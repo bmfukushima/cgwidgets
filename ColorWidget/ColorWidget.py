@@ -36,12 +36,12 @@ class ColorWidget(QWidget):
                 parent=None,
                 attr=None,
                 color='.5 0.18 0.18',
-                #main_widget=None,
+                main_widget=None,
                 widget_default_data=None
                 ):
         super(ColorWidget, self).__init__(parent)
         main_layout = QGridLayout()
-        #self.main_widget = main_widget
+        self.main_widget = main_widget
 
         self.widget_default_data = widget_default_data
         self.attr = attr
@@ -173,13 +173,11 @@ class ColorWidget(QWidget):
                 % (SETTINGS.PADDING, red, green, blue)
             )
             value = '%s %s %s' % (red, green, blue)
-            '''
             self.main_widget.setValue(
                 attr=self.attr,
                 value=value,
                 widget_default_data=self.widget_default_data
                 )
-            '''
 
     def getColor(self):
         if not hasattr(self, 'color'):
@@ -888,13 +886,16 @@ class TestLabel(QLabel):
 class TestWidget(QWidget):
     def __init__(self, parent=None, value=0):
         super(TestWidget, self).__init__(parent)
-
-        color_widget = ColorWidget()
-        color_widget.show()
+        layout = QVBoxLayout()
+        self.setLayout(layout)
+        label = TestLabel()
+        color_widget = ColorWidget(main_widget=label)
+        layout.addWidget(color_widget)
+        #layout.addWidget(label)
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    color_widget = ColorWidget()
-    color_widget.show()
+    menu = TestWidget()
+    menu.show()
     sys.exit(app.exec_())
