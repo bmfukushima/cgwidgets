@@ -1,1 +1,1 @@
-__all__ = ['ColorWidget', 'LadderWidget']
+__all__ = ['ColorWidget', 'LadderWidget', 'ImageLibrary']

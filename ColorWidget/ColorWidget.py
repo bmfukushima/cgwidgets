@@ -5,7 +5,7 @@ from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 from qtpy.QtGui import *
 
-from LadderWidget import ValueLadder
+from LadderWidget.LadderWidget import ValueLadder
 from SETTINGS import SETTINGS
 '''
 KATANA BUGS:
@@ -36,12 +36,12 @@ class ColorWidget(QWidget):
                 parent=None,
                 attr=None,
                 color='.5 0.18 0.18',
-                main_widget=None,
+                #main_widget=None,
                 widget_default_data=None
                 ):
         super(ColorWidget, self).__init__(parent)
         main_layout = QGridLayout()
-        self.main_widget = main_widget
+        #self.main_widget = main_widget
 
         self.widget_default_data = widget_default_data
         self.attr = attr
@@ -173,11 +173,13 @@ class ColorWidget(QWidget):
                 % (SETTINGS.PADDING, red, green, blue)
             )
             value = '%s %s %s' % (red, green, blue)
+            '''
             self.main_widget.setValue(
                 attr=self.attr,
                 value=value,
                 widget_default_data=self.widget_default_data
                 )
+            '''
 
     def getColor(self):
         if not hasattr(self, 'color'):
@@ -872,30 +874,8 @@ class DefaultColorWidget(QWidget):
         layout.addWidget(self.color_widget)
 
 
-''' SET UP TESTING ENVIRONMENT '''
-
-
-class TestLabel(QLabel):
-    def __init__(self, parent=None):
-        super(TestLabel, self).__init__(parent)
-
-    def setValue(self, value, attr=None, widget_default_data=None):
-        self.setText(str(value))
-
-
-class TestWidget(QWidget):
-    def __init__(self, parent=None, value=0):
-        super(TestWidget, self).__init__(parent)
-        layout = QVBoxLayout()
-        self.setLayout(layout)
-        label = TestLabel()
-        color_widget = ColorWidget(main_widget=label)
-        layout.addWidget(color_widget)
-        #layout.addWidget(label)
-
-
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    menu = TestWidget()
-    menu.show()
+    color_widget = ColorWidget()
+    color_widget.show()
     sys.exit(app.exec_())
