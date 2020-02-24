@@ -9,7 +9,7 @@ from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 from qtpy.QtGui import *
 
-from ImageLibrary import Utils
+from cgqtpy.ImageLibrary import Utils
 '''
 
 Detailed:

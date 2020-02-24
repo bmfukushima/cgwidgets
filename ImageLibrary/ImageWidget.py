@@ -14,7 +14,7 @@ from qtpy.QtGui import *
 from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 
-from ImageLibrary import Utils
+from cgqtpy.ImageLibrary import Utils
 
 
 class ImageWidget(QLabel):

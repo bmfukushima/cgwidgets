@@ -6,7 +6,8 @@ from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 from qtpy.QtGui import *
 
-from LadderWidget.LadderWidget import ValueLadder
+from cgqtpy import LadderWidget
+print(LadderWidget)
 
 '''
 KATANA BUGS:
@@ -455,7 +456,7 @@ class ValueLabel(DataTypeLineEdit):
             value_list = [0.0001, 0.001, 0.01, 0.1]
             pos = QCursor.pos()
 
-            ladder = ValueLadder(
+            ladder = LadderWidget(
                 parent=self,
                 widget=self,
                 pos=pos,
@@ -1110,6 +1111,7 @@ class SETTINGS(object):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+    print (sys.path)
     color_widget = ColorWidget()
     color_widget.show()
     sys.exit(app.exec_())

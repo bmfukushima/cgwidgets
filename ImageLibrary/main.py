@@ -87,11 +87,6 @@ send frames to bottom left...
     going to bottom of widget right now... not bottom of pixmap =\
 
 #===============================================================================
-# BUGS
-#===============================================================================
-ImportRigs
-    naming conventions... if it exists, it will not import
-#===============================================================================
 # WISH LIST
 #===============================================================================
 - Arrow Key next/previous image
@@ -178,11 +173,11 @@ from qtpy.QtWidgets import *
 from qtpy.QtGui import *
 from qtpy.QtCore import *
 
-from ImageLibrary import ImageWidget
-from ImageLibrary.PublishWidget import PublishWidget
-from ImageLibrary.TopBarWidget import TopBarMainWidget
-from ImageLibrary import Utils
-from ImageLibrary.Views import *
+from cgqtpy.ImageLibrary import ImageWidget
+from cgqtpy.ImageLibrary.PublishWidget import PublishWidget
+from cgqtpy.ImageLibrary.TopBarWidget import TopBarMainWidget
+from cgqtpy.ImageLibrary import Utils
+from cgqtpy.ImageLibrary.Views import *
 
 
 class Library(QWidget):

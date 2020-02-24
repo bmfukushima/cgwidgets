@@ -4,7 +4,7 @@ import sys
 from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 
-from ImageLibrary import Utils
+from cgqtpy.ImageLibrary import Utils
 
 
 class PublishWidget(QWidget):

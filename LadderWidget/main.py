@@ -171,6 +171,9 @@ class LadderMiddleWidget(QLabel):
             self.setStyleSheet(self.default_stylesheet)
 
 
+''' TEST STUFF '''
+
+
 class LadderWidget(QLabel):
     '''
     @orig_value: float starting value of widget before opening of menu
@@ -338,8 +341,7 @@ class TestWidget(QLabel):
                 parent=self,
                 widget=self,
                 pos=self.pos(),
-                value_list=self.value_list,
-                current_value=self.getValue()
+                value_list=self.value_list
             )
             ladder.show()
         return QLabel.mousePressEvent(self, event, *args, **kwargs)

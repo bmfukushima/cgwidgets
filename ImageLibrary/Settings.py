@@ -5,7 +5,7 @@ import sys
 
 from qtpy.QtWidgets import *
 
-from ImageLibrary import Utils
+from cgqtpy.ImageLibrary import Utils
 
 
 class Settings(object):

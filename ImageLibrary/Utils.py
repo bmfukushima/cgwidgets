@@ -31,10 +31,10 @@ def getSetting(setting):
         value = user_settings[setting]
     # global settings
     except KeyError:
-        from ImageLibrary.Settings import Settings
+        from cgqtpy.ImageLibrary.Settings import Settings
         value = getattr(Settings, setting)
     except FileNotFoundError:
-        from ImageLibrary.Settings import Settings
+        from cgqtpy.ImageLibrary.Settings import Settings
         value = getattr(Settings, setting)
     # return
     finally:
@@ -82,7 +82,7 @@ def createImageWidget(parent, json, row_height):
     @json: <dict> json
     @row_height: <int>
     '''
-    from ImageLibrary.ImageWidget import DefaultImage
+    from cgqtpy.ImageLibrary.ImageWidget import DefaultImage
     #from Settings import Settings
     border_width = getSetting('IMAGE_SELECTED_BORDER_WIDTH')
     image_height = row_height - (border_width * 2)
