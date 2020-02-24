@@ -27,7 +27,7 @@ class TopBarMainWidget(QWidget):
         self.main_layout.addWidget(self.size_button_container)
         self.main_layout.addWidget(self.mode_container)
 
-    ''' USER SETTINGS '''
+    ''' USER wtf '''
 
 
 class TopBarWidgetContainer(QGroupBox):
