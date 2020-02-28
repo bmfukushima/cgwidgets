@@ -22,9 +22,10 @@ Slide direction change...
 
 Gradient Update:
     Not effect current selected value
+
+Expose Colors
     
-Middle Widget:
-    Needs to be accented more...
+
 '''
 
 
@@ -35,7 +36,26 @@ class LadderDelegate(QWidget):
     @is_active  boolean to determine is the widget
                         is currently being manipulated by
                         the user
-
+                        
+    +
+    @slide_distance: <float> multiplier of how far the user
+        should have to drag in order to trigger a value update.
+        Lower values are slower, higher values are faster.
+    @slide_color: (<str>, <str>) | (color1, color2)
+        The color that is displayed to the user when the user starts
+        to click/drag to slide
+        
+        255, 255, 255, 255
+        setter requires two strings that are comma delimeated RGBA values
+        Color0:
+            Background Color
+        color1:
+            Foreground Color
+    @selected_color: <str> rgba 255, 255, 255, 255
+        The color that is displayed to the user when they are selecting
+        which value they wish to adjust
+        
+    # no longer valid
     the @widget needs a 'setValue' method, this is where
     the LadderDelegate will set the value.  The value ladder
     does @widget.setValue(offset=offset) where offset is
@@ -53,6 +73,10 @@ class LadderDelegate(QWidget):
         self.setLayout(layout)
         self.setWidget(widget)
 
+        # default attrs
+        self._slide_distance = .01
+        self._slide_color = ('18, 18, 18, 128', '255, 128, 32, 255')
+        self._selected_color = '32, 32, 32, 255'
         # set up style
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
@@ -93,6 +117,31 @@ class LadderDelegate(QWidget):
         item_list = self.getItemList()
         item_list.insert(self.middle_item_index, self.middle_item)
         self.setItemList(item_list)
+
+    ''' API '''
+    @property
+    def slide_distance(self):
+        return self._slide_distance
+    
+    @slide_distance.setter
+    def slide_distance(self, slide_distance):
+        self._slide_distance = slide_distance
+
+    @property
+    def slide_color(self):
+        return self._slide_color
+    
+    @slide_color.setter
+    def slide_color(self, color0, color1):
+        self._slide_color = (color0, color1)
+
+    @property
+    def selected_color(self):
+        return self._selected_color
+    
+    @selected_color.setter
+    def selected_color(self, color):
+        self._selected_color = color
 
     ''' PROPERTIES '''
     def appendItemList(self, widget):
@@ -192,6 +241,8 @@ class LadderMiddleItem(QLabel):
         self.setFixedHeight(height)
         self.setFixedWidth(width)
         self.default_style_sheet = self.styleSheet()
+        self.setStyleSheet('border-width: 3px; border-color: rgb(18,18,18);border-style: solid;')
+        #self.setStyleSheet('background-color: rgb(255,0,0)')
 
     def setValue(self, value):
         self.setText(str(value))
@@ -201,18 +252,19 @@ class LadderMiddleItem(QLabel):
         return self.value
 
     def updateColor(self, xpos):
-        print('yolo')
         if self.getIsActive() is True:
-            print ('bolo')
             self.setStyleSheet("* {background: \
-            qlineargradient( x1:%s y1:0, x2:%s y2:0, \
-                stop:0 rgba(200,200,0,255), stop:1 rgba(100,200,100,255) \
-            );}" % (str(xpos), str(xpos + 0.01)))
+            qlineargradient( x1:{xpos1} y1:0, x2:{xpos2} y2:0, \
+                stop:0 rgba({bgcolor}), stop:1 rgba({fgcolor}) \
+            );}".format(
+                xpos1=str(xpos),
+                xpos2=str(xpos + 0.01),
+                bgcolor=self.parent().slide_color[0],
+                fgcolor=self.parent().slide_color[1]
+                )
+            )
         else:
             self.setStyleSheet(self.default_stylesheet)
-
-
-''' TEST STUFF '''
 
 
 class LadderItem(QLabel):
@@ -267,11 +319,25 @@ class LadderItem(QLabel):
         qlineargradient( x1:%s y1:0, x2:%s y2:0, \
             stop:0 rgba(200,200,0,255), stop:1 rgba(100,200,100,255) \
         )" % (str(xpos), str(xpos + 0.01))
-        '''
+        
         style_sheet = "background-color: \
         qlineargradient( x1:%s y1:0, x2:%s y2:0, \
-            stop:0 black, stop:1 green \
+            stop:0 rgba(64,128,64,128) , stop:1 rgba(0,0,0,128) \
         )" % (str(xpos), str(xpos + 0.01))
+        '''
+        style_sheet = '''
+        background: qlineargradient(
+            x1:{xpos1} y1:0,
+            x2:{xpos2} y2:0,
+            stop:0 rgba({bgcolor}),
+            stop:1 rgba({fgcolor})
+        );
+        '''.format(
+                xpos1=str(xpos),
+                xpos2=str(xpos + 0.01),
+                bgcolor=self.parent().slide_color[0],
+                fgcolor=self.parent().slide_color[1]
+            )
         self.setStyleSheet(style_sheet)
 
     def resetColor(self):
@@ -284,7 +350,10 @@ class LadderItem(QLabel):
         '''
         hack to set up hover color for QLabels
         '''
-        self.setStyleSheet('background-color: green')
+        self.setStyleSheet(
+            'background-color: rgba({selected_color})'.format(
+                selected_color=self.parent().selected_color)
+            )
         return QLabel.enterEvent(self, *args, **kwargs)
 
     def leaveEvent(self, *args, **kwargs):
@@ -310,7 +379,7 @@ class LadderItem(QLabel):
         '''
         primary work horse for mouse movement slider
         '''
-        MAGNITUDE_MULTIPLIER = .02
+        MAGNITUDE_MULTIPLIER = self.parent().slide_distance
         if self.getIsActive() is True:
             # ===================================================================
             # get attrs
@@ -356,6 +425,9 @@ class LadderItem(QLabel):
         self.setIsActive(False)
         self.parent().resetWidgetGradients()
         return QLabel.mouseReleaseEvent(self, *args, **kwargs)
+
+
+''' TEST STUFF '''
 
 
 class TestWidget(QLineEdit):
