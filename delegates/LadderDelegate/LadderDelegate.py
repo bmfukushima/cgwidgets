@@ -16,6 +16,15 @@ from qtpy.QtCore import *
 LadderDelegate --> SetValue... -->
     Need to support multiple different widget types...
         Should overload this?
+        
+Slide direction change...
+    midway through
+
+Gradient Update:
+    Not effect current selected value
+    
+Middle Widget:
+    Needs to be accented more...
 '''
 
 
@@ -121,13 +130,13 @@ class LadderDelegate(QWidget):
 
     def setValue(self, offset):
         value = self.getValue()
-        if value:
-            self.value = float(current_value) + offset
+        if value is not None:
+            self.value = float(value) + offset
             
             # set value
             
             self.middle_item.setText(str(self.value))
-            widget.setText(str(self.value))
+            self.parent().setText(str(self.value))
 
     def getValue(self):
         try:
@@ -192,7 +201,9 @@ class LadderMiddleItem(QLabel):
         return self.value
 
     def updateColor(self, xpos):
+        print('yolo')
         if self.getIsActive() is True:
+            print ('bolo')
             self.setStyleSheet("* {background: \
             qlineargradient( x1:%s y1:0, x2:%s y2:0, \
                 stop:0 rgba(200,200,0,255), stop:1 rgba(100,200,100,255) \
@@ -371,13 +382,13 @@ class TestWidget(QLineEdit):
 
 #if __name__ == '__main__':
 # tested line edit, label
-'''
+
 print(__name__)
 
 app = QApplication(sys.argv)
 menu = TestWidget()
 menu.show()
 sys.exit(app.exec_())
-'''
+
 
 
