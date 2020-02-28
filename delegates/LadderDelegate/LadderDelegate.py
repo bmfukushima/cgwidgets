@@ -12,12 +12,16 @@ from qtpy.QtCore import *
 - Detect if close to edge...
     - Detect center point function
     - only needs to handle y pos
+
+LadderDelegate --> SetValue... -->
+    Need to support multiple different widget types...
+        Should overload this?
 '''
 
 
 class LadderDelegate(QWidget):
     '''
-    @widget_list: list of widgets
+    @item_list: list of widgets
     @widget widget to send signal to update to
     @is_active  boolean to determine is the widget
                         is currently being manipulated by
@@ -39,9 +43,8 @@ class LadderDelegate(QWidget):
         layout = QVBoxLayout()
         self.setLayout(layout)
         self.setWidget(widget)
-        # =======================================================================
-        # set up display
-        # =======================================================================
+
+        # set up style
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         self.setWindowFlags(
@@ -51,20 +54,17 @@ class LadderDelegate(QWidget):
         )
         WIDGET_WIDTH = self.parentWidget().width()
         WIDGET_HEIGHT = 50
-        # =======================================================================
+
         # set position
-        # =======================================================================
-        self.middle_widget_index = int(len(value_list) * 0.5)
-        offset = self.middle_widget_index * WIDGET_HEIGHT
+        self.middle_item_index = int(len(value_list) * 0.5)
+        offset = self.middle_item_index * WIDGET_HEIGHT
         pos = QPoint(
-            pos.x() - (WIDGET_WIDTH * 0.5),
+            pos.x(), #+ (WIDGET_WIDTH),
             pos.y() - ((WIDGET_HEIGHT * (len(value_list) + 1)) * .5)
         )
         self.move(pos)
 
-        # =======================================================================
-        # set up widgets
-        # =======================================================================
+        # create widgets
         for value in value_list:
             widget = LadderItem(
                 value_mult=value,
@@ -72,37 +72,38 @@ class LadderDelegate(QWidget):
                 width=WIDGET_WIDTH
             )
             layout.addWidget(widget)
-            self.appendWidgetList(widget)
+            self.appendItemList(widget)
 
         # special handler for display widget
-        self.middle_widget = LadderMiddleItem(
-            value=0,
+        self.middle_item = LadderMiddleItem(
+            value=self.getValue(),
             height=WIDGET_HEIGHT,
             width=WIDGET_WIDTH
         )
-        layout.insertWidget(self.middle_widget_index, self.middle_widget)
-        widget_list = self.getWidgetList()
-        widget_list.insert(self.middle_widget_index, self.middle_widget)
-        self.setWidgetList(widget_list)
+        layout.insertWidget(self.middle_item_index, self.middle_item)
+        item_list = self.getItemList()
+        item_list.insert(self.middle_item_index, self.middle_item)
+        self.setItemList(item_list)
 
-    def appendWidgetList(self, widget):
+    ''' PROPERTIES '''
+    def appendItemList(self, widget):
         '''
-        appends widget to widget_list
+        appends widget to item_list
         '''
-        widget_list = self.getWidgetList()
-        widget_list.append(widget)
-        self.setWidgetList(widget_list)
+        item_list = self.getItemList()
+        item_list.append(widget)
+        self.setItemList(item_list)
 
-    def setWidgetList(self, widget_list):
+    def setItemList(self, item_list):
         '''
         list of widgets
         '''
-        self.widget_list = widget_list
+        self.item_list = item_list
 
-    def getWidgetList(self):
-        if not hasattr(self, 'widget_list'):
-            self.widget_list = []
-        return self.widget_list
+    def getItemList(self):
+        if not hasattr(self, 'item_list'):
+            self.item_list = []
+        return self.item_list
 
     def setWidget(self, widget):
         self.widget = widget
@@ -118,17 +119,46 @@ class LadderDelegate(QWidget):
     def setIsActive(self, boolean):
         self.is_active = boolean
 
+    def setValue(self, offset):
+        value = self.getValue()
+        if value:
+            self.value = float(current_value) + offset
+            
+            # set value
+            
+            self.middle_item.setText(str(self.value))
+            widget.setText(str(self.value))
+
+    def getValue(self):
+        try:
+            self.value = float(self.parent().text())
+            return self.value
+        except ValueError:
+            print('knead numba...')
+            return None
+
+    ''' UTILS '''
+
     def updateWidgetGradients(self, xpos):
-        widget_list = self.getWidgetList()
-        for index, widget in enumerate(widget_list):
-            if index != self.middle_widget_index:
-                widget.updateColor(xpos)
+        '''
+        Draws out the moving slider over the items to show
+        the user how close they are to the next tick
+        '''
+        item_list = self.getItemList()
+        for index, item in enumerate(item_list):
+            if index != self.middle_item_index:
+                item.updateColor(xpos)
 
     def resetWidgetGradients(self):
-        widget_list = self.getWidgetList()
-        for index, widget in enumerate(widget_list):
-            if index != self.middle_widget_index:
-                widget.resetColor()
+        '''
+        Returns all of the items back to their default color
+        '''
+        item_list = self.getItemList()
+        for index, item in enumerate(item_list):
+            if index != self.middle_item_index:
+                item.resetColor()
+
+    ''' EVENTS '''
 
     def leaveEvent(self, event, *args, **kwargs):
         if self.getIsActive() is False:
@@ -258,11 +288,11 @@ class LadderItem(QLabel):
         '''
         if the user selects the MMB it will start the click/drag operation
         '''
-        if event.button() == Qt.MiddleButton:
-            pos = QCursor.pos()
-            self.setStartPos(pos)
-            self.tick_amount = 0
-            self.setIsActive(True)
+        #if event.button() == Qt.MiddleButton:
+        pos = QCursor.pos()
+        self.setStartPos(pos)
+        self.tick_amount = 0
+        self.setIsActive(True)
         return QLabel.mousePressEvent(self, event, *args, **kwargs)
 
     def mouseMoveEvent(self, event, *args, **kwargs):
@@ -303,12 +333,10 @@ class LadderItem(QLabel):
             # note: this will look for a change with tick_amount vs magnitude
             #         to determine when a full value changed has happened
             # ===================================================================
-            # update color
+            # update value
             xpos = math.fabs(math.modf(magnitude)[0])
             if self.tick_amount != int(magnitude):
-                self.parent().middle_widget.setValue(return_value)
-                print(self.parent().getWidget())
-                self.parent().getWidget().setValue(return_value)
+                self.parent().setValue(offset)
                 self.tick_amount = int(magnitude)
             self.parent().updateWidgetGradients(xpos)
         return QLabel.mouseMoveEvent(self, event, *args, **kwargs)
@@ -319,20 +347,12 @@ class LadderItem(QLabel):
         return QLabel.mouseReleaseEvent(self, *args, **kwargs)
 
 
-class TestWidget(QLabel):
+class TestWidget(QLineEdit):
     def __init__(self, parent=None, value=0):
         super(TestWidget, self).__init__(parent)
         pos = QCursor().pos()
         self.setGeometry(pos.x(), pos.y(), 200, 100)
-        self.setValue(value)
         self.value_list = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
-
-    def setValue(self, value):
-        self.setText(str(value))
-        self.value = value
-
-    def getValue(self):
-        return self.value
 
     def mousePressEvent(self, event, *args, **kwargs):
         '''
@@ -346,12 +366,16 @@ class TestWidget(QLabel):
                 value_list=self.value_list
             )
             ladder.show()
-        return QLabel.mousePressEvent(self, event, *args, **kwargs)
+        return QLineEdit.mousePressEvent(self, event, *args, **kwargs)
 
 
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    menu = TestWidget()
-    menu.show()
-    sys.exit(app.exec_())
+#if __name__ == '__main__':
+# tested line edit, label
+print(__name__)
+
+app = QApplication(sys.argv)
+menu = TestWidget()
+menu.show()
+sys.exit(app.exec_())
+
 
