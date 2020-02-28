@@ -1,195 +1,26 @@
 import sys
-import math
 
 from qtpy.QtGui import *
 from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 
-'''
-# ===============================================================================
-# To Do
-# ===============================================================================
-- Detect if close to edge...
-    - Detect center point function
-    - only needs to handle y pos
-'''
+from ...delegates import LadderDelegate
 
-
-class LadderDelegate(QWidget):
+class LadderWidget(QLineEdit):
     '''
-    @widget_list: list of widgets
-    @widget widget to send signal to update to
-    @is_active  boolean to determine is the widget
-                        is currently being manipulated by
-                        the user
-
-    the @widget needs a 'setValue' method, this is where
-    the LadderDelegate will set the value.  The value ladder
-    does @widget.setValue(offset=offset) where offset is
-    the amount that the current value should be offset.
-
-    The setValue, will then need to do the final math to calculate the result
-    '''
-    def __init__(
-            self, parent=None,
-            widget=None, pos=None,
-            value_list=None
-    ):
-        super(LadderDelegate, self).__init__(parent)
-        layout = QVBoxLayout()
-        self.setLayout(layout)
-        self.setWidget(widget)
-        # =======================================================================
-        # set up display
-        # =======================================================================
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
-        self.setWindowFlags(
-            self.windowFlags()
-            | Qt.FramelessWindowHint
-            | Qt.Popup
-        )
-        WIDGET_WIDTH = self.parentWidget().width()
-        WIDGET_HEIGHT = 50
-        # =======================================================================
-        # set position
-        # =======================================================================
-        self.middle_widget_index = int(len(value_list) * 0.5)
-        offset = self.middle_widget_index * WIDGET_HEIGHT
-        pos = QPoint(
-            pos.x() - (WIDGET_WIDTH * 0.5),
-            pos.y() - ((WIDGET_HEIGHT * (len(value_list) + 1)) * .5)
-        )
-        self.move(pos)
-
-        # =======================================================================
-        # set up widgets
-        # =======================================================================
-        for value in value_list:
-            widget = LadderItem(
-                value_mult=value,
-                height=WIDGET_HEIGHT,
-                width=WIDGET_WIDTH
-            )
-            layout.addWidget(widget)
-            self.appendWidgetList(widget)
-
-        # special handler for display widget
-        self.middle_widget = LadderMiddleItem(
-            value=0,
-            height=WIDGET_HEIGHT,
-            width=WIDGET_WIDTH
-        )
-        layout.insertWidget(self.middle_widget_index, self.middle_widget)
-        widget_list = self.getWidgetList()
-        widget_list.insert(self.middle_widget_index, self.middle_widget)
-        self.setWidgetList(widget_list)
-
-    def appendWidgetList(self, widget):
-        '''
-        appends widget to widget_list
-        '''
-        widget_list = self.getWidgetList()
-        widget_list.append(widget)
-        self.setWidgetList(widget_list)
-
-    def setWidgetList(self, widget_list):
-        '''
-        list of widgets
-        '''
-        self.widget_list = widget_list
-
-    def getWidgetList(self):
-        if not hasattr(self, 'widget_list'):
-            self.widget_list = []
-        return self.widget_list
-
-    def setWidget(self, widget):
-        self.widget = widget
-
-    def getWidget(self):
-        return self.widget
-
-    def getIsActive(self):
-        if not hasattr(self, 'is_active'):
-            self.is_active = False
-        return self.is_active
-
-    def setIsActive(self, boolean):
-        self.is_active = boolean
-
-    def updateWidgetGradients(self, xpos):
-        widget_list = self.getWidgetList()
-        for index, widget in enumerate(widget_list):
-            if index != self.middle_widget_index:
-                widget.updateColor(xpos)
-
-    def resetWidgetGradients(self):
-        widget_list = self.getWidgetList()
-        for index, widget in enumerate(widget_list):
-            if index != self.middle_widget_index:
-                widget.resetColor()
-
-    def leaveEvent(self, event, *args, **kwargs):
-        if self.getIsActive() is False:
-            self.close()
-        return QWidget.leaveEvent(self, event, *args, **kwargs)
-
-    def keyPressEvent(self, event, *args, **kwargs):
-        if event.key() == Qt.Key_Escape:
-            self.close()
-        return QWidget.keyPressEvent(self, event, *args, **kwargs)
-
-
-class LadderMiddleItem(QLabel):
-    '''
-    Poorly named class... this is the display label to overlay
-    over the current widget.  Due to how awesomely bad
-    transparency is to do in Qt =\
-    '''
-    def __init__(self, parent=None, height=50, value=None, width=100):
-        super(LadderMiddleItem, self).__init__()
-        self.setValue(value)
-        self.setFixedHeight(height)
-        self.setFixedWidth(width)
-        self.default_style_sheet = self.styleSheet()
-
-    def setValue(self, value):
-        self.setText(str(value))
-        self.value = value
-
-    def getValue(self):
-        return self.value
-
-    def updateColor(self, xpos):
-        if self.getIsActive() is True:
-            self.setStyleSheet("* {background: \
-            qlineargradient( x1:%s y1:0, x2:%s y2:0, \
-                stop:0 rgba(200,200,0,255), stop:1 rgba(100,200,100,255) \
-            );}" % (str(xpos), str(xpos + 0.01)))
-        else:
-            self.setStyleSheet(self.default_stylesheet)
-
-
-''' TEST STUFF '''
-
-
-class LadderItem(QLabel):
-    '''
-    
     @orig_value: float starting value of widget before opening of menu
     @value_mult: float how many units the drag should update
     @start_pos: QPoint starting position of drag
     @is_active: whether or not the user is currently manipulating a value
     '''
     def __init__(self, parent=None, value_mult='', height=50, width=None):
-        super(LadderItem, self).__init__(parent)
+        super(LadderWidget, self).__init__(parent)
         self.setText(str(value_mult))
         self.setValueMult(value_mult)
         self.default_stylesheet = self.styleSheet()
         self.setFixedHeight(height)
         self.setFixedWidth(width)
-    
+
     def setValueMult(self, value_mult):
         self.value_mult = value_mult
 
@@ -307,8 +138,7 @@ class LadderItem(QLabel):
             xpos = math.fabs(math.modf(magnitude)[0])
             if self.tick_amount != int(magnitude):
                 self.parent().middle_widget.setValue(return_value)
-                print(self.parent().getWidget())
-                self.parent().getWidget().setValue(return_value)
+                self.parent().getWidget().setValue(offset=offset)
                 self.tick_amount = int(magnitude)
             self.parent().updateWidgetGradients(xpos)
         return QLabel.mouseMoveEvent(self, event, *args, **kwargs)
@@ -354,4 +184,3 @@ if __name__ == '__main__':
     menu = TestWidget()
     menu.show()
     sys.exit(app.exec_())
-
