@@ -371,11 +371,13 @@ class TestWidget(QLineEdit):
 
 #if __name__ == '__main__':
 # tested line edit, label
+'''
 print(__name__)
 
 app = QApplication(sys.argv)
 menu = TestWidget()
 menu.show()
 sys.exit(app.exec_())
+'''
 
 
