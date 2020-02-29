@@ -12,10 +12,6 @@ from qtpy.QtCore import *
 - Detect if close to edge...
     - Detect center point function
     - only needs to handle y pos
-
-LadderDelegate --> SetValue... -->
-    Need to support multiple different widget types...
-        Should overload this?
         
 Slide direction change...
     midway through
@@ -31,11 +27,15 @@ Expose Colors
 
 class LadderDelegate(QWidget):
     '''
-    @item_list: list of widgets
+    @item_list: list of all of the items
     @widget widget to send signal to update to
-    @is_active  boolean to determine is the widget
+    @is_active  boolean to determine if the widget
                         is currently being manipulated by
                         the user
+    @current_item: <LadderItem>
+        The current item that the user is manipulating.  This property is currently used
+        to determine if this ladder item should have its visual appearance changed on
+        interaction.
                         
     +
     @slide_distance: <float> multiplier of how far the user
@@ -144,6 +144,15 @@ class LadderDelegate(QWidget):
         self._selected_color = color
 
     ''' PROPERTIES '''
+    
+    @property
+    def current_item(self):
+        return self._current_item
+    
+    @current_item.setter
+    def current_item(self, current_item):
+        self._current_item = current_item
+
     def appendItemList(self, widget):
         '''
         appends widget to item_list
@@ -204,8 +213,9 @@ class LadderDelegate(QWidget):
         '''
         item_list = self.getItemList()
         for index, item in enumerate(item_list):
-            if index != self.middle_item_index:
-                item.updateColor(xpos)
+            if index is not self.middle_item_index:
+                if item is not self.current_item:
+                    item.updateColor(xpos)
 
     def resetWidgetGradients(self):
         '''
@@ -229,7 +239,31 @@ class LadderDelegate(QWidget):
         return QWidget.keyPressEvent(self, event, *args, **kwargs)
 
 
-class LadderMiddleItem(QLabel):
+class ILadder():
+    def updateColor(self, xpos):
+        '''
+        @xpos: floatf of single channel rgb color
+        sets the style sheet to converge from left
+        to right so that each full convergance will
+        display another increment in value 
+        '''
+        style_sheet = '''
+        background: qlineargradient(
+            x1:{xpos1} y1:0,
+            x2:{xpos2} y2:0,
+            stop:0 rgba({bgcolor}),
+            stop:1 rgba({fgcolor})
+        );
+        '''.format(
+                xpos1=str(xpos),
+                xpos2=str(xpos + 0.01),
+                bgcolor=self.parent().slide_color[0],
+                fgcolor=self.parent().slide_color[1]
+            )
+        self.setStyleSheet(style_sheet)
+
+
+class LadderMiddleItem(QLabel, ILadder):
     '''
     Poorly named class... this is the display label to overlay
     over the current widget.  Due to how awesomely bad
@@ -251,23 +285,8 @@ class LadderMiddleItem(QLabel):
     def getValue(self):
         return self.value
 
-    def updateColor(self, xpos):
-        if self.getIsActive() is True:
-            self.setStyleSheet("* {background: \
-            qlineargradient( x1:{xpos1} y1:0, x2:{xpos2} y2:0, \
-                stop:0 rgba({bgcolor}), stop:1 rgba({fgcolor}) \
-            );}".format(
-                xpos1=str(xpos),
-                xpos2=str(xpos + 0.01),
-                bgcolor=self.parent().slide_color[0],
-                fgcolor=self.parent().slide_color[1]
-                )
-            )
-        else:
-            self.setStyleSheet(self.default_stylesheet)
 
-
-class LadderItem(QLabel):
+class LadderItem(QLabel, ILadder):
     '''
     
     @orig_value: float starting value of widget before opening of menu
@@ -306,45 +325,13 @@ class LadderItem(QLabel):
         self.parent().setIsActive(boolean)
         self.is_active = boolean
 
-    def updateColor(self, xpos):
-        '''
-        @xpos: floatf of single channel rgb color
-        sets the style sheet to converge from left
-        to right so that each full convergance will
-        display another increment in value 
-        '''
-        '''
-        # because Katana won't let me RGB this...
-        style_sheet = "background-color: \
-        qlineargradient( x1:%s y1:0, x2:%s y2:0, \
-            stop:0 rgba(200,200,0,255), stop:1 rgba(100,200,100,255) \
-        )" % (str(xpos), str(xpos + 0.01))
-        
-        style_sheet = "background-color: \
-        qlineargradient( x1:%s y1:0, x2:%s y2:0, \
-            stop:0 rgba(64,128,64,128) , stop:1 rgba(0,0,0,128) \
-        )" % (str(xpos), str(xpos + 0.01))
-        '''
-        style_sheet = '''
-        background: qlineargradient(
-            x1:{xpos1} y1:0,
-            x2:{xpos2} y2:0,
-            stop:0 rgba({bgcolor}),
-            stop:1 rgba({fgcolor})
-        );
-        '''.format(
-                xpos1=str(xpos),
-                xpos2=str(xpos + 0.01),
-                bgcolor=self.parent().slide_color[0],
-                fgcolor=self.parent().slide_color[1]
-            )
-        self.setStyleSheet(style_sheet)
-
     def resetColor(self):
         '''
         resets the color widget color back to default
         '''
         self.setStyleSheet(self.default_stylesheet)
+
+    ''' EVENTS '''
 
     def enterEvent(self, *args, **kwargs):
         '''
@@ -371,6 +358,7 @@ class LadderItem(QLabel):
         #if event.button() == Qt.MiddleButton:
         pos = QCursor.pos()
         self.setStartPos(pos)
+        self.parent().current_item = self
         self.tick_amount = 0
         self.setIsActive(True)
         return QLabel.mousePressEvent(self, event, *args, **kwargs)
@@ -422,7 +410,9 @@ class LadderItem(QLabel):
         return QLabel.mouseMoveEvent(self, event, *args, **kwargs)
 
     def mouseReleaseEvent(self, *args, **kwargs):
+        # reset all of the items/attributes back to default
         self.setIsActive(False)
+        self.parent().current_item = None
         self.parent().resetWidgetGradients()
         return QLabel.mouseReleaseEvent(self, *args, **kwargs)
 
@@ -454,8 +444,6 @@ class TestWidget(QLineEdit):
 
 #if __name__ == '__main__':
 # tested line edit, label
-
-print(__name__)
 
 app = QApplication(sys.argv)
 menu = TestWidget()
