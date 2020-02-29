@@ -153,6 +153,8 @@ class LadderDelegate(QWidget):
     def current_item(self, current_item):
         self._current_item = current_item
 
+    ''' PROPERTIES '''
+
     def appendItemList(self, widget):
         '''
         appends widget to item_list
@@ -178,13 +180,15 @@ class LadderDelegate(QWidget):
     def getWidget(self):
         return self.widget
 
-    def getIsActive(self):
-        if not hasattr(self, 'is_active'):
-            self.is_active = False
-        return self.is_active
+    @property
+    def is_active(self):
+        if not hasattr(self, '_is_active'):
+            self._is_active = False
+        return self._is_active
 
-    def setIsActive(self, boolean):
-        self.is_active = boolean
+    @is_active.setter
+    def is_active(self, boolean):
+        self._is_active = boolean
 
     def setValue(self, offset):
         value = self.getValue()
@@ -229,7 +233,7 @@ class LadderDelegate(QWidget):
     ''' EVENTS '''
 
     def leaveEvent(self, event, *args, **kwargs):
-        if self.getIsActive() is False:
+        if self.is_active is False:
             self.close()
         return QWidget.leaveEvent(self, event, *args, **kwargs)
 
@@ -239,7 +243,7 @@ class LadderDelegate(QWidget):
         return QWidget.keyPressEvent(self, event, *args, **kwargs)
 
 
-class ILadder():
+class iLadderItem():
     def updateColor(self, xpos):
         '''
         @xpos: floatf of single channel rgb color
@@ -263,7 +267,7 @@ class ILadder():
         self.setStyleSheet(style_sheet)
 
 
-class LadderMiddleItem(QLabel, ILadder):
+class LadderMiddleItem(QLabel, iLadderItem):
     '''
     Poorly named class... this is the display label to overlay
     over the current widget.  Due to how awesomely bad
@@ -286,7 +290,7 @@ class LadderMiddleItem(QLabel, ILadder):
         return self.value
 
 
-class LadderItem(QLabel, ILadder):
+class LadderItem(QLabel, iLadderItem):
     '''
     
     @orig_value: float starting value of widget before opening of menu
@@ -316,14 +320,7 @@ class LadderItem(QLabel, ILadder):
             self.start_pos = QCursor.pos()
         return self.start_pos
 
-    def getIsActive(self):
-        if not hasattr(self, 'is_active'):
-            self.is_active = False
-        return self.is_active
-
-    def setIsActive(self, boolean):
-        self.parent().setIsActive(boolean)
-        self.is_active = boolean
+    ''' PROPERTIES '''
 
     def resetColor(self):
         '''
@@ -337,10 +334,11 @@ class LadderItem(QLabel, ILadder):
         '''
         hack to set up hover color for QLabels
         '''
-        self.setStyleSheet(
-            'background-color: rgba({selected_color})'.format(
-                selected_color=self.parent().selected_color)
-            )
+        if self.parent().is_active is False:
+            self.setStyleSheet(
+                'background-color: rgba({selected_color})'.format(
+                    selected_color=self.parent().selected_color)
+                )
         return QLabel.enterEvent(self, *args, **kwargs)
 
     def leaveEvent(self, *args, **kwargs):
@@ -360,7 +358,8 @@ class LadderItem(QLabel, ILadder):
         self.setStartPos(pos)
         self.parent().current_item = self
         self.tick_amount = 0
-        self.setIsActive(True)
+        self.parent().is_active = True
+        self.resetColor()
         return QLabel.mousePressEvent(self, event, *args, **kwargs)
 
     def mouseMoveEvent(self, event, *args, **kwargs):
@@ -368,7 +367,7 @@ class LadderItem(QLabel, ILadder):
         primary work horse for mouse movement slider
         '''
         MAGNITUDE_MULTIPLIER = self.parent().slide_distance
-        if self.getIsActive() is True:
+        if self.parent().is_active is True:
             # ===================================================================
             # get attrs
             # ===================================================================
@@ -411,7 +410,7 @@ class LadderItem(QLabel, ILadder):
 
     def mouseReleaseEvent(self, *args, **kwargs):
         # reset all of the items/attributes back to default
-        self.setIsActive(False)
+        self.parent().is_active = False
         self.parent().current_item = None
         self.parent().resetWidgetGradients()
         return QLabel.mouseReleaseEvent(self, *args, **kwargs)
