@@ -16,12 +16,6 @@ from qtpy.QtCore import *
 Slide direction change...
     midway through
 
-Gradient Update:
-    Not effect current selected value
-
-Expose Colors
-    
-
 '''
 
 
@@ -190,14 +184,16 @@ class LadderDelegate(QWidget):
     def is_active(self, boolean):
         self._is_active = boolean
 
-    def setValue(self, offset):
-        value = self.getValue()
+    def setValue(self, value):
+        '''
+        Sets the value on the parent widget.  This will need to be
+        exposed as an API eventually to be expandible.
+        '''
         if value is not None:
-            self.value = float(value) + offset
+            self.value = value
             
             # set value
-            
-            self.middle_item.setText(str(self.value))
+            self.middle_item.setValue(str(self.value))
             self.parent().setText(str(self.value))
 
     def getValue(self):
@@ -287,16 +283,18 @@ class LadderMiddleItem(QLabel, iLadderItem):
         self.value = value
 
     def getValue(self):
-        return self.value
+        return float(self.value)
 
 
 class LadderItem(QLabel, iLadderItem):
     '''
-    
-    @orig_value: float starting value of widget before opening of menu
+    @orig_value: <float> the value of the widget prior to starting a
+        value adjustment.  This is reset everytime a new value adjustment
+        is started.
     @value_mult: float how many units the drag should update
     @start_pos: QPoint starting position of drag
-    @is_active: whether or not the user is currently manipulating a value
+    @num_ticks: < int > how many units the user has moved.
+        ( units_moved * value_mult ) + orig_value = new_value
     '''
     def __init__(self, parent=None, value_mult='', height=50, width=None):
         super(LadderItem, self).__init__(parent)
@@ -305,6 +303,23 @@ class LadderItem(QLabel, iLadderItem):
         self.default_stylesheet = self.styleSheet()
         self.setFixedHeight(height)
         self.setFixedWidth(width)
+    
+    ''' PROPERTIES '''
+    @property
+    def num_ticks(self):
+        return self._num_ticks
+    
+    @num_ticks.setter
+    def num_ticks(self, num_ticks):
+        self._num_ticks = num_ticks
+    
+    @property
+    def orig_value(self):
+        return self._orig_value
+    
+    @orig_value.setter
+    def orig_value(self, orig_value):
+        self._orig_value = orig_value
     
     def setValueMult(self, value_mult):
         self.value_mult = value_mult
@@ -320,7 +335,7 @@ class LadderItem(QLabel, iLadderItem):
             self.start_pos = QCursor.pos()
         return self.start_pos
 
-    ''' PROPERTIES '''
+    ''' UTILS '''
 
     def resetColor(self):
         '''
@@ -351,14 +366,19 @@ class LadderItem(QLabel, iLadderItem):
 
     def mousePressEvent(self, event, *args, **kwargs):
         '''
-        if the user selects the MMB it will start the click/drag operation
+        if the user clicks on the item, it will start the click/drag value adjust
         '''
-        #if event.button() == Qt.MiddleButton:
+        # get initial position
         pos = QCursor.pos()
         self.setStartPos(pos)
         self.parent().current_item = self
-        self.tick_amount = 0
+        
+        # initialize attrs
+        self.orig_value = self.parent().middle_item.getValue()
+        self.num_ticks = 0
         self.parent().is_active = True
+
+        # reset style
         self.resetColor()
         return QLabel.mousePressEvent(self, event, *args, **kwargs)
 
@@ -368,15 +388,11 @@ class LadderItem(QLabel, iLadderItem):
         '''
         MAGNITUDE_MULTIPLIER = self.parent().slide_distance
         if self.parent().is_active is True:
-            # ===================================================================
             # get attrs
-            # ===================================================================
             current_pos = QCursor.pos()
             start_pos = self.getStartPos()
 
-            # ===================================================================
             # get magnitude
-            # ===================================================================
             xoffset = start_pos.x() - current_pos.x()
             yoffset = start_pos.y() - current_pos.y()
             magnitude = math.sqrt(
@@ -384,27 +400,24 @@ class LadderItem(QLabel, iLadderItem):
                 + pow(yoffset, 2)
             )
 
-            # ===================================================================
             # determine offset direction
-            # ===================================================================
             offset = self.getValueMult()
             if xoffset > 0:
-                offset = -self.getValueMult()
                 magnitude *= -1
             magnitude *= MAGNITUDE_MULTIPLIER
 
-            return_value = (int(magnitude) * self.getValueMult())
-
             # ===================================================================
             # update values
-            # note: this will look for a change with tick_amount vs magnitude
+            # note: this will look for a change with num_ticks vs magnitude
             #         to determine when a full value changed has happened
             # ===================================================================
             # update value
             xpos = math.fabs(math.modf(magnitude)[0])
-            if self.tick_amount != int(magnitude):
-                self.parent().setValue(offset)
-                self.tick_amount = int(magnitude)
+            if self.num_ticks != int(magnitude):
+                offset *= self.num_ticks
+                return_val = offset + self.orig_value
+                self.parent().setValue(return_val)
+                self.num_ticks = int(magnitude)
             self.parent().updateWidgetGradients(xpos)
         return QLabel.mouseMoveEvent(self, event, *args, **kwargs)
 
