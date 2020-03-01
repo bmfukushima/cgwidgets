@@ -24,6 +24,9 @@ from qtpy.QtCore import *
 
 class LadderDelegate(QWidget):
     '''
+    Widget that should be added as a popup during an event.  This should be
+    installed with the utils.installLadderDelegate(widget).
+    
     @item_list: list of all of the items
     @widget widget to send signal to update to
     @is_active  boolean to determine if the widget
@@ -201,7 +204,7 @@ class LadderDelegate(QWidget):
             try:
                 parent.setValue(value)
             except AttributeError:
-                print('{} has no method \"setValue\"'.format(parent))
+                print('{} has no method \"setValue(value)\"'.format(parent))
 
     def getValue(self):
         try:
@@ -464,9 +467,6 @@ class TestWidget(QLineEdit):
             ladder.show()
         return QLineEdit.mousePressEvent(self, event, *args, **kwargs)
 
-
-#if __name__ == '__main__':
-# tested line edit, label
 
 '''
 app = QApplication(sys.argv)
