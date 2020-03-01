@@ -12,9 +12,12 @@ from qtpy.QtCore import *
 - Detect if close to edge...
     - Detect center point function
     - only needs to handle y pos
-        
-Slide direction change...
-    midway through
+
+- Clean up properties/API
+    - private/public
+    - syntax:
+        - public getter/setter
+        - private @property a_property
 
 '''
 
@@ -191,10 +194,14 @@ class LadderDelegate(QWidget):
         '''
         if value is not None:
             self.value = value
-            
+            parent = self.parent()
             # set value
             self.middle_item.setValue(str(self.value))
-            self.parent().setText(str(self.value))
+            parent.setText(str(self.value))
+            try:
+                parent.setValue(value)
+            except AttributeError:
+                print('{} has no method \"setValue\"'.format(parent))
 
     def getValue(self):
         try:
@@ -439,6 +446,10 @@ class TestWidget(QLineEdit):
         self.setGeometry(pos.x(), pos.y(), 200, 100)
         self.value_list = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
 
+    def setValue(self, value):
+        print(value)
+        self.setText(str(value))
+
     def mousePressEvent(self, event, *args, **kwargs):
         '''
         trigger to active the popup menu
@@ -457,10 +468,13 @@ class TestWidget(QLineEdit):
 #if __name__ == '__main__':
 # tested line edit, label
 
+'''
 app = QApplication(sys.argv)
 menu = TestWidget()
 menu.show()
 sys.exit(app.exec_())
+'''
+
 
 
 
