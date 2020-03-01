@@ -1,2 +1,2 @@
 from . import widgets
-from . import utils
+from . import __utils__
