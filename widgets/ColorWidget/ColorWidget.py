@@ -6,7 +6,7 @@ from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 from qtpy.QtGui import *
 
-from cgqtpy.delegates import LadderDelegate
+from ...delegates import LadderDelegate
 
 '''
 KATANA BUGS:
@@ -1110,9 +1110,11 @@ class SETTINGS(object):
 
 #if __name__ == '__main__':
 
+
 '''
 app = QApplication(sys.argv)
 color_widget = ColorWidget()
 color_widget.show()
 sys.exit(app.exec_())
 '''
+
