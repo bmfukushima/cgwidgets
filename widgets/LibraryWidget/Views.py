@@ -1,17 +1,4 @@
-from collections import OrderedDict
-import json
-import math
-import os
-import re
-import sys
-
-from qtpy.QtWidgets import *
-from qtpy.QtCore import *
-from qtpy.QtGui import *
-
-from . import Utils
 '''
-
 Detailed:
     # required...
     - Text Edit fields need to be changed... so users can't break them...
@@ -25,6 +12,19 @@ List:
     one long list? Like really freaking long?
 
 '''
+from collections import OrderedDict
+import json
+import math
+import os
+import re
+import sys
+
+from qtpy.QtWidgets import *
+from qtpy.QtCore import *
+from qtpy.QtGui import *
+
+from .__utils__ import iUtils
+from ... import __utils__ as gUtils
 
 
 class ImageListModel(QAbstractTableModel):
@@ -249,9 +249,9 @@ class ImageListModel(QAbstractTableModel):
     def updateViews(self):
         '''
         Updates all of the views, this is not attached to this model
-        in any way... so I could probably just send this to a Utils...
+        in any way... so I could probably just send this to a iUtils...
         '''
-        main_widget = Utils.getMainWidget(self._parent_widget)
+        main_widget = gUtils.getMainWidget(self._parent_widget, 'Library')
 
         detailed_view = main_widget.detailed_view
         thumbnail_view = main_widget.thumbnail_view
@@ -368,7 +368,7 @@ class ThumbnailViewWidget(QScrollArea):
         self.model = model
         # reset
         # self.resetHeaderWidgetLists()
-        Utils.clearLayout(self.main_layout)
+        gUtils.clearLayout(self.main_layout)
 
         # populate model
         widget_list = []
@@ -412,7 +412,7 @@ class ThumbnailViewWidget(QScrollArea):
         image_size = self.image_size
         w = self.geometry().width() - 50
         
-        border_width = Utils.getSetting('IMAGE_SELECTED_BORDER_WIDTH')
+        border_width = iUtils.getSetting('IMAGE_SELECTED_BORDER_WIDTH')
         # compensate for scroll bar
         if self.verticalScrollBar().isVisible() is True:
             scroll_bar_width = self.verticalScrollBar().width()
@@ -440,7 +440,7 @@ class ThumbnailViewWidget(QScrollArea):
             self.num_columns = num_columns
 
         # clear layout
-        Utils.clearLayout(self.main_layout)
+        gUtils.clearLayout(self.main_layout)
 
         # populate layout
         if hasattr(self, 'widget_list'):
@@ -452,7 +452,7 @@ class ThumbnailViewWidget(QScrollArea):
                 )
 
     def update(self):
-        self.image_size = Utils.getMainWidget(self).image_size
+        self.image_size = gUtils.getMainWidget(self, 'Library').image_size
         # update model
         try:
             self.setModel(self.model)
@@ -491,7 +491,7 @@ class ThumbnailViewItem(QWidget):
         vbox.setContentsMargins(0, 0, 0, 0)
         self.setLayout(vbox)
 
-        self.image_widget, self.pixmap = Utils.createImageWidget(
+        self.image_widget, self.pixmap = iUtils.createImageWidget(
             self,
             self.json,
             image_size
@@ -578,7 +578,7 @@ class DetailedViewWidget(QWidget):
         self.main_table = DetailedViewTable(self, hscrollbar=self.hscrollbar, vscrollbar=self.vscrollbar)
 
         # set widget sizes
-        main_widget = Utils.getMainWidget(self)
+        main_widget = gUtils.getMainWidget(self, 'Library')
         self.main_layout.setSpacing(main_widget.main_splitter_handle_width)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
 
@@ -610,7 +610,7 @@ class DetailedViewWidget(QWidget):
 
         # reset
         self.resetHeaderWidgetLists()
-        Utils.clearLayout(self.main_table.main_layout)
+        gUtils.clearLayout(self.main_table.main_layout)
 
         # update view
         for row in range(model.rowCount()):
@@ -625,8 +625,8 @@ class DetailedViewWidget(QWidget):
         self.vheader.update()
 
     def update(self):
-        # self.image_size = Utils.getMainWidget(self).image_size
-        self.row_height = Utils.getMainWidget(self).image_size
+        # self.image_size = gUtils.getMainWidget(self, 'Library').image_size
+        self.row_height = gUtils.getMainWidget(self, 'Library').image_size
         # update model
         try:
             self.setModel(self.model)
@@ -683,7 +683,7 @@ class DetailedViewWidget(QWidget):
         # update widgets
         self.main_table.main_layout.setSpacing(row_spacing)
 
-        border_width = Utils.getSetting('IMAGE_SELECTED_BORDER_WIDTH')
+        border_width = iUtils.getSetting('IMAGE_SELECTED_BORDER_WIDTH')
         # self.vheader.main_layout.setSpacing(row_spacing + (border_width * 2))
         self.vheader.main_layout.setSpacing(row_spacing)
 
@@ -786,7 +786,7 @@ class DetailedViewVerticalHeader(QWidget):
         self.spacer.setFixedHeight(
             self.parent().header_height
             + self.parent().row_spacing
-            - (Utils.getSetting('IMAGE_SELECTED_BORDER_WIDTH') * 2)
+            - (iUtils.getSetting('IMAGE_SELECTED_BORDER_WIDTH') * 2)
         )
         # set up main layout
 
@@ -802,7 +802,7 @@ class DetailedViewVerticalHeader(QWidget):
         proxy_layout.setContentsMargins(0, 0, 0, 0)
         proxy_layout.setSpacing(0)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
-        border_width = Utils.getSetting('IMAGE_SELECTED_BORDER_WIDTH')
+        border_width = iUtils.getSetting('IMAGE_SELECTED_BORDER_WIDTH')
         self.main_layout.setSpacing(self.parent().row_spacing + (border_width * 2))
         self.main_layout.setAlignment(Qt.AlignHCenter | Qt.AlignTop)
 
@@ -839,7 +839,7 @@ class DetailedViewVerticalHeader(QWidget):
         when the size changes, this updates the image
         that is displayed to the user.
         '''
-        Utils.clearLayout(self.main_layout)
+        gUtils.clearLayout(self.main_layout)
         self.populate(self.jsonlist)
     """
 
@@ -847,10 +847,10 @@ class DetailedViewVerticalHeader(QWidget):
         '''
         updates the row height
         '''
-        Utils.clearLayout(self.main_layout)
+        gUtils.clearLayout(self.main_layout)
         self.populate()
 
-        row_height = self.getRowHeight() + (Utils.getSetting('IMAGE_SELECTED_BORDER_WIDTH') * 2)
+        row_height = self.getRowHeight() + (iUtils.getSetting('IMAGE_SELECTED_BORDER_WIDTH') * 2)
         self.setFixedWidth(row_height)
 
     def populate(self):
@@ -859,7 +859,7 @@ class DetailedViewVerticalHeader(QWidget):
         for row in range(model.rowCount()):
             jsondata = model.imageJSONList[row]
             if jsondata['filepath'] not in model.metadata['hidden']:
-                image_widget, self.pixmap = Utils.createImageWidget(
+                image_widget, self.pixmap = iUtils.createImageWidget(
                     self, jsondata, self.getRowHeight()
                 )
                 #image_widget.setFixedWidth(self.getRowHeight())

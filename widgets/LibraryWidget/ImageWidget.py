@@ -14,8 +14,8 @@ from qtpy.QtGui import *
 from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 
-from . import Utils
-
+from .__utils__ import iUtils
+from ... import __utils__ as gUtils
 
 class ImageWidget(QLabel):
     '''
@@ -45,7 +45,7 @@ class ImageWidget(QLabel):
     ''' PROPERTIES '''
 
     def isSelected(self):
-        model = Utils.getModel(self)
+        model = iUtils().getModel(self)
         selection_list = model.metadata['selected']
         if self.json_file in selection_list:
             return True
@@ -53,9 +53,9 @@ class ImageWidget(QLabel):
             return False
 
     def setSelected(self):
-        stylesheet = Utils.getSetting('IMAGE_SELECTED_SS')
+        stylesheet = iUtils().getSetting('IMAGE_SELECTED_SS')
         self.setStyleSheet(stylesheet)
-        model = Utils.getModel(self)
+        model = iUtils().getModel(self)
         model.appendToSelectionList(self.json_file)
 
     def setUnselected(self):
@@ -65,7 +65,7 @@ class ImageWidget(QLabel):
             border-color: rgba(0,0,0,0)\
         '''
         self.setStyleSheet(style_sheet)
-        model = Utils.getModel(self)
+        model = iUtils().getModel(self)
         model.removeFromSelectionList(self.json_file)
 
     '''
@@ -220,7 +220,7 @@ class ImageWidget(QLabel):
 
     def mousePressEvent(self, event, *args, **kwargs):
         self.button = event.button()
-        main_widget = Utils.getMainWidget(self)
+        main_widget = gUtils.getMainWidget(self, 'Library')
 
         # set selection
         #selection_list = self.model.metadata['selected']
@@ -247,7 +247,7 @@ class ImageWidget(QLabel):
                     self.setSelected()
 
             self._activated = False
-        model = Utils.getModel(self)
+        model = iUtils().getModel(self)
         model.updateViews()
         # not to sure on why this goes bananas
         # RuntimeError: wrapped C/C++ object of type DefaultImage has been deleted
@@ -272,7 +272,7 @@ class DefaultImage(ImageWidget):
         self._activated = False
 
         self.json_file = json_file
-        json_data = Utils.getJSONData(json_file)
+        json_data = gUtils.getJSONData(json_file)
 
         self.proxyImageDir = json_data['proxy']
         self.proxyImageList = (sorted(os.listdir(json_data['proxy'])))
@@ -324,7 +324,7 @@ class DefaultImage(ImageWidget):
                 self.setSelected()
                 self._activated = True
                 # Activate full screen display
-                main_widget = Utils.getMainWidget(self)
+                main_widget = gUtils.getMainWidget(self, 'Library')
                 main_widget.activateFullScreenDisplay()
 
         def rightMousePress():
@@ -344,7 +344,7 @@ class DefaultImage(ImageWidget):
     '''
     def mouseReleaseEvent(self, event, *args, **kwargs):
         if self.button == Qt.LeftButton:
-            model = Utils.getModel(self)
+            model = iUtils().getModel(self)
             model.updateViews()
             return ImageWidget.mouseReleaseEvent(self, event, *args, **kwargs)
     '''

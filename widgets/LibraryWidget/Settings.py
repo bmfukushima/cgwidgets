@@ -5,12 +5,12 @@ import sys
 
 from qtpy.QtWidgets import *
 
-from . import Utils
+from .__utils__ import iUtils
 
 
 class Settings(object):
     # PUBLISH WIDGET
-    PUBLISH_CONTAINER_SS = Utils.createGroupBoxSS(2, 5)
+    PUBLISH_CONTAINER_SS = iUtils.createGroupBoxSS(2, 5)
     PUBLISH_GROUP_CONTENT_MARGINS = 15
 
     # Views
@@ -20,7 +20,7 @@ class Settings(object):
         border-color: rgba(255,200,0,255);\
         border-style: solid\
     '''.format(IMAGE_SELECTED_BORDER_WIDTH)
-    IMAGE_DESELECTED_SS = Utils.createThumbnailSS(IMAGE_SELECTED_BORDER_WIDTH, False)
+    IMAGE_DESELECTED_SS = iUtils.createThumbnailSS(IMAGE_SELECTED_BORDER_WIDTH, False)
 
     # IMAGE
     FULL_SCREEN_TEXT_SS = '''
@@ -29,7 +29,7 @@ class Settings(object):
     '''
 
     # TOP BAR
-    TOP_BAR_CONTAINER_SS = Utils.createGroupBoxSS(1, 20)
+    TOP_BAR_CONTAINER_SS = iUtils.createGroupBoxSS(1, 20)
     # image sizes
     IMAGE_SIZES = OrderedDict()
     IMAGE_SIZES['small'] = 25
@@ -58,7 +58,7 @@ if __name__ == '__main__':
 
     settings_dict = {
         # PUBLISH WIDGET
-        'PUBLISH_CONTAINER_SS': Utils.createGroupBoxSS(2, 5),
+        'PUBLISH_CONTAINER_SS': iUtils.createGroupBoxSS(2, 5),
         'PUBLISH_GROUP_CONTENT_MARGINS': 15,
         # Views
         'IMAGE_SELECTED_BORDER_WIDTH': IMAGE_SELECTED_BORDER_WIDTH,
@@ -67,7 +67,7 @@ if __name__ == '__main__':
             'border-color: rgba(255,200,0,255)',
             'border-style: solid'
         ],
-        'IMAGE_DESELECTED_SS': Utils.createThumbnailSS(IMAGE_SELECTED_BORDER_WIDTH, False),
+        'IMAGE_DESELECTED_SS': iUtils.createThumbnailSS(IMAGE_SELECTED_BORDER_WIDTH, False),
         # IMAGE
         'FULL_SCREEN_TEXT_SS': [
             'background-color:rgba(64,64,64,128)',
@@ -75,7 +75,7 @@ if __name__ == '__main__':
         ],
 
         # TOP BAR
-        'TOP_BAR_CONTAINER_SS': Utils.createGroupBoxSS(1, 20),
+        'TOP_BAR_CONTAINER_SS': iUtils.createGroupBoxSS(1, 20),
         # image sizes
         'IMAGE_SIZES': IMAGE_SIZES,
 

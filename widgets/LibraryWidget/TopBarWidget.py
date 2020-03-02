@@ -3,8 +3,8 @@ import math
 from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 
-from . import Utils
-
+from .__utils__ import iUtils
+from ... import __utils__ as gUtils
 
 class TopBarMainWidget(QWidget):
     '''
@@ -37,7 +37,7 @@ class TopBarWidgetContainer(QGroupBox):
         self.setTitle(title)
 
         # set up stylesheet
-        self.setStyleSheet(Utils.getSetting('TOP_BAR_CONTAINER_SS'))
+        self.setStyleSheet(iUtils.getSetting('TOP_BAR_CONTAINER_SS'))
 
         # set up layout
         if layout.startswith('h'):
@@ -57,8 +57,8 @@ class ViewModeDropDown(QComboBox):
 
     def indexChanged(self):
         mode = self.currentText()
-        main_widget = Utils.getMainWidget(self)
-        model = Utils.getModel(self)
+        main_widget = gUtils.getMainWidget(self, 'Library')
+        model = iUtils.getModel(self)
         if mode == 'Publish':
             self.switchToPublishView(main_widget)
         elif mode == 'Thumbnail':
@@ -105,7 +105,7 @@ class ImageSizeButtonContainer(TopBarWidgetContainer):
         super(ImageSizeButtonContainer, self).__init__(parent, title='Display Size', layout='h')
         # attrs
         self.spacing = 10
-        self.thumbnail_view_sizes = Utils.getSetting('IMAGE_SIZES')
+        self.thumbnail_view_sizes = iUtils.getSetting('IMAGE_SIZES')
         self.thumbnail_view_buttons = {}
 
         # setup spacing
@@ -123,7 +123,7 @@ class ImageSizeButtonContainer(TopBarWidgetContainer):
             self.main_layout.addWidget(size_button)
 
         # set width
-        width = ((size_button.height() + self.spacing)* len(Utils.getSetting('IMAGE_SIZES'))) + 40
+        width = ((size_button.height() + self.spacing)* len(iUtils.getSetting('IMAGE_SIZES'))) + 40
         self.setFixedWidth(width)
 
 
@@ -152,13 +152,13 @@ class ImageSizeButton(QPushButton):
         # creates a 'core' and a 'border' to give the
         # illusion of different sized widgets
         core_size = (
-            h - (math.fabs((index + 1 ) - len(Utils.getSetting('IMAGE_SIZES'))) * 5)
+            h - (math.fabs((index + 1 ) - len(iUtils.getSetting('IMAGE_SIZES'))) * 5)
         )
         self.border_width = (h - core_size) * .5
 
         # set style sheet
-        #stylesheet = Utils.createThumbnailSS(self.border_width, False)
-        self.setStyleSheet(Utils.createThumbnailSS(self.border_width, False))
+        #stylesheet = iUtils.createThumbnailSS(self.border_width, False)
+        self.setStyleSheet(iUtils.createThumbnailSS(self.border_width, False))
         self.clicked.connect(self.setSelected)
 
     def clearUserSelection(self):
@@ -170,7 +170,7 @@ class ImageSizeButton(QPushButton):
             size_button = thumbnail_view_widgets[size_name]
             if size_button != self:
                 size_button.setChecked(False)
-                size_button.setStyleSheet(Utils.createThumbnailSS(size_button.border_width, False))
+                size_button.setStyleSheet(iUtils.createThumbnailSS(size_button.border_width, False))
         pass
 
     def setSelected(self):
@@ -178,10 +178,10 @@ class ImageSizeButton(QPushButton):
         Updates the thumbnail size of the directory views
         '''
         # set up main widget properties
-        model = Utils.getModel(self)
+        model = iUtils.getModel(self)
         self.clearUserSelection()
-        self.setStyleSheet(Utils.createThumbnailSS(self.border_width, True))
-        main_widget = Utils.getMainWidget(self)
+        self.setStyleSheet(iUtils.createThumbnailSS(self.border_width, True))
+        main_widget = gUtils.getMainWidget(self, 'Library')
 
         scroll_bar_width = main_widget.detailed_view.vscrollbar.width()
         splitter_width = main_widget.main_splitter_handle_width

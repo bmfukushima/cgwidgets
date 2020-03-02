@@ -4,8 +4,8 @@ import sys
 from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 
-from . import Utils
-
+from .__utils__ import iUtils
+from ... import __utils__ as gUtils
 
 class PublishWidget(QWidget):
     '''
@@ -29,7 +29,7 @@ class PublishWidget(QWidget):
     def __init__(self, parent=None):
         super(PublishWidget, self).__init__(parent)
         # Container Style Sheet
-        self.container_ss = Utils.getSetting('PUBLISH_CONTAINER_SS')
+        self.container_ss = iUtils.getSetting('PUBLISH_CONTAINER_SS')
 
         # need to fix these options... ['rig', 'emit', 'block', 'hdri']
         self.publish_options = [
@@ -75,7 +75,7 @@ class PublishWidget(QWidget):
         container.setTitle(title)
         container.setStyleSheet(self.container_ss)
         layout = QVBoxLayout()
-        m = Utils.getSetting('PUBLISH_GROUP_CONTENT_MARGINS')
+        m = iUtils.getSetting('PUBLISH_GROUP_CONTENT_MARGINS')
         layout.setContentsMargins(m, m, m, m)
         container.setLayout(layout)
 

@@ -2,7 +2,7 @@
 need to clean up..
     - move all document all methods/properties in classes
     - move to UML chart eventually...
-- Utils and Settings Utils are going to conflict...
+- iUtils and Settings iUtils are going to conflict...
     - and then add the Settings tab?
 
 API:
@@ -178,11 +178,12 @@ import sys
 from . import ImageWidget
 from .PublishWidget import PublishWidget
 from .TopBarWidget import TopBarMainWidget
-from . import Utils
+from .__utils__ import iUtils
+from ... import __utils__ as gUtils
 from .Views import *
 
 
-class LibraryWidget(QWidget):
+class LibraryWidget(QWidget, iUtils):
     '''
     @selection_list: a list of Image Widgets to display
         which ones are currently selected
@@ -313,7 +314,7 @@ class LibraryWidget(QWidget):
         self.model = ImageListModel(parent_widget=self)
         # Default View
         mode_widget = self.top_bar_widget.mode_container.mode_menu
-        default_view = Utils.getSetting('DEFAULT_VIEW')
+        default_view = iUtils.getSetting('DEFAULT_VIEW')
         mode_index = mode_widget.model().findItems(default_view, Qt.MatchExactly)
         try:
             row = mode_index[0].index().row()
@@ -326,7 +327,7 @@ class LibraryWidget(QWidget):
         for index in range(size_layout.count()):
             widget = size_layout.itemAt(index).widget()
             widget_size_name = widget.name
-            default_size = Utils.getSetting('DEFAULT_SIZE')
+            default_size = iUtils.getSetting('DEFAULT_SIZE')
             if widget_size_name == default_size:
                 widget.setSelected()
 
@@ -431,7 +432,7 @@ class LibraryWidget(QWidget):
                 self.drag_image_path
                 self.drag_proxy_image_path
             except AttributeError:
-                json_data = Utils.getJSONData(widget.json_file)
+                json_data = gUtils.getJSONData(widget.json_file)
                 if 'default_image' in json_data.keys():
                     current_image = '/'.join([widget.proxyImageDir, json_data['default_image']])
                     if os.path.isfile(current_image) is False:
@@ -571,7 +572,7 @@ class FullScreenImageViewer(ThumbnailViewWidget):
         '''
 
         # get attributes
-        n = len(Utils.getMainWidget(self).temp_selection_list)
+        n = len(gUtils.getMainWidget(self, 'Library').temp_selection_list)
         if n == 0:
             '''
             small hack, when the widget is initializing it will try to divide by 0
@@ -582,7 +583,7 @@ class FullScreenImageViewer(ThumbnailViewWidget):
         y = self.height()
 
         # calculate offset for spacing + border widths
-        image_selected_border_width= Utils.getSetting('IMAGE_SELECTED_BORDER_WIDTH')
+        image_selected_border_width= iUtils.getSetting('IMAGE_SELECTED_BORDER_WIDTH')
         border_width = image_selected_border_width
         if n == 1:
             offset = border_width
@@ -667,7 +668,7 @@ class FullScreenImageViewer(ThumbnailViewWidget):
             temp_dict[widget.json_file]['currentImage'] = widget.currentImage
             temp_dict[widget.json_file]['proxyImageIndex'] = widget.proxyImageIndex
         # clear layout
-        Utils.clearLayout(self.main_layout)
+        gUtils.clearLayout(self.main_layout)
 
         # populate model
         widget_list = []
@@ -726,7 +727,7 @@ class FullScreenImageViewer(ThumbnailViewWidget):
         @selected: <bool> if True, will only set the previous image
             of the selected image.  If False, will update ALL images
         '''
-        #image_list = Utils.getModel(self).metadata['selected']
+        #image_list = iUtils.getModel(self).metadata['selected']
         for widget in self.widget_list:
             if selected is True:
                 if widget.isSelected() is True:
@@ -739,7 +740,7 @@ class FullScreenImageViewer(ThumbnailViewWidget):
         When this widget is hidden from view, it returns the
         previous selection back to the user
         '''
-        main_widget = Utils.getMainWidget(self)
+        main_widget = gUtils.getMainWidget(self, 'Library')
         main_widget.model.metadata['selected'] = main_widget.temp_selection_list
         main_widget.model.updateViews()
         return ThumbnailViewWidget.hideEvent(self, *args, **kwargs)
@@ -749,7 +750,7 @@ class FullScreenImageViewer(ThumbnailViewWidget):
         When this widget is resized, it updates the sizes of the widgets
         to get the most possible space
         '''
-        main_widget = Utils.getMainWidget(self)
+        main_widget = gUtils.getMainWidget(self, 'Library')
         self.update(selection_list=main_widget.temp_selection_list)
         #return ThumbnailViewWidget.resizeEvent(self, event, *args, **kwargs)
 
@@ -767,7 +768,7 @@ class FullScreenImageItem(ImageWidget.ImageWidget):
         # set up json data
 
         self.json_file = json_file
-        json_data = Utils.getJSONData(json_file)
+        json_data = gUtils.getJSONData(json_file)
 
         self.image_width = image_width
 
@@ -812,7 +813,7 @@ class FullScreenImageItem(ImageWidget.ImageWidget):
             QSizePolicy.Expanding, QSizePolicy.Expanding
         )
 
-        FULL_SCREEN_TEXT_SS = Utils.getSetting('FULL_SCREEN_TEXT_SS')
+        FULL_SCREEN_TEXT_SS = iUtils.getSetting('FULL_SCREEN_TEXT_SS')
         style_sheet = FULL_SCREEN_TEXT_SS
         self.text_widget.setStyleSheet(style_sheet)
 
@@ -891,7 +892,7 @@ class FullScreenImageItem(ImageWidget.ImageWidget):
                         selected = False
 
                     # update the image
-                    main_widget = Utils.getMainWidget(self)
+                    main_widget = gUtils.getMainWidget(self, 'Library')
                     full_screen_view = main_widget.full_screen_image
                     if mmd > change_distance:
                         full_screen_view.previousImage(selected=selected)
@@ -968,7 +969,7 @@ class SearchBar(QLineEdit):
         '''
         accepted_keys = [Qt.Key_Enter, Qt.Key_Return]
         if event.key() in accepted_keys:
-            model = Utils.getModel(self)
+            model = iUtils.getModel(self)
             model.populateHideList(self.text())
             model.updateViews()
 
@@ -1035,7 +1036,7 @@ class DirList(QTreeWidget):
         views to display all of the images located in that directory
         and its subdirectories in the view
         '''
-        main_widget = Utils.getMainWidget(self)
+        main_widget = gUtils.getMainWidget(self, 'Library')
 
         # get all items
         item = self.currentItem()
