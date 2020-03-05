@@ -15,12 +15,6 @@ Slider no longer updating....
     - Detect center point function
     - only needs to handle y pos
 
-- Clean up properties/API
-    - private/public
-    - syntax:
-        - public getter/setter
-        - private @property a_property
-
 #------------------------------------------------------------------- API
     seperate display option "discrete" mode:
         - Transparent while sliding option
@@ -331,8 +325,10 @@ class LadderItem(QLabel, iLadderItem):
     '''
     def __init__(self, parent=None, value_mult='', height=50, width=None):
         super(LadderItem, self).__init__(parent)
+
+        # set default attrs
+        self._value_mult = value_mult
         self.setText(str(value_mult))
-        self.setValueMult(value_mult)
         self.default_stylesheet = self.styleSheet()
         self.setFixedHeight(height)
         self.setFixedWidth(width)
@@ -354,32 +350,36 @@ class LadderItem(QLabel, iLadderItem):
     def orig_value(self, orig_value):
         self._orig_value = orig_value
     
-    def setValueMult(self, value_mult):
-        self._value_mult = value_mult
-
-    def getValueMult(self):
+    @property
+    def value_mult(self):
         return self._value_mult
 
-    def setStartPos(self, pos):
-        self.start_pos = pos
+    @value_mult.setter
+    def value_mult(self, value_mult):
+        self._value_mult = value_mult
 
-    def getStartPos(self):
-        if not hasattr(self, 'start_pos'):
-            self.start_pos = QCursor.pos()
-        return self.start_pos
+    @property
+    def start_pos(self):
+        if not hasattr(self, '_start_pos'):
+            self._start_pos = QCursor.pos()
+        return self._start_pos
+
+    @start_pos.setter
+    def start_pos(self, pos):
+        self._start_pos = pos
 
     ''' UTILS '''
 
-    def resetWidgetGradients(self):
+    def __resetWidgetGradients(self):
         '''
         Returns all of the items back to their default color
         '''
         item_list = self.parent().item_list
         for index, item in enumerate(item_list):
             if index != self.parent().middle_item_index:
-                item.resetColor()
+                item.__resetColor()
 
-    def resetColor(self):
+    def __resetColor(self):
         '''
         resets the color widget color back to default
         '''
@@ -412,7 +412,7 @@ class LadderItem(QLabel, iLadderItem):
         '''
         # get initial position
         pos = QCursor.pos()
-        self.setStartPos(pos)
+        self.start_pos = pos
         self.parent().current_item = self
         
         # initialize attrs
@@ -421,7 +421,7 @@ class LadderItem(QLabel, iLadderItem):
         self.parent().is_active = True
 
         # reset style
-        self.resetColor()
+        self.__resetColor()
         return QLabel.mousePressEvent(self, event, *args, **kwargs)
 
     def mouseMoveEvent(self, event, *args, **kwargs):
@@ -432,7 +432,7 @@ class LadderItem(QLabel, iLadderItem):
         if self.parent().is_active is True:
             # get attrs
             current_pos = QCursor.pos()
-            start_pos = self.getStartPos()
+            start_pos = self.start_pos
 
             # get magnitude
             xoffset = start_pos.x() - current_pos.x()
@@ -443,7 +443,7 @@ class LadderItem(QLabel, iLadderItem):
             )
 
             # determine offset direction
-            offset = self.getValueMult()
+            offset = self.value_mult
             if xoffset > 0:
                 magnitude *= -1
             magnitude *= MAGNITUDE_MULTIPLIER
@@ -467,7 +467,7 @@ class LadderItem(QLabel, iLadderItem):
         # reset all of the items/attributes back to default
         self.parent().is_active = False
         self.parent().current_item = None
-        self.resetWidgetGradients()
+        self.__resetWidgetGradients()
         return QLabel.mouseReleaseEvent(self, *args, **kwargs)
 
 
@@ -498,11 +498,9 @@ class TestWidget(QLineEdit):
             ladder.show()
         return QLineEdit.mousePressEvent(self, event, *args, **kwargs)
 
-
-
-
+'''
 app = QApplication(sys.argv)
 menu = TestWidget()
-print(help(LadderDelegate))
 menu.show()
 sys.exit(app.exec_())
+'''
