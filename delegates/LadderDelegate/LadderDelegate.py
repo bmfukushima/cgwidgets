@@ -5,9 +5,10 @@ from qtpy.QtGui import *
 from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 
-'''
+"""
 #-------------------------------------------------------------------------- Bugs
-Slider no longer updating....
+Install delegate...
+    needs to have value on creation/installation of event filter...
 
 # -----------------------------------------------------------------------To Do
 
@@ -22,14 +23,23 @@ Slider no longer updating....
         - minimal value slider ticker...
 
     
-'''
+"""
 
 
 class LadderDelegate(QWidget):
-    '''
+    """
     Widget that should be added as a popup during an event.  This should be
     installed with the utils.installLadderDelegate(widget).
     
+    kwargs: 
+        #@widget=None,
+        @pos=None,
+        @value_list=None,
+        @user_input: <QEvent.Type>
+    
+        The action for the user to do to trigger the ladder to be installed
+        ie.
+            QEvent.MouseButtonPress
     - 
     @item_list: list of all of the items
     @is_active  boolean to determine if the widget
@@ -64,17 +74,16 @@ class LadderDelegate(QWidget):
     the amount that the current value should be offset.
 
     The setValue, will then need to do the final math to calculate the result
-    '''
+    """
     def __init__(
             self, parent=None,
             widget=None,
             pos=None,
-            value_list=None
+            value_list=None,
+            user_input=QEvent.MouseButtonPress,
     ):
         super(LadderDelegate, self).__init__(parent)
-        if self.getValue() is None:
-            print('This widgets like numbers. Not whatever you put in here.')
-            return
+
         layout = QVBoxLayout()
         self.setLayout(layout)
         # self.setWidget(widget)
@@ -86,6 +95,7 @@ class LadderDelegate(QWidget):
         self.setSelectionColor((32, 32, 32, 255))
         self.setItemHeight(50)
         self.setMiddleItemBorderWidth(2)
+        self.setUserInput(user_input)
 
         # set up style
         layout.setContentsMargins(0, 0, 0, 0)
@@ -122,7 +132,13 @@ class LadderDelegate(QWidget):
 
         self.__setPosition()
 
-    ''' API '''
+    """ API """
+
+    def getUserInput(self):
+        return self._user_input
+    
+    def setUserInput(self, user_input):
+        self._user_input = user_input
 
     def getMiddleItemBorderWidth(self):
         return self._middle_item_border_width
@@ -160,7 +176,7 @@ class LadderDelegate(QWidget):
     def setItemHeight(self, item_height):
         self._item_height = item_height
 
-    ''' PROPERTIES '''
+    """ PROPERTIES """
 
     @property
     def current_item(self):
@@ -188,19 +204,19 @@ class LadderDelegate(QWidget):
 
     @item_list.setter
     def item_list(self, item_list):
-        '''
+        """
         list of widgets
-        '''
+        """
         self._item_list = item_list
 
     def setValue(self, value):
-        '''
+        """
         @value: <float>
         Sets the value on the parent widget.
         
         creating a setValue(value) method on the parent widget
         will run this method last when setting the value
-        '''
+        """
         if value is not None:
             self._value = value
             parent = self.parent()
@@ -219,13 +235,13 @@ class LadderDelegate(QWidget):
         except ValueError:
             return None
 
-    ''' UTILS '''
+    """ UTILS """
 
     def __setPosition(self):
-        '''
+        """
         sets the position of the delegate relative to the
         widget that it is adjusting
-        '''
+        """
         num_values = len(self.item_list)
         pos = self.parent().pos()
 
@@ -240,7 +256,11 @@ class LadderDelegate(QWidget):
         )
         self.move(pos)
 
-    ''' EVENTS '''
+    """ EVENTS """
+
+    def showEvent(self, *args, **kwargs):
+        self.middle_item.setValue(self.getValue())
+        return QWidget.showEvent(self, *args, **kwargs)
 
     def leaveEvent(self, event, *args, **kwargs):
         if self.is_active is False:
@@ -251,24 +271,35 @@ class LadderDelegate(QWidget):
         if event.key() == Qt.Key_Escape:
             self.close()
         return QWidget.keyPressEvent(self, event, *args, **kwargs)
+    
+    def eventFilter(self, obj, event, *args, **kwargs):
+        """
+        could stick this on the LadderDelegate?
+        """
+        if self.getValue() is None:
+            # print('This widgets like numbers. Not whatever you put in here.')
+            return QWidget.eventFilter(self, obj, event, *args, **kwargs)
+        if event.type() == self.getUserInput():
+            self.show()
+        return QWidget.eventFilter(self, obj, event, *args, **kwargs)
 
 
 class iLadderItem():
     def updateColor(self, xpos):
-        '''
+        """
         @xpos: floatf of single channel rgb color
         sets the style sheet to converge from left
         to right so that each full convergance will
         display another increment in value 
-        '''
-        style_sheet = '''
+        """
+        style_sheet = """
         background: qlineargradient(
             x1:{xpos1} y1:0,
             x2:{xpos2} y2:0,
             stop:0 rgba{bgcolor},
             stop:1 rgba{fgcolor}
         );
-        '''.format(
+        """.format(
                 xpos1=str(xpos),
                 xpos2=str(xpos + 0.01),
                 bgcolor=repr(self.parent().getBGSlideColor()),
@@ -277,10 +308,10 @@ class iLadderItem():
         self.setStyleSheet(style_sheet)
 
     def updateWidgetGradients(self, xpos):
-        '''
+        """
         Draws out the moving slider over the items to show
         the user how close they are to the next tick
-        '''
+        """
         item_list = self.parent().item_list
         for index, item in enumerate(item_list):
             if index is not self.parent().middle_item_index:
@@ -289,11 +320,11 @@ class iLadderItem():
     
 
 class LadderMiddleItem(QLabel, iLadderItem):
-    '''
+    """
     Poorly named class... this is the display label to overlay
     over the current widget.  Due to how awesomely bad
     transparency is to do in Qt =\
-    '''
+    """
     def __init__(self, parent=None, height=50, value=None, width=100):
         super(LadderMiddleItem, self).__init__(parent)
         self.setValue(value)
@@ -314,7 +345,7 @@ class LadderMiddleItem(QLabel, iLadderItem):
 
 
 class LadderItem(QLabel, iLadderItem):
-    '''
+    """
     @orig_value: <float> the value of the widget prior to starting a
         value adjustment.  This is reset everytime a new value adjustment
         is started.
@@ -322,7 +353,7 @@ class LadderItem(QLabel, iLadderItem):
     @start_pos: QPoint starting position of drag
     @num_ticks: < int > how many units the user has moved.
         ( units_moved * value_mult ) + orig_value = new_value
-    '''
+    """
     def __init__(self, parent=None, value_mult='', height=50, width=None):
         super(LadderItem, self).__init__(parent)
 
@@ -333,7 +364,7 @@ class LadderItem(QLabel, iLadderItem):
         self.setFixedHeight(height)
         self.setFixedWidth(width)
     
-    ''' PROPERTIES '''
+    """ PROPERTIES """
     @property
     def num_ticks(self):
         return self._num_ticks
@@ -368,29 +399,29 @@ class LadderItem(QLabel, iLadderItem):
     def start_pos(self, pos):
         self._start_pos = pos
 
-    ''' UTILS '''
+    """ UTILS """
 
     def __resetWidgetGradients(self):
-        '''
+        """
         Returns all of the items back to their default color
-        '''
+        """
         item_list = self.parent().item_list
         for index, item in enumerate(item_list):
             if index != self.parent().middle_item_index:
                 item.__resetColor()
 
     def __resetColor(self):
-        '''
+        """
         resets the color widget color back to default
-        '''
+        """
         self.setStyleSheet(self.default_stylesheet)
 
-    ''' EVENTS '''
+    """ EVENTS """
 
     def enterEvent(self, *args, **kwargs):
-        '''
+        """
         hack to set up hover color for QLabels
-        '''
+        """
         if self.parent().is_active is False:
             self.setStyleSheet(
                 'background-color: rgba{selected_color}'.format(
@@ -399,17 +430,17 @@ class LadderItem(QLabel, iLadderItem):
         return QLabel.enterEvent(self, *args, **kwargs)
 
     def leaveEvent(self, *args, **kwargs):
-        '''
+        """
         hack to set up hover color for QLabels
         reset to default values
-        '''
+        """
         self.setStyleSheet(self.default_stylesheet)
         return QLabel.leaveEvent(self, *args, **kwargs)
 
     def mousePressEvent(self, event, *args, **kwargs):
-        '''
+        """
         if the user clicks on the item, it will start the click/drag value adjust
-        '''
+        """
         # get initial position
         pos = QCursor.pos()
         self.start_pos = pos
@@ -425,9 +456,9 @@ class LadderItem(QLabel, iLadderItem):
         return QLabel.mousePressEvent(self, event, *args, **kwargs)
 
     def mouseMoveEvent(self, event, *args, **kwargs):
-        '''
+        """
         primary work horse for mouse movement slider
-        '''
+        """
         MAGNITUDE_MULTIPLIER = self.parent().getSlideDistance()
         if self.parent().is_active is True:
             # get attrs
@@ -471,7 +502,7 @@ class LadderItem(QLabel, iLadderItem):
         return QLabel.mouseReleaseEvent(self, *args, **kwargs)
 
 
-''' TEST STUFF '''
+""" TEST STUFF """
 
 
 class TestWidget(QLineEdit):
@@ -480,14 +511,26 @@ class TestWidget(QLineEdit):
         pos = QCursor().pos()
         self.setGeometry(pos.x(), pos.y(), 200, 100)
         self._value_list = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
+        #self.setText('0')
+        self.installLadderDelegate()
 
     def setValue(self, value):
         self.setText(str(value))
 
+    def installLadderDelegate(self):
+        ladder = LadderDelegate(
+            parent=self,
+            widget=self,
+            #pos=self.pos(),
+            value_list=self._value_list
+        )
+        self.installEventFilter(ladder)
+
     def mousePressEvent(self, event, *args, **kwargs):
-        '''
+        """
         trigger to active the popup menu
-        '''
+        """
+        """
         if event.button() == Qt.MiddleButton:
             ladder = LadderDelegate(
                 parent=self,
@@ -496,11 +539,12 @@ class TestWidget(QLineEdit):
                 value_list=self._value_list
             )
             ladder.show()
+        """
         return QLineEdit.mousePressEvent(self, event, *args, **kwargs)
 
-'''
+
 app = QApplication(sys.argv)
 menu = TestWidget()
 menu.show()
 sys.exit(app.exec_())
-'''
+
