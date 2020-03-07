@@ -5,7 +5,7 @@ from collections import OrderedDict
 from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 from qtpy.QtGui import *
-from cgqtpy.delegates.__utils__ import installLadderDelegate
+from .delegates import LadderDelegate
 
 
 def getJSONData(json_file):
@@ -67,23 +67,30 @@ def clearLayout(layout, start=None, end=None):
             pass
 
 
-def installLadderDelegate(widget, user_input):
+def installLadderDelegate(
+    widget,
+    user_input=QEvent.MouseButtonPress,
+    value_list=[0.001, 0.01, 0.1, 1, 10, 100, 1000]
+):
     """
-    kwargs:
+    args:
         @widget: <QLineEdit> or <QLabel>
             widget to install ladder delegate onto.  Note this currently
             works for QLineEdit and QLabel.  Other widgets will need
             to implement a 'setValue(value)' method on which sets the
             widgets value. 
+    kwargs:
         @user_input: <QEvent>
             user event that triggers the popup of the Ladder Delegate
-            
+        @value_list: <list> of <float>
+            list of values for the user to be able to adjust by, usually this
+            is set to .01, .1, 1, 10, etc
     """
     ladder = LadderDelegate(
         parent=widget,
         widget=widget,
         #pos=self.pos(),
-        value_list=self._value_list,
+        value_list=value_list,
         user_input=user_input
     )
     widget.installEventFilter(ladder)
