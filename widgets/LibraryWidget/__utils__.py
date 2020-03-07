@@ -6,7 +6,7 @@ from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 from qtpy.QtGui import *
 
-from ... import __utils__ as gUtils
+from cgwidgets import __utils__ as gUtils
 
 class iUtils(object):
 

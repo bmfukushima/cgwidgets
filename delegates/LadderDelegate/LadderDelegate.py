@@ -23,6 +23,9 @@ Install delegate...
         - display values somewhere non obtrustive
         - minimal value slider ticker...
 
+    need to figure out how to make eventFilter more robust...
+        ie support CTRL+ALT+CLICK / RMB, etc
+            rather than just a QEvent.Type
     
 """
 
@@ -31,60 +34,73 @@ class LadderDelegate(QWidget):
     """
     Widget that should be added as a popup during an event.  This should be
     installed with the utils.installLadderDelegate(widget).
-    
-    kwargs: 
-        #@widget=None,
-        @pos=None,
-        @value_list=None,
-        @user_input: <QEvent.Type>
-    
-        The action for the user to do to trigger the ladder to be installed
-        ie.
-            QEvent.MouseButtonPress
-    - 
-    @item_list: list of all of the items
-    @is_active  boolean to determine if the widget
-                        is currently being manipulated by
-                        the user
-    @current_item: <LadderItem>
-        The current item that the user is manipulating.  This property is currently used
-        to determine if this ladder item should have its visual appearance changed on
-        interaction.
-                        
-    +
-    @slide_distance: <float>
-        multiplier of how far the user should have to drag in order
-        to trigger a value update.  Lower values are slower, higher
-        values are faster.
-    @bg_slide_color: < rgba > | ( int array ) | 0 - 255 
-        The bg color that is displayed to the user when the user starts
-        to click/drag to slide
-    @fg_slide_color: < rgba > | ( int array ) | 0 - 255 
-        The bg color that is displayed to the user when the user starts
-        to click/drag to slide
-    @selection_color: < rgba >  | ( int array ) | 0 - 255 
-        The color that is displayed to the user when they are selecting
-        which value they wish to adjust
-    @item_height: < int>
-        The height of each individual adjustable item.  The middle item will always
-        have the same geometry as the parent widget.
-    # no longer valid
-    the @widget needs a 'setValue' method, this is where
-    the LadderDelegate will set the value.  The value ladder
-    does @widget.setValue(offset=offset) where offset is
-    the amount that the current value should be offset.
+    args:
 
-    The setValue, will then need to do the final math to calculate the result
+    kwargs: 
+        @widget: <QLineEdit> or <QLabel>
+            widget to install ladder delegate onto.  Note this currently
+            works for QLineEdit and QLabel.  Other widgets will need
+            to implement a 'setValue(value)' method on which sets the
+            widgets value. 
+        @pos=<QPos>
+            position of the parent widget
+        @value_list: <list> of <float>
+            list of values for the user to be able to adjust by, usually this
+            is set to .01, .1, 1, 10, etc
+        @user_input: <QEvent.Type>
+            The action for the user to do to trigger the ladder to be installed
+                ie.
+            QEvent.MouseButtonPress
+    
+    properties:
+        -- private
+        @item_list: list of all of the items
+        @is_active  boolean to determine if the widget
+                            is currently being manipulated by
+                            the user
+        @current_item: <LadderItem>
+            The current item that the user is manipulating.  This property is
+            currently used to determine if this ladder item should have its
+            visual appearance changed on interaction.
+                            
+        -- public
+        use getters / setters
+            ie.
+                getPropertyName()
+                setPropertyName(value)
+        @slide_distance: <float>
+            multiplier of how far the user should have to drag in order
+            to trigger a value update.  Lower values are slower, higher
+            values are faster.
+        @bg_slide_color: < rgba > | ( int array ) | 0 - 255 
+            The bg color that is displayed to the user when the user starts
+            to click/drag to slide
+        @fg_slide_color: < rgba > | ( int array ) | 0 - 255 
+            The bg color that is displayed to the user when the user starts
+            to click/drag to slide
+        @selection_color: < rgba >  | ( int array ) | 0 - 255 
+            The color that is displayed to the user when they are selecting
+            which value they wish to adjust
+        @item_height: < int>
+            The height of each individual adjustable item.  The middle item will always
+            have the same geometry as the parent widget.
+        # no longer valid
+        the @widget needs a 'setValue' method, this is where
+        the LadderDelegate will set the value.  The value ladder
+        does @widget.setValue(offset=offset) where offset is
+        the amount that the current value should be offset.
+    
+        The setValue, will then need to do the final math to calculate the result
     """
     def __init__(
-            self, parent=None,
+            self,
+            parent=None,
             widget=None,
             pos=None,
             value_list=None,
             user_input=None,
     ):
         super(LadderDelegate, self).__init__(parent)
-
         layout = QVBoxLayout()
         self.setLayout(layout)
         # self.setWidget(widget)
@@ -112,9 +128,7 @@ class LadderDelegate(QWidget):
         # create widgets
         for value in value_list:
             widget = LadderItem(
-                value_mult=value,
-                height=self.getItemHeight(),
-                width=self.parent().width()
+                value_mult=value
             )
             layout.addWidget(widget)
             self.item_list.append(widget)
@@ -122,17 +136,16 @@ class LadderDelegate(QWidget):
         # special handler for display widget
         self.middle_item = LadderMiddleItem(
             parent=self,
-            value=self.getValue(),
-            height=self.parent().height(),
-            width=self.parent().width()
+            value=self.getValue()
         )
         layout.insertWidget(self.middle_item_index, self.middle_item)
         item_list = self.item_list
         item_list.insert(self.middle_item_index, self.middle_item)
         self.item_list = item_list
 
-        self.__setPosition()
-
+        #self.__setItemSize()
+        #self.__setPosition()
+        
     """ API """
 
     def getUserInput(self):
@@ -238,6 +251,17 @@ class LadderDelegate(QWidget):
 
     """ UTILS """
 
+    def __setItemSize(self):
+        
+        # set adjustable items
+        height = self.getItemHeight()
+        width = self.parent().width()
+        for item in self.item_list:
+            item.setFixedSize(width, height)
+        
+        # set display item ( middle item)
+        self.middle_item.setFixedSize(width, self.parent().height())
+            
     def __setPosition(self):
         """
         sets the position of the delegate relative to the
@@ -245,7 +269,12 @@ class LadderDelegate(QWidget):
         """
         num_values = len(self.item_list)
         pos = self.parent().pos()
-
+        gpos = self.mapToGlobal(self.parent().pos())
+        self.move(pos)
+        print('==='*5)
+        print(self.parent())
+        print(pos, gpos)
+        '''
         # set position
         offset = self.middle_item_index * self.getItemHeight()
         pos = QPoint(
@@ -256,11 +285,15 @@ class LadderDelegate(QWidget):
             + self.parent().height() + 6
         )
         self.move(pos)
+        '''
 
     """ EVENTS """
 
     def showEvent(self, *args, **kwargs):
         self.middle_item.setValue(self.getValue())
+        self.__setItemSize()
+        self.__setPosition()
+        print('show?')
         return QWidget.showEvent(self, *args, **kwargs)
 
     def leaveEvent(self, event, *args, **kwargs):
@@ -275,7 +308,8 @@ class LadderDelegate(QWidget):
     
     def eventFilter(self, obj, event, *args, **kwargs):
         """
-        could stick this on the LadderDelegate?
+        installed on the parent widget to determine the user input
+        for triggering the ladder delegate
         """
         if self.getValue() is None:
             # print('This widgets like numbers. Not whatever you put in here.')
@@ -329,8 +363,6 @@ class LadderMiddleItem(QLabel, iLadderItem):
     def __init__(self, parent=None, height=50, value=None, width=100):
         super(LadderMiddleItem, self).__init__(parent)
         self.setValue(value)
-        self.setFixedHeight(height)
-        self.setFixedWidth(width)
         self.default_style_sheet = self.styleSheet()
         self.setStyleSheet('border-width: {}px; border-color: rgb(18,18,18);border-style: solid;'.format(
             self.parent().getMiddleItemBorderWidth())
@@ -362,8 +394,6 @@ class LadderItem(QLabel, iLadderItem):
         self._value_mult = value_mult
         self.setText(str(value_mult))
         self.default_stylesheet = self.styleSheet()
-        self.setFixedHeight(height)
-        self.setFixedWidth(width)
     
     """ PROPERTIES """
     @property

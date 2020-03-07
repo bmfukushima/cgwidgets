@@ -5,7 +5,7 @@ from qtpy.QtGui import *
 from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 
-from ..__utils__ import installLadderDelegate
+from cgwidgets.__utils__ import installLadderDelegate 
 
 """ TEST STUFF """
 
@@ -15,9 +15,15 @@ class TestWidget(QLineEdit):
         super(TestWidget, self).__init__(parent)
         pos = QCursor().pos()
         self.setGeometry(pos.x(), pos.y(), 200, 100)
-        self._value_list = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
+        value_list = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
         #self.setText('0')
-        installLadderDelegate(self, QEvent.MouseButtonPress)
+        value_list = [0.0001, 0.001, 0.01, 0.1]
+        pos = QCursor.pos()
+        installLadderDelegate(
+            self,
+            user_input=QEvent.MouseButtonPress,
+            value_list=value_list
+        )
 
     def setValue(self, value):
         self.setText(str(value))

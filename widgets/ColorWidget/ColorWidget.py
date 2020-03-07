@@ -6,8 +6,8 @@ from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 from qtpy.QtGui import *
 
-from ...delegates import LadderDelegate
-
+#from ...delegates import LadderDelegate
+from cgwidgets.__utils__ import installLadderDelegate
 '''
 KATANA BUGS:
     - Drag outside...
@@ -349,6 +349,14 @@ class ValueLabel(DataTypeLineEdit):
             )
         '''
         self.setAlignment(Qt.AlignLeft)
+        # set up ladder delegate
+        value_list = [0.0001, 0.001, 0.01, 0.1]
+        pos = QCursor.pos()
+        installLadderDelegate(
+            self,
+            user_input=QEvent.MouseButtonPress,
+            value_list=value_list
+        )
         #self.home(False)
 
     def __name__(self):
@@ -452,6 +460,7 @@ class ValueLabel(DataTypeLineEdit):
 
     def mousePressEvent(self, event, *args, **kwargs):
         if event.button() == Qt.MiddleButton:
+            '''
             value_list = [0.0001, 0.001, 0.01, 0.1]
             pos = QCursor.pos()
 
@@ -462,6 +471,7 @@ class ValueLabel(DataTypeLineEdit):
                 value_list=value_list
             )
             ladder.show()
+            '''
             self.setPos(event.pos().x())
             return
         return QLineEdit.mousePressEvent(self, event, *args, **kwargs)
