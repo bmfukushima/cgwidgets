@@ -108,12 +108,16 @@ def getGlobalPos(widget):
         <QPoint>
     '''
     top_level_widget = widget.window()
+    #QApplication::style()->pixelMetric(QStyle::PM_TitleBarHeight)#
+    title_bar_height = QApplication.style().pixelMetric(QStyle.PM_TitleBarHeight)
     #parent = widget.parentWidget().parentWidget()
     parent = widget.parentWidget()
 
     local_pos = parent.mapTo(top_level_widget, widget.pos())
     global_pos = top_level_widget.pos()            # works
     xpos = local_pos.x() + global_pos.x()
-    ypos = local_pos.y() + global_pos.y()
+    ypos = local_pos.y() + global_pos.y() + title_bar_height
     new_pos = QPoint(xpos, ypos)
+    # content margins?
+    # padding?
     return new_pos

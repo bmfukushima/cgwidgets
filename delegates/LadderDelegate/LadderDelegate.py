@@ -289,7 +289,7 @@ class LadderDelegate(QWidget):
         offset = self.middle_item_index * self.getItemHeight()
         pos = QPoint(
             pos.x(),
-            pos.y()# - offset
+            pos.y() - offset
         )
         self.move(pos)
         '''

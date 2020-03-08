@@ -54,9 +54,9 @@ class TestWidget(QLineEdit):
         """
         return QLineEdit.mousePressEvent(self, event, *args, **kwargs)
 
-
+'''
 app = QApplication(sys.argv)
 menu = TestWidget()
 menu.show()
 sys.exit(app.exec_())
-
+'''

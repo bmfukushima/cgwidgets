@@ -10,6 +10,7 @@ Widgets:
             line edit
             label
         - position error...
+            needs content margins + padding...
     - Error on PySide for ColorWidget
 
     - Split out image widget
