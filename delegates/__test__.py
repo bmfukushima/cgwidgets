@@ -59,3 +59,4 @@ app = QApplication(sys.argv)
 menu = TestWidget()
 menu.show()
 sys.exit(app.exec_())
+

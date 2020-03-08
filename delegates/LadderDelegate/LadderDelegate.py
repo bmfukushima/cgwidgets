@@ -5,11 +5,18 @@ from qtpy.QtGui import *
 from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 
-
+from cgwidgets.__utils__ import getGlobalPos
 """
+
+
 #-------------------------------------------------------------------------- Bugs
 Install delegate...
     needs to have value on creation/installation of event filter...
+    
+postion...
+    LadderDelegate --> __setPosition
+        - not getting global position correct...
+        - may need to look for top level widget to do the mapToGlobal from?
 
 # -----------------------------------------------------------------------To Do
 
@@ -268,15 +275,25 @@ class LadderDelegate(QWidget):
         widget that it is adjusting
         """
         num_values = len(self.item_list)
-        pos = self.parent().pos()
-        gpos = self.mapToGlobal(self.parent().pos())
-        self.move(pos)
-        print('==='*5)
-        print(self.parent())
-        print(pos, gpos)
-        '''
+        
+        # get global pos
+        top_level_widget = self.parentWidget().window()
+        if self.parent().parent() is None:
+            pos = top_level_widget.pos()
+        else:
+            pos = getGlobalPos(self.parentWidget())
+
+        # move middle item to center
+
         # set position
         offset = self.middle_item_index * self.getItemHeight()
+        pos = QPoint(
+            pos.x(),
+            pos.y()# - offset
+        )
+        self.move(pos)
+        '''
+                offset = self.middle_item_index * self.getItemHeight()
         pos = QPoint(
             pos.x(),
             pos.y()
@@ -284,8 +301,8 @@ class LadderDelegate(QWidget):
             * .5)
             + self.parent().height() + 6
         )
-        self.move(pos)
         '''
+        
 
     """ EVENTS """
 

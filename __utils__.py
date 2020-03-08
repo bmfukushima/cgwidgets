@@ -5,7 +5,6 @@ from collections import OrderedDict
 from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 from qtpy.QtGui import *
-from .delegates import LadderDelegate
 
 
 def getJSONData(json_file):
@@ -86,6 +85,7 @@ def installLadderDelegate(
             list of values for the user to be able to adjust by, usually this
             is set to .01, .1, 1, 10, etc
     """
+    from .delegates import LadderDelegate
     ladder = LadderDelegate(
         parent=widget,
         widget=widget,
@@ -95,3 +95,25 @@ def installLadderDelegate(
     )
     widget.installEventFilter(ladder)
 
+
+def getGlobalPos(widget):
+    '''
+    returns the global position of the widget provided, because Qt
+    does such a lovely job of doing this out of box and making it
+    so simply
+    args:
+        @widget: <QWidget>
+
+    returns:
+        <QPoint>
+    '''
+    top_level_widget = widget.window()
+    #parent = widget.parentWidget().parentWidget()
+    parent = widget.parentWidget()
+
+    local_pos = parent.mapTo(top_level_widget, widget.pos())
+    global_pos = top_level_widget.pos()            # works
+    xpos = local_pos.x() + global_pos.x()
+    ypos = local_pos.y() + global_pos.y()
+    new_pos = QPoint(xpos, ypos)
+    return new_pos
