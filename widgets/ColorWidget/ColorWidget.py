@@ -1134,11 +1134,12 @@ class SETTINGS(object):
 #if __name__ == '__main__':
 
 
-
+'''
 app = QApplication(sys.argv)
 color_widget = ColorWidget()
 color_widget.show()
 sys.exit(app.exec_())
+'''
 
 
 

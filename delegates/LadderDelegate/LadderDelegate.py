@@ -1,3 +1,31 @@
+"""
+
+
+#-------------------------------------------------------------------------- Bugs
+
+
+# -----------------------------------------------------------------------To Do
+
+    * Detect if close to edge...
+        - Detect center point function
+        - only needs to handle y pos
+
+#------------------------------------------------------------------- API
+    * seperate display option "discrete" mode:
+        - Transparent while sliding option
+        - display values somewhere non obtrustive
+        - minimal value slider ticker...
+
+    * need to figure out how to make eventFilter more robust...
+        ie support CTRL+ALT+CLICK / RMB, etc
+            rather than just a QEvent.Type
+    
+    * set range
+        allow ladder widget to only go between a specifc range
+            ie
+                Only allow this to work in the 0-1 range
+    
+"""
 import sys
 import math
 
@@ -6,35 +34,6 @@ from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 
 from cgwidgets.__utils__ import getGlobalPos
-"""
-
-
-#-------------------------------------------------------------------------- Bugs
-Install delegate...
-    needs to have value on creation/installation of event filter...
-    
-postion...
-    LadderDelegate --> __setPosition
-        - not getting global position correct...
-        - may need to look for top level widget to do the mapToGlobal from?
-
-# -----------------------------------------------------------------------To Do
-
-- Detect if close to edge...
-    - Detect center point function
-    - only needs to handle y pos
-
-#------------------------------------------------------------------- API
-    seperate display option "discrete" mode:
-        - Transparent while sliding option
-        - display values somewhere non obtrustive
-        - minimal value slider ticker...
-
-    need to figure out how to make eventFilter more robust...
-        ie support CTRL+ALT+CLICK / RMB, etc
-            rather than just a QEvent.Type
-    
-"""
 
 
 class LadderDelegate(QWidget):
@@ -61,8 +60,8 @@ class LadderDelegate(QWidget):
         +
         use getters / setters
             ie.
-                getPropertyName()
-                setPropertyName(value)
+        getPropertyName()
+        setPropertyName(value)
         @slide_distance: <float>
             multiplier of how far the user should have to drag in order
             to trigger a value update.  Lower values are slower, higher
@@ -236,11 +235,12 @@ class LadderDelegate(QWidget):
 
     def setValue(self, value):
         """
-        @value: <float>
-        Sets the value on the parent widget.
-        
-        creating a setValue(value) method on the parent widget
-        will run this method last when setting the value
+        args:
+            @value: <float>
+            Sets the value on the parent widget.
+            
+            creating a setValue(value) method on the parent widget
+            will run this method last when setting the value
         """
         if value is not None:
             self._value = value
@@ -325,12 +325,21 @@ class LadderDelegate(QWidget):
 
 
 class iLadderItem():
+    """
+    Interface for the Ladder Items.  This is currently only
+    holding the color updates.  Which are only necessary
+    for the LadderItems so... this interface is properly not necessary.
+    """
     def updateColor(self, xpos):
         """
-        @xpos: floatf of single channel rgb color
-        sets the style sheet to converge from left
-        to right so that each full convergance will
-        display another increment in value 
+        changes the color for the moving slider for all
+        the individual items in the ladder
+
+        args:
+            @xpos: floatf of single channel rgb color
+            sets the style sheet to converge from left
+            to right so that each full convergance will
+            display another increment in value 
         """
         style_sheet = """
         background: qlineargradient(
@@ -351,6 +360,12 @@ class iLadderItem():
         """
         Draws out the moving slider over the items to show
         the user how close they are to the next tick
+
+        args:
+            @xpos: floatf of single channel rgb color
+            sets the style sheet to converge from left
+            to right so that each full convergance will
+            display another increment in value 
         """
         item_list = self.parent().item_list
         for index, item in enumerate(item_list):
@@ -361,9 +376,10 @@ class iLadderItem():
 
 class LadderMiddleItem(QLabel, iLadderItem):
     """
-    Poorly named class... this is the display label to overlay
-    over the current widget.  Due to how awesomely bad
-    transparency is to do in Qt =\
+    This is the display label to overlay
+    over the current widget.  
+
+    Due to how awesomely bad transparency is to do in Qt =\
     """
     def __init__(self, parent=None, height=50, value=None, width=100):
         super(LadderMiddleItem, self).__init__(parent)
@@ -384,15 +400,26 @@ class LadderMiddleItem(QLabel, iLadderItem):
 
 class LadderItem(QLabel, iLadderItem):
     """
-    @orig_value: <float> the value of the widget prior to starting a
-        value adjustment.  This is reset everytime a new value adjustment
-        is started.
-    @value_mult: float how many units the drag should update
-    @start_pos: QPoint starting position of drag
-    @num_ticks: < int > how many units the user has moved.
-        ( units_moved * value_mult ) + orig_value = new_value
+    This represents one item in the ladder that is displayed to the user.
+    Clicking/Dragging left/right on one of these will update the widget
+    that is passed to the ladder delegate.
+
+    kwargs:
+        @orig_value: <float> the value of the widget prior to starting a
+            value adjustment.  This is reset everytime a new value adjustment
+            is started.
+        @value_mult: float how many units the drag should update
+        @start_pos: QPoint starting position of drag
+        @num_ticks: < int > how many units the user has moved.
+            ( units_moved * value_mult ) + orig_value = new_value
     """
-    def __init__(self, parent=None, value_mult='', height=50, width=None):
+    def __init__(
+            self,
+            parent=None,
+            value_mult='',
+            height=50,
+            width=None
+        ):
         super(LadderItem, self).__init__(parent)
 
         # set default attrs
