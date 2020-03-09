@@ -88,8 +88,6 @@ def installLadderDelegate(
     from .delegates import LadderDelegate
     ladder = LadderDelegate(
         parent=widget,
-        widget=widget,
-        #pos=self.pos(),
         value_list=value_list,
         user_input=user_input
     )

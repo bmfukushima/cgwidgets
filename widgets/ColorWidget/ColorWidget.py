@@ -515,7 +515,7 @@ class ColorLabel(ValueLabel):
         updates the background color of the widget
         '''
         value = value * 255
-        """
+        
         if self.channel == 0:
             self.setStyleSheet(
                 'border-color:rgb(%s,0,0); \
@@ -552,7 +552,7 @@ class ColorLabel(ValueLabel):
                     SETTINGS.DARK_TRANSPARENT_STRRGBA
                 )
             )
-        """
+        
     def userInput(self):
         value = self.text()
         self.setValue(float(value))
@@ -903,7 +903,7 @@ class SETTINGS(object):
     GRID_BORDER_WIDTH = 3
     HUD_BORDER_WIDTH = 1
     HUD_BORDER_OFFSET = 3
-    PADDING = 0
+    PADDING = 3
     ALPHA = '48'
     CREATE_LABEL_WIDTH = 150
     SELECTION_WIDTH = 15
@@ -1134,12 +1134,12 @@ class SETTINGS(object):
 #if __name__ == '__main__':
 
 
-'''
+
 app = QApplication(sys.argv)
 color_widget = ColorWidget()
 color_widget.show()
 sys.exit(app.exec_())
-'''
+
 
 
 

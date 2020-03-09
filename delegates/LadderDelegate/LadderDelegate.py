@@ -44,13 +44,11 @@ class LadderDelegate(QWidget):
     args:
 
     kwargs: 
-        @widget: <QLineEdit> or <QLabel>
+        @parent: <QLineEdit> or <QLabel>
             widget to install ladder delegate onto.  Note this currently
             works for QLineEdit and QLabel.  Other widgets will need
             to implement a 'setValue(value)' method on which sets the
             widgets value. 
-        @pos=<QPos>
-            position of the parent widget
         @value_list: <list> of <float>
             list of values for the user to be able to adjust by, usually this
             is set to .01, .1, 1, 10, etc
@@ -60,17 +58,7 @@ class LadderDelegate(QWidget):
             QEvent.MouseButtonPress
     
     properties:
-        -- private
-        @item_list: list of all of the items
-        @is_active  boolean to determine if the widget
-                            is currently being manipulated by
-                            the user
-        @current_item: <LadderItem>
-            The current item that the user is manipulating.  This property is
-            currently used to determine if this ladder item should have its
-            visual appearance changed on interaction.
-                            
-        -- public
+        +
         use getters / setters
             ie.
                 getPropertyName()
@@ -98,12 +86,24 @@ class LadderDelegate(QWidget):
         the amount that the current value should be offset.
     
         The setValue, will then need to do the final math to calculate the result
+        -
+        @item_list: list of all of the items
+        @is_active  boolean to determine if the widget
+                            is currently being manipulated by
+                            the user
+        @current_item: <LadderItem>
+            The current item that the user is manipulating.  This property is
+            currently used to determine if this ladder item should have its
+            visual appearance changed on interaction.
+        @middle_item_index: <int>
+            Index of the middle item in the item's list.  This is used to offset
+            the middle item to overlay the widget it was used on.
+            
+        
     """
     def __init__(
             self,
             parent=None,
-            widget=None,
-            pos=None,
             value_list=None,
             user_input=None,
     ):
@@ -120,6 +120,7 @@ class LadderDelegate(QWidget):
         self.setItemHeight(50)
         self.setMiddleItemBorderWidth(2)
         self.setUserInput(user_input)
+        self.middle_item_index = int(len(value_list) * 0.5)
 
         # set up style
         layout.setContentsMargins(0, 0, 0, 0)
@@ -129,8 +130,6 @@ class LadderDelegate(QWidget):
             | Qt.FramelessWindowHint
             | Qt.Popup
         )
-
-        self.middle_item_index = int(len(value_list) * 0.5)
 
         # create widgets
         for value in value_list:
@@ -149,9 +148,6 @@ class LadderDelegate(QWidget):
         item_list = self.item_list
         item_list.insert(self.middle_item_index, self.middle_item)
         self.item_list = item_list
-
-        #self.__setItemSize()
-        #self.__setPosition()
         
     """ API """
 
@@ -198,6 +194,14 @@ class LadderDelegate(QWidget):
         self._item_height = item_height
 
     """ PROPERTIES """
+
+    @property
+    def middle_item_index(self):
+        return self._middle_item_index
+
+    @middle_item_index.setter
+    def middle_item_index(self, middle_item_index):
+        self._middle_item_index = middle_item_index
 
     @property
     def current_item(self):
@@ -247,7 +251,8 @@ class LadderDelegate(QWidget):
             try:
                 parent.setValue(value)
             except AttributeError:
-                print('{} has no method \"setValue(value)\"'.format(parent))
+                pass
+                #print('{} has no method \"setValue(value)\"'.format(parent))
 
     def getValue(self):
         try:

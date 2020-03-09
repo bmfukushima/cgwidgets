@@ -28,16 +28,6 @@ class TestWidget(QLineEdit):
     def setValue(self, value):
         self.setText(str(value))
 
-    '''
-    def installLadderDelegate(self):
-        ladder = LadderDelegate(
-            parent=self,
-            widget=self,
-            #pos=self.pos(),
-            value_list=self._value_list
-        )
-        self.installEventFilter(ladder)
-    '''
     def mousePressEvent(self, event, *args, **kwargs):
         """
         trigger to active the popup menu
@@ -60,4 +50,5 @@ menu = TestWidget()
 menu.show()
 sys.exit(app.exec_())
 '''
+
 
