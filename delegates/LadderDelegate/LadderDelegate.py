@@ -277,14 +277,15 @@ class LadderDelegate(QWidget):
         num_values = len(self.item_list)
         
         # get global pos
+        '''
         top_level_widget = self.parentWidget().window()
         if self.parent().parent() is None:
             pos = top_level_widget.pos()
         else:
             pos = getGlobalPos(self.parentWidget())
-
+        '''
         # move middle item to center
-
+        pos = getGlobalPos(self.parentWidget())
         # set position
         offset = self.middle_item_index * self.getItemHeight()
         pos = QPoint(
