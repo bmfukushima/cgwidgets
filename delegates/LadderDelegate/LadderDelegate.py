@@ -1,6 +1,4 @@
 """
-
-
 #-------------------------------------------------------------------------- Bugs
 
 
@@ -45,12 +43,15 @@ class LadderDelegate(QWidget):
     kwargs: 
         @parent: <QLineEdit> or <QLabel>
             widget to install ladder delegate onto.  Note this currently
-            works for QLineEdit and QLabel.  Other widgets will need
-            to implement a 'setValue(value)' method on which sets the
-            widgets value. 
+            works for QLineEdit and QLabel.  
+            
+            Other widgets will need to implement the 'setValue(value)'
+            method to properly parse the value from the ladder to the widget.
+
         @value_list: <list> of <float>
             list of values for the user to be able to adjust by, usually this
             is set to .01, .1, 1, 10, etc
+
         @user_input: <QEvent.Type>
             The action for the user to do to trigger the ladder to be installed
                 ie.
@@ -66,39 +67,39 @@ class LadderDelegate(QWidget):
             multiplier of how far the user should have to drag in order
             to trigger a value update.  Lower values are slower, higher
             values are faster.
+
         @bg_slide_color: < rgba > | ( int array ) | 0 - 255 
             The bg color that is displayed to the user when the user starts
             to click/drag to slide
+
         @fg_slide_color: < rgba > | ( int array ) | 0 - 255 
             The bg color that is displayed to the user when the user starts
             to click/drag to slide
+
         @selection_color: < rgba >  | ( int array ) | 0 - 255 
             The color that is displayed to the user when they are selecting
             which value they wish to adjust
+
         @item_height: < int>
             The height of each individual adjustable item.  The middle item will always
             have the same geometry as the parent widget.
-        # no longer valid
-        the @widget needs a 'setValue' method, this is where
-        the LadderDelegate will set the value.  The value ladder
-        does @widget.setValue(offset=offset) where offset is
-        the amount that the current value should be offset.
-    
+
         The setValue, will then need to do the final math to calculate the result
         -
         @item_list: list of all of the items
+
         @is_active  boolean to determine if the widget
                             is currently being manipulated by
                             the user
+
         @current_item: <LadderItem>
             The current item that the user is manipulating.  This property is
             currently used to determine if this ladder item should have its
             visual appearance changed on interaction.
+
         @middle_item_index: <int>
             Index of the middle item in the item's list.  This is used to offset
             the middle item to overlay the widget it was used on.
-            
-        
     """
     def __init__(
             self,
@@ -248,11 +249,6 @@ class LadderDelegate(QWidget):
             # set value
             self.middle_item.setValue(str(self._value))
             parent.setText(str(self._value))
-            try:
-                parent.setValue(value)
-            except AttributeError:
-                pass
-                #print('{} has no method \"setValue(value)\"'.format(parent))
 
     def getValue(self):
         try:
@@ -408,10 +404,14 @@ class LadderItem(QLabel, iLadderItem):
         @orig_value: <float> the value of the widget prior to starting a
             value adjustment.  This is reset everytime a new value adjustment
             is started.
+
         @value_mult: float how many units the drag should update
+
         @start_pos: QPoint starting position of drag
+
         @num_ticks: < int > how many units the user has moved.
             ( units_moved * value_mult ) + orig_value = new_value
+
     """
     def __init__(
             self,
