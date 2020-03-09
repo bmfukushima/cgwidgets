@@ -275,16 +275,7 @@ class LadderDelegate(QWidget):
         widget that it is adjusting
         """
         num_values = len(self.item_list)
-        
-        # get global pos
-        '''
-        top_level_widget = self.parentWidget().window()
-        if self.parent().parent() is None:
-            pos = top_level_widget.pos()
-        else:
-            pos = getGlobalPos(self.parentWidget())
-        '''
-        # move middle item to center
+
         pos = getGlobalPos(self.parentWidget())
         # set position
         offset = self.middle_item_index * self.getItemHeight()
@@ -293,35 +284,26 @@ class LadderDelegate(QWidget):
             pos.y() - offset
         )
         self.move(pos)
-        '''
-                offset = self.middle_item_index * self.getItemHeight()
-        pos = QPoint(
-            pos.x(),
-            pos.y()
-            - ((self.getItemHeight() * (num_values + 1))
-            * .5)
-            + self.parent().height() + 6
-        )
-        '''
-        
 
     """ EVENTS """
+    def hideEvent(self, *args, **kwargs):
+        self.is_active = False
+        return QWidget.hideEvent(self, *args, **kwargs)
 
     def showEvent(self, *args, **kwargs):
         self.middle_item.setValue(self.getValue())
         self.__setItemSize()
         self.__setPosition()
-        print('show?')
         return QWidget.showEvent(self, *args, **kwargs)
 
     def leaveEvent(self, event, *args, **kwargs):
         if self.is_active is False:
-            self.close()
+            self.hide()
         return QWidget.leaveEvent(self, event, *args, **kwargs)
 
     def keyPressEvent(self, event, *args, **kwargs):
         if event.key() == Qt.Key_Escape:
-            self.close()
+            self.hide()
         return QWidget.keyPressEvent(self, event, *args, **kwargs)
     
     def eventFilter(self, obj, event, *args, **kwargs):

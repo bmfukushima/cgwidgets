@@ -103,29 +103,23 @@ def getGlobalPos(widget):
     so simply
     args:
         @widget: <QWidget>
+            widget to return screen space position of
 
     returns:
         <QPoint>
     '''
     top_level_widget = widget.window()
-    title_bar_height = QApplication.style().pixelMetric(QStyle.PM_TitleBarHeight)
-    if widget.parent() is None:
-        #pos = top_level_widget.pos() + title_bar_height
+    parent = widget.parentWidget()
+    if parent is None:
+        title_bar_height = top_level_widget.style().pixelMetric(QStyle.PM_TitleBarHeight)
+        #pos = top_level_widget.pos() + title_bar_height + 4
+        
         pos = QPoint(
             top_level_widget.pos().x(),
-            top_level_widget.pos().y() + title_bar_height
+            top_level_widget.pos().y() + title_bar_height + 4
         )
+        
     else:
-        #QApplication::style()->pixelMetric(QStyle::PM_TitleBarHeight)#
-        title_bar_height = QApplication.style().pixelMetric(QStyle.PM_TitleBarHeight)
-        #parent = widget.parentWidget().parentWidget()
-        parent = widget.parentWidget()
-    
-        local_pos = parent.mapTo(top_level_widget, widget.pos())
-        global_pos = top_level_widget.pos()            # works
-        xpos = local_pos.x() + global_pos.x()
-        ypos = local_pos.y() + global_pos.y() + title_bar_height
-        pos = QPoint(xpos, ypos)
-        # content margins?
-        # padding?
+        pos = parent.mapToGlobal(widget.pos())
+
     return pos

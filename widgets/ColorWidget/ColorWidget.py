@@ -16,6 +16,12 @@ KATANA BUGS:
 IDEA:
     Put ring of default colors around the color widget for quick color selection
 
+#-------------------------------------------------------------------------- Bugs
+
+ColorLabel --> Set Color
+    Disabling style sheets for now...
+    as they were overriding the delegate...
+    will need to rethink this...
 '''
 
 
@@ -41,7 +47,7 @@ class ColorWidget(QWidget):
                 widget_default_data=None
                 ):
         super(ColorWidget, self).__init__(parent)
-        main_layout = QGridLayout()
+        main_layout = QVBoxLayout()
         #self.main_widget = main_widget
 
         self.widget_default_data = widget_default_data
@@ -91,10 +97,16 @@ class ColorWidget(QWidget):
         self.stacked_layout.addWidget(self.display_color_widget)
         self.stacked_layout.setCurrentIndex(0)
 
+        '''
         main_layout.addLayout(self.stacked_layout, 0, 0, 1, 1)
         main_layout.addLayout(self.rgb_layout, 1, 0, 1, 1)
         main_layout.addLayout(self.hsv_layout, 2, 0, 1, 1)
-
+        '''
+        #main_layout.setContentsMargins(0,0,0,0)
+        #main_layout.setSpacing(0)
+        main_layout.addLayout(self.stacked_layout)
+        main_layout.addLayout(self.rgb_layout)
+        main_layout.addLayout(self.hsv_layout)
         self.setColor(color)
         self.setStyleSheet(
             "QLineEdit { background-color: rgba(0,0,0,0);\
@@ -503,6 +515,7 @@ class ColorLabel(ValueLabel):
         updates the background color of the widget
         '''
         value = value * 255
+        """
         if self.channel == 0:
             self.setStyleSheet(
                 'border-color:rgb(%s,0,0); \
@@ -539,7 +552,7 @@ class ColorLabel(ValueLabel):
                     SETTINGS.DARK_TRANSPARENT_STRRGBA
                 )
             )
-
+        """
     def userInput(self):
         value = self.text()
         self.setValue(float(value))
@@ -890,7 +903,7 @@ class SETTINGS(object):
     GRID_BORDER_WIDTH = 3
     HUD_BORDER_WIDTH = 1
     HUD_BORDER_OFFSET = 3
-    PADDING = 3
+    PADDING = 0
     ALPHA = '48'
     CREATE_LABEL_WIDTH = 150
     SELECTION_WIDTH = 15
