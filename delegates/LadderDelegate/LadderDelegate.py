@@ -32,6 +32,7 @@ from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 
 from cgwidgets.__utils__ import getGlobalPos
+from decimal import Decimal, getcontext
 
 
 class LadderDelegate(QWidget):
@@ -401,16 +402,20 @@ class LadderItem(QLabel, iLadderItem):
     that is passed to the ladder delegate.
 
     kwargs:
-        @orig_value: <float> the value of the widget prior to starting a
+        orig_value < float >
+            the value of the widget prior to starting a
             value adjustment.  This is reset everytime a new value adjustment
             is started.
 
-        @value_mult: float how many units the drag should update
+        value_mult < float >
+            how many units the drag should update
 
-        @start_pos: QPoint starting position of drag
+        start_pos < QPoint >
+            starting position of drag
 
-        @num_ticks: < int > how many units the user has moved.
-            ( units_moved * value_mult ) + orig_value = new_value
+        num_ticks < int >
+            how many units the user has moved.
+            ( num_ticks * value_mult ) + orig_value = new_value
 
     """
     def __init__(
@@ -442,7 +447,7 @@ class LadderItem(QLabel, iLadderItem):
     
     @orig_value.setter
     def orig_value(self, orig_value):
-        self._orig_value = orig_value
+        self._orig_value = Decimal(orig_value)
     
     @property
     def value_mult(self):
@@ -450,7 +455,7 @@ class LadderItem(QLabel, iLadderItem):
 
     @value_mult.setter
     def value_mult(self, value_mult):
-        self._value_mult = value_mult
+        self._value_mult = Decimal(value_mult)
 
     @property
     def start_pos(self):
@@ -550,9 +555,17 @@ class LadderItem(QLabel, iLadderItem):
             # update value
             xpos = math.fabs(math.modf(magnitude)[0])
             if self.num_ticks != int(magnitude):
+                # set floating point precision
+                getcontext().prec = len(str(self.value_mult).split('.')[1])
+
+                # do math
                 offset *= self.num_ticks
-                return_val = offset + self.orig_value
+                return_val = Decimal(offset) + self.orig_value
+
+                # set value
                 self.parent().setValue(return_val)
+
+                # reset values
                 self.num_ticks = int(magnitude)
             self.updateWidgetGradients(xpos)
         return QLabel.mouseMoveEvent(self, event, *args, **kwargs)
