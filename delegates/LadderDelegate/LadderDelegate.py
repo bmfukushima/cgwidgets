@@ -1,6 +1,7 @@
 """
 #-------------------------------------------------------------------------- Bugs
-
+    * Updating values on ladder during slide...
+        seems to be calculating correctly... just not properly updating?
 
 # -----------------------------------------------------------------------To Do
 
@@ -321,57 +322,7 @@ class LadderDelegate(QWidget):
         return QWidget.eventFilter(self, obj, event, *args, **kwargs)
 
 
-class iLadderItem():
-    """
-    Interface for the Ladder Items.  This is currently only
-    holding the color updates.  Which are only necessary
-    for the LadderItems so... this interface is properly not necessary.
-    """
-    def updateColor(self, xpos):
-        """
-        changes the color for the moving slider for all
-        the individual items in the ladder
-
-        args:
-            @xpos: floatf of single channel rgb color
-            sets the style sheet to converge from left
-            to right so that each full convergance will
-            display another increment in value 
-        """
-        style_sheet = """
-        background: qlineargradient(
-            x1:{xpos1} y1:0,
-            x2:{xpos2} y2:0,
-            stop:0 rgba{bgcolor},
-            stop:1 rgba{fgcolor}
-        );
-        """.format(
-                xpos1=str(xpos),
-                xpos2=str(xpos + 0.01),
-                bgcolor=repr(self.parent().getBGSlideColor()),
-                fgcolor=repr(self.parent().getFGSlideColor())
-            )
-        self.setStyleSheet(style_sheet)
-
-    def updateWidgetGradients(self, xpos):
-        """
-        Draws out the moving slider over the items to show
-        the user how close they are to the next tick
-
-        args:
-            @xpos: floatf of single channel rgb color
-            sets the style sheet to converge from left
-            to right so that each full convergance will
-            display another increment in value 
-        """
-        item_list = self.parent().item_list
-        for index, item in enumerate(item_list):
-            if index is not self.parent().middle_item_index:
-                if item is not self.parent().current_item:
-                    item.updateColor(xpos)
-    
-
-class LadderMiddleItem(QLabel, iLadderItem):
+class LadderMiddleItem(QLabel):
     """
     This is the display label to overlay
     over the current widget.  
@@ -395,7 +346,7 @@ class LadderMiddleItem(QLabel, iLadderItem):
         return float(self._value)
 
 
-class LadderItem(QLabel, iLadderItem):
+class LadderItem(QLabel):
     """
     This represents one item in the ladder that is displayed to the user.
     Clicking/Dragging left/right on one of these will update the widget
@@ -468,6 +419,48 @@ class LadderItem(QLabel, iLadderItem):
         self._start_pos = pos
 
     """ UTILS """
+    def __updateColor(self, xpos):
+        """
+        changes the color for the moving slider for all
+        the individual items in the ladder
+
+        args:
+            @xpos: floatf of single channel rgb color
+            sets the style sheet to converge from left
+            to right so that each full convergance will
+            display another increment in value 
+        """
+        style_sheet = """
+        background: qlineargradient(
+            x1:{xpos1} y1:0,
+            x2:{xpos2} y2:0,
+            stop:0 rgba{bgcolor},
+            stop:1 rgba{fgcolor}
+        );
+        """.format(
+                xpos1=str(xpos),
+                xpos2=str(xpos + 0.01),
+                bgcolor=repr(self.parent().getBGSlideColor()),
+                fgcolor=repr(self.parent().getFGSlideColor())
+            )
+        self.setStyleSheet(style_sheet)
+
+    def __updateWidgetGradients(self, xpos):
+        """
+        Draws out the moving slider over the items to show
+        the user how close they are to the next tick
+
+        args:
+            @xpos: floatf of single channel rgb color
+            sets the style sheet to converge from left
+            to right so that each full convergance will
+            display another increment in value 
+        """
+        item_list = self.parent().item_list
+        for index, item in enumerate(item_list):
+            if index is not self.parent().middle_item_index:
+                if item is not self.parent().current_item:
+                    item.__updateColor(xpos)
 
     def __resetWidgetGradients(self):
         """
@@ -567,7 +560,7 @@ class LadderItem(QLabel, iLadderItem):
 
                 # reset values
                 self.num_ticks = int(magnitude)
-            self.updateWidgetGradients(xpos)
+            self.__updateWidgetGradients(xpos)
         return QLabel.mouseMoveEvent(self, event, *args, **kwargs)
 
     def mouseReleaseEvent(self, *args, **kwargs):

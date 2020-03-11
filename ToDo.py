@@ -1,17 +1,14 @@
 '''
-__init__ ( cgwidgets )
-    - not import delegates?
-
 Widgets:
-    - Split Utils
-
     - Ladder Delegate / Widget
         - widget just installs the delegate on:
             line edit
             label
-        - position error...
-            needs content margins + padding...
+
     - Error on PySide for ColorWidget
+    File "/media/ssd01/Scripts/WidgetFactory/cgwidgets/widgets/ColorWidget/ColorWidget.py", line 702, in _pickColor
+    screen = QApplication.primaryScreen()
+AttributeError: type object 'PySide.QtGui.QApplication' has no attribute 'primaryScreen'
 
     - Split out image widget
 
