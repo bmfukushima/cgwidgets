@@ -150,7 +150,8 @@ class LadderDelegate(QWidget):
         item_list = self.item_list
         item_list.insert(self.middle_item_index, self.middle_item)
         self.item_list = item_list
-        
+        self.__setSignificantDigits()
+
     """ API """
 
     def getUserInput(self):
@@ -260,6 +261,26 @@ class LadderDelegate(QWidget):
             return None
 
     """ UTILS """
+    def __setSignificantDigits(self):
+        '''
+        sets the number of significant digits to round to
+        
+        This is to avoid floating point errors...
+        
+        Currently only working with what's set up... does not expand
+        when the number of sig digits increases... this really only needs
+        to work for decimals
+        '''
+        self._significant_digits = 1
+        for item in self.item_list:
+            if item is not self.middle_item:
+                value = item.value_mult
+                string_value = ''.join(str(value).lstrip('0').rstrip('0').split('.'))
+                sig_digits = int(len(string_value))
+                if sig_digits > self._significant_digits:
+                    self._significant_digits = sig_digits
+        
+        getcontext().prec = self._significant_digits
 
     def __setItemSize(self):
         
@@ -477,6 +498,12 @@ class LadderItem(QLabel):
         """
         self.setStyleSheet(self.default_stylesheet)
 
+    def __updateSignificantDigits(self):
+        sig_digits = self.parent()._significant_digits
+        int_len = len(self.parent().middle_item.text().split('.')[0])
+        getcontext().prec = sig_digits + int_len 
+
+
     """ EVENTS """
 
     def enterEvent(self, *args, **kwargs):
@@ -548,13 +575,11 @@ class LadderItem(QLabel):
             # update value
             xpos = math.fabs(math.modf(magnitude)[0])
             if self.num_ticks != int(magnitude):
-                # set floating point precision
-                getcontext().prec = len(str(self.value_mult).split('.')[1])
-
+                self.__updateSignificantDigits()
                 # do math
                 offset *= self.num_ticks
                 return_val = Decimal(offset) + self.orig_value
-
+                #print(Decimal(offset) , self.orig_value)
                 # set value
                 self.parent().setValue(return_val)
 
