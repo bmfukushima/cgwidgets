@@ -1,9 +1,22 @@
 import sys
 import math
+import os
+os.environ['QT_API'] = 'pyside2'
+import qtpy
+
+print(
+'''
+QT_API == {}
+'''.format(qtpy.API)
+)
 
 from qtpy.QtGui import *
 from qtpy.QtWidgets import *
 from qtpy.QtCore import *
+
+
+print(dir(qtpy))
+
 
 from cgwidgets.__utils__ import installLadderDelegate 
 
@@ -17,7 +30,7 @@ class TestWidget(QLineEdit):
         self.setGeometry(pos.x(), pos.y(), 200, 100)
         value_list = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
         #self.setText('0')
-        value_list = [0.0001, 0.001, 0.01, 0.1]
+        #value_list = [0.0001, 0.001, 0.01, 0.1]
         pos = QCursor.pos()
         installLadderDelegate(
             self,
@@ -28,29 +41,13 @@ class TestWidget(QLineEdit):
     def setValue(self, value):
         self.setText(str(value))
 
-    def mousePressEvent(self, event, *args, **kwargs):
-        """
-        trigger to active the popup menu
-        """
-        """
-        if event.button() == Qt.MiddleButton:
-            ladder = LadderDelegate(
-                parent=self,
-                widget=self,
-                #pos=self.pos(),
-                value_list=self._value_list
-            )
-            ladder.show()
-        """
-        return QLineEdit.mousePressEvent(self, event, *args, **kwargs)
 
 
-'''
 app = QApplication(sys.argv)
 menu = TestWidget()
 menu.show()
 sys.exit(app.exec_())
-'''
+
 
 
 

@@ -92,6 +92,7 @@ def installLadderDelegate(
         user_input=user_input
     )
     widget.installEventFilter(ladder)
+    return ladder
 
 
 def getGlobalPos(widget):

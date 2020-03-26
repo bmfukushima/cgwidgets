@@ -1,15 +1,13 @@
 """
-#-------------------------------------------------------------------------- Bugs
-    * Updating values on ladder during slide...
-        seems to be calculating correctly... just not properly updating?
-
+# -------------------------------------------------------------------------- Bugs
+    * First tick does not register
 # -----------------------------------------------------------------------To Do
 
     * Detect if close to edge...
         - Detect center point function
         - only needs to handle y pos
 
-#------------------------------------------------------------------- API
+# ------------------------------------------------------------------- API
     * seperate display option "discrete" mode:
         - Transparent while sliding option
         - display values somewhere non obtrustive
@@ -40,74 +38,80 @@ class LadderDelegate(QWidget):
     """
     Widget that should be added as a popup during an event.  This should be
     installed with the utils.installLadderDelegate(widget).
-    args:
+    
+    If you directly install this on a widget.  The widget must have the text/getText
+    methods (QLineEdit/QLabel).  If they do not, you need to subclass this and
+    reimplement the setValue() and getValue() methods or add those methods
+    to the parent widget.
 
     kwargs: 
-        @parent: <QLineEdit> or <QLabel>
+        parent: <QLineEdit> or <QLabel>
             widget to install ladder delegate onto.  Note this currently
             works for QLineEdit and QLabel.  
             
             Other widgets will need to implement the 'setValue(value)'
             method to properly parse the value from the ladder to the widget.
 
-        @value_list: <list> of <float>
+        value_list: <list> of <float>
             list of values for the user to be able to adjust by, usually this
             is set to .01, .1, 1, 10, etc
 
-        @user_input: <QEvent.Type>
+        user_input: <QEvent.Type>
             The action for the user to do to trigger the ladder to be installed
                 ie.
             QEvent.MouseButtonPress
     
-    properties:
-        +
-        use getters / setters
-            ie.
-        getPropertyName()
-        setPropertyName(value)
-        @slide_distance: <float>
-            multiplier of how far the user should have to drag in order
-            to trigger a value update.  Lower values are slower, higher
-            values are faster.
+    Attributes:
+        + Public:
+            use getters / setters
+                ie.
+                    getPropertyName()
+                    setPropertyName(value)
+    
+            slide_distance: <float>
+                multiplier of how far the user should have to drag in order
+                to trigger a value update.  Lower values are slower, higher
+                values are faster.
+    
+            bg_slide_color: <rgba> | ( int array ) | 0 - 255 
+                The bg color that is displayed to the user when the user starts
+                to click/drag to slide
+    
+            fg_slide_color: <rgba> | ( int array ) | 0 - 255 
+                The bg color that is displayed to the user when the user starts
+                to click/drag to slide
+    
+            selection_color: <rgba>  | ( int array ) | 0 - 255 
+                The color that is displayed to the user when they are selecting
+                which value they wish to adjust
+    
+            item_height: <int>
+                The height of each individual adjustable item.  The middle item will always
+                have the same geometry as the parent widget.
+    
+            The setValue, will then need to do the final math to calculate the result
+        
+        - Private
+            item_list <list>
+                list of all of the ladder items
+    
+            is_active  <boolean>
+                determines if the widget is currently being manipulated by the user
+    
+            current_item: <LadderItem>
+                The current item that the user is manipulating.  This property is
+                currently used to determine if this ladder item should have its
+                visual appearance changed on interaction.
 
-        @bg_slide_color: < rgba > | ( int array ) | 0 - 255 
-            The bg color that is displayed to the user when the user starts
-            to click/drag to slide
-
-        @fg_slide_color: < rgba > | ( int array ) | 0 - 255 
-            The bg color that is displayed to the user when the user starts
-            to click/drag to slide
-
-        @selection_color: < rgba >  | ( int array ) | 0 - 255 
-            The color that is displayed to the user when they are selecting
-            which value they wish to adjust
-
-        @item_height: < int>
-            The height of each individual adjustable item.  The middle item will always
-            have the same geometry as the parent widget.
-
-        The setValue, will then need to do the final math to calculate the result
-        -
-        @item_list: list of all of the items
-
-        @is_active  boolean to determine if the widget
-                            is currently being manipulated by
-                            the user
-
-        @current_item: <LadderItem>
-            The current item that the user is manipulating.  This property is
-            currently used to determine if this ladder item should have its
-            visual appearance changed on interaction.
-
-        @middle_item_index: <int>
+        middle_item_index: <int>
             Index of the middle item in the item's list.  This is used to offset
             the middle item to overlay the widget it was used on.
     """
     def __init__(
             self,
             parent=None,
-            value_list=None,
-            user_input=None,
+            value_list=[0.001, 0.01, 0.1, 1, 10, 100, 1000],
+            user_input=QEvent.MouseButtonPress,
     ):
         super(LadderDelegate, self).__init__(parent)
         layout = QVBoxLayout()
@@ -147,13 +151,16 @@ class LadderDelegate(QWidget):
             value=self.getValue()
         )
         layout.insertWidget(self.middle_item_index, self.middle_item)
+
+        # populate item list
         item_list = self.item_list
         item_list.insert(self.middle_item_index, self.middle_item)
         self.item_list = item_list
+
+        # set significant digits
         self.__setSignificantDigits()
 
     """ API """
-
     def getUserInput(self):
         return self._user_input
     
@@ -197,7 +204,6 @@ class LadderDelegate(QWidget):
         self._item_height = item_height
 
     """ PROPERTIES """
-
     @property
     def middle_item_index(self):
         return self._middle_item_index
@@ -240,7 +246,7 @@ class LadderDelegate(QWidget):
     def setValue(self, value):
         """
         args:
-            @value: <float>
+            value: <float>
             Sets the value on the parent widget.
             
             creating a setValue(value) method on the parent widget
@@ -251,12 +257,29 @@ class LadderDelegate(QWidget):
             parent = self.parent()
             # set value
             self.middle_item.setValue(str(self._value))
-            parent.setText(str(self._value))
+            try:
+                parent.setText(str(self._value))
+            except AttributeError:
+                try:
+                    self.parent().setValue(self._value)
+                except AttributeError:
+                    return None
 
     def getValue(self):
+        '''
+        returns:
+            current parent widgets value. Will attempt to look for the
+            default text() attr, however if it is not available, will look for
+            the parents getValue() method.
+        '''
         try:
             self._value = float(self.parent().text())
             return self._value
+        except AttributeError:
+            try:
+                return self.parent().getValue()
+            except AttributeError:
+                return None
         except ValueError:
             return None
 
@@ -350,7 +373,7 @@ class LadderMiddleItem(QLabel):
 
     Due to how awesomely bad transparency is to do in Qt =\
     """
-    def __init__(self, parent=None, height=50, value=None, width=100):
+    def __init__(self, parent=None, value=None):
         super(LadderMiddleItem, self).__init__(parent)
         self.setValue(value)
         self.default_style_sheet = self.styleSheet()
@@ -374,6 +397,10 @@ class LadderItem(QLabel):
     that is passed to the ladder delegate.
 
     kwargs:
+        value_mult < float >
+            how many units the drag should update
+
+    Attributes:
         orig_value < float >
             the value of the widget prior to starting a
             value adjustment.  This is reset everytime a new value adjustment
@@ -393,9 +420,7 @@ class LadderItem(QLabel):
     def __init__(
             self,
             parent=None,
-            value_mult='',
-            height=50,
-            width=None
+            value_mult=''
         ):
         super(LadderItem, self).__init__(parent)
 
@@ -446,10 +471,11 @@ class LadderItem(QLabel):
         the individual items in the ladder
 
         args:
-            @xpos: floatf of single channel rgb color
-            sets the style sheet to converge from left
-            to right so that each full convergance will
-            display another increment in value 
+            xpos <float>
+                single channel rgb color ( 0 - 1)
+                sets the style sheet to converge from left
+                to right so that each full convergance will
+                display another increment in value 
         """
         style_sheet = """
         background: qlineargradient(
@@ -472,10 +498,11 @@ class LadderItem(QLabel):
         the user how close they are to the next tick
 
         args:
-            @xpos: floatf of single channel rgb color
-            sets the style sheet to converge from left
-            to right so that each full convergance will
-            display another increment in value 
+            xpos <float>
+                single channel rgb color ( 0 - 1)
+                sets the style sheet to converge from left
+                to right so that each full convergance will
+                display another increment in value 
         """
         item_list = self.parent().item_list
         for index, item in enumerate(item_list):
@@ -498,11 +525,46 @@ class LadderItem(QLabel):
         """
         self.setStyleSheet(self.default_stylesheet)
 
-    def __updateSignificantDigits(self):
+    def __updateSignificantDigits(self, value):
+        '''
+        updates the significant digits
+        
+        This is used to ensure that the floating point precision is
+        correct when the user scrubs the widget
+        '''
         sig_digits = self.parent()._significant_digits
-        int_len = len(self.parent().middle_item.text().split('.')[0])
-        getcontext().prec = sig_digits + int_len 
+        int_len = len(str(value).split('.')[0])
+        getcontext().prec = sig_digits + int_len
 
+    def __getMagnitude(self, start_pos, current_pos):
+        '''
+        returns the magnitude of a user click/drop operation
+
+        args:
+            start_pos <QPoint>
+                initial point of the cursor.  This could be when the user
+                clicked, or when the last tick was registered
+            current_pos <QPoint>
+                current position of the cursor
+        returns <float>
+
+        '''
+        # get magnitude
+        xoffset = start_pos.x() - current_pos.x()
+        yoffset = start_pos.y() - current_pos.y()
+        magnitude = math.sqrt(
+            pow(xoffset, 2)
+            + pow(yoffset, 2)
+        )
+        
+        # direction of magnitude
+        if xoffset > 0:
+            magnitude *= -1
+            
+        # user mult
+        MAGNITUDE_MULTIPLIER = self.parent().getSlideDistance()
+        magnitude *= MAGNITUDE_MULTIPLIER
+        return magnitude
 
     """ EVENTS """
 
@@ -530,8 +592,7 @@ class LadderItem(QLabel):
         if the user clicks on the item, it will start the click/drag value adjust
         """
         # get initial position
-        pos = QCursor.pos()
-        self.start_pos = pos
+        self.start_pos = QCursor.pos()
         self.parent().current_item = self
         
         # initialize attrs
@@ -547,25 +608,10 @@ class LadderItem(QLabel):
         """
         primary work horse for mouse movement slider
         """
-        MAGNITUDE_MULTIPLIER = self.parent().getSlideDistance()
         if self.parent().is_active is True:
-            # get attrs
-            current_pos = QCursor.pos()
-            start_pos = self.start_pos
-
-            # get magnitude
-            xoffset = start_pos.x() - current_pos.x()
-            yoffset = start_pos.y() - current_pos.y()
-            magnitude = math.sqrt(
-                pow(xoffset, 2)
-                + pow(yoffset, 2)
-            )
-
-            # determine offset direction
+            #magnitude = self.__getMagnitude(self.start_pos, QCursor.pos())
+            magnitude = self.__getMagnitude(self.start_pos, self.mapToGlobal(event.pos()))
             offset = self.value_mult
-            if xoffset > 0:
-                magnitude *= -1
-            magnitude *= MAGNITUDE_MULTIPLIER
 
             # ===================================================================
             # update values
@@ -575,17 +621,18 @@ class LadderItem(QLabel):
             # update value
             xpos = math.fabs(math.modf(magnitude)[0])
             if self.num_ticks != int(magnitude):
-                self.__updateSignificantDigits()
                 # do math
                 offset *= self.num_ticks
+                self.__updateSignificantDigits(Decimal(offset) + self.orig_value)
                 return_val = Decimal(offset) + self.orig_value
-                #print(Decimal(offset) , self.orig_value)
+
                 # set value
                 self.parent().setValue(return_val)
 
                 # reset values
                 self.num_ticks = int(magnitude)
             self.__updateWidgetGradients(xpos)
+
         return QLabel.mouseMoveEvent(self, event, *args, **kwargs)
 
     def mouseReleaseEvent(self, *args, **kwargs):

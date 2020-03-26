@@ -3,7 +3,7 @@ import os
 
 os.environ['QT_API'] = "pyside2"
 
-
+import qtpy
 from qtpy.QtWidgets import *
 
 from . import LibraryWidget
@@ -16,6 +16,12 @@ pyqt4
 pyside
 pyside2
 '''
+print(
+'''
+QT_API == {}
+'''.format(qtpy.API)
+)
+
 #print(os.environ['QT_API'])
 ''' UNIT TESTS '''
 app = QApplication(sys.argv)
