@@ -1,11 +1,3 @@
-'''
-    * sig digits not updating??
-        - the current value is not the correct sig digits?
-        - looks like its rolling over 1 tick to soon...
-
-        - This looks like an actual bug
-'''
-
 import unittest
 import sys
 
@@ -13,9 +5,7 @@ from qtpy.QtWidgets import QApplication, QLineEdit
 from qtpy.QtGui import QCursor, QMouseEvent
 from qtpy.QtTest import QTest
 from qtpy.QtCore import Qt, QEvent, QPoint
-#print(dir(QtTest))
 
-#from .LadderDelegate import LadderItem
 from cgwidgets.__utils__ import installLadderDelegate
 from cgwidgets.delegates.LadderDelegate.LadderDelegate import LadderItem
 
@@ -56,7 +46,7 @@ class TestLadderDelegate(unittest.TestCase):
                 # pen move
                 num_ticks = 0
                 for x in range(0, 343):
-                    pos = QPoint(QCursor().pos().x() + x, QCursor().pos().y() + x, )
+                    pos = QPoint(QCursor().pos().x() + x, QCursor().pos().y() + x)
                     move_event = QMouseEvent(
                         QEvent.MouseMove,
                         pos,

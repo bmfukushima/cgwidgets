@@ -16,14 +16,13 @@
     * need to figure out how to make eventFilter more robust...
         ie support CTRL+ALT+CLICK / RMB, etc
             rather than just a QEvent.Type
-    
+
     * set range
         allow ladder widget to only go between a specifc range
             ie
                 Only allow this to work in the 0-1 range
-    
+
 """
-import sys
 import math
 
 from qtpy.QtGui import *
@@ -38,17 +37,17 @@ class LadderDelegate(QWidget):
     """
     Widget that should be added as a popup during an event.  This should be
     installed with the utils.installLadderDelegate(widget).
-    
+
     If you directly install this on a widget.  The widget must have the text/getText
     methods (QLineEdit/QLabel).  If they do not, you need to subclass this and
     reimplement the setValue() and getValue() methods or add those methods
     to the parent widget.
 
-    kwargs: 
+    kwargs:
         parent: <QLineEdit> or <QLabel>
             widget to install ladder delegate onto.  Note this currently
-            works for QLineEdit and QLabel.  
-            
+            works for QLineEdit and QLabel.
+
             Other widgets will need to implement the 'setValue(value)'
             method to properly parse the value from the ladder to the widget.
 
@@ -60,52 +59,52 @@ class LadderDelegate(QWidget):
             The action for the user to do to trigger the ladder to be installed
                 ie.
             QEvent.MouseButtonPress
-    
+
     Attributes:
         + Public:
             use getters / setters
                 ie.
                     getPropertyName()
                     setPropertyName(value)
-    
+
             slide_distance: <float>
                 multiplier of how far the user should have to drag in order
                 to trigger a value update.  Lower values are slower, higher
                 values are faster.
-    
-            bg_slide_color: <rgba> | ( int array ) | 0 - 255 
+
+            bg_slide_color: <rgba> | ( int array ) | 0 - 255
                 The bg color that is displayed to the user when the user starts
                 to click/drag to slide
-    
-            fg_slide_color: <rgba> | ( int array ) | 0 - 255 
+
+            fg_slide_color: <rgba> | ( int array ) | 0 - 255
                 The bg color that is displayed to the user when the user starts
                 to click/drag to slide
-    
-            selection_color: <rgba>  | ( int array ) | 0 - 255 
+
+            selection_color: <rgba>  | ( int array ) | 0 - 255
                 The color that is displayed to the user when they are selecting
                 which value they wish to adjust
-    
+
             item_height: <int>
-                The height of each individual adjustable item.  The middle item will always
-                have the same geometry as the parent widget.
-    
+                The height of each individual adjustable item.  The middle item
+                will always have the same geometry as the parent widget.
+
             The setValue, will then need to do the final math to calculate the result
-        
+
         - Private
             item_list <list>
                 list of all of the ladder items
-    
+
             is_active  <boolean>
                 determines if the widget is currently being manipulated by the user
-    
+
             current_item: <LadderItem>
-                The current item that the user is manipulating.  This property is
-                currently used to determine if this ladder item should have its
-                visual appearance changed on interaction.
+                The current item that the user is manipulating.  This property
+                is currently used to determine if this ladder item should have
+                its visual appearance changed on interaction.
 
         middle_item_index: <int>
-            Index of the middle item in the item's list.  This is used to offset
-            the middle item to overlay the widget it was used on.
+            Index of the middle item in the item's list.  This is used to
+            offset the middle item to overlay the widget it was used on.
     """
     def __init__(
             self,
@@ -163,43 +162,43 @@ class LadderDelegate(QWidget):
     """ API """
     def getUserInput(self):
         return self._user_input
-    
+
     def setUserInput(self, user_input):
         self._user_input = user_input
 
     def getMiddleItemBorderWidth(self):
         return self._middle_item_border_width
-    
+
     def setMiddleItemBorderWidth(self, border_width):
-        self._middle_item_border_width = border_width    
+        self._middle_item_border_width = border_width
 
     def getSlideDistance(self):
         return self._slide_distance
-    
+
     def setSlideDistance(self, slide_distance):
         self._slide_distance = slide_distance
 
     def getBGSlideColor(self):
         return self._bg_slide_color
-    
+
     def setBGSlideColor(self, color):
         self._bg_slide_color = color
 
     def getFGSlideColor(self):
         return self._fg_slide_color
-    
+
     def setFGSlideColor(self, color):
         self._fg_slide_color = color
 
     def getSelectionColor(self):
         return self._selection_color
-    
+
     def setSelectionColor(self, color):
         self._selection_color = color
 
     def getItemHeight(self):
         return self._item_height
-        
+
     def setItemHeight(self, item_height):
         self._item_height = item_height
 
@@ -229,7 +228,7 @@ class LadderDelegate(QWidget):
     @is_active.setter
     def is_active(self, boolean):
         self._is_active = boolean
-    
+
     @property
     def item_list(self):
         if not hasattr(self, '_item_list'):
@@ -248,7 +247,7 @@ class LadderDelegate(QWidget):
         args:
             value: <float>
             Sets the value on the parent widget.
-            
+
             creating a setValue(value) method on the parent widget
             will run this method last when setting the value
         """
@@ -287,9 +286,9 @@ class LadderDelegate(QWidget):
     def __setSignificantDigits(self):
         '''
         sets the number of significant digits to round to
-        
+
         This is to avoid floating point errors...
-        
+
         Currently only working with what's set up... does not expand
         when the number of sig digits increases... this really only needs
         to work for decimals
@@ -302,27 +301,25 @@ class LadderDelegate(QWidget):
                 sig_digits = int(len(string_value))
                 if sig_digits > self._significant_digits:
                     self._significant_digits = sig_digits
-        
+
         getcontext().prec = self._significant_digits
 
     def __setItemSize(self):
-        
+
         # set adjustable items
         height = self.getItemHeight()
         width = self.parent().width()
         for item in self.item_list:
             item.setFixedSize(width, height)
-        
+
         # set display item ( middle item)
         self.middle_item.setFixedSize(width, self.parent().height())
-            
+
     def __setPosition(self):
         """
         sets the position of the delegate relative to the
         widget that it is adjusting
         """
-        num_values = len(self.item_list)
-
         pos = getGlobalPos(self.parentWidget())
         # set position
         offset = self.middle_item_index * self.getItemHeight()
@@ -352,7 +349,7 @@ class LadderDelegate(QWidget):
         if event.key() == Qt.Key_Escape:
             self.hide()
         return QWidget.keyPressEvent(self, event, *args, **kwargs)
-    
+
     def eventFilter(self, obj, event, *args, **kwargs):
         """
         installed on the parent widget to determine the user input
@@ -369,7 +366,7 @@ class LadderDelegate(QWidget):
 class LadderMiddleItem(QLabel):
     """
     This is the display label to overlay
-    over the current widget.  
+    over the current widget.
 
     Due to how awesomely bad transparency is to do in Qt =\
     """
@@ -377,10 +374,12 @@ class LadderMiddleItem(QLabel):
         super(LadderMiddleItem, self).__init__(parent)
         self.setValue(value)
         self.default_style_sheet = self.styleSheet()
-        self.setStyleSheet('border-width: {}px; border-color: rgb(18,18,18);border-style: solid;'.format(
-            self.parent().getMiddleItemBorderWidth())
-        )
-        #self.setStyleSheet('background-color: rgb(255,0,0)')
+        self.setStyleSheet(
+            '''
+        border-width: {}px;
+        border-color: rgb(18,18,18);
+        border-style: solid;
+        '''.format(self.parent().getMiddleItemBorderWidth()))
 
     def setValue(self, value):
         self.setText(str(value))
@@ -428,24 +427,24 @@ class LadderItem(QLabel):
         self._value_mult = value_mult
         self.setText(str(value_mult))
         self.default_stylesheet = self.styleSheet()
-    
+
     """ PROPERTIES """
     @property
     def num_ticks(self):
         return self._num_ticks
-    
+
     @num_ticks.setter
     def num_ticks(self, num_ticks):
         self._num_ticks = num_ticks
-    
+
     @property
     def orig_value(self):
         return self._orig_value
-    
+
     @orig_value.setter
     def orig_value(self, orig_value):
         self._orig_value = Decimal(orig_value)
-    
+
     @property
     def value_mult(self):
         return self._value_mult
@@ -475,7 +474,7 @@ class LadderItem(QLabel):
                 single channel rgb color ( 0 - 1)
                 sets the style sheet to converge from left
                 to right so that each full convergance will
-                display another increment in value 
+                display another increment in value
         """
         style_sheet = """
         background: qlineargradient(
@@ -502,7 +501,7 @@ class LadderItem(QLabel):
                 single channel rgb color ( 0 - 1)
                 sets the style sheet to converge from left
                 to right so that each full convergance will
-                display another increment in value 
+                display another increment in value
         """
         item_list = self.parent().item_list
         for index, item in enumerate(item_list):
@@ -528,7 +527,7 @@ class LadderItem(QLabel):
     def __updateSignificantDigits(self, value):
         '''
         updates the significant digits
-        
+
         This is used to ensure that the floating point precision is
         correct when the user scrubs the widget
         '''
@@ -556,11 +555,11 @@ class LadderItem(QLabel):
             pow(xoffset, 2)
             + pow(yoffset, 2)
         )
-        
+
         # direction of magnitude
         if xoffset > 0:
             magnitude *= -1
-            
+
         # user mult
         MAGNITUDE_MULTIPLIER = self.parent().getSlideDistance()
         magnitude *= MAGNITUDE_MULTIPLIER
@@ -594,7 +593,7 @@ class LadderItem(QLabel):
         # get initial position
         self.start_pos = QCursor.pos()
         self.parent().current_item = self
-        
+
         # initialize attrs
         self.orig_value = self.parent().middle_item.getValue()
         self.num_ticks = 0
@@ -609,7 +608,7 @@ class LadderItem(QLabel):
         primary work horse for mouse movement slider
         """
         if self.parent().is_active is True:
-            #magnitude = self.__getMagnitude(self.start_pos, QCursor.pos())
+            # magnitude = self.__getMagnitude(self.start_pos, QCursor.pos())
             magnitude = self.__getMagnitude(self.start_pos, self.mapToGlobal(event.pos()))
             offset = self.value_mult
 
