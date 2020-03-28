@@ -1,3 +1,4 @@
+"""
 import sys
 import math
 import os
@@ -19,9 +20,6 @@ print(dir(qtpy))
 
 
 from cgwidgets.utils import installLadderDelegate 
-
-""" TEST STUFF """
-
 
 class TestWidget(QLineEdit):
     def __init__(self, parent=None, value=0):
@@ -47,8 +45,10 @@ app = QApplication(sys.argv)
 menu = TestWidget()
 menu.show()
 sys.exit(app.exec_())
+"""
 
-
+from cgwidgets.delegates.LadderDelegate import test_LadderDelegate
+test_LadderDelegate.mainFunction()
 
 
 

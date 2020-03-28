@@ -35,7 +35,6 @@ class LadderWidget(QWidget):
         super(LadderWidget, self).__init__(parent)
         # setup widget
         layout = QVBoxLayout(self)
-        
 
         # set up position
         pos = QCursor().pos()
@@ -46,7 +45,7 @@ class LadderWidget(QWidget):
             widget = QLineEdit()
 
         # install ladder delegate
-        installLadderDelegate(
+        self.ladder = installLadderDelegate(
             widget,
             user_input=user_input,
             value_list=value_list
@@ -60,7 +59,7 @@ class LadderWidget(QWidget):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    label = QLabel('0')
+    label = QLabel('-5')
     menu = LadderWidget(widget=label)
     menu.show()
     sys.exit(app.exec_())

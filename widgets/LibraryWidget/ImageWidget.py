@@ -17,6 +17,7 @@ from qtpy.QtCore import *
 from .__utils__ import iUtils
 from cgwidgets import utils as gUtils
 
+
 class ImageWidget(QLabel):
     '''
     temperature = property(get_temperature,set_temperature)
