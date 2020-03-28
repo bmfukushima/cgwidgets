@@ -1,4 +1,5 @@
-'''
+"""
+ladder test
 Widgets:
     - Ladder Delegate / Widget
         - widget just installs the delegate on:
@@ -13,8 +14,5 @@ AttributeError: type object 'PySide.QtGui.QApplication' has no attribute 'primar
     - Split out image widget
 
     - Split out view widgets
-    
 
-
-
-'''
+"""
