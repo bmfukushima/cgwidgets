@@ -35,7 +35,7 @@ class LadderWidget(QWidget):
         super(LadderWidget, self).__init__(parent)
         # setup widget
         layout = QVBoxLayout(self)
-        layout.addWidget(widget)
+        
 
         # set up position
         pos = QCursor().pos()
@@ -51,6 +51,8 @@ class LadderWidget(QWidget):
             user_input=user_input,
             value_list=value_list
         )
+
+        layout.addWidget(widget)
 
     def setValue(self, value):
         self.setText(str(value))

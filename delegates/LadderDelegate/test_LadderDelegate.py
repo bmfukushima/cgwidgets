@@ -9,8 +9,6 @@ from qtpy.QtCore import Qt, QEvent, QPoint
 from cgwidgets.utils import installLadderDelegate
 from cgwidgets.delegates.LadderDelegate.LadderDelegate import LadderItem
 
-app = QApplication(sys.argv)
-
 
 class TestLadderDelegate(unittest.TestCase):
     '''
@@ -108,4 +106,5 @@ class TestParentWidget(QLineEdit):
 
 
 if __name__ == '__main__':
+    app = QApplication(sys.argv)
     unittest.main()
