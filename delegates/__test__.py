@@ -18,7 +18,7 @@ from qtpy.QtCore import *
 print(dir(qtpy))
 
 
-from cgwidgets.__utils__ import installLadderDelegate 
+from cgwidgets.utils import installLadderDelegate 
 
 """ TEST STUFF """
 

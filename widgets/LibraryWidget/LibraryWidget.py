@@ -179,7 +179,7 @@ from . import ImageWidget
 from .PublishWidget import PublishWidget
 from .TopBarWidget import TopBarMainWidget
 from .__utils__ import iUtils
-from cgwidgets import __utils__ as gUtils
+from cgwidgets import utils as gUtils
 from .Views import *
 
 

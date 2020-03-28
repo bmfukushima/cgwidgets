@@ -2,11 +2,23 @@
 # -------------------------------------------------------------------------- Bugs
     * First tick does not register
 # -----------------------------------------------------------------------To Do
+    * LadderItem --)Utils:
+        Consider ClassMethod/StaticMethod
 
     * Detect if close to edge...
         - Detect center point function
         - only needs to handle y pos
 
+    * Cursor Wrapping
+        - When cursor gets to end of monitor, wrap to other side.
+        - Can also hide cursor during drag... and recenter?
+            This seems like the better idea...
+
+    * Hide non essential stuff while manipulating?
+        - Don't need all of the items updating the tick...
+        - can just have one update the tick... 
+            potentially can show this at the bottom with a new
+            slider delegate
 # ------------------------------------------------------------------- API
     * seperate display option "discrete" mode:
         - Transparent while sliding option
@@ -29,7 +41,7 @@ from qtpy.QtGui import *
 from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 
-from cgwidgets.__utils__ import getGlobalPos
+from cgwidgets.utils import getGlobalPos
 from decimal import Decimal, getcontext
 
 
@@ -43,19 +55,19 @@ class LadderDelegate(QWidget):
     reimplement the setValue() and getValue() methods or add those methods
     to the parent widget.
 
-    kwargs:
-        parent: <QLineEdit> or <QLabel>
+    Kwargs:
+        parent: (QLineEdit) or (QLabel)
             widget to install ladder delegate onto.  Note this currently
             works for QLineEdit and QLabel.
 
             Other widgets will need to implement the 'setValue(value)'
             method to properly parse the value from the ladder to the widget.
 
-        value_list: <list> of <float>
+        value_list: (list) of (float)
             list of values for the user to be able to adjust by, usually this
             is set to .01, .1, 1, 10, etc
 
-        user_input: <QEvent.Type>
+        user_input: (QEvent.Type)
             The action for the user to do to trigger the ladder to be installed
                 ie.
             QEvent.MouseButtonPress
@@ -67,44 +79,53 @@ class LadderDelegate(QWidget):
                     getPropertyName()
                     setPropertyName(value)
 
-            slide_distance: <float>
+            user_input: (QEvent)
+                Event to be used on the widget to allow the user to trigger
+                the ladder delegate to popup
+                    ie
+                        QEvent.MouseButtonPress
+
+            middle_item_border_width: (int)
+                The width of the border for the widget that displays the current value
+
+            slide_distance: (float)
                 multiplier of how far the user should have to drag in order
                 to trigger a value update.  Lower values are slower, higher
                 values are faster.
 
-            bg_slide_color: <rgba> | ( int array ) | 0 - 255
+            bg_slide_color: (rgba) | ( int array ) | 0 - 255
                 The bg color that is displayed to the user when the user starts
                 to click/drag to slide
 
-            fg_slide_color: <rgba> | ( int array ) | 0 - 255
+            fg_slide_color: (rgba) | ( int array ) | 0 - 255
                 The bg color that is displayed to the user when the user starts
                 to click/drag to slide
 
-            selection_color: <rgba>  | ( int array ) | 0 - 255
+            selection_color: (rgba)  | ( int array ) | 0 - 255
                 The color that is displayed to the user when they are selecting
                 which value they wish to adjust
 
-            item_height: <int>
+            item_height: (int)
                 The height of each individual adjustable item.  The middle item
                 will always have the same geometry as the parent widget.
 
-            The setValue, will then need to do the final math to calculate the result
+            * The setValue, will then need to do the final math to calculate the result
 
         - Private
-            item_list <list>
+            item_list (list)
                 list of all of the ladder items
 
-            is_active  <boolean>
+            is_active  (boolean)
                 determines if the widget is currently being manipulated by the user
 
-            current_item: <LadderItem>
+            current_item: (LadderItem)
                 The current item that the user is manipulating.  This property
                 is currently used to determine if this ladder item should have
                 its visual appearance changed on interaction.
 
-        middle_item_index: <int>
-            Index of the middle item in the item's list.  This is used to
-            offset the middle item to overlay the widget it was used on.
+            middle_item_index: (int)
+                Index of the middle item in the item's list.  This is used to
+                offset the middle item to overlay the widget it was used on.
     """
     def __init__(
             self,
@@ -244,8 +265,8 @@ class LadderDelegate(QWidget):
 
     def setValue(self, value):
         """
-        args:
-            value: <float>
+        Args:
+            value: (float)
             Sets the value on the parent widget.
 
             creating a setValue(value) method on the parent widget
@@ -395,23 +416,23 @@ class LadderItem(QLabel):
     Clicking/Dragging left/right on one of these will update the widget
     that is passed to the ladder delegate.
 
-    kwargs:
-        value_mult < float >
+    Kwargs:
+        value_mult (float)
             how many units the drag should update
 
     Attributes:
-        orig_value < float >
+        orig_value (float)
             the value of the widget prior to starting a
             value adjustment.  This is reset everytime a new value adjustment
             is started.
 
-        value_mult < float >
+        value_mult (float)
             how many units the drag should update
 
-        start_pos < QPoint >
+        start_pos (QPoint)
             starting position of drag
 
-        num_ticks < int >
+        num_ticks (int)
             how many units the user has moved.
             ( num_ticks * value_mult ) + orig_value = new_value
 
@@ -469,8 +490,8 @@ class LadderItem(QLabel):
         changes the color for the moving slider for all
         the individual items in the ladder
 
-        args:
-            xpos <float>
+        Args:
+            xpos (float)
                 single channel rgb color ( 0 - 1)
                 sets the style sheet to converge from left
                 to right so that each full convergance will
@@ -496,8 +517,8 @@ class LadderItem(QLabel):
         Draws out the moving slider over the items to show
         the user how close they are to the next tick
 
-        args:
-            xpos <float>
+        Args:
+            xpos (float)
                 single channel rgb color ( 0 - 1)
                 sets the style sheet to converge from left
                 to right so that each full convergance will
@@ -530,6 +551,9 @@ class LadderItem(QLabel):
 
         This is used to ensure that the floating point precision is
         correct when the user scrubs the widget
+
+        Args:
+            value (float)
         '''
         sig_digits = self.parent()._significant_digits
         int_len = len(str(value).split('.')[0])
@@ -539,14 +563,14 @@ class LadderItem(QLabel):
         '''
         returns the magnitude of a user click/drop operation
 
-        args:
-            start_pos <QPoint>
+        Args:
+            start_pos (QPoint)
                 initial point of the cursor.  This could be when the user
                 clicked, or when the last tick was registered
-            current_pos <QPoint>
+            current_pos (QPoint)
                 current position of the cursor
-        returns <float>
-
+        Returns:
+            float
         '''
         # get magnitude
         xoffset = start_pos.x() - current_pos.x()

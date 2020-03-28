@@ -24,7 +24,7 @@ from qtpy.QtCore import *
 from qtpy.QtGui import *
 
 from .__utils__ import iUtils
-from cgwidgets import __utils__ as gUtils
+from cgwidgets import utils as gUtils
 
 
 class ImageListModel(QAbstractTableModel):

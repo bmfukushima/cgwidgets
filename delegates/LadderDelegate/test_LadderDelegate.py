@@ -6,7 +6,7 @@ from qtpy.QtGui import QCursor, QMouseEvent
 from qtpy.QtTest import QTest
 from qtpy.QtCore import Qt, QEvent, QPoint
 
-from cgwidgets.__utils__ import installLadderDelegate
+from cgwidgets.utils import installLadderDelegate
 from cgwidgets.delegates.LadderDelegate.LadderDelegate import LadderItem
 
 app = QApplication(sys.argv)
@@ -24,11 +24,14 @@ class TestLadderDelegate(unittest.TestCase):
         TestLadderDelegate.ladder_delegate.setValue(3)
         app.processEvents()
 
-    def test_setValue(self):
-        TestLadderDelegate.ladder_delegate.setValue(5)
-        self.assertEqual(TestLadderDelegate.ladder_delegate.middle_item.getValue(), 5)
+    def setValue(self, value):
+        TestLadderDelegate.ladder_delegate.setValue(value)
+        self.assertEqual(TestLadderDelegate.ladder_delegate.middle_item.getValue(), value)
 
-    def test_userClickDrag(self):
+    def test_setValue(self):
+        self.setValue(5)
+
+    def userClickDrag(self):
         '''
         Tests a user click/drag operation.  When the delegate opens, a user
         can click + drag on a value to determine how much to update the
@@ -81,6 +84,9 @@ class TestLadderDelegate(unittest.TestCase):
 
                 # pen up
                 QTest.mouseRelease(item, Qt.LeftButton)
+
+    def test_userClickDrag(self):
+        self.userClickDrag()
 
 
 class TestParentWidget(QLineEdit):

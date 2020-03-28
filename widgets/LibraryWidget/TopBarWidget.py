@@ -4,7 +4,7 @@ from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 
 from .__utils__ import iUtils
-from cgwidgets import __utils__ as gUtils
+from cgwidgets import utils as gUtils
 
 class TopBarMainWidget(QWidget):
     '''
