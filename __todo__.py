@@ -1,5 +1,16 @@
 """
-ladder test
+Unit Tests:
+    - Delegates seems to be working
+    - Move tests to main...
+    - Add widgets in
+    - Run pyside2/PyQt5 tests
+        Update to Python 3.5 --> 3.8
+
+        Setup checks for Python 2.7
+            * pyside
+            * pyqt4
+
+
 Widgets:
     - Ladder Delegate / Widget
         - widget just installs the delegate on:
@@ -15,4 +26,6 @@ AttributeError: type object 'PySide.QtGui.QApplication' has no attribute 'primar
 
     - Split out view widgets
 
+Notes:
+    * Unit tests run in script mode
 """

@@ -1,4 +1,4 @@
-import sys
+"""import sys
 import os
 
 os.environ['QT_API'] = "pyside2"
@@ -37,9 +37,24 @@ color_widget = ColorWidget()
 color_widget.show()
 #color_widget.close()
 sys.exit(app.exec_())
+"""
 
-    
+import unittest
+import sys
+
+from qtpy.QtWidgets import QApplication
 
 
+def testLadderWidget():
+    from cgwidgets.widgets.LadderWidget import test_LadderWidget
+    suite = unittest.TestLoader().loadTestsFromModule(test_LadderWidget)
+    unittest.TextTestRunner(verbosity=2).run(suite)
 
-    
+
+def mainFunction():
+    app = QApplication(sys.argv)
+    testLadderWidget()
+
+
+if __name__ == '__main__':
+    mainFunction()

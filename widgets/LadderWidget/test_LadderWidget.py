@@ -30,6 +30,11 @@ class TestLadderWidget(unittest.TestCase):
         iTest().setValue(self, 5, TestLadderWidget.widget.ladder)
         iTest().setValue(self, -5, TestLadderWidget.widget.ladder)
 
-if __name__ == '__main__':
+
+def mainFunction():
     app = QApplication(sys.argv)
     unittest.main()
+
+
+if __name__ == '__main__':
+    mainFunction()

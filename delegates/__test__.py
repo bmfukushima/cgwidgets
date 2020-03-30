@@ -46,10 +46,23 @@ menu = TestWidget()
 menu.show()
 sys.exit(app.exec_())
 """
+import unittest
+import sys
 
-from cgwidgets.delegates.LadderDelegate import test_LadderDelegate
-test_LadderDelegate.mainFunction()
+from qtpy.QtWidgets import QApplication
 
 
+def testLadderDelegate():
+    from cgwidgets.delegates.LadderDelegate import test_LadderDelegate
+    suite = unittest.TestLoader().loadTestsFromModule(test_LadderDelegate)
+    unittest.TextTestRunner(verbosity=2).run(suite)
 
+
+def mainFunction():
+    app = QApplication(sys.argv)
+    testLadderDelegate()
+
+
+if __name__ == '__main__':
+    mainFunction()
 
