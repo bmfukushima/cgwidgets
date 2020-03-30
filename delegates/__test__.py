@@ -59,10 +59,10 @@ def testLadderDelegate():
 
 
 def mainFunction():
-    app = QApplication(sys.argv)
     testLadderDelegate()
 
 
 if __name__ == '__main__':
+    app = QApplication(sys.argv)
     mainFunction()
 

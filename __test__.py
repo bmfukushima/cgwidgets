@@ -1,6 +1,10 @@
 import unittest
 import sys
+import os
 
+os.environ['QT_API'] = 'pyside2'
+
+import qtpy
 from qtpy.QtWidgets import QApplication
 
 from cgwidgets.widgets import __test__ as test_widgets
@@ -16,6 +20,11 @@ def testWidgets():
 
 
 if __name__ == '__main__':
+    print(
+    '''
+    QT_API == {}
+    '''.format(qtpy.API)
+    )
     app = QApplication(sys.argv)
     testDelegates()
     testWidgets()

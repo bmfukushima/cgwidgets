@@ -52,9 +52,9 @@ def testLadderWidget():
 
 
 def mainFunction():
-    app = QApplication(sys.argv)
     testLadderWidget()
 
 
 if __name__ == '__main__':
+    app = QApplication(sys.argv)
     mainFunction()
