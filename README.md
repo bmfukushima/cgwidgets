@@ -1,6 +1,14 @@
 # WidgetFactory
 PyQt / PySide compliant Widgets
 
+Why
+Does
+This
+Not
+Support
+New
+Lines
+
 Prerequisites
 	qtpy
 		https://pypi.org/project/QtPy/
