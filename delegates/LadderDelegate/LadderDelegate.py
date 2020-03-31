@@ -41,7 +41,7 @@ from qtpy.QtGui import *
 from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 
-from cgwidgets.utils import getGlobalPos
+from cgwidgets.utils import getGlobalPos, addInvisibleDragEvent
 from decimal import Decimal, getcontext
 
 
@@ -71,6 +71,10 @@ class LadderDelegate(QWidget):
             The action for the user to do to trigger the ladder to be installed
                 ie.
             QEvent.MouseButtonPress
+
+        invisible_Drag (boolean): Toggle on/off the invisible drag
+        functionality.  Having this turned on will also enable cursor
+        wrapping for infinite dragging
 
     Attributes:
         + Public:
@@ -132,6 +136,7 @@ class LadderDelegate(QWidget):
             parent=None,
             value_list=[0.001, 0.01, 0.1, 1, 10, 100, 1000],
             user_input=QEvent.MouseButtonPress,
+            invisible_drag=True
     ):
         super(LadderDelegate, self).__init__(parent)
         layout = QVBoxLayout()
@@ -179,6 +184,9 @@ class LadderDelegate(QWidget):
 
         # set significant digits
         self.__setSignificantDigits()
+
+        # setup invisible drag
+        self.__setupInvisibleDrag()
 
     """ API """
     def getUserInput(self):
@@ -349,6 +357,11 @@ class LadderDelegate(QWidget):
             pos.y() - offset
         )
         self.move(pos)
+
+    def __setupInvisibleDrag(self):
+        for item in self.item_list:
+            if not isinstance(item, LadderMiddleItem):
+                addInvisibleDragEvent(item)
 
     """ EVENTS """
     def hideEvent(self, *args, **kwargs):

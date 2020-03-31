@@ -75,6 +75,12 @@ def clearLayout(layout, start=None, end=None):
             pass
 
 
+def addInvisibleDragEvent(widget):
+    from .events import InvisibleMouseDragEvent
+    invis_drag_filter = InvisibleMouseDragEvent(parent=widget)
+    widget.installEventFilter(invis_drag_filter)
+
+
 def installLadderDelegate(
     widget,
     user_input=QEvent.MouseButtonPress,
@@ -86,7 +92,7 @@ def installLadderDelegate(
             widget to install ladder delegate onto.  Note this currently
             works for QLineEdit and QLabel.  Other widgets will need
             to implement a 'setValue(value)' method on which sets the
-            widgets value. 
+            widgets value.
     kwargs:
         user_input: <QEvent>
             user event that triggers the popup of the Ladder Delegate
