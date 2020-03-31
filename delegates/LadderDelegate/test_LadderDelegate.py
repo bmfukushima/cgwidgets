@@ -94,6 +94,8 @@ class iTest():
                         # pass on the first run since the values are not set yet
                         pass
                     except AssertionError:
+                        pass
+                        """
                         print('''
 
 return val == {return_val}
@@ -109,7 +111,7 @@ float(current_val) == {fcurrent_val}
     fcurrent_val=float(current_val),
 )
 )
-
+"""
                 # pen up
                 QTest.mouseRelease(item, Qt.LeftButton)
 
