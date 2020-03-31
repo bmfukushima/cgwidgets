@@ -497,21 +497,6 @@ class LadderItem(QLabel):
                 to right so that each full convergance will
                 display another increment in value
         """
-        '''
-        style_sheet = """
-        background: qlineargradient(
-            x1:{xpos1} y1:0,
-            x2:{xpos2} y2:0,
-            stop:0 rgba{bgcolor},
-            stop:1 rgba{fgcolor}
-        );
-        """.format(
-                xpos1=str(xpos),
-                xpos2=str(xpos + 0.01),
-                bgcolor=repr(self.parent().getBGSlideColor()),
-                fgcolor=repr(self.parent().getFGSlideColor())
-            )
-        '''
         style_sheet = """
         background: qlineargradient(
             x1:{xpos1} y1:0,
@@ -569,9 +554,13 @@ class LadderItem(QLabel):
 
         Args:
             value (float)
+
+        Returns:
+            None
         '''
         sig_digits = self.parent()._significant_digits
-        int_len = len(str(value).split('.')[0])
+        str_val = str(value).split('.')[0].replace('-', '')
+        int_len = len(str_val)
         getcontext().prec = sig_digits + int_len
 
     def __getMagnitude(self, start_pos, current_pos):
@@ -659,6 +648,9 @@ class LadderItem(QLabel):
             # update value
             xpos = math.fabs(math.modf(magnitude)[0])
             if self.num_ticks != int(magnitude):
+                # reset values
+                self.num_ticks = int(magnitude)
+
                 # do math
                 offset *= self.num_ticks
                 self.__updateSignificantDigits(Decimal(offset) + self.orig_value)
@@ -667,8 +659,7 @@ class LadderItem(QLabel):
                 # set value
                 self.parent().setValue(return_val)
 
-                # reset values
-                self.num_ticks = int(magnitude)
+
             self.__updateWidgetGradients(xpos)
 
         return QLabel.mouseMoveEvent(self, event, *args, **kwargs)
@@ -679,3 +670,31 @@ class LadderItem(QLabel):
         self.parent().current_item = None
         self.__resetWidgetGradients()
         return QLabel.mouseReleaseEvent(self, *args, **kwargs)
+
+
+if __name__ == '__main__':
+    import sys
+    from cgwidgets.utils import installLadderDelegate 
+
+    class TestWidget(QLineEdit):
+        def __init__(self, parent=None, value=0):
+            super(TestWidget, self).__init__(parent)
+            pos = QCursor().pos()
+            self.setGeometry(pos.x(), pos.y(), 200, 100)
+            value_list = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
+            #self.setText('0')
+            #value_list = [0.0001, 0.001, 0.01, 0.1]
+            pos = QCursor.pos()
+            installLadderDelegate(
+                self,
+                user_input=QEvent.MouseButtonPress,
+                value_list=value_list
+            )
+
+        def setValue(self, value):
+            self.setText(str(value))
+
+    app = QApplication(sys.argv)
+    menu = TestWidget()
+    menu.show()
+    sys.exit(app.exec_())

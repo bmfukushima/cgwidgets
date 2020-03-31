@@ -7,11 +7,13 @@ from qtpy.QtTest import QTest
 
 from cgwidgets.widgets.LadderWidget import LadderWidget
 from cgwidgets.delegates.LadderDelegate.test_LadderDelegate import iTest
+from cgwidgets.utils import printStartTest
 
 
 class TestLadderWidget(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        printStartTest('Ladder Widget')
         TestLadderWidget.widget = LadderWidget()
 
     def setUp(self):

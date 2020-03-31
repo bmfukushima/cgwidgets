@@ -7,6 +7,15 @@ from qtpy.QtCore import *
 from qtpy.QtGui import *
 
 
+def printStartTest(name):
+    print('''
+
+----------------------------------------------------------------------
+----------------------------------------------------------------------
+''')
+    print('Starting {} unittest...'.format(name))
+
+
 def getJSONData(json_file):
     """
     returns the actual json dict

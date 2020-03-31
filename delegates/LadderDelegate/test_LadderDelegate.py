@@ -6,8 +6,9 @@ from qtpy.QtGui import QCursor, QMouseEvent
 from qtpy.QtTest import QTest
 from qtpy.QtCore import Qt, QEvent, QPoint
 
-from cgwidgets.utils import installLadderDelegate
+from cgwidgets.utils import installLadderDelegate, printStartTest
 from cgwidgets.delegates.LadderDelegate.LadderDelegate import LadderItem
+#from cgwidgets.tester.__test__ import
 
 
 class iTest():
@@ -123,6 +124,7 @@ class TestLadderDelegate(unittest.TestCase):
     '''
     @classmethod
     def setUpClass(cls):
+        printStartTest('Ladder Delegate')
         TestLadderDelegate.parent_widget = TestParentWidget()
         TestLadderDelegate.ladder_delegate = TestLadderDelegate.parent_widget.ladder
         TestLadderDelegate.ladder_delegate.setValue(3)
