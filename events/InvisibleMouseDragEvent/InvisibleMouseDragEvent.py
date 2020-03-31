@@ -12,7 +12,7 @@ class InvisibleMouseDragEvent(QWidget):
     def eventFilter(self, obj, event, *args, **kwargs):
         if event.type() == QEvent.MouseButtonPress:
             self._init_pos = obj.mapToGlobal(event.pos())
-            obj.setCursor(Qt.BlankCursor)
+            obj.window().setCursor(Qt.BlankCursor)
 
         elif event.type() == QEvent.MouseMove:
             pos = obj.mapToGlobal(event.pos())
@@ -22,7 +22,7 @@ class InvisibleMouseDragEvent(QWidget):
                 QCursor().setPos(QPoint(1, y_pos))
 
         elif event.type() == QEvent.MouseButtonRelease:
-            obj.unsetCursor()
+            obj.window().unsetCursor()
             QCursor().setPos(self._init_pos)
 
         return QWidget.eventFilter(self, obj, event, *args, **kwargs)

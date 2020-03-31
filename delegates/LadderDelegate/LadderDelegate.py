@@ -10,9 +10,8 @@
         - only needs to handle y pos
 
     * Cursor Wrapping
-        - When cursor gets to end of monitor, wrap to other side.
-        - Can also hide cursor during drag... and recenter?
-            This seems like the better idea...
+        working...
+            but... only invisible while inside of the widget??
 
     * Hide non essential stuff while manipulating?
         - Don't need all of the items updating the tick...
@@ -186,7 +185,8 @@ class LadderDelegate(QWidget):
         self.__setSignificantDigits()
 
         # setup invisible drag
-        self.__setupInvisibleDrag()
+        if invisible_drag is True:
+            self.__setupInvisibleDrag()
 
     """ API """
     def getUserInput(self):
