@@ -2,7 +2,7 @@
 # -------------------------------------------------------------------------- Bugs
     * First tick does not register
 # -----------------------------------------------------------------------To Do
-    * LadderItem --)Utils:
+    * LadderItem --> Utils:
         Consider ClassMethod/StaticMethod
 
     * Detect if close to edge...
@@ -497,6 +497,21 @@ class LadderItem(QLabel):
                 to right so that each full convergance will
                 display another increment in value
         """
+        '''
+        style_sheet = """
+        background: qlineargradient(
+            x1:{xpos1} y1:0,
+            x2:{xpos2} y2:0,
+            stop:0 rgba{bgcolor},
+            stop:1 rgba{fgcolor}
+        );
+        """.format(
+                xpos1=str(xpos),
+                xpos2=str(xpos + 0.01),
+                bgcolor=repr(self.parent().getBGSlideColor()),
+                fgcolor=repr(self.parent().getFGSlideColor())
+            )
+        '''
         style_sheet = """
         background: qlineargradient(
             x1:{xpos1} y1:0,

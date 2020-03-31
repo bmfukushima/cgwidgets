@@ -1,15 +1,14 @@
 """
 Unit Tests:
-    - Delegates seems to be working
-    - Move tests to main...
-    - Add widgets in
-    - Run pyside2/PyQt5 tests
-        Update to Python 3.5 --> 3.8
+    * Python 2.7.7
+        - PySide 5.12
+        - PyQt 5.12
+            * /usr/lib/python2.7/dist-packages
+                need to reinstall this... because pip doesnt want to install it =\
 
-        Setup checks for Python 2.7
-            * pyside
-            * pyqt4
 
+    * How to run tests in different environments...
+        bash script...
 
 Widgets:
     - Ladder Delegate / Widget
