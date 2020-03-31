@@ -6,8 +6,6 @@ import platform
 import qtpy
 from qtpy.QtWidgets import QApplication
 from qtpy.QtCore import __version__
-#from qtpy.Qt 
-
 
 from cgwidgets.widgets import __test__ as test_widgets
 from cgwidgets.delegates import __test__ as test_delegates
@@ -22,24 +20,28 @@ def testWidgets():
 
 
 def mainFunction():
+    # print header
     print(
-    '''
+        '''
 ####################################################################
 ####################################################################
                 QT_API    == {0}
                 Version   == {1}
                 Python    == {2}
 ####################################################################
-    '''.format(
-        qtpy.API,
-        __version__,
-        platform.python_version()
-        )
+        '''.format(
+            qtpy.API,
+            __version__,
+            platform.python_version()
+            )
     )
 
+    # run unit test
     app = QApplication(sys.argv)
     testDelegates()
     testWidgets()
+
+    # print closer
     print('''
 
 END

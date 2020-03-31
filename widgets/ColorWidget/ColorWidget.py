@@ -552,7 +552,7 @@ class ColorLabel(ValueLabel):
                     SETTINGS.DARK_TRANSPARENT_STRRGBA
                 )
             )
-        
+
     def userInput(self):
         value = self.text()
         self.setValue(float(value))
