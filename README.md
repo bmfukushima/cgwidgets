@@ -1,3 +1,8 @@
+# Disclaimer
+This is my own personal work, and does not represent that of my employer.
+The work in this library represents my learning path from scripting towards
+Software Engineering.
+
 # WidgetFactory
 PyQt / PySide compliant Widgets
 
