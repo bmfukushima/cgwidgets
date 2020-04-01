@@ -1,14 +1,23 @@
+'''
+To Do...
+    * HSV
+        Setup Gradient for QGraphicsView
+            From Color Widget
+    * Unit
+        Set up Gradient (style sheet)
+            From Ladder Delegate
+'''
 import sys
 
 from qtpy.QtWidgets import QDesktopWidget, QApplication, QWidget
 
-class SlideBar(QWidget):
+class AbstractSlideBar(QWidget):
     """
     This should be abstract
-        SliderBar--> HueSlideBar / SatSlideBar / ValueSlideBar / Unit Slide Bar...
+        SliderBar--> HueAbstractSlideBar / SatAbstractSlideBar / ValueAbstractSlideBar / Unit Slide Bar...
     """
     def __init__(self, parent=None):
-        super(SlideBar, self).__init__(parent)
+        super(AbstractSlideBar, self).__init__(parent)
 
         self.screen_geometry = QDesktopWidget().screenGeometry(-1)
         self.screen_width = self.screen_geometry.width()
@@ -18,8 +27,9 @@ class SlideBar(QWidget):
         self.setFixedWidth(self.screen_width)
         self.setFixedHeight(50)
 
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    w = SlideBar()
+    w = AbstractSlideBar()
     w.show()
     sys.exit(app.exec_())
