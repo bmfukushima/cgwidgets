@@ -11,7 +11,7 @@ class StyleGuide(object):
         argument (type): This is the first line of the argument.
 
     Attributes/Properties:
-        + Public +
+        + public +
         Internal Notes:
             * use getters / setters
                 ie.
@@ -27,7 +27,7 @@ class StyleGuide(object):
             * This is a note, hurray!
             * This section is for any additional notes for the developer
 
-        - Private -
+        - private -
         Internal Notes:
             * private attributes use the @property for getters/setters
 

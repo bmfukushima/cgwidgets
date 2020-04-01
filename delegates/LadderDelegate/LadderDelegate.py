@@ -92,14 +92,6 @@ class LadderDelegate(QWidget):
                 to trigger a value update.  Lower values are slower, higher
                 values are faster.
 
-            bg_slide_color: (rgba) | ( int array ) | 0 - 255
-                The bg color that is displayed to the user when the user starts
-                to click/drag to slide
-
-            fg_slide_color: (rgba) | ( int array ) | 0 - 255
-                The bg color that is displayed to the user when the user starts
-                to click/drag to slide
-
             selection_color: (rgba)  | ( int array ) | 0 - 255
                 The color that is displayed to the user when they are selecting
                 which value they wish to adjust
