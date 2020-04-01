@@ -1,13 +1,14 @@
 '''
 To Do...
     * Display / Screen
-        Allow user to choose between, display, or widget
+        - Allow user to choose between, display, or widget
     * HSV
-        Setup Gradient for QGraphicsView
+        - Setup Gradient for QGraphicsView
             From Color Widget
     * Unit
-        Set up Gradient (style sheet)
+        - Set up Gradient (style sheet)
             From Ladder Delegate
+        - Add installer in the utils
 '''
 import sys
 
