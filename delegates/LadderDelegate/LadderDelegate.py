@@ -203,15 +203,19 @@ class LadderDelegate(QWidget):
     def setSlideDistance(self, slide_distance):
         self._slide_distance = slide_distance
 
+    # remove
     def getBGSlideColor(self):
         return self._bg_slide_color
 
+    # remove
     def setBGSlideColor(self, color):
         self._bg_slide_color = color
 
+    # remove
     def getFGSlideColor(self):
         return self._fg_slide_color
 
+    # remove
     def setFGSlideColor(self, color):
         self._fg_slide_color = color
 
@@ -494,6 +498,7 @@ class LadderItem(QLabel):
         self._start_pos = pos
 
     """ UTILS """
+    # remove
     def __updateColor(self, xpos):
         """
         changes the color for the moving slider for all
@@ -521,6 +526,7 @@ class LadderItem(QLabel):
             )
         self.setStyleSheet(style_sheet)
 
+    # this can prob be removed
     def __updateWidgetGradients(self, xpos):
         """
         Draws out the moving slider over the items to show
@@ -539,6 +545,7 @@ class LadderItem(QLabel):
                 if item is not self.parent().current_item:
                     item.__updateColor(xpos)
 
+    # remove
     def __resetWidgetGradients(self):
         """
         Returns all of the items back to their default color
@@ -548,6 +555,7 @@ class LadderItem(QLabel):
             if index != self.parent().middle_item_index:
                 item.__resetColor()
 
+    #remove
     def __resetColor(self):
         """
         resets the color widget color back to default
