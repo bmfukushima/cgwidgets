@@ -9,10 +9,6 @@
         - Detect center point function
         - only needs to handle y pos
 
-    * Cursor Wrapping
-        working...
-            but... only invisible while inside of the widget??
-
     * Hide non essential stuff while manipulating?
         - Don't need all of the items updating the tick...
         - can just have one update the tick...
@@ -687,7 +683,7 @@ class LadderItem(QLabel):
 
 if __name__ == '__main__':
     import sys
-    from cgwidgets.utils import installLadderDelegate 
+    from cgwidgets.utils import installLadderDelegate
 
     class TestWidget(QLineEdit):
         def __init__(self, parent=None, value=0):
@@ -695,8 +691,6 @@ if __name__ == '__main__':
             pos = QCursor().pos()
             self.setGeometry(pos.x(), pos.y(), 200, 100)
             value_list = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
-            #self.setText('0')
-            #value_list = [0.0001, 0.001, 0.01, 0.1]
             pos = QCursor.pos()
             installLadderDelegate(
                 self,
