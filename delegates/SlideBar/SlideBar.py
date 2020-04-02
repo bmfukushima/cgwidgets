@@ -1,5 +1,9 @@
 '''
 To Do...
+    * Is this an event or a delegate...
+        Event and delegate...
+            - Event... is the eventFilter...
+            - Delegate is the Widgets themselves...
     * Display / Screen
         - Allow user to choose between, display, or widget
     * HSV
@@ -9,6 +13,10 @@ To Do...
         - Set up Gradient (style sheet)
             From Ladder Delegate
         - Add installer in the utils
+    * Utils
+        - install event filter
+
+    * How do I pass the information to the delegate?
 '''
 import sys
 
