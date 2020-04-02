@@ -28,10 +28,11 @@ Hue = 1
 Sat = 2
 Val = 3
 
-class AbstractSlideBar(QWidget):
+
+class AbstractSlideDisplay(QWidget):
     """
     Abstract class for all slide bars.  This will be inherited by the
-    HSVSlideBar and UnitSlideBar.  The base properties of this
+    HSVSlideDisplay and UnitSlideDisplay.  The base properties of this
     widget are to create the containter for these widgets, and then
     subclass this widget and draw the visuals.
 
@@ -54,7 +55,7 @@ class AbstractSlideBar(QWidget):
                 the main display.
 
     This should be abstract
-        SliderBar--> HueAbstractSlideBar / SatAbstractSlideBar / ValueAbstractSlideBar / Unit Slide Bar...
+        SliderBar--> HueAbstractSlideDisplay / SatAbstractSlideDisplay / ValueAbstractSlideDisplay / Unit Slide Bar...
 
     """
     def __init__(
@@ -63,7 +64,7 @@ class AbstractSlideBar(QWidget):
         depth=50,
         alignment=Qt.AlignBottom
     ):
-        super(AbstractSlideBar, self).__init__(parent)
+        super(AbstractSlideDisplay, self).__init__(parent)
 
         # set screen properties
         self._screen_geometry = QDesktopWidget().screenGeometry(-1)
@@ -183,7 +184,7 @@ class AbstractSlideBar(QWidget):
         return QWidget.keyPressEvent(self, event, *args, **kwargs)
 
 
-class UnitSlideBar(AbstractSlideBar):
+class UnitSlideDisplay(AbstractSlideDisplay):
     """
     Displays a bar on a cardinal direction relative to the monitor
     (Top, Bottom, Left Right).  This bar will have two colors,
@@ -212,7 +213,7 @@ class UnitSlideBar(AbstractSlideBar):
         depth=50,
         alignment=Qt.AlignBottom
     ):
-        super(UnitSlideBar, self).__init__(
+        super(UnitSlideDisplay, self).__init__(
             parent, alignment=alignment, depth=depth
         )
 
@@ -262,16 +263,16 @@ class UnitSlideBar(AbstractSlideBar):
         self.setStyleSheet(style_sheet)
 
 
-class SlideBar(QWidget):
+class SlideDelegate(QWidget):
     """
-    Container that encapsulates the different types of SlideBars.
+    Container that encapsulates the different types of SlideDisplays.
     This widget has two major components, the event filter, and
     the breed.
 
     Kwargs:
-        breed (cgwidgets.delegates.SlideBar.breed): bit based value
+        breed (cgwidgets.delegates.SlideDisplay.breed): bit based value
             designated at the top of this file.  This value will determine
-            what type of SlideBar is displayed to the user.  The options
+            what type of SlideDisplay is displayed to the user.  The options
             Unit, Hue, Sat, and Val.
         getSliderPos (method): gets the current position of the slider,
             this is called by the slider to determine where it should
@@ -285,7 +286,7 @@ class SlideBar(QWidget):
         breed=Unit,
         getSliderPos=None
     ):
-        super(SlideBar, self).__init__(parent)
+        super(SlideDelegate, self).__init__(parent)
         self.breed = breed
         self.getSliderPos = getSliderPos
 
@@ -307,14 +308,14 @@ class SlideBar(QWidget):
         3 = Val
         """
         if self.breed == 0:
-            return UnitSlideBar()
+            return UnitSlideDisplay()
         else:
             pass
 
     """ EVENTS """
     def eventFilter(self, obj, event, *args, **kwargs):
         if event.type() == QEvent.MouseButtonPress:
-            self.slidebar = UnitSlideBar()
+            self.slidebar = UnitSlideDisplay()
             self.slidebar.show()
         elif event.type() == QEvent.MouseMove:
             slider_pos = self.getSliderPos()
@@ -324,21 +325,23 @@ class SlideBar(QWidget):
 
         return QWidget.eventFilter(self, obj, event, *args, **kwargs)
 
+
 def testSliderPos():
     return 0.5
 
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    
+
     w = QWidget()
-    ef = SlideBar(
+    ef = SlideDelegate(
         parent=w,
         getSliderPos=testSliderPos
     )
     w.installEventFilter(ef)
     w.show()
     '''
-    w = UnitSlideBar(alignment=Qt.AlignRight)
+    w = UnitSlideDisplay(alignment=Qt.AlignRight)
     w.show()
     '''
     sys.exit(app.exec_())
