@@ -273,6 +273,10 @@ class SlideDelegate(QWidget):
             designated at the top of this file.  This value will determine
             what type of SlideDisplay is displayed to the user.  The options
             Unit, Hue, Sat, and Val.
+            Note:
+                All breeds will need the 'update' method to be overwritten
+                and accept a float value.  The update method should update
+                the display to the user to show what the current value is.
         getSliderPos (method): gets the current position of the slider,
             this is called by the slider to determine where it should
             display the current tick to the user.

@@ -81,24 +81,60 @@ def addInvisibleDragEvent(widget):
     widget.installEventFilter(invis_drag_filter)
 
 
+def installSlideDelegate(
+        widget,
+        getSliderPos,
+        breed=None
+    ):
+    """
+    Args:
+        widget (QWidget): the PyQt widget to install this delegate
+            on to.
+        getSliderPos (method): returns the position of the slider
+            as a percentage (0-1)
+            Returns:
+                (float): 0-1
+    Kwargs:
+        breed (cgwidgets.delegate.SliderDelegate.breed): what type
+            of slide display to show to the user.  Appropriate values are
+            Unit, Hue, Sat, Val
+    Returns:
+        SlideDelegate
+    """
+    from .delegates import SlideDelegate
+    # set up default slide display type
+    if breed is None:
+        breed = SlideDelegate.Unit
+
+    slide_delegate = SlideDelegate(
+        parent=widget,
+        getSliderPos=getSliderPos,
+        breed=breed
+    )
+    widget.installEventFilter(slide_delegate)
+    return slide_delegate
+
+
 def installLadderDelegate(
     widget,
     user_input=QEvent.MouseButtonPress,
     value_list=[0.001, 0.01, 0.1, 1, 10, 100, 1000]
 ):
     """
-    args:
+    Args:
         widget: <QLineEdit> or <QLabel>
             widget to install ladder delegate onto.  Note this currently
             works for QLineEdit and QLabel.  Other widgets will need
             to implement a 'setValue(value)' method on which sets the
             widgets value.
-    kwargs:
+    Kwargs:
         user_input: <QEvent>
             user event that triggers the popup of the Ladder Delegate
         value_list: <list> of <float>
             list of values for the user to be able to adjust by, usually this
             is set to .01, .1, 1, 10, etc
+    Returns:
+        LadderDelegate
     """
     from .delegates import LadderDelegate
     ladder = LadderDelegate(
@@ -125,13 +161,12 @@ def getGlobalPos(widget):
     parent = widget.parentWidget()
     if parent is None:
         title_bar_height = top_level_widget.style().pixelMetric(QStyle.PM_TitleBarHeight)
-        #pos = top_level_widget.pos() + title_bar_height + 4
-        
+
         pos = QPoint(
             top_level_widget.pos().x(),
             top_level_widget.pos().y() + title_bar_height + 4
         )
-        
+
     else:
         pos = parent.mapToGlobal(widget.pos())
 
