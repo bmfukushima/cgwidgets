@@ -255,7 +255,7 @@ class UnitSlideBar(AbstractSlideBar):
         );
         """.format(
                 xpos1=str(xpos),
-                xpos2=str(xpos + 0.01),
+                xpos2=str(xpos + 0.0001),
                 bgcolor=repr(self.getBGSlideColor()),
                 fgcolor=repr(self.getFGSlideColor())
             )
@@ -273,14 +273,21 @@ class SlideBar(QWidget):
             designated at the top of this file.  This value will determine
             what type of SlideBar is displayed to the user.  The options
             Unit, Hue, Sat, and Val.
+        getSliderPos (method): gets the current position of the slider,
+            this is called by the slider to determine where it should
+            display the current tick to the user.
+            Returns:
+                (float): 0-1
     """
     def __init__(
         self,
         parent=None,
-        breed=Unit
+        breed=Unit,
+        getSliderPos=None
     ):
         super(SlideBar, self).__init__(parent)
         self.breed = breed
+        self.getSliderPos = getSliderPos
 
     """ API """
     @property
@@ -310,17 +317,24 @@ class SlideBar(QWidget):
             self.slidebar = UnitSlideBar()
             self.slidebar.show()
         elif event.type() == QEvent.MouseMove:
-            self.slidebar.update(event.pos().x())
+            slider_pos = self.getSliderPos()
+            self.slidebar.update(slider_pos)
         elif event.type() == QEvent.MouseButtonRelease:
             self.slidebar.close()
 
         return QWidget.eventFilter(self, obj, event, *args, **kwargs)
 
+def testSliderPos():
+    return 0.5
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+    
     w = QWidget()
-    ef = SlideBar(parent=w)
+    ef = SlideBar(
+        parent=w,
+        getSliderPos=testSliderPos
+    )
     w.installEventFilter(ef)
     w.show()
     '''
