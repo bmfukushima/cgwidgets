@@ -1,22 +1,20 @@
 '''
+
+SlideDelegate --> SlideBreed -->AbstractSlideDisplay
 To Do...
-    * Is this an event or a delegate...
-        Event and delegate...
-            - Event... is the eventFilter...
-            - Delegate is the Widgets themselves...
     * Display / Screen
         - Allow user to choose between, display, or widget
+
     * HSV
         - Setup Gradient for QGraphicsView
             From Color Widget
+
     * Unit
         - Set up Gradient (style sheet)
             From Ladder Delegate
-        - Add installer in the utils
+
     * Utils
         - install event filter
-
-    * How do I pass the information to the delegate?
 '''
 import sys
 
@@ -220,6 +218,7 @@ class UnitSlideDisplay(AbstractSlideDisplay):
         # set slide color
         self.setBGSlideColor((18, 18, 18, 128))
         self.setFGSlideColor((32, 128, 32, 255))
+        self.update(0.0)
 
     """ PROPERTIESS """
     def getBGSlideColor(self):
@@ -287,17 +286,27 @@ class SlideDelegate(QWidget):
         getSliderPos=None
     ):
         super(SlideDelegate, self).__init__(parent)
-        self.breed = breed
+        self.setBreed(breed)
         self.getSliderPos = getSliderPos
 
     """ API """
-    @property
-    def breed(self):
+    def getBreed(self):
         return self._breed
 
-    @breed.setter
-    def breed(self, breed):
+    def setBreed(self, breed):
         self._breed = breed
+
+    def getBGSlideColor(self):
+        return self._bg_slide_color
+
+    def setBGSlideColor(self, color):
+        self._bg_slide_color = color
+
+    def getFGSlideColor(self):
+        return self._fg_slide_color
+
+    def setFGSlideColor(self, color):
+        self._fg_slide_color = color
 
     """ UTILS """
     def getBreedWidget(self):
@@ -307,7 +316,8 @@ class SlideDelegate(QWidget):
         2 = Sat
         3 = Val
         """
-        if self.breed == 0:
+        breed = self.getBreed()
+        if breed == 0:
             return UnitSlideDisplay()
         else:
             pass
@@ -318,7 +328,7 @@ class SlideDelegate(QWidget):
             self.slidebar = UnitSlideDisplay()
             self.slidebar.show()
         elif event.type() == QEvent.MouseMove:
-            slider_pos = self.getSliderPos()
+            slider_pos = self.getSliderPos(obj)
             self.slidebar.update(slider_pos)
         elif event.type() == QEvent.MouseButtonRelease:
             self.slidebar.close()
@@ -326,17 +336,21 @@ class SlideDelegate(QWidget):
         return QWidget.eventFilter(self, obj, event, *args, **kwargs)
 
 
-def testSliderPos():
-    return 0.5
-
-
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+    class TestWidget(QWidget):
+        def __init__(self, parent=None):
+            super(TestWidget, self).__init__(parent)
+            self.value = .75
+            print('init?')
 
-    w = QWidget()
+        def testSliderPos(self):
+            return self.value
+
+    w = TestWidget()
     ef = SlideDelegate(
         parent=w,
-        getSliderPos=testSliderPos
+        getSliderPos=TestWidget.testSliderPos
     )
     w.installEventFilter(ef)
     w.show()
