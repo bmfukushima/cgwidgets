@@ -30,7 +30,7 @@ def getMainWidget(widget, name):
     """
     searchs widgets parents until it finds one with the name
     provided in the variables.
-    
+
     Note:
         that name is found with the __name__() dunder
 
@@ -75,7 +75,7 @@ def clearLayout(layout, start=None, end=None):
             pass
 
 
-def addInvisibleDragEvent(widget):
+def installInvisibleDragEvent(widget):
     from .events import InvisibleMouseDragEvent
     invis_drag_filter = InvisibleMouseDragEvent(parent=widget)
     widget.installEventFilter(invis_drag_filter)

@@ -2,6 +2,10 @@
 
 SlideDelegate --> SlideBreed -->AbstractSlideDisplay
 To Do...
+    * Is this an event or a delegate...
+        Event and delegate...
+            - Event... is the eventFilter...
+            - Delegate is the Widgets themselves...
     * Display / Screen
         - Allow user to choose between, display, or widget
 
@@ -12,9 +16,17 @@ To Do...
     * Unit
         - Set up Gradient (style sheet)
             From Ladder Delegate
+<<<<<<< HEAD:delegates/SlideDelegate/SlideDelegate.py
 
     * Utils
         - install event filter
+=======
+        - Add installer in the utils
+    * Utils
+        - install event filter
+
+    * How do I pass the information to the delegate?
+>>>>>>> beta:delegates/SlideBar/SlideBar.py
 '''
 import sys
 

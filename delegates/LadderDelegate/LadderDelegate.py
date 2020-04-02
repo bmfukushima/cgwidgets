@@ -36,7 +36,7 @@ from qtpy.QtGui import *
 from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 
-from cgwidgets.utils import getGlobalPos, addInvisibleDragEvent
+from cgwidgets.utils import getGlobalPos, installInvisibleDragEvent
 from decimal import Decimal, getcontext
 
 
@@ -353,7 +353,7 @@ class LadderDelegate(QWidget):
     def __setupInvisibleDrag(self):
         for item in self.item_list:
             if not isinstance(item, LadderMiddleItem):
-                addInvisibleDragEvent(item)
+                installInvisibleDragEvent(item)
 
     """ EVENTS """
     def hideEvent(self, *args, **kwargs):
