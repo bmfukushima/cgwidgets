@@ -1,5 +1,9 @@
 '''
 To Do...
+    * Is this an event or a delegate...
+        Event and delegate...
+            - Event... is the eventFilter...
+            - Delegate is the Widgets themselves...
     * Display / Screen
         - Allow user to choose between, display, or widget
     * HSV
@@ -9,12 +13,20 @@ To Do...
         - Set up Gradient (style sheet)
             From Ladder Delegate
         - Add installer in the utils
+    * Utils
+        - install event filter
+
+    * How do I pass the information to the delegate?
 '''
 import sys
 
 from qtpy.QtWidgets import QDesktopWidget, QApplication, QWidget
-from qtpy.QtCore import Qt, QPoint
+from qtpy.QtCore import Qt, QPoint, QEvent
 
+Unit = 0
+Hue = 1
+Sat = 2
+Val = 3
 
 class AbstractSlideBar(QWidget):
     """
@@ -89,6 +101,7 @@ class AbstractSlideBar(QWidget):
     def screen_geometry(self, screen_geometry):
         self._screen_geometry = screen_geometry
 
+    @property
     def screen_width(self):
         return self._screen_width
 
@@ -221,7 +234,7 @@ class UnitSlideBar(AbstractSlideBar):
         self._fg_slide_color = fg_slide_color
 
     """ UTILS """
-    def __update(self, xpos):
+    def update(self, xpos):
         """
         Updates the color of the widget relative to how far the user
         has dragged.
@@ -249,8 +262,69 @@ class UnitSlideBar(AbstractSlideBar):
         self.setStyleSheet(style_sheet)
 
 
+class SlideBar(QWidget):
+    """
+    Container that encapsulates the different types of SlideBars.
+    This widget has two major components, the event filter, and
+    the breed.
+
+    Kwargs:
+        breed (cgwidgets.delegates.SlideBar.breed): bit based value
+            designated at the top of this file.  This value will determine
+            what type of SlideBar is displayed to the user.  The options
+            Unit, Hue, Sat, and Val.
+    """
+    def __init__(
+        self,
+        parent=None,
+        breed=Unit
+    ):
+        super(SlideBar, self).__init__(parent)
+        self.breed = breed
+
+    """ API """
+    @property
+    def breed(self):
+        return self._breed
+
+    @breed.setter
+    def breed(self, breed):
+        self._breed = breed
+
+    """ UTILS """
+    def getBreedWidget(self):
+        """
+        0 = Unit
+        1 = Hue
+        2 = Sat
+        3 = Val
+        """
+        if self.breed == 0:
+            return UnitSlideBar()
+        else:
+            pass
+
+    """ EVENTS """
+    def eventFilter(self, obj, event, *args, **kwargs):
+        if event.type() == QEvent.MouseButtonPress:
+            self.slidebar = UnitSlideBar()
+            self.slidebar.show()
+        elif event.type() == QEvent.MouseMove:
+            self.slidebar.update(event.pos().x())
+        elif event.type() == QEvent.MouseButtonRelease:
+            self.slidebar.close()
+
+        return QWidget.eventFilter(self, obj, event, *args, **kwargs)
+
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+    w = QWidget()
+    ef = SlideBar(parent=w)
+    w.installEventFilter(ef)
+    w.show()
+    '''
     w = UnitSlideBar(alignment=Qt.AlignRight)
     w.show()
+    '''
     sys.exit(app.exec_())
