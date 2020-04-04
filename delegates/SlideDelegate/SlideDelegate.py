@@ -16,21 +16,21 @@ To Do...
     * Unit
         - Set up Gradient (style sheet)
             From Ladder Delegate
-<<<<<<< HEAD:delegates/SlideDelegate/SlideDelegate.py
 
     * Utils
         - install event filter
-=======
-        - Add installer in the utils
-    * Utils
-        - install event filter
+            - seems to be an issue with losing focus?
+            - Event filter is only registering the press...
+                no move or release...
+            - Works here... but not when inherited in the Ladder?
 
     * How do I pass the information to the delegate?
 >>>>>>> beta:delegates/SlideBar/SlideBar.py
 '''
 import sys
+import platform
 
-from qtpy.QtWidgets import QDesktopWidget, QApplication, QWidget
+from qtpy.QtWidgets import QDesktopWidget, QApplication, QWidget, QLabel
 from qtpy.QtCore import Qt, QPoint, QEvent
 
 Unit = 0
@@ -75,7 +75,19 @@ class AbstractSlideDisplay(QWidget):
         alignment=Qt.AlignBottom
     ):
         super(AbstractSlideDisplay, self).__init__(parent)
-
+        if platform.system() == 'Windows':
+            self.setWindowFlags(
+                Qt.Tool
+                | Qt.NoDropShadowWindowHint
+                | Qt.WindowStaysOnTopHint
+                )
+        elif platform.system() == 'Linux':
+            self.setWindowFlags(
+                Qt.Tool
+                | Qt.NoDropShadowWindowHint
+                | Qt.FramelessWindowHint
+                #| QtCore.Qt.WindowStaysOnTopHint
+                )
         # set screen properties
         self._screen_geometry = QDesktopWidget().screenGeometry(-1)
         self._screen_width = self.screen_geometry.width()
@@ -85,9 +97,9 @@ class AbstractSlideDisplay(QWidget):
         # set properties
         self.setDepth(depth)
         self.setAlignment(alignment)
-
+        self.setWidgetPosition(self.getAlignment())
         # set display flags
-        self.setWindowFlags(Qt.FramelessWindowHint)
+        #self.setWindowFlags(Qt.FramelessWindowHint)
 
     """ API """
     def getDepth(self):
@@ -101,7 +113,7 @@ class AbstractSlideDisplay(QWidget):
 
     def setAlignment(self, alignment):
         self._alignment = alignment
-        self.__setWidgetPosition(alignment)
+    #self.__setWidgetPosition(alignment)
 
     """ PROPERTIES """
     @property
@@ -137,7 +149,7 @@ class AbstractSlideDisplay(QWidget):
         self._screen_pos = screen_pos
 
     """ UTILS """
-    def __setWidgetPosition(self, alignment):
+    def setWidgetPosition(self, alignment):
         """
         Determines where on the monitor the widget should be located
 
@@ -298,7 +310,7 @@ class SlideDelegate(QWidget):
     def __init__(
         self,
         parent=None,
-        breed=Unit,
+        breed=None,
         getSliderPos=None
     ):
         super(SlideDelegate, self).__init__(parent)
@@ -341,24 +353,59 @@ class SlideDelegate(QWidget):
     """ EVENTS """
     def eventFilter(self, obj, event, *args, **kwargs):
         if event.type() == QEvent.MouseButtonPress:
-            self.slidebar = UnitSlideDisplay()
+            self.slidebar = UnitSlideDisplay(obj)
+            self.slidebar.setWidgetPosition(self.slidebar.getAlignment())
             self.slidebar.show()
+
+            return QWidget.eventFilter(self, obj, event, *args, **kwargs)
         elif event.type() == QEvent.MouseMove:
-            slider_pos = self.getSliderPos(obj)
-            self.slidebar.update(slider_pos)
+            try:
+                try:
+                    slider_pos = self.getSliderPos()
+                except:
+                    slider_pos = self.getSliderPos(obj)
+                self.slidebar.update(slider_pos)
+            except AttributeError:
+                pass
+            return QWidget.eventFilter(self, obj, event, *args, **kwargs)
+            #return obj.mouseMoveEvent(event)
         elif event.type() == QEvent.MouseButtonRelease:
-            self.slidebar.close()
+            try:
+                self.slidebar.close()
+            except AttributeError:
+                pass
+            return QWidget.eventFilter(self, obj, event, *args, **kwargs)
+            #return obj.mouseReleaseEvent(event)
+        return QWidget.eventFilter(self, obj, event, *args, **kwargs)
+    '''
+    def eventFilter(self, obj, event, *args, **kwargs):
+        if event.type() == QEvent.MouseButtonPress:
+            self._init_pos = obj.mapToGlobal(event.pos())
+            obj.window().setCursor(Qt.BlankCursor)
+
+        elif event.type() == QEvent.MouseMove:
+            pos = obj.mapToGlobal(event.pos())
+
+            if pos.x() > self._screen_resolution:
+                y_pos = pos.y()
+                QCursor().setPos(QPoint(1, y_pos))
+
+        elif event.type() == QEvent.MouseButtonRelease:
+            obj.window().unsetCursor()
+            QCursor().setPos(self._init_pos)
 
         return QWidget.eventFilter(self, obj, event, *args, **kwargs)
+        '''
+        
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+    
     class TestWidget(QWidget):
         def __init__(self, parent=None):
             super(TestWidget, self).__init__(parent)
             self.value = .75
-            print('init?')
 
         def testSliderPos(self):
             return self.value

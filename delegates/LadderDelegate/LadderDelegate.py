@@ -36,7 +36,7 @@ from qtpy.QtGui import *
 from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 
-from cgwidgets.utils import getGlobalPos, installInvisibleDragEvent
+from cgwidgets.utils import getGlobalPos, installInvisibleDragEvent, installSlideDelegate
 from decimal import Decimal, getcontext
 
 
@@ -67,9 +67,12 @@ class LadderDelegate(QWidget):
                 ie.
             QEvent.MouseButtonPress
 
-        invisible_Drag (boolean): Toggle on/off the invisible drag
-        functionality.  Having this turned on will also enable cursor
-        wrapping for infinite dragging
+        invisible_drag (bool): Toggle on/off the invisible drag
+            functionality.  Having this turned on will also enable cursor
+            wrapping for infinite dragging
+
+        slide_bar (bool): Toggle on/off the slide bar while manipulating
+            the ladder
 
     Attributes:
         + Public:
@@ -123,7 +126,8 @@ class LadderDelegate(QWidget):
             parent=None,
             value_list=[0.001, 0.01, 0.1, 1, 10, 100, 1000],
             user_input=QEvent.MouseButtonPress,
-            invisible_drag=True
+            invisible_drag=True,
+            slide_bar=True
     ):
         super(LadderDelegate, self).__init__(parent)
         layout = QVBoxLayout()
@@ -173,8 +177,12 @@ class LadderDelegate(QWidget):
         self.__setSignificantDigits()
 
         # setup invisible drag
-        if invisible_drag is True:
-            self.__setupInvisibleDrag()
+        #if invisible_drag is True:
+            #self.__setupInvisibleDrag()
+
+        # setup slide bar
+        if slide_bar is True:
+            self.__setupSlideBar()
 
     """ API """
     def getUserInput(self):
@@ -355,6 +363,16 @@ class LadderDelegate(QWidget):
             if not isinstance(item, LadderMiddleItem):
                 installInvisibleDragEvent(item)
 
+    def test(self):
+        import random
+        return random.random()
+
+    def __setupSlideBar(self):
+        #installSlideDelegate(self.parent(), sliderPosMethod=self.test, breed=0)
+        for item in self.item_list:
+            if not isinstance(item, LadderMiddleItem):
+                self.slidebar = installSlideDelegate(item, sliderPosMethod=item.getCurrentPos, breed=0)
+
     """ EVENTS """
     def hideEvent(self, *args, **kwargs):
         self.is_active = False
@@ -370,6 +388,11 @@ class LadderDelegate(QWidget):
         if self.is_active is False:
             self.hide()
         return QWidget.leaveEvent(self, event, *args, **kwargs)
+
+    def closeEvent(self, event, *args, **kwargs):
+        if self.is_active is True:
+            return
+        return QWidget.closeEvent(self, event, *args, **kwargs)
 
     def keyPressEvent(self, event, *args, **kwargs):
         if event.key() == Qt.Key_Escape:
@@ -490,6 +513,8 @@ class LadderItem(QLabel):
         self._start_pos = pos
 
     """ UTILS """
+    def getCurrentPos(self):
+        return self.slider_pos
     # remove
     def __updateColor(self, xpos):
         """
@@ -635,6 +660,7 @@ class LadderItem(QLabel):
         self.orig_value = self.parent().middle_item.getValue()
         self.num_ticks = 0
         self.parent().is_active = True
+        self.slider_pos = 0
 
         # reset style
         self.__resetColor()
@@ -655,7 +681,8 @@ class LadderItem(QLabel):
             #         to determine when a full value changed has happened
             # ===================================================================
             # update value
-            xpos = math.fabs(math.modf(magnitude)[0])
+            self.slider_pos = math.fabs(math.modf(magnitude)[0])
+            self.__updateWidgetGradients(self.slider_pos)
             if self.num_ticks != int(magnitude):
                 # reset values
                 self.num_ticks = int(magnitude)
@@ -667,9 +694,6 @@ class LadderItem(QLabel):
 
                 # set value
                 self.parent().setValue(return_val)
-
-
-            self.__updateWidgetGradients(xpos)
 
         return QLabel.mouseMoveEvent(self, event, *args, **kwargs)
 
@@ -695,7 +719,9 @@ if __name__ == '__main__':
             installLadderDelegate(
                 self,
                 user_input=QEvent.MouseButtonPress,
-                value_list=value_list
+                value_list=value_list,
+                invisible_drag=True,
+                slide_bar=True
             )
 
         def setValue(self, value):

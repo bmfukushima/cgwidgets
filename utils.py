@@ -83,7 +83,7 @@ def installInvisibleDragEvent(widget):
 
 def installSlideDelegate(
         widget,
-        getSliderPos,
+        sliderPosMethod,
         breed=None
     ):
     """
@@ -104,11 +104,11 @@ def installSlideDelegate(
     from .delegates import SlideDelegate
     # set up default slide display type
     if breed is None:
-        breed = SlideDelegate.Unit
+        breed = 0
 
     slide_delegate = SlideDelegate(
         parent=widget,
-        getSliderPos=getSliderPos,
+        getSliderPos=sliderPosMethod,
         breed=breed
     )
     widget.installEventFilter(slide_delegate)
@@ -118,7 +118,9 @@ def installSlideDelegate(
 def installLadderDelegate(
     widget,
     user_input=QEvent.MouseButtonPress,
-    value_list=[0.001, 0.01, 0.1, 1, 10, 100, 1000]
+    value_list=[0.001, 0.01, 0.1, 1, 10, 100, 1000],
+    invisible_drag=True,
+    slide_bar=True
 ):
     """
     Args:
@@ -140,7 +142,9 @@ def installLadderDelegate(
     ladder = LadderDelegate(
         parent=widget,
         value_list=value_list,
-        user_input=user_input
+        user_input=user_input,
+        invisible_drag=invisible_drag,
+        slide_bar=slide_bar
     )
     widget.installEventFilter(ladder)
     return ladder
