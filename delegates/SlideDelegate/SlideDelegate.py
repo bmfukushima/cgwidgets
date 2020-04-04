@@ -2,10 +2,6 @@
 
 SlideDelegate --> SlideBreed -->AbstractSlideDisplay
 To Do...
-    * Is this an event or a delegate...
-        Event and delegate...
-            - Event... is the eventFilter...
-            - Delegate is the Widgets themselves...
     * Display / Screen
         - Allow user to choose between, display, or widget
 
@@ -13,19 +9,7 @@ To Do...
         - Setup Gradient for QGraphicsView
             From Color Widget
 
-    * Unit
-        - Set up Gradient (style sheet)
-            From Ladder Delegate
-
-    * Utils
-        - install event filter
-            - seems to be an issue with losing focus?
-            - Event filter is only registering the press...
-                no move or release...
-            - Works here... but not when inherited in the Ladder?
-
-    * How do I pass the information to the delegate?
->>>>>>> beta:delegates/SlideBar/SlideBar.py
+            SlideDelegate --> getBreedWidget
 '''
 import sys
 import platform
@@ -189,6 +173,11 @@ class AbstractSlideDisplay(QWidget):
             self.setFixedWidth(width)
             self.move(pos)
 
+    def update(self, *args, **kwargs):
+        print('you need to reimplement this on: {}'.format(self))
+        return QWidget.update(self, *args, **kwargs)
+
+    """ EVENTS"""
     def keyPressEvent(self, event, *args, **kwargs):
         if event.key() == Qt.Key_Escape:
             self.close()
@@ -301,7 +290,7 @@ class SlideDelegate(QWidget):
     def __init__(
         self,
         parent=None,
-        breed=None,
+        breed=0,
         getSliderPos=None
     ):
         super(SlideDelegate, self).__init__(parent)
@@ -366,35 +355,13 @@ class SlideDelegate(QWidget):
             except AttributeError:
                 pass
             return QWidget.eventFilter(self, obj, event, *args, **kwargs)
-            #return obj.mouseMoveEvent(event)
         elif event.type() == QEvent.MouseButtonRelease:
             try:
                 self.slidebar.close()
             except AttributeError:
                 pass
             return QWidget.eventFilter(self, obj, event, *args, **kwargs)
-            #return obj.mouseReleaseEvent(event)
         return QWidget.eventFilter(self, obj, event, *args, **kwargs)
-    '''
-    def eventFilter(self, obj, event, *args, **kwargs):
-        if event.type() == QEvent.MouseButtonPress:
-            self._init_pos = obj.mapToGlobal(event.pos())
-            obj.window().setCursor(Qt.BlankCursor)
-
-        elif event.type() == QEvent.MouseMove:
-            pos = obj.mapToGlobal(event.pos())
-
-            if pos.x() > self._screen_resolution:
-                y_pos = pos.y()
-                QCursor().setPos(QPoint(1, y_pos))
-
-        elif event.type() == QEvent.MouseButtonRelease:
-            obj.window().unsetCursor()
-            QCursor().setPos(self._init_pos)
-
-        return QWidget.eventFilter(self, obj, event, *args, **kwargs)
-        '''
-        
 
 
 if __name__ == '__main__':
