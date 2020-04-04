@@ -79,6 +79,7 @@ class AbstractSlideDisplay(QWidget):
         super(AbstractSlideDisplay, self).__init__(parent)
         # set as tool
         setAsTool(self)
+
         # set screen properties
         self._screen_geometry = QDesktopWidget().screenGeometry(-1)
         self._screen_width = self.screen_geometry.width()
@@ -89,8 +90,6 @@ class AbstractSlideDisplay(QWidget):
         self.setDepth(depth)
         self.setAlignment(alignment)
         self.setWidgetPosition(self.getAlignment())
-        # set display flags
-        #self.setWindowFlags(Qt.FramelessWindowHint)
 
     """ API """
     def getDepth(self):
@@ -223,15 +222,17 @@ class UnitSlideDisplay(AbstractSlideDisplay):
         self,
         parent=None,
         depth=50,
-        alignment=Qt.AlignBottom
+        alignment=Qt.AlignBottom,
+        bg_slide_color=(18, 18, 18, 128),
+        fg_slide_color=(18, 128, 18, 128),
     ):
         super(UnitSlideDisplay, self).__init__(
             parent, alignment=alignment, depth=depth
         )
 
         # set slide color
-        self.setBGSlideColor((18, 18, 18, 128))
-        self.setFGSlideColor((32, 128, 32, 255))
+        self.setBGSlideColor(bg_slide_color)
+        self.setFGSlideColor(fg_slide_color)
         self.update(0.0)
 
     """ PROPERTIESS """
@@ -319,11 +320,15 @@ class SlideDelegate(QWidget):
 
     def setBGSlideColor(self, color):
         self._bg_slide_color = color
+        if self.getBreed() == 0:
+            self.getBreedWidget().setBGSlideColor(color)
 
     def getFGSlideColor(self):
         return self._fg_slide_color
 
     def setFGSlideColor(self, color):
+        if self.getBreed() == 0:
+            self.getBreedWidget().setFGSlideColor(color)
         self._fg_slide_color = color
 
     """ UTILS """
@@ -336,14 +341,17 @@ class SlideDelegate(QWidget):
         """
         breed = self.getBreed()
         if breed == 0:
-            return UnitSlideDisplay()
+            return UnitSlideDisplay(
+                bg_slide_color=(74, 112, 18, 128),
+                fg_slide_color=(255, 18, 18, 128)
+            )
         else:
             pass
 
     """ EVENTS """
     def eventFilter(self, obj, event, *args, **kwargs):
         if event.type() == QEvent.MouseButtonPress:
-            self.slidebar = UnitSlideDisplay(obj)
+            self.slidebar = self.getBreedWidget()
             self.slidebar.setWidgetPosition(self.slidebar.getAlignment())
             self.slidebar.show()
 

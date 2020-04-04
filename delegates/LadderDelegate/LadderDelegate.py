@@ -178,11 +178,11 @@ class LadderDelegate(QWidget):
 
         # setup invisible drag
         if invisible_drag is True:
-            self.__setupInvisibleDrag()
+            self.setupInvisibleDrag()
 
         # setup slide bar
         if slide_bar is True:
-            self.__setupSlideBar()
+            self.setupSlideBar()
 
     """ API """
     def getUserInput(self):
@@ -358,12 +358,20 @@ class LadderDelegate(QWidget):
         )
         self.move(pos)
 
-    def __setupInvisibleDrag(self):
+    def setupInvisibleDrag(self):
         for item in self.item_list:
             if not isinstance(item, LadderMiddleItem):
                 installInvisibleDragEvent(item)
 
-    def __setupSlideBar(self):
+    def setupSlideBar(
+        self,
+        bg_color=(64, 64, 64, 128),
+        fg_color=(64, 128, 128, 255)
+    ):
+        """
+        bg_color ( rgba int array | 0 - 255 ) : color of BG while swiping
+        fg_color ( rgba int array | 0 - 255 ) : color of FG while swiping
+        """
         for item in self.item_list:
             if not isinstance(item, LadderMiddleItem):
                 self.slidebar = installSlideDelegate(
@@ -371,6 +379,8 @@ class LadderDelegate(QWidget):
                     sliderPosMethod=item.getCurrentPos,
                     breed=0
                 )
+                self.slidebar.setBGSlideColor(bg_color)
+                self.slidebar.setFGSlideColor(fg_color)
 
     """ EVENTS """
     def hideEvent(self, *args, **kwargs):
