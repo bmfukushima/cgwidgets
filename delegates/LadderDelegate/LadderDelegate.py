@@ -136,8 +136,8 @@ class LadderDelegate(QWidget):
 
         # default attrs
         self.setSlideDistance(.01)
-        self.setBGSlideColor((128, 128, 128, 128))
-        self.setFGSlideColor((32, 128, 32, 255))
+        self.setBGSlideColor((0, 0, 0, 128))
+        self.setFGSlideColor((128, 128, 32, 255))
         self.setSelectionColor((32, 32, 32, 255))
         self.setItemHeight(50)
         self.setMiddleItemBorderWidth(2)
@@ -364,14 +364,8 @@ class LadderDelegate(QWidget):
                 installInvisibleDragEvent(item)
 
     def setupSlideBar(
-        self,
-        bg_color=(64, 64, 64, 128),
-        fg_color=(64, 128, 128, 255)
+        self
     ):
-        """
-        bg_color ( rgba int array | 0 - 255 ) : color of BG while swiping
-        fg_color ( rgba int array | 0 - 255 ) : color of FG while swiping
-        """
         for item in self.item_list:
             if not isinstance(item, LadderMiddleItem):
                 self.slidebar = installSlideDelegate(
@@ -379,8 +373,8 @@ class LadderDelegate(QWidget):
                     sliderPosMethod=item.getCurrentPos,
                     breed=0
                 )
-                self.slidebar.setBGSlideColor(bg_color)
-                self.slidebar.setFGSlideColor(fg_color)
+                self.slidebar.setBGSlideColor(self.getBGSlideColor())
+                self.slidebar.setFGSlideColor(self.getFGSlideColor())
 
     """ EVENTS """
     def hideEvent(self, *args, **kwargs):

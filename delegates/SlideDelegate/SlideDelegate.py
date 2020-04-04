@@ -295,6 +295,10 @@ class SlideDelegate(QWidget):
     ):
         super(SlideDelegate, self).__init__(parent)
         self.setBreed(breed)
+        # set initial colors
+        self.setBGSlideColor((32, 32, 32, 128))
+        self.setFGSlideColor((32, 128, 32, 255))
+
         self.getSliderPos = getSliderPos
 
     """ API """
@@ -309,16 +313,20 @@ class SlideDelegate(QWidget):
 
     def setBGSlideColor(self, color):
         self._bg_slide_color = color
+        '''
         if self.getBreed() == 0:
             self.getBreedWidget().setBGSlideColor(color)
+        '''
 
     def getFGSlideColor(self):
         return self._fg_slide_color
 
     def setFGSlideColor(self, color):
+        self._fg_slide_color = color
+        '''
         if self.getBreed() == 0:
             self.getBreedWidget().setFGSlideColor(color)
-        self._fg_slide_color = color
+        '''
 
     """ UTILS """
     def getBreedWidget(self):
@@ -331,8 +339,8 @@ class SlideDelegate(QWidget):
         breed = self.getBreed()
         if breed == 0:
             return UnitSlideDisplay(
-                bg_slide_color=(74, 112, 18, 128),
-                fg_slide_color=(255, 18, 18, 128)
+                bg_slide_color=self.getBGSlideColor(),
+                fg_slide_color=self.getFGSlideColor()
             )
         else:
             pass
