@@ -136,7 +136,7 @@ class LadderDelegate(QWidget):
 
         # default attrs
         self.setSlideDistance(.01)
-        self.setBGSlideColor((18, 18, 18, 128))
+        self.setBGSlideColor((128, 128, 128, 128))
         self.setFGSlideColor((32, 128, 32, 255))
         self.setSelectionColor((32, 32, 32, 255))
         self.setItemHeight(50)
