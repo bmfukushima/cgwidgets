@@ -75,6 +75,22 @@ def clearLayout(layout, start=None, end=None):
             pass
 
 
+def setAsTool(widget):
+    import platform
+    if platform.system() == 'Windows':
+        widget.setWindowFlags(
+            Qt.Tool
+            | Qt.NoDropShadowWindowHint
+            | Qt.WindowStaysOnTopHint
+            )
+    elif platform.system() == 'Linux':
+        widget.setWindowFlags(
+            Qt.Tool
+            | Qt.NoDropShadowWindowHint
+            | Qt.FramelessWindowHint
+            )
+
+
 def installInvisibleDragEvent(widget):
     from .events import InvisibleMouseDragEvent
     invis_drag_filter = InvisibleMouseDragEvent(parent=widget)

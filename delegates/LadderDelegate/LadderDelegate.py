@@ -177,8 +177,8 @@ class LadderDelegate(QWidget):
         self.__setSignificantDigits()
 
         # setup invisible drag
-        #if invisible_drag is True:
-            #self.__setupInvisibleDrag()
+        if invisible_drag is True:
+            self.__setupInvisibleDrag()
 
         # setup slide bar
         if slide_bar is True:
@@ -363,15 +363,14 @@ class LadderDelegate(QWidget):
             if not isinstance(item, LadderMiddleItem):
                 installInvisibleDragEvent(item)
 
-    def test(self):
-        import random
-        return random.random()
-
     def __setupSlideBar(self):
-        #installSlideDelegate(self.parent(), sliderPosMethod=self.test, breed=0)
         for item in self.item_list:
             if not isinstance(item, LadderMiddleItem):
-                self.slidebar = installSlideDelegate(item, sliderPosMethod=item.getCurrentPos, breed=0)
+                self.slidebar = installSlideDelegate(
+                    item,
+                    sliderPosMethod=item.getCurrentPos,
+                    breed=0
+                )
 
     """ EVENTS """
     def hideEvent(self, *args, **kwargs):

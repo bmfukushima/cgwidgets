@@ -30,8 +30,10 @@ To Do...
 import sys
 import platform
 
-from qtpy.QtWidgets import QDesktopWidget, QApplication, QWidget, QLabel
+from qtpy.QtWidgets import QDesktopWidget, QApplication, QWidget
 from qtpy.QtCore import Qt, QPoint, QEvent
+
+from utils import setAsTool
 
 Unit = 0
 Hue = 1
@@ -75,19 +77,8 @@ class AbstractSlideDisplay(QWidget):
         alignment=Qt.AlignBottom
     ):
         super(AbstractSlideDisplay, self).__init__(parent)
-        if platform.system() == 'Windows':
-            self.setWindowFlags(
-                Qt.Tool
-                | Qt.NoDropShadowWindowHint
-                | Qt.WindowStaysOnTopHint
-                )
-        elif platform.system() == 'Linux':
-            self.setWindowFlags(
-                Qt.Tool
-                | Qt.NoDropShadowWindowHint
-                | Qt.FramelessWindowHint
-                #| QtCore.Qt.WindowStaysOnTopHint
-                )
+        # set as tool
+        setAsTool(self)
         # set screen properties
         self._screen_geometry = QDesktopWidget().screenGeometry(-1)
         self._screen_width = self.screen_geometry.width()
@@ -113,7 +104,6 @@ class AbstractSlideDisplay(QWidget):
 
     def setAlignment(self, alignment):
         self._alignment = alignment
-    #self.__setWidgetPosition(alignment)
 
     """ PROPERTIES """
     @property
