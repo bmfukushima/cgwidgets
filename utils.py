@@ -92,9 +92,24 @@ def setAsTool(widget):
 
 
 def installInvisibleDragEvent(widget):
+    """
+    Installs an event filter on the widget that makes it so that when the
+    user click/drags, it will turn the cursor invisible, and all the cursor
+    to move an infinite distance.  On release, it will return the cursor
+    back to the starting position
+
+    Args:
+        widget (QWidget): Widget to install the invisible drag event on
+
+    Returns:
+        (InvisibleMouseDragEvent): QWidget which holds the event
+            filter for the invisible drag event
+    """
     from .events import InvisibleMouseDragEvent
     invis_drag_filter = InvisibleMouseDragEvent(parent=widget)
     widget.installEventFilter(invis_drag_filter)
+
+    return invis_drag_filter
 
 
 def installSlideDelegate(

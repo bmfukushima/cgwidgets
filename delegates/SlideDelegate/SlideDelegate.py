@@ -10,6 +10,22 @@ To Do...
             From Color Widget
 
             SlideDelegate --> getBreedWidget
+    * Vertical Alignment
+        - Unit
+            - When aligning vertically gradient still moves horizontally...and notvertically...
+            - Need to reverse order depending on direction of cursor move...
+
+    * Organize attributes...
+        API is all over the place with multiple setters/getters in all of the slide delegates...
+            Currently being set as a setter on the SlideDelegate
+
+    * How to set up class Attributes/Properties?
+        so that I can do a
+            - SlideDelegate.Unit
+            - SlideDelegate.Hue
+            - SlideDelegate.Sat
+            - SlideDelegate.Val
+
 '''
 import sys
 import platform
@@ -298,6 +314,8 @@ class SlideDelegate(QWidget):
         # set initial colors
         self.setBGSlideColor((32, 32, 32, 128))
         self.setFGSlideColor((32, 128, 32, 255))
+        self.setDepth(50)
+        self.setAlignment(Qt.AlignBottom)
 
         self.getSliderPos = getSliderPos
 
@@ -307,6 +325,18 @@ class SlideDelegate(QWidget):
 
     def setBreed(self, breed):
         self._breed = breed
+
+    def getDepth(self):
+        return self._depth
+
+    def setDepth(self, depth):
+        self._depth = depth
+
+    def getAlignment(self):
+        return self._alignment
+
+    def setAlignment(self, alignment):
+        self._alignment = alignment
 
     def getBGSlideColor(self):
         return self._bg_slide_color
@@ -349,16 +379,19 @@ class SlideDelegate(QWidget):
     def eventFilter(self, obj, event, *args, **kwargs):
         if event.type() == QEvent.MouseButtonPress:
             self.slidebar = self.getBreedWidget()
-            self.slidebar.setWidgetPosition(self.slidebar.getAlignment())
+            self.slidebar.setWidgetPosition(self.getAlignment())
             self.slidebar.show()
 
             return QWidget.eventFilter(self, obj, event, *args, **kwargs)
         elif event.type() == QEvent.MouseMove:
             try:
+                slider_pos = self.getSliderPos()
+                '''
                 try:
                     slider_pos = self.getSliderPos()
                 except:
                     slider_pos = self.getSliderPos(obj)
+                '''
                 self.slidebar.update(slider_pos)
             except AttributeError:
                 pass
@@ -374,7 +407,7 @@ class SlideDelegate(QWidget):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    
+
     class TestWidget(QWidget):
         def __init__(self, parent=None):
             super(TestWidget, self).__init__(parent)

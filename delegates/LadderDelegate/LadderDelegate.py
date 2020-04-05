@@ -2,23 +2,17 @@
 # -------------------------------------------------------------------------- Bugs
     * First tick does not register
 # -----------------------------------------------------------------------To Do
-    * LadderItem --> Utils:
-        Consider ClassMethod/StaticMethod
-
     * Detect if close to edge...
         - Detect center point function
         - only needs to handle y pos
 
-    * Hide non essential stuff while manipulating?
-        - Don't need all of the items updating the tick...
-        - can just have one update the tick...
-            potentially can show this at the bottom with a new
-            slider delegate
 # ------------------------------------------------------------------- API
     * seperate display option "discrete" mode:
-        - Transparent while sliding option
+        - How to set transparency?
+            - New delegate?
+                This is probably better...
+            - Force set in LadderDelegate?
         - display values somewhere non obtrustive
-        - minimal value slider ticker...
 
     * need to figure out how to make eventFilter more robust...
         ie support CTRL+ALT+CLICK / RMB, etc
@@ -176,13 +170,16 @@ class LadderDelegate(QWidget):
         # set significant digits
         self.__setSignificantDigits()
 
+        self.setDiscreteMode(True)
+        '''
         # setup invisible drag
         if invisible_drag is True:
-            self.setupInvisibleDrag()
+            self.setInvisibleDrag()
 
         # setup slide bar
         if slide_bar is True:
-            self.setupSlideBar()
+            self.setSlideBar()
+        '''
 
     """ API """
     def getUserInput(self):
@@ -358,23 +355,40 @@ class LadderDelegate(QWidget):
         )
         self.move(pos)
 
-    def setupInvisibleDrag(self):
+    def setInvisibleDrag(self, boolean):
         for item in self.item_list:
             if not isinstance(item, LadderMiddleItem):
-                installInvisibleDragEvent(item)
+                if boolean is True:
+                    installInvisibleDragEvent(item)
+                elif boolean is False:
+                    self.removeEventFilter()
 
-    def setupSlideBar(
-        self
-    ):
+    def setSlideBar(self, boolean, bg_color, fg_color, depth, alignment):
         for item in self.item_list:
             if not isinstance(item, LadderMiddleItem):
-                self.slidebar = installSlideDelegate(
-                    item,
-                    sliderPosMethod=item.getCurrentPos,
-                    breed=0
-                )
-                self.slidebar.setBGSlideColor(self.getBGSlideColor())
-                self.slidebar.setFGSlideColor(self.getFGSlideColor())
+                if boolean is True:
+                    self.slidebar = installSlideDelegate(
+                        item,
+                        sliderPosMethod=item.getCurrentPos,
+                        breed=0
+                    )
+                    self.slidebar.setBGSlideColor(bg_color)
+                    self.slidebar.setFGSlideColor(fg_color)
+                    self.slidebar.setDepth(depth)
+                    self.slidebar.setAlignment(alignment)
+                elif boolean is False:
+                    self.removeEventFilter(self.slidebar)
+
+    def setDiscreteMode(
+        self,
+        boolean,
+        alignment=Qt.AlignBottom,
+        depth=50,
+        fg_color=(32, 32, 32, 255),
+        bg_color=(32, 128, 32, 255)
+    ):
+        self.setInvisibleDrag(boolean)
+        self.setSlideBar(boolean, bg_color, fg_color, depth, alignment)
 
     """ EVENTS """
     def hideEvent(self, *args, **kwargs):
