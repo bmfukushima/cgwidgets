@@ -8,10 +8,10 @@ To Do...
     * Off by one pixel?
         because it runs the event filter first... then runs the event
 
+    * Not filling entire space?
+
     * Layout --> Slide Widget / Value?
         - move value with slide?
-
-    * Weird directional movement?
 
     * Display / Screen
         - Allow user to choose between, display, or widget
@@ -21,7 +21,6 @@ To Do...
             From Color Widget
 
             SlideDelegate --> getBreedWidget
-
 
     * Organize attributes...
         API is all over the place with multiple setters/getters in all of the slide delegates...
@@ -34,10 +33,6 @@ To Do...
             will be more standalone, and the different display bars could potentially
             be inherited later on...
 
-    * SlideDelegate Class Attributes
-        __init__ kwarg is still broken...
-            - only for import, not for local
-
 '''
 import sys
 import platform
@@ -47,11 +42,6 @@ from qtpy.QtWidgets import QDesktopWidget, QApplication, QWidget
 from qtpy.QtCore import Qt, QPoint, QEvent
 
 from utils import setAsTool
-
-Unit = 0
-Hue = 1
-Sat = 2
-Val = 3
 
 
 class AbstractSlideDisplay(QWidget):
@@ -286,7 +276,6 @@ class UnitSlideDisplay(AbstractSlideDisplay):
         Returns:
             None
         """
-        print(math.fabs(1 - pos))
         pos = math.fabs(1 - pos)
         # align horizontally
         if self.getAlignment() in [Qt.AlignBottom, Qt.AlignTop]:
@@ -428,13 +417,10 @@ class SlideDelegate(QWidget):
             return QWidget.eventFilter(self, obj, event, *args, **kwargs)
         elif event.type() == QEvent.MouseMove:
             try:
-                slider_pos = self.getSliderPos()
-                '''
                 try:
                     slider_pos = self.getSliderPos()
-                except:
+                except TypeError:
                     slider_pos = self.getSliderPos(obj)
-                '''
                 self.slidebar.update(slider_pos)
             except AttributeError:
                 pass

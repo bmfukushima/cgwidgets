@@ -25,14 +25,14 @@
 
 """
 import math
+from decimal import Decimal, getcontext
 
 from qtpy.QtGui import *
 from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 
 from cgwidgets.utils import getGlobalPos, installInvisibleDragEvent, installSlideDelegate
-from decimal import Decimal, getcontext
-from delegates import SlideDelegate
+from cgwidgets.delegates import SlideDelegate
 
 
 class LadderDelegate(QWidget):
@@ -353,7 +353,15 @@ class LadderDelegate(QWidget):
                 elif boolean is False:
                     self.removeEventFilter()
 
-    def setSlideBar(self, boolean, bg_color, fg_color, depth, alignment):
+    def setSlideBar(
+        self,
+        boolean,
+        bg_color,
+        fg_color,
+        depth,
+        alignment,
+        breed
+    ):
 
         for item in self.item_list:
             if not isinstance(item, LadderMiddleItem):
@@ -361,7 +369,7 @@ class LadderDelegate(QWidget):
                     self.slidebar = installSlideDelegate(
                         item,
                         sliderPosMethod=item.getCurrentPos,
-                        breed=SlideDelegate.UNIT
+                        breed=breed
                     )
                     self.slidebar.setBGSlideColor(bg_color)
                     self.slidebar.setFGSlideColor(fg_color)
@@ -376,10 +384,11 @@ class LadderDelegate(QWidget):
         alignment=Qt.AlignRight,
         depth=50,
         fg_color=(32, 32, 32, 255),
-        bg_color=(32, 128, 32, 255)
+        bg_color=(32, 128, 32, 255),
+        breed=SlideDelegate.UNIT
     ):
         self.setInvisibleDrag(boolean)
-        self.setSlideBar(boolean, bg_color, fg_color, depth, alignment)
+        self.setSlideBar(boolean, bg_color, fg_color, depth, alignment, breed)
 
     """ EVENTS """
     def hideEvent(self, *args, **kwargs):
@@ -523,6 +532,7 @@ class LadderItem(QLabel):
     """ UTILS """
     def getCurrentPos(self):
         return self.slider_pos
+
     # remove
     def __updateColor(self, xpos):
         """
@@ -727,9 +737,7 @@ if __name__ == '__main__':
             installLadderDelegate(
                 self,
                 user_input=QEvent.MouseButtonPress,
-                value_list=value_list,
-                invisible_drag=True,
-                slide_bar=True
+                value_list=value_list
             )
 
         def setValue(self, value):

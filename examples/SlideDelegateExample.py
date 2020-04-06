@@ -16,10 +16,13 @@ class TestWidget(QWidget):
     def testSliderPos(self):
         return self.value
 
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+    print('what')
+    print(dir(SlideDelegate))
+    print(SlideDelegate.UNIT)
 
     w = TestWidget()
-    print(SlideDelegate.UNIT)
     w.show()
     sys.exit(app.exec_())

@@ -30,7 +30,9 @@ class InvisibleMouseDragEvent(QWidget):
             if pos.x() > self._screen_resolution:
                 y_pos = pos.y()
                 QCursor().setPos(QPoint(1, y_pos))
-
+            elif pos.x() < 1:
+                y_pos = pos.y()
+                QCursor().setPos(QPoint(self._screen_resolution - 1, y_pos))
         elif event.type() == QEvent.MouseButtonRelease:
             #obj.show()
             #obj.setStyleSheet(self.old_style_sheet)
