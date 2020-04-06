@@ -121,8 +121,6 @@ class LadderDelegate(QWidget):
             parent=None,
             value_list=[0.001, 0.01, 0.1, 1, 10, 100, 1000],
             user_input=QEvent.MouseButtonPress,
-            invisible_drag=True,
-            slide_bar=True
     ):
         super(LadderDelegate, self).__init__(parent)
         layout = QVBoxLayout()
@@ -171,16 +169,7 @@ class LadderDelegate(QWidget):
         # set significant digits
         self.__setSignificantDigits()
 
-        self.setDiscreteMode(True)
-        '''
-        # setup invisible drag
-        if invisible_drag is True:
-            self.setInvisibleDrag()
-
-        # setup slide bar
-        if slide_bar is True:
-            self.setSlideBar()
-        '''
+        self.setDiscreteDrag(True)
 
     """ API """
     def getUserInput(self):
@@ -381,10 +370,10 @@ class LadderDelegate(QWidget):
                 elif boolean is False:
                     self.removeEventFilter(self.slidebar)
 
-    def setDiscreteMode(
+    def setDiscreteDrag(
         self,
         boolean,
-        alignment=Qt.AlignBottom,
+        alignment=Qt.AlignRight,
         depth=50,
         fg_color=(32, 32, 32, 255),
         bg_color=(32, 128, 32, 255)

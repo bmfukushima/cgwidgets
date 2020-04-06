@@ -149,9 +149,7 @@ def installSlideDelegate(
 def installLadderDelegate(
     widget,
     user_input=QEvent.MouseButtonPress,
-    value_list=[0.001, 0.01, 0.1, 1, 10, 100, 1000],
-    invisible_drag=True,
-    slide_bar=True
+    value_list=[0.001, 0.01, 0.1, 1, 10, 100, 1000]
 ):
     """
     Args:
@@ -173,9 +171,7 @@ def installLadderDelegate(
     ladder = LadderDelegate(
         parent=widget,
         value_list=value_list,
-        user_input=user_input,
-        invisible_drag=invisible_drag,
-        slide_bar=slide_bar
+        user_input=user_input
     )
     widget.installEventFilter(ladder)
     return ladder

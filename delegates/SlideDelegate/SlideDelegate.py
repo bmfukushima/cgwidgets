@@ -3,9 +3,15 @@
 SlideDelegate --> SlideBreed -->AbstractSlideDisplay
 To Do...
     *Invisible Slide?
+        What?
 
     * Off by one pixel?
         because it runs the event filter first... then runs the event
+
+    * Layout --> Slide Widget / Value?
+        - move value with slide?
+
+    * Weird directional movement?
 
     * Display / Screen
         - Allow user to choose between, display, or widget
@@ -16,25 +22,26 @@ To Do...
 
             SlideDelegate --> getBreedWidget
 
-    * Vertical Alignment
-        - Unit
-            - When aligning vertically gradient still moves horizontally...and notvertically...
-            - Need to reverse order depending on direction of cursor move...
 
     * Organize attributes...
         API is all over the place with multiple setters/getters in all of the slide delegates...
             Currently being set as a setter on the SlideDelegate
+                - bg_color
+                - fg_color
+                - alignment
+            Currently doing an inheritance chain due to the creation process... As
+            the widget is created/destroyed on demand... this way each widget
+            will be more standalone, and the different display bars could potentially
+            be inherited later on...
 
-    * How to set up class Attributes/Properties?
-        so that I can do a
-            - SlideDelegate.Unit
-            - SlideDelegate.Hue
-            - SlideDelegate.Sat
-            - SlideDelegate.Val
+    * SlideDelegate Class Attributes
+        __init__ kwarg is still broken...
+            - only for import, not for local
 
 '''
 import sys
 import platform
+import math
 
 from qtpy.QtWidgets import QDesktopWidget, QApplication, QWidget
 from qtpy.QtCore import Qt, QPoint, QEvent
@@ -244,6 +251,7 @@ class UnitSlideDisplay(AbstractSlideDisplay):
         # set slide color
         self.setBGSlideColor(bg_slide_color)
         self.setFGSlideColor(fg_slide_color)
+        self.setAlignment(alignment)
         self.update(0.0)
 
     """ PROPERTIESS """
@@ -259,8 +267,14 @@ class UnitSlideDisplay(AbstractSlideDisplay):
     def setFGSlideColor(self, fg_slide_color):
         self._fg_slide_color = fg_slide_color
 
+    def getAlignment(self):
+        return self._alignment
+
+    def setAlignment(self, alignment):
+        self._alignment = alignment
+
     """ UTILS """
-    def update(self, xpos):
+    def update(self, pos):
         """
         Updates the color of the widget relative to how far the user
         has dragged.
@@ -272,19 +286,38 @@ class UnitSlideDisplay(AbstractSlideDisplay):
         Returns:
             None
         """
-        style_sheet = """
-        background: qlineargradient(
-            x1:{xpos1} y1:0,
-            x2:{xpos2} y2:0,
-            stop:0 rgba{bgcolor},
-            stop:1 rgba{fgcolor}
-        );
-        """.format(
-                xpos1=str(xpos),
-                xpos2=str(xpos + 0.0001),
-                bgcolor=repr(self.getBGSlideColor()),
-                fgcolor=repr(self.getFGSlideColor())
-            )
+        print(math.fabs(1 - pos))
+        pos = math.fabs(1 - pos)
+        # align horizontally
+        if self.getAlignment() in [Qt.AlignBottom, Qt.AlignTop]:
+            style_sheet = """
+            background: qlineargradient(
+                x1:{pos1} y1:0,
+                x2:{pos2} y2:0,
+                stop:0 rgba{fgcolor},
+                stop:1 rgba{bgcolor}
+            );
+            """.format(
+                    pos1=str(pos),
+                    pos2=str(pos + 0.0001),
+                    bgcolor=repr(self.getBGSlideColor()),
+                    fgcolor=repr(self.getFGSlideColor())
+                )
+        # align vertically
+        elif self.getAlignment() in [Qt.AlignLeft, Qt.AlignRight]:
+            style_sheet = """
+            background: qlineargradient(
+                x1:0 y1:{pos1},
+                x2:0 y2:{pos2},
+                stop:0 rgba{fgcolor},
+                stop:1 rgba{bgcolor}
+            );
+            """.format(
+                    pos1=str(pos),
+                    pos2=str(pos + 0.0001),
+                    bgcolor=repr(self.getBGSlideColor()),
+                    fgcolor=repr(self.getFGSlideColor())
+                )
         self.setStyleSheet(style_sheet)
 
 
@@ -379,7 +412,8 @@ class SlideDelegate(QWidget):
         if breed == SlideDelegate.UNIT:
             return UnitSlideDisplay(
                 bg_slide_color=self.getBGSlideColor(),
-                fg_slide_color=self.getFGSlideColor()
+                fg_slide_color=self.getFGSlideColor(),
+                alignment=self.getAlignment()
             )
         else:
             pass
