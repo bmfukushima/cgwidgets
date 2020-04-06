@@ -10,11 +10,15 @@ Unit Tests:
     * How to run tests in different environments...
         bash script...
 
+Workflow...
+    events...
+        delegates?
+        delegates.utils?
+            - Then how to have utils utils?
+            - Do I even need utils?
+
 Widgets:
-    - Ladder Delegate / Widget
-        - widget just installs the delegate on:
-            line edit
-            label
+
 
     - Error on PySide for ColorWidget
     File "/media/ssd01/Scripts/WidgetFactory/cgwidgets/widgets/ColorWidget/ColorWidget.py", line 702, in _pickColor
