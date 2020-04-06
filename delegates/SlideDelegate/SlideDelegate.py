@@ -2,6 +2,11 @@
 
 SlideDelegate --> SlideBreed -->AbstractSlideDisplay
 To Do...
+    *Invisible Slide?
+
+    * Off by one pixel?
+        because it runs the event filter first... then runs the event
+
     * Display / Screen
         - Allow user to choose between, display, or widget
 
@@ -10,6 +15,7 @@ To Do...
             From Color Widget
 
             SlideDelegate --> getBreedWidget
+
     * Vertical Alignment
         - Unit
             - When aligning vertically gradient still moves horizontally...and notvertically...
@@ -302,7 +308,18 @@ class SlideDelegate(QWidget):
             display the current tick to the user.
             Returns:
                 (float): 0-1
+
+    Class Attributes:
+        UNIT
+        HUE
+        SATURATION
+        VALUE
     """
+    UNIT = 0
+    HUE = 1
+    SATURATION = 2
+    VALUE = 4
+
     def __init__(
         self,
         parent=None,
@@ -343,20 +360,12 @@ class SlideDelegate(QWidget):
 
     def setBGSlideColor(self, color):
         self._bg_slide_color = color
-        '''
-        if self.getBreed() == 0:
-            self.getBreedWidget().setBGSlideColor(color)
-        '''
 
     def getFGSlideColor(self):
         return self._fg_slide_color
 
     def setFGSlideColor(self, color):
         self._fg_slide_color = color
-        '''
-        if self.getBreed() == 0:
-            self.getBreedWidget().setFGSlideColor(color)
-        '''
 
     """ UTILS """
     def getBreedWidget(self):
@@ -364,10 +373,10 @@ class SlideDelegate(QWidget):
         0 = Unit
         1 = Hue
         2 = Sat
-        3 = Val
+        4 = Val
         """
         breed = self.getBreed()
-        if breed == 0:
+        if breed == SlideDelegate.UNIT:
             return UnitSlideDisplay(
                 bg_slide_color=self.getBGSlideColor(),
                 fg_slide_color=self.getFGSlideColor()

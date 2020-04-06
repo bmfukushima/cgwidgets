@@ -3,7 +3,7 @@ import sys
 from qtpy.QtWidgets import QApplication, QWidget
 
 from cgwidgets.utils import installSlideDelegate
-
+from cgwidgets.delegates import SlideDelegate
 
 class TestWidget(QWidget):
     def __init__(self, parent=None):
@@ -20,6 +20,6 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
 
     w = TestWidget()
-    
+    print(SlideDelegate.UNIT)
     w.show()
     sys.exit(app.exec_())

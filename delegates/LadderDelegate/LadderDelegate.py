@@ -32,6 +32,7 @@ from qtpy.QtCore import *
 
 from cgwidgets.utils import getGlobalPos, installInvisibleDragEvent, installSlideDelegate
 from decimal import Decimal, getcontext
+from delegates import SlideDelegate
 
 
 class LadderDelegate(QWidget):
@@ -364,13 +365,14 @@ class LadderDelegate(QWidget):
                     self.removeEventFilter()
 
     def setSlideBar(self, boolean, bg_color, fg_color, depth, alignment):
+
         for item in self.item_list:
             if not isinstance(item, LadderMiddleItem):
                 if boolean is True:
                     self.slidebar = installSlideDelegate(
                         item,
                         sliderPosMethod=item.getCurrentPos,
-                        breed=0
+                        breed=SlideDelegate.UNIT
                     )
                     self.slidebar.setBGSlideColor(bg_color)
                     self.slidebar.setFGSlideColor(fg_color)
