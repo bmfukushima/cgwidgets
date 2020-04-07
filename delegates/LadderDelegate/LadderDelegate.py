@@ -590,8 +590,11 @@ class LadderItem(QLabel):
         self._start_pos = pos
 
     """ UTILS """
-    def getCurrentPos(self):
-        return self.slider_pos
+    def getCurrentPos(self, event):
+        current_pos = self.mapToGlobal(event.pos())
+        magnitude = self.__getMagnitude(self.start_pos, current_pos)
+        return math.fabs(math.modf(magnitude)[0])
+        #return self.slider_pos
 
     # remove
     def __updateColor(self, xpos):

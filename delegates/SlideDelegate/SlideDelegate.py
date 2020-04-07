@@ -5,11 +5,9 @@ To Do...
     *Invisible Slide?
         What?
 
-    * Off by one pixel?
-        because it runs the event filter first... then runs the event
-
     * Not filling entire space?
-
+        - appears to be on vertical display only...
+        - appears to be happening on rollover
     * Layout --> Slide Widget / Value?
         - display value on top of slider?
             QGraphicsScene / Mask?
@@ -279,7 +277,7 @@ class UnitSlideDisplay(AbstractSlideDisplay):
         Returns:
             None
         """
-        
+
         # align horizontally
         if self.getAlignment() in [Qt.AlignBottom, Qt.AlignTop]:
             pos=pos
@@ -317,7 +315,6 @@ class UnitSlideDisplay(AbstractSlideDisplay):
         except UnboundLocalError:
             # alignment not set
             pass
-
 
 
 class SlideDelegate(QWidget):
@@ -428,9 +425,9 @@ class SlideDelegate(QWidget):
         elif event.type() == QEvent.MouseMove:
             try:
                 try:
-                    slider_pos = self.getSliderPos()
+                    slider_pos = self.getSliderPos(event)
                 except TypeError:
-                    slider_pos = self.getSliderPos(obj)
+                    slider_pos = self.getSliderPos(obj, event)
                 self.slidebar.update(slider_pos)
             except AttributeError:
                 pass
