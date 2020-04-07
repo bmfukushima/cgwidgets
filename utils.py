@@ -146,6 +146,10 @@ def installSlideDelegate(
     return slide_delegate
 
 
+def removeSlideDelegate(item, slide_delegate):
+    item.removeEventFilter(slide_delegate)
+
+
 def installLadderDelegate(
     widget,
     user_input=QEvent.MouseButtonPress,

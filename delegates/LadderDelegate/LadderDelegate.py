@@ -1,6 +1,8 @@
 """
 # -------------------------------------------------------------------------- Bugs
     * First tick does not register
+    * Installing multiple Slide Delegates
+        does not delete original...
 # -----------------------------------------------------------------------To Do
     * Detect if close to edge...
         - Detect center point function
@@ -31,7 +33,12 @@ from qtpy.QtGui import *
 from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 
-from cgwidgets.utils import getGlobalPos, installInvisibleDragEvent, installSlideDelegate
+from cgwidgets.utils import (
+    getGlobalPos,
+    installInvisibleDragEvent,
+    installSlideDelegate,
+    removeSlideDelegate
+)
 from cgwidgets.delegates import SlideDelegate
 
 
@@ -168,8 +175,6 @@ class LadderDelegate(QWidget):
 
         # set significant digits
         self.__setSignificantDigits()
-
-        self.setDiscreteDrag(True)
 
     """ API """
     def getUserInput(self):
@@ -356,11 +361,11 @@ class LadderDelegate(QWidget):
     def setSlideBar(
         self,
         boolean,
-        bg_color,
-        fg_color,
-        depth,
-        alignment,
-        breed
+        alignment=Qt.AlignRight,
+        depth=50,
+        fg_color=(32, 32, 32, 255),
+        bg_color=(32, 128, 32, 255),
+        breed=SlideDelegate.UNIT
     ):
 
         for item in self.item_list:
@@ -374,9 +379,19 @@ class LadderDelegate(QWidget):
                     self.slidebar.setBGSlideColor(bg_color)
                     self.slidebar.setFGSlideColor(fg_color)
                     self.slidebar.setDepth(depth)
+
                     self.slidebar.setAlignment(alignment)
+
                 elif boolean is False:
-                    self.removeEventFilter(self.slidebar)
+                    try:
+                        
+                        #self.slidebar.close()
+                        #self.slidebar.setParent(None)
+                        removeSlideDelegate(item, self.slidebar)
+                        item.removeEventFilter(self.slidebar)
+                    except AttributeError:
+                        # pass on first run through
+                        pass
 
     def setDiscreteDrag(
         self,
@@ -387,8 +402,24 @@ class LadderDelegate(QWidget):
         bg_color=(32, 128, 32, 255),
         breed=SlideDelegate.UNIT
     ):
+        # delete old slidebar
+        self.setSlideBar(False)
+
+        # set cursor drag mode
         self.setInvisibleDrag(boolean)
-        self.setSlideBar(boolean, bg_color, fg_color, depth, alignment, breed)
+
+        # create new slide bar
+        if boolean is True:
+            # create new
+            self.setInvisibleDrag(boolean)
+            self.setSlideBar(
+                boolean,
+                bg_color=bg_color,
+                fg_color=fg_color,
+                depth=depth,
+                alignment=alignment,
+                breed=breed
+            )
 
     """ EVENTS """
     def hideEvent(self, *args, **kwargs):
@@ -734,11 +765,15 @@ if __name__ == '__main__':
             self.setGeometry(pos.x(), pos.y(), 200, 100)
             value_list = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
             pos = QCursor.pos()
-            installLadderDelegate(
+            ladder = installLadderDelegate(
                 self,
                 user_input=QEvent.MouseButtonPress,
                 value_list=value_list
             )
+
+            ladder.setDiscreteDrag(True, alignment=Qt.AlignBottom)
+            ladder.setDiscreteDrag(True, alignment=Qt.AlignRight)
+            ladder.setDiscreteDrag(True, alignment=Qt.AlignLeft)
 
         def setValue(self, value):
             self.setText(str(value))

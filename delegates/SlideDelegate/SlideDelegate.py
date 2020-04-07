@@ -11,7 +11,11 @@ To Do...
     * Not filling entire space?
 
     * Layout --> Slide Widget / Value?
-        - move value with slide?
+        - display value on top of slider?
+            QGraphicsScene / Mask?
+        - easier to display to right/left/top/bottom of slider...
+            also better to look at...  provides a consistent place to look
+            rather than a dynamic one...
 
     * Display / Screen
         - Allow user to choose between, display, or widget
@@ -276,15 +280,16 @@ class UnitSlideDisplay(AbstractSlideDisplay):
         Returns:
             None
         """
-        pos = math.fabs(1 - pos)
+        
         # align horizontally
         if self.getAlignment() in [Qt.AlignBottom, Qt.AlignTop]:
+            pos=pos
             style_sheet = """
             background: qlineargradient(
                 x1:{pos1} y1:0,
                 x2:{pos2} y2:0,
-                stop:0 rgba{fgcolor},
-                stop:1 rgba{bgcolor}
+                stop:0 rgba{bgcolor},
+                stop:1 rgba{fgcolor}
             );
             """.format(
                     pos1=str(pos),
@@ -294,6 +299,7 @@ class UnitSlideDisplay(AbstractSlideDisplay):
                 )
         # align vertically
         elif self.getAlignment() in [Qt.AlignLeft, Qt.AlignRight]:
+            pos = math.fabs(1 - pos)
             style_sheet = """
             background: qlineargradient(
                 x1:0 y1:{pos1},
@@ -307,7 +313,12 @@ class UnitSlideDisplay(AbstractSlideDisplay):
                     bgcolor=repr(self.getBGSlideColor()),
                     fgcolor=repr(self.getFGSlideColor())
                 )
-        self.setStyleSheet(style_sheet)
+        try:
+            self.setStyleSheet(style_sheet)
+        except UnboundLocalError:
+            # alignment not set
+            pass
+
 
 
 class SlideDelegate(QWidget):
