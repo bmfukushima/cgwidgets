@@ -1,12 +1,12 @@
 """
 # -------------------------------------------------------------------------- Bugs
     * First tick does not register
-    * Installing multiple Slide Delegates
-        does not delete original...
+
 # -----------------------------------------------------------------------To Do
     * Detect if close to edge...
         - Detect center point function
         - only needs to handle y pos
+    * Horizontal Delegate?
 
 # ------------------------------------------------------------------- API
     * seperate display option "discrete" mode:
@@ -52,6 +52,7 @@ class LadderDelegate(QWidget):
     reimplement the setValue() and getValue() methods or add those methods
     to the parent widget.
 
+
     Kwargs:
         parent: (QLineEdit) or (QLabel)
             widget to install ladder delegate onto.  Note this currently
@@ -75,6 +76,7 @@ class LadderDelegate(QWidget):
 
         slide_bar (bool): Toggle on/off the slide bar while manipulating
             the ladder
+
 
     Attributes:
         + Public:
@@ -286,12 +288,12 @@ class LadderDelegate(QWidget):
                     return None
 
     def getValue(self):
-        '''
-        returns:
+        """
+        Returns:
             current parent widgets value. Will attempt to look for the
             default text() attr, however if it is not available, will look for
             the parents getValue() method.
-        '''
+        """
         try:
             self._value = float(self.parent().text())
             return self._value
@@ -305,7 +307,7 @@ class LadderDelegate(QWidget):
 
     """ UTILS """
     def __setSignificantDigits(self):
-        '''
+        """
         sets the number of significant digits to round to
 
         This is to avoid floating point errors...
@@ -313,7 +315,7 @@ class LadderDelegate(QWidget):
         Currently only working with what's set up... does not expand
         when the number of sig digits increases... this really only needs
         to work for decimals
-        '''
+        """
         self._significant_digits = 1
         for item in self.item_list:
             if item is not self.middle_item:
@@ -326,7 +328,13 @@ class LadderDelegate(QWidget):
         getcontext().prec = self._significant_digits
 
     def __setItemSize(self):
+        """
+        Sets each individual item's size according to the
+        getItemHeight and parents widgets width
 
+        This is also probably where I will be installing a delegate
+        for a horizontal ladder layout...
+        """
         # set adjustable items
         height = self.getItemHeight()
         width = self.parent().width()
@@ -350,7 +358,13 @@ class LadderDelegate(QWidget):
         )
         self.move(pos)
 
-    def setInvisibleDrag(self, boolean):
+    def __setInvisibleDrag(self, boolean):
+        """
+        When the mouse is click/dragged in each individual
+        item, the cursor dissappears from the users view.  When
+        the user releases the trigger, it will show the cursor again
+        at the original clicking point.
+        """
         for item in self.item_list:
             if not isinstance(item, LadderMiddleItem):
                 if boolean is True:
@@ -358,7 +372,7 @@ class LadderDelegate(QWidget):
                 elif boolean is False:
                     self.removeEventFilter()
 
-    def setSlideBar(
+    def __setSlideBar(
         self,
         boolean,
         alignment=Qt.AlignRight,
@@ -367,7 +381,10 @@ class LadderDelegate(QWidget):
         bg_color=(32, 128, 32, 255),
         breed=SlideDelegate.UNIT
     ):
-
+        """
+        Creates a visual bar on the screen to show the user
+        how close they are to creating the next tick
+        """
         for item in self.item_list:
             if not isinstance(item, LadderMiddleItem):
                 if boolean is True:
@@ -398,17 +415,41 @@ class LadderDelegate(QWidget):
         bg_color=(32, 128, 32, 255),
         breed=SlideDelegate.UNIT
     ):
+        """
+        Discrete drag is a display mode that happens when
+        the user manipulates an item in the ladder ( click + drag +release)
+
+        On pen down, the cursor will dissapear and a visual cue will be added
+        based on the alignment kwarg. Pen drag will update the visual cue
+        to show the user how close they are to the next tick.
+
+        Args:
+            boolean (boolean): Whether or not to enable/disable discrete
+            drag mode
+
+        Kwargs:
+            depth (int): how wide/tall the widget should be depending
+                on its orientation
+            alignment (QtCore.Qt.Align): where the widget should be align
+                relative to the display
+            bg_slide_color rgba int 0-255):
+                The bg color that is displayed to the user when the user starts
+                to click/drag to slide
+            fg_slide_color rgba int 0-255):
+                The bg color that is displayed to the user when the user starts
+                to click/drag to slide
+            breed (SlideDelegate.TYPE): What type of visual cue to display.
+                Other options HUE, SATURATION, VALUE
+        """
         # delete old slidebar
-        self.setSlideBar(False)
+        self.__setSlideBar(False)
 
         # set cursor drag mode
-        self.setInvisibleDrag(boolean)
+        self.__setInvisibleDrag(boolean)
 
         # create new slide bar
         if boolean is True:
-            # create new
-            self.setInvisibleDrag(boolean)
-            self.setSlideBar(
+            self.__setSlideBar(
                 boolean,
                 bg_color=bg_color,
                 fg_color=fg_color,
@@ -489,31 +530,23 @@ class LadderItem(QLabel):
     that is passed to the ladder delegate.
 
     Kwargs:
-        value_mult (float)
-            how many units the drag should update
+        value_mult (float): how many units the drag should update
 
     Attributes:
-        orig_value (float)
-            the value of the widget prior to starting a
+        orig_value (float): the value of the widget prior to starting a
             value adjustment.  This is reset everytime a new value adjustment
             is started.
-
-        value_mult (float)
-            how many units the drag should update
-
-        start_pos (QPoint)
-            starting position of drag
-
-        num_ticks (int)
-            how many units the user has moved.
+        value_mult (float): how many units the drag should update
+        start_pos (QPoint): starting position of drag
+        num_ticks (int): how many units the user has moved.
             ( num_ticks * value_mult ) + orig_value = new_value
 
     """
     def __init__(
-            self,
-            parent=None,
-            value_mult=''
-        ):
+        self,
+        parent=None,
+        value_mult=''
+    ):
         super(LadderItem, self).__init__(parent)
 
         # set default attrs
@@ -567,8 +600,7 @@ class LadderItem(QLabel):
         the individual items in the ladder
 
         Args:
-            xpos (float)
-                single channel rgb color ( 0 - 1)
+            xpos (float): single channel rgb color ( 0 - 1)
                 sets the style sheet to converge from left
                 to right so that each full convergance will
                 display another increment in value
@@ -595,8 +627,7 @@ class LadderItem(QLabel):
         the user how close they are to the next tick
 
         Args:
-            xpos (float)
-                single channel rgb color ( 0 - 1)
+            xpos (float): single channel rgb color ( 0 - 1)
                 sets the style sheet to converge from left
                 to right so that each full convergance will
                 display another increment in value
@@ -673,7 +704,6 @@ class LadderItem(QLabel):
         return magnitude
 
     """ EVENTS """
-
     def enterEvent(self, *args, **kwargs):
         """
         hack to set up hover color for QLabels
