@@ -115,7 +115,8 @@ def installInvisibleDragEvent(widget):
 def installSlideDelegate(
         widget,
         sliderPosMethod,
-        breed=None
+        breed=None,
+        display_widget=None
     ):
     """
     Args:
@@ -140,7 +141,8 @@ def installSlideDelegate(
     slide_delegate = SlideDelegate(
         parent=widget,
         getSliderPos=sliderPosMethod,
-        breed=breed
+        breed=breed,
+        widget=display_widget
     )
     widget.installEventFilter(slide_delegate)
     return slide_delegate
@@ -153,7 +155,8 @@ def removeSlideDelegate(item, slide_delegate):
 def installLadderDelegate(
     widget,
     user_input=QEvent.MouseButtonPress,
-    value_list=[0.001, 0.01, 0.1, 1, 10, 100, 1000]
+    value_list=[0.001, 0.01, 0.1, 1, 10, 100, 1000],
+    display_widget=None
 ):
     """
     Args:
@@ -168,6 +171,8 @@ def installLadderDelegate(
         value_list: <list> of <float>
             list of values for the user to be able to adjust by, usually this
             is set to .01, .1, 1, 10, etc
+        display_widget (QWidget): optional argument.  If entered, the display
+            will show up over that widget rather than over the main display.
     Returns:
         LadderDelegate
     """
@@ -175,7 +180,8 @@ def installLadderDelegate(
     ladder = LadderDelegate(
         parent=widget,
         value_list=value_list,
-        user_input=user_input
+        user_input=user_input,
+        widget=display_widget
     )
     widget.installEventFilter(ladder)
     return ladder

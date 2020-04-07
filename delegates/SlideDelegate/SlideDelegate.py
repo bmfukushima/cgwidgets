@@ -7,7 +7,9 @@ To Do...
 
     * Not filling entire space?
         - appears to be on vertical display only...
-        - appears to be happening on rollover
+        - appears at ~roughly .15
+        - almost like its adding another stop to the ramp...
+
     * Layout --> Slide Widget / Value?
         - display value on top of slider?
             QGraphicsScene / Mask?
@@ -58,6 +60,8 @@ class AbstractSlideDisplay(QWidget):
             on its orientation
         alignment (QtCore.Qt.Align): where the widget should be align
             relative to the display
+        widget (QWidget): optional argument.  If entered, the display
+            will show up over that widget rather than over the main display.
 
     Properties:
         + public+
@@ -79,7 +83,8 @@ class AbstractSlideDisplay(QWidget):
         self,
         parent=None,
         depth=50,
-        alignment=Qt.AlignBottom
+        alignment=Qt.AlignBottom,
+        widget=None
     ):
         super(AbstractSlideDisplay, self).__init__(parent)
         # set as tool
@@ -92,9 +97,10 @@ class AbstractSlideDisplay(QWidget):
         self._screen_pos = self.screen_geometry.topLeft()
 
         # set properties
+        self._widget = widget
         self.setDepth(depth)
         self.setAlignment(alignment)
-        self.setWidgetPosition(self.getAlignment())
+        #self.setWidgetPosition(self.getAlignment(), widget=widget)
 
     """ API """
     def getDepth(self):
@@ -143,7 +149,15 @@ class AbstractSlideDisplay(QWidget):
         self._screen_pos = screen_pos
 
     """ UTILS """
-    def setWidgetPosition(self, alignment):
+    #def alignWidgetToDisplay(self):
+    def setWidgetPosition(self, alignment, widget=None):
+        if widget:
+            pass
+        else:
+            self.alignWidgetToDisplay(alignment)
+        pass
+
+    def alignWidgetToDisplay(self, alignment):
         """
         Determines where on the monitor the widget should be located
 
@@ -234,6 +248,7 @@ class UnitSlideDisplay(AbstractSlideDisplay):
         alignment=Qt.AlignBottom,
         bg_slide_color=(18, 18, 18, 128),
         fg_slide_color=(18, 128, 18, 128),
+        widget=None
     ):
         super(UnitSlideDisplay, self).__init__(
             parent, alignment=alignment, depth=depth
@@ -243,6 +258,7 @@ class UnitSlideDisplay(AbstractSlideDisplay):
         self.setBGSlideColor(bg_slide_color)
         self.setFGSlideColor(fg_slide_color)
         self.setAlignment(alignment)
+        self._widget = widget
         self.update(0.0)
 
     """ PROPERTIESS """
@@ -280,7 +296,7 @@ class UnitSlideDisplay(AbstractSlideDisplay):
 
         # align horizontally
         if self.getAlignment() in [Qt.AlignBottom, Qt.AlignTop]:
-            pos=pos
+            pos = pos
             style_sheet = """
             background: qlineargradient(
                 x1:{pos1} y1:0,
@@ -353,16 +369,18 @@ class SlideDelegate(QWidget):
         self,
         parent=None,
         breed=0,
-        getSliderPos=None
+        getSliderPos=None,
+        widget=None
     ):
         super(SlideDelegate, self).__init__(parent)
         self.setBreed(breed)
-        # set initial colors
+
+        # set initial attributes
         self.setBGSlideColor((32, 32, 32, 128))
         self.setFGSlideColor((32, 128, 32, 255))
         self.setDepth(50)
         self.setAlignment(Qt.AlignBottom)
-
+        self._widget = widget
         self.getSliderPos = getSliderPos
 
     """ API """
@@ -409,7 +427,8 @@ class SlideDelegate(QWidget):
             return UnitSlideDisplay(
                 bg_slide_color=self.getBGSlideColor(),
                 fg_slide_color=self.getFGSlideColor(),
-                alignment=self.getAlignment()
+                alignment=self.getAlignment(),
+                widget=self._widget
             )
         else:
             pass
@@ -418,7 +437,7 @@ class SlideDelegate(QWidget):
     def eventFilter(self, obj, event, *args, **kwargs):
         if event.type() == QEvent.MouseButtonPress:
             self.slidebar = self.getBreedWidget()
-            self.slidebar.setWidgetPosition(self.getAlignment())
+            self.slidebar.setWidgetPosition(self.getAlignment(), widget=self._widget)
             self.slidebar.show()
 
             return QWidget.eventFilter(self, obj, event, *args, **kwargs)

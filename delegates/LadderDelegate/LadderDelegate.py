@@ -130,6 +130,7 @@ class LadderDelegate(QWidget):
             parent=None,
             value_list=[0.001, 0.01, 0.1, 1, 10, 100, 1000],
             user_input=QEvent.MouseButtonPress,
+            widget=None
     ):
         super(LadderDelegate, self).__init__(parent)
         layout = QVBoxLayout()
@@ -144,6 +145,7 @@ class LadderDelegate(QWidget):
         self.setItemHeight(50)
         self.setMiddleItemBorderWidth(2)
         self.setUserInput(user_input)
+        self._widget = widget
         self.middle_item_index = int(len(value_list) * 0.5)
 
         # set up style
@@ -391,7 +393,8 @@ class LadderDelegate(QWidget):
                     slidebar = installSlideDelegate(
                         item,
                         sliderPosMethod=item.getCurrentPos,
-                        breed=breed
+                        breed=breed,
+                        display_widget=self._widget
                     )
                     slidebar.setBGSlideColor(bg_color)
                     slidebar.setFGSlideColor(fg_color)
@@ -797,7 +800,8 @@ if __name__ == '__main__':
             ladder = installLadderDelegate(
                 self,
                 user_input=QEvent.MouseButtonPress,
-                value_list=value_list
+                value_list=value_list,
+                #display_widget=self.parent()
             )
 
             ladder.setDiscreteDrag(True, alignment=Qt.AlignBottom)
@@ -806,8 +810,12 @@ if __name__ == '__main__':
 
         def setValue(self, value):
             self.setText(str(value))
-
+    
     app = QApplication(sys.argv)
-    menu = TestWidget()
-    menu.show()
+    widget = QWidget()
+    layout = QVBoxLayout(widget)
+    
+    menu = TestWidget(widget)
+    layout.addWidget(menu)
+    widget.show()
     sys.exit(app.exec_())
