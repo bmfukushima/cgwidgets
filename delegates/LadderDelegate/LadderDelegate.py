@@ -371,26 +371,22 @@ class LadderDelegate(QWidget):
         for item in self.item_list:
             if not isinstance(item, LadderMiddleItem):
                 if boolean is True:
-                    self.slidebar = installSlideDelegate(
+                    slidebar = installSlideDelegate(
                         item,
                         sliderPosMethod=item.getCurrentPos,
                         breed=breed
                     )
-                    self.slidebar.setBGSlideColor(bg_color)
-                    self.slidebar.setFGSlideColor(fg_color)
-                    self.slidebar.setDepth(depth)
+                    slidebar.setBGSlideColor(bg_color)
+                    slidebar.setFGSlideColor(fg_color)
+                    slidebar.setDepth(depth)
 
-                    self.slidebar.setAlignment(alignment)
+                    slidebar.setAlignment(alignment)
+                    item.slidebar = slidebar
 
                 elif boolean is False:
                     try:
-                        
-                        #self.slidebar.close()
-                        #self.slidebar.setParent(None)
-                        removeSlideDelegate(item, self.slidebar)
-                        item.removeEventFilter(self.slidebar)
+                        removeSlideDelegate(item, item.slidebar)
                     except AttributeError:
-                        # pass on first run through
                         pass
 
     def setDiscreteDrag(
