@@ -11,13 +11,6 @@
         "setDiscreteMode" method
 
 # ------------------------------------------------------------------- API
-    * seperate display option "discrete" mode:
-        - How to set transparency?
-            - New delegate?
-                This is probably better...
-            - Force set in LadderDelegate?
-        - display values somewhere non obtrustive
-
     * need to figure out how to make eventFilter more robust...
         ie support CTRL+ALT+CLICK / RMB, etc
             rather than just a QEvent.Type
@@ -38,6 +31,7 @@ from qtpy.QtCore import *
 from cgwidgets.utils import (
     getGlobalPos,
     installInvisibleCursorEvent,
+    installInvisibleWidgetEvent,
     installSlideDelegate,
     removeSlideDelegate
 )
@@ -362,7 +356,7 @@ class LadderDelegate(QWidget):
         )
         self.move(pos)
 
-    def __setInvisibleDrag(self, boolean):
+    def __setInvisibleCursor(self, boolean):
         """
         When the mouse is click/dragged in each individual
         item, the cursor dissappears from the users view.  When
@@ -375,6 +369,17 @@ class LadderDelegate(QWidget):
                     installInvisibleCursorEvent(item)
                 elif boolean is False:
                     self.removeEventFilter()
+
+    def __setInvisibleWidget(self, boolean):
+        """
+        When the mouse is click/dragged in each individual
+        item, ladder will dissapear from view.
+        """
+        for item in self.item_list:
+            if boolean is True:
+                installInvisibleWidgetEvent(item, hide_widget=self)
+            elif boolean is False:
+                item.removeEventFilter()
 
     def __setSlideBar(
         self,
@@ -450,7 +455,8 @@ class LadderDelegate(QWidget):
         self.__setSlideBar(False)
 
         # set cursor drag mode
-        self.__setInvisibleDrag(boolean)
+        self.__setInvisibleCursor(boolean)
+        self.__setInvisibleWidget(boolean)
 
         # create new slide bar
         if boolean is True:
@@ -807,7 +813,7 @@ if __name__ == '__main__':
             )
 
             ladder.setDiscreteDrag(True, alignment=Qt.AlignBottom, depth=10)
-            ladder.setDiscreteDrag(True, alignment=Qt.AlignBottom, depth=10, fg_color=(128, 128, 32, 255))
+            ladder.setDiscreteDrag(True, alignment=Qt.AlignLeft, depth=10, fg_color=(128, 128, 32, 255))
             #ladder.setDiscreteDrag(True, alignment=Qt.AlignLeft)
 
         def setValue(self, value):

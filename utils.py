@@ -112,6 +112,32 @@ def installInvisibleCursorEvent(widget):
     return invis_drag_filter
 
 
+def installInvisibleWidgetEvent(widget, hide_widget=None):
+    """
+    Installs an event filter on the widget that makes it so that when the
+    user click/drags, it will turn the cursor invisible, and all the cursor
+    to move an infinite distance.  On release, it will return the cursor
+    back to the starting position
+
+    Args:
+
+    Returns:
+    """
+    from events import InvisibleWidgetEvent
+
+    # ensure defaults for hide widget
+    if hide_widget is None:
+        hide_widget = widget
+
+    # install event filter
+    invis_cursor_filter = InvisibleWidgetEvent(
+        parent=widget, hide_widget=hide_widget
+    )
+    widget.installEventFilter(invis_cursor_filter)
+
+    return invis_cursor_filter
+
+
 def installSlideDelegate(
         widget,
         sliderPosMethod,

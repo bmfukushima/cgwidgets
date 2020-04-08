@@ -16,14 +16,16 @@ class InvisibleCursorEvent(QWidget):
         self._screen_resolution = self.screen_resolutions()
 
     def eventFilter(self, obj, event, *args, **kwargs):
-        if event.type() == QEvent.MouseButtonPress:
-            #obj.hide()
-            #self.old_style_sheet = obj.styleSheet()
-            #obj.setStyleSheet('background-color: rgba(0,0,0,0)')
+        # catch init failures
+        try:
+            self._init_pos
+        except AttributeError:
+            return QWidget.eventFilter(self, obj, event, *args, **kwargs)
 
+        # do work
+        if event.type() == QEvent.MouseButtonPress:
             self._init_pos = obj.mapToGlobal(event.pos())
             obj.window().setCursor(Qt.BlankCursor)
-
         elif event.type() == QEvent.MouseMove:
             pos = obj.mapToGlobal(event.pos())
 
@@ -34,8 +36,6 @@ class InvisibleCursorEvent(QWidget):
                 y_pos = pos.y()
                 QCursor().setPos(QPoint(self._screen_resolution - 1, y_pos))
         elif event.type() == QEvent.MouseButtonRelease:
-            #obj.show()
-            #obj.setStyleSheet(self.old_style_sheet)
             obj.window().unsetCursor()
             QCursor().setPos(self._init_pos)
 
