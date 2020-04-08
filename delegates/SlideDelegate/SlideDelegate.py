@@ -4,12 +4,13 @@ SlideDelegate --> SlideBreed -->AbstractSlideDisplay
 To Do...
     *Invisible Slide?
         What?
-
+#-------------------------------------------------------------------------- Bugs
     * Not filling entire space?
         - appears to be on vertical display only...
         - appears at ~roughly .15
         - almost like its adding another stop to the ramp...
 
+#--------------------------------------------------------------------- Features
     * Layout --> Slide Widget / Value?
         - display value on top of slider?
             QGraphicsScene / Mask?
@@ -19,6 +20,11 @@ To Do...
 
     * Display / Screen
         - Allow user to choose between, display, or widget
+            - currently passing _widget as an untracked attribute...
+            - need to start documenting this chain...
+            - instead of absolute position...
+                do this with a layout? stacked widget? 
+                
 
     * HSV
         - Setup Gradient for QGraphicsView
@@ -26,6 +32,7 @@ To Do...
 
             SlideDelegate --> getBreedWidget
 
+#---------------------------------------------------------------------- Clean up
     * Organize attributes...
         API is all over the place with multiple setters/getters in all of the slide delegates...
             Currently being set as a setter on the SlideDelegate
@@ -36,16 +43,24 @@ To Do...
             the widget is created/destroyed on demand... this way each widget
             will be more standalone, and the different display bars could potentially
             be inherited later on...
+        - Also due to the fact that the inheritance wasnt passed to the abstract widget
+            through the super... well aint that super...
+
+
+    * Document
+        - _widget added...
+
 
 '''
 import sys
 import platform
 import math
 
-from qtpy.QtWidgets import QDesktopWidget, QApplication, QWidget
+from qtpy.QtWidgets import QDesktopWidget, QApplication, QWidget, QStackedLayout
 from qtpy.QtCore import Qt, QPoint, QEvent
 
 from utils import setAsTool
+from PyQt5.QtWidgets import QVBoxLayout, QPushButton
 
 
 class AbstractSlideDisplay(QWidget):
@@ -87,7 +102,7 @@ class AbstractSlideDisplay(QWidget):
         widget=None
     ):
         super(AbstractSlideDisplay, self).__init__(parent)
-        # set as tool
+
         setAsTool(self)
 
         # set screen properties
@@ -149,15 +164,102 @@ class AbstractSlideDisplay(QWidget):
         self._screen_pos = screen_pos
 
     """ UTILS """
-    #def alignWidgetToDisplay(self):
     def setWidgetPosition(self, alignment, widget=None):
         if widget:
-            pass
+            self.alignToWidget(alignment, widget)
         else:
-            self.alignWidgetToDisplay(alignment)
+            self.alignToDisplay(alignment)
+
+    def setupStackedLayout(self):
         pass
 
-    def alignWidgetToDisplay(self, alignment):
+    def unsetStackedLayout(self):
+        pass
+
+    def alignToWidget(self, alignment, widget):
+        '''
+        needs to be setup incase a widget has no parent?
+        '''
+        _accepted = [
+            Qt.AlignLeft,
+            Qt.AlignRight,
+            Qt.AlignTop,
+            Qt.AlignBottom
+        ]
+        """
+        parent = widget.parent()
+        parent_layout = parent.layout()
+        print(widget, parent.layout())
+        print(widget.objectName(), parent.layout().objectName())
+        
+        stacked_layout = QStackedLayout()
+        
+        # get widget index in parent...
+        # insert stacked layout into parent
+        
+        align_widget = QWidget()
+        align_layout = QVBoxLayout(align_widget)
+        align_layout.setAlignment(alignment)
+        align_layout.setContentsMargins(0, 0, 0, 0)
+
+        # stupid method beacuse I can't figure out the correct
+        # way to get the index of the widget in a layout...
+        child_index = -1
+        print('layout count == %s'%parent_layout.count())
+        for index in range(parent_layout.count()):
+            print('i == %s'%index)
+            child_widget = parent_layout.itemAt(index).widget()
+            print(child_widget)
+            if child_widget == widget:
+                child_index = index
+        print('child_index == =%s'%child_index)
+
+        # add widgets to stacked layout
+        #stacked_layout.addWidget(align_widget)
+        button = QPushButton('test')
+        stacked_layout.addWidget(button)
+        stacked_layout.addWidget(widget)
+        button.setFixedSize(50, 50)
+        button.setStyleSheet('background-color:rgba(128,128,128,128)')
+        parent_layout.insertLayout(child_index, stacked_layout)
+
+        """
+
+        screen_pos = widget.parent().mapToGlobal(widget.pos())
+
+        if alignment in _accepted:
+            if alignment == Qt.AlignLeft:
+                height = widget.height()
+                width = self.getDepth()
+                pos = screen_pos
+            elif alignment == Qt.AlignRight:
+                height = widget.height()
+                width = self.getDepth()
+                pos_x = (
+                    screen_pos.x()
+                    + widget.width()
+                    - self.getDepth()
+                )
+                pos = QPoint(pos_x, screen_pos.y())
+            elif alignment == Qt.AlignTop:
+                height = self.getDepth()
+                width = widget.width()
+                pos = screen_pos
+            elif alignment == Qt.AlignBottom:
+                height = self.getDepth()
+                width = widget.width()
+                pos_y = (
+                    screen_pos.y()
+                    + widget.height()
+                    - self.getDepth()
+                )
+                pos = QPoint(screen_pos.x(), pos_y)
+
+            self.setFixedHeight(height)
+            self.setFixedWidth(width)
+            self.move(pos)
+
+    def alignToDisplay(self, alignment):
         """
         Determines where on the monitor the widget should be located
 

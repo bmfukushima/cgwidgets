@@ -7,6 +7,8 @@
         - Detect center point function
         - only needs to handle y pos
     * Horizontal Delegate?
+    * Move SlideDelegate display widget to the
+        "setDiscreteMode" method
 
 # ------------------------------------------------------------------- API
     * seperate display option "discrete" mode:
@@ -801,21 +803,30 @@ if __name__ == '__main__':
                 self,
                 user_input=QEvent.MouseButtonPress,
                 value_list=value_list,
-                #display_widget=self.parent()
+                display_widget=self.parent()
             )
 
             ladder.setDiscreteDrag(True, alignment=Qt.AlignBottom)
             ladder.setDiscreteDrag(True, alignment=Qt.AlignRight)
-            ladder.setDiscreteDrag(True, alignment=Qt.AlignLeft)
+            #ladder.setDiscreteDrag(True, alignment=Qt.AlignLeft)
 
         def setValue(self, value):
             self.setText(str(value))
-    
+
     app = QApplication(sys.argv)
-    widget = QWidget()
-    layout = QVBoxLayout(widget)
-    
-    menu = TestWidget(widget)
-    layout.addWidget(menu)
-    widget.show()
+    mw = QWidget()
+    ml = QVBoxLayout()
+    mw.setLayout(ml)
+
+    w2 = QWidget(mw)
+    l2 = QVBoxLayout()
+    w2.setLayout(l2)
+
+    menu = TestWidget(w2)
+    l2.addWidget(menu)
+    l2.addWidget(QPushButton('BUTTTON'))
+    l2.addWidget(QLabel('LABELLLLL'))
+
+    ml.addWidget(w2)
+    mw.show()
     sys.exit(app.exec_())
