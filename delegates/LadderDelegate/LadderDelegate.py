@@ -803,11 +803,11 @@ if __name__ == '__main__':
                 self,
                 user_input=QEvent.MouseButtonPress,
                 value_list=value_list,
-                display_widget=self.parent()
+                display_widget=self.parent().parent()
             )
 
-            ladder.setDiscreteDrag(True, alignment=Qt.AlignBottom)
-            ladder.setDiscreteDrag(True, alignment=Qt.AlignRight)
+            ladder.setDiscreteDrag(True, alignment=Qt.AlignBottom, depth=10)
+            ladder.setDiscreteDrag(True, alignment=Qt.AlignRight, depth=10)
             #ladder.setDiscreteDrag(True, alignment=Qt.AlignLeft)
 
         def setValue(self, value):

@@ -53,14 +53,14 @@ To Do...
 
 '''
 import sys
-import platform
+#import platform
 import math
 
-from qtpy.QtWidgets import QDesktopWidget, QApplication, QWidget, QStackedLayout
+from qtpy.QtWidgets import QDesktopWidget, QApplication, QWidget#, QStackedLayout
 from qtpy.QtCore import Qt, QPoint, QEvent
 
-from utils import setAsTool
-from PyQt5.QtWidgets import QVBoxLayout, QPushButton
+from utils import setAsTool, getGlobalPos
+#from PyQt5.QtWidgets import QVBoxLayout, QPushButton
 
 
 class AbstractSlideDisplay(QWidget):
@@ -224,8 +224,7 @@ class AbstractSlideDisplay(QWidget):
         parent_layout.insertLayout(child_index, stacked_layout)
 
         """
-
-        screen_pos = widget.parent().mapToGlobal(widget.pos())
+        screen_pos = getGlobalPos(widget)
 
         if alignment in _accepted:
             if alignment == Qt.AlignLeft:
@@ -530,7 +529,8 @@ class SlideDelegate(QWidget):
                 bg_slide_color=self.getBGSlideColor(),
                 fg_slide_color=self.getFGSlideColor(),
                 alignment=self.getAlignment(),
-                widget=self._widget
+                widget=self._widget,
+                depth=self._depth
             )
         else:
             pass

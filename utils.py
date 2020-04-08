@@ -187,25 +187,30 @@ def installLadderDelegate(
     return ladder
 
 
-def getGlobalPos(widget):
+def getGlobalPos(widget, offset=8):
     '''
     returns the global position of the widget provided, because Qt
     does such a lovely job of doing this out of box and making it
-    so simply
+    so simple
+
+    No idea why this doesnt get the actual title bar height?
     args:
         widget: <QWidget>
             widget to return screen space position of
 
     returns: <QPoint>
     '''
-    top_level_widget = widget.window()
     parent = widget.parentWidget()
     if parent is None:
+        top_level_widget = widget.window()
         title_bar_height = top_level_widget.style().pixelMetric(QStyle.PM_TitleBarHeight)
-
+        # print(dir(top_level_widget))
+        # print(top_level_widget.PdmDepth)
+        # print(top_level_widget.PdmHeight)
+        # print(title_bar_height)
         pos = QPoint(
             top_level_widget.pos().x(),
-            top_level_widget.pos().y() + title_bar_height + 4
+            top_level_widget.pos().y() + title_bar_height + top_level_widget.PdmDepth + (top_level_widget.PdmHeight * .5)
         )
 
     else:
