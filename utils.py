@@ -102,11 +102,11 @@ def installInvisibleDragEvent(widget):
         widget (QWidget): Widget to install the invisible drag event on
 
     Returns:
-        (InvisibleMouseDragEvent): QWidget which holds the event
+        (InvisibleCursorEvent): QWidget which holds the event
             filter for the invisible drag event
     """
-    from .events import InvisibleMouseDragEvent
-    invis_drag_filter = InvisibleMouseDragEvent(parent=widget)
+    from events import InvisibleCursorEvent
+    invis_drag_filter = InvisibleCursorEvent(parent=widget)
     widget.installEventFilter(invis_drag_filter)
 
     return invis_drag_filter
@@ -187,7 +187,7 @@ def installLadderDelegate(
     return ladder
 
 
-def getGlobalPos(widget, offset=8):
+def getGlobalPos(widget):
     '''
     returns the global position of the widget provided, because Qt
     does such a lovely job of doing this out of box and making it

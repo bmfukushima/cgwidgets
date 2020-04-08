@@ -807,7 +807,7 @@ if __name__ == '__main__':
             )
 
             ladder.setDiscreteDrag(True, alignment=Qt.AlignBottom, depth=10)
-            ladder.setDiscreteDrag(True, alignment=Qt.AlignRight, depth=10)
+            ladder.setDiscreteDrag(True, alignment=Qt.AlignBottom, depth=10, fg_color=(128, 128, 32, 255))
             #ladder.setDiscreteDrag(True, alignment=Qt.AlignLeft)
 
         def setValue(self, value):
