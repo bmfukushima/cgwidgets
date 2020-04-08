@@ -37,7 +37,7 @@ from qtpy.QtCore import *
 
 from cgwidgets.utils import (
     getGlobalPos,
-    installInvisibleDragEvent,
+    installInvisibleCursorEvent,
     installSlideDelegate,
     removeSlideDelegate
 )
@@ -372,7 +372,7 @@ class LadderDelegate(QWidget):
         for item in self.item_list:
             if not isinstance(item, LadderMiddleItem):
                 if boolean is True:
-                    installInvisibleDragEvent(item)
+                    installInvisibleCursorEvent(item)
                 elif boolean is False:
                     self.removeEventFilter()
 

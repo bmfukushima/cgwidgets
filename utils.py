@@ -91,7 +91,7 @@ def setAsTool(widget):
             )
 
 
-def installInvisibleDragEvent(widget):
+def installInvisibleCursorEvent(widget):
     """
     Installs an event filter on the widget that makes it so that when the
     user click/drags, it will turn the cursor invisible, and all the cursor

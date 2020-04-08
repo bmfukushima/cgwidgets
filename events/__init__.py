@@ -1,3 +1,3 @@
-from events.InvisibleCursorEvent import InvisibleMouseDragEvent as InvisibleMouseDragEvent
+from events.InvisibleCursorEvent import InvisibleCursorEvent as InvisibleCursorEvent
 
 from .__utils__ import *

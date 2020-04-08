@@ -4,7 +4,7 @@ from PyQt5.QtGui import QCursor
 import sys
 
 
-class InvisibleMouseDragEvent(QWidget):
+class InvisibleCursorEvent(QWidget):
     """
     Sets up an invisible drag event.  When the user clicks, and drags,
     the cursor will dissappear.  On release, the cursor will reappear at
@@ -12,7 +12,7 @@ class InvisibleMouseDragEvent(QWidget):
     infinite distance without disrupting the user.
     """
     def __init__(self, parent=None):
-        super(InvisibleMouseDragEvent, self).__init__(parent)
+        super(InvisibleCursorEvent, self).__init__(parent)
         self._screen_resolution = self.screen_resolutions()
 
     def eventFilter(self, obj, event, *args, **kwargs):
@@ -52,7 +52,7 @@ class InvisibleMouseDragEvent(QWidget):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     w = QLabel('Test')
-    ef = InvisibleMouseDragEvent()
+    ef = InvisibleCursorEvent()
     w.installEventFilter(ef)
     w.show()
 
