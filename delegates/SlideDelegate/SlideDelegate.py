@@ -62,7 +62,7 @@ import math
 from qtpy.QtWidgets import QDesktopWidget, QApplication, QWidget#, QStackedLayout
 from qtpy.QtCore import Qt, QPoint, QEvent
 
-from utils import setAsTool, getGlobalPos
+from cgwidgets.utils import setAsTool, getGlobalPos
 #from PyQt5.QtWidgets import QVBoxLayout, QPushButton
 
 
@@ -169,8 +169,10 @@ class AbstractSlideDisplay(QWidget):
     """ UTILS """
     def setWidgetPosition(self, alignment, widget=None):
         if widget:
+            print('1')
             self.alignToWidget(alignment, widget)
         else:
+            print('2')
             self.alignToDisplay(alignment)
 
     def setupStackedLayout(self):
