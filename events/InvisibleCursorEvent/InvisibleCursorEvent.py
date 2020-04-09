@@ -1,6 +1,6 @@
-from PyQt5.QtCore import QEvent, Qt, QPoint
-from PyQt5.QtWidgets import QWidget, QApplication, QLabel, QDesktopWidget
-from PyQt5.QtGui import QCursor
+from qtpy.QtCore import QEvent, Qt, QPoint
+from qtpy.QtWidgets import QWidget, QApplication, QLabel, QDesktopWidget
+from qtpy.QtGui import QCursor
 import sys
 
 
