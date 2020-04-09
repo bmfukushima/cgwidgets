@@ -102,7 +102,7 @@ class AbstractSlideDisplay(QWidget):
         parent=None,
         depth=50,
         alignment=Qt.AlignBottom,
-        widget=None
+        display_widget=None
     ):
         super(AbstractSlideDisplay, self).__init__(parent)
 
@@ -115,7 +115,7 @@ class AbstractSlideDisplay(QWidget):
         self._screen_pos = self.screen_geometry.topLeft()
 
         # set properties
-        self._widget = widget
+        self._display_widget = display_widget
         self.setDepth(depth)
         self.setAlignment(alignment)
         #self.setWidgetPosition(self.getAlignment(), widget=widget)
@@ -169,17 +169,9 @@ class AbstractSlideDisplay(QWidget):
     """ UTILS """
     def setWidgetPosition(self, alignment, widget=None):
         if widget:
-            print('1')
             self.alignToWidget(alignment, widget)
         else:
-            print('2')
             self.alignToDisplay(alignment)
-
-    def setupStackedLayout(self):
-        pass
-
-    def unsetStackedLayout(self):
-        pass
 
     def alignToWidget(self, alignment, widget):
         '''
@@ -354,20 +346,20 @@ class UnitSlideDisplay(AbstractSlideDisplay):
         alignment=Qt.AlignBottom,
         bg_slide_color=(18, 18, 18, 128),
         fg_slide_color=(18, 128, 18, 128),
-        widget=None
+        display_widget=None
     ):
         super(UnitSlideDisplay, self).__init__(
             parent, alignment=alignment, depth=depth
         )
 
-        # set slide color
+        # set default attrs
         self.setBGSlideColor(bg_slide_color)
         self.setFGSlideColor(fg_slide_color)
         self.setAlignment(alignment)
-        self._widget = widget
+        self._display_widget = display_widget
         self.update(0.0)
 
-    """ PROPERTIESS """
+    """ PROPERTIES """
     def getBGSlideColor(self):
         return self._bg_slide_color
 
@@ -476,7 +468,7 @@ class SlideDelegate(QWidget):
         parent=None,
         breed=0,
         getSliderPos=None,
-        widget=None
+        display_widget=None
     ):
         super(SlideDelegate, self).__init__(parent)
         self.setBreed(breed)
@@ -486,7 +478,7 @@ class SlideDelegate(QWidget):
         self.setFGSlideColor((32, 128, 32, 255))
         self.setDepth(50)
         self.setAlignment(Qt.AlignBottom)
-        self._widget = widget
+        self._display_widget = display_widget
         self.getSliderPos = getSliderPos
 
     """ API """
@@ -534,7 +526,7 @@ class SlideDelegate(QWidget):
                 bg_slide_color=self.getBGSlideColor(),
                 fg_slide_color=self.getFGSlideColor(),
                 alignment=self.getAlignment(),
-                widget=self._widget,
+                display_widget=self._display_widget,
                 depth=self._depth
             )
         else:
@@ -544,7 +536,9 @@ class SlideDelegate(QWidget):
     def eventFilter(self, obj, event, *args, **kwargs):
         if event.type() == QEvent.MouseButtonPress:
             self.slidebar = self.getBreedWidget()
-            self.slidebar.setWidgetPosition(self.getAlignment(), widget=self._widget)
+            self.slidebar.setWidgetPosition(
+                self.getAlignment(), widget=self._display_widget
+            )
             self.slidebar.show()
 
             return QWidget.eventFilter(self, obj, event, *args, **kwargs)

@@ -127,7 +127,6 @@ class LadderDelegate(QWidget):
             parent=None,
             value_list=[0.001, 0.01, 0.1, 1, 10, 100, 1000],
             user_input=QEvent.MouseButtonPress,
-            widget=None
     ):
         super(LadderDelegate, self).__init__(parent)
         layout = QVBoxLayout()
@@ -142,7 +141,6 @@ class LadderDelegate(QWidget):
         self.setItemHeight(50)
         self.setMiddleItemBorderWidth(2)
         self.setUserInput(user_input)
-        self._widget = widget
         self.middle_item_index = int(len(value_list) * 0.5)
 
         # set up style
@@ -389,7 +387,8 @@ class LadderDelegate(QWidget):
         depth=50,
         fg_color=(32, 32, 32, 255),
         bg_color=(32, 128, 32, 255),
-        breed=SlideDelegate.UNIT
+        breed=SlideDelegate.UNIT,
+        display_widget=None
     ):
         """
         Creates a visual bar on the screen to show the user
@@ -402,7 +401,7 @@ class LadderDelegate(QWidget):
                         item,
                         sliderPosMethod=item.getCurrentPos,
                         breed=breed,
-                        display_widget=self._widget
+                        display_widget=display_widget
                     )
                     slidebar.setBGSlideColor(bg_color)
                     slidebar.setFGSlideColor(fg_color)
@@ -424,7 +423,8 @@ class LadderDelegate(QWidget):
         depth=50,
         fg_color=(32, 32, 32, 255),
         bg_color=(32, 128, 32, 255),
-        breed=SlideDelegate.UNIT
+        breed=SlideDelegate.UNIT,
+        display_widget=None
     ):
         """
         Discrete drag is a display mode that happens when
@@ -467,7 +467,8 @@ class LadderDelegate(QWidget):
                 fg_color=fg_color,
                 depth=depth,
                 alignment=alignment,
-                breed=breed
+                breed=breed,
+                display_widget=display_widget
             )
 
     """ EVENTS """
@@ -814,7 +815,13 @@ if __name__ == '__main__':
             )
 
             ladder.setDiscreteDrag(True, alignment=Qt.AlignBottom, depth=10)
-            ladder.setDiscreteDrag(True, alignment=Qt.AlignLeft, depth=10, fg_color=(128, 128, 32, 255))
+            ladder.setDiscreteDrag(
+                True,
+                alignment=Qt.AlignLeft,
+                depth=10,
+                fg_color=(128, 128, 32, 255),
+                display_widget=self.window()
+                )
             #ladder.setDiscreteDrag(True, alignment=Qt.AlignLeft)
 
         def setValue(self, value):

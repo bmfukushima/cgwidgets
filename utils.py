@@ -168,7 +168,7 @@ def installSlideDelegate(
         parent=widget,
         getSliderPos=sliderPosMethod,
         breed=breed,
-        widget=display_widget
+        display_widget=display_widget
     )
     widget.installEventFilter(slide_delegate)
     return slide_delegate
@@ -206,8 +206,7 @@ def installLadderDelegate(
     ladder = LadderDelegate(
         parent=widget,
         value_list=value_list,
-        user_input=user_input,
-        widget=display_widget
+        user_input=user_input
     )
     widget.installEventFilter(ladder)
     return ladder

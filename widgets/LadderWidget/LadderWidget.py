@@ -30,8 +30,7 @@ class LadderWidget(QWidget):
         parent=None,
         value_list=[0.0001, 0.001, 0.01, 0.1],
         widget=None,
-        user_input=QEvent.MouseButtonPress,
-        display_widget=None
+        user_input=QEvent.MouseButtonPress
     ):
         super(LadderWidget, self).__init__(parent)
         # setup widget
@@ -49,8 +48,7 @@ class LadderWidget(QWidget):
         self.ladder = installLadderDelegate(
             widget,
             user_input=user_input,
-            value_list=value_list,
-            display_widget=display_widget
+            value_list=value_list
         )
 
         layout.addWidget(widget)
@@ -62,10 +60,15 @@ class LadderWidget(QWidget):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     label = QLabel('-5')
-    ladder_widget = LadderWidget(widget=label, display_widget=label)
+    ladder_widget = LadderWidget(widget=label)
     ladder_widget.ladder.setDiscreteDrag(
-        True, alignment=Qt.AlignLeft, depth=10, fg_color=(128, 128, 32, 255))
-    
+        True,
+        alignment=Qt.AlignLeft,
+        depth=10,
+        fg_color=(128, 128, 32, 255),
+        display_widget=label.window()
+    )
+
     ladder_widget.show()
     sys.exit(app.exec_())
 
