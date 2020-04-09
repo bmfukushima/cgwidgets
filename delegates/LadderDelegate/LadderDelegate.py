@@ -7,8 +7,9 @@
         - Detect center point function
         - only needs to handle y pos
     * Horizontal Delegate?
-    * Move SlideDelegate display widget to the
-        "setDiscreteMode" method
+    * display_widget / _widget
+        - Needs to change to be passed into the the install
+            in the utils.
 
 # ------------------------------------------------------------------- API
     * need to figure out how to make eventFilter more robust...

@@ -45,16 +45,12 @@ class LadderWidget(QWidget):
         if not widget:
             widget = QLineEdit()
 
-        # create default display widget
-        if not display_widget:
-            self._display_widget = self
-
         # install ladder delegate
         self.ladder = installLadderDelegate(
             widget,
             user_input=user_input,
             value_list=value_list,
-            display_widget=self._display_widget
+            display_widget=display_widget
         )
 
         layout.addWidget(widget)
@@ -66,9 +62,9 @@ class LadderWidget(QWidget):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     label = QLabel('-5')
-    ladder_widget = LadderWidget(widget=label)
+    ladder_widget = LadderWidget(widget=label, display_widget=label)
     ladder_widget.ladder.setDiscreteDrag(
-        True, alignment=Qt.AlignBottom, depth=10, fg_color=(128, 128, 32, 255))
+        True, alignment=Qt.AlignLeft, depth=10, fg_color=(128, 128, 32, 255))
     
     ladder_widget.show()
     sys.exit(app.exec_())
