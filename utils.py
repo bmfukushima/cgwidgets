@@ -229,10 +229,6 @@ def getGlobalPos(widget):
     if parent is None:
         top_level_widget = widget.window()
         title_bar_height = top_level_widget.style().pixelMetric(QStyle.PM_TitleBarHeight)
-        # print(dir(top_level_widget))
-        # print(top_level_widget.PdmDepth)
-        # print(top_level_widget.PdmHeight)
-        # print(title_bar_height)
         pos = QPoint(
             top_level_widget.pos().x(),
             top_level_widget.pos().y() + title_bar_height + top_level_widget.PdmDepth + (top_level_widget.PdmHeight * .5)

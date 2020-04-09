@@ -16,11 +16,14 @@ class InvisibleCursorEvent(QWidget):
         self._screen_resolution = self.screen_resolutions()
 
     def eventFilter(self, obj, event, *args, **kwargs):
+        """
+        print ('ok!')
         # catch init failures
         try:
             self._init_pos
         except AttributeError:
             return QWidget.eventFilter(self, obj, event, *args, **kwargs)
+        """
 
         # do work
         if event.type() == QEvent.MouseButtonPress:

@@ -2,6 +2,20 @@
 # -------------------------------------------------------------------------- Bugs
     * First tick does not register
 
+    * Seems to sometimes get into a buggy state...
+        - I assume this is something to do with the middle item...
+
+    * Houdini
+        Traceback (most recent call last):
+          File "/media/ssd01/Scripts/WidgetFactory/cgwidgets/delegates/SlideDelegate/SlideDelegate.py", line 540, in eventFilter
+            self.getAlignment(), widget=self._display_widget
+          File "/media/ssd01/Scripts/WidgetFactory/cgwidgets/delegates/SlideDelegate/SlideDelegate.py", line 172, in setWidgetPosition
+            self.alignToWidget(alignment, widget)
+          File "/media/ssd01/Scripts/WidgetFactory/cgwidgets/delegates/SlideDelegate/SlideDelegate.py", line 224, in alignToWidget
+            screen_pos = getGlobalPos(widget)
+          File "/media/ssd01/Scripts/WidgetFactory/cgwidgets/utils.py", line 231, in getGlobalPos
+            title_bar_height = top_level_widget.style().pixelMetric(QStyle.PM_TitleBarHeight)
+        RuntimeError: Internal C++ object (PySide2.QtWidgets.QStyle) already deleted.
 # -----------------------------------------------------------------------To Do
     * Detect if close to edge...
         - Detect center point function
