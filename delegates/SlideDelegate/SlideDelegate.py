@@ -222,12 +222,23 @@ class AbstractSlideDisplay(QWidget):
 
         """
         screen_pos = getGlobalPos(widget)
-
+        '''
+        contents_margins = widget.layout().getContentsMargins()
+        left_pad = contents_margins[0]
+        top_pad = contents_margins[1]
+        right_pad = contents_margins[2]
+        bot_pad = contents_margins[3]
+        '''
         if alignment in _accepted:
             if alignment == Qt.AlignLeft:
                 height = widget.height()
                 width = self.getDepth()
                 pos = screen_pos
+
+                # add padding
+                #height += top_pad
+                #screen_pos.setX(screen_pos.x() - left_pad)
+                #screen_pos.setY(screen_pos.y() - top_pad)
             elif alignment == Qt.AlignRight:
                 height = widget.height()
                 width = self.getDepth()
@@ -562,25 +573,53 @@ class SlideDelegate(QWidget):
 
 
 if __name__ == '__main__':
-    app = QApplication(sys.argv)
+    import sys
+    from cgwidgets.utils import installLadderDelegate
+    from qtpy.QtWidgets import QLineEdit, QVBoxLayout, QLabel, QPushButton
+    from qtpy.QtGui import QCursor
 
-    class TestWidget(QWidget):
-        def __init__(self, parent=None):
+    class TestWidget(QLineEdit):
+        def __init__(self, parent=None, value=0):
             super(TestWidget, self).__init__(parent)
-            self.value = .75
+            pos = QCursor().pos()
+            self.setGeometry(pos.x(), pos.y(), 200, 100)
+            value_list = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
+            pos = QCursor.pos()
+            ladder = installLadderDelegate(
+                self,
+                user_input=QEvent.MouseButtonPress,
+                value_list=value_list
+            )
 
-        def testSliderPos(self):
-            return self.value
+            ladder.setDiscreteDrag(True, alignment=Qt.AlignLeft, depth=10)
+            ladder.setDiscreteDrag(
+                True,
+                alignment=Qt.AlignLeft,
+                depth=10,
+                fg_color=(128, 128, 32, 255),
+                display_widget=self.parent().parent()
+                )
+            #ladder.setDiscreteDrag(True, alignment=Qt.AlignLeft)
 
-    w = TestWidget()
-    ef = SlideDelegate(
-        parent=w,
-        getSliderPos=TestWidget.testSliderPos
-    )
-    w.installEventFilter(ef)
-    w.show()
-    '''
-    w = UnitSlideDisplay(alignment=Qt.AlignRight)
-    w.show()
-    '''
+        def setValue(self, value):
+            self.setText(str(value))
+
+    app = QApplication(sys.argv)
+    mw = QWidget()
+    ml = QVBoxLayout()
+    mw.setLayout(ml)
+
+    w2 = QWidget(mw)
+    w2.setStyleSheet('background-color: rgba(0,255,255,255)')
+    l2 = QVBoxLayout()
+    #l2.setContentsMargins(0,0,0,0)
+    w2.setLayout(l2)
+
+    menu = TestWidget(w2)
+    l2.addWidget(menu)
+    l2.addWidget(QPushButton('BUTTTON'))
+    l2.addWidget(QLabel('LABELLLLL'))
+
+    ml.addWidget(w2)
+    mw.show()
     sys.exit(app.exec_())

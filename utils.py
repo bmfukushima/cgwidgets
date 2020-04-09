@@ -181,8 +181,7 @@ def removeSlideDelegate(item, slide_delegate):
 def installLadderDelegate(
     widget,
     user_input=QEvent.MouseButtonPress,
-    value_list=[0.001, 0.01, 0.1, 1, 10, 100, 1000],
-    display_widget=None
+    value_list=[0.001, 0.01, 0.1, 1, 10, 100, 1000]
 ):
     """
     Args:
@@ -227,7 +226,8 @@ def getGlobalPos(widget):
     '''
     parent = widget.parentWidget()
     if parent is None:
-        top_level_widget = widget.window()
+        #top_level_widget = widget.window()
+        top_level_widget = widget
         title_bar_height = top_level_widget.style().pixelMetric(QStyle.PM_TitleBarHeight)
         pos = QPoint(
             top_level_widget.pos().x(),
@@ -238,3 +238,4 @@ def getGlobalPos(widget):
         pos = parent.mapToGlobal(widget.pos())
 
     return pos
+

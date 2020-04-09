@@ -828,7 +828,7 @@ if __name__ == '__main__':
                 display_widget=self.parent().parent()
             )
 
-            ladder.setDiscreteDrag(True, alignment=Qt.AlignBottom, depth=10)
+            ladder.setDiscreteDrag(True, alignment=Qt.AlignLeft, depth=10)
             ladder.setDiscreteDrag(
                 True,
                 alignment=Qt.AlignLeft,
