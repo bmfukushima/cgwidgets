@@ -2,9 +2,6 @@
 # -------------------------------------------------------------------------- Bugs
     * First tick does not register
 
-    * Seems to sometimes get into a buggy state...
-        - I assume this is something to do with the middle item...
-
     * Houdini
         Traceback (most recent call last):
           File "/media/ssd01/Scripts/WidgetFactory/cgwidgets/delegates/SlideDelegate/SlideDelegate.py", line 540, in eventFilter
@@ -389,10 +386,11 @@ class LadderDelegate(QWidget):
         item, ladder will dissapear from view.
         """
         for item in self.item_list:
-            if boolean is True:
-                installInvisibleWidgetEvent(item, hide_widget=self)
-            elif boolean is False:
-                item.removeEventFilter()
+            if not isinstance(item, LadderMiddleItem):
+                if boolean is True:
+                    installInvisibleWidgetEvent(item, hide_widget=self)
+                elif boolean is False:
+                    item.removeEventFilter()
 
     def __setSlideBar(
         self,
@@ -824,8 +822,7 @@ if __name__ == '__main__':
             ladder = installLadderDelegate(
                 self,
                 user_input=QEvent.MouseButtonPress,
-                value_list=value_list,
-                display_widget=self.parent().parent()
+                value_list=value_list
             )
 
             ladder.setDiscreteDrag(True, alignment=Qt.AlignLeft, depth=10)
@@ -834,9 +831,8 @@ if __name__ == '__main__':
                 alignment=Qt.AlignLeft,
                 depth=10,
                 fg_color=(128, 128, 32, 255),
-                display_widget=self.window()
+                display_widget=self.parent()
                 )
-            #ladder.setDiscreteDrag(True, alignment=Qt.AlignLeft)
 
         def setValue(self, value):
             self.setText(str(value))

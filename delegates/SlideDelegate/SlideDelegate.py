@@ -2,8 +2,6 @@
 
 SlideDelegate --> SlideBreed -->AbstractSlideDisplay
 To Do...
-    *Invisible Slide?
-        What?
 #-------------------------------------------------------------------------- Bugs
     * Not filling entire space?
         - appears to be on vertical display only...
@@ -21,13 +19,6 @@ To Do...
         - easier to display to right/left/top/bottom of slider...
             also better to look at...  provides a consistent place to look
             rather than a dynamic one...
-
-    * Display / Screen
-        - Allow user to choose between, display, or widget
-            - currently passing _widget as an untracked attribute...
-            - need to start documenting this chain...
-            - instead of absolute position...
-                do this with a layout? stacked widget?
 
     * HSV
         - Setup Gradient for QGraphicsView
@@ -49,9 +40,6 @@ To Do...
         - Also due to the fact that the inheritance wasnt passed to the abstract widget
             through the super... well aint that super...
         - clean up screen_pos attributes...
-
-    * Document
-        - _widget added...
 
 
 '''
@@ -93,8 +81,12 @@ class AbstractSlideDisplay(QWidget):
             screen_geometry (QDesktopWidget.screenGeometry): geometry for
                 the main display.
 
-    This should be abstract
-        SliderBar--> HueAbstractSlideDisplay / SatAbstractSlideDisplay / ValueAbstractSlideDisplay / Unit Slide Bar...
+    This should be abstracted for
+        SliderBar-->
+            HueSlideDisplay
+            SatSlideDisplay
+            ValueSlideDisplay
+            UnitSlideDisplay
 
     """
     def __init__(
@@ -222,23 +214,12 @@ class AbstractSlideDisplay(QWidget):
 
         """
         screen_pos = getGlobalPos(widget)
-        '''
-        contents_margins = widget.layout().getContentsMargins()
-        left_pad = contents_margins[0]
-        top_pad = contents_margins[1]
-        right_pad = contents_margins[2]
-        bot_pad = contents_margins[3]
-        '''
+
         if alignment in _accepted:
             if alignment == Qt.AlignLeft:
                 height = widget.height()
                 width = self.getDepth()
                 pos = screen_pos
-
-                # add padding
-                #height += top_pad
-                #screen_pos.setX(screen_pos.x() - left_pad)
-                #screen_pos.setY(screen_pos.y() - top_pad)
             elif alignment == Qt.AlignRight:
                 height = widget.height()
                 width = self.getDepth()
