@@ -78,60 +78,44 @@ class LadderDelegate(QWidget):
                 ie.
             QEvent.MouseButtonPress
 
-        invisible_drag (bool): Toggle on/off the invisible drag
-            functionality.  Having this turned on will also enable cursor
-            wrapping for infinite dragging
-
-        slide_bar (bool): Toggle on/off the slide bar while manipulating
-            the ladder
-
-
     Attributes:
         + Public:
             use getters / setters
                 ie.
                     getPropertyName()
                     setPropertyName(value)
-
-            user_input: (QEvent)
-                Event to be used on the widget to allow the user to trigger
-                the ladder delegate to popup
+            * user_input (QEvent): Event to be used on the widget to allow
+                the user to trigger the ladder delegate to popup
                     ie
                         QEvent.MouseButtonPress
-
-            middle_item_border_width: (int)
-                The width of the border for the widget that displays the current value
-
-            slide_distance: (float)
-                multiplier of how far the user should have to drag in order
-                to trigger a value update.  Lower values are slower, higher
-                values are faster.
-
-            selection_color: (rgba)  | ( int array ) | 0 - 255
+            * middle_item_border_width (int): The width of the border
+                for the widget that displays the current value
+            * slide_distance (float): multiplier of how far the user should
+                have to drag in order to trigger a value update.  Lower
+                values are slower, higher values are faster.
+            * selection_color: (rgba)  | ( int array ) | 0 - 255
                 The color that is displayed to the user when they are selecting
                 which value they wish to adjust
-
-            item_height: (int)
-                The height of each individual adjustable item.  The middle item
-                will always have the same geometry as the parent widget.
+            * item_height (int): The height of each individual adjustable item.
+                The middle item will always have the same geometry as the
+                parent widget.
 
             * The setValue, will then need to do the final math to calculate the result
 
         - Private
+            middle_item_index: (int)
+                Index of the middle item in the item's list.  This is used to
+                offset the middle item to overlay the widget it was used on.
             item_list (list)
                 list of all of the ladder items
-
             is_active  (boolean)
                 determines if the widget is currently being manipulated by the user
-
             current_item: (LadderItem)
                 The current item that the user is manipulating.  This property
                 is currently used to determine if this ladder item should have
                 its visual appearance changed on interaction.
 
-            middle_item_index: (int)
-                Index of the middle item in the item's list.  This is used to
-                offset the middle item to overlay the widget it was used on.
+
     """
     def __init__(
             self,
@@ -145,13 +129,15 @@ class LadderDelegate(QWidget):
         # self.setWidget(widget)
 
         # default attrs
+        self.setUserInput(user_input)
+        self.setMiddleItemBorderWidth(2)
         self.setSlideDistance(.01)
-        self.setBGSlideColor((0, 0, 0, 128))
-        self.setFGSlideColor((128, 128, 32, 255))
         self.setSelectionColor((32, 32, 32, 255))
         self.setItemHeight(50)
-        self.setMiddleItemBorderWidth(2)
-        self.setUserInput(user_input)
+
+        self.setBGSlideColor((0, 0, 0, 128))
+        self.setFGSlideColor((128, 128, 32, 255))
+
         self.middle_item_index = int(len(value_list) * 0.5)
 
         # set up style
@@ -205,19 +191,15 @@ class LadderDelegate(QWidget):
     def setSlideDistance(self, slide_distance):
         self._slide_distance = slide_distance
 
-    # remove
     def getBGSlideColor(self):
         return self._bg_slide_color
 
-    # remove
     def setBGSlideColor(self, color):
         self._bg_slide_color = color
 
-    # remove
     def getFGSlideColor(self):
         return self._fg_slide_color
 
-    # remove
     def setFGSlideColor(self, color):
         self._fg_slide_color = color
 
@@ -233,6 +215,60 @@ class LadderDelegate(QWidget):
     def setItemHeight(self, item_height):
         self._item_height = item_height
 
+    def setDiscreteDrag(
+        self,
+        boolean,
+        alignment=Qt.AlignRight,
+        depth=50,
+        fg_color=(32, 32, 32, 255),
+        bg_color=(32, 128, 32, 255),
+        breed=SlideDelegate.UNIT,
+        display_widget=None
+    ):
+        """
+        Discrete drag is a display mode that happens when
+        the user manipulates an item in the ladder ( click + drag +release)
+
+        On pen down, the cursor will dissapear and a visual cue will be added
+        based on the alignment kwarg. Pen drag will update the visual cue
+        to show the user how close they are to the next tick.
+
+        Args:
+            boolean (boolean): Whether or not to enable/disable discrete
+            drag mode
+
+        Kwargs:
+            depth (int): how wide/tall the widget should be depending
+                on its orientation
+            alignment (QtCore.Qt.Align): where the widget should be align
+                relative to the display
+            bg_slide_color rgba int 0-255):
+                The bg color that is displayed to the user when the user starts
+                to click/drag to slide
+            fg_slide_color rgba int 0-255):
+                The bg color that is displayed to the user when the user starts
+                to click/drag to slide
+            breed (SlideDelegate.TYPE): What type of visual cue to display.
+                Other options HUE, SATURATION, VALUE
+        """
+        # delete old slidebar
+        self.__setSlideBar(False)
+
+        # set cursor drag mode
+        self.__setInvisibleCursor(boolean)
+        self.__setInvisibleWidget(boolean)
+
+        # create new slide bar
+        if boolean is True:
+            self.__setSlideBar(
+                boolean,
+                bg_color=bg_color,
+                fg_color=fg_color,
+                depth=depth,
+                alignment=alignment,
+                breed=breed,
+                display_widget=display_widget
+            )
     """ PROPERTIES """
     @property
     def middle_item_index(self):
@@ -427,61 +463,6 @@ class LadderDelegate(QWidget):
                         removeSlideDelegate(item, item.slidebar)
                     except AttributeError:
                         pass
-
-    def setDiscreteDrag(
-        self,
-        boolean,
-        alignment=Qt.AlignRight,
-        depth=50,
-        fg_color=(32, 32, 32, 255),
-        bg_color=(32, 128, 32, 255),
-        breed=SlideDelegate.UNIT,
-        display_widget=None
-    ):
-        """
-        Discrete drag is a display mode that happens when
-        the user manipulates an item in the ladder ( click + drag +release)
-
-        On pen down, the cursor will dissapear and a visual cue will be added
-        based on the alignment kwarg. Pen drag will update the visual cue
-        to show the user how close they are to the next tick.
-
-        Args:
-            boolean (boolean): Whether or not to enable/disable discrete
-            drag mode
-
-        Kwargs:
-            depth (int): how wide/tall the widget should be depending
-                on its orientation
-            alignment (QtCore.Qt.Align): where the widget should be align
-                relative to the display
-            bg_slide_color rgba int 0-255):
-                The bg color that is displayed to the user when the user starts
-                to click/drag to slide
-            fg_slide_color rgba int 0-255):
-                The bg color that is displayed to the user when the user starts
-                to click/drag to slide
-            breed (SlideDelegate.TYPE): What type of visual cue to display.
-                Other options HUE, SATURATION, VALUE
-        """
-        # delete old slidebar
-        self.__setSlideBar(False)
-
-        # set cursor drag mode
-        self.__setInvisibleCursor(boolean)
-        self.__setInvisibleWidget(boolean)
-
-        # create new slide bar
-        if boolean is True:
-            self.__setSlideBar(
-                boolean,
-                bg_color=bg_color,
-                fg_color=fg_color,
-                depth=depth,
-                alignment=alignment,
-                breed=breed,
-                display_widget=display_widget
-            )
 
     """ EVENTS """
     def hideEvent(self, *args, **kwargs):
