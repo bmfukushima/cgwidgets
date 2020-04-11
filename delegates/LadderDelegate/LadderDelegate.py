@@ -52,70 +52,56 @@ from cgwidgets.delegates import SlideDelegate
 
 class LadderDelegate(QWidget):
     """
-    Widget that should be added as a popup during an event.  This should be
-    installed with the utils.installLadderDelegate(widget).
+Widget that should be added as a popup during an event.  This should be
+installed with the utils.installLadderDelegate(widget).
 
-    If you directly install this on a widget.  The widget must have the text/getText
-    methods (QLineEdit/QLabel).  If they do not, you need to subclass this and
-    reimplement the setValue() and getValue() methods or add those methods
-    to the parent widget.
+If you directly install this on a widget.  The widget must have the text/getText
+methods (QLineEdit/QLabel).  If they do not, you need to subclass this and
+reimplement the setValue() and getValue() methods or add those methods
+to the parent widget.
 
 
-    Kwargs:
-        parent: (QLineEdit) or (QLabel)
-            widget to install ladder delegate onto.  Note this currently
-            works for QLineEdit and QLabel.
+Args:
+    **  parent (QLineEdit) or (QLabel): widget to install ladder delegate onto.
+            This currently works for QLineEdit and QLabel.  Other widgets will
+            need to implement the 'setValue(value)' method to properly parse
+            the value from the ladder to the widget.
 
-            Other widgets will need to implement the 'setValue(value)'
-            method to properly parse the value from the ladder to the widget.
+    **  value_list (list) of (float): list of values for the user to be able
+            to adjust by, usually this is set to .01, .1, 1, 10, etc
 
-        value_list: (list) of (float)
-            list of values for the user to be able to adjust by, usually this
-            is set to .01, .1, 1, 10, etc
-
-        user_input: (QEvent.Type)
+    **  user_input: (QEvent.Type):
             The action for the user to do to trigger the ladder to be installed
                 ie.
             QEvent.MouseButtonPress
 
-    Attributes:
-        + Public:
-            use getters / setters
-                ie.
-                    getPropertyName()
-                    setPropertyName(value)
-            * user_input (QEvent): Event to be used on the widget to allow
-                the user to trigger the ladder delegate to popup
-                    ie
-                        QEvent.MouseButtonPress
-            * middle_item_border_width (int): The width of the border
-                for the widget that displays the current value
-            * slide_distance (float): multiplier of how far the user should
-                have to drag in order to trigger a value update.  Lower
-                values are slower, higher values are faster.
-            * selection_color: (rgba)  | ( int array ) | 0 - 255
-                The color that is displayed to the user when they are selecting
-                which value they wish to adjust
-            * item_height (int): The height of each individual adjustable item.
-                The middle item will always have the same geometry as the
-                parent widget.
+Attributes:
+    bg_slide_color (rgba int 0-255):
+            The bg color that is displayed to the user when the use
+            starts to click/drag to slide
+    fg_slide_color (rgba int 0-255):
+        The bg color that is displayed to the user when the use
+        starts to click/drag to slide
+    item_height (int): The height of each individual adjustable item.
+            The middle item will always have the same geometry as the
+            parent widget.
+    middle_item_border_width (int): The width of the border
+        for the widget that displays the current value
+    selection_color: (rgba)  | ( int array ) | 0 - 255
+        The color that is displayed to the user when they are selecting
+        which value they wish to adjust
+    slide_distance (float): multiplier of how far the user should
+        have to drag in order to trigger a value update.  Lower
+        values are slower, higher values are faster.
+    user_input (QEvent): Event to be used on the widget to allow
+        the trigger to popup the ladder delegate
+           ie
+            QEvent.MouseButtonPress
+Notes:
+    -   The setValue, will then need to do the final math to calculate
+            the result
 
-            * The setValue, will then need to do the final math to calculate the result
-
-        - Private
-            middle_item_index: (int)
-                Index of the middle item in the item's list.  This is used to
-                offset the middle item to overlay the widget it was used on.
-            item_list (list)
-                list of all of the ladder items
-            is_active  (boolean)
-                determines if the widget is currently being manipulated by the user
-            current_item: (LadderItem)
-                The current item that the user is manipulating.  This property
-                is currently used to determine if this ladder item should have
-                its visual appearance changed on interaction.
-
-
+--------------------------------------------------------------------------------
     """
     def __init__(
             self,
@@ -173,24 +159,6 @@ class LadderDelegate(QWidget):
         self.__setSignificantDigits()
 
     """ API """
-    def getUserInput(self):
-        return self._user_input
-
-    def setUserInput(self, user_input):
-        self._user_input = user_input
-
-    def getMiddleItemBorderWidth(self):
-        return self._middle_item_border_width
-
-    def setMiddleItemBorderWidth(self, border_width):
-        self._middle_item_border_width = border_width
-
-    def getSlideDistance(self):
-        return self._slide_distance
-
-    def setSlideDistance(self, slide_distance):
-        self._slide_distance = slide_distance
-
     def getBGSlideColor(self):
         return self._bg_slide_color
 
@@ -203,17 +171,35 @@ class LadderDelegate(QWidget):
     def setFGSlideColor(self, color):
         self._fg_slide_color = color
 
+    def getItemHeight(self):
+        return self._item_height
+
+    def setItemHeight(self, item_height):
+        self._item_height = item_height
+
+    def getMiddleItemBorderWidth(self):
+        return self._middle_item_border_width
+
+    def setMiddleItemBorderWidth(self, border_width):
+        self._middle_item_border_width = border_width
+
     def getSelectionColor(self):
         return self._selection_color
 
     def setSelectionColor(self, color):
         self._selection_color = color
 
-    def getItemHeight(self):
-        return self._item_height
+    def getSlideDistance(self):
+        return self._slide_distance
 
-    def setItemHeight(self, item_height):
-        self._item_height = item_height
+    def setSlideDistance(self, slide_distance):
+        self._slide_distance = slide_distance
+
+    def getUserInput(self):
+        return self._user_input
+
+    def setUserInput(self, user_input):
+        self._user_input = user_input
 
     def setDiscreteDrag(
         self,
@@ -234,22 +220,20 @@ class LadderDelegate(QWidget):
         to show the user how close they are to the next tick.
 
         Args:
-            boolean (boolean): Whether or not to enable/disable discrete
-            drag mode
-
-        Kwargs:
-            depth (int): how wide/tall the widget should be depending
-                on its orientation
-            alignment (QtCore.Qt.Align): where the widget should be align
-                relative to the display
-            bg_slide_color rgba int 0-255):
-                The bg color that is displayed to the user when the user starts
-                to click/drag to slide
-            fg_slide_color rgba int 0-255):
-                The bg color that is displayed to the user when the user starts
-                to click/drag to slide
-            breed (SlideDelegate.TYPE): What type of visual cue to display.
-                Other options HUE, SATURATION, VALUE
+            *   boolean (boolean): Whether or not to enable/disable discrete
+                    drag mode
+            **  depth (int): how wide/tall the widget should be depending
+                    on its orientation
+            **  alignment (QtCore.Qt.Align): where the widget should be align
+                    relative to the display
+            **  bg_slide_color (rgba int 0-255):
+                    The bg color that is displayed to the user when the user
+                    starts to click/drag to slide
+            **  fg_slide_color (rgba int 0-255):
+                    The bg color that is displayed to the user when the use
+                    starts to click/drag to slide
+            **  breed (SlideDelegate.TYPE): What type of visual cue to display.
+                    Other options HUE, SATURATION, VALUE
         """
         # delete old slidebar
         self.__setSlideBar(False)
@@ -269,9 +253,15 @@ class LadderDelegate(QWidget):
                 breed=breed,
                 display_widget=display_widget
             )
+
     """ PROPERTIES """
     @property
     def middle_item_index(self):
+        """
+        middle_item_index (int): Index of the middle item in the item's list.
+            This is used to offset the middle item to overlay the widget it was
+            used on.
+        """
         return self._middle_item_index
 
     @middle_item_index.setter
@@ -280,6 +270,11 @@ class LadderDelegate(QWidget):
 
     @property
     def current_item(self):
+        """
+        current_item (LadderItem): The current item that the user is manipulating.
+            This property is currently used to determine if this ladder item
+            should have its visual appearance changed on interaction.
+        """
         return self._current_item
 
     @current_item.setter
@@ -288,6 +283,10 @@ class LadderDelegate(QWidget):
 
     @property
     def is_active(self):
+        """
+        is_active  (boolean) determines if the widget is currently being
+            manipulated by the user
+        """
         if not hasattr(self, '_is_active'):
             self._is_active = False
         return self._is_active
@@ -298,6 +297,9 @@ class LadderDelegate(QWidget):
 
     @property
     def item_list(self):
+        """
+        item_list (list): list of all of the ladder items
+        """
         if not hasattr(self, '_item_list'):
             self._item_list = []
         return self._item_list
@@ -311,12 +313,9 @@ class LadderDelegate(QWidget):
 
     def setValue(self, value):
         """
-        Args:
-            value: (float)
-            Sets the value on the parent widget.
-
-            creating a setValue(value) method on the parent widget
-            will run this method last when setting the value
+        value (float): Sets the value on the parent widget.
+            creating a setValue(value) method on the parent
+            widget will run this method last when setting the value
         """
         if value is not None:
             self._value = value
@@ -505,21 +504,29 @@ class LadderDelegate(QWidget):
 
 class LadderMiddleItem(QLabel):
     """
-    This is the display label to overlay
-    over the current widget.
+This is the display label to overlayover the current widget.
+Due to how awesomely bad transparency is to do in Qt =\
+I made this a widget instead of transparency... in hindsite...
+I guess I could have done a mask.
 
-    Due to how awesomely bad transparency is to do in Qt =\
+Args:
+    **  parent (LadderDelegate)
+    **  value (float): the default value to display
+
+Attributes:
+    value (float): display value that should be the value
+        that is returned to the parent widget during user manipulation.
     """
     def __init__(self, parent=None, value=None):
         super(LadderMiddleItem, self).__init__(parent)
         self.setValue(value)
         self.default_style_sheet = self.styleSheet()
-        self.setStyleSheet(
-            '''
-        border-width: {}px;
-        border-color: rgb(18,18,18);
-        border-style: solid;
-        '''.format(self.parent().getMiddleItemBorderWidth()))
+        self.setStyleSheet('''
+            border-width: {}px;
+            border-color: rgb(18,18,18);
+            border-style: solid;
+            '''.format(self.parent().getMiddleItemBorderWidth())
+        )
 
     def setValue(self, value):
         self.setText(str(value))
@@ -600,9 +607,7 @@ class LadderItem(QLabel):
         current_pos = self.mapToGlobal(event.pos())
         magnitude = self.__getMagnitude(self.start_pos, current_pos)
         return math.fabs(math.modf(magnitude)[0])
-        #return self.slider_pos
 
-    # remove
     def __updateColor(self, xpos):
         """
         changes the color for the moving slider for all
@@ -629,7 +634,6 @@ class LadderItem(QLabel):
             )
         self.setStyleSheet(style_sheet)
 
-    # this can prob be removed
     def __updateWidgetGradients(self, xpos):
         """
         Draws out the moving slider over the items to show
@@ -647,7 +651,6 @@ class LadderItem(QLabel):
                 if item is not self.parent().current_item:
                     item.__updateColor(xpos)
 
-    # remove
     def __resetWidgetGradients(self):
         """
         Returns all of the items back to their default color
@@ -657,7 +660,6 @@ class LadderItem(QLabel):
             if index != self.parent().middle_item_index:
                 item.__resetColor()
 
-    #remove
     def __resetColor(self):
         """
         resets the color widget color back to default
@@ -789,8 +791,9 @@ class LadderItem(QLabel):
         return QLabel.mouseReleaseEvent(self, *args, **kwargs)
 
 
-if __name__ == '__main__':
+def main():
     import sys
+
     from cgwidgets.utils import installLadderDelegate
 
     class TestWidget(QLineEdit):
@@ -805,7 +808,7 @@ if __name__ == '__main__':
                 user_input=QEvent.MouseButtonPress,
                 value_list=value_list
             )
-
+            '''
             ladder.setDiscreteDrag(True, alignment=Qt.AlignLeft, depth=10)
             ladder.setDiscreteDrag(
                 True,
@@ -814,7 +817,7 @@ if __name__ == '__main__':
                 fg_color=(128, 128, 32, 255),
                 display_widget=self.parent()
                 )
-
+            '''
         def setValue(self, value):
             self.setText(str(value))
 
@@ -835,3 +838,7 @@ if __name__ == '__main__':
     ml.addWidget(w2)
     mw.show()
     sys.exit(app.exec_())
+
+
+if __name__ == '__main__':
+    main()

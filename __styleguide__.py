@@ -1,18 +1,19 @@
 class StyleGuide(object):
-    """ A one line summary of the module or program, terminated by a period.
+    """
+A one line summary of the module or program, terminated by a period.
 
-    One blank line follows the 80 char summary.  Very twitter like, now I see
-    where we got Twitter from...
+One blank line follows the 80 char summary.  Very twitter like, now I see
+where we got Twitter from...
 
-    But Twitter doesn't allow you to have an entire summary... or yet a
-    second paragraph! Which is seperated by space...
+But Twitter doesn't allow you to have an entire summary... or yet a
+second paragraph! Which is seperated by space...
 
-    I'm using tabs or 4 spaces here... I'm using tabs because I like my
-    space bar because its my jump key in games, and I don't want to spam
-    that all day and break my keyboard... I mean this thing is rated at 50m
-    keystrokes if ya know what I mean ;)
+I'm using tabs or 4 spaces here... I'm using tabs because I like my
+space bar because its my jump key in games, and I don't want to spam
+that all day and break my keyboard... I mean this thing is rated at 50m
+keystrokes if ya know what I mean ;)
 
--- Args:
+Args:
     Arguments should be denoted if they are an *arg, or a **kwarg
     by using * or ** followed by spaces.  This should do a total line
     fill of four characters or the number of spaces that a tab will use.
@@ -35,7 +36,7 @@ class StyleGuide(object):
                 should do, so I'll stop typing stuff now.
         **  another_kwarg (type): A second kwarg...
 
---  Attributes:
+Attributes:
     Attributes are broken down into public vs private.
     The primary definition to determine what is public and what
     is private is if it will be exposed as an API call.  If it is an API
@@ -56,13 +57,13 @@ class StyleGuide(object):
         *   attribute (type): Oddly enough, you add a space between
                 paragraphs in the description.  But not between attributes.
 
--- Notes:
-    -  This section is for any additional notes that the I think are necessary
+Notes:
+    -   This section is for any additional notes that the I think are necessary
             for someone else to know.  Please note the continuued usaged of
             the 4 padded delimietors between items in this case, '-' followed
             by three ' '.
 
--- Syntax
+Syntax
     attribute:
         this_is_an_attribute
         public:
@@ -90,9 +91,9 @@ class StyleGuide(object):
     @property
     def private_attribute(self):
         """
-        user_property (type): This is the first line of the argument.
-        second line of the private attr maybe with some more
-        information or something like that
+        private_attribute (type): This is the first line of the argument.
+            This is written in the @property method of the private_attribute
+            method.
         """
         return self._property
 
@@ -105,7 +106,9 @@ class StyleGuide(object):
         """
         One line description of this function.
 
-        This is the second paragraph of the definition of this class
+        This is the second paragraph of the definition of this class.
+        These doc strings should be written in the class themselves
+        in order to not muddy up the class doc string.
 
         Args:
             *   argument (type): This is the first line of the argument.
@@ -120,10 +123,24 @@ class StyleGuide(object):
         """
         pass
 
+    def exampleDocString(self, arg, kwarg=None):
+        """
+        One line description of this function.
+
+        Args:
+            *   argument (type): This is the first line of the argument.
+                    This is the second line, please note the 8 space or
+                    double tab indention.
+            **  kwarg (type): Optional kwarguement
+
+        Returns:
+            (type): This is the first line of the argument.
+        """
+        pass
     """ EVENTS """
 
 if __name__ == '__main__':
     from qtpy.QtWidgets import QWidget
-    #print(help(QWidget))
+
     print(help(StyleGuide))
 
