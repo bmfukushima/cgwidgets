@@ -13,24 +13,22 @@
           File "/media/ssd01/Scripts/WidgetFactory/cgwidgets/utils.py", line 231, in getGlobalPos
             title_bar_height = top_level_widget.style().pixelMetric(QStyle.PM_TitleBarHeight)
         RuntimeError: Internal C++ object (PySide2.QtWidgets.QStyle) already deleted.
-# -----------------------------------------------------------------------To Do
-    * Detect if close to edge...
-        - Detect center point function
-        - only needs to handle y pos
-    * Horizontal Delegate?
-    * display_widget / _widget
-        - Needs to change to be passed into the the install
-            in the utils.
 
-# ------------------------------------------------------------------- API
-    * need to figure out how to make eventFilter more robust...
+# ----------------------------------------------------------------------- Feature Enhancement
+    *** need to figure out how to make eventFilter more robust...
         ie support CTRL+ALT+CLICK / RMB, etc
             rather than just a QEvent.Type
 
-    * set range
+    *** set range
         allow ladder widget to only go between a specifc range
             ie
                 Only allow this to work in the 0-1 range
+
+    *** Detect if close to edge...
+        - Detect center point function
+        - only needs to handle y pos
+
+    * Horizontal Delegate?
 
 """
 import math
@@ -85,9 +83,12 @@ Attributes:
     item_height (int): The height of each individual adjustable item.
             The middle item will always have the same geometry as the
             parent widget.
+    middle_item_border_color (rgba int 0-255):
+        The border color that is displayed to the user on the middle item
+            ( value display widget )
     middle_item_border_width (int): The width of the border
         for the widget that displays the current value
-    selection_color: (rgba)  | ( int array ) | 0 - 255
+    selection_color (rgba int 0-255):
         The color that is displayed to the user when they are selecting
         which value they wish to adjust
     slide_distance (float): multiplier of how far the user should
@@ -116,7 +117,8 @@ Notes:
 
         # default attrs
         self.setUserInput(user_input)
-        self.setMiddleItemBorderWidth(2)
+        self.setMiddleItemBorderColor((18, 18, 18))
+        self.setMiddleItemBorderWidth(5)
         self.setSlideDistance(.01)
         self.setSelectionColor((32, 32, 32, 255))
         self.setItemHeight(50)
@@ -165,17 +167,33 @@ Notes:
     def setBGSlideColor(self, color):
         self._bg_slide_color = color
 
+        # update slidebar
+        for item in self.item_list:
+            if not isinstance(item, LadderMiddleItem):
+                    item.slidebar.setBGSlideColor(color)
+
     def getFGSlideColor(self):
         return self._fg_slide_color
 
     def setFGSlideColor(self, color):
         self._fg_slide_color = color
 
+        # update slidebar
+        for item in self.item_list:
+            if not isinstance(item, LadderMiddleItem):
+                    item.slidebar.setFGSlideColor(color)
+
     def getItemHeight(self):
         return self._item_height
 
     def setItemHeight(self, item_height):
         self._item_height = item_height
+
+    def getMiddleItemBorderColor(self):
+        return self._middle_item_border_color
+
+    def setMiddleItemBorderColor(self, border_color):
+        self._middle_item_border_color = border_color
 
     def getMiddleItemBorderWidth(self):
         return self._middle_item_border_width
@@ -370,7 +388,27 @@ Notes:
 
         getcontext().prec = self._significant_digits
 
-    def __setItemSize(self):
+    def __updateUserInputs(self):
+        """
+        Updates any user inputs using the getter/setter methods.
+        This is necessary because we are created this widget on
+        demand, so if we do not manually update during the
+        show event, it will not update the user set attributes.
+        """
+        self.__updateItemSize()
+        self.__updatePosition()
+        self.__updateMiddleItemBorder()
+
+    def __updateMiddleItemBorder(self):
+        """
+        updates the middle items style sheet
+        """
+        self.middle_item.updateStyleSheet(
+            border_width=self.getMiddleItemBorderWidth(),
+            border_color=self.getMiddleItemBorderColor()
+        )
+
+    def __updateItemSize(self):
         """
         Sets each individual item's size according to the
         getItemHeight and parents widgets width
@@ -387,7 +425,7 @@ Notes:
         # set display item ( middle item)
         self.middle_item.setFixedSize(width, self.parent().height())
 
-    def __setPosition(self):
+    def __updatePosition(self):
         """
         sets the position of the delegate relative to the
         widget that it is adjusting
@@ -470,8 +508,7 @@ Notes:
 
     def showEvent(self, *args, **kwargs):
         self.middle_item.setValue(self.getValue())
-        self.__setItemSize()
-        self.__setPosition()
+        self.__updateUserInputs()
         return QWidget.showEvent(self, *args, **kwargs)
 
     def leaveEvent(self, event, *args, **kwargs):
@@ -521,11 +558,35 @@ Attributes:
         super(LadderMiddleItem, self).__init__(parent)
         self.setValue(value)
         self.default_style_sheet = self.styleSheet()
+        self.updateStyleSheet(
+            border_width=self.parent().getMiddleItemBorderWidth()
+        )
         self.setStyleSheet('''
             border-width: {}px;
             border-color: rgb(18,18,18);
             border-style: solid;
             '''.format(self.parent().getMiddleItemBorderWidth())
+        )
+
+    def updateStyleSheet(
+        self,
+        border_width=2,
+        border_color=(18, 18, 18)
+    ):
+        """
+        Args:
+            border_width (int): Width of the border of the middle item
+            border_color (rgb int 0-255): Color of the border, this is
+                not currently exposed...
+        """
+        self.setStyleSheet('''
+            border-width: {border_width}px;
+            border-color: rgb{border_color};
+            border-style: solid;
+            '''.format(
+                border_width=border_width,
+                border_color=repr(border_color)
+            )
         )
 
     def setValue(self, value):
@@ -538,22 +599,12 @@ Attributes:
 
 class LadderItem(QLabel):
     """
-    This represents one item in the ladder that is displayed to the user.
-    Clicking/Dragging left/right on one of these will update the widget
-    that is passed to the ladder delegate.
+This represents one item in the ladder that is displayed to the user.
+Clicking/Dragging left/right on one of these will update the widget
+that is passed to the ladder delegate.
 
-    Kwargs:
-        value_mult (float): how many units the drag should update
-
-    Attributes:
-        orig_value (float): the value of the widget prior to starting a
-            value adjustment.  This is reset everytime a new value adjustment
-            is started.
-        value_mult (float): how many units the drag should update
-        start_pos (QPoint): starting position of drag
-        num_ticks (int): how many units the user has moved.
-            ( num_ticks * value_mult ) + orig_value = new_value
-
+Args:
+    **  value_mult (float): how many units the drag should update
     """
     def __init__(
         self,
@@ -570,6 +621,10 @@ class LadderItem(QLabel):
     """ PROPERTIES """
     @property
     def num_ticks(self):
+        """
+        num_ticks (int): how many units the user has moved.
+            ( num_ticks * value_mult ) + orig_value = new_value
+        """
         return self._num_ticks
 
     @num_ticks.setter
@@ -578,6 +633,11 @@ class LadderItem(QLabel):
 
     @property
     def orig_value(self):
+        """
+        orig_value (float): the value of the widget prior to starting a
+            value adjustment.  This is reset everytime a new value
+            adjustment is started.
+        """
         return self._orig_value
 
     @orig_value.setter
@@ -585,15 +645,10 @@ class LadderItem(QLabel):
         self._orig_value = Decimal(orig_value)
 
     @property
-    def value_mult(self):
-        return self._value_mult
-
-    @value_mult.setter
-    def value_mult(self, value_mult):
-        self._value_mult = Decimal(value_mult)
-
-    @property
     def start_pos(self):
+        """
+        start_pos (QPoint): starting position of drag
+        """
         if not hasattr(self, '_start_pos'):
             self._start_pos = QCursor.pos()
         return self._start_pos
@@ -602,8 +657,30 @@ class LadderItem(QLabel):
     def start_pos(self, pos):
         self._start_pos = pos
 
+    @property
+    def value_mult(self):
+        """
+        value_mult (float): how many units the drag should update
+        """
+        return self._value_mult
+
+    @value_mult.setter
+    def value_mult(self, value_mult):
+        self._value_mult = Decimal(value_mult)
+
     """ UTILS """
     def getCurrentPos(self, event):
+        """
+        Gets the current global position of the cursor.
+
+        Args:
+            *   event (QEvent): QMoveEvent to get the current pos of
+                    the cursor
+
+        Returns:
+            (float): percentage value of how close the user is to
+                registering the next tick/update in unit value.
+        """
         current_pos = self.mapToGlobal(event.pos())
         magnitude = self.__getMagnitude(self.start_pos, current_pos)
         return math.fabs(math.modf(magnitude)[0])
@@ -808,16 +885,21 @@ def main():
                 user_input=QEvent.MouseButtonPress,
                 value_list=value_list
             )
-            '''
+
             ladder.setDiscreteDrag(True, alignment=Qt.AlignLeft, depth=10)
             ladder.setDiscreteDrag(
                 True,
                 alignment=Qt.AlignLeft,
                 depth=10,
-                fg_color=(128, 128, 32, 255),
+                fg_color=(128, 128, 255, 255),
                 display_widget=self.parent()
                 )
-            '''
+            ladder.setMiddleItemBorderColor((255, 0, 255))
+            ladder.setMiddleItemBorderWidth(2)
+            ladder.setItemHeight(50)
+            ladder.setFGSlideColor((255, 128, 32, 255))
+            ladder.setBGSlideColor((0, 128, 255, 255))
+
         def setValue(self, value):
             self.setText(str(value))
 
@@ -842,3 +924,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+    #help(LadderDelegate)

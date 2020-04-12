@@ -63,7 +63,7 @@ if __name__ == '__main__':
     ladder_widget = LadderWidget(widget=label)
     ladder_widget.ladder.setDiscreteDrag(
         True,
-        alignment=Qt.AlignLeft,
+        alignment=Qt.AlignBottom,
         depth=10,
         fg_color=(128, 128, 32, 255),
         display_widget=label.window()
