@@ -28,18 +28,10 @@ To Do...
 
 #---------------------------------------------------------------------- Clean up
     * Organize attributes...
-        API is all over the place with multiple setters/getters in all of the slide delegates...
-            Currently being set as a setter on the SlideDelegate
-                - bg_color
-                - fg_color
-                - alignment
-            Currently doing an inheritance chain due to the creation process... As
-            the widget is created/destroyed on demand... this way each widget
-            will be more standalone, and the different display bars could potentially
-            be inherited later on...
-        - Also due to the fact that the inheritance wasnt passed to the abstract widget
-            through the super... well aint that super...
-        - clean up screen_pos attributes...
+        - clean up screen_pos attributes... ?
+    * Style Guide
+        - AbstractSlideDisplay()
+        - UnitSlideDisplay()
 
 
 '''
