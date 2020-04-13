@@ -26,54 +26,39 @@ To Do...
 
             SlideDelegate --> getBreedWidget
 
-#---------------------------------------------------------------------- Clean up
-    * Organize attributes...
-        - clean up screen_pos attributes... ?
-    * Style Guide
-        - AbstractSlideDisplay()
-        - UnitSlideDisplay()
-
-
 '''
-import sys
-#import platform
 import math
 
-from qtpy.QtWidgets import QDesktopWidget, QApplication, QWidget#, QStackedLayout
+from qtpy.QtWidgets import QDesktopWidget, QApplication, QWidget
 from qtpy.QtCore import Qt, QPoint, QEvent
 
 from cgwidgets.utils import setAsTool, getGlobalPos
-#from PyQt5.QtWidgets import QVBoxLayout, QPushButton
 
 
 class AbstractSlideDisplay(QWidget):
     """
-    Abstract class for all slide bars.  This will be inherited by the
-    HSVSlideDisplay and UnitSlideDisplay.  The base properties of this
-    widget are to create the containter for these widgets, and then
-    subclass this widget and draw the visuals.
+Abstract class for all slide bars.
 
-    Kwargs:
-        depth (int): how wide/tall the widget should be depending
-            on its orientation
-        alignment (QtCore.Qt.Align): where the widget should be align
+This will be inherited by the HSVSlideDisplay and UnitSlideDisplay.
+The base properties of this widget are to create the containter for
+these widgets, and then subclass this widget and draw the visuals.
+
+Kwargs:
+    **  alignment (QtCore.Qt.Align): where the widget should be align
             relative to the display
-        widget (QWidget): optional argument.  If entered, the display
+    **  depth (int): how wide/tall the widget should be depending
+            on its orientation
+    **  display_widget (QWidget): optional argument.  If entered, the display
             will show up over that widget rather than over the main display.
 
-    Properties:
-        + public+
-            depth (int): width/height of the slideBar (depends on orientation)
-            alignment (Qt.Alignment): Where widget should be aligned
+Attributes:
+    alignment (Qt.Alignment): Where widget should be aligned
+    depth (int): width/height of the slideBar (depends on orientation)
+    display_widget (QWidget): optional argument.  If entered, the display
+        will show up over that widget rather than over the main display.
 
-        - private -
-            screen_width (int): width of screen
-            screen_height (int): height of screen
-            screen_pos (QPoint): position of display ( if using multiple displays )
-            screen_geometry (QDesktopWidget.screenGeometry): geometry for
-                the main display.
-
-    This should be abstracted for
+Notes:
+    - This should be abstracted for
         SliderBar-->
             HueSlideDisplay
             SatSlideDisplay
@@ -84,25 +69,18 @@ class AbstractSlideDisplay(QWidget):
     def __init__(
         self,
         parent=None,
-        depth=50,
         alignment=Qt.AlignBottom,
+        depth=50,
         display_widget=None
     ):
         super(AbstractSlideDisplay, self).__init__(parent)
 
         setAsTool(self)
 
-        # set screen properties
-        self._screen_geometry = QDesktopWidget().screenGeometry(-1)
-        self._screen_width = self.screen_geometry.width()
-        self._screen_height = self.screen_geometry.height()
-        self._screen_pos = self.screen_geometry.topLeft()
-
         # set properties
-        self._display_widget = display_widget
+        self.setDisplayWidget(display_widget)
         self.setDepth(depth)
         self.setAlignment(alignment)
-        #self.setWidgetPosition(self.getAlignment(), widget=widget)
 
     """ API """
     def getDepth(self):
@@ -117,127 +95,79 @@ class AbstractSlideDisplay(QWidget):
     def setAlignment(self, alignment):
         self._alignment = alignment
 
-    """ PROPERTIES """
-    @property
-    def screen_geometry(self):
-        return self._screen_geometry
+    def getDisplayWidget(self):
+        return self._display_widget
 
-    @screen_geometry.setter
-    def screen_geometry(self, screen_geometry):
-        self._screen_geometry = screen_geometry
-
-    @property
-    def screen_width(self):
-        return self._screen_width
-
-    @screen_width.setter
-    def screen_width(self, screen_width):
-        self._screen_width = screen_width
-
-    @property
-    def screen_height(self):
-        return self._screen_height
-
-    @screen_height.setter
-    def screen_height(self, screen_height):
-        self._screen_height = screen_height
-
-    @property
-    def screen_pos(self):
-        return self._screen_pos
-
-    @screen_pos.setter
-    def screen_pos(self, screen_pos):
-        self._screen_pos = screen_pos
+    def setDisplayWidget(self, display_widget):
+        self._display_widget = display_widget
 
     """ UTILS """
     def setWidgetPosition(self, alignment, widget=None):
-        if widget:
-            self.alignToWidget(alignment, widget)
-        else:
-            self.alignToDisplay(alignment)
+        """
+        Picks which algorithm to use to determine the widgets position
 
-    def alignToWidget(self, alignment, widget):
-        '''
-        needs to be setup incase a widget has no parent?
-        '''
+        If 'display_widget' is defined, then it will align to that widget,
+        if not, it will align to the main display on the system.
+        """
         _accepted = [
             Qt.AlignLeft,
             Qt.AlignRight,
             Qt.AlignTop,
             Qt.AlignBottom
         ]
-        """
-        parent = widget.parent()
-        parent_layout = parent.layout()
-        print(widget, parent.layout())
-        print(widget.objectName(), parent.layout().objectName())
-        
-        stacked_layout = QStackedLayout()
-        
-        # get widget index in parent...
-        # insert stacked layout into parent
-        
-        align_widget = QWidget()
-        align_layout = QVBoxLayout(align_widget)
-        align_layout.setAlignment(alignment)
-        align_layout.setContentsMargins(0, 0, 0, 0)
+        if alignment in _accepted:
+            if widget:
+                self.alignToWidget(alignment, widget)
+            else:
+                self.alignToDisplay(alignment)
 
-        # stupid method beacuse I can't figure out the correct
-        # way to get the index of the widget in a layout...
-        child_index = -1
-        print('layout count == %s'%parent_layout.count())
-        for index in range(parent_layout.count()):
-            print('i == %s'%index)
-            child_widget = parent_layout.itemAt(index).widget()
-            print(child_widget)
-            if child_widget == widget:
-                child_index = index
-        print('child_index == =%s'%child_index)
+    def alignToWidget(self, alignment, widget):
+        '''
+        Determines where on the monitor the widget should be located
 
-        # add widgets to stacked layout
-        #stacked_layout.addWidget(align_widget)
-        button = QPushButton('test')
-        stacked_layout.addWidget(button)
-        stacked_layout.addWidget(widget)
-        button.setFixedSize(50, 50)
-        button.setStyleSheet('background-color:rgba(128,128,128,128)')
-        parent_layout.insertLayout(child_index, stacked_layout)
+        Args:
+            *   alignment (QtCore.Qt.Alignment): Determines where on the
+                monitor to position the widget.
+                    AlignLeft
+                    AlignRight
+                    AlignTop
+                    AlignBottom
+            *    widget (QWidget): The QWidget that the slide bar should be
+                    aligned to.
+        '''
 
-        """
         screen_pos = getGlobalPos(widget)
 
-        if alignment in _accepted:
-            if alignment == Qt.AlignLeft:
-                height = widget.height()
-                width = self.getDepth()
-                pos = screen_pos
-            elif alignment == Qt.AlignRight:
-                height = widget.height()
-                width = self.getDepth()
-                pos_x = (
-                    screen_pos.x()
-                    + widget.width()
-                    - self.getDepth()
-                )
-                pos = QPoint(pos_x, screen_pos.y())
-            elif alignment == Qt.AlignTop:
-                height = self.getDepth()
-                width = widget.width()
-                pos = screen_pos
-            elif alignment == Qt.AlignBottom:
-                height = self.getDepth()
-                width = widget.width()
-                pos_y = (
-                    screen_pos.y()
-                    + widget.height()
-                    - self.getDepth()
-                )
-                pos = QPoint(screen_pos.x(), pos_y)
+        if alignment == Qt.AlignLeft:
+            height = widget.height()
+            width = self.getDepth()
+            pos = screen_pos
+        elif alignment == Qt.AlignRight:
+            height = widget.height()
+            width = self.getDepth()
+            pos_x = (
+                screen_pos.x()
+                + widget.width()
+                - self.getDepth()
+            )
+            pos = QPoint(pos_x, screen_pos.y())
+        elif alignment == Qt.AlignTop:
+            height = self.getDepth()
+            width = widget.width()
+            pos = screen_pos
+        elif alignment == Qt.AlignBottom:
+            height = self.getDepth()
+            width = widget.width()
+            pos_y = (
+                screen_pos.y()
+                + widget.height()
+                - self.getDepth()
+            )
+            pos = QPoint(screen_pos.x(), pos_y)
 
-            self.setFixedHeight(height)
-            self.setFixedWidth(width)
-            self.move(pos)
+        self.setFixedHeight(height)
+        self.setFixedWidth(width)
+        self.move(pos)
 
     def alignToDisplay(self, alignment):
         """
@@ -251,44 +181,41 @@ class AbstractSlideDisplay(QWidget):
                 AlignTop
                 AlignBottom
         """
-        _accepted = [
-            Qt.AlignLeft,
-            Qt.AlignRight,
-            Qt.AlignTop,
-            Qt.AlignBottom
-        ]
+        # set screen properties
+        self.screen_geometry = QDesktopWidget().screenGeometry(-1)
+        self.screen_width = self.screen_geometry.width()
+        self.screen_height = self.screen_geometry.height()
+        self.screen_pos = self.screen_geometry.topLeft()
+        if alignment == Qt.AlignLeft:
+            height = self.screen_height
+            width = self.getDepth()
+            pos = self.screen_pos
+        elif alignment == Qt.AlignRight:
+            height = self.screen_height
+            width = self.getDepth()
+            pos_x = (
+                self.screen_pos.x()
+                + self.screen_width
+                - self.getDepth()
+            )
+            pos = QPoint(pos_x, self.screen_pos.y())
+        elif alignment == Qt.AlignTop:
+            height = self.getDepth()
+            width = self.screen_width
+            pos = self.screen_pos
+        elif alignment == Qt.AlignBottom:
+            height = self.getDepth()
+            width = self.screen_width
+            pos_y = (
+                self.screen_pos.y()
+                + self.screen_height
+                - self.getDepth()
+            )
+            pos = QPoint(self.screen_pos.x(), pos_y)
 
-        if alignment in _accepted:
-            if alignment == Qt.AlignLeft:
-                height = self.screen_height
-                width = self.getDepth()
-                pos = self.screen_pos
-            elif alignment == Qt.AlignRight:
-                height = self.screen_height
-                width = self.getDepth()
-                pos_x = (
-                    self.screen_pos.x()
-                    + self.screen_width
-                    - self.getDepth()
-                )
-                pos = QPoint(pos_x, self.screen_pos.y())
-            elif alignment == Qt.AlignTop:
-                height = self.getDepth()
-                width = self.screen_width
-                pos = self.screen_pos
-            elif alignment == Qt.AlignBottom:
-                height = self.getDepth()
-                width = self.screen_width
-                pos_y = (
-                    self.screen_pos.y()
-                    + self.screen_height
-                    - self.getDepth()
-                )
-                pos = QPoint(self.screen_pos.x(), pos_y)
-
-            self.setFixedHeight(height)
-            self.setFixedWidth(width)
-            self.move(pos)
+        self.setFixedHeight(height)
+        self.setFixedWidth(width)
+        self.move(pos)
 
     def update(self, *args, **kwargs):
         print('you need to reimplement this on: {}'.format(self))
@@ -303,44 +230,51 @@ class AbstractSlideDisplay(QWidget):
 
 class UnitSlideDisplay(AbstractSlideDisplay):
     """
-    Displays a bar on a cardinal direction relative to the monitor
-    (Top, Bottom, Left Right).  This bar will have two colors,
-    which will display how far a user slide has gone before the
-    next tick is registered to be updated
+Displays a bar on a cardinal direction relative to the monitor
+(Top, Bottom, Left Right).  This bar will have two colors,
+which will display how far a user slide has gone before the
+next tick is registered to be updated
 
-    Kwargs:
-        depth (int): how wide/tall the widget should be depending
-            on its orientation
-        alignment (QtCore.Qt.Align): where the widget should be align
+Args:
+    *    alignment (QtCore.Qt.Align): where the widget should be align
             relative to the display
+    *   bg_slide_color (rgba int): The bg color that is displayed to the
+            user when the use starts to click/drag to slide
+    *   depth (int): how wide/tall the widget should be depending
+            on its orientation
+    *   display_widget (QWidget): The widget to display the slide
+            delegate on to.  If no widget is given, this defaults to displaying
+            over the primary monitor.
+    *   fg_slide_color (rgba int): The bg color that is displayed to the
+            user when the user starts to click/drag to slide
 
-    Attributes:
-        + public +
-            bg_slide_color: (rgba) | ( int array ) | 0 - 255
-                The bg color that is displayed to the user when the user starts
-                to click/drag to slide
-            fg_slide_color: (rgba) | ( int array ) | 0 - 255
-                The bg color that is displayed to the user when the user starts
-                to click/drag to slide
+Attributes:
+    bg_slide_color (rgba int):
+            The bg color that is displayed to the user when the use
+            starts to click/drag to slide
+    fg_slide_color (rgba int):
+        The bg color that is displayed to the user when the use
+        starts to click/drag to slide
     """
     def __init__(
         self,
         parent=None,
-        depth=50,
         alignment=Qt.AlignBottom,
         bg_slide_color=(18, 18, 18, 128),
+        depth=50,
         fg_slide_color=(18, 128, 18, 128),
         display_widget=None
     ):
         super(UnitSlideDisplay, self).__init__(
-            parent, alignment=alignment, depth=depth
+            parent,
+            alignment=alignment,
+            depth=depth,
+            display_widget=display_widget
         )
 
         # set default attrs
         self.setBGSlideColor(bg_slide_color)
         self.setFGSlideColor(fg_slide_color)
-        self.setAlignment(alignment)
-        self._display_widget = display_widget
         self.update(0.0)
 
     """ PROPERTIES """
@@ -356,12 +290,6 @@ class UnitSlideDisplay(AbstractSlideDisplay):
     def setFGSlideColor(self, fg_slide_color):
         self._fg_slide_color = fg_slide_color
 
-    def getAlignment(self):
-        return self._alignment
-
-    def setAlignment(self, alignment):
-        self._alignment = alignment
-
     """ UTILS """
     def update(self, pos):
         """
@@ -369,11 +297,9 @@ class UnitSlideDisplay(AbstractSlideDisplay):
         has dragged.
 
         Args:
-            xpos (float): what percentage the user has travelled towards
-                the next tick.
+            *   pos (float): what percentage the user has travelled towards
+                    the next tick.
 
-        Returns:
-            None
         """
 
         # align horizontally
@@ -572,7 +498,7 @@ if __name__ == '__main__':
                 fg_color=(128, 128, 32, 255),
                 display_widget=self.parent().parent()
                 )
-            #ladder.setDiscreteDrag(True, alignment=Qt.AlignLeft)
+            # ladder.setDiscreteDrag(True, alignment=Qt.AlignLeft)
 
         def setValue(self, value):
             self.setText(str(value))
@@ -585,7 +511,6 @@ if __name__ == '__main__':
     w2 = QWidget(mw)
     w2.setStyleSheet('background-color: rgba(0,255,255,255)')
     l2 = QVBoxLayout()
-    #l2.setContentsMargins(0,0,0,0)
     w2.setLayout(l2)
 
     menu = TestWidget(w2)

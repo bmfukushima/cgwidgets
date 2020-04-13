@@ -74,10 +74,10 @@ Args:
             QEvent.MouseButtonPress
 
 Attributes:
-    bg_slide_color (rgba int 0-255):
+    bg_slide_color (rgba int):
             The bg color that is displayed to the user when the use
             starts to click/drag to slide
-    fg_slide_color (rgba int 0-255):
+    fg_slide_color (rgba int):
         The bg color that is displayed to the user when the use
         starts to click/drag to slide
     item_height (int): The height of each individual adjustable item.
