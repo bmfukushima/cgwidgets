@@ -85,7 +85,7 @@ class TansuTabWidget(BaseTansuWidget):
     MULTI = False
     TYPE = STACKED
 
-    def __init__(self, parent=None, direction=SOUTH):
+    def __init__(self, parent=None, direction=NORTH):
         super(TansuTabWidget, self).__init__(parent)
         # etc attrs
         self.setHandleWidth(0)
@@ -221,10 +221,14 @@ class TansuTabWidget(BaseTansuWidget):
 
     """ EVENTS """
     def showEvent(self, event):
-        if self.getTabDirection() in [TansuTabWidget.NORTH, TansuTabWidget.SOUTH]:
+        if self.getTabDirection() == TansuTabWidget.NORTH:
             self.moveSplitter(self.tab_height, 1)
-        elif self.getTabDirection() in [TansuTabWidget.EAST, TansuTabWidget.WEST]:
+        elif self.getTabDirection() == TansuTabWidget.SOUTH:
+            self.moveSplitter(self.height() - self.tab_height, 1)
+        elif self.getTabDirection() == TansuTabWidget.WEST:
             self.moveSplitter(self.tab_width, 1)
+        elif self.getTabDirection() == TansuTabWidget.EAST:
+            self.moveSplitter(self.width() - self.tab_width, 1)
         return BaseTansuWidget.showEvent(self, event)
 
     """ PROPERTIES """
@@ -272,10 +276,6 @@ class TansuTabWidget(BaseTansuWidget):
                 is selected.
         """
         # reset tab label bar
-        # if hasattr(self, 'tab_label_bar_widget'):
-        #     self.tab_label_bar_widget.setParent(None)
-        # self.tab_label_bar_widget = TabLabelBarWidget(self)
-        # self.insertWidget(0, self.tab_label_bar_widget)
         self.tab_label_bar_widget.clear()
 
         # clear layout
@@ -319,8 +319,8 @@ class TansuTabWidget(BaseTansuWidget):
         #QApplication.processEvents()
         if direction == TansuTabWidget.WEST:
             self.setOrientation(Qt.Horizontal)
+            self.insertWidget(0, self.tab_label_bar_widget)
             self.tab_label_bar_widget.layout().setDirection(QBoxLayout.TopToBottom)
-            self.insertWidget(1, self.tab_label_bar_widget)
         elif direction == TansuTabWidget.EAST:
             self.setOrientation(Qt.Horizontal)
             self.insertWidget(1, self.tab_label_bar_widget)
@@ -654,7 +654,7 @@ if __name__ == "__main__":
 
     # stacked widget example
     w.setType(TansuTabWidget.STACKED)
-    w.setTabPosition(TansuTabWidget.EAST)
+    w.setTabPosition(TansuTabWidget.WEST)
     #w.setMultiSelect(True)
     #w.setMultiSelectDirection(Qt.Horizontal)
     #
