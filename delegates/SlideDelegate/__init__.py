@@ -1,1 +1,0 @@
-from .SlideDelegate import SlideDelegate as SlideDelegate

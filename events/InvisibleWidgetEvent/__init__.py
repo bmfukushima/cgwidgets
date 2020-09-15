@@ -1,1 +1,0 @@
-from .InvisibleWidgetEvent import InvisibleWidgetEvent as InvisibleWidgetEvent

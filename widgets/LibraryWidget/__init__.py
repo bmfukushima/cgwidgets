@@ -1,1 +1,0 @@
-from .LibraryWidget import LibraryWidget as LibraryWidget
