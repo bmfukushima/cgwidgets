@@ -1,13 +1,17 @@
-from PyQt5.QtWidgets import QSplitter, qApp
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QCursor
+"""
+TODO:
+    *   Full Screen mode
+    *   Display for collapse state...
+"""
+
+from qtpy.QtWidgets import QSplitter, qApp
+from qtpy.QtCore import Qt
+from qtpy.QtGui import QCursor
 
 from cgwidgets.settings.colors import(
     RGBA_TANSU_HANDLE,
     RGBA_TANSU_HANDLE_HOVER
 )
-
-from cgwidgets.utils import getWidgetAncestor
 
 
 class BaseTansuWidget(QSplitter):

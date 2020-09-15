@@ -1,16 +1,13 @@
 """
 TODO:
-    - Default sizes
-    - set up colors
-    - set up handle widths
-
+    - Escape
+        Return to correct widget display mode in the Tansu Widget
 """
 
-from PyQt5.QtWidgets import (
-    QWidget, QLabel, QBoxLayout, QStackedLayout, QVBoxLayout, QSizePolicy, QSplitter
+from qtpy.QtWidgets import (
+    QWidget, QLabel, QBoxLayout, QVBoxLayout
 )
-from PyQt5.QtCore import Qt
-
+from qtpy.QtCore import Qt
 
 from cgwidgets.utils import getWidgetAncestor
 from cgwidgets.settings.colors import (
@@ -18,11 +15,7 @@ from cgwidgets.settings.colors import (
     RGBA_SELECTED,
     RGBA_SELECTED_HOVER
 )
-
-try:
-    from cgwidgets.BaseTansuWidget import BaseTansuWidget
-except ImportError:
-    from BaseTansuWidget import BaseTansuWidget
+from cgwidgets.widgets import BaseTansuWidget
 
 
 class TansuTabWidget(BaseTansuWidget):

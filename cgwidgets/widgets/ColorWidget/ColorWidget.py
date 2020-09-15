@@ -1,14 +1,4 @@
-import sys
-import math
-import re
-
-from qtpy.QtWidgets import *
-from qtpy.QtCore import *
-from qtpy.QtGui import *
-
-#from ...delegates import LadderDelegate
-from cgwidgets.utils import installLadderDelegate
-'''
+"""
 KATANA BUGS:
     - Drag outside...
         - Hitbox is not correct, skewed by what appears to be the
@@ -22,7 +12,19 @@ ColorLabel --> Set Color
     Disabling style sheets for now...
     as they were overriding the delegate...
     will need to rethink this...
-'''
+"""
+
+import sys
+import math
+import re
+
+from qtpy.QtWidgets import *
+from qtpy.QtCore import *
+from qtpy.QtGui import *
+
+#from ...delegates import LadderDelegate
+from cgwidgets.utils import installLadderDelegate
+from cgwidgets.widgets import FloatUserInputWidget
 
 
 class ColorWidget(QWidget):
@@ -200,147 +202,7 @@ class ColorWidget(QWidget):
         return self.color
 
 
-class DataTypeLineEdit(QLineEdit):
-    def __init__(
-            self,
-            parent=None,
-            data_type=None,
-            domath=False,
-            allownegative=False
-        ):
-
-        super(DataTypeLineEdit, self).__init__(parent)
-        self.setAllowNegative(allownegative)
-        self.setDoMath(domath)
-        self.setDataType(data_type)
-        self.editingFinished.connect(self.finishUserInput)
-        self.setAlignment(Qt.AlignCenter)
-
-    def home(self, *args, **kwargs):
-        print('home')
-        #return QLineEdit.home(self, *args, **kwargs)
-
-    ''' PROPERTIES '''
-    def setAllowNegative(self, boolean):
-        self.allow_negative = boolean
-
-    def getAllowNegative(self):
-        return self.allow_negative
-
-    def setDoMath(self, domath):
-        self.domath = domath
-
-    def getDoMath(self):
-        return self.domath
-
-    def getDataType(self):
-        return self.data_type
-
-    def setDataType(self, data_type):
-        self.data_type = data_type
-        # SET UP KEY LIST
-        self.key_list = []
-        number_types = ['float', 'number', 'color', 'int']
-        if data_type in number_types:
-            self.key_list = [
-                                Qt.Key_0,
-                                Qt.Key_1,
-                                Qt.Key_2,
-                                Qt.Key_3,
-                                Qt.Key_4,
-                                Qt.Key_5,
-                                Qt.Key_6,
-                                Qt.Key_7,
-                                Qt.Key_8,
-                                Qt.Key_9,
-                                Qt.Key_Left,
-                                Qt.Key_Right,
-                                Qt.Key_Up,
-                                Qt.Key_Down,
-                                Qt.Key_Delete,
-                                Qt.Key_Backspace,
-                                Qt.Key_Return,
-                                Qt.Key_Enter,
-                                Qt.Key_CapsLock
-                                ]
-        if data_type == 'float':
-            self.key_list.append(Qt.Key_Period)
-        if data_type == 'color':
-            self.key_list.append(Qt.Key_Period)
-            self.key_list.append(Qt.Key_Space)
-        if self.getDoMath() is True:
-            math_keys = [
-                Qt.Key_V,
-                Qt.Key_Plus,
-                Qt.Key_plusminus,
-                Qt.Key_Minus,
-                Qt.Key_multiply,
-                Qt.Key_Asterisk,
-                Qt.Key_Slash
-            ]
-            for key in math_keys:
-                self.key_list.append(key)
-        if self.getAllowNegative() is True:
-            self.key_list.append(Qt.Key_Minus)
-
-    def setOrigValue(self, value):
-        self.orig_value = value
-
-    def getOrigValue(self):
-        return self.orig_value
-
-    ''' SIGNALS / EVENTS '''
-    def focusInEvent(self, *args, **kwargs):
-        self.setOrigValue(self.text())
-        return QLineEdit.focusInEvent(self, *args, **kwargs)
-
-    def finishUserInput(self):
-        data_type = self.getDataType()
-        text = self.text()
-        orig_value = self.getOrigValue()
-
-        # =======================================================================
-        # Validate user input
-        # =======================================================================
-        if data_type == 'float':
-            try:
-                float(self.text())
-            except:
-                self.setText(orig_value)
-
-        elif data_type == 'int':
-            try:
-                float(self.text())
-            except:
-                self.setText(orig_value)
-
-        elif data_type == 'color':
-            try:
-                rgb = filter(None, text.split(' '))
-                if len(rgb) != 3:
-                    self.setText(orig_value)
-                    return
-                else:
-                    for value in rgb:
-                        float(value)
-
-            except:
-                self.setText(orig_value)
-            pass
-
-    def mousePressEvent(self, event, *args, **kwargs):
-        if event.button() == Qt.MiddleButton:
-            return
-        return QLineEdit.mousePressEvent(self, event, *args, **kwargs)
-
-    def keyPressEvent(self, event, *args, **kwargs):
-        if event.key() in self.key_list:
-            return QLineEdit.keyPressEvent(self, event, *args, **kwargs)
-        elif self.getDataType() == 'string':
-            return QLineEdit.keyPressEvent(self, event, *args, **kwargs)
-
-
-class ValueLabel(DataTypeLineEdit):
+class ValueLabel(FloatUserInputWidget):
     #  ==========================================================================
     #  abstract label to be used by the Color/HSV labels to inherit
     #  ==========================================================================
@@ -353,13 +215,7 @@ class ValueLabel(DataTypeLineEdit):
             ):
         super(ValueLabel, self).__init__(parent=parent)
         self.value = value
-        self.setDataType('float')
-        '''
-        self.setStyleSheet(
-            'background-color: rgba(0,0,0,0);\
-            qproperty-cursorPosition: 0;'
-            )
-        '''
+
         self.setAlignment(Qt.AlignLeft)
         # set up ladder delegate
         value_list = [0.0001, 0.001, 0.01, 0.1]
@@ -375,14 +231,14 @@ class ValueLabel(DataTypeLineEdit):
         return 'valuelabel'
 
     def setValue(self, value=None, update=True, offset=None):
-        '''
+        """
         @value float rgb color (single channel)
         @update determines whether or not this will set the
             property or update the property as well
         @offset <float> how much the value should be offset
             this is primarily used with ladder widgets.  If it is set
             to None, it will just use the 'value' arg coming in
-        '''
+        """
         # =======================================================================
         # Add offset (if applicable)
         # =======================================================================
@@ -472,18 +328,6 @@ class ValueLabel(DataTypeLineEdit):
 
     def mousePressEvent(self, event, *args, **kwargs):
         if event.button() == Qt.MiddleButton:
-            '''
-            value_list = [0.0001, 0.001, 0.01, 0.1]
-            pos = QCursor.pos()
-
-            ladder = LadderDelegate(
-                parent=self,
-                widget=self,
-                pos=pos,
-                value_list=value_list
-            )
-            ladder.show()
-            '''
             self.setPos(event.pos().x())
             return
         return QLineEdit.mousePressEvent(self, event, *args, **kwargs)
@@ -515,7 +359,7 @@ class ColorLabel(ValueLabel):
         updates the background color of the widget
         '''
         value = value * 255
-        
+
         if self.channel == 0:
             self.setStyleSheet(
                 'border-color:rgb(%s,0,0); \
@@ -1131,17 +975,11 @@ class SETTINGS(object):
     )
 
 
-#if __name__ == '__main__':
-
-
-'''
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     color_widget = ColorWidget()
     color_widget.show()
     sys.exit(app.exec_())
-
-'''
 
 
 

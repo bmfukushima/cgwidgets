@@ -2,7 +2,7 @@ import sys
 
 from qtpy.QtWidgets import *
 
-from ColorWidget.ColorWidget import ColorWidget
+from cgwidgets.widgets import ColorWidget
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

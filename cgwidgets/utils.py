@@ -274,3 +274,13 @@ def multiplyRGBAValues(rgba, mult=1.5):
         new_color.append(int(value))
 
     return tuple(new_color)
+
+
+def updateStyleSheet(widget):
+    """
+    Updates the stylesheet for the specified widget for dynamic
+    style sheets
+    """
+    widget.style().unpolish(widget)
+    widget.style().polish(widget)
+    widget.update()
