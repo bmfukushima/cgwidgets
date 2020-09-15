@@ -13,6 +13,11 @@ from PyQt5.QtCore import Qt
 
 
 from cgwidgets.utils import getWidgetAncestor
+from cgwidgets.settings.colors import (
+    RGBA_TANSU_HANDLE,
+    RGBA_SELECTED,
+    RGBA_SELECTED_HOVER
+)
 
 try:
     from cgwidgets.BaseTansuWidget import BaseTansuWidget
@@ -33,6 +38,15 @@ class TansuTabWidget(BaseTansuWidget):
             options are STACKED | DYNAMIC | MULTI
             see class attrs for more info...
         selected_labels_list (list): list of labels that are currently selected by the user
+
+    Attributes:
+        rgba_handle (rgba): color of the outline for the individual tab labels
+            default color is TansuTabWidget.OUTLINE_COLOR
+        rgba_selected_tab (rgba): text color of selected tab
+            default color is TansuTabWidget.SELECTED_COLOR
+        rgba_selected_tab_hover (rgba): text color of tab when hovered over
+         TansuTabWidget.SELECTED_COLOR_HOVER
+
     Class Attrs:
         TYPE
             STACKED: Will operate like a normal tab, where widgets
@@ -52,23 +66,17 @@ class TansuTabWidget(BaseTansuWidget):
                 |-- TabLabelBarWidget
                         |-- QBoxLayout
                                 |-* TabLabelWidget
-                |-- main_layout
-                        This needs to be changed...
-                        This is the control for dynamic vs stacked...
-                        and it essentially swaps the layouts
-                        - move to abstractSplitterWidget
-                        - SplitterStackedWidget
-                            - get index
-                            - set index
+                |-- BaseTansuWidget
 
     """
     NORTH = 'north'
     SOUTH = 'south'
     EAST = 'east'
     WEST = 'west'
-    OUTLINE_COLOR = (200, 100, 0, 255)
     OUTLINE_WIDTH = 1
-    SELECTED_COLOR = (200, 100, 0, 255)
+    OUTLINE_COLOR = RGBA_TANSU_HANDLE
+    SELECTED_COLOR = RGBA_SELECTED
+    SELECTED_COLOR_HOVER = RGBA_SELECTED_HOVER
     STACKED = 'stacked'
     DYNAMIC = 'dynamic'
     MULTI = False
@@ -76,8 +84,14 @@ class TansuTabWidget(BaseTansuWidget):
 
     def __init__(self, parent=None, direction=NORTH):
         super(TansuTabWidget, self).__init__(parent)
-        # set up splitter
+        # etc attrs
         self.setHandleWidth(0)
+        self._direction = TansuTabWidget.NORTH #just a temp set... for things
+
+        # colors attrs
+        self.rgba_handle = TansuTabWidget.OUTLINE_COLOR
+        self.rgba_selected_tab = TansuTabWidget.SELECTED_COLOR
+        self.rgba_selected_tab_hover = TansuTabWidget.SELECTED_COLOR_HOVER
         style_sheet = """
             QSplitter::handle {
                 border: None;
@@ -117,50 +131,19 @@ class TansuTabWidget(BaseTansuWidget):
                 should be layed out in.  Where the tab label bar will always be
                 the first widget added
         """
-        self.tab_direction = direction
-
         if direction == TansuTabWidget.NORTH:
-            self.setDirection(QBoxLayout.TopToBottom)
+            self.setDirection(TansuTabWidget.NORTH)
             self.tab_label_bar_widget.layout().setDirection(QBoxLayout.LeftToRight)
         elif direction == TansuTabWidget.SOUTH:
-            self.setDirection(QBoxLayout.BottomToTop)
+            self.setDirection(TansuTabWidget.SOUTH)
             self.tab_label_bar_widget.layout().setDirection(QBoxLayout.LeftToRight)
         elif direction == TansuTabWidget.EAST:
-            self.setDirection(QBoxLayout.RightToLeft)
+            self.setDirection(TansuTabWidget.EAST)
             self.tab_label_bar_widget.layout().setDirection(QBoxLayout.TopToBottom)
         elif direction == TansuTabWidget.WEST:
-            self.setDirection(QBoxLayout.LeftToRight)
+            self.setDirection(TansuTabWidget.WEST)
             self.tab_label_bar_widget.layout().setDirection(QBoxLayout.TopToBottom)
-        self.tab_label_bar_widget.updateStyleSheets()
-
-    def getDirection(self):
-        return self._direction
-
-    def setDirection(self, direction):
-        """
-        Sets the current direction this widget.  This is the orientation of
-        where the tab labels will be vs where the main widget will be, where
-        the tab labels bar will always be the first widget.
-        """
-        self._direction = direction
-        self.main_widget.setParent(None)
-        self.tab_label_bar_widget.setParent(None)
-        if direction == QBoxLayout.LeftToRight:
-            self.addWidget(self.tab_label_bar_widget)
-            self.addWidget(self.main_widget)
-            self.setOrientation(Qt.Horizontal)
-        elif direction == QBoxLayout.RightToLeft:
-            self.addWidget(self.main_widget)
-            self.addWidget(self.tab_label_bar_widget)
-            self.setOrientation(Qt.Horizontal)
-        elif direction == QBoxLayout.TopToBottom:
-            self.addWidget(self.tab_label_bar_widget)
-            self.addWidget(self.main_widget)
-            self.setOrientation(Qt.Vertical)
-        elif direction == QBoxLayout.BottomToTop:
-            self.addWidget(self.main_widget)
-            self.addWidget(self.tab_label_bar_widget)
-            self.setOrientation(Qt.Vertical)
+        self.tab_label_bar_widget.setupStyleSheet()
 
     def insertTab(self, index, widget, name, tab_label=None):
         """
@@ -255,6 +238,7 @@ class TansuTabWidget(BaseTansuWidget):
         return BaseTansuWidget.showEvent(self, event)
 
     """ PROPERTIES """
+    """ selection """
     def setMultiSelect(self, enabled):
         self._multi_select = enabled
 
@@ -267,12 +251,24 @@ class TansuTabWidget(BaseTansuWidget):
 
         orientation (Qt.ORIENTATION): ie Qt.Vertical or Qt.Horizontal
         """
-        pass
         self.main_widget.setOrientation(orientation)
 
     def getMultiSelectDirection(self):
         return self.main_widget.orientation()
 
+    def setSelectedLabelsList(self, selected_labels_list):
+        self._selected_labels_list = selected_labels_list
+
+    def getSelectedLabelsList(self):
+        return self._selected_labels_list
+
+    def appendLabelToList(self, label):
+        self.getSelectedLabelsList().append(label)
+
+    def removeLabelFromList(self, label):
+        self.getSelectedLabelsList().remove(label)
+
+    """ type """
     def setType(self, value, dynamic_widget=None, dynamic_function=None):
         """
         Sets the type of this widget.  This will reset the entire layout to a blank
@@ -317,26 +313,63 @@ class TansuTabWidget(BaseTansuWidget):
     def getType(self):
         return self._type
 
-    def setSelectedLabelsList(self, selected_labels_list):
-        self._selected_labels_list = selected_labels_list
+    """ direction """
+    def getDirection(self):
+        return self._direction
 
-    def getSelectedLabelsList(self):
-        return self._selected_labels_list
+    def setDirection(self, direction):
+        """
+        Sets the current direction this widget.  This is the orientation of
+        where the tab labels will be vs where the main widget will be, where
+        the tab labels bar will always be the first widget.
+        """
+        self._direction = direction
+        self.main_widget.setParent(None)
+        self.tab_label_bar_widget.setParent(None)
 
-    def appendLabelToList(self, label):
-        self.getSelectedLabelsList().append(label)
+        if direction == TansuTabWidget.WEST:
+            self.addWidget(self.tab_label_bar_widget)
+            self.addWidget(self.main_widget)
+            self.setOrientation(Qt.Horizontal)
+        elif direction == TansuTabWidget.EAST:
+            self.addWidget(self.main_widget)
+            self.addWidget(self.tab_label_bar_widget)
+            self.setOrientation(Qt.Horizontal)
+        elif direction == TansuTabWidget.NORTH:
+            self.addWidget(self.tab_label_bar_widget)
+            self.addWidget(self.main_widget)
+            self.setOrientation(Qt.Vertical)
+        elif direction == TansuTabWidget.SOUTH:
+            self.addWidget(self.main_widget)
+            self.addWidget(self.tab_label_bar_widget)
+            self.setOrientation(Qt.Vertical)
 
-    def removeLabelFromList(self, label):
-        self.getSelectedLabelsList().remove(label)
+    """ colors """
+    @property
+    def rgba_handle(self):
+        return self._rgba_handle
+
+    @rgba_handle.setter
+    def rgba_handle(self, rgba_handle):
+        self._rgba_handle = rgba_handle
 
     @property
-    def tab_direction(self):
-        return self._tab_direction
+    def rgba_selected_tab(self):
+        return self._rgba_selected_tab
 
-    @tab_direction.setter
-    def tab_direction(self, tab_direction):
-        self._tab_direction = tab_direction
+    @rgba_selected_tab.setter
+    def rgba_selected_tab(self, rgba_selected_tab):
+        self._rgba_selected_tab = rgba_selected_tab
 
+    @property
+    def rgba_selected_tab_hover(self):
+        return self._rgba_selected_tab_hover
+
+    @rgba_selected_tab_hover.setter
+    def rgba_selected_tab_hover(self, rgba_selected_tab_hover):
+        self._rgba_selected_tab_hover = rgba_selected_tab_hover
+
+    """ not currently in use..."""
     @property
     def tab_width(self):
         return self._tab_width
@@ -363,6 +396,7 @@ class TabLabelBarWidget(QWidget):
         QBoxLayout(QBoxLayout.LeftToRight, self)
         self.layout().setSpacing(0)
         self.layout().setContentsMargins(0, 0, 0, 0)
+        self.setupStyleSheet()
 
     def insertWidget(self, index, widget):
         self.layout().insertWidget(index, widget)
@@ -388,10 +422,80 @@ class TabLabelBarWidget(QWidget):
 
         return _all_labels
 
-    def updateStyleSheets(self):
-        labels = self.getAllLabels()
-        for label in labels:
-            label.setupStyleSheet()
+    def setupStyleSheet(self):
+        """
+        Sets the style sheet for the outline based off of the direction of the parent.
+
+        """
+        tab_widget = getWidgetAncestor(self, TansuTabWidget)
+        direction = tab_widget.getDirection()
+        style_sheet_args = [
+            repr(tab_widget.rgba_handle),
+            repr(tab_widget.rgba_selected_tab),
+            repr(tab_widget.rgba_selected_tab_hover),
+            TansuTabWidget.OUTLINE_WIDTH
+        ]
+        if direction == TansuTabWidget.NORTH:
+            style_sheet = """
+            QLabel:hover{{color: rgba{2}}}
+            QLabel[is_selected=false]{{
+                border: {3}px solid rgba{0};
+                border-top: None;
+                border-left: None;
+            }}
+            QLabel[is_selected=true]{{
+                border: {3}px solid rgba{0} ;
+                border-left: None;
+                border-bottom: None;
+                color: rgba{1};
+            }}
+            """.format(*style_sheet_args)
+        elif direction == TansuTabWidget.SOUTH:
+            style_sheet = """
+            TabLabelWidget:hover{{color: rgba{2}}}
+            TabLabelWidget[is_selected=false]{{
+                border: {3}px solid rgba{0};
+                border-left: None;
+                border-bottom: None;
+            }}
+            TabLabelWidget[is_selected=true]{{
+                border: {3}px solid rgba{0} ;
+                border-left: None;
+                border-top: None;
+                color: rgba{1};
+            }}
+            """.format(*style_sheet_args)
+        elif direction == TansuTabWidget.EAST:
+            style_sheet = """
+            TabLabelWidget:hover{{color: rgba{2}}}
+            TabLabelWidget[is_selected=false]{{
+                border: {3}px solid rgba{0};
+                border-top: None;
+                border-right: None;
+            }}
+            TabLabelWidget[is_selected=true]{{
+                border: {3}px solid rgba{0} ;
+                border-top: None;
+                border-left: None;
+                color: rgba{1};
+            }}
+            """.format(*style_sheet_args)
+        elif direction == TansuTabWidget.WEST:
+            style_sheet = """
+            TabLabelWidget:hover{{color: rgba{2}}}
+            TabLabelWidget[is_selected=false]{{
+                border: {3}px solid rgba{0};
+                border-top: None;
+                border-left: None;
+            }}
+            TabLabelWidget[is_selected=true]{{
+                border: {3}px solid rgba{0} ;
+                border-top: None;
+                border-right: None;
+                color: rgba{1};
+            }}
+            """.format(*style_sheet_args)
+        self.setStyleSheet(style_sheet)
 
 
 class TabLabelWidget(QLabel):
@@ -417,83 +521,83 @@ class TabLabelWidget(QLabel):
         # set up display
         self.setAlignment(Qt.AlignCenter)
         self.is_selected = False
-        TabLabelWidget.setupStyleSheet(self)
+        #TabLabelWidget.setupStyleSheet(self)
         self.setMinimumSize(35, 35)
 
-    @staticmethod
-    def setupStyleSheet(item):
-        """
-        Sets the style sheet for the outline based off of the direction of the parent.
-
-        """
-        tab_widget = getWidgetAncestor(item, TansuTabWidget)
-        direction = tab_widget.tab_direction
-        style_sheet_args = [
-            repr(TansuTabWidget.OUTLINE_COLOR),
-            repr(TansuTabWidget.SELECTED_COLOR),
-            TansuTabWidget.OUTLINE_WIDTH
-        ]
-        if direction == TansuTabWidget.NORTH:
-            style_sheet = """
-            QLabel:hover{{color: rgba{0}}}
-            QLabel[is_selected=false]{{
-                border: {2}px solid rgba{0};
-                border-top: None;
-                border-left: None;
-            }}
-            QLabel[is_selected=true]{{
-                border: {2}px solid rgba{0} ;
-                border-left: None;
-                border-bottom: None;
-                color: rgba{1};
-            }}
-            """.format(*style_sheet_args)
-        elif direction == TansuTabWidget.SOUTH:
-            style_sheet = """
-            QLabel:hover{{color: rgba{0}}}
-            QLabel[is_selected=false]{{
-                border: {2}px solid rgba{0};
-                border-left: None;
-                border-bottom: None;
-            }}
-            QLabel[is_selected=true]{{
-                border: {2}px solid rgba{0} ;
-                border-left: None;
-                border-top: None;
-                color: rgba{1};
-            }}
-            """.format(*style_sheet_args)
-        elif direction == TansuTabWidget.EAST:
-            style_sheet = """
-            QLabel:hover{{color: rgba{0}}}
-            QLabel[is_selected=false]{{
-                border: {2}px solid rgba{0};
-                border-top: None;
-                border-right: None;
-            }}
-            QLabel[is_selected=true]{{
-                border: {2}px solid rgba{0} ;
-                border-top: None;
-                border-left: None;
-                color: rgba{1};
-            }}
-            """.format(*style_sheet_args)
-        elif direction == TansuTabWidget.WEST:
-            style_sheet = """
-            QLabel:hover{{color: rgba{0}}}
-            QLabel[is_selected=false]{{
-                border: {2}px solid rgba{0};
-                border-top: None;
-                border-left: None;
-            }}
-            QLabel[is_selected=true]{{
-                border: {2}px solid rgba{0} ;
-                border-top: None;
-                border-right: None;
-                color: rgba{1};
-            }}
-            """.format(*style_sheet_args)
-        item.setStyleSheet(style_sheet)
+    # @staticmethod
+    # def setupStyleSheet(item):
+    #     """
+    #     Sets the style sheet for the outline based off of the direction of the parent.
+    #
+    #     """
+    #     tab_widget = getWidgetAncestor(item, TansuTabWidget)
+    #     direction = tab_widget.direction
+    #     style_sheet_args = [
+    #         repr(TansuTabWidget.OUTLINE_COLOR),
+    #         repr(TansuTabWidget.SELECTED_COLOR),
+    #         TansuTabWidget.OUTLINE_WIDTH
+    #     ]
+    #     if direction == TansuTabWidget.NORTH:
+    #         style_sheet = """
+    #         QLabel:hover{{color: rgba{0}}}
+    #         QLabel[is_selected=false]{{
+    #             border: {2}px solid rgba{0};
+    #             border-top: None;
+    #             border-left: None;
+    #         }}
+    #         QLabel[is_selected=true]{{
+    #             border: {2}px solid rgba{0} ;
+    #             border-left: None;
+    #             border-bottom: None;
+    #             color: rgba{1};
+    #         }}
+    #         """.format(*style_sheet_args)
+    #     elif direction == TansuTabWidget.SOUTH:
+    #         style_sheet = """
+    #         QLabel:hover{{color: rgba{0}}}
+    #         QLabel[is_selected=false]{{
+    #             border: {2}px solid rgba{0};
+    #             border-left: None;
+    #             border-bottom: None;
+    #         }}
+    #         QLabel[is_selected=true]{{
+    #             border: {2}px solid rgba{0} ;
+    #             border-left: None;
+    #             border-top: None;
+    #             color: rgba{1};
+    #         }}
+    #         """.format(*style_sheet_args)
+    #     elif direction == TansuTabWidget.EAST:
+    #         style_sheet = """
+    #         QLabel:hover{{color: rgba{0}}}
+    #         QLabel[is_selected=false]{{
+    #             border: {2}px solid rgba{0};
+    #             border-top: None;
+    #             border-right: None;
+    #         }}
+    #         QLabel[is_selected=true]{{
+    #             border: {2}px solid rgba{0} ;
+    #             border-top: None;
+    #             border-left: None;
+    #             color: rgba{1};
+    #         }}
+    #         """.format(*style_sheet_args)
+    #     elif direction == TansuTabWidget.WEST:
+    #         style_sheet = """
+    #         QLabel:hover{{color: rgba{0}}}
+    #         QLabel[is_selected=false]{{
+    #             border: {2}px solid rgba{0};
+    #             border-top: None;
+    #             border-left: None;
+    #         }}
+    #         QLabel[is_selected=true]{{
+    #             border: {2}px solid rgba{0} ;
+    #             border-top: None;
+    #             border-right: None;
+    #             color: rgba{1};
+    #         }}
+    #         """.format(*style_sheet_args)
+    #     item.setStyleSheet(style_sheet)
 
     def mousePressEvent(self, event):
         # get attrs
