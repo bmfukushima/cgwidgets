@@ -5,6 +5,7 @@ from qtpy.QtWidgets import QApplication, QWidget
 from cgwidgets.utils import installSlideDelegate
 from cgwidgets.delegates import SlideDelegate
 
+
 class TestWidget(QWidget):
     def __init__(self, parent=None):
         super(TestWidget, self).__init__(parent)

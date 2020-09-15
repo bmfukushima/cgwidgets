@@ -10,20 +10,19 @@ from cgwidgets.utils import installLadderDelegate
 
 class LadderWidget(QWidget):
     '''
-    Widget with a LadderDelegate for editing
+Widget with a LadderDelegate for editing
 
-    Kwargs:
-        value_list (list): A list of float values.  This list will be displayed
+Args:
+    **  user_input (QEvent): Event to be triggered in order to have the
+            delegate popup.
+    **  value_list (list): A list of float values.  This list will be displayed
             to the user as the available options to click/drag on in order
             to manipulate the value on the LadderWidget
-
-        widget (QLineEdit or QLabel): The actual widget type for the user
+    **  widget (QLineEdit or QLabel): The actual widget type for the user
             manipulate.  This can also be any widget,  however you will
             need to implement a "setValue()" method on that widget and
             have it set the display value.
 
-        user_input (QEvent): Event to be triggered in order to have the
-            delegate popup.
     '''
     def __init__(
         self,

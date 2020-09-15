@@ -6,14 +6,16 @@ import sys
 
 class InvisibleWidgetEvent(QWidget):
     """
-    Sets up an invisible drag event.  When the user clicks, and drags,
-    the widget will dissappear.  On release, the widget will reappear at
-    the original location.
+Causes a widget to hide/show during pen down/up.
 
-    Kwargs:
-        hide_widget (QWidget): optional argument, if this is defined
+Sets up an invisible drag event.  When the user clicks, and drags,
+the widget will dissappear.  On release, the widget will reappear at
+the original location.
+
+Args:
+    **  hide_widget (QWidget): optional argument, if this is defined
             this will be the widget that is hidden.
-        parent(QWidget): if no hide_widget argument is provided,
+    **  parent(QWidget): if no hide_widget argument is provided,
             this will become the widget to be hidden.
     """
     def __init__(self, parent=None, hide_widget=None):

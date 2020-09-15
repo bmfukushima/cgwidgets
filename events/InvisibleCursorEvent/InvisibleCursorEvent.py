@@ -6,10 +6,12 @@ import sys
 
 class InvisibleCursorEvent(QWidget):
     """
-    Sets up an invisible drag event.  When the user clicks, and drags,
-    the cursor will dissappear.  On release, the cursor will reappear at
-    the original location.  This will also allow the cursor to travel an
-    infinite distance without disrupting the user.
+Causes the cursor to hide/show during pen down/up.
+
+Sets up an invisible drag event.  When the user clicks, and drags,
+the cursor will dissappear.  On release, the cursor will reappear at
+the original location.  This will also allow the cursor to travel an
+infinite distance without disrupting the user.
     """
     def __init__(self, parent=None):
         super(InvisibleCursorEvent, self).__init__(parent)
@@ -17,7 +19,6 @@ class InvisibleCursorEvent(QWidget):
 
     def eventFilter(self, obj, event, *args, **kwargs):
         """
-        print ('ok!')
         # catch init failures
         try:
             self._init_pos
