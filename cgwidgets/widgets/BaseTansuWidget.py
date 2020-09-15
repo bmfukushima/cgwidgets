@@ -2,15 +2,15 @@ from PyQt5.QtWidgets import QSplitter, qApp
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QCursor
 
-# from Utils2.colors import(
-#     GRID_COLOR,
-#     GRID_HOVER_COLOR
-# )
+from cgwidgets.settings.colors import(
+    RGBA_TANSU_HANDLE,
+    RGBA_TANSU_HANDLE_HOVER
+)
 
 from cgwidgets.utils import getWidgetAncestor
 
 
-class BaseSplitterWidget(QSplitter):
+class BaseTansuWidget(QSplitter):
     """
     Splitter widget that has advanced functionality.  This serves as a base
     class for everything that will be used through this library.
@@ -29,20 +29,34 @@ class BaseSplitterWidget(QSplitter):
         HANDLE_WIDTH: Default size of the handle
         FULLSCREEN_HOTKEY: Default hotkey for toggling full screen mode
     """
-    HANDLE_WIDTH = 10
+    HANDLE_WIDTH = 2
     FULLSCREEN_HOTKEY = 96
-    HANDLE_COLOR = (10, 100, 10, 255)
-    HANDLE_HOVER_COLOR = (10, 200, 10, 255)
+    HANDLE_COLOR = RGBA_TANSU_HANDLE
+    HANDLE_COLOR_HOVER = RGBA_TANSU_HANDLE_HOVER
 
     def __init__(self, parent=None, orientation=Qt.Vertical):
-        super(BaseSplitterWidget, self).__init__(parent)
+        super(BaseTansuWidget, self).__init__(parent)
 
         self._current_index = None
         self._current_widget = None
         self._is_solo_view = False
-        self._solo_view_hotkey = BaseSplitterWidget.FULLSCREEN_HOTKEY
+        self._solo_view_hotkey = BaseTansuWidget.FULLSCREEN_HOTKEY
         self.setOrientation(orientation)
 
+        # set up handle defaults
+        self.setHandleColor(
+            BaseTansuWidget.HANDLE_COLOR,
+            BaseTansuWidget.HANDLE_COLOR_HOVER)
+        self.setHandleWidth(BaseTansuWidget.HANDLE_WIDTH)
+
+    def setHandleColor(self, color, hover_color):
+        """
+        Sets the color of the handle based off of the two provided
+
+        Args:
+            color (rgba): color to display when not hovering over handle
+            hover_color (rgba): color to display when hover over handle
+        """
         style_sheet = """
                 QSplitter::handle {
                     border: 1px double rgba%s;
@@ -50,10 +64,9 @@ class BaseSplitterWidget(QSplitter):
                 QSplitter::handle:hover {
                     border: 2px double rgba%s;
                 }
-        """ % (repr(BaseSplitterWidget.HANDLE_COLOR), repr(BaseSplitterWidget.HANDLE_HOVER_COLOR))
+        """ % (repr(color), repr(hover_color))
 
         self.setStyleSheet(style_sheet)
-        self.setHandleWidth(BaseSplitterWidget.HANDLE_WIDTH)
 
     def __displayAllWidgets(self, value):
         """
@@ -98,10 +111,10 @@ class BaseSplitterWidget(QSplitter):
             if returns None, then bypass everything.
         """
         if widget.parent():
-            if isinstance(widget.parent(), BaseSplitterWidget):
+            if isinstance(widget.parent(), BaseTansuWidget):
                 return widget.parent().indexOf(widget), widget
             else:
-                return BaseSplitterWidget.getIndexOfWidget(widget.parent())
+                return BaseTansuWidget.getIndexOfWidget(widget.parent())
         else:
             return None, None
 
@@ -219,13 +232,13 @@ if __name__ == "__main__":
     from PyQt5.QtGui import QCursor
     app = QApplication(sys.argv)
 
-    main_splitter = BaseSplitterWidget()
+    main_splitter = BaseTansuWidget()
     main_splitter.setObjectName("main")
     main_splitter.addWidget(QLabel('a'))
     main_splitter.addWidget(QLabel('b'))
     main_splitter.addWidget(QLabel('c'))
 
-    splitter1 = BaseSplitterWidget(orientation=Qt.Horizontal)
+    splitter1 = BaseTansuWidget(orientation=Qt.Horizontal)
     splitter1.setObjectName("embed")
     for x in range(3):
         l = QLabel(str(x))

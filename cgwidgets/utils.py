@@ -259,3 +259,18 @@ def getGlobalPos(widget):
 
     return pos
 
+
+def multiplyRGBAValues(rgba, mult=1.5):
+    """
+
+    """
+    new_color = []
+    for value in rgba:
+        value *= mult
+        if 255 < value:
+            value = 255
+        elif value < 0:
+            value = 0
+        new_color.append(int(value))
+
+    return tuple(new_color)
