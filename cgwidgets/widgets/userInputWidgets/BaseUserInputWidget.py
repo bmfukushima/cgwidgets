@@ -1,3 +1,21 @@
+"""
+TODO:
+    Group Box
+        *   Expose middle line color
+        *   Dynamic text size
+                QApplication.font()
+        *   Add Widget to group box
+                Multiple?
+                    Would need another labelling device?
+        *   Rounded vs straight corners?
+        *   Expose orientation?
+                That's a lot of work...
+    User Input:
+        *   Add ladder widget to numbers
+        *   Ladder widget... center widget... needs to just be the input...
+
+"""
+
 from qtpy.QtWidgets import (
     QLineEdit, QLabel, QGroupBox, QBoxLayout, QSizePolicy
 )
@@ -14,20 +32,25 @@ class BaseUserInputWidget(QLineEdit):
     Attributes:
         orig_value (str): the previous value set by the user
     """
+    RGBA_BORDER_COLOR = RGBA_OUTLINE
+
     def __init__(self, parent=None):
         super(BaseUserInputWidget, self).__init__(parent)
         self._key_list = []
-
+        self.rgba_border = BaseUserInputWidget.RGBA_BORDER_COLOR
+        self.updateStyleSheet()
         self.editingFinished.connect(self.finishUserInput)
+
+    def updateStyleSheet(self):
         self.setStyleSheet("""
-            border: 2px solid rgba(255,255,255,255);
+            border: 2px solid rgba{border_color};
             border-right: None;
             border-left: None;
             border-bottom: None;
             background-color: rgba(0,0,0,0);
             padding-top: 5px;
             margin-top: 10px
-            """)
+            """.format(border_color=self._rgba_border))
 
     ''' PROPERTIES '''
     def appendKey(self, key):
@@ -55,6 +78,13 @@ class BaseUserInputWidget(QLineEdit):
         """
         return str(eval(self.text()))
 
+    @property
+    def rgba_border(self):
+        return self._rgba_border
+
+    @rgba_border.setter
+    def rgba_border(self, _rgba_border):
+        self._rgba_border = _rgba_border
     """ UTILS """
     def setValidateUserInputFunction(self, function):
         """
@@ -130,12 +160,20 @@ class BaseUserInputGroup(QGroupBox):
             subcontrol-position: top center; 
             padding: -{padding}px {paddingX2}px;
             }}
-            QGroupBox{{
+            QGroupBox[display_background=true]{{
                 background-color: rgba(0,0,0,{alpha});
                 border-width: 1px;
                 border-radius: {paddingX2};
                 border-style: solid;
                 border-color: rgba{border_color};
+                margin-top: 1ex;
+                margin-bottom: {padding};
+                margin-left: {padding};
+                margin-right:  {padding};
+            }}
+            QGroupBox[display_background=false]{{
+                background-color: rgba(0,0,0,0);
+                border: None;
                 margin-top: 1ex;
                 margin-bottom: {padding};
                 margin-left: {padding};
@@ -159,13 +197,22 @@ class BaseUserInputGroup(QGroupBox):
         self._alpha = _alpha
 
     @property
+    def display_background(self):
+        return self._display_background
+
+    @display_background.setter
+    def display_background(self, _display_background):
+        self._display_background = _display_background
+        self.setProperty('display_background', _display_background)
+        updateStyleSheet(self)
+
+    @property
     def padding(self):
         return self._padding
 
     @padding.setter
     def padding(self, _padding):
         self._padding = _padding
-        #self.layout().setContentsMargins(self.padding * 4, self.padding * 4, self.padding * 4, self.padding * 4)
 
     @property
     def rgba_border(self):
@@ -330,6 +377,7 @@ if __name__ == "__main__":
     l = QVBoxLayout(w)
 
     gw = BaseUserInputGroup()
+    gw.display_background = False
     l.addWidget(gw)
 
     input_widget = IntUserInputWidget()
