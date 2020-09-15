@@ -131,10 +131,10 @@ class BaseTansuWidget(QSplitter):
     def keyPressEvent(self, event):
         if event.key() == self.soloViewHotkey():
             self.setIsSoloView(True)
-            event.ignore()
             return
         elif event.key() == Qt.Key_Escape:
             self.setIsSoloView(False)
+            return
         return QSplitter.keyPressEvent(self, event)
 
     def isolateWidgets(self, widget_list):
@@ -180,12 +180,14 @@ class BaseTansuWidget(QSplitter):
                     parent_splitter.setIsSoloView(True, current_splitter)
                     parent_splitter._is_solo_view = True
                     current_widget1.setFocus()
+
             # adjust current widget
             elif current_splitter.isSoloView() is False:
                 current_splitter.__displayAllWidgets(False)
                 current_widget.show()
                 current_splitter._is_solo_view = True
                 current_widget.setFocus()
+                #return
         # exit full screen
         else:
             # adjust current widget
@@ -193,12 +195,14 @@ class BaseTansuWidget(QSplitter):
                 current_splitter.__displayAllWidgets(True)
                 current_splitter._is_solo_view = False
                 current_widget.setFocus()
+                #return
             # adjust parent widget
             elif current_splitter.isSoloView() is False:
                 current_index1, current_widget1 = self.getIndexOfWidget(current_splitter)
                 if current_widget1:
                     parent_splitter = current_widget.parent()
                     parent_splitter.setIsSoloView(False, current_splitter)
+
                     parent_splitter._is_solo_view = False
                     parent_splitter.setFocus()
                     current_widget1.setFocus()
@@ -246,7 +250,7 @@ if __name__ == "__main__":
 
     main_splitter.addWidget(splitter1)
     main_splitter.show()
-    main_splitter.setFixedSize(400,400)
+    main_splitter.setFixedSize(400, 400)
     main_splitter.move(QCursor.pos())
     sys.exit(app.exec_())
 

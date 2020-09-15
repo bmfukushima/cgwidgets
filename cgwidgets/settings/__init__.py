@@ -1,1 +1,1 @@
-import colors
+from . import colors
