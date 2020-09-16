@@ -2,8 +2,10 @@
 TODO:
     *   Full Screen mode
     *   Better Displays...
-            - Show when is solo
-            - Show which widgets refer to what...
+            - Add label widget to Tabs, so that when clicked on it shows the
+                    label by default at the top?  Do not show if only one is
+                    selected.
+            - Add Border when solo'd
     *   If none selected, show ALL
 """
 
@@ -75,7 +77,7 @@ class BaseTansuWidget(QSplitter):
 
         self.setStyleSheet(style_sheet)
 
-    def __displayAllWidgets(self, value):
+    def displayAllWidgets(self, value):
         """
         Hides/shows all of the widgets in this splitter.  This is a utility function
         for toggling inbetween full screen modes.
@@ -148,7 +150,7 @@ class BaseTansuWidget(QSplitter):
         """
         Shows only the widgets provided to the widget list
         """
-        self.__displayAllWidgets(False)
+        self.displayAllWidgets(False)
         for widget in widget_list:
             widget.show()
 
@@ -190,7 +192,7 @@ class BaseTansuWidget(QSplitter):
 
             # adjust current widget
             elif current_splitter.isSoloView() is False:
-                current_splitter.__displayAllWidgets(False)
+                current_splitter.displayAllWidgets(False)
                 current_widget.show()
                 current_splitter._is_solo_view = True
                 current_widget.setFocus()
@@ -199,7 +201,7 @@ class BaseTansuWidget(QSplitter):
         else:
             # adjust current widget
             if current_splitter.isSoloView() is True:
-                current_splitter.__displayAllWidgets(True)
+                current_splitter.displayAllWidgets(True)
                 current_splitter._is_solo_view = False
                 current_widget.setFocus()
                 #return

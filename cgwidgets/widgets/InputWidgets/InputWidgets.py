@@ -1,4 +1,6 @@
-from .AbstractInputWidgets import (
+from qtpy.QtCore import Qt
+
+from cgwidgets.widgets import (
     AbstractInputGroup,
     AbstractFloatInputWidget,
     AbstractIntInputWidget,
@@ -6,10 +8,40 @@ from .AbstractInputWidgets import (
     AbstractBooleanInputWidget
 )
 
+from cgwidgets.widgets import TabTansuWidget
+
 
 class InputGroup(AbstractInputGroup):
-    def __init__(self, parent=None):
-        super(InputGroup, self).__init__(parent)
+    """
+    A container for holding user parameters.  The default main
+    widget is a TansuWidget which can have the individual widgets
+    added to ti
+    """
+    def __init__(self, parent=None, title=None):
+        super(InputGroup, self).__init__(parent, title)
+
+        # setup main widget
+        self.main_widget = TabTansuWidget(self)
+        self.main_widget.setTabPosition(TabTansuWidget.WEST)
+        self.main_widget.setMultiSelect(True)
+        self.main_widget.setMultiSelectDirection(Qt.Vertical)
+        self.layout().addWidget(self.main_widget)
+
+    def insertInputWidget(self, index, widget, name, type=None):
+        """
+        Inserts a widget into the Main Widget
+
+        index (int)
+        widget (InputWidget)
+        name (str)
+        type (str):
+        """
+        if type:
+            name = "{name}  |  {type}".format(name=name, type=str(type))
+        self.main_widget.insertTab(index, widget, name)
+
+    def removeInputWidget(self, index):
+        self.main_widget.removeTab(index)
 
 
 class FloatInputWidget(AbstractFloatInputWidget):
@@ -39,13 +71,20 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     w = QWidget()
     l = QVBoxLayout(w)
-    input_widget = AbstractFloatInputWidget()
-    gw = AbstractInputGroup('cool stuff', input_widget)
-    gw.getInputWidget().setUseLadder(True)
+
+    input_widget1 = FloatInputWidget()
+    input_widget2 = FloatInputWidget()
+    input_widget3 = FloatInputWidget()
+    gw = InputGroup('cool stuff')
+    gw.insertInputWidget(0, input_widget1, 'test 1')
+    gw.insertInputWidget(0, input_widget2, 'test 2')
+    gw.insertInputWidget(0, input_widget3, 'test 3')
+
+    #input_widget1.setUseLadder(True)
     gw.display_background = False
     l.addWidget(gw)
-
     w.resize(500, 500)
     w.show()
     w.move(QCursor.pos())
+
     sys.exit(app.exec_())

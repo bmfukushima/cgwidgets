@@ -33,9 +33,9 @@ from qtpy.QtCore import Qt, QEvent
 from cgwidgets.utils import (
     updateStyleSheet, clearLayout, installLadderDelegate, getWidgetAncestor
 )
-from cgwidgets.settings.colors import RGBA_OUTLINE
+from cgwidgets.settings.colors import RGBA_OUTLINE, getTopBorderStyleSheet
 
-from cgwidgets.widgets import TabTansuWidget
+
 # from .AbstractInputWidgets import AbstractIntInputWidget as AbstractIntInputWidget
 # from .AbstractInputWidgets import AbstractStringInputWidget as AbstractStringInputWidget
 # from .AbstractInputWidgets import AbstractBooleanInputWidget as AbstractBooleanInputWidget
@@ -54,20 +54,12 @@ class AbstractInputWidget(QLineEdit):
         super(AbstractInputWidget, self).__init__(parent)
         self._key_list = []
         self.rgba_border = AbstractInputWidget.RGBA_BORDER_COLOR
-        self.updateStyleSheet()
+        #self.updateStyleSheet()
         self.editingFinished.connect(self.finishInput)
 
     def updateStyleSheet(self):
-        self.setStyleSheet("""
-            AbstractInputWidget{{border: 2px solid rgba{border_color};
-            border-right: None;
-            border-left: None;
-            border-bottom: None;
-            background-color: rgba(0,0,0,0);
-            padding-top: 5px;
-            margin-top: 10px
-            }}
-            """.format(border_color=self._rgba_border))
+        style_sheet = getTopBorderStyleSheet(self._rgba_border, 2)
+        self.setStyleSheet(style_sheet)
 
     ''' PROPERTIES '''
     def appendKey(self, key):
@@ -131,8 +123,8 @@ class AbstractInputWidget(QLineEdit):
         else:
             self.setText(self.getOrigValue())
 
-    def setValue(self, value):
-        self.setText(str(value))
+    # def setValue(self, value):
+    #     self.setText(str(value))
 
     def mousePressEvent(self, event, *args, **kwargs):
         if event.button() == Qt.MiddleButton:
@@ -152,21 +144,15 @@ class AbstractInputGroup(QGroupBox):
     PADDING = 3
     ALPHA = 48
 
-    def __init__(self, title, parent=None):
+    def __init__(self, parent=None, title=None):
         super(AbstractInputGroup, self).__init__(parent)
         # setup main layout
         QBoxLayout(QBoxLayout.TopToBottom, self)
         self.layout().setAlignment(Qt.AlignTop)
 
-        # setup main widget
-        self.main_widget = TabTansuWidget(self)
-        self.main_widget.setTabPosition(TabTansuWidget.WEST)
-        self.main_widget.setMultiSelect(True)
-        self.main_widget.setMultiSelectDirection(Qt.Vertical)
-        self.layout().addWidget(self.main_widget)
-
         # set up default attrs
-        self.setTitle(title)
+        if title:
+            self.setTitle(title)
         self._rgba_border = AbstractInputGroup.RGBA_BORDER_COLOR
         self._padding = AbstractInputGroup.PADDING
         self._alpha = AbstractInputGroup.ALPHA
@@ -176,11 +162,43 @@ class AbstractInputGroup(QGroupBox):
         self.updateStyleSheet()
 
     def updateStyleSheet(self):
+        # style_sheet = """
+        #     QGroupBox::title{{
+        #     subcontrol-origin: margin;
+        #     subcontrol-position: top center;
+        #     padding: -{padding}px {paddingX2}px;
+        #     }}
+        #     QGroupBox[display_background=true]{{
+        #         background-color: rgba(0,0,0,{alpha});
+        #         border-width: 1px;
+        #         border-radius: {paddingX2};
+        #         border-style: solid;
+        #         border-color: rgba{border_color};
+        #         margin-top: 1ex;
+        #         margin-bottom: {padding};
+        #         margin-left: {padding};
+        #         margin-right:  {padding};
+        #     }}
+        #     QGroupBox[display_background=false]{{
+        #         background-color: rgba(0,0,0,0);
+        #         border: None;
+        #         margin-top: 1ex;
+        #         margin-bottom: {padding};
+        #         margin-left: {padding};
+        #         margin-right:  {padding};
+        #     }}
+        # """.format(
+        #     padding=self.padding,
+        #     paddingX2=(self.padding*2),
+        #     alpha=self.alpha,
+        #     border_color=repr(self.rgba_border)
+        # )
         style_sheet = """
             QGroupBox::title{{
             subcontrol-origin: margin;
             subcontrol-position: top center; 
             padding: -{padding}px {paddingX2}px;
+            border: 3px solid rgba(0,255,0,255);
             }}
             QGroupBox[display_background=true]{{
                 background-color: rgba(0,0,0,{alpha});
@@ -210,22 +228,6 @@ class AbstractInputGroup(QGroupBox):
         self.setStyleSheet(style_sheet)
 
     """PROPERTIES"""
-    def insertInputWidget(self, index, widget, name, type=None):
-        """
-        Inserts a widget into the Main Widget
-
-        index (int)
-        widget (InputWidget)
-        name (str)
-        type (str):
-        """
-        if type:
-            name = "{name}  |  {type}".format(name=name, type=str(type))
-        self.main_widget.insertWidget(index, widget, name)
-
-    def removeInputWidget(self, index):
-        self.main_widget.removeTab(index)
-
     @property
     def alpha(self):
         return self._alpha
@@ -307,14 +309,16 @@ class AbstractNumberInputWidget(AbstractInputWidget):
         Qt.Key_Slash
     ]
 
-    def __init__(self, parent=None, allow_negative=False, do_math=False):
+    def __init__(
+        self, parent=None, allow_negative=True, do_math=True
+    ):
         super(AbstractNumberInputWidget, self).__init__(parent)
         self.setKeyList(AbstractNumberInputWidget.KEY_LIST)
         self._do_math = do_math
         self._allow_negative = allow_negative
 
-    # def setValue(self, value):
-    #     self.setText(str(value))
+    def setValue(self, value):
+        self.setText(str(value))
 
     def setUseLadder(
             self,
@@ -323,10 +327,7 @@ class AbstractNumberInputWidget(AbstractInputWidget):
             value_list=[0.01, 0.1, 1, 10],
             alignment=Qt.AlignLeft
     ):
-        # if not user_input:
-        #     user_input = QEvent.MouseButtonPress
-        # if not value_list:
-        #     value_list = [0.01, 0.1, 1, 10]
+        # create ladder
         if _use_ladder_delegate is True:
             self.ladder = installLadderDelegate(
                 self,
@@ -344,10 +345,14 @@ class AbstractNumberInputWidget(AbstractInputWidget):
                 )
             # set up outline on ladder
             base_group = getWidgetAncestor(self, AbstractInputGroup)
+            if base_group:
+                outline_color = base_group.rgba_border
+            else:
+                outline_color = RGBA_OUTLINE
             self.ladder.setStyleSheet("""
             QWidget{{border: 1px solid rgba{RGBA_OUTLINE}}}
             """.format(
-                RGBA_OUTLINE=repr(base_group.rgba_border))
+                RGBA_OUTLINE=repr(outline_color))
             )
         else:
             if hasattr(self, 'ladder'):
@@ -389,11 +394,14 @@ class AbstractNumberInputWidget(AbstractInputWidget):
 
 
 class AbstractFloatInputWidget(AbstractNumberInputWidget):
-    def __init__(self, parent=None):
-        super(AbstractFloatInputWidget, self).__init__(parent)
+    def __init__(
+        self, parent=None, allow_negative=True, do_math=True
+    ):
+        super(AbstractFloatInputWidget, self).__init__(
+            parent, allow_negative, do_math
+        )
         self.appendKey(Qt.Key_Period)
         self.setValidateInputFunction(self.validateInput)
-        self.setDoMath(True)
 
     def __repr__(self):
         return ('float')
@@ -414,10 +422,13 @@ class AbstractFloatInputWidget(AbstractNumberInputWidget):
 
 
 class AbstractIntInputWidget(AbstractNumberInputWidget):
-    def __init__(self, parent=None):
-        super(AbstractIntInputWidget, self).__init__(parent)
+    def __init__(
+        self, parent=None, allow_negative=True, do_math=True
+    ):
+        super(AbstractIntInputWidget, self).__init__(
+            parent, allow_negative, do_math
+        )
         self.setValidateInputFunction(self.validateInput)
-        self.setDoMath(True)
 
     def __repr__(self):
         return ('int')
@@ -472,9 +483,9 @@ if __name__ == "__main__":
     w = QWidget()
     l = QVBoxLayout(w)
     input_widget = AbstractFloatInputWidget()
-    gw = AbstractInputGroup('cool stuff', input_widget)
-    gw.getInputWidget().setUseLadder(True)
-    gw.display_background = False
+    gw = AbstractInputGroup('cool stuff')
+    gw.layout().addWidget(input_widget)
+    #gw.display_background = False
     l.addWidget(gw)
 
     w.resize(500, 500)

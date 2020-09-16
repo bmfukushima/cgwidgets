@@ -14,6 +14,25 @@ def multiplyRGBAValues(rgba, mult=1.5):
 
     return tuple(new_color)
 
+def getTopBorderStyleSheet(border_color, border_width):
+    """
+    Returns a style sheet for adding the top border of something to do something.
+    This is mainly used in input widgets with headings above them.
+    """
+    style_sheet ="""
+    AbstractInputWidget{{border: {border_width}px solid rgba{border_color};
+    border-right: None;
+    border-left: None;
+    border-bottom: None;
+    background-color: rgba(0,0,0,0);
+    padding-top: 5px;
+    margin-top: 10px
+    }}
+    """.format(
+        border_color=border_color,
+        border_width=border_width
+    )
+    return style_sheet
 
 ################################
 #########    COLORS    ###########

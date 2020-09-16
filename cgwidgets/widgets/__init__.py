@@ -5,6 +5,11 @@ THE IMPORT ORDER MATTERS!!
 
     I need more abstract classes...
 """
+from .AbstractWidgets import AbstractInputGroup as AbstractInputGroup
+from .AbstractWidgets import AbstractFloatInputWidget as AbstractFloatInputWidget
+from .AbstractWidgets import AbstractIntInputWidget as AbstractIntInputWidget
+from .AbstractWidgets import AbstractStringInputWidget as AbstractStringInputWidget
+from .AbstractWidgets import AbstractBooleanInputWidget as AbstractBooleanInputWidget
 
 from .BaseTansuWidget import BaseTansuWidget
 from .TabTansuWidget import TabTansuWidget
