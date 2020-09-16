@@ -1,27 +1,26 @@
 """
 TODO:
     Group Box
-        *   Expose middle line color
         *   Dynamic text size
                 QApplication.font()
-        *   Add Widget to group box
-                Multiple?
-                    Would need another labelling device?
         *   Rounded vs straight corners?
         *   Expose orientation?
                 That's a lot of work...
     User Input:
-        *   Add ladder widget to numbers
-        *   Ladder widget... center widget... needs to just be the input...
+        * Ladder Widget...
+            - set value needs to do validity check...
+            - ladder middle widget can use base class widgets...
 
 """
 
 from qtpy.QtWidgets import (
     QLineEdit, QLabel, QGroupBox, QBoxLayout, QSizePolicy
 )
-from qtpy.QtCore import Qt
+from qtpy.QtCore import Qt, QEvent
 
-from cgwidgets.utils import updateStyleSheet
+from cgwidgets.utils import (
+    updateStyleSheet, clearLayout, installLadderDelegate, getWidgetAncestor
+)
 from cgwidgets.settings.colors import RGBA_OUTLINE
 
 
@@ -43,13 +42,14 @@ class BaseUserInputWidget(QLineEdit):
 
     def updateStyleSheet(self):
         self.setStyleSheet("""
-            border: 2px solid rgba{border_color};
+            BaseUserInputWidget{{border: 2px solid rgba{border_color};
             border-right: None;
             border-left: None;
             border-bottom: None;
             background-color: rgba(0,0,0,0);
             padding-top: 5px;
             margin-top: 10px
+            }}
             """.format(border_color=self._rgba_border))
 
     ''' PROPERTIES '''
@@ -114,19 +114,8 @@ class BaseUserInputWidget(QLineEdit):
         else:
             self.setText(self.getOrigValue())
 
-        # elif data_type == 'color':
-        #     try:
-        #         rgb = filter(None, text.split(' '))
-        #         if len(rgb) != 3:
-        #             self.setText(orig_value)
-        #             return
-        #         else:
-        #             for value in rgb:
-        #                 float(value)
-        #
-        #     except:
-        #         self.setText(orig_value)
-        #     pass
+    def setValue(self, value):
+        self.setText(str(value))
 
     def mousePressEvent(self, event, *args, **kwargs):
         if event.button() == Qt.MiddleButton:
@@ -139,17 +128,24 @@ class BaseUserInputWidget(QLineEdit):
 
 
 class BaseUserInputGroup(QGroupBox):
+    """
+    Group box containing the user input parameters widgets.
+    """
     RGBA_BORDER_COLOR = RGBA_OUTLINE
     PADDING = 3
+    ALPHA = 48
 
-    def __init__(self, parent=None):
+    def __init__(self, title, user_input_widget, parent=None):
         super(BaseUserInputGroup, self).__init__(parent)
         QBoxLayout(QBoxLayout.TopToBottom, self)
         self.layout().setAlignment(Qt.AlignTop)
-        self.setTitle("lkasjdlfjaf")
-        self.rgba_border = BaseUserInputGroup.RGBA_BORDER_COLOR
-        self.padding = 3
-        self.alpha = 48
+        self.setTitle(title + "  |  {input_type}".format(input_type=repr(user_input_widget)))
+        self.setUserInputWidget(user_input_widget)
+
+        self._rgba_border = BaseUserInputGroup.RGBA_BORDER_COLOR
+        self._padding = BaseUserInputGroup.PADDING
+        self._alpha = BaseUserInputGroup.ALPHA
+
         self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
         self.updateStyleSheet()
 
@@ -188,6 +184,14 @@ class BaseUserInputGroup(QGroupBox):
         self.setStyleSheet(style_sheet)
 
     """PROPERTIES"""
+    def setUserInputWidget(self, _user_input_widget):
+        self._user_input_widget = _user_input_widget
+        clearLayout(self.layout())
+        self.layout().addWidget(_user_input_widget)
+
+    def getUserInputWidget(self):
+        return self._user_input_widget
+
     @property
     def alpha(self):
         return self._alpha
@@ -221,6 +225,10 @@ class BaseUserInputGroup(QGroupBox):
     @rgba_border.setter
     def rgba_border(self, _rgba_border):
         self._rgba_border = _rgba_border
+        self.user_input_widget.rgba_border = _rgba_border
+
+        self.updateStyleSheet()
+        self.user_input_widget.updateStyleSheet()
 
 
 class NumberUserInputWidget(BaseUserInputWidget):
@@ -271,6 +279,51 @@ class NumberUserInputWidget(BaseUserInputWidget):
         self._do_math = do_math
         self._allow_negative = allow_negative
 
+    # def setValue(self, value):
+    #     self.setText(str(value))
+
+    def setUseLadder(
+            self,
+            _use_ladder_delegate,
+            user_input=QEvent.MouseButtonPress,
+            value_list=[0.01, 0.1, 1, 10],
+            alignment=Qt.AlignLeft
+    ):
+        # if not user_input:
+        #     user_input = QEvent.MouseButtonPress
+        # if not value_list:
+        #     value_list = [0.01, 0.1, 1, 10]
+        if _use_ladder_delegate is True:
+            self.ladder = installLadderDelegate(
+                self,
+                user_input=user_input,
+                value_list=value_list
+            )
+            # set up ladder discrete drag
+            self.ladder.setDiscreteDrag(True, alignment=Qt.AlignLeft, depth=10)
+            self.ladder.setDiscreteDrag(
+                True,
+                alignment=alignment,
+                depth=10,
+                fg_color=(128, 128, 255, 255),
+                display_widget=self.parent()
+                )
+            # set up outline on ladder
+            base_group = getWidgetAncestor(self, BaseUserInputGroup)
+            self.ladder.setStyleSheet("""
+            QWidget{{border: 1px solid rgba{RGBA_OUTLINE}}}
+            """.format(
+                RGBA_OUTLINE=repr(base_group.rgba_border))
+            )
+        else:
+            if hasattr(self, 'ladder'):
+                self.ladder.setParent(None)
+        pass
+        self._use_ladder_delegate = _use_ladder_delegate
+
+    def getUseLadder(self):
+        return self._use_ladder_delegate
+
     def setAllowNegative(self, _allow_negative):
         self._allow_negative = _allow_negative
 
@@ -308,6 +361,9 @@ class FloatUserInputWidget(NumberUserInputWidget):
         self.setValidateUserInputFunction(self.validateUserInput)
         self.setDoMath(True)
 
+    def __repr__(self):
+        return ('float')
+
     def validateUserInput(self):
         """
         Check to see if the users input is valid or not
@@ -329,6 +385,9 @@ class IntUserInputWidget(NumberUserInputWidget):
         self.setValidateUserInputFunction(self.validateUserInput)
         self.setDoMath(True)
 
+    def __repr__(self):
+        return ('int')
+
     def validateUserInput(self):
         """
         Check to see if the users input is valid or not
@@ -347,6 +406,9 @@ class IntUserInputWidget(NumberUserInputWidget):
 class StringUserInputWidget(BaseUserInputWidget):
     def __init__(self, parent=None):
         super(StringUserInputWidget, self).__init__(parent)
+
+    def __repr__(self):
+        return ('string')
 
 
 class BooleanUserInputWidget(QLabel):
@@ -375,13 +437,11 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     w = QWidget()
     l = QVBoxLayout(w)
-
-    gw = BaseUserInputGroup()
+    input_widget = FloatUserInputWidget()
+    gw = BaseUserInputGroup('cool stuff', input_widget)
+    gw.getUserInputWidget().setUseLadder(True)
     gw.display_background = False
     l.addWidget(gw)
-
-    input_widget = IntUserInputWidget()
-    gw.layout().addWidget(input_widget)
 
     w.resize(500, 500)
     w.show()

@@ -1,10 +1,23 @@
-import os
 import json
+import re
+
 from collections import OrderedDict
 
 from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 from qtpy.QtGui import *
+
+from cgwidgets.settings.colors import RGBA_DEFAULT_BACKGROUND
+
+
+def guessBackgroundColor(style_sheet):
+    """
+    Searches a style sheet for the background-color
+    """
+    find_matches = b = re.findall("background-color.*rgba.*\)", style_sheet)
+    if len(find_matches) > 0:
+        return '(' + b[0].split('(')[1:][0]
+    return repr((64, 64 ,64 ,255))
 
 
 def printStartTest(name):
@@ -125,7 +138,7 @@ def installInvisibleCursorEvent(widget):
         (InvisibleCursorEvent): QWidget which holds the event
             filter for the invisible drag event
     """
-    from events import InvisibleCursorEvent
+    from cgwidgets.events import InvisibleCursorEvent
     invis_drag_filter = InvisibleCursorEvent(parent=widget)
     widget.installEventFilter(invis_drag_filter)
 
@@ -143,7 +156,7 @@ def installInvisibleWidgetEvent(widget, hide_widget=None):
 
     Returns:
     """
-    from events import InvisibleWidgetEvent
+    from cgwidgets.events import InvisibleWidgetEvent
 
     # ensure defaults for hide widget
     if hide_widget is None:
@@ -221,7 +234,7 @@ def installLadderDelegate(
     Returns:
         LadderDelegate
     """
-    from .delegates import LadderDelegate
+    from cgwidgets.delegates import LadderDelegate
     ladder = LadderDelegate(
         parent=widget,
         value_list=value_list,
@@ -258,22 +271,6 @@ def getGlobalPos(widget):
         pos = parent.mapToGlobal(widget.pos())
 
     return pos
-
-
-def multiplyRGBAValues(rgba, mult=1.5):
-    """
-
-    """
-    new_color = []
-    for value in rgba:
-        value *= mult
-        if 255 < value:
-            value = 255
-        elif value < 0:
-            value = 0
-        new_color.append(int(value))
-
-    return tuple(new_color)
 
 
 def updateStyleSheet(widget):

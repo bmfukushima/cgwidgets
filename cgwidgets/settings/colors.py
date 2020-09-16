@@ -1,8 +1,26 @@
-from cgwidgets.utils import multiplyRGBAValues
+#from cgwidgets.utils import multiplyRGBAValues
+def multiplyRGBAValues(rgba, mult=1.5):
+    """
+
+    """
+    new_color = []
+    for value in rgba:
+        value *= mult
+        if 255 < value:
+            value = 255
+        elif value < 0:
+            value = 0
+        new_color.append(int(value))
+
+    return tuple(new_color)
+
 
 ################################
 #########    COLORS    ###########
 ################################
+""" DEFAULTS """
+RGBA_DEFAULT_BACKGROUND = (64, 64, 64, 255)
+
 """ ACCEPTS / DECLINE / MAYBE"""
 RGBA_ACCEPT = (64, 128, 64, 255)
 RGBA_CANCEL = (128, 64, 64, 255)
