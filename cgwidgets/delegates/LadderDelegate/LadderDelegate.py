@@ -54,6 +54,7 @@ from cgwidgets.settings.colors import (
     RGBA_OUTLINE
 )
 
+from cgwidgets.widgets import FloatInputWidget
 
 
 class LadderDelegate(QWidget):
@@ -548,7 +549,7 @@ Notes:
         return QWidget.eventFilter(self, obj, event, *args, **kwargs)
 
 
-class LadderMiddleItem(QLineEdit):
+class LadderMiddleItem(FloatInputWidget):
     """
 This is the display label to overlayover the current widget.
 Due to how awesomely bad transparency is to do in Qt =\

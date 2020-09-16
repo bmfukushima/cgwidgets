@@ -24,7 +24,7 @@ from qtpy.QtGui import *
 
 #from ...delegates import LadderDelegate
 from cgwidgets.utils import installLadderDelegate
-from cgwidgets.widgets import FloatUserInputWidget
+from cgwidgets.widgets import FloatInputWidget
 
 
 class ColorWidget(QWidget):
@@ -202,7 +202,7 @@ class ColorWidget(QWidget):
         return self.color
 
 
-class ValueLabel(FloatUserInputWidget):
+class ValueLabel(FloatInputWidget):
     #  ==========================================================================
     #  abstract label to be used by the Color/HSV labels to inherit
     #  ==========================================================================

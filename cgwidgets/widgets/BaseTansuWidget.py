@@ -1,7 +1,10 @@
 """
 TODO:
     *   Full Screen mode
-    *   Display for collapse state...
+    *   Better Displays...
+            - Show when is solo
+            - Show which widgets refer to what...
+    *   If none selected, show ALL
 """
 
 from qtpy.QtWidgets import QSplitter, qApp

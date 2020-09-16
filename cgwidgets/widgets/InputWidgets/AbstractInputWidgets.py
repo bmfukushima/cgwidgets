@@ -6,11 +6,23 @@ TODO:
         *   Rounded vs straight corners?
         *   Expose orientation?
                 That's a lot of work...
-    User Input:
+     Input:
         * Ladder Widget...
             - set value needs to do validity check...
             - ladder middle widget can use base class widgets...
 
+Input Group
+    AbstractInputGroup (QGroupBox)
+        | -- TabTansuWidget
+                | -* InputWidget
+
+Input Widgets
+    AbstractInputWidget (QLineEdit)
+        | -- AbstractStringInputWidget
+        | -- AbstractNumberInputWidget
+                | -- AbstractFloatInputWidget
+                | -- AbstractIntInputWidget
+    BooleanInputWidget (QLabel)
 """
 
 from qtpy.QtWidgets import (
@@ -23,8 +35,13 @@ from cgwidgets.utils import (
 )
 from cgwidgets.settings.colors import RGBA_OUTLINE
 
+from cgwidgets.widgets import TabTansuWidget
+# from .AbstractInputWidgets import AbstractIntInputWidget as AbstractIntInputWidget
+# from .AbstractInputWidgets import AbstractStringInputWidget as AbstractStringInputWidget
+# from .AbstractInputWidgets import AbstractBooleanInputWidget as AbstractBooleanInputWidget
 
-class BaseUserInputWidget(QLineEdit):
+
+class AbstractInputWidget(QLineEdit):
     """
     Base class for users to input data into.
 
@@ -34,15 +51,15 @@ class BaseUserInputWidget(QLineEdit):
     RGBA_BORDER_COLOR = RGBA_OUTLINE
 
     def __init__(self, parent=None):
-        super(BaseUserInputWidget, self).__init__(parent)
+        super(AbstractInputWidget, self).__init__(parent)
         self._key_list = []
-        self.rgba_border = BaseUserInputWidget.RGBA_BORDER_COLOR
+        self.rgba_border = AbstractInputWidget.RGBA_BORDER_COLOR
         self.updateStyleSheet()
-        self.editingFinished.connect(self.finishUserInput)
+        self.editingFinished.connect(self.finishInput)
 
     def updateStyleSheet(self):
         self.setStyleSheet("""
-            BaseUserInputWidget{{border: 2px solid rgba{border_color};
+            AbstractInputWidget{{border: 2px solid rgba{border_color};
             border-right: None;
             border-left: None;
             border-bottom: None;
@@ -71,7 +88,7 @@ class BaseUserInputWidget(QLineEdit):
     def getOrigValue(self):
         return self._orig_value
 
-    def getUserInput(self):
+    def getInput(self):
         """
         Evaluates the users input, this is important
         when using numbers
@@ -86,7 +103,7 @@ class BaseUserInputWidget(QLineEdit):
     def rgba_border(self, _rgba_border):
         self._rgba_border = _rgba_border
     """ UTILS """
-    def setValidateUserInputFunction(self, function):
+    def setValidateInputFunction(self, function):
         """
         Sets the function that will validate the users input.  This function
         should take no args, and will need to return True/False.  This will be the
@@ -94,7 +111,7 @@ class BaseUserInputWidget(QLineEdit):
         """
         self._validate_user_input = function
 
-    def checkUserInput(self):
+    def checkInput(self):
         """
         Determines if the users input is valid
         """
@@ -106,11 +123,11 @@ class BaseUserInputWidget(QLineEdit):
         self.setOrigValue(self.text())
         return QLineEdit.focusInEvent(self, *args, **kwargs)
 
-    def finishUserInput(self):
-        is_valid = self.checkUserInput()
+    def finishInput(self):
+        is_valid = self.checkInput()
 
         if is_valid:
-            self.setText(self.getUserInput())
+            self.setText(self.getInput())
         else:
             self.setText(self.getOrigValue())
 
@@ -127,7 +144,7 @@ class BaseUserInputWidget(QLineEdit):
             return QLineEdit.keyPressEvent(self, event, *args, **kwargs)
 
 
-class BaseUserInputGroup(QGroupBox):
+class AbstractInputGroup(QGroupBox):
     """
     Group box containing the user input parameters widgets.
     """
@@ -135,17 +152,26 @@ class BaseUserInputGroup(QGroupBox):
     PADDING = 3
     ALPHA = 48
 
-    def __init__(self, title, user_input_widget, parent=None):
-        super(BaseUserInputGroup, self).__init__(parent)
+    def __init__(self, title, parent=None):
+        super(AbstractInputGroup, self).__init__(parent)
+        # setup main layout
         QBoxLayout(QBoxLayout.TopToBottom, self)
         self.layout().setAlignment(Qt.AlignTop)
-        self.setTitle(title + "  |  {input_type}".format(input_type=repr(user_input_widget)))
-        self.setUserInputWidget(user_input_widget)
 
-        self._rgba_border = BaseUserInputGroup.RGBA_BORDER_COLOR
-        self._padding = BaseUserInputGroup.PADDING
-        self._alpha = BaseUserInputGroup.ALPHA
+        # setup main widget
+        self.main_widget = TabTansuWidget(self)
+        self.main_widget.setTabPosition(TabTansuWidget.WEST)
+        self.main_widget.setMultiSelect(True)
+        self.main_widget.setMultiSelectDirection(Qt.Vertical)
+        self.layout().addWidget(self.main_widget)
 
+        # set up default attrs
+        self.setTitle(title)
+        self._rgba_border = AbstractInputGroup.RGBA_BORDER_COLOR
+        self._padding = AbstractInputGroup.PADDING
+        self._alpha = AbstractInputGroup.ALPHA
+
+        # setup display styles
         self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
         self.updateStyleSheet()
 
@@ -184,13 +210,21 @@ class BaseUserInputGroup(QGroupBox):
         self.setStyleSheet(style_sheet)
 
     """PROPERTIES"""
-    def setUserInputWidget(self, _user_input_widget):
-        self._user_input_widget = _user_input_widget
-        clearLayout(self.layout())
-        self.layout().addWidget(_user_input_widget)
+    def insertInputWidget(self, index, widget, name, type=None):
+        """
+        Inserts a widget into the Main Widget
 
-    def getUserInputWidget(self):
-        return self._user_input_widget
+        index (int)
+        widget (InputWidget)
+        name (str)
+        type (str):
+        """
+        if type:
+            name = "{name}  |  {type}".format(name=name, type=str(type))
+        self.main_widget.insertWidget(index, widget, name)
+
+    def removeInputWidget(self, index):
+        self.main_widget.removeTab(index)
 
     @property
     def alpha(self):
@@ -231,7 +265,7 @@ class BaseUserInputGroup(QGroupBox):
         self.user_input_widget.updateStyleSheet()
 
 
-class NumberUserInputWidget(BaseUserInputWidget):
+class AbstractNumberInputWidget(AbstractInputWidget):
     """
     Base class for number based widgets.  The float
     and int input widgets will both inherit from this.
@@ -274,8 +308,8 @@ class NumberUserInputWidget(BaseUserInputWidget):
     ]
 
     def __init__(self, parent=None, allow_negative=False, do_math=False):
-        super(NumberUserInputWidget, self).__init__(parent)
-        self.setKeyList(NumberUserInputWidget.KEY_LIST)
+        super(AbstractNumberInputWidget, self).__init__(parent)
+        self.setKeyList(AbstractNumberInputWidget.KEY_LIST)
         self._do_math = do_math
         self._allow_negative = allow_negative
 
@@ -309,7 +343,7 @@ class NumberUserInputWidget(BaseUserInputWidget):
                 display_widget=self.parent()
                 )
             # set up outline on ladder
-            base_group = getWidgetAncestor(self, BaseUserInputGroup)
+            base_group = getWidgetAncestor(self, AbstractInputGroup)
             self.ladder.setStyleSheet("""
             QWidget{{border: 1px solid rgba{RGBA_OUTLINE}}}
             """.format(
@@ -335,10 +369,10 @@ class NumberUserInputWidget(BaseUserInputWidget):
 
         # add key to key list
         if _do_math is True:
-            for key in NumberUserInputWidget.MATH_KEYS:
+            for key in AbstractNumberInputWidget.MATH_KEYS:
                 self.appendKey(key)
         else:
-            for key in NumberUserInputWidget.MATH_KEYS:
+            for key in AbstractNumberInputWidget.MATH_KEYS:
                 self.removeKey(key)
 
     def getDoMath(self):
@@ -354,17 +388,17 @@ class NumberUserInputWidget(BaseUserInputWidget):
                 return False
 
 
-class FloatUserInputWidget(NumberUserInputWidget):
+class AbstractFloatInputWidget(AbstractNumberInputWidget):
     def __init__(self, parent=None):
-        super(FloatUserInputWidget, self).__init__(parent)
+        super(AbstractFloatInputWidget, self).__init__(parent)
         self.appendKey(Qt.Key_Period)
-        self.setValidateUserInputFunction(self.validateUserInput)
+        self.setValidateInputFunction(self.validateInput)
         self.setDoMath(True)
 
     def __repr__(self):
         return ('float')
 
-    def validateUserInput(self):
+    def validateInput(self):
         """
         Check to see if the users input is valid or not
         """
@@ -379,16 +413,16 @@ class FloatUserInputWidget(NumberUserInputWidget):
             return False
 
 
-class IntUserInputWidget(NumberUserInputWidget):
+class AbstractIntInputWidget(AbstractNumberInputWidget):
     def __init__(self, parent=None):
-        super(IntUserInputWidget, self).__init__(parent)
-        self.setValidateUserInputFunction(self.validateUserInput)
+        super(AbstractIntInputWidget, self).__init__(parent)
+        self.setValidateInputFunction(self.validateInput)
         self.setDoMath(True)
 
     def __repr__(self):
         return ('int')
 
-    def validateUserInput(self):
+    def validateInput(self):
         """
         Check to see if the users input is valid or not
         """
@@ -403,17 +437,17 @@ class IntUserInputWidget(NumberUserInputWidget):
             return False
 
 
-class StringUserInputWidget(BaseUserInputWidget):
+class AbstractStringInputWidget(AbstractInputWidget):
     def __init__(self, parent=None):
-        super(StringUserInputWidget, self).__init__(parent)
+        super(AbstractStringInputWidget, self).__init__(parent)
 
     def __repr__(self):
         return ('string')
 
 
-class BooleanUserInputWidget(QLabel):
+class AbstractBooleanInputWidget(QLabel):
     def __init__(self, parent=None):
-        super(BooleanUserInputWidget, self).__init__(parent)
+        super(AbstractBooleanInputWidget, self).__init__(parent)
         style_sheet = """
         QLabel[is_clicked=true]{background-color: rgba{clicked_color};
         QLabel
@@ -437,9 +471,9 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     w = QWidget()
     l = QVBoxLayout(w)
-    input_widget = FloatUserInputWidget()
-    gw = BaseUserInputGroup('cool stuff', input_widget)
-    gw.getUserInputWidget().setUseLadder(True)
+    input_widget = AbstractFloatInputWidget()
+    gw = AbstractInputGroup('cool stuff', input_widget)
+    gw.getInputWidget().setUseLadder(True)
     gw.display_background = False
     l.addWidget(gw)
 
