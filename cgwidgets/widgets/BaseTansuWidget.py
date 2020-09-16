@@ -6,7 +6,7 @@ TODO:
                     label by default at the top?  Do not show if only one is
                     selected.
             - Add Border when solo'd
-    *   If none selected, show ALL
+
 """
 
 from qtpy.QtWidgets import QSplitter, qApp
@@ -14,9 +14,12 @@ from qtpy.QtCore import Qt
 from qtpy.QtGui import QCursor
 
 from cgwidgets.settings.colors import(
+    RGBA_TANSU_FLAG,
     RGBA_TANSU_HANDLE,
     RGBA_TANSU_HANDLE_HOVER
 )
+
+from cgwidgets.utils import updateStyleSheet
 
 
 class BaseTansuWidget(QSplitter):
@@ -29,7 +32,8 @@ class BaseTansuWidget(QSplitter):
             allows the user to press a hotkey to make a widget take up the
             entire space of this splitter.  The default hotkey for this is ~ but can be
             set with the setSoloViewHotkey() call.
-
+        rgba_handle (rgba): color of the handle
+        rgba_handle_hover (rgba): color of the handle when hovered over
         # not used... but I set them up anyways lol
         currentIndex (int): The current index
         currentWidget (widget): The current widget
@@ -42,23 +46,28 @@ class BaseTansuWidget(QSplitter):
     FULLSCREEN_HOTKEY = 96
     HANDLE_COLOR = RGBA_TANSU_HANDLE
     HANDLE_COLOR_HOVER = RGBA_TANSU_HANDLE_HOVER
+    FLAG_COLOR = RGBA_TANSU_FLAG
 
     def __init__(self, parent=None, orientation=Qt.Vertical):
         super(BaseTansuWidget, self).__init__(parent)
-
+        # set default attrs
         self._current_index = None
         self._current_widget = None
         self._is_solo_view = False
         self._solo_view_hotkey = BaseTansuWidget.FULLSCREEN_HOTKEY
+
+        # set colors
+        self._rgba_handle = BaseTansuWidget.HANDLE_COLOR
+        self._rgba_handle_hover = BaseTansuWidget.HANDLE_COLOR_HOVER
+        self._rgba_flag = BaseTansuWidget.FLAG_COLOR
         self.setOrientation(orientation)
 
         # set up handle defaults
-        self.setHandleColor(
-            BaseTansuWidget.HANDLE_COLOR,
-            BaseTansuWidget.HANDLE_COLOR_HOVER)
         self.setHandleWidth(BaseTansuWidget.HANDLE_WIDTH)
+        self.updateStyleSheet()
 
-    def setHandleColor(self, color, hover_color):
+    """ UTILS """
+    def updateStyleSheet(self):
         """
         Sets the color of the handle based off of the two provided
 
@@ -67,13 +76,20 @@ class BaseTansuWidget(QSplitter):
             hover_color (rgba): color to display when hover over handle
         """
         style_sheet = """
-                QSplitter::handle {
-                    border: 1px double rgba%s;
-                }
-                QSplitter::handle:hover {
-                    border: 2px double rgba%s;
-                }
-        """ % (repr(color), repr(hover_color))
+            BaseTansuWidget[is_solo_view=true]{{
+                border: 3px ridge rgba{rgba_flag}; 
+            }}
+            QSplitter::handle {{
+                border: 1px double rgba{rgba_handle};
+            }}
+            QSplitter::handle:hover {{
+                border: 2px double rgba{rgba_handle_hover};
+            }}
+        """.format(
+            rgba_flag=repr(self.rgba_flag),
+            rgba_handle=repr(self.rgba_handle),
+            rgba_handle_hover=repr(self.rgba_handle_hover)
+        )
 
         self.setStyleSheet(style_sheet)
 
@@ -135,14 +151,14 @@ class BaseTansuWidget(QSplitter):
         which already does not have enough
         """
         # toggle attrs
-        self.setIsSoloView(not self.isSoloView())
+        self.toggleIsSoloView(not self.isSoloView())
 
     def keyPressEvent(self, event):
         if event.key() == self.soloViewHotkey():
-            self.setIsSoloView(True)
+            self.toggleIsSoloView(True)
             return
         elif event.key() == Qt.Key_Escape:
-            self.setIsSoloView(False)
+            self.toggleIsSoloView(False)
             return
         return QSplitter.keyPressEvent(self, event)
 
@@ -154,11 +170,17 @@ class BaseTansuWidget(QSplitter):
         for widget in widget_list:
             widget.show()
 
-    """ PROPERTIES """
+    """ SOLO VIEW """
     def isSoloView(self):
         return self._is_solo_view
 
-    def setIsSoloView(self, is_solo_view, widget=None):
+    @staticmethod
+    def setIsSoloView(tansu_widget, _is_solo_view):
+        tansu_widget._is_solo_view = _is_solo_view
+        tansu_widget.setProperty('is_solo_view', _is_solo_view)
+        updateStyleSheet(tansu_widget)
+
+    def toggleIsSoloView(self, is_solo_view, widget=None):
         """
         Sets the widget that the mouse is currently over to take up
         all of the space inside of the splitter by hiding the rest of the
@@ -186,15 +208,15 @@ class BaseTansuWidget(QSplitter):
                 current_index1, current_widget1 = self.getIndexOfWidget(current_splitter)
                 if current_widget1:
                     parent_splitter = current_widget.parent()
-                    parent_splitter.setIsSoloView(True, current_splitter)
-                    parent_splitter._is_solo_view = True
-                    current_widget1.setFocus()
+                    parent_splitter.toggleIsSoloView(True, current_splitter)
+                    BaseTansuWidget.setIsSoloView(parent_splitter, True)
+                    parent_splitter.setFocus()
 
             # adjust current widget
             elif current_splitter.isSoloView() is False:
                 current_splitter.displayAllWidgets(False)
                 current_widget.show()
-                current_splitter._is_solo_view = True
+                BaseTansuWidget.setIsSoloView(current_splitter, True)
                 current_widget.setFocus()
                 #return
         # exit full screen
@@ -202,7 +224,7 @@ class BaseTansuWidget(QSplitter):
             # adjust current widget
             if current_splitter.isSoloView() is True:
                 current_splitter.displayAllWidgets(True)
-                current_splitter._is_solo_view = False
+                BaseTansuWidget.setIsSoloView(current_splitter, False)
                 current_widget.setFocus()
                 #return
             # adjust parent widget
@@ -210,13 +232,14 @@ class BaseTansuWidget(QSplitter):
                 current_index1, current_widget1 = self.getIndexOfWidget(current_splitter)
                 if current_widget1:
                     parent_splitter = current_widget.parent()
-                    parent_splitter.setIsSoloView(False, current_splitter)
+                    parent_splitter.toggleIsSoloView(False, current_splitter)
 
-                    parent_splitter._is_solo_view = False
+                    BaseTansuWidget.setIsSoloView(parent_splitter, False)
                     parent_splitter.setFocus()
                     current_widget1.setFocus()
 
         # set attrs
+
         current_splitter.setCurrentIndex(current_index)
         current_splitter.setCurrentWidget(current_widget)
 
@@ -226,6 +249,7 @@ class BaseTansuWidget(QSplitter):
     def setSoloViewHotkey(self, solo_view_hotkey):
         self._solo_view_hotkey = solo_view_hotkey
 
+    """ PROPERTIES """
     def getCurrentWidget(self):
         return self._current_widget
 
@@ -237,6 +261,43 @@ class BaseTansuWidget(QSplitter):
 
     def setCurrentIndex(self, current_index):
         self._current_index = current_index
+
+    @property
+    def handle_width(self):
+        return self._handle_width
+
+    @handle_width.setter
+    def handle_width(self, _handle_width):
+        self._handle_width = _handle_width
+        self.setHandleWidth(_handle_width)
+
+    """ COLORS """
+    @property
+    def rgba_handle(self):
+        return self._rgba_handle
+
+    @rgba_handle.setter
+    def rgba_handle(self, _rgba_handle):
+        self._rgba_handle = _rgba_handle
+        self.updateStyleSheet()
+
+    @property
+    def rgba_handle_hover(self):
+        return self._rgba_handle_hover
+
+    @rgba_handle_hover.setter
+    def rgba_handle_hover(self, _rgba_handle_hover):
+        self._rgba_handle_hover = _rgba_handle_hover
+        self.updateStyleSheet()
+
+    @property
+    def rgba_flag(self):
+        return self._rgba_flag
+
+    @rgba_flag.setter
+    def rgba_flag(self, _rgba_flag):
+        self._rgba_flag = _rgba_flag
+        self.updateStyleSheet()
 
 
 if __name__ == "__main__":

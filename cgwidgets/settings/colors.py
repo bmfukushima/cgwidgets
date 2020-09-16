@@ -14,19 +14,20 @@ def multiplyRGBAValues(rgba, mult=1.5):
 
     return tuple(new_color)
 
+# NOT IN USE
 def getTopBorderStyleSheet(border_color, border_width):
     """
     Returns a style sheet for adding the top border of something to do something.
     This is mainly used in input widgets with headings above them.
     """
+    #    padding-top: 5px;
+    # margin-top: 10px
     style_sheet ="""
     AbstractInputWidget{{border: {border_width}px solid rgba{border_color};
     border-right: None;
     border-left: None;
     border-bottom: None;
     background-color: rgba(0,0,0,0);
-    padding-top: 5px;
-    margin-top: 10px
     }}
     """.format(
         border_color=border_color,
@@ -52,6 +53,7 @@ RGBA_MAYBE_HOVER = multiplyRGBAValues(RGBA_MAYBE)
 RGBA_ERROR_HOVER = multiplyRGBAValues(RGBA_ERROR)
 
 """ TANSU """
+RGBA_TANSU_FLAG = (10, 20, 95, 255)
 RGBA_TANSU_HANDLE = (10, 95, 20, 255)
 RGBA_TANSU_HANDLE_HOVER = multiplyRGBAValues(RGBA_TANSU_HANDLE)
 

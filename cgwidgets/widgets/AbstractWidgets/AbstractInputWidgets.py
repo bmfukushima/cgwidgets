@@ -26,12 +26,13 @@ Input Widgets
 """
 
 from qtpy.QtWidgets import (
-    QLineEdit, QLabel, QGroupBox, QBoxLayout, QSizePolicy
+    QLineEdit, QLabel, QGroupBox, QBoxLayout, QSizePolicy, QFrame, QApplication
 )
 from qtpy.QtCore import Qt, QEvent
 
 from cgwidgets.utils import (
-    updateStyleSheet, clearLayout, installLadderDelegate, getWidgetAncestor
+    updateStyleSheet, clearLayout, installLadderDelegate, getWidgetAncestor,
+    getFontSize
 )
 from cgwidgets.settings.colors import RGBA_OUTLINE, getTopBorderStyleSheet
 
@@ -39,6 +40,21 @@ from cgwidgets.settings.colors import RGBA_OUTLINE, getTopBorderStyleSheet
 # from .AbstractInputWidgets import AbstractIntInputWidget as AbstractIntInputWidget
 # from .AbstractInputWidgets import AbstractStringInputWidget as AbstractStringInputWidget
 # from .AbstractInputWidgets import AbstractBooleanInputWidget as AbstractBooleanInputWidget
+class QHLine(QFrame):
+    def __init__(self, parent=None):
+        super(QHLine, self).__init__(parent)
+        self.setFrameShape(QFrame.HLine)
+        self.setFrameShadow(QFrame.Sunken)
+        self.setStyleSheet("""
+            margin: 30px;
+        """)
+
+
+class QVLine(QFrame):
+    def __init__(self, parent=None):
+        super(QVLine, self).__init__(parent)
+        self.setFrameShape(QFrame.VLine)
+        self.setFrameShadow(QFrame.Sunken)
 
 
 class AbstractInputWidget(QLineEdit):
@@ -47,19 +63,23 @@ class AbstractInputWidget(QLineEdit):
 
     Attributes:
         orig_value (str): the previous value set by the user
+        rgba_border (rgba): color of the border...
+        alpha (int): value of alpha transparency
     """
     RGBA_BORDER_COLOR = RGBA_OUTLINE
+    ALPHA = 48
 
     def __init__(self, parent=None):
         super(AbstractInputWidget, self).__init__(parent)
         self._key_list = []
         self.rgba_border = AbstractInputWidget.RGBA_BORDER_COLOR
-        #self.updateStyleSheet()
+        self.alpha = AbstractInputWidget.ALPHA
+        self.updateStyleSheet()
         self.editingFinished.connect(self.finishInput)
 
     def updateStyleSheet(self):
-        style_sheet = getTopBorderStyleSheet(self._rgba_border, 2)
-        self.setStyleSheet(style_sheet)
+        #style_sheet = getTopBorderStyleSheet(self._rgba_border, 2)
+        self.setStyleSheet("border: None; background-color: rgba(0,0,0,{alpha});".format(alpha=self.alpha))
 
     ''' PROPERTIES '''
     def appendKey(self, key):
@@ -94,6 +114,16 @@ class AbstractInputWidget(QLineEdit):
     @rgba_border.setter
     def rgba_border(self, _rgba_border):
         self._rgba_border = _rgba_border
+
+    @property
+    def alpha(self):
+        return self._alpha
+
+    @alpha.setter
+    def alpha(self, _alpha):
+        self._alpha = _alpha
+        self.updateStyleSheet()
+
     """ UTILS """
     def setValidateInputFunction(self, function):
         """
@@ -149,6 +179,8 @@ class AbstractInputGroup(QGroupBox):
         # setup main layout
         QBoxLayout(QBoxLayout.TopToBottom, self)
         self.layout().setAlignment(Qt.AlignTop)
+        seperator = QHLine(self)
+        self.layout().addWidget(seperator)
 
         # set up default attrs
         if title:
@@ -158,8 +190,13 @@ class AbstractInputGroup(QGroupBox):
         self._alpha = AbstractInputGroup.ALPHA
 
         # setup display styles
-        self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
+        self.display_background = True
         self.updateStyleSheet()
+
+        font_size = getFontSize(QApplication)
+        self.layout().setContentsMargins(self.padding*3, font_size*2, self.padding*3, font_size)
+        self.layout().setSpacing(font_size)
+        self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
 
     def updateStyleSheet(self):
         # style_sheet = """
@@ -193,12 +230,12 @@ class AbstractInputGroup(QGroupBox):
         #     alpha=self.alpha,
         #     border_color=repr(self.rgba_border)
         # )
+        font_size = getFontSize(QApplication)
         style_sheet = """
             QGroupBox::title{{
             subcontrol-origin: margin;
             subcontrol-position: top center; 
             padding: -{padding}px {paddingX2}px;
-            border: 3px solid rgba(0,255,0,255);
             }}
             QGroupBox[display_background=true]{{
                 background-color: rgba(0,0,0,{alpha});
@@ -206,7 +243,7 @@ class AbstractInputGroup(QGroupBox):
                 border-radius: {paddingX2};
                 border-style: solid;
                 border-color: rgba{border_color};
-                margin-top: 1ex;
+                margin-top: {font_size};
                 margin-bottom: {padding};
                 margin-left: {padding};
                 margin-right:  {padding};
@@ -220,6 +257,7 @@ class AbstractInputGroup(QGroupBox):
                 margin-right:  {padding};
             }}
         """.format(
+            font_size=font_size,
             padding=self.padding,
             paddingX2=(self.padding*2),
             alpha=self.alpha,
@@ -253,7 +291,9 @@ class AbstractInputGroup(QGroupBox):
     @padding.setter
     def padding(self, _padding):
         self._padding = _padding
+        self.updateStyleSheet()
 
+    """ COLORS """
     @property
     def rgba_border(self):
         return self._rgba_border

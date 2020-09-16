@@ -4,7 +4,8 @@ TODO:
         Return to correct widget display mode in the Tansu Widget
     - Dynamic will need updates since
          - insertTab modified to put the tab name at the top when solo'ing
-
+    - TabLabelBar needs to sync up with ~/esc for the Tansu Widget
+        *   If none selected, show ALL
 """
 
 from qtpy.QtWidgets import (
@@ -16,8 +17,7 @@ from cgwidgets.utils import getWidgetAncestor
 from cgwidgets.settings.colors import (
     RGBA_TANSU_HANDLE,
     RGBA_SELECTED,
-    RGBA_SELECTED_HOVER,
-    getTopBorderStyleSheet
+    RGBA_SELECTED_HOVER
 )
 
 from cgwidgets.widgets import AbstractInputGroup
@@ -685,8 +685,8 @@ if __name__ == "__main__":
     # stacked widget example
     w.setType(TabTansuWidget.STACKED)
     w.setTabPosition(TabTansuWidget.WEST)
-    #w.setMultiSelect(True)
-    #w.setMultiSelectDirection(Qt.Horizontal)
+    w.setMultiSelect(True)
+    w.setMultiSelectDirection(Qt.Horizontal)
     #
     # for x in range(3):
     #     nw = QLabel(str(x))

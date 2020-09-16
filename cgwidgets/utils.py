@@ -10,6 +10,14 @@ from qtpy.QtGui import *
 from cgwidgets.settings.colors import RGBA_DEFAULT_BACKGROUND
 
 
+def getFontSize(application):
+    """
+    Returns the current systems font size
+    """
+    font = application.font()
+    return font.pointSize()
+
+
 def guessBackgroundColor(style_sheet):
     """
     Searches a style sheet for the background-color
