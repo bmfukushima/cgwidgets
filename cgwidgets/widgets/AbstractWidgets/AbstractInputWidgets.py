@@ -36,25 +36,7 @@ from cgwidgets.utils import (
 )
 from cgwidgets.settings.colors import RGBA_OUTLINE, getTopBorderStyleSheet
 
-
-# from .AbstractInputWidgets import AbstractIntInputWidget as AbstractIntInputWidget
-# from .AbstractInputWidgets import AbstractStringInputWidget as AbstractStringInputWidget
-# from .AbstractInputWidgets import AbstractBooleanInputWidget as AbstractBooleanInputWidget
-class QHLine(QFrame):
-    def __init__(self, parent=None):
-        super(QHLine, self).__init__(parent)
-        self.setFrameShape(QFrame.HLine)
-        self.setFrameShadow(QFrame.Sunken)
-        self.setStyleSheet("""
-            margin: 30px;
-        """)
-
-
-class QVLine(QFrame):
-    def __init__(self, parent=None):
-        super(QVLine, self).__init__(parent)
-        self.setFrameShape(QFrame.VLine)
-        self.setFrameShadow(QFrame.Sunken)
+from cgwidgets.widgets.AbstractWidgets import AbstractVLine, AbstractHLine
 
 
 class AbstractInputWidget(QLineEdit):
@@ -153,9 +135,6 @@ class AbstractInputWidget(QLineEdit):
         else:
             self.setText(self.getOrigValue())
 
-    # def setValue(self, value):
-    #     self.setText(str(value))
-
     def mousePressEvent(self, event, *args, **kwargs):
         if event.button() == Qt.MiddleButton:
             return
@@ -179,7 +158,7 @@ class AbstractInputGroup(QGroupBox):
         # setup main layout
         QBoxLayout(QBoxLayout.TopToBottom, self)
         self.layout().setAlignment(Qt.AlignTop)
-        seperator = QHLine(self)
+        seperator = AbstractHLine(self)
         self.layout().addWidget(seperator)
 
         # set up default attrs
@@ -199,37 +178,6 @@ class AbstractInputGroup(QGroupBox):
         self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
 
     def updateStyleSheet(self):
-        # style_sheet = """
-        #     QGroupBox::title{{
-        #     subcontrol-origin: margin;
-        #     subcontrol-position: top center;
-        #     padding: -{padding}px {paddingX2}px;
-        #     }}
-        #     QGroupBox[display_background=true]{{
-        #         background-color: rgba(0,0,0,{alpha});
-        #         border-width: 1px;
-        #         border-radius: {paddingX2};
-        #         border-style: solid;
-        #         border-color: rgba{border_color};
-        #         margin-top: 1ex;
-        #         margin-bottom: {padding};
-        #         margin-left: {padding};
-        #         margin-right:  {padding};
-        #     }}
-        #     QGroupBox[display_background=false]{{
-        #         background-color: rgba(0,0,0,0);
-        #         border: None;
-        #         margin-top: 1ex;
-        #         margin-bottom: {padding};
-        #         margin-left: {padding};
-        #         margin-right:  {padding};
-        #     }}
-        # """.format(
-        #     padding=self.padding,
-        #     paddingX2=(self.padding*2),
-        #     alpha=self.alpha,
-        #     border_color=repr(self.rgba_border)
-        # )
         font_size = getFontSize(QApplication)
         style_sheet = """
             QGroupBox::title{{

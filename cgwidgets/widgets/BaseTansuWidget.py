@@ -74,7 +74,7 @@ class BaseTansuWidget(QSplitter):
         """
         style_sheet = """
             BaseTansuWidget[is_solo_view=true]{{
-                border: 3px ridge rgba{rgba_flag}; 
+                border: 3px solid rgba{rgba_flag}; 
             }}
             QSplitter::handle {{
                 border: 1px double rgba{rgba_handle};

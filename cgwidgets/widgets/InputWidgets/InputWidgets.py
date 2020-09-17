@@ -22,7 +22,7 @@ class InputGroup(AbstractInputGroup):
 
         # setup main widget
         self.main_widget = TabTansuWidget(self)
-        self.main_widget.setTabPosition(TabTansuWidget.WEST)
+        self.main_widget.setTabBarPosition(TabTansuWidget.WEST)
         self.main_widget.setMultiSelect(True)
         self.main_widget.setMultiSelectDirection(Qt.Vertical)
         self.layout().addWidget(self.main_widget)

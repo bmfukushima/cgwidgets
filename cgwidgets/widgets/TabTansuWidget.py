@@ -119,7 +119,7 @@ class TabTansuWidget(BaseTansuWidget):
         self.setType(TabTansuWidget.TYPE)
 
         # set direction
-        self.setTabPosition(direction)
+        self.setTabBarPosition(direction)
 
         # set multi
         self.setMultiSelect(TabTansuWidget.MULTI)
@@ -134,7 +134,7 @@ class TabTansuWidget(BaseTansuWidget):
         current_label.is_selected = True
         self.main_widget.isolateWidgets([current_label.tab_widget])
 
-    def setupTabLabelBar(self):
+    def setTabLabelBarToDefaultSize(self):
         """
         Moves the main slider to make the tab label bar the default startup size
         """
@@ -146,27 +146,6 @@ class TabTansuWidget(BaseTansuWidget):
             self.moveSplitter(self.tab_width, 1)
         elif self.getTabDirection() == TabTansuWidget.EAST:
             self.moveSplitter(self.width() - self.tab_width, 1)
-
-    def setTabPosition(self, direction):
-        """
-        Sets the orientation of the tab bar relative to the main widget.
-        This is done by setting the direction on this widget, and then
-        setting the layout direction on the tab label bar widget
-
-        Args:
-            direction (QVBoxLayout.DIRECTION): The direction that this widget
-                should be layed out in.  Where the tab label bar will always be
-                the first widget added
-        """
-        if direction == TabTansuWidget.NORTH:
-            self.setTabDirection(direction)
-        elif direction == TabTansuWidget.SOUTH:
-            self.setTabDirection(direction)
-        elif direction == TabTansuWidget.EAST:
-            self.setTabDirection(direction)
-        elif direction == TabTansuWidget.WEST:
-            self.setTabDirection(direction)
-        self.tab_label_bar_widget.setupStyleSheet()
 
     def insertTab(self, index, widget, name, tab_label=None):
         """
@@ -200,12 +179,11 @@ class TabTansuWidget(BaseTansuWidget):
     def createTabWidgetWidget(self, name, widget):
         """
         Creates a new tab widget widget...
+        TODO:
+            Move to base tansu?
         """
         tab_widget_widget = TabWidgetWidget(self, name)
         tab_widget_widget.layout().addWidget(widget)
-
-        #style_sheet = getTopBorderStyleSheet(self.rgba_handle, 2)
-        #widget.setStyleSheet(style_sheet)
 
         return tab_widget_widget
 
@@ -260,7 +238,7 @@ class TabTansuWidget(BaseTansuWidget):
 
     """ EVENTS """
     def showEvent(self, event):
-        self.setupTabLabelBar()
+        self.setTabLabelBarToDefaultSize()
         self.main_widget.displayAllWidgets(False)
         return BaseTansuWidget.showEvent(self, event)
 
@@ -341,7 +319,7 @@ class TabTansuWidget(BaseTansuWidget):
     def getType(self):
         return self._type
 
-    """ direction """
+    """ LAYOUT """
     def getTabDirection(self):
         return self._direction
 
@@ -353,23 +331,51 @@ class TabTansuWidget(BaseTansuWidget):
         """
         self._direction = direction
         self.tab_label_bar_widget.setParent(None)
-        #QApplication.processEvents()
+
         if direction == TabTansuWidget.WEST:
             self.setOrientation(Qt.Horizontal)
             self.insertWidget(0, self.tab_label_bar_widget)
             self.tab_label_bar_widget.layout().setDirection(QBoxLayout.TopToBottom)
+
         elif direction == TabTansuWidget.EAST:
             self.setOrientation(Qt.Horizontal)
             self.insertWidget(1, self.tab_label_bar_widget)
             self.tab_label_bar_widget.layout().setDirection(QBoxLayout.TopToBottom)
+
         elif direction == TabTansuWidget.NORTH:
             self.setOrientation(Qt.Vertical)
             self.insertWidget(0, self.tab_label_bar_widget)
             self.tab_label_bar_widget.layout().setDirection(QBoxLayout.LeftToRight)
+
         elif direction == TabTansuWidget.SOUTH:
             self.setOrientation(Qt.Vertical)
             self.insertWidget(1, self.tab_label_bar_widget)
             self.tab_label_bar_widget.layout().setDirection(QBoxLayout.LeftToRight)
+
+        # make uncollapsible
+        self.setCollapsible(0, False)
+        self.setCollapsible(1, False)
+
+    def setTabBarPosition(self, direction):
+        """
+        Sets the orientation of the tab bar relative to the main widget.
+        This is done by setting the direction on this widget, and then
+        setting the layout direction on the tab label bar widget
+
+        Args:
+            direction (QVBoxLayout.DIRECTION): The direction that this widget
+                should be layed out in.  Where the tab label bar will always be
+                the first widget added
+        """
+        if direction == TabTansuWidget.NORTH:
+            self.setTabDirection(direction)
+        elif direction == TabTansuWidget.SOUTH:
+            self.setTabDirection(direction)
+        elif direction == TabTansuWidget.EAST:
+            self.setTabDirection(direction)
+        elif direction == TabTansuWidget.WEST:
+            self.setTabDirection(direction)
+        self.tab_label_bar_widget.setupStyleSheet()
 
     """ colors """
     @property
@@ -703,7 +709,7 @@ if __name__ == "__main__":
 
     # stacked widget example
     w.setType(TabTansuWidget.STACKED)
-    w.setTabPosition(TabTansuWidget.WEST)
+    w.setTabBarPosition(TabTansuWidget.WEST)
     w.setMultiSelect(True)
     w.setMultiSelectDirection(Qt.Horizontal)
     #
@@ -723,6 +729,7 @@ if __name__ == "__main__":
     w.resize(500,500)
     w.show()
     w.setCurrentIndex(0)
-    w.main_widget.setSizes([200,800])
+    w.setTabLabelBarToDefaultSize()
+    #w.main_widget.setSizes([200,800])
     w.move(QCursor.pos())
     sys.exit(app.exec_())
