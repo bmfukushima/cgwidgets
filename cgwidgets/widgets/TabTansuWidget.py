@@ -11,7 +11,7 @@ TODO:
 """
 
 from qtpy.QtWidgets import (
-    QWidget, QLabel, QBoxLayout, QVBoxLayout
+    QWidget, QLabel, QBoxLayout, QVBoxLayout, QLineEdit, QSizePolicy
 )
 from qtpy.QtCore import Qt
 
@@ -96,6 +96,7 @@ class TabTansuWidget(BaseTansuWidget):
         self._direction = direction #just a temp set... for things
         self._tab_height = 35
         self._tab_width = 100
+        self._tab_label_type = TabLabelWidget
 
         # colors attrs
         self.rgba_handle = TabTansuWidget.OUTLINE_COLOR
@@ -154,7 +155,7 @@ class TabTansuWidget(BaseTansuWidget):
         elif self.getTabDirection() == TabTansuWidget.EAST:
             self.moveSplitter(self.width() - self.tab_width, 1)
 
-    def insertTab(self, index, widget, name, tab_label=None):
+    def insertTab(self, index, widget, name):
         """
         Creates a new tab at  the specified index
 
@@ -169,8 +170,7 @@ class TabTansuWidget(BaseTansuWidget):
         tab_widget_widget = self.createTabWidgetWidget(name, widget)
 
         # create tab label widget
-        if not tab_label:
-            tab_label = TabLabelWidget(self, name, index)
+        tab_label = self.tab_label_type(self, name, index)
         tab_label.tab_widget = tab_widget_widget
 
         # add to layout if stacked
@@ -326,6 +326,14 @@ class TabTansuWidget(BaseTansuWidget):
     def getType(self):
         return self._type
 
+    @property
+    def tab_label_type(self):
+        return self._tab_label_type
+
+    @tab_label_type.setter
+    def tab_label_type(self, tab_label_type):
+        self._tab_label_type = tab_label_type
+
     """ LAYOUT """
     def getTabDirection(self):
         return self._direction
@@ -474,100 +482,92 @@ class TabLabelBarWidget(QWidget):
         """
         tab_widget = getWidgetAncestor(self, TabTansuWidget)
         direction = tab_widget.getTabDirection()
-        style_sheet_args = [
-            repr(tab_widget.rgba_handle),
-            repr(tab_widget.rgba_selected_tab),
-            repr(tab_widget.rgba_selected_tab_hover),
-            TabTansuWidget.OUTLINE_WIDTH
-        ]
+        style_sheet_args = {
+            'rgba_border': repr(tab_widget.rgba_handle),
+            'rgba_selected': repr(tab_widget.rgba_selected_tab),
+            'rgba_hover': repr(tab_widget.rgba_selected_tab_hover),
+            'outline_width': TabTansuWidget.OUTLINE_WIDTH,
+            'type': self.parent().tab_label_type.__name__
+        }
         if direction == TabTansuWidget.NORTH:
             style_sheet = """
-            QLabel:hover{{color: rgba{2}}}
-            QLabel[is_selected=false]{{
-                border: {3}px solid rgba{0};
+            {type}:hover{{color: rgba{rgba_hover}}}
+            {type}[is_selected=false]{{
+                border: {outline_width}px solid rgba{rgba_border};
                 border-top: None;
                 border-left: None;
             }}
-            QLabel[is_selected=true]{{
-                border: {3}px solid rgba{0} ;
+            {type}[is_selected=true]{{
+                border: {outline_width}px solid rgba{rgba_border} ;
                 border-left: None;
                 border-bottom: None;
-                color: rgba{1};
+                color: rgba{rgba_selected};
             }}
-            """.format(*style_sheet_args)
+            """.format(**style_sheet_args)
         elif direction == TabTansuWidget.SOUTH:
             style_sheet = """
-            TabLabelWidget:hover{{color: rgba{2}}}
-            TabLabelWidget[is_selected=false]{{
-                border: {3}px solid rgba{0};
+            {type}:hover{{color: rgba{rgba_hover}}}
+            {type}[is_selected=false]{{
+                border: {outline_width}px solid rgba{rgba_border};
                 border-left: None;
                 border-bottom: None;
             }}
-            TabLabelWidget[is_selected=true]{{
-                border: {3}px solid rgba{0} ;
+            {type}[is_selected=true]{{
+                border: {outline_width}px solid rgba{rgba_border} ;
                 border-left: None;
                 border-top: None;
-                color: rgba{1};
+                color: rgba{rgba_selected};
             }}
-            """.format(*style_sheet_args)
+            """.format(**style_sheet_args)
         elif direction == TabTansuWidget.EAST:
             style_sheet = """
-            TabLabelWidget:hover{{color: rgba{2}}}
-            TabLabelWidget[is_selected=false]{{
-                border: {3}px solid rgba{0};
+            {type}:hover{{color: rgba{rgba_hover}}}
+            {type}[is_selected=false]{{
+                border: {outline_width}px solid rgba{rgba_border};
                 border-top: None;
                 border-right: None;
             }}
-            TabLabelWidget[is_selected=true]{{
-                border: {3}px solid rgba{0} ;
+            {type}[is_selected=true]{{
+                border: {outline_width}px solid rgba{rgba_border} ;
                 border-top: None;
                 border-left: None;
-                color: rgba{1};
+                color: rgba{rgba_selected};
             }}
-            """.format(*style_sheet_args)
+            """.format(**style_sheet_args)
         elif direction == TabTansuWidget.WEST:
             style_sheet = """
-            TabLabelWidget:hover{{color: rgba{2}}}
-            TabLabelWidget[is_selected=false]{{
-                border: {3}px solid rgba{0};
+            {type}:hover{{color: rgba{rgba_hover}}}
+            {type}[is_selected=false]{{
+                border: {outline_width}px solid rgba{rgba_border};
                 border-top: None;
                 border-left: None;
             }}
-            TabLabelWidget[is_selected=true]{{
-                border: {3}px solid rgba{0} ;
+            {type}[is_selected=true]{{
+                border: {outline_width}px solid rgba{rgba_border} ;
                 border-top: None;
                 border-right: None;
-                color: rgba{1};
+                color: rgba{rgba_selected};
             }}
-            """.format(*style_sheet_args)
+            """.format(**style_sheet_args)
         self.setStyleSheet(style_sheet)
 
 
-class TabLabelWidget(QLabel):
+class iTabLabel(QWidget):
     """
-    This is the tab's tab.
+    Interface for tab labels.
+
+    If you want to change the label type, you'll need to do multiple inheritance
+    with this guy as the second argument.  So that you can get all these sweet
+    sweet functions.
 
     Attributes:
+        index (int): The current index...
         is_selected (bool): Determines if this label is currently selected
         tab_widget (widget): The widget that this label correlates to.
 
-    TODO:
-        *   Update Font Size dynamically:
-                if prefKey == PrefNames.APPLICATION_FONTSIZE
-                prefChanged
-                self.setFixedHeight(self.height() * 2)
     """
-    def __init__(self, parent, text, index):
-        super(TabLabelWidget, self).__init__(parent)
-        # set up attrs
-        self.setText(text)
-        self.index = index
-
-        # set up display
-        self.setAlignment(Qt.AlignCenter)
-        self.is_selected = False
-        #TabLabelWidget.setupStyleSheet(self)
-        self.setMinimumSize(35, 35)
+    def __init__(self, parent=None):
+        super(iTabLabel, self).__init__(parent)
 
     def mousePressEvent(self, event):
         # get attrs
@@ -644,6 +644,7 @@ class TabLabelWidget(QLabel):
                 item.tab_widget.setParent(None)
 
     """ PROPERTIES """
+
     @property
     def is_selected(self):
         return self._is_selected
@@ -675,6 +676,34 @@ class TabLabelWidget(QLabel):
         self._tab_widget = tab_widget
 
 
+class TabLabelWidget(QLineEdit, iTabLabel):
+    """
+    Default tab label widget
+
+    TODO:
+        *   Update Font Size dynamically:
+                if prefKey == PrefNames.APPLICATION_FONTSIZE
+                prefChanged
+                self.setFixedHeight(self.height() * 2)
+    """
+    def __init__(self, parent, text, index, signal_widget=None):
+        super(TabLabelWidget, self).__init__(parent)
+
+        self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+        self.setReadOnly(True)
+        self.setAlignment(Qt.AlignCenter)
+        self.setText(text)
+
+        self.index = index
+
+        # set up display
+        self.is_selected = False
+
+        self.setMinimumSize(35, 35)
+
+        print(repr(TabLabelWidget.__name__))
+
+
 class TabWidgetWidget(AbstractInputGroup):
     """
     This is a clone of the InputGroup... but I'm getting
@@ -686,11 +715,6 @@ class TabWidgetWidget(AbstractInputGroup):
         self.display_background = False
         self.alpha = 0
         self.updateStyleSheet()
-
-
-class DynamicTabWidget(TabTansuWidget):
-    def __init__(self, parent=None):
-        super(DynamicTabWidget, self).__init__(parent)
 
 
 class TabDynamicWidgetExample(QWidget):
