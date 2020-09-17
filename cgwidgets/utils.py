@@ -47,6 +47,11 @@ def getJSONData(json_file):
     return datastore
 
 
+def getWidgetUnderCursor():
+    pos = QCursor.pos()
+    widget = qApp.widgetAt(pos)
+    return widget
+# this needs to die
 def getMainWidget(widget, name):
     """
     searchs widgets parents until it finds one with the name

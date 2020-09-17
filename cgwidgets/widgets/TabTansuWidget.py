@@ -6,6 +6,8 @@ TODO:
          - insertTab modified to put the tab name at the top when solo'ing
     - TabLabelBar needs to sync up with ~/esc for the Tansu Widget
         *   If none selected, show ALL
+    - setCurrentIndex?
+    - currentIndex?
 """
 
 from qtpy.QtWidgets import (
@@ -125,6 +127,26 @@ class TabTansuWidget(BaseTansuWidget):
         self._selected_labels_list = []
 
     """ UTILS """
+    def setCurrentIndex(self, index):
+        current_label = self.tab_label_bar_widget.getAllLabels()[index]
+        self.clearLabelSelectionList()
+        self.setSelectedLabelsList([current_label])
+        current_label.is_selected = True
+        self.main_widget.isolateWidgets([current_label.tab_widget])
+
+    def setupTabLabelBar(self):
+        """
+        Moves the main slider to make the tab label bar the default startup size
+        """
+        if self.getTabDirection() == TabTansuWidget.NORTH:
+            self.moveSplitter(self.tab_height, 1)
+        elif self.getTabDirection() == TabTansuWidget.SOUTH:
+            self.moveSplitter(self.height() - self.tab_height, 1)
+        elif self.getTabDirection() == TabTansuWidget.WEST:
+            self.moveSplitter(self.tab_width, 1)
+        elif self.getTabDirection() == TabTansuWidget.EAST:
+            self.moveSplitter(self.width() - self.tab_width, 1)
+
     def setTabPosition(self, direction):
         """
         Sets the orientation of the tab bar relative to the main widget.
@@ -238,15 +260,8 @@ class TabTansuWidget(BaseTansuWidget):
 
     """ EVENTS """
     def showEvent(self, event):
-        if self.getTabDirection() == TabTansuWidget.NORTH:
-            self.moveSplitter(self.tab_height, 1)
-        elif self.getTabDirection() == TabTansuWidget.SOUTH:
-            self.moveSplitter(self.height() - self.tab_height, 1)
-        elif self.getTabDirection() == TabTansuWidget.WEST:
-            self.moveSplitter(self.tab_width, 1)
-        elif self.getTabDirection() == TabTansuWidget.EAST:
-            self.moveSplitter(self.width() - self.tab_width, 1)
-        self.main_widget.displayAllWidgets(True)
+        self.setupTabLabelBar()
+        self.main_widget.displayAllWidgets(False)
         return BaseTansuWidget.showEvent(self, event)
 
     """ PROPERTIES """
@@ -274,11 +289,15 @@ class TabTansuWidget(BaseTansuWidget):
     def getSelectedLabelsList(self):
         return self._selected_labels_list
 
-    def appendLabelToList(self, label):
+    def appendLabelToSelectionList(self, label):
         self.getSelectedLabelsList().append(label)
 
-    def removeLabelFromList(self, label):
+    def removeLabelFromSelectionList(self, label):
         self.getSelectedLabelsList().remove(label)
+
+    def clearLabelSelectionList(self):
+        for label in self.getSelectedLabelsList():
+            label.is_selected = False
 
     """ type """
     def setType(self, value, dynamic_widget=None, dynamic_function=None):
@@ -550,10 +569,10 @@ class TabLabelWidget(QLabel):
                 labels_list = top_level_widget.getSelectedLabelsList()
                 if self in labels_list:
                     self.is_selected = False
-                    top_level_widget.removeLabelFromList(self)
+                    top_level_widget.removeLabelFromSelectionList(self)
                 else:
                     self.is_selected = True
-                    top_level_widget.appendLabelToList(self)
+                    top_level_widget.appendLabelToSelectionList(self)
             # reset list
             else:
                 TabLabelWidget.__setExclusiveSelect(self)
@@ -651,8 +670,8 @@ class TabWidgetWidget(AbstractInputGroup):
     """
     def __init__(self, parent=None, title=None):
         super(TabWidgetWidget, self).__init__(parent, title)
-        #self.display_background = False
-        #self.alpha = 0
+        self.display_background = False
+        self.alpha = 0
         self.updateStyleSheet()
 
 
@@ -700,8 +719,10 @@ if __name__ == "__main__":
         nw = QLabel(str(x))
         w.insertTab(0, nw, str(x))
 
+
     w.resize(500,500)
     w.show()
+    w.setCurrentIndex(0)
     w.main_widget.setSizes([200,800])
     w.move(QCursor.pos())
     sys.exit(app.exec_())

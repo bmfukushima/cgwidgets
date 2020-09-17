@@ -2,10 +2,7 @@
 TODO:
     *   Full Screen mode
     *   Better Displays...
-            - Add label widget to Tabs, so that when clicked on it shows the
-                    label by default at the top?  Do not show if only one is
-                    selected.
-            - Add Border when solo'd
+            Has been added to TabTansu... add to this one?
 
 """
 
