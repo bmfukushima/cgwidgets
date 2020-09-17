@@ -13,6 +13,8 @@ from .AbstractWidgets import AbstractBooleanInputWidget as AbstractBooleanInputW
 
 from .BaseTansuWidget import BaseTansuWidget
 from .TabTansuWidget import TabTansuWidget
+from .TabTansuWidget import TabLabelWidget
+from .TabTansuWidget import iTabLabel
 
 from .InputWidgets import FloatInputWidget as FloatInputWidget
 from .InputWidgets import IntInputWidget as IntInputWidget

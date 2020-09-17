@@ -704,7 +704,7 @@ class TabLabelWidget(QLineEdit, iTabLabel):
                 prefChanged
                 self.setFixedHeight(self.height() * 2)
     """
-    def __init__(self, parent, text, index, signal_widget=None):
+    def __init__(self, parent, text, index):
         super(TabLabelWidget, self).__init__(parent)
 
         # set attrs
