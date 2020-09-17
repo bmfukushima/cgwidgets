@@ -167,16 +167,16 @@ class TabTansuWidget(BaseTansuWidget):
             tab_label (widget): If provided this will use the widget
                 provided as a label, as opposed to the default one.
         """
-        # create tab widget widget
-        tab_widget_widget = self.createTabWidgetWidget(name, widget)
 
         # create tab label widget
         label_widget_type = self.getTabLabelInstanceType()
         tab_label = label_widget_type(self, name, index)
-        tab_label.tab_widget = tab_widget_widget
 
         # add to layout if stacked
         if self.getType() == TabTansuWidget.STACKED:
+            # create tab widget widget
+            tab_widget_widget = self.createTabWidgetWidget(name, widget)
+            tab_label.tab_widget = tab_widget_widget
             # insert tab widget
             self.main_widget.insertWidget(index, tab_widget_widget)
 
@@ -210,7 +210,7 @@ class TabTansuWidget(BaseTansuWidget):
             label.index = index
 
     """ DYNAMIC WIDGET """
-    def createNewDynamicWidget(self, name="Main"):
+    def createNewDynamicWidget(self, name="Nothing Selected..."):
         dynamic_widget_class = self.getDynamicWidgetBaseClass()
         new_dynamic_widget = dynamic_widget_class()
         new_widget = self.createTabWidgetWidget(name, new_dynamic_widget)
@@ -321,7 +321,6 @@ class TabTansuWidget(BaseTansuWidget):
             self.setDynamicUpdateFunction(dynamic_function)
 
             self.dynamic_widget = self.createNewDynamicWidget()
-            #self.dynamic_widget = dynamic_widget.getMainWidget()
             self.main_widget.addWidget(self.dynamic_widget)
 
         # update attr
@@ -571,6 +570,7 @@ class iTabLabel(QWidget):
     def __init__(self, parent=None):
         super(iTabLabel, self).__init__(parent)
         self._text = 'None'
+        self._tab_widget = 'None'
 
     def mousePressEvent(self, event):
         # get attrs
@@ -645,7 +645,10 @@ class iTabLabel(QWidget):
                 top_level_widget.updateDynamicWidget(new_dynamic_widget, item)
             else:
                 # destroy widget
-                item.tab_widget.setParent(None)
+                try:
+                    item.tab_widget.setParent(None)
+                except AttributeError:
+                    pass
 
     """ PROPERTIES """
 
@@ -751,6 +754,7 @@ class TabDynamicWidgetExample(QWidget):
     @staticmethod
     def updateGUI(widget, label):
         if label:
+            widget.setTitle(label.text())
             widget.getMainWidget().label.setText(label.text())
 
 
@@ -780,14 +784,14 @@ if __name__ == "__main__":
     # # dynamic widget example
     dw = TabDynamicWidgetExample
     w.setType(TabTansuWidget.DYNAMIC, dynamic_widget=TabDynamicWidgetExample, dynamic_function=TabDynamicWidgetExample.updateGUI)
-    # for x in range(3):
-    #     nw = QLabel(str(x))
-    #     w.insertTab(0, nw, str(x))
     for x in range(3):
-        nw = BaseTansuWidget(w)
-        for b in ['a','b','c']:
-            nw.addWidget(QLabel(b))
+        nw = QLabel(str(x))
         w.insertTab(0, nw, str(x))
+    # for x in range(3):
+    #     nw = BaseTansuWidget(w)
+    #     for b in ['a','b','c']:
+    #         nw.addWidget(QLabel(b))
+    #     w.insertTab(0, nw, str(x))
 
 
 
