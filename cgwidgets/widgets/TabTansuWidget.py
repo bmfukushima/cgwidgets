@@ -96,7 +96,7 @@ class TabTansuWidget(BaseTansuWidget):
         self._direction = direction #just a temp set... for things
         self._tab_height = 35
         self._tab_width = 100
-        self._tab_label_type = TabLabelWidget
+        self.setTabLabelInstanceType(TabLabelWidget)
 
         # colors attrs
         self.rgba_handle = TabTansuWidget.OUTLINE_COLOR
@@ -170,7 +170,8 @@ class TabTansuWidget(BaseTansuWidget):
         tab_widget_widget = self.createTabWidgetWidget(name, widget)
 
         # create tab label widget
-        tab_label = self.tab_label_type(self, name, index)
+        label_widget_type = self.getTabLabelInstanceType()
+        tab_label = label_widget_type(self, name, index)
         tab_label.tab_widget = tab_widget_widget
 
         # add to layout if stacked
@@ -326,12 +327,10 @@ class TabTansuWidget(BaseTansuWidget):
     def getType(self):
         return self._type
 
-    @property
-    def tab_label_type(self):
+    def getTabLabelInstanceType(self):
         return self._tab_label_type
 
-    @tab_label_type.setter
-    def tab_label_type(self, tab_label_type):
+    def setTabLabelInstanceType(self, tab_label_type):
         self._tab_label_type = tab_label_type
 
     """ LAYOUT """
@@ -487,7 +486,7 @@ class TabLabelBarWidget(QWidget):
             'rgba_selected': repr(tab_widget.rgba_selected_tab),
             'rgba_hover': repr(tab_widget.rgba_selected_tab_hover),
             'outline_width': TabTansuWidget.OUTLINE_WIDTH,
-            'type': self.parent().tab_label_type.__name__
+            'type': self.parent().getTabLabelInstanceType().__name__
         }
         if direction == TabTansuWidget.NORTH:
             style_sheet = """
@@ -689,19 +688,16 @@ class TabLabelWidget(QLineEdit, iTabLabel):
     def __init__(self, parent, text, index, signal_widget=None):
         super(TabLabelWidget, self).__init__(parent)
 
-        self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
-        self.setReadOnly(True)
-        self.setAlignment(Qt.AlignCenter)
+        # set attrs
         self.setText(text)
-
         self.index = index
-
-        # set up display
         self.is_selected = False
 
+        # set up display
+        self.setReadOnly(True)
+        self.setAlignment(Qt.AlignCenter)
+        self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
         self.setMinimumSize(35, 35)
-
-        print(repr(TabLabelWidget.__name__))
 
 
 class TabWidgetWidget(AbstractInputGroup):
