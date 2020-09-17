@@ -38,7 +38,7 @@ class InputGroup(AbstractInputGroup):
         """
         if type:
             name = "{name}  |  {type}".format(name=name, type=str(type))
-        self.main_widget.insertTab(index, widget, name)
+        self.main_widget.insertTab(index, name, widget=widget)
 
     def removeInputWidget(self, index):
         self.main_widget.removeTab(index)

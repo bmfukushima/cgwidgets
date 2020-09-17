@@ -197,6 +197,7 @@ class BaseTansuWidget(QSplitter):
         if not widget:
             widget = qApp.widgetAt(QCursor.pos())
         current_index, current_widget = self.getIndexOfWidget(widget)
+        if not current_widget: return
         current_splitter = current_widget.parent()
 
         # enter full screen

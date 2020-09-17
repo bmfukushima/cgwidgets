@@ -156,7 +156,7 @@ class TabTansuWidget(BaseTansuWidget):
         elif self.getTabDirection() == TabTansuWidget.EAST:
             self.moveSplitter(self.width() - self.tab_width, 1)
 
-    def insertTab(self, index, widget, name):
+    def insertTab(self, index, name, widget=None):
         """
         Creates a new tab at  the specified index
 
@@ -632,7 +632,10 @@ class iTabLabel(QWidget):
             if item.is_selected:
                 item.tab_widget.show()
             else:
-                item.tab_widget.hide()
+                try:
+                    item.tab_widget.hide()
+                except AttributeError:
+                    pass
 
         # update dynamic widgets
         if top_level_widget.getType() == TabTansuWidget.DYNAMIC:
@@ -783,10 +786,14 @@ if __name__ == "__main__":
 
     # # dynamic widget example
     dw = TabDynamicWidgetExample
-    w.setType(TabTansuWidget.DYNAMIC, dynamic_widget=TabDynamicWidgetExample, dynamic_function=TabDynamicWidgetExample.updateGUI)
+    w.setType(
+        TabTansuWidget.DYNAMIC,
+        dynamic_widget=TabDynamicWidgetExample,
+        dynamic_function=TabDynamicWidgetExample.updateGUI
+    )
     for x in range(3):
         nw = QLabel(str(x))
-        w.insertTab(0, nw, str(x))
+        w.insertTab(0, str(x), nw)
     # for x in range(3):
     #     nw = BaseTansuWidget(w)
     #     for b in ['a','b','c']:
