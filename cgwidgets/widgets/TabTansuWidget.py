@@ -210,10 +210,10 @@ class TabTansuWidget(BaseTansuWidget):
             label.index = index
 
     """ DYNAMIC WIDGET """
-    def createNewDynamicWidget(self):
+    def createNewDynamicWidget(self, name="Main"):
         dynamic_widget_class = self.getDynamicWidgetBaseClass()
         new_dynamic_widget = dynamic_widget_class()
-        new_widget = self.createTabWidgetWidget('Test', new_dynamic_widget)
+        new_widget = self.createTabWidgetWidget(name, new_dynamic_widget)
         return new_widget
 
     def getDynamicMainWidget(self):
@@ -570,6 +570,7 @@ class iTabLabel(QWidget):
     """
     def __init__(self, parent=None):
         super(iTabLabel, self).__init__(parent)
+        self._text = 'None'
 
     def mousePressEvent(self, event):
         # get attrs
@@ -637,10 +638,7 @@ class iTabLabel(QWidget):
         if top_level_widget.getType() == TabTansuWidget.DYNAMIC:
             if item.is_selected:
                 # create new dynamic widget...
-                new_dynamic_widget = top_level_widget.createNewDynamicWidget()
-                # dynamic_widget_class = self.getDynamicWidgetBaseClass()
-                # new_dynamic_widget = dynamic_widget_class()
-                # new_widget = self.createTabWidgetWidget('Test', new_dynamic_widget)
+                new_dynamic_widget = top_level_widget.createNewDynamicWidget(name=item.text())
 
                 top_level_widget.main_widget.addWidget(new_dynamic_widget)
                 item.tab_widget = new_dynamic_widget
@@ -680,6 +678,14 @@ class iTabLabel(QWidget):
     @tab_widget.setter
     def tab_widget(self, tab_widget):
         self._tab_widget = tab_widget
+
+    @property
+    def text(self):
+        return self._text
+
+    @text.setter
+    def text(self, text):
+        self._text = text
 
 
 class TabLabelWidget(QLineEdit, iTabLabel):
@@ -732,6 +738,10 @@ class TabWidgetWidget(AbstractInputGroup):
 
 
 class TabDynamicWidgetExample(QWidget):
+    """
+    TODO:
+        turn this into an interface for creating dynamic tab widgets
+    """
     def __init__(self, parent=None):
         super(TabDynamicWidgetExample, self).__init__(parent)
         QVBoxLayout(self)
@@ -741,8 +751,6 @@ class TabDynamicWidgetExample(QWidget):
     @staticmethod
     def updateGUI(widget, label):
         if label:
-            print('i did sutff...')
-            print(label.text())
             widget.getMainWidget().label.setText(label.text())
 
 
@@ -772,9 +780,15 @@ if __name__ == "__main__":
     # # dynamic widget example
     dw = TabDynamicWidgetExample
     w.setType(TabTansuWidget.DYNAMIC, dynamic_widget=TabDynamicWidgetExample, dynamic_function=TabDynamicWidgetExample.updateGUI)
+    # for x in range(3):
+    #     nw = QLabel(str(x))
+    #     w.insertTab(0, nw, str(x))
     for x in range(3):
-        nw = QLabel(str(x))
+        nw = BaseTansuWidget(w)
+        for b in ['a','b','c']:
+            nw.addWidget(QLabel(b))
         w.insertTab(0, nw, str(x))
+
 
 
     w.resize(500,500)
