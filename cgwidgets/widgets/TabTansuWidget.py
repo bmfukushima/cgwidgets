@@ -74,6 +74,7 @@ class TabTansuWidget(BaseTansuWidget):
                                 |-* TabLabelWidget (Label)
                 |-- BaseTansuWidget
                         | -- TabWidgetWidget (AbstractGroupBox)
+                                | -* Stacked/Dynamic Widget (main_widget)
 
     """
     NORTH = 'north'
@@ -191,7 +192,7 @@ class TabTansuWidget(BaseTansuWidget):
             Move to base tansu?
         """
         tab_widget_widget = TabWidgetWidget(self, name)
-        tab_widget_widget.layout().addWidget(widget)
+        tab_widget_widget.setMainWidget(widget)
 
         return tab_widget_widget
 
@@ -211,7 +212,8 @@ class TabTansuWidget(BaseTansuWidget):
     """ DYNAMIC WIDGET """
     def createNewDynamicWidget(self):
         dynamic_widget_class = self.getDynamicWidgetBaseClass()
-        new_widget = dynamic_widget_class()
+        new_dynamic_widget = dynamic_widget_class()
+        new_widget = self.createTabWidgetWidget('Test', new_dynamic_widget)
         return new_widget
 
     def getDynamicMainWidget(self):
@@ -319,6 +321,7 @@ class TabTansuWidget(BaseTansuWidget):
             self.setDynamicUpdateFunction(dynamic_function)
 
             self.dynamic_widget = self.createNewDynamicWidget()
+            #self.dynamic_widget = dynamic_widget.getMainWidget()
             self.main_widget.addWidget(self.dynamic_widget)
 
         # update attr
@@ -635,6 +638,10 @@ class iTabLabel(QWidget):
             if item.is_selected:
                 # create new dynamic widget...
                 new_dynamic_widget = top_level_widget.createNewDynamicWidget()
+                # dynamic_widget_class = self.getDynamicWidgetBaseClass()
+                # new_dynamic_widget = dynamic_widget_class()
+                # new_widget = self.createTabWidgetWidget('Test', new_dynamic_widget)
+
                 top_level_widget.main_widget.addWidget(new_dynamic_widget)
                 item.tab_widget = new_dynamic_widget
                 top_level_widget.updateDynamicWidget(new_dynamic_widget, item)
@@ -712,6 +719,17 @@ class TabWidgetWidget(AbstractInputGroup):
         self.alpha = 0
         self.updateStyleSheet()
 
+    def setMainWidget(self, widget):
+        # remove old main widget if it exists
+        if hasattr(self, '_main_widget'):
+            self._main_widget.setParent(None)
+
+        self._main_widget = widget
+        self.layout().addWidget(self._main_widget)
+
+    def getMainWidget(self):
+        return self._main_widget
+
 
 class TabDynamicWidgetExample(QWidget):
     def __init__(self, parent=None):
@@ -723,7 +741,9 @@ class TabDynamicWidgetExample(QWidget):
     @staticmethod
     def updateGUI(widget, label):
         if label:
-            widget.label.setText(label.text())
+            print('i did sutff...')
+            print(label.text())
+            widget.getMainWidget().label.setText(label.text())
 
 
 if __name__ == "__main__":
@@ -739,25 +759,27 @@ if __name__ == "__main__":
     w.setTabBarPosition(TabTansuWidget.WEST)
     w.setMultiSelect(True)
     w.setMultiSelectDirection(Qt.Horizontal)
-    #
+
     # for x in range(3):
-    #     nw = QLabel(str(x))
+    #     nw = BaseTansuWidget(w)
+    #     for b in ['a','b','c']:
+    #         nw.addWidget(QLabel(b))
     #     w.insertTab(0, nw, str(x))
 
-    # # dynamic widget example
-    #dw = TabDynamicWidgetExample
-    #w.setType(TabTansuWidget.DYNAMIC, dynamic_widget=TabDynamicWidgetExample, dynamic_function=TabDynamicWidgetExample.updateGUI)
+    #
 
+
+    # # dynamic widget example
+    dw = TabDynamicWidgetExample
+    w.setType(TabTansuWidget.DYNAMIC, dynamic_widget=TabDynamicWidgetExample, dynamic_function=TabDynamicWidgetExample.updateGUI)
     for x in range(3):
-        nw = BaseTansuWidget(w)
-        for b in ['a','b','c']:
-            nw.addWidget(QLabel(b))
+        nw = QLabel(str(x))
         w.insertTab(0, nw, str(x))
 
 
     w.resize(500,500)
     w.show()
-    w.setCurrentIndex(0)
+    #w.setCurrentIndex(0)
     w.setTabLabelBarToDefaultSize()
     #w.main_widget.setSizes([200,800])
     w.move(QCursor.pos())
