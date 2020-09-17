@@ -140,6 +140,7 @@ class BaseTansuWidget(QSplitter):
         else:
             return None, None
 
+    """ EVENTS """
     def toggleSoloViewView(self):
         """
         Toggles between the full view of either the parameters
@@ -237,8 +238,8 @@ class BaseTansuWidget(QSplitter):
 
         # set attrs
 
-        current_splitter.setCurrentIndex(current_index)
-        current_splitter.setCurrentWidget(current_widget)
+        #current_splitter.setCurrentIndex(current_index)
+        #current_splitter.setCurrentWidget(current_widget)
 
     def soloViewHotkey(self):
         return self._solo_view_hotkey

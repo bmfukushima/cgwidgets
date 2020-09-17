@@ -128,6 +128,13 @@ class TabTansuWidget(BaseTansuWidget):
 
     """ UTILS """
     def setCurrentIndex(self, index):
+        """
+        Sets the current index to the one provded
+
+        Todo:
+            for some reason in the BaseTansuWidget, when setting an index
+            it will recurse up to this... those lines have been commented out...
+        """
         current_label = self.tab_label_bar_widget.getAllLabels()[index]
         self.clearLabelSelectionList()
         self.setSelectedLabelsList([current_label])
@@ -238,8 +245,8 @@ class TabTansuWidget(BaseTansuWidget):
 
     """ EVENTS """
     def showEvent(self, event):
+        #self.main_widget.displayAllWidgets(False)
         self.setTabLabelBarToDefaultSize()
-        self.main_widget.displayAllWidgets(False)
         return BaseTansuWidget.showEvent(self, event)
 
     """ PROPERTIES """
@@ -722,7 +729,9 @@ if __name__ == "__main__":
     #w.setType(TabTansuWidget.DYNAMIC, dynamic_widget=TabDynamicWidgetExample, dynamic_function=TabDynamicWidgetExample.updateGUI)
 
     for x in range(3):
-        nw = QLabel(str(x))
+        nw = BaseTansuWidget(w)
+        for b in ['a','b','c']:
+            nw.addWidget(QLabel(b))
         w.insertTab(0, nw, str(x))
 
 
