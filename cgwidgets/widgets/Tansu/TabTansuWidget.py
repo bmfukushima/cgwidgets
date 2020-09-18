@@ -23,9 +23,7 @@ from cgwidgets.settings.colors import (
 )
 
 from cgwidgets.widgets import AbstractInputGroup
-
-
-from cgwidgets.widgets import BaseTansuWidget
+from cgwidgets.widgets.Tansu import BaseTansuWidget
 
 
 class TabTansuWidget(BaseTansuWidget):
@@ -69,11 +67,11 @@ class TabTansuWidget(BaseTansuWidget):
 
     Widgets:
         |-- QBoxLayout
-                |-- TabLabelBarWidget (QWidget)
+                |-- TabTansuLabelBarWidget (QWidget)
                         |-- QBoxLayout
-                                |-* TabLabelWidget (Label)
+                                |-* TabTansuLabelWidget (Label)
                 |-- BaseTansuWidget
-                        | -- TabWidgetWidget (AbstractGroupBox)
+                        | -- TabTansuWidgetWidget (AbstractGroupBox)
                                 | -* Stacked/Dynamic Widget (main_widget)
 
     """
@@ -97,7 +95,7 @@ class TabTansuWidget(BaseTansuWidget):
         self._direction = direction #just a temp set... for things
         self._tab_height = 35
         self._tab_width = 100
-        self.setTabLabelInstanceType(TabLabelWidget)
+        self.setTabLabelInstanceType(TabTansuLabelWidget)
 
         # colors attrs
         self.rgba_handle = TabTansuWidget.OUTLINE_COLOR
@@ -111,7 +109,7 @@ class TabTansuWidget(BaseTansuWidget):
         self.setStyleSheet(style_sheet)
 
         # create widgets
-        self.tab_label_bar_widget = TabLabelBarWidget(self)
+        self.tab_label_bar_widget = TabTansuLabelBarWidget(self)
         self.main_widget = BaseTansuWidget(self)
 
         self.addWidget(self.main_widget)
@@ -177,7 +175,7 @@ class TabTansuWidget(BaseTansuWidget):
         # add to layout if stacked
         if self.getType() == TabTansuWidget.STACKED:
             # create tab widget widget
-            tab_widget_widget = self.createTabWidgetWidget(name, widget)
+            tab_widget_widget = self.createTabTansuWidgetWidget(name, widget)
             tab_label.tab_widget = tab_widget_widget
             # insert tab widget
             self.main_widget.insertWidget(index, tab_widget_widget)
@@ -189,21 +187,23 @@ class TabTansuWidget(BaseTansuWidget):
 
         return tab_label
 
-    def createTabWidgetWidget(self, name, widget):
+    def createTabTansuWidgetWidget(self, name, widget):
         """
         Creates a new tab widget widget...
         TODO:
             Move to base tansu?
         """
-        tab_widget_widget = TabWidgetWidget(self, name)
+        tab_widget_widget = TabTansuWidgetWidget(self, name)
         tab_widget_widget.setMainWidget(widget)
 
         return tab_widget_widget
 
     def removeTab(self, index):
-        self.tab_label_bar_widget.itemAt(index).widget().setParent(None)
-        self.tab_widget_layout.itemAt(index).widget().setParent(None)
+        self.tab_label_bar_widget.layout().itemAt(index).widget().setParent(None)
         self.__updateAllTabLabelIndexes()
+
+        if self.getType() == TabTansuWidget.STACKED:
+            self.tab_widget_layout.itemAt(index).widget().setParent(None)
 
     def __updateAllTabLabelIndexes(self):
         """
@@ -217,7 +217,7 @@ class TabTansuWidget(BaseTansuWidget):
     def createNewDynamicWidget(self, name="Nothing Selected..."):
         dynamic_widget_class = self.getDynamicWidgetBaseClass()
         new_dynamic_widget = dynamic_widget_class()
-        new_widget = self.createTabWidgetWidget(name, new_dynamic_widget)
+        new_widget = self.createTabTansuWidgetWidget(name, new_dynamic_widget)
         return new_widget
 
     def getDynamicMainWidget(self):
@@ -245,7 +245,7 @@ class TabTansuWidget(BaseTansuWidget):
 
         Args:
             widget (DynamicWidget) The dynamic widget that should be updated
-            label (TabLabelWidget): The tab label that should be updated
+            label (TabTansuLabelWidget): The tab label that should be updated
         """
         # needs to pick which to update...
         self.__dynamicWidgetFunction(widget, label, *args, **kwargs)
@@ -440,12 +440,12 @@ class TabTansuWidget(BaseTansuWidget):
         self._tab_height = tab_height
 
 
-class TabLabelBarWidget(QWidget):
+class TabTansuLabelBarWidget(QWidget):
     """
     The top bar of the Two Faced Design Widget containing all of the tabs
     """
     def __init__(self, parent=None):
-        super(TabLabelBarWidget, self).__init__(parent)
+        super(TabTansuLabelBarWidget, self).__init__(parent)
         QBoxLayout(QBoxLayout.LeftToRight, self)
         self.layout().setSpacing(0)
         self.layout().setContentsMargins(0, 0, 0, 0)
@@ -471,7 +471,7 @@ class TabLabelBarWidget(QWidget):
         """
         Gets all of the Tab Labels in this bar
 
-        returns (list): of TabLabelWidget
+        returns (list): of TabTansuLabelWidget
         """
         _all_labels = []
         for index in range(self.layout().count()):
@@ -557,7 +557,7 @@ class TabLabelBarWidget(QWidget):
         self.setStyleSheet(style_sheet)
 
 
-class iTabLabel(QWidget):
+class iTabTansuLabel(QWidget):
     """
     Interface for tab labels.
 
@@ -572,11 +572,11 @@ class iTabLabel(QWidget):
 
     """
     def __init__(self, parent=None):
-        super(iTabLabel, self).__init__(parent)
+        super(iTabTansuLabel, self).__init__(parent)
         self._text = 'None'
         self._tab_widget = 'None'
 
-    def mousePressEvent(self, event):
+    def mouseReleaseEvent(self, event):
         # get attrs
         top_level_widget = getWidgetAncestor(self, TabTansuWidget)
         is_multi_select = top_level_widget.getMultiSelect()
@@ -595,10 +595,11 @@ class iTabLabel(QWidget):
                     top_level_widget.appendLabelToSelectionList(self)
             # reset list
             else:
-                TabLabelWidget.__setExclusiveSelect(self)
+                TabTansuLabelWidget.__setExclusiveSelect(self)
         # set up single select
         else:
-            TabLabelWidget.__setExclusiveSelect(self)
+            TabTansuLabelWidget.__setExclusiveSelect(self)
+        return QWidget.mouseReleaseEvent(self, event)
 
     @staticmethod
     def __setExclusiveSelect(item):
@@ -671,7 +672,7 @@ class iTabLabel(QWidget):
         self.style().polish(self)
         self.update()
 
-        TabLabelWidget.updateDisplay(self)
+        TabTansuLabelWidget.updateDisplay(self)
 
     @property
     def index(self):
@@ -698,7 +699,7 @@ class iTabLabel(QWidget):
         self._text = text
 
 
-class TabLabelWidget(QLineEdit, iTabLabel):
+class TabTansuLabelWidget(QLineEdit, iTabTansuLabel):
     """
     Default tab label widget
 
@@ -709,7 +710,7 @@ class TabLabelWidget(QLineEdit, iTabLabel):
                 self.setFixedHeight(self.height() * 2)
     """
     def __init__(self, parent, text, index):
-        super(TabLabelWidget, self).__init__(parent)
+        super(TabTansuLabelWidget, self).__init__(parent)
 
         # set attrs
         self.setText(text)
@@ -723,14 +724,14 @@ class TabLabelWidget(QLineEdit, iTabLabel):
         self.setMinimumSize(35, 35)
 
 
-class TabWidgetWidget(AbstractInputGroup):
+class TabTansuWidgetWidget(AbstractInputGroup):
     """
     This is a clone of the InputGroup... but I'm getting
     stuck in import recursion land... so... this is a copy
     paste.  Sorry. deal with it.
     """
     def __init__(self, parent=None, title=None):
-        super(TabWidgetWidget, self).__init__(parent, title)
+        super(TabTansuWidgetWidget, self).__init__(parent, title)
         self.display_background = False
         self.alpha = 0
         self.updateStyleSheet()
@@ -747,13 +748,13 @@ class TabWidgetWidget(AbstractInputGroup):
         return self._main_widget
 
 
-class TabDynamicWidgetExample(QWidget):
+class TabTansuDynamicWidgetExample(QWidget):
     """
     TODO:
         turn this into an interface for creating dynamic tab widgets
     """
     def __init__(self, parent=None):
-        super(TabDynamicWidgetExample, self).__init__(parent)
+        super(TabTansuDynamicWidgetExample, self).__init__(parent)
         QVBoxLayout(self)
         self.label = QLabel('init')
         self.layout().addWidget(self.label)
@@ -789,11 +790,11 @@ if __name__ == "__main__":
 
 
     # # dynamic widget example
-    dw = TabDynamicWidgetExample
+    dw = TabTansuDynamicWidgetExample
     w.setType(
         TabTansuWidget.DYNAMIC,
-        dynamic_widget=TabDynamicWidgetExample,
-        dynamic_function=TabDynamicWidgetExample.updateGUI
+        dynamic_widget=TabTansuDynamicWidgetExample,
+        dynamic_function=TabTansuDynamicWidgetExample.updateGUI
     )
     for x in range(3):
         nw = QLabel(str(x))
