@@ -166,6 +166,8 @@ class TabTansuWidget(BaseTansuWidget):
             name (str): name of widget
             tab_label (widget): If provided this will use the widget
                 provided as a label, as opposed to the default one.
+
+        Returns (Tab Label)
         """
 
         # create tab label widget
@@ -184,6 +186,8 @@ class TabTansuWidget(BaseTansuWidget):
 
         # update all label index
         self.__updateAllTabLabelIndexes()
+
+        return tab_label
 
     def createTabWidgetWidget(self, name, widget):
         """
