@@ -3,7 +3,7 @@ TODO:
     - Escape
         Return to correct widget display mode in the Tansu Widget
     - Dynamic will need updates since
-         - insertTab modified to put the tab name at the top when solo'ing
+         - insertViewItem modified to put the tab name at the top when solo'ing
     - DelegateWidget needs to sync up with ~/esc for the Tansu Widget
         *   If none selected, show ALL
     - setCurrentIndex?
@@ -105,7 +105,7 @@ class TansuModelViewWidget(BaseTansuWidget):
 
         # create widgets
         new_model = TansuModel()
-        default_view_widget = ListView()
+        default_view_widget = ListView(self)
 
         self.setViewWidget(default_view_widget)
         self.setModel(new_model)
@@ -116,17 +116,17 @@ class TansuModelViewWidget(BaseTansuWidget):
         self.addWidget(self._view_widget)
 
         # set default attrs
-        self.setType(TansuModelViewWidget.TYPE)
+        self.setDelegateType(TansuModelViewWidget.TYPE)
 
         # set direction
-        self.setDelegatePosition(direction)
+        self.setViewPosition(direction)
 
         # set multi
         self.setMultiSelect(TansuModelViewWidget.MULTI)
 
         self._selected_labels_list = []
 
-    def insertTab(self, index, name, parent=None, widget=None):
+    def insertViewItem(self, index, name, parent=None, widget=None):
         """
         Creates a new tab at  the specified index
 
@@ -152,16 +152,11 @@ class TansuModelViewWidget(BaseTansuWidget):
         # add to layout if stacked
         if self.getType() == TansuModelViewWidget.STACKED:
             # create tab widget widget
-            tab_widget_widget = self.createTansuModelDelegateWidget(name, widget)
-            view_item.setDelegateWidget(tab_widget_widget)
+            view_delegate_widget = self.createTansuModelDelegateWidget(name, widget)
+            view_item.setDelegateWidget(view_delegate_widget)
             # insert tab widget
-            self.main_widget.insertWidget(index, tab_widget_widget)
-
-        # add to view bar
-        #self.view_item_bar_widget.insertWidget(index, view_item)
-
-        # update all label index
-        #self.__updateAllViewIndexes()
+            self.main_widget.insertWidget(index, view_delegate_widget)
+            view_delegate_widget.hide()
 
         return view_item
 
@@ -180,35 +175,10 @@ class TansuModelViewWidget(BaseTansuWidget):
     def setViewWidget(self, view_widget):
         self._view_widget = view_widget
 
-    def setViewWidgetToDefaultSize(self):
-        """
-        Moves the main slider to make the tab label bar the default startup size
-        """
-        if self.getDelegatePosition() == TansuModelViewWidget.NORTH:
-            self.moveSplitter(self.view_height, 1)
-        elif self.getDelegatePosition() == TansuModelViewWidget.SOUTH:
-            self.moveSplitter(self.height() - self.view_height, 1)
-        elif self.getDelegatePosition() == TansuModelViewWidget.WEST:
-            self.moveSplitter(self.view_width, 1)
-        elif self.getDelegatePosition() == TansuModelViewWidget.EAST:
-            self.moveSplitter(self.width() - self.view_width, 1)
-
-    def createTansuModelDelegateWidget(self, name, widget):
-        """
-        Creates a new tab widget widget...
-        TODO:
-            Move to base tansu?
-        """
-        display_widget = TansuModelDelegateWidget(self, name)
-        display_widget.setMainWidget(widget)
-
-        return display_widget
-
-    """ DELEGATE """
-    def getDelegatePosition(self):
+    def getViewPosition(self):
         return self._direction
 
-    def setDelegatePosition(self, direction):
+    def setViewPosition(self, direction):
         """
         Sets the current direction this widget.  This is the orientation of
         where the tab labels will be vs where the main widget will be, where
@@ -237,26 +207,69 @@ class TansuModelViewWidget(BaseTansuWidget):
         self.setCollapsible(0, False)
         self.setCollapsible(1, False)
 
-    def updateTansuWidget(self, item):
+    def setViewWidgetToDefaultSize(self):
+        """
+        Moves the main slider to make the tab label bar the default startup size
+        """
+        if self.getViewPosition() == TansuModelViewWidget.NORTH:
+            self.moveSplitter(self.view_height, 1)
+        elif self.getViewPosition() == TansuModelViewWidget.SOUTH:
+            self.moveSplitter(self.height() - self.view_height, 1)
+        elif self.getViewPosition() == TansuModelViewWidget.WEST:
+            self.moveSplitter(self.view_width, 1)
+        elif self.getViewPosition() == TansuModelViewWidget.EAST:
+            self.moveSplitter(self.width() - self.view_width, 1)
+
+    def createTansuModelDelegateWidget(self, name, widget):
+        """
+        Creates a new tab widget widget...
+        TODO:
+            Move to base tansu?
+        """
+        display_widget = TansuModelDelegateWidget(self, name)
+        display_widget.setMainWidget(widget)
+
+        return display_widget
+
+    """ DELEGATE """
+    def updateDelegateDisplay(self, selected, deselected):
         """
         Determines whether or not an items delegateWidget() should be
         displayed/updated/destroyed.
 
-        item (TansuModelItem)
         """
         # update display
-        if not hasattr(item, 'delegateWidget()'): return
+        self._selection_item = selected
+        for index in selected.indexes():
+            item = index.internalPointer()
+            self.__updateDelegateItem(item, True)
+
+        for index in deselected.indexes():
+            item = index.internalPointer()
+            self.__updateDelegateItem(item, False)
+
+    def __updateDelegateItem(self, item, selected):
+        """
+        item (TansuModelItem)
+        selected (bool): determines if this item has been selected
+            or un selected.
+        """
+        if not hasattr(item, '_delegate_widget'): return
 
         # update static widgets
         if self.getType() == TansuModelViewWidget.STACKED:
-            self.__updateStackedDisplay(item)
+            self.__updateStackedDisplay(item, selected)
 
         # update dynamic widgets
         if self.getType() == TansuModelViewWidget.DYNAMIC:
-            self.__updateDynamicDisplay(item)
+            self.__updateDynamicDisplay(item, selected)
 
-    def __updateStackedDisplay(self, item):
-        if item.is_selected:
+    def __updateStackedDisplay(self, item, selected):
+        """
+        If the delegate display type is set to STACKED, this will
+        automatically show/hide widgets as needed
+        """
+        if selected:
             item.delegateWidget().show()
         else:
             try:
@@ -264,14 +277,17 @@ class TansuModelViewWidget(BaseTansuWidget):
             except AttributeError:
                 pass
 
-    def __updateDynamicDisplay(self, item):
-        if item.is_selected:
-            # create new dynamic widget...
-            new_dynamic_widget = self.createNewDynamicWidget(name=item.text())
-
-            self.main_widget.addWidget(new_dynamic_widget)
-            item.setDelegateWidget(new_dynamic_widget)
-            self.updateDynamicWidget(new_dynamic_widget, item)
+    def __updateDynamicDisplay(self, item, selected):
+        """
+        If the delegate display type is set to DYNAMIC, this will
+        automatically dynamically create/destroy widgets as needed.
+        """
+        if selected:
+            # create dynamic widget
+            dynamic_widget = self.createNewDynamicWidget(name=item.name())
+            self.main_widget.addWidget(dynamic_widget)
+            item.setDelegateWidget(dynamic_widget)
+            self.updateDynamicWidget(dynamic_widget, item)
         else:
             # destroy widget
             try:
@@ -286,8 +302,11 @@ class TansuModelViewWidget(BaseTansuWidget):
         new_widget = self.createTansuModelDelegateWidget(name, new_dynamic_widget)
         return new_widget
 
-    def getDynamicMainWidget(self):
-        return self._dynamic_widget
+    # def getDynamicMainWidget(self):
+    #     return self._dynamic_widget
+    #
+    # def setDynamicMainWidget(self, _dynamic_widget):
+    #     self._dynamic_widget = _dynamic_widget
 
     def __dynamicWidgetFunction(self):
         pass
@@ -325,6 +344,7 @@ class TansuModelViewWidget(BaseTansuWidget):
     """ selection """
     def setMultiSelect(self, enabled):
         self._multi_select = enabled
+        self.viewWidget().setMultiSelect(enabled)
 
     def getMultiSelect(self):
         return self._multi_select
@@ -341,7 +361,7 @@ class TansuModelViewWidget(BaseTansuWidget):
         return self.main_widget.orientation()
 
     """ type """
-    def setType(self, value, dynamic_widget=None, dynamic_function=None):
+    def setDelegateType(self, value, dynamic_widget=None, dynamic_function=None):
         """
         Sets the type of this widget.  This will reset the entire layout to a blank
         state.
@@ -368,8 +388,8 @@ class TansuModelViewWidget(BaseTansuWidget):
             self.setDynamicWidgetBaseClass(dynamic_widget)
             self.setDynamicUpdateFunction(dynamic_function)
 
-            self.dynamic_widget = self.createNewDynamicWidget()
-            self.main_widget.addWidget(self.dynamic_widget)
+            #self._dynamic_widget = self.createNewDynamicWidget()
+            #self.main_widget.addWidget(self._dynamic_widget)
 
         # update attr
         self._type = value
@@ -436,32 +456,70 @@ class TansuModelDelegateWidget(AbstractInputGroup):
         return self._main_widget
 
 
+# need to do a QAbstractItemView injection here...
+
 class ListView(QListView):
     def __init__(self, parent=None):
         super(ListView, self).__init__(parent)
         self.setEditTriggers(QAbstractItemView.DoubleClicked)
 
+    def setMultiSelect(self, multi_select):
+        if multi_select is True:
+            self.setSelectionMode(QAbstractItemView.MultiSelection)
+        else:
+            self.setSelectionMode(QAbstractItemView.SingleSelection)
+
     def selectionChanged(self, selected, deselected):
         top_level_widget = getWidgetAncestor(self, TansuModelViewWidget)
-        for index in selected.indexes():
-            item = index.internalPointer()
-            print(item.name())
-            #item.test()
-        #return ListView.selectionChanged(self, selected, deselected)
+        if top_level_widget:
+            top_level_widget.updateDelegateDisplay(selected, deselected)
+        # for index in selected.indexes():
+        #     item = index.internalPointer()
+
+
+class TabTansuDynamicWidgetExample(QWidget):
+    """
+    TODO:
+        turn this into an interface for creating dynamic tab widgets
+    """
+    def __init__(self, parent=None):
+        super(TabTansuDynamicWidgetExample, self).__init__(parent)
+        QVBoxLayout(self)
+        self.label = QLabel('init')
+        self.layout().addWidget(self.label)
+
+    @staticmethod
+    def updateGUI(widget, label):
+        print(widget)
+        if label:
+            widget.setTitle(label.name())
+            widget.getMainWidget().label.setText(label.name())
 
 
 if __name__ == "__main__":
     import sys
-    from PyQt5.QtWidgets import QApplication, QLabel
+    from PyQt5.QtWidgets import QApplication, QLabel, QVBoxLayout
     from PyQt5.QtGui import QCursor
     app = QApplication(sys.argv)
 
     w = TansuModelViewWidget()
+    w.setViewPosition(TansuModelViewWidget.WEST)
+    w.setMultiSelect(True)
+    w.setMultiSelectDirection(Qt.Vertical)
+
+    dw = TabTansuDynamicWidgetExample
+    w.setDelegateType(
+        TansuModelViewWidget.DYNAMIC,
+        dynamic_widget=TabTansuDynamicWidgetExample,
+        dynamic_function=TabTansuDynamicWidgetExample.updateGUI
+    )
+
     for x in range(3):
         widget = QLabel(str(x))
-        w.insertTab(x, str(x),widget=widget)
+        w.insertViewItem(x, str(x),widget=widget)
 
     w.resize(500,500)
+
     w.show()
 
     q = ListView()
