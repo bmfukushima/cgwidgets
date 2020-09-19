@@ -69,12 +69,13 @@ class TansuModelViewWidget(BaseTansuWidget):
 
     Widgets:
         |-- QBoxLayout
-                |-- ViewWidget
+                |-- ViewWidget (TansuTreeView)
                         ( TansuListView | TansuTableView | TansuTreeView )
-                |-- DelegateWidget (BaseTansuWidget)
-                        | -- _temp_proxy_widget (QWidget)
-                        | -* TansuModelDelegateWidget (AbstractGroupBox)
-                                | -- Stacked/Dynamic Widget (main_widget)
+                | -- Scroll Area
+                    |-- DelegateWidget (TansuMainDelegateWidget --> BaseTansuWidget)
+                            | -- _temp_proxy_widget (QWidget)
+                            | -* TansuModelDelegateWidget (AbstractGroupBox)
+                                    | -- Stacked/Dynamic Widget (main_widget)
 
     """
     NORTH = 'north'
@@ -112,7 +113,7 @@ class TansuModelViewWidget(BaseTansuWidget):
         self.setModel(new_model)
 
         # setup delegate
-        delegate_widget = BaseTansuWidget()
+        delegate_widget = TansuMainDelegateWidget()
         self.setDelegateWidget(delegate_widget)
         self._temp_proxy_widget = QWidget()
 
@@ -155,7 +156,7 @@ class TansuModelViewWidget(BaseTansuWidget):
         view_item.setName(name)
 
         # add to layout if stacked
-        if self.getType() == TansuModelViewWidget.STACKED:
+        if self.getDelegateType() == TansuModelViewWidget.STACKED:
             # create tab widget widget
             view_delegate_widget = self.createTansuModelDelegateWidget(name, widget)
             view_item.setDelegateWidget(view_delegate_widget)
@@ -261,7 +262,23 @@ class TansuModelViewWidget(BaseTansuWidget):
             else:
                 self._temp_proxy_widget.hide()
 
-    def updateDelegateDisplay(self, selected, deselected):
+    def updateDelegateDisplay(self):
+        """
+        Updates which widgets should be shown/hidden based off of
+        the current models selection list
+        """
+        if self.getDelegateType() == TansuModelViewWidget.STACKED:
+            self.toggleDelegateSpacerWidget()
+            selection_model = self.viewWidget().selectionModel()
+            widget_list = []
+            for index in selection_model.selectedIndexes():
+                item = index.internalPointer()
+                widget = item.delegateWidget()
+                widget_list.append(widget)
+
+            self.delegateWidget().isolateWidgets(widget_list)
+
+    def updateDelegateDisplayFromSelection(self, selected, deselected):
         """
         Determines whether or not an items delegateWidget() should be
         displayed/updated/destroyed.
@@ -288,11 +305,11 @@ class TansuModelViewWidget(BaseTansuWidget):
         if not hasattr(item, '_delegate_widget'): return
 
         # update static widgets
-        if self.getType() == TansuModelViewWidget.STACKED:
+        if self.getDelegateType() == TansuModelViewWidget.STACKED:
             self.__updateStackedDisplay(item, selected)
 
         # update dynamic widgets
-        if self.getType() == TansuModelViewWidget.DYNAMIC:
+        if self.getDelegateType() == TansuModelViewWidget.DYNAMIC:
             self.__updateDynamicDisplay(item, selected)
 
     def __updateStackedDisplay(self, item, selected):
@@ -398,7 +415,6 @@ class TansuModelViewWidget(BaseTansuWidget):
             dynamic_function (function): The function to be run when a label
                 is selected.
         """
-
         # update layout
         if value == TansuModelViewWidget.STACKED:
             pass
@@ -414,10 +430,10 @@ class TansuModelViewWidget(BaseTansuWidget):
             self.setDynamicUpdateFunction(dynamic_function)
 
         # update attr
-        self._type = value
+        self._delegate_type = value
 
-    def getType(self):
-        return self._type
+    def getDelegateType(self):
+        return self._delegate_type
 
     def getViewInstanceType(self):
         return self._view_item_type
@@ -454,6 +470,27 @@ class TansuModelViewWidget(BaseTansuWidget):
         self._view_height = view_height
 
 
+class TansuMainDelegateWidget(BaseTansuWidget):
+    """
+    The main delegate view that will show all of the items widgets that
+     the user currently has selected
+    """
+    def __init__(self, parent=None):
+        super(TansuMainDelegateWidget, self).__init__(parent)
+
+    def showEvent(self, event):
+        tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
+        if tab_tansu_widget:
+            tab_tansu_widget.updateDelegateDisplay()
+
+    def keyPressEvent(self, event):
+        BaseTansuWidget.keyPressEvent(self, event)
+        if event.key() == Qt.Key_Escape:
+            tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
+            if tab_tansu_widget:
+                tab_tansu_widget.updateDelegateDisplay()
+
+
 class TansuModelDelegateWidget(AbstractInputGroup):
     """
     This is a clone of the InputGroup... but I'm getting
@@ -485,6 +522,22 @@ class TansuListView(QListView):
         super(TansuListView, self).__init__(parent)
         self.setEditTriggers(QAbstractItemView.DoubleClicked)
 
+    def showEvent(self, event):
+        tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
+        if tab_tansu_widget:
+            tab_tansu_widget.updateDelegateDisplay()
+            # if tab_tansu_widget.getDelegateType() == TansuModelViewWidget.STACKED:
+            #     tab_tansu_widget.toggleDelegateSpacerWidget()
+            #     selection_model = self.selectionModel()
+            #     widget_list = []
+            #     for index in selection_model.selectedIndexes():
+            #         item = index.internalPointer()
+            #         widget = item.delegateWidget()
+            #         widget_list.append(widget)
+            #
+            #     tab_tansu_widget.delegateWidget().isolateWidgets(widget_list)
+        QListView.showEvent(self, event)
+
     def setOrientation(self, orientation):
         if orientation == Qt.Horizontal:
             self.setFlow(QListView.TopToBottom)
@@ -500,7 +553,7 @@ class TansuListView(QListView):
     def selectionChanged(self, selected, deselected):
         top_level_widget = getWidgetAncestor(self, TansuModelViewWidget)
         if top_level_widget:
-            top_level_widget.updateDelegateDisplay(selected, deselected)
+            top_level_widget.updateDelegateDisplayFromSelection(selected, deselected)
         # for index in selected.indexes():
         #     item = index.internalPointer()
 
@@ -538,12 +591,12 @@ if __name__ == "__main__":
     w.setMultiSelect(True)
     w.setMultiSelectDirection(Qt.Vertical)
 
-    dw = TabTansuDynamicWidgetExample
-    w.setDelegateType(
-        TansuModelViewWidget.DYNAMIC,
-        dynamic_widget=TabTansuDynamicWidgetExample,
-        dynamic_function=TabTansuDynamicWidgetExample.updateGUI
-    )
+    # dw = TabTansuDynamicWidgetExample
+    # w.setDelegateType(
+    #     TansuModelViewWidget.DYNAMIC,
+    #     dynamic_widget=TabTansuDynamicWidgetExample,
+    #     dynamic_function=TabTansuDynamicWidgetExample.updateGUI
+    # )
 
     for x in range(3):
         widget = QLabel(str(x))
