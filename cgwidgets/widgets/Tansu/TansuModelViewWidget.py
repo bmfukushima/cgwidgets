@@ -8,6 +8,8 @@ TODO:
         *   If none selected, show ALL
     - setCurrentIndex?
     - currentIndex?
+
+    Horizontal/vertical tree widgets... makes a case to pull out the double tree widget...
 """
 
 from qtpy.QtWidgets import (
@@ -189,18 +191,22 @@ class TansuModelViewWidget(BaseTansuWidget):
 
         if direction == TansuModelViewWidget.WEST:
             self.setOrientation(Qt.Horizontal)
+            self.viewWidget().setOrientation(Qt.Horizontal)
             self.insertWidget(0, self.viewWidget())
 
         elif direction == TansuModelViewWidget.EAST:
             self.setOrientation(Qt.Horizontal)
+            self.viewWidget().setOrientation(Qt.Horizontal)
             self.insertWidget(1, self.viewWidget())
 
         elif direction == TansuModelViewWidget.NORTH:
             self.setOrientation(Qt.Vertical)
+            self.viewWidget().setOrientation(Qt.Vertical)
             self.insertWidget(0, self.viewWidget())
 
         elif direction == TansuModelViewWidget.SOUTH:
             self.setOrientation(Qt.Vertical)
+            self.viewWidget().setOrientation(Qt.Vertical)
             self.insertWidget(1, self.viewWidget())
 
         # make uncollapsible
@@ -302,12 +308,6 @@ class TansuModelViewWidget(BaseTansuWidget):
         new_widget = self.createTansuModelDelegateWidget(name, new_dynamic_widget)
         return new_widget
 
-    # def getDynamicMainWidget(self):
-    #     return self._dynamic_widget
-    #
-    # def setDynamicMainWidget(self, _dynamic_widget):
-    #     self._dynamic_widget = _dynamic_widget
-
     def __dynamicWidgetFunction(self):
         pass
 
@@ -388,9 +388,6 @@ class TansuModelViewWidget(BaseTansuWidget):
             self.setDynamicWidgetBaseClass(dynamic_widget)
             self.setDynamicUpdateFunction(dynamic_function)
 
-            #self._dynamic_widget = self.createNewDynamicWidget()
-            #self.main_widget.addWidget(self._dynamic_widget)
-
         # update attr
         self._type = value
 
@@ -463,6 +460,12 @@ class ListView(QListView):
         super(ListView, self).__init__(parent)
         self.setEditTriggers(QAbstractItemView.DoubleClicked)
 
+    def setOrientation(self, orientation):
+        if orientation == Qt.Horizontal:
+            self.setFlow(QListView.TopToBottom)
+        else:
+            self.setFlow(QListView.LeftToRight)
+
     def setMultiSelect(self, multi_select):
         if multi_select is True:
             self.setSelectionMode(QAbstractItemView.MultiSelection)
@@ -518,7 +521,7 @@ if __name__ == "__main__":
         widget = QLabel(str(x))
         w.insertViewItem(x, str(x),widget=widget)
 
-    w.resize(500,500)
+    w.resize(500, 500)
 
     w.show()
 
