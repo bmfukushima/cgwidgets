@@ -69,12 +69,12 @@ class TansuModelViewWidget(BaseTansuWidget):
 
     Widgets:
         |-- QBoxLayout
-                |-- TabTansuLabelBarWidget (QWidget)
-                        |-- QBoxLayout
-                                |-* TabTansuLabelWidget (Label)
-                |-- BaseTansuWidget
-                        | -- TansuModelDelegateWidget (AbstractGroupBox)
-                                | -* Stacked/Dynamic Widget (main_widget)
+                |-- ViewWidget
+                        ( TansuListView | TansuTableView | TansuTreeView )
+                |-- DelegateWidget (BaseTansuWidget)
+                        | -- _temp_proxy_widget (QWidget)
+                        | -* TansuModelDelegateWidget (AbstractGroupBox)
+                                | -- Stacked/Dynamic Widget (main_widget)
 
     """
     NORTH = 'north'
@@ -105,28 +105,26 @@ class TansuModelViewWidget(BaseTansuWidget):
         """
         self.setStyleSheet(style_sheet)
 
-        # create widgets
+        # setup model / view
         new_model = TansuModel()
-        default_view_widget = ListView(self)
-
+        default_view_widget = TansuListView(self)
         self.setViewWidget(default_view_widget)
         self.setModel(new_model)
 
-        self.main_widget = BaseTansuWidget(self)
+        # setup delegate
+        delegate_widget = BaseTansuWidget(self)
+        self.setDelegateWidget(delegate_widget)
+        self._temp_proxy_widget = QWidget()
+        self.delegateWidget().addWidget(self._temp_proxy_widget)
 
-        self.addWidget(self.main_widget)
+        # setup main layout
+        self.addWidget(self._delegate_widget)
         self.addWidget(self._view_widget)
 
         # set default attrs
         self.setDelegateType(TansuModelViewWidget.TYPE)
-
-        # set direction
         self.setViewPosition(direction)
-
-        # set multi
         self.setMultiSelect(TansuModelViewWidget.MULTI)
-
-        self._selected_labels_list = []
 
     def insertViewItem(self, index, name, parent=None, widget=None):
         """
@@ -157,7 +155,7 @@ class TansuModelViewWidget(BaseTansuWidget):
             view_delegate_widget = self.createTansuModelDelegateWidget(name, widget)
             view_item.setDelegateWidget(view_delegate_widget)
             # insert tab widget
-            self.main_widget.insertWidget(index, view_delegate_widget)
+            self.delegateWidget().insertWidget(index, view_delegate_widget)
             view_delegate_widget.hide()
 
         return view_item
@@ -238,12 +236,34 @@ class TansuModelViewWidget(BaseTansuWidget):
         return display_widget
 
     """ DELEGATE """
+    def delegateWidget(self):
+        return self._delegate_widget
+
+    def setDelegateWidget(self, _delegate_widget):
+        self._delegate_widget = _delegate_widget
+
+    def toggleDelegateSpacerWidget(self):
+        """
+        Determines if the spacer proxy widget should be hidden/shown in
+        the delegate.  This is widget is only there to retain the spacing
+        of the view/delegate positions
+        """
+        # hide/show proxy widget
+        if hasattr(self, "_temp_proxy_widget"):
+            selection_model = self.viewWidget().selectionModel()
+            if len(selection_model.selectedIndexes()) == 0:
+                self._temp_proxy_widget.show()
+            else:
+                self._temp_proxy_widget.hide()
+
     def updateDelegateDisplay(self, selected, deselected):
         """
         Determines whether or not an items delegateWidget() should be
         displayed/updated/destroyed.
 
         """
+        self.toggleDelegateSpacerWidget()
+
         # update display
         self._selection_item = selected
         for index in selected.indexes():
@@ -291,7 +311,7 @@ class TansuModelViewWidget(BaseTansuWidget):
         if selected:
             # create dynamic widget
             dynamic_widget = self.createNewDynamicWidget(name=item.name())
-            self.main_widget.addWidget(dynamic_widget)
+            self.delegateWidget().addWidget(dynamic_widget)
             item.setDelegateWidget(dynamic_widget)
             self.updateDynamicWidget(dynamic_widget, item)
         else:
@@ -355,10 +375,10 @@ class TansuModelViewWidget(BaseTansuWidget):
 
         orientation (Qt.ORIENTATION): ie Qt.Vertical or Qt.Horizontal
         """
-        self.main_widget.setOrientation(orientation)
+        self.delegateWidget().setOrientation(orientation)
 
     def getMultiSelectDirection(self):
-        return self.main_widget.orientation()
+        return self.delegateWidget().orientation()
 
     """ type """
     def setDelegateType(self, value, dynamic_widget=None, dynamic_function=None):
@@ -455,9 +475,9 @@ class TansuModelDelegateWidget(AbstractInputGroup):
 
 # need to do a QAbstractItemView injection here...
 
-class ListView(QListView):
+class TansuListView(QListView):
     def __init__(self, parent=None):
-        super(ListView, self).__init__(parent)
+        super(TansuListView, self).__init__(parent)
         self.setEditTriggers(QAbstractItemView.DoubleClicked)
 
     def setOrientation(self, orientation):
@@ -524,11 +544,12 @@ if __name__ == "__main__":
     w.resize(500, 500)
 
     w.show()
+    w.setViewWidgetToDefaultSize()
 
-    q = ListView()
-    q.show()
-
-    q.setModel(w.model())
+    # q = TansuListView()
+    # q.show()
+    #
+    # q.setModel(w.model())
 
     w.move(QCursor.pos())
     sys.exit(app.exec_())

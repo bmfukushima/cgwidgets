@@ -61,11 +61,11 @@ class TansuModel(QAbstractItemModel):
             if index.column() == 0:
                 return item.name()
 
-        if role == Qt.DecorationRole:
-            if index.column() == 0:
-                pixmap = QPixmap(26, 26)
-                icon = QIcon(pixmap)
-                return icon
+        # if role == Qt.DecorationRole:
+        #     if index.column() == 0:
+        #         pixmap = QPixmap(26, 26)
+        #         icon = QIcon(pixmap)
+        #         return icon
 
     def setData(self, index, value, role=Qt.EditRole):
         """
