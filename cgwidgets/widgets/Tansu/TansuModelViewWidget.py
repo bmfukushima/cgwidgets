@@ -13,7 +13,7 @@ TODO:
 """
 
 from qtpy.QtWidgets import (
-    QWidget, QListView, QAbstractItemView, QScrollArea
+    QWidget, QListView, QAbstractItemView, QScrollArea, QTableView
 )
 from qtpy.QtCore import Qt, QModelIndex
 
@@ -151,8 +151,8 @@ class TansuModelViewWidget(BaseTansuWidget):
         self.model().insertRows(index, 1, parent)
 
         # setup custom object
-        row = self.model().index(index, 1, parent)
-        view_item = row.internalPointer()
+        new_index = self.model().index(index, 1, parent)
+        view_item = new_index.internalPointer()
         view_item.setName(name)
 
         # add to layout if stacked
@@ -604,13 +604,21 @@ if __name__ == "__main__":
 
     w.resize(500, 500)
 
-    w.show()
+    # new_index = self.model().index(index, 1, parent)
+    # view_item = new_index.internalPointer()
+    # view_item.setName(name)
+    #
+    index = w.model().index(0, 3, QModelIndex())
+    item = w.model().getItem(index)
+    item.setName("klajfjklasjfkla")
+    #
+    # w.show()
     w.setViewWidgetToDefaultSize()
 
-    # q = TansuListView()
-    # q.show()
-    #
-    # q.setModel(w.model())
+    q = QTableView()
+    q.show()
 
+    q.setModel(w.model())
+    w.show()
     w.move(QCursor.pos())
     sys.exit(app.exec_())

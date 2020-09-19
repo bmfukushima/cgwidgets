@@ -1,7 +1,14 @@
 # https://doc.qt.io/qt-5/model-view-programming.html#model-view-classes
 
-from qtpy.QtWidgets import (
-    QApplication, QTreeView)
+"""
+TODO:
+    *   Add drag/drop
+    *   Add multiple columns
+            rows --> TansuModelItem
+                                | -- column list (holds data for each column of this row...)
+
+"""
+
 from qtpy.QtCore import (
     Qt, QModelIndex, QAbstractItemModel)
 from qtpy.QtGui import (
@@ -41,7 +48,7 @@ class TansuModel(QAbstractItemModel):
         INPUTS: QModelIndex
        OUTPUT: int
        """
-        return 1
+        return 2
 
     def data(self, index, role):
         """
@@ -60,12 +67,6 @@ class TansuModel(QAbstractItemModel):
         if role == Qt.DisplayRole or role == Qt.EditRole:
             if index.column() == 0:
                 return item.name()
-
-        # if role == Qt.DecorationRole:
-        #     if index.column() == 0:
-        #         pixmap = QPixmap(26, 26)
-        #         icon = QIcon(pixmap)
-        #         return icon
 
     def setData(self, index, value, role=Qt.EditRole):
         """
@@ -112,22 +113,29 @@ class TansuModel(QAbstractItemModel):
 
     def index(self, row, column, parent):
         """
-        INPUTS: int, int, QModelIndex
-        OUTPUT: QModelIndex
-        Should return a QModelIndex that corresponds to the given row, column and parent item
+        Returns the QModelIndex associated with a row/column/parent provided
+
+        Args:
+                row (int)
+                column (int)
+                parent (QModelIndex)
+
+        Returns (QModelIndex)
         """
         parent_item = self.getItem(parent)
-        childItem = parent_item.child(row)
+        child_item = parent_item.child(row)
 
-        if childItem:
-            return self.createIndex(row, column, childItem)
+        if child_item:
+            return self.createIndex(row, column, child_item)
         else:
             return QModelIndex()
 
     def getItem(self, index):
         """
-        CUSTOM
-        INPUTS: QModelIndex
+        Returns the item held by the index provided
+        Args:
+            index (QModelIndex)
+        Returns (TansuModelItem)
         """
         if index.isValid():
             item = index.internalPointer()
@@ -136,6 +144,7 @@ class TansuModel(QAbstractItemModel):
 
         return self._root_item
 
+    """ INSERT INDEXES """
     def insertRows(self, position, rows, parent=QModelIndex()):
         """
         INPUTS: int, int, QModelIndex
@@ -171,32 +180,33 @@ class TansuModel(QAbstractItemModel):
         self._root_item = root_item
 
 
-class TreeView(QTreeView):
-    def __init__(self, parent=None):
-        super(TreeView, self).__init__(parent)
-        root_item = TansuModelItem("root")
-
-
-        model = TansuModel(root_item=root_item)
-        self.setModel(model)
-        childNode1 = TansuModelItem("RightPirateLeg_END", root_item)
-        childNode3 = TansuModelItem("LeftTibia", root_item)
-        childNode4 = TansuModelItem("LeftFoot", root_item)
-
-    def selectionChanged(self, selected, deselected):
-        for index in selected.indexes():
-            item = index.internalPointer()
-            item.test()
-        return QTreeView.selectionChanged(self, selected, deselected)
-
-
 if __name__ == '__main__':
+    from qtpy.QtWidgets import (
+        QApplication, QTreeView, QListView, QTableView)
     app = QApplication(sys.argv)
 
+    model = TansuModel()
+    model.insertRows(0, 3, QModelIndex())
+    index = model.index(0, 1, QModelIndex())
+    item = model.getItem(index)
+    item.setName("klajfjklasjfkla")
 
-    treeView = TreeView()
-    treeView.show()
+    parent_index = model.index(0,1, QModelIndex())
+    parent_item = parent_index.internalPointer()
+    TansuModelItem("child", parent_item)
 
 
+    tree_view = QTreeView()
+    tree_view.show()
+
+    list_view = QListView()
+    list_view.show()
+
+    table_view = QTableView()
+    table_view.show()
+
+    tree_view.setModel(model)
+    list_view.setModel(model)
+    table_view.setModel(model)
 
     sys.exit(app.exec_())

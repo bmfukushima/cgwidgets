@@ -64,6 +64,7 @@ class TansuModelItem(object):
         if self._parent is not None:
             return self._parent._children.index(self)
 
+
     def log(self, tabLevel=-1):
         output = ""
         tabLevel += 1
