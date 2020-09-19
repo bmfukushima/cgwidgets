@@ -13,7 +13,7 @@ TODO:
 """
 
 from qtpy.QtWidgets import (
-    QWidget, QListView, QAbstractItemView
+    QWidget, QListView, QAbstractItemView, QScrollArea
 )
 from qtpy.QtCore import Qt, QModelIndex
 
@@ -112,13 +112,18 @@ class TansuModelViewWidget(BaseTansuWidget):
         self.setModel(new_model)
 
         # setup delegate
-        delegate_widget = BaseTansuWidget(self)
+        delegate_widget = BaseTansuWidget()
         self.setDelegateWidget(delegate_widget)
         self._temp_proxy_widget = QWidget()
+
         self.delegateWidget().addWidget(self._temp_proxy_widget)
 
         # setup main layout
-        self.addWidget(self._delegate_widget)
+        scroll_area = QScrollArea()
+        scroll_area.setWidget(delegate_widget)
+        scroll_area.setWidgetResizable(True)
+
+        self.addWidget(scroll_area)
         self.addWidget(self._view_widget)
 
         # set default attrs
@@ -512,11 +517,14 @@ class TabTansuDynamicWidgetExample(QWidget):
         self.layout().addWidget(self.label)
 
     @staticmethod
-    def updateGUI(widget, label):
-        print(widget)
-        if label:
-            widget.setTitle(label.name())
-            widget.getMainWidget().label.setText(label.name())
+    def updateGUI(widget, item):
+        """
+        widget (TansuModelDelegateWidget)
+        item (TansuModelItem)
+        """
+        if item:
+            widget.setTitle(item.name())
+            widget.getMainWidget().label.setText(item.name())
 
 
 if __name__ == "__main__":
