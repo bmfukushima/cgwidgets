@@ -2,13 +2,26 @@
 
 
 class TansuModelItem(object):
+    """
+
+    Attributes:
+        delegate_widget (QWidget): Widget to be shown when this item is
+            selected
+    """
     def __init__(self, name, parent=None):
         self._name = name
         self._children = []
         self._parent = parent
+        self._delegate_widget = None
 
         if parent is not None:
             parent.addChild(self)
+
+    def delegateWidget(self):
+        return self._delegate_widget
+
+    def setDelegateWidget(self, _delegate_widget):
+        self._delegate_widget =_delegate_widget
 
     def addChild(self, child):
         self._children.append(child)
@@ -67,5 +80,5 @@ class TansuModelItem(object):
 
         return output
 
-    def __repr__(self):
-        return self.log()
+    # def __repr__(self):
+    #     return self.log()

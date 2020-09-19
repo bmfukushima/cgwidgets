@@ -7,18 +7,22 @@ from qtpy.QtCore import (
 from qtpy.QtGui import (
     QPixmap,
     QIcon,
-    QColor
+
 )
 
 import sys
+
+from cgwidgets.widgets.Tansu import TansuModelItem
 
 
 class TansuModel(QAbstractItemModel):
     """INPUTS: TansuModelItem, QObject"""
 
-    def __init__(self, root, parent=None):
+    def __init__(self, parent=None, root_item=None):
         super(TansuModel, self).__init__(parent)
-        self._root_item = root
+        if not root_item:
+            root_item = TansuModelItem('root_item')
+        self._root_item = root_item
 
     def rowCount(self, parent):
         """
@@ -160,17 +164,24 @@ class TansuModel(QAbstractItemModel):
 
         return success
 
+    def getRootItem(self):
+        return self._root_item
+
+    def setRootItem(self, root_item):
+        self._root_item = root_item
+
 
 class TreeView(QTreeView):
     def __init__(self, parent=None):
         super(TreeView, self).__init__(parent)
         root_item = TansuModelItem("root")
+
+
+        model = TansuModel(root_item=root_item)
+        self.setModel(model)
         childNode1 = TansuModelItem("RightPirateLeg_END", root_item)
         childNode3 = TansuModelItem("LeftTibia", root_item)
         childNode4 = TansuModelItem("LeftFoot", root_item)
-
-        model = TansuModel(root_item)
-        self.setModel(model)
 
     def selectionChanged(self, selected, deselected):
         for index in selected.indexes():
@@ -181,8 +192,6 @@ class TreeView(QTreeView):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    #app.setStyle("plastique")
-
 
 
     treeView = TreeView()
