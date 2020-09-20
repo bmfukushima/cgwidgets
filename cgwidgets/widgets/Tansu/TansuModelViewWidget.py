@@ -134,6 +134,8 @@ class TansuModelViewWidget(BaseTansuWidget):
         self.setViewPosition(direction)
         self.setMultiSelect(TansuModelViewWidget.MULTI)
 
+        self.setViewWidgetToDefaultSize()
+
     def insertViewItem(self, row, name, parent=None, widget=None):
         """
         Creates a new tab at  the specified index
