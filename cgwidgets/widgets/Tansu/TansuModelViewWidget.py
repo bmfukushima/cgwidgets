@@ -196,6 +196,7 @@ class TansuModelViewWidget(BaseTansuWidget):
         # set new view widget
         self._view_widget = view_widget
         view_widget.setModel(self.model())
+        self.setViewPosition(self.getViewPosition())
 
     def getViewPosition(self):
         return self._direction
@@ -616,6 +617,11 @@ if __name__ == "__main__":
     w.setMultiSelect(True)
     w.setMultiSelectDirection(Qt.Vertical)
 
+
+    new_view = TansuListView()
+    new_view.show()
+    w.setViewWidget(new_view)
+
     # dw = TabTansuDynamicWidgetExample
     # w.setDelegateType(
     #     TansuModelViewWidget.DYNAMIC,
@@ -640,10 +646,10 @@ if __name__ == "__main__":
     # w.show()
     #w.setViewWidgetToDefaultSize()
 
-    q = QTableView()
-    q.show()
-
-    q.setModel(w.model())
+    # q = QTableView()
+    # q.show()
+    #
+    # q.setModel(w.model())
     w.show()
     w.move(QCursor.pos())
     sys.exit(app.exec_())
