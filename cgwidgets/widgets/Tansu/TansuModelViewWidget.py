@@ -20,6 +20,8 @@ from qtpy.QtGui import QCursor
 
 from cgwidgets.settings.colors import (
     RGBA_TANSU_HANDLE,
+    RGBA_SELECTED,
+    RGBA_SELECTED_HOVER
 )
 from cgwidgets.utils import getWidgetAncestor
 
@@ -44,7 +46,7 @@ class TansuModelViewWidget(BaseTansuWidget):
         selected_labels_list (list): list of labels that are currently selected by the user
 
     Attributes:
-        rgba_handle (rgba): color of the outline for the individual tab labels
+        rgba_outline (rgba): color of the outline for the individual tab labels
             default color is TansuModelViewWidget.OUTLINE_COLOR
         rgba_selected_tab (rgba): text color of selected tab
             default color is TansuModelViewWidget.SELECTED_COLOR
@@ -70,7 +72,7 @@ class TansuModelViewWidget(BaseTansuWidget):
 
     Widgets:
         |-- QBoxLayout
-                |-- ViewWidget (TansuTreeView)
+                |-- ViewWidget (TansuListView)
                         ( TansuListView | TansuTableView | TansuTreeView )
                 | -- Scroll Area
                     |-- DelegateWidget (TansuMainDelegateWidget --> BaseTansuWidget)
@@ -85,6 +87,8 @@ class TansuModelViewWidget(BaseTansuWidget):
     WEST = 'west'
     OUTLINE_WIDTH = 1
     OUTLINE_COLOR = RGBA_TANSU_HANDLE
+    SELECTED_COLOR = RGBA_SELECTED
+    SELECTED_COLOR_HOVER = RGBA_SELECTED_HOVER
     STACKED = 'stacked'
     DYNAMIC = 'dynamic'
     MULTI = False
@@ -93,19 +97,15 @@ class TansuModelViewWidget(BaseTansuWidget):
     def __init__(self, parent=None, direction=NORTH):
         super(TansuModelViewWidget, self).__init__(parent)
         # etc attrs
-        self.setHandleWidth(5)
+        self.setHandleWidth(0)
         self._direction = direction #just a temp set... for things
         self._view_height = 50
         self._view_width = 100
 
         # colors attrs
-        self.rgba_handle = TansuModelViewWidget.OUTLINE_COLOR
-        style_sheet = """
-            QSplitter::handle {
-                border: None;
-            }
-        """
-        self.setStyleSheet(style_sheet)
+        self.rgba_outline = TansuModelViewWidget.OUTLINE_COLOR
+        self.rgba_selected_tab = TansuModelViewWidget.SELECTED_COLOR
+        self.rgba_selected_tab_hover = TansuModelViewWidget.SELECTED_COLOR_HOVER
 
         # setup model / view
         self._model = TansuModel()
@@ -233,6 +233,7 @@ class TansuModelViewWidget(BaseTansuWidget):
         # make uncollapsible
         self.setCollapsible(0, False)
         self.setCollapsible(1, False)
+        self.setupStyleSheet()
 
     def setViewWidgetToDefaultSize(self):
         """
@@ -458,15 +459,117 @@ class TansuModelViewWidget(BaseTansuWidget):
         self._view_item_type = view_item_type
 
     """ LAYOUT """
+    def setupStyleSheet(self):
+        """
+        Sets the style sheet for the outline based off of the direction of the parent.
+
+        """
+        splitter_style_sheet = """
+            QSplitter::handle {{
+                border: None;
+            }}
+        """
+
+        view_position = self.getViewPosition()
+        style_sheet_args = {
+            'rgba_border': repr(self.rgba_outline),
+            'rgba_selected': repr(self.rgba_selected_tab),
+            'rgba_hover': repr(self.rgba_selected_tab_hover),
+            'outline_width': TansuModelViewWidget.OUTLINE_WIDTH,
+            'type': type(self.viewWidget()).__name__,
+            'splitter_style_sheet': splitter_style_sheet
+        }
+        if view_position == TansuModelViewWidget.NORTH:
+            style_sheet = """
+            {type}::item:hover{{color: rgba{rgba_hover}}}
+            {type}::item{{
+                border: {outline_width}px solid rgba{rgba_border} ;
+                border-left: None;
+                border-top: None;
+                color: rgba{rgba_selected};
+            }}
+            {type}::item:selected{{
+                border: {outline_width}px solid rgba{rgba_border} ;
+                border-left: None;
+                border-bottom: None;
+                color: rgba{rgba_selected};
+            }}
+            {splitter_style_sheet}
+            """.format(**style_sheet_args)
+
+        elif view_position == TansuModelViewWidget.SOUTH:
+            style_sheet = """
+            {type}::item:hover{{color: rgba{rgba_hover}}}
+            {type}::item{{
+                border: {outline_width}px solid rgba{rgba_border};
+                border-left: None;
+                border-bottom: None;
+            }}
+            {type}::item:selected{{
+                border: {outline_width}px solid rgba{rgba_border} ;
+                border-left: None;
+                border-top: None;
+                color: rgba{rgba_selected};
+            }}
+            {splitter_style_sheet}
+            """.format(**style_sheet_args)
+        elif view_position == TansuModelViewWidget.EAST:
+            style_sheet = """
+            {type}::item:hover{{color: rgba{rgba_hover}}}
+            {type}::item{{
+                border: {outline_width}px solid rgba{rgba_border};
+                border-top: None;
+                border-right: None;
+            }}
+            {type}::item:selected{{
+                border: {outline_width}px solid rgba{rgba_border} ;
+                border-top: None;
+                border-left: None;
+                color: rgba{rgba_selected};
+            }}
+            {splitter_style_sheet}
+            """.format(**style_sheet_args)
+        elif view_position == TansuModelViewWidget.WEST:
+            style_sheet = """
+            {type}::item:hover{{color: rgba{rgba_hover}}}
+            {type}::item{{
+                border: {outline_width}px solid rgba{rgba_border};
+                border-top: None;
+                border-left: None;
+            }}
+            {type}::item:selected{{
+                border: {outline_width}px solid rgba{rgba_border} ;
+                border-top: None;
+                border-right: None;
+                color: rgba{rgba_selected};
+            }}
+            """.format(**style_sheet_args)
+        self.setStyleSheet(style_sheet)
 
     """ colors """
     @property
-    def rgba_handle(self):
-        return self._rgba_handle
+    def rgba_outline(self):
+        return self._rgba_outline
 
-    @rgba_handle.setter
-    def rgba_handle(self, rgba_handle):
-        self._rgba_handle = rgba_handle
+    @rgba_outline.setter
+    def rgba_outline(self, rgba_outline):
+        self._rgba_outline = rgba_outline
+
+    @property
+    def rgba_selected_tab(self):
+        return self._rgba_selected_tab
+
+    @rgba_selected_tab.setter
+    def rgba_selected_tab(self, rgba_selected_tab):
+        self._rgba_selected_tab = rgba_selected_tab
+
+    @property
+    def rgba_selected_tab_hover(self):
+        return self._rgba_selected_tab_hover
+
+    @rgba_selected_tab_hover.setter
+    def rgba_selected_tab_hover(self, rgba_selected_tab_hover):
+        self._rgba_selected_tab_hover = rgba_selected_tab_hover
 
     """ default view size"""
     @property
@@ -613,14 +716,15 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     w = TansuModelViewWidget()
-    w.setViewPosition(TansuModelViewWidget.WEST)
+    w.setViewPosition(TansuModelViewWidget.NORTH)
     w.setMultiSelect(True)
     w.setMultiSelectDirection(Qt.Vertical)
-
-
-    new_view = TansuListView()
-    new_view.show()
-    w.setViewWidget(new_view)
+    #
+    # new_view = TansuListView()
+    # print()
+    # new_view.show()
+    # w.setViewWidget(new_view)
+    # w.setViewPosition(TansuModelViewWidget.NORTH)
 
     # dw = TabTansuDynamicWidgetExample
     # w.setDelegateType(
