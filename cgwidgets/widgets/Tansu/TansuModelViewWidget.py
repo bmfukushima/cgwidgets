@@ -160,6 +160,7 @@ class TansuModelViewWidget(BaseTansuWidget):
         # get new index/item created
         new_index = self.model().index(row, 1, parent)
         view_item = new_index.internalPointer()
+        view_item.setName(name)
 
         # add to layout if stacked
         if self.getDelegateType() == TansuModelViewWidget.STACKED:
