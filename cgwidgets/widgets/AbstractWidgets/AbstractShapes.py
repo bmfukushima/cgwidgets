@@ -5,9 +5,9 @@ from qtpy.QtWidgets import QFrame
 class AbstractLine(QFrame):
     def __init__(self, parent=None):
         super(AbstractLine, self).__init__(parent)
-        # self.setStyleSheet("""
-        #     margin: 30px;
-        # """)
+        self.setStyleSheet("""
+            margin: 30px;
+        """)
 
 
 class AbstractHLine(AbstractLine):

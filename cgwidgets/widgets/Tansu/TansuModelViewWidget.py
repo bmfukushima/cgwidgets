@@ -21,7 +21,7 @@ from qtpy.QtGui import QCursor
 from cgwidgets.utils import getWidgetAncestor
 from cgwidgets.settings.colors import iColor
 
-from cgwidgets.widgets import AbstractInputGroup
+from cgwidgets.widgets import AbstractInputGroupContainer
 from cgwidgets.widgets.Tansu import (
     BaseTansuWidget, TansuModel
 )
@@ -109,7 +109,7 @@ class TansuModelViewWidget(BaseTansuWidget):
         scroll_area.setWidgetResizable(True)
 
         self.addWidget(scroll_area)
-        scroll_area.setStyleSheet(iColor.default_style_sheet)
+        scroll_area.setStyleSheet("border:None")
         self.addWidget(self._view_widget)
 
         # set default attrs
@@ -396,7 +396,7 @@ class TansuModelViewWidget(BaseTansuWidget):
         ]:
             width = int( self.width() / num_items )
             if TansuModel.ITEM_WIDTH < width:
-                model.item_width = width - 1
+                model.item_width = width
                 self.setupStyleSheet()
         return BaseTansuWidget.resizeEvent(self, event)
 
@@ -478,7 +478,6 @@ class TansuModelViewWidget(BaseTansuWidget):
                 color: rgba(255,0,0,255);
             }}
         """
-        #splitter_style_sheet = """background-color{rgba(0,0,0,255)}"""
         view_position = self.getViewPosition()
         style_sheet_args = iColor.style_sheet_args
         style_sheet_args.update({
@@ -491,14 +490,14 @@ class TansuModelViewWidget(BaseTansuWidget):
             {type}::item:hover{{color: rgba{rgba_hover}}}
             {type}::item{{
                 border: {outline_width}px solid rgba{rgba_outline} ;
-                border-left: None;
+                border-right: None;
                 border-top: None;
                 background-color: rgba{rgba_background};
                 color: rgba{rgba_text_color};
             }}
             {type}::item:selected{{
                 border: {outline_width}px solid rgba{rgba_outline} ;
-                border-left: None;
+                border-right: None;
                 border-bottom: None;
                 background-color: rgba{rgba_background_selected};
                 color: rgba{rgba_selected};
@@ -510,14 +509,14 @@ class TansuModelViewWidget(BaseTansuWidget):
             {type}::item:hover{{color: rgba{rgba_hover}}}
             {type}::item{{
                 border: {outline_width}px solid rgba{rgba_outline};
-                border-left: None;
+                border-right: None;
                 border-bottom: None;
                 background-color: rgba{rgba_background};
                 color: rgba{rgba_text_color};
             }}
             {type}::item:selected{{
                 border: {outline_width}px solid rgba{rgba_outline} ;
-                border-left: None;
+                border-right: None;
                 border-top: None;
                 background-color: rgba{rgba_background_selected};
                 color: rgba{rgba_selected};
@@ -563,7 +562,6 @@ class TansuModelViewWidget(BaseTansuWidget):
             {splitter_style_sheet}
             """.format(**style_sheet_args)
 
-        #self.setStyleSheet( """background-color{rgba(0,0,0,255)}""")
         self.setStyleSheet(style_sheet)
 
     """ default view size"""
@@ -591,6 +589,8 @@ class TansuMainDelegateWidget(BaseTansuWidget):
     """
     def __init__(self, parent=None):
         super(TansuMainDelegateWidget, self).__init__(parent)
+        self.rgba_background = iColor.rgba_outline
+        #self.setStyleSheet(self.styleSheet() + "background-color: rgba(0,0,128,255)")
 
     def showEvent(self, event):
         tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
@@ -605,7 +605,7 @@ class TansuMainDelegateWidget(BaseTansuWidget):
                 tab_tansu_widget.updateDelegateDisplay()
 
 
-class TansuModelDelegateWidget(AbstractInputGroup):
+class TansuModelDelegateWidget(AbstractInputGroupContainer):
     """
     This is a clone of the InputGroup... but I'm getting
     stuck in import recursion land... so... this is a copy
@@ -613,13 +613,9 @@ class TansuModelDelegateWidget(AbstractInputGroup):
     """
     def __init__(self, parent=None, title=None):
         super(TansuModelDelegateWidget, self).__init__(parent, title)
-        self.display_background = False
-        self.alpha = 0
-        self.updateStyleSheet()
-        #self.setStyleSheet(iColor.default_style_sheet)
-        #print(iColor.default_style_sheet)
-        #self.updateStyleSheet()
-        #self.setContentsMargins(0,0,0,0)
+        self.setStyleSheet("background-color: rgba{background_color}".format(
+            background_color=iColor.rgba_background_selected)
+        )
 
     def setMainWidget(self, widget):
         # remove old main widget if it exists
@@ -639,7 +635,8 @@ class TansuListView(QListView):
     def __init__(self, parent=None):
         super(TansuListView, self).__init__(parent)
 
-        self.setStyleSheet(iColor.default_style_sheet)
+        self.setStyleSheet(self.styleSheet() + iColor.default_style_sheet)
+
         self.setEditTriggers(QAbstractItemView.DoubleClicked)
 
     """ ABSTRACT ITEM VIEW STUFFF"""
@@ -718,7 +715,7 @@ if __name__ == "__main__":
 
     w = TansuModelViewWidget()
     w.setViewPosition(TansuModelViewWidget.NORTH)
-    w.setMultiSelect(True)
+    #w.setMultiSelect(True)
     w.setMultiSelectDirection(Qt.Vertical)
     #
     # new_view = TansuListView()

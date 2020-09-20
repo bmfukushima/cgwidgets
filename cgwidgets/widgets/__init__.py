@@ -7,6 +7,7 @@ THE IMPORT ORDER MATTERS!!
 """
 """ IMPORT ABSTRACT WIDGETS """
 from .AbstractWidgets import AbstractInputGroup as AbstractInputGroup
+from .AbstractWidgets import AbstractInputGroupContainer as AbstractInputGroupContainer
 from .AbstractWidgets import AbstractFloatInputWidget as AbstractFloatInputWidget
 from .AbstractWidgets import AbstractIntInputWidget as AbstractIntInputWidget
 from .AbstractWidgets import AbstractStringInputWidget as AbstractStringInputWidget

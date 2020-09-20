@@ -109,6 +109,17 @@ class iColor(object):
     border: None;
     """.format(**style_sheet_args)
 
+    def createDefaultStyleSheet(updated_style_sheet_args):
+        style_sheet_args = iColor.style_sheet_args
+        style_sheet_args.update(updated_style_sheet_args)
+
+        default_style_sheet = """
+            background-color: rgba{rgba_background};
+            color: rgba{rgba_text_color};
+            border: None;
+        """.format(**style_sheet_args)
+        return default_style_sheet
+
     def multiplyRGBAValues(rgba, mult=1.5):
         """
 

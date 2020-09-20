@@ -56,6 +56,7 @@ class BaseTansuWidget(QSplitter):
         self._rgba_handle = iColor.rgba_outline
         self._rgba_handle_hover = iColor.rgba_outline_hover
         self._rgba_flag = iColor.rgba_hover
+        self._rgba_background = iColor.rgba_background
         self.setOrientation(orientation)
 
         # set up handle defaults
@@ -256,8 +257,7 @@ class BaseTansuWidget(QSplitter):
             'rgba_flag': repr(self.rgba_flag),
             'rgba_handle': repr(self.rgba_handle),
             'rgba_handle_hover': repr(self.rgba_handle_hover),
-            'rgba_background': repr(iColor.rgba_background)
-
+            'rgba_background': repr(self.rgba_background)
         }
         style_sheet = """
             BaseTansuWidget{{background-color: rgba{rgba_background}}}
@@ -301,6 +301,15 @@ class BaseTansuWidget(QSplitter):
     @rgba_flag.setter
     def rgba_flag(self, _rgba_flag):
         self._rgba_flag = _rgba_flag
+        self.updateStyleSheet()
+
+    @property
+    def rgba_background(self):
+        return self._rgba_background
+
+    @rgba_background.setter
+    def rgba_background(self, _rgba_background):
+        self._rgba_flag = _rgba_background
         self.updateStyleSheet()
 
 

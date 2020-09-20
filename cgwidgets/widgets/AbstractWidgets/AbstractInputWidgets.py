@@ -26,7 +26,7 @@ Input Widgets
 """
 
 from qtpy.QtWidgets import (
-    QLineEdit, QLabel, QGroupBox, QBoxLayout, QSizePolicy, QFrame, QApplication
+    QLineEdit, QLabel, QGroupBox, QBoxLayout, QSizePolicy, QFrame, QApplication, QWidget, QVBoxLayout
 )
 from qtpy.QtCore import Qt, QEvent
 
@@ -46,7 +46,7 @@ class AbstractInputWidget(QLineEdit):
     Attributes:
         orig_value (str): the previous value set by the user
         rgba_border (rgba): color of the border...
-        alpha (int): value of alpha transparency
+        background_color (int): value of background_color transparency
     """
     RGBA_BORDER_COLOR = iColor.rgba_outline
     ALPHA = 48
@@ -55,13 +55,13 @@ class AbstractInputWidget(QLineEdit):
         super(AbstractInputWidget, self).__init__(parent)
         self._key_list = []
         self.rgba_border = AbstractInputWidget.RGBA_BORDER_COLOR
-        self.alpha = AbstractInputWidget.ALPHA
+        self.background_color = AbstractInputWidget.ALPHA
         self.updateStyleSheet()
         self.editingFinished.connect(self.finishInput)
 
     def updateStyleSheet(self):
         #style_sheet = getTopBorderStyleSheet(self._rgba_border, 2)
-        self.setStyleSheet("border: None; background-color: rgba(0,0,0,{alpha});".format(alpha=self.alpha))
+        self.setStyleSheet("border: None; background-color: rgba(0,0,0,{background_color});".format(background_color=self.background_color))
 
     ''' PROPERTIES '''
     def appendKey(self, key):
@@ -98,12 +98,12 @@ class AbstractInputWidget(QLineEdit):
         self._rgba_border = _rgba_border
 
     @property
-    def alpha(self):
-        return self._alpha
+    def background_color(self):
+        return self._background_color
 
-    @alpha.setter
-    def alpha(self, _alpha):
-        self._alpha = _alpha
+    @background_color.setter
+    def background_color(self, _background_color):
+        self._background_color = _background_color
         self.updateStyleSheet()
 
     """ UTILS """
@@ -145,24 +145,35 @@ class AbstractInputWidget(QLineEdit):
             return QLineEdit.keyPressEvent(self, event, *args, **kwargs)
 
 
+class AbstractInputGroupContainer(QFrame):
+    def __init__(self, parent=None, title='None'):
+        super(AbstractInputGroupContainer, self).__init__(parent)
+        QVBoxLayout(self)
+        self.group_box = AbstractInputGroup(parent=parent, title=title)
+        self.layout().addWidget(self.group_box)
+        self.group_box.display_background = False
+        #self.setStyleSheet("background-color:rgba(0,0,255,255)")
+
+
 class AbstractInputGroup(QGroupBox):
     """
     Group box containing the user input parameters widgets.
     """
     RGBA_BORDER_COLOR = iColor.rgba_outline
     PADDING = 3
-    ALPHA = 48
+    BACKGROUND_COLOR = iColor.rgba_background
 
     def __init__(self, parent=None, title=None):
         super(AbstractInputGroup, self).__init__(parent)
         # setup main layout
         QBoxLayout(QBoxLayout.TopToBottom, self)
         self.layout().setAlignment(Qt.AlignTop)
+        # create seperator
         seperator = AbstractHLine(self)
         seperator.setStyleSheet("""
-            background-color: rgba{rgba_outline};
+            background-color: rgba{rgba_text_color};
             margin: 30px;
-            """.format(rgba_outline=iColor.rgba_outline))
+            """.format(rgba_text_color=repr(iColor.rgba_text_color)))
         self.layout().addWidget(seperator)
 
         # set up default attrs
@@ -170,7 +181,7 @@ class AbstractInputGroup(QGroupBox):
             self.setTitle(title)
         self._rgba_border = AbstractInputGroup.RGBA_BORDER_COLOR
         self._padding = AbstractInputGroup.PADDING
-        self._alpha = AbstractInputGroup.ALPHA
+        self._background_color = AbstractInputGroup.BACKGROUND_COLOR
 
         # setup display styles
         self.display_background = True
@@ -190,7 +201,7 @@ class AbstractInputGroup(QGroupBox):
             padding: -{padding}px {paddingX2}px;
             }}
             QGroupBox[display_background=true]{{
-                background-color: rgba(0,0,0,{alpha});
+                background-color: rgba{background_color};
                 border-width: 1px;
                 border-radius: {paddingX2};
                 border-style: solid;
@@ -212,19 +223,19 @@ class AbstractInputGroup(QGroupBox):
             font_size=font_size,
             padding=self.padding,
             paddingX2=(self.padding*2),
-            alpha=self.alpha,
+            background_color=repr(self.background_color),
             border_color=repr(self.rgba_border)
         )
         self.setStyleSheet(style_sheet)
 
     """PROPERTIES"""
     @property
-    def alpha(self):
-        return self._alpha
+    def background_color(self):
+        return self._background_color
 
-    @alpha.setter
-    def alpha(self, _alpha):
-        self._alpha = _alpha
+    @background_color.setter
+    def background_color(self, _background_color):
+        self._background_color = _background_color
 
     @property
     def display_background(self):
@@ -340,7 +351,7 @@ class AbstractNumberInputWidget(AbstractInputWidget):
             if base_group:
                 outline_color = base_group.rgba_border
             else:
-                outline_color = RGBA_OUTLINE
+                outline_color = iColor.rgba_outline
             self.ladder.setStyleSheet("""
             QWidget{{border: 1px solid rgba{RGBA_OUTLINE}}}
             """.format(
@@ -474,12 +485,20 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     w = QWidget()
     l = QVBoxLayout(w)
+    l.setAlignment(Qt.AlignTop)
     input_widget = AbstractFloatInputWidget()
-    gw = AbstractInputGroup('cool stuff')
+    gw = AbstractInputGroupContainer(title='cool stuff')
     gw.layout().addWidget(input_widget)
+
+
+    asdf = AbstractInputGroup(title='not cool')
+    i2 = AbstractFloatInputWidget()
+    asdf.layout().addWidget(i2)
     #gw.display_background = False
     l.addWidget(gw)
-
+    l.addWidget(asdf)
+    w.setStyleSheet("background-color: rgba(255,0,0,255); border: 3px solid rgba(255,255,0,255)")
+    #gw.setStyleSheet("background-color: rgba(0, 255,0,255); border: 3px solid rgba(255,255,0,255)")
     w.resize(500, 500)
     w.show()
     w.move(QCursor.pos())
