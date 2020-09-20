@@ -21,7 +21,7 @@ class TansuModelItem(object):
         return self._delegate_widget
 
     def setDelegateWidget(self, _delegate_widget):
-        self._delegate_widget =_delegate_widget
+        self._delegate_widget = _delegate_widget
 
     def addChild(self, child):
         self._children.append(child)
@@ -63,7 +63,6 @@ class TansuModelItem(object):
     def row(self):
         if self._parent is not None:
             return self._parent._children.index(self)
-
 
     def log(self, tabLevel=-1):
         output = ""

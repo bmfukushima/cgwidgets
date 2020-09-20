@@ -23,14 +23,29 @@ from cgwidgets.widgets.Tansu import TansuModelItem
 
 
 class TansuModel(QAbstractItemModel):
-    """INPUTS: TansuModelItem, QObject"""
+    """
+    Abstract model that is used for the Tansu.  This supports tables, lists, and
+    trees.  However not yet...
+    TODO:
+        - Drag/drop support
+        - multi column support
+
+    Attributes:
+        item_type (Item): Data item to be stored on each index.  By default this
+            set to the TansuModelItem
+    """
 
     def __init__(self, parent=None, root_item=None):
         super(TansuModel, self).__init__(parent)
+        # set up default item type
+        self._item_type = TansuModelItem
+
+        # set up root item
         if not root_item:
             root_item = TansuModelItem('root_item')
         self._root_item = root_item
 
+    """ UTILS """
     def rowCount(self, parent):
         """
         INPUTS: QModelIndex
@@ -144,6 +159,28 @@ class TansuModel(QAbstractItemModel):
 
         return self._root_item
 
+    """ Create index/items"""
+    def setItemType(self, item_type):
+        self._item_type = item_type
+
+    def itemType(self):
+        return self._item_type
+
+    def createNewItem(self, *args, **kwargs):
+        """
+        Creates a new item of the specified type
+        """
+        item_type = self.itemType()
+        new_item = item_type(*args, **kwargs)
+
+        return new_item
+
+    def insertNewIndex(self, row, name="None", parent=QModelIndex()):
+        self.insertRow(row, parent)
+        new_index = self.index(row, 0, parent)
+        new_index.internalPointer().setName(name)
+        return new_index
+
     """ INSERT INDEXES """
     def insertRows(self, position, rows, parent=QModelIndex()):
         """
@@ -154,7 +191,7 @@ class TansuModel(QAbstractItemModel):
 
         for row in range(rows):
             childCount = parent_item.childCount()
-            childNode = TansuModelItem("untitled" + str(childCount))
+            childNode = self.createNewItem(str(childCount))
             success = parent_item.insertChild(position, childNode)
 
         self.endInsertRows()
@@ -189,11 +226,14 @@ if __name__ == '__main__':
     model.insertRows(0, 3, QModelIndex())
     index = model.index(0, 1, QModelIndex())
     item = model.getItem(index)
+    print(item)
     item.setName("klajfjklasjfkla")
 
     parent_index = model.index(0,1, QModelIndex())
     parent_item = parent_index.internalPointer()
     TansuModelItem("child", parent_item)
+
+    model.insertNewIndex(2, name="hello")
 
 
     tree_view = QTreeView()

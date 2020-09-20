@@ -16,6 +16,7 @@ from qtpy.QtWidgets import (
     QWidget, QListView, QAbstractItemView, QScrollArea, QTableView
 )
 from qtpy.QtCore import Qt, QModelIndex
+from qtpy.QtGui import QCursor
 
 from cgwidgets.settings.colors import (
     RGBA_TANSU_HANDLE,
@@ -107,10 +108,11 @@ class TansuModelViewWidget(BaseTansuWidget):
         self.setStyleSheet(style_sheet)
 
         # setup model / view
-        new_model = TansuModel()
-        default_view_widget = TansuListView(self)
-        self.setViewWidget(default_view_widget)
-        self.setModel(new_model)
+        self._model = TansuModel()
+        self._view_widget = TansuListView(self)
+        self._view_widget.setModel(self._model)
+        #self.setModel(new_model)
+        #self.setViewWidget(default_view_widget)
 
         # setup delegate
         delegate_widget = TansuMainDelegateWidget()
@@ -132,12 +134,12 @@ class TansuModelViewWidget(BaseTansuWidget):
         self.setViewPosition(direction)
         self.setMultiSelect(TansuModelViewWidget.MULTI)
 
-    def insertViewItem(self, index, name, parent=None, widget=None):
+    def insertViewItem(self, row, name, parent=None, widget=None):
         """
         Creates a new tab at  the specified index
 
         Args:
-            index (int): index to insert widget at
+            row (int): index to insert widget at
             widget (QWidget): widget to be displayed at that index
             name (str): name of widget
             parent (QModelIndex): Parent index to create this new
@@ -148,20 +150,25 @@ class TansuModelViewWidget(BaseTansuWidget):
         # create new model index
         if not parent:
             parent = QModelIndex()
-        self.model().insertRows(index, 1, parent)
+        self.model().insertRow(row, parent)
 
         # setup custom object
-        new_index = self.model().index(index, 1, parent)
+        item_type = self.model().itemType()
+        view_item = item_type(name)
+        self.model().createIndex(row, 1, view_item)
+
+        # get new index/item created
+        new_index = self.model().index(row, 1, parent)
         view_item = new_index.internalPointer()
-        view_item.setName(name)
 
         # add to layout if stacked
         if self.getDelegateType() == TansuModelViewWidget.STACKED:
             # create tab widget widget
             view_delegate_widget = self.createTansuModelDelegateWidget(name, widget)
             view_item.setDelegateWidget(view_delegate_widget)
+
             # insert tab widget
-            self.delegateWidget().insertWidget(index, view_delegate_widget)
+            self.delegateWidget().insertWidget(row, view_delegate_widget)
             view_delegate_widget.hide()
 
         return view_item
@@ -179,7 +186,13 @@ class TansuModelViewWidget(BaseTansuWidget):
         return self._view_widget
 
     def setViewWidget(self, view_widget):
+        # remove all view widget
+        if hasattr(self, '_view_widget'):
+            self._view_widget.setParent(None)
+
+        # set new view widget
         self._view_widget = view_widget
+        view_widget.setModel(self.model())
 
     def getViewPosition(self):
         return self._direction
@@ -302,11 +315,10 @@ class TansuModelViewWidget(BaseTansuWidget):
         selected (bool): determines if this item has been selected
             or un selected.
         """
-        if not hasattr(item, '_delegate_widget'): return
-
         # update static widgets
         if self.getDelegateType() == TansuModelViewWidget.STACKED:
-            self.__updateStackedDisplay(item, selected)
+            if item.delegateWidget():
+                self.__updateStackedDisplay(item, selected)
 
         # update dynamic widgets
         if self.getDelegateType() == TansuModelViewWidget.DYNAMIC:
@@ -522,6 +534,16 @@ class TansuListView(QListView):
         super(TansuListView, self).__init__(parent)
         self.setEditTriggers(QAbstractItemView.DoubleClicked)
 
+    """ ABSTRACT ITEM VIEW STUFFF"""
+    def getIndexUnderCursor(self):
+        """
+        Returns the QModelIndex underneath the cursor
+        """
+        pos = self.mapFromGlobal(QCursor.pos())
+        index = self.indexAt(pos)
+        #item = index.internalPointer()
+        return index
+
     def showEvent(self, event):
         tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
         if tab_tansu_widget:
@@ -600,7 +622,7 @@ if __name__ == "__main__":
 
     for x in range(3):
         widget = QLabel(str(x))
-        w.insertViewItem(x, str(x),widget=widget)
+        w.insertViewItem(x, str(x), widget=widget)
 
     w.resize(500, 500)
 
@@ -608,12 +630,12 @@ if __name__ == "__main__":
     # view_item = new_index.internalPointer()
     # view_item.setName(name)
     #
-    index = w.model().index(0, 3, QModelIndex())
-    item = w.model().getItem(index)
-    item.setName("klajfjklasjfkla")
+    # index = w.model().index(0, 3, QModelIndex())
+    # item = w.model().getItem(index)
+    # item.setName("klajfjklasjfkla")
     #
     # w.show()
-    w.setViewWidgetToDefaultSize()
+    #w.setViewWidgetToDefaultSize()
 
     q = QTableView()
     q.show()

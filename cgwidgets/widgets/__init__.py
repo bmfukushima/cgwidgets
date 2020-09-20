@@ -18,6 +18,7 @@ from .Tansu import TansuModel as TansuModel
 
 from .Tansu import BaseTansuWidget as BaseTansuWidget
 from .Tansu import TansuModelViewWidget as TansuModelViewWidget
+from .Tansu import TansuListView as TansuListView
 
 from .Tansu import TabTansuWidget as TabTansuWidget
 from .Tansu import TabTansuLabelWidget as TabTansuLabelWidget
