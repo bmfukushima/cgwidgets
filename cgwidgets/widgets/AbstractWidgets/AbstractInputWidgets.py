@@ -34,7 +34,7 @@ from cgwidgets.utils import (
     updateStyleSheet, clearLayout, installLadderDelegate, getWidgetAncestor,
     getFontSize
 )
-from cgwidgets.settings.colors import RGBA_OUTLINE, getTopBorderStyleSheet
+from cgwidgets.settings.colors import iColor
 
 from cgwidgets.widgets.AbstractWidgets import AbstractVLine, AbstractHLine
 
@@ -48,7 +48,7 @@ class AbstractInputWidget(QLineEdit):
         rgba_border (rgba): color of the border...
         alpha (int): value of alpha transparency
     """
-    RGBA_BORDER_COLOR = RGBA_OUTLINE
+    RGBA_BORDER_COLOR = iColor.rgba_outline
     ALPHA = 48
 
     def __init__(self, parent=None):
@@ -149,7 +149,7 @@ class AbstractInputGroup(QGroupBox):
     """
     Group box containing the user input parameters widgets.
     """
-    RGBA_BORDER_COLOR = RGBA_OUTLINE
+    RGBA_BORDER_COLOR = iColor.rgba_outline
     PADDING = 3
     ALPHA = 48
 
@@ -159,6 +159,10 @@ class AbstractInputGroup(QGroupBox):
         QBoxLayout(QBoxLayout.TopToBottom, self)
         self.layout().setAlignment(Qt.AlignTop)
         seperator = AbstractHLine(self)
+        seperator.setStyleSheet("""
+            background-color: rgba{rgba_outline};
+            margin: 30px;
+            """.format(rgba_outline=iColor.rgba_outline))
         self.layout().addWidget(seperator)
 
         # set up default attrs

@@ -18,16 +18,12 @@ from qtpy.QtWidgets import (
 from qtpy.QtCore import Qt, QModelIndex
 from qtpy.QtGui import QCursor
 
-from cgwidgets.settings.colors import (
-    RGBA_TANSU_HANDLE,
-    RGBA_SELECTED,
-    RGBA_SELECTED_HOVER
-)
 from cgwidgets.utils import getWidgetAncestor
+from cgwidgets.settings.colors import iColor
 
 from cgwidgets.widgets import AbstractInputGroup
 from cgwidgets.widgets.Tansu import (
-    BaseTansuWidget, TansuModel, TansuModelItem
+    BaseTansuWidget, TansuModel
 )
 
 
@@ -46,12 +42,6 @@ class TansuModelViewWidget(BaseTansuWidget):
         selected_labels_list (list): list of labels that are currently selected by the user
 
     Attributes:
-        rgba_outline (rgba): color of the outline for the individual tab labels
-            default color is TansuModelViewWidget.OUTLINE_COLOR
-        rgba_selected_tab (rgba): text color of selected tab
-            default color is TansuModelViewWidget.SELECTED_COLOR
-        rgba_selected_tab_hover (rgba): text color of tab when hovered over
-         TansuModelViewWidget.SELECTED_COLOR_HOVER
         view_height (int): the default height of the tab label in pixels
             only works when the mode is set to view the labels on the north/south
         view_width (int): the default width of the tab label in pixels
@@ -86,9 +76,6 @@ class TansuModelViewWidget(BaseTansuWidget):
     EAST = 'east'
     WEST = 'west'
     OUTLINE_WIDTH = 1
-    OUTLINE_COLOR = RGBA_TANSU_HANDLE
-    SELECTED_COLOR = RGBA_SELECTED
-    SELECTED_COLOR_HOVER = RGBA_SELECTED_HOVER
     STACKED = 'stacked'
     DYNAMIC = 'dynamic'
     MULTI = False
@@ -101,11 +88,6 @@ class TansuModelViewWidget(BaseTansuWidget):
         self._direction = direction #just a temp set... for things
         self._view_height = 50
         self._view_width = 100
-
-        # colors attrs
-        self.rgba_outline = TansuModelViewWidget.OUTLINE_COLOR
-        self.rgba_selected_tab = TansuModelViewWidget.SELECTED_COLOR
-        self.rgba_selected_tab_hover = TansuModelViewWidget.SELECTED_COLOR_HOVER
 
         # setup model / view
         self._model = TansuModel()
@@ -127,6 +109,7 @@ class TansuModelViewWidget(BaseTansuWidget):
         scroll_area.setWidgetResizable(True)
 
         self.addWidget(scroll_area)
+        scroll_area.setStyleSheet(iColor.default_style_sheet)
         self.addWidget(self._view_widget)
 
         # set default attrs
@@ -233,7 +216,7 @@ class TansuModelViewWidget(BaseTansuWidget):
         # make uncollapsible
         self.setCollapsible(0, False)
         self.setCollapsible(1, False)
-        self.setupStyleSheet()
+        self.updateStyleSheet()
 
     def setViewWidgetToDefaultSize(self):
         """
@@ -308,10 +291,12 @@ class TansuModelViewWidget(BaseTansuWidget):
         self._selection_item = selected
         for index in selected.indexes():
             item = index.internalPointer()
+            item.setSelected(True)
             self.__updateDelegateItem(item, True)
 
         for index in deselected.indexes():
             item = index.internalPointer()
+            item.setSelected(False)
             self.__updateDelegateItem(item, False)
 
     def __updateDelegateItem(self, item, selected):
@@ -399,6 +384,22 @@ class TansuModelViewWidget(BaseTansuWidget):
         self.setViewWidgetToDefaultSize()
         return BaseTansuWidget.showEvent(self, event)
 
+    def resizeEvent(self, event):
+
+        model = self.model()
+        num_items = model.getRootItem().childCount()
+
+        # update width
+        if self.getViewPosition() in [
+            TansuModelViewWidget.NORTH,
+            TansuModelViewWidget.SOUTH
+        ]:
+            width = int( self.width() / num_items )
+            if TansuModel.ITEM_WIDTH < width:
+                model.item_width = width - 1
+                self.setupStyleSheet()
+        return BaseTansuWidget.resizeEvent(self, event)
+
     """ PROPERTIES """
     """ selection """
     def setMultiSelect(self, enabled):
@@ -464,51 +465,61 @@ class TansuModelViewWidget(BaseTansuWidget):
         Sets the style sheet for the outline based off of the direction of the parent.
 
         """
+        self.setHandleWidth(0)
+        # splitter_style_sheet = """
+        #     BaseTansuWidget::handle {{
+        #         border: None;
+        #         background-color: rgba(0,0,0,0);
+        #     }}
+        # """
         splitter_style_sheet = """
             QSplitter::handle {{
                 border: None;
+                color: rgba(255,0,0,255);
             }}
         """
-
+        #splitter_style_sheet = """background-color{rgba(0,0,0,255)}"""
         view_position = self.getViewPosition()
-        style_sheet_args = {
-            'rgba_border': repr(self.rgba_outline),
-            'rgba_selected': repr(self.rgba_selected_tab),
-            'rgba_hover': repr(self.rgba_selected_tab_hover),
+        style_sheet_args = iColor.style_sheet_args
+        style_sheet_args.update({
             'outline_width': TansuModelViewWidget.OUTLINE_WIDTH,
             'type': type(self.viewWidget()).__name__,
             'splitter_style_sheet': splitter_style_sheet
-        }
+        })
         if view_position == TansuModelViewWidget.NORTH:
             style_sheet = """
             {type}::item:hover{{color: rgba{rgba_hover}}}
             {type}::item{{
-                border: {outline_width}px solid rgba{rgba_border} ;
+                border: {outline_width}px solid rgba{rgba_outline} ;
                 border-left: None;
                 border-top: None;
-                color: rgba{rgba_selected};
+                background-color: rgba{rgba_background};
+                color: rgba{rgba_text_color};
             }}
             {type}::item:selected{{
-                border: {outline_width}px solid rgba{rgba_border} ;
+                border: {outline_width}px solid rgba{rgba_outline} ;
                 border-left: None;
                 border-bottom: None;
+                background-color: rgba{rgba_background_selected};
                 color: rgba{rgba_selected};
             }}
             {splitter_style_sheet}
             """.format(**style_sheet_args)
-
         elif view_position == TansuModelViewWidget.SOUTH:
             style_sheet = """
             {type}::item:hover{{color: rgba{rgba_hover}}}
             {type}::item{{
-                border: {outline_width}px solid rgba{rgba_border};
+                border: {outline_width}px solid rgba{rgba_outline};
                 border-left: None;
                 border-bottom: None;
+                background-color: rgba{rgba_background};
+                color: rgba{rgba_text_color};
             }}
             {type}::item:selected{{
-                border: {outline_width}px solid rgba{rgba_border} ;
+                border: {outline_width}px solid rgba{rgba_outline} ;
                 border-left: None;
                 border-top: None;
+                background-color: rgba{rgba_background_selected};
                 color: rgba{rgba_selected};
             }}
             {splitter_style_sheet}
@@ -517,14 +528,17 @@ class TansuModelViewWidget(BaseTansuWidget):
             style_sheet = """
             {type}::item:hover{{color: rgba{rgba_hover}}}
             {type}::item{{
-                border: {outline_width}px solid rgba{rgba_border};
+                border: {outline_width}px solid rgba{rgba_outline};
                 border-top: None;
                 border-right: None;
+                background-color: rgba{rgba_background};
+                color: rgba{rgba_text_color}
             }}
             {type}::item:selected{{
-                border: {outline_width}px solid rgba{rgba_border} ;
+                border: {outline_width}px solid rgba{rgba_outline} ;
                 border-top: None;
                 border-left: None;
+                background-color: rgba{rgba_background_selected};
                 color: rgba{rgba_selected};
             }}
             {splitter_style_sheet}
@@ -533,43 +547,24 @@ class TansuModelViewWidget(BaseTansuWidget):
             style_sheet = """
             {type}::item:hover{{color: rgba{rgba_hover}}}
             {type}::item{{
-                border: {outline_width}px solid rgba{rgba_border};
+                border: {outline_width}px solid rgba{rgba_outline};
                 border-top: None;
                 border-left: None;
+                background-color: rgba{rgba_background};
+                color: rgba{rgba_text_color}
             }}
             {type}::item:selected{{
-                border: {outline_width}px solid rgba{rgba_border} ;
+                border: {outline_width}px solid rgba{rgba_outline} ;
                 border-top: None;
                 border-right: None;
+                background-color: rgba{rgba_background_selected};
                 color: rgba{rgba_selected};
             }}
+            {splitter_style_sheet}
             """.format(**style_sheet_args)
+
+        #self.setStyleSheet( """background-color{rgba(0,0,0,255)}""")
         self.setStyleSheet(style_sheet)
-
-    """ colors """
-    @property
-    def rgba_outline(self):
-        return self._rgba_outline
-
-    @rgba_outline.setter
-    def rgba_outline(self, rgba_outline):
-        self._rgba_outline = rgba_outline
-
-    @property
-    def rgba_selected_tab(self):
-        return self._rgba_selected_tab
-
-    @rgba_selected_tab.setter
-    def rgba_selected_tab(self, rgba_selected_tab):
-        self._rgba_selected_tab = rgba_selected_tab
-
-    @property
-    def rgba_selected_tab_hover(self):
-        return self._rgba_selected_tab_hover
-
-    @rgba_selected_tab_hover.setter
-    def rgba_selected_tab_hover(self, rgba_selected_tab_hover):
-        self._rgba_selected_tab_hover = rgba_selected_tab_hover
 
     """ default view size"""
     @property
@@ -621,6 +616,10 @@ class TansuModelDelegateWidget(AbstractInputGroup):
         self.display_background = False
         self.alpha = 0
         self.updateStyleSheet()
+        #self.setStyleSheet(iColor.default_style_sheet)
+        #print(iColor.default_style_sheet)
+        #self.updateStyleSheet()
+        #self.setContentsMargins(0,0,0,0)
 
     def setMainWidget(self, widget):
         # remove old main widget if it exists
@@ -639,6 +638,8 @@ class TansuModelDelegateWidget(AbstractInputGroup):
 class TansuListView(QListView):
     def __init__(self, parent=None):
         super(TansuListView, self).__init__(parent)
+
+        self.setStyleSheet(iColor.default_style_sheet)
         self.setEditTriggers(QAbstractItemView.DoubleClicked)
 
     """ ABSTRACT ITEM VIEW STUFFF"""
@@ -739,6 +740,7 @@ if __name__ == "__main__":
 
     w.resize(500, 500)
 
+    #w.setStyleSheet(iColor.default_style_sheet)
     # new_index = self.model().index(index, 1, parent)
     # view_item = new_index.internalPointer()
     # view_item.setName(name)
@@ -754,6 +756,9 @@ if __name__ == "__main__":
     # q.show()
     #
     # q.setModel(w.model())
+    # widget = QLabel("test")
+    # display_widget = TansuModelDelegateWidget('alskdjf')
+    # display_widget.setMainWidget(widget)
     w.show()
     w.move(QCursor.pos())
     sys.exit(app.exec_())

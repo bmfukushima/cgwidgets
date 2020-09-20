@@ -13,7 +13,8 @@ from qtpy.QtGui import QCursor
 from cgwidgets.settings.colors import(
     RGBA_TANSU_FLAG,
     RGBA_TANSU_HANDLE,
-    RGBA_TANSU_HANDLE_HOVER
+    RGBA_TANSU_HANDLE_HOVER,
+    iColor
 )
 
 from cgwidgets.utils import updateStyleSheet
@@ -41,8 +42,6 @@ class BaseTansuWidget(QSplitter):
     """
     HANDLE_WIDTH = 2
     FULLSCREEN_HOTKEY = 96
-    HANDLE_COLOR = RGBA_TANSU_HANDLE
-    HANDLE_COLOR_HOVER = RGBA_TANSU_HANDLE_HOVER
     FLAG_COLOR = RGBA_TANSU_FLAG
 
     def __init__(self, parent=None, orientation=Qt.Vertical):
@@ -54,9 +53,9 @@ class BaseTansuWidget(QSplitter):
         self._solo_view_hotkey = BaseTansuWidget.FULLSCREEN_HOTKEY
 
         # set colors
-        self._rgba_handle = BaseTansuWidget.HANDLE_COLOR
-        self._rgba_handle_hover = BaseTansuWidget.HANDLE_COLOR_HOVER
-        self._rgba_flag = BaseTansuWidget.FLAG_COLOR
+        self._rgba_handle = iColor.rgba_outline
+        self._rgba_handle_hover = iColor.rgba_outline_hover
+        self._rgba_flag = iColor.rgba_hover
         self.setOrientation(orientation)
 
         # set up handle defaults
@@ -64,32 +63,6 @@ class BaseTansuWidget(QSplitter):
         self.updateStyleSheet()
 
     """ UTILS """
-    def updateStyleSheet(self):
-        """
-        Sets the color of the handle based off of the two provided
-
-        Args:
-            color (rgba): color to display when not hovering over handle
-            hover_color (rgba): color to display when hover over handle
-        """
-        style_sheet = """
-            BaseTansuWidget[is_solo_view=true]{{
-                border: 3px solid rgba{rgba_flag}; 
-            }}
-            QSplitter::handle {{
-                border: 1px double rgba{rgba_handle};
-            }}
-            QSplitter::handle:hover {{
-                border: 2px double rgba{rgba_handle_hover};
-            }}
-        """.format(
-            rgba_flag=repr(self.rgba_flag),
-            rgba_handle=repr(self.rgba_handle),
-            rgba_handle_hover=repr(self.rgba_handle_hover)
-        )
-
-        self.setStyleSheet(style_sheet)
-
     def displayAllWidgets(self, value):
         """
         Hides/shows all of the widgets in this splitter.  This is a utility function
@@ -271,6 +244,38 @@ class BaseTansuWidget(QSplitter):
         self.setHandleWidth(_handle_width)
 
     """ COLORS """
+    def updateStyleSheet(self):
+        """
+        Sets the color of the handle based off of the two provided
+
+        Args:
+            color (rgba): color to display when not hovering over handle
+            hover_color (rgba): color to display when hover over handle
+        """
+        style_sheet_args = {
+            'rgba_flag': repr(self.rgba_flag),
+            'rgba_handle': repr(self.rgba_handle),
+            'rgba_handle_hover': repr(self.rgba_handle_hover),
+            'rgba_background': repr(iColor.rgba_background)
+
+        }
+        style_sheet = """
+            BaseTansuWidget{{background-color: rgba{rgba_background}}}
+            BaseTansuWidget[is_solo_view=true]{{
+                border: 3px solid rgba{rgba_flag}; 
+            }}
+            QSplitter::handle {{
+                border: 1px double rgba{rgba_handle};
+            }}
+            QSplitter::handle:hover {{
+                border: 2px double rgba{rgba_handle_hover};
+            }}
+        """.format(
+            **style_sheet_args
+        )
+
+        self.setStyleSheet(style_sheet)
+
     @property
     def rgba_handle(self):
         return self._rgba_handle

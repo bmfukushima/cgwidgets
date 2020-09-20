@@ -13,6 +13,7 @@ class TansuModelItem(object):
         self._children = []
         self._parent = parent
         self._delegate_widget = None
+        self._is_selected = False
 
         if parent is not None:
             parent.addChild(self)
@@ -22,6 +23,12 @@ class TansuModelItem(object):
 
     def setDelegateWidget(self, _delegate_widget):
         self._delegate_widget = _delegate_widget
+
+    def isSelected(self):
+        return self._is_selected
+
+    def setSelected(self, selected):
+        self._is_selected = selected
 
     def addChild(self, child):
         self._children.append(child)

@@ -16,11 +16,6 @@ from qtpy.QtWidgets import (
 from qtpy.QtCore import Qt
 
 from cgwidgets.utils import getWidgetAncestor
-from cgwidgets.settings.colors import (
-    RGBA_TANSU_HANDLE,
-    RGBA_SELECTED,
-    RGBA_SELECTED_HOVER
-)
 
 from cgwidgets.widgets import AbstractInputGroup
 from cgwidgets.widgets.Tansu import BaseTansuWidget
@@ -80,9 +75,7 @@ class TabTansuWidget(BaseTansuWidget):
     EAST = 'east'
     WEST = 'west'
     OUTLINE_WIDTH = 1
-    OUTLINE_COLOR = RGBA_TANSU_HANDLE
-    SELECTED_COLOR = RGBA_SELECTED
-    SELECTED_COLOR_HOVER = RGBA_SELECTED_HOVER
+
     STACKED = 'stacked'
     DYNAMIC = 'dynamic'
     MULTI = False

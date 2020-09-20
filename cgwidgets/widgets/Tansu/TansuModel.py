@@ -10,16 +10,15 @@ TODO:
 """
 
 from qtpy.QtCore import (
-    Qt, QModelIndex, QAbstractItemModel)
+    Qt, QModelIndex, QAbstractItemModel, QSize)
 from qtpy.QtGui import (
-    QPixmap,
-    QIcon,
-
+    QBrush, QColor
 )
 
 import sys
 
 from cgwidgets.widgets.Tansu import TansuModelItem
+from cgwidgets.settings.colors import iColor
 
 
 class TansuModel(QAbstractItemModel):
@@ -34,12 +33,15 @@ class TansuModel(QAbstractItemModel):
         item_type (Item): Data item to be stored on each index.  By default this
             set to the TansuModelItem
     """
+    ITEM_HEIGHT = 35
+    ITEM_WIDTH = 100
 
     def __init__(self, parent=None, root_item=None):
         super(TansuModel, self).__init__(parent)
         # set up default item type
         self._item_type = TansuModelItem
-
+        self._item_height = TansuModel.ITEM_HEIGHT
+        self._item_width = TansuModel.ITEM_WIDTH
         # set up root item
         if not root_item:
             root_item = TansuModelItem('root_item')
@@ -82,6 +84,17 @@ class TansuModel(QAbstractItemModel):
         if role == Qt.DisplayRole or role == Qt.EditRole:
             if index.column() == 0:
                 return item.name()
+
+        if role == Qt.SizeHintRole:
+            return QSize(self.item_width, self.item_height)
+
+        if role == Qt.BackgroundRole:
+            return None
+        # if role == Qt.BackgroundRole:
+        #     if item.isSelected():
+        #         return QBrush(QColor(*iColor.rgba_background_selected))
+        #     else:
+        #         return QBrush(QColor(*iColor.rgba_background))
 
     def setData(self, index, value, role=Qt.EditRole):
         """
@@ -215,6 +228,23 @@ class TansuModel(QAbstractItemModel):
 
     def setRootItem(self, root_item):
         self._root_item = root_item
+
+    """ PROPERTIES """
+    @property
+    def item_height(self):
+        return self._item_height
+
+    @item_height.setter
+    def item_height(self, _item_height):
+        self._item_height = _item_height
+
+    @property
+    def item_width(self):
+        return self._item_width
+
+    @item_width.setter
+    def item_width(self, _item_width):
+        self._item_width = _item_width
 
 
 if __name__ == '__main__':
