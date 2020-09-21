@@ -15,18 +15,18 @@ class Settings(object):
 
     # Views
     IMAGE_SELECTED_BORDER_WIDTH = 2
-    IMAGE_SELECTED_SS = '''
+    IMAGE_SELECTED_SS = """
         border-width:{}px;\
         border-color: rgba(255,200,0,255);\
         border-style: solid\
-    '''.format(IMAGE_SELECTED_BORDER_WIDTH)
+    """.format(IMAGE_SELECTED_BORDER_WIDTH)
     IMAGE_DESELECTED_SS = iUtils.createThumbnailSS(IMAGE_SELECTED_BORDER_WIDTH, False)
 
     # IMAGE
-    FULL_SCREEN_TEXT_SS = '''
+    FULL_SCREEN_TEXT_SS = """
         background-color:rgba(64,64,64,128);
         color:rgb(200,200,32)
-    '''
+    """
 
     # TOP BAR
     TOP_BAR_CONTAINER_SS = iUtils.createGroupBoxSS(1, 20)

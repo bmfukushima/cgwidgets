@@ -93,8 +93,6 @@ class TansuModelViewWidget(BaseTansuWidget):
         self._model = TansuModel()
         self._view_widget = TansuListView(self)
         self._view_widget.setModel(self._model)
-        #self.setModel(new_model)
-        #self.setViewWidget(default_view_widget)
 
         # setup delegate
         delegate_widget = TansuMainDelegateWidget()
@@ -109,7 +107,8 @@ class TansuModelViewWidget(BaseTansuWidget):
         scroll_area.setWidgetResizable(True)
 
         self.addWidget(scroll_area)
-        scroll_area.setStyleSheet("border:None")
+        # TEMP
+        scroll_area.setStyleSheet("QScrollArea{border:None}")
         self.addWidget(self._view_widget)
 
         # set default attrs
@@ -590,7 +589,6 @@ class TansuMainDelegateWidget(BaseTansuWidget):
     def __init__(self, parent=None):
         super(TansuMainDelegateWidget, self).__init__(parent)
         self.rgba_background = iColor.rgba_outline
-        #self.setStyleSheet(self.styleSheet() + "background-color: rgba(0,0,128,255)")
 
     def showEvent(self, event):
         tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
@@ -613,9 +611,11 @@ class TansuModelDelegateWidget(AbstractInputGroupContainer):
     """
     def __init__(self, parent=None, title=None):
         super(TansuModelDelegateWidget, self).__init__(parent, title)
-        self.setStyleSheet("background-color: rgba{background_color}".format(
-            background_color=iColor.rgba_background_selected)
-        )
+        self.setStyleSheet("""
+            TansuModelDelegateWidget{{background-color: rgba{background_color}}}
+        """.format(
+            background_color=iColor.rgba_background_selected
+        ))
 
     def setMainWidget(self, widget):
         # remove old main widget if it exists

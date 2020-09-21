@@ -12,11 +12,11 @@ class iUtils(object):
 
     @staticmethod
     def getSetting(setting):
-        '''
+        """
         @setting: <str> return the setting value.  This will check the
             user directory located at $HOME/.library.settings.json first
             before checking the settings file embedded into the library.
-        '''
+        """
         # user settings
         try:
             settings_dir = os.environ['HOME'] + '/.library'
@@ -43,69 +43,13 @@ class iUtils(object):
         main_widget = gUtils.getMainWidget(widget, 'Library')
         model = main_widget.model
         return model
-    
-    """
-    @staticmethod
-    def getJSONData(json_file):
-        '''
-        returns the actual json dict
-        '''
-        if json_file:
-            with open(json_file, 'r') as f:
-                datastore = json.load(f, object_pairs_hook=OrderedDict)
-        return datastore
 
-    @staticmethod
-    def getMainWidget(widget, name):
-        '''
-        searchs widgets parents until it finds one with the name
-        provided in the variables.
-        
-        Note:
-            that name is found with the __name__() dunder
-
-        @widget < widget >
-            widget to start searching parents from
-        @name < str >
-            name of widget to find
-        '''
-        try:
-            if widget.__name__() == name:
-                return widget
-            else:
-                return iUtils.getMainWidget(widget.parent(), name)
-        except AttributeError:
-            try:
-                return iUtils.getMainWidget(widget.parent(), name)
-            except AttributeError:
-                print("this is has no parents...")
-    
-    @staticmethod
-    def clearLayout(layout, start=None, end=None):
-        '''
-        removes all widgets from the layout provided,
-        @start: < int > 
-            index to start removing from
-        @end: <int>
-            index to stop removing at
-        '''
-        if not end:
-            end = layout.count()
-        if not start:
-            start = 0
-        for i in reversed(range(start, end)):
-            widget = layout.itemAt(i).widget()
-            try:
-                widget.setParent(None)
-            except AttributeError:
-                pass
-    """
     @staticmethod
     def createImageWidget(parent, json, row_height):
-        '''
+        """
         @json: <dict> json
         @row_height: <int>
-        '''
+        """
         from .ImageWidget import DefaultImage
         #from Settings import Settings
         border_width = iUtils.getSetting('IMAGE_SELECTED_BORDER_WIDTH')
@@ -124,10 +68,10 @@ class iUtils(object):
     
     @staticmethod
     def createGroupBoxSS(border, margin):
-            '''
+            """
             @border: <int> width of border
             @margin: <int> size of margin
-            '''
+            """
             stylesheet = """
             QGroupBox::title{{
                 subcontrol-origin: margin;
@@ -156,12 +100,12 @@ class iUtils(object):
         if active is True:
             activated_color = '255, 200, 0'
     
-        stylesheet = '''
+        stylesheet = """
             border-width:{}px;
             border-style: solid;
             border-color: rgba(48,48,48,192);
             background-color: rgba({activated_color},192);
-            '''.format(border_width, activated_color=activated_color)
+            """.format(border_width, activated_color=activated_color)
     
         return stylesheet
 

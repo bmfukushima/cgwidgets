@@ -1,4 +1,4 @@
-'''
+"""
 need to clean up..
     - move all document all methods/properties in classes
     - move to UML chart eventually...
@@ -166,7 +166,7 @@ lookdev
 
 NOTES:
     json file needs iskatanalibrary key to be registered for plugin
-'''
+"""
 import re
 
 from qtpy.QtWidgets import *
@@ -184,10 +184,10 @@ from .Views import *
 
 
 class LibraryWidget(QWidget, iUtils):
-    '''
+    """
     @selection_list: a list of Image Widgets to display
         which ones are currently selected
-    '''
+    """
 
     def __init__(self, parent=None):
         super(LibraryWidget, self).__init__(parent)
@@ -278,13 +278,13 @@ class LibraryWidget(QWidget, iUtils):
         self.main_splitter.setHandleWidth(self.main_splitter_handle_width)
         #self.full_screen_image = ImageWidget.FullScreenImage()
         self.full_screen_image = FullScreenImageViewer(self)
-        '''
+        """
         self.full_screen_image_layout = QVBoxLayout()
         self.full_screen_image.setLayout(self.full_screen_image_layout)
         self.full_screen_image.setSizePolicy(
             QSizePolicy.Expanding, QSizePolicy.Expanding
         )
-        '''
+        """
 
         self.view_layout.addWidget(self.main_splitter)
         self.view_layout.addWidget(self.full_screen_image)
@@ -307,10 +307,10 @@ class LibraryWidget(QWidget, iUtils):
         self.setupUserDefaults()
 
     def setupUserDefaults(self):
-        '''
+        """
         Sets up the user defaults for any options the user may click
         in the interface
-        '''
+        """
         self.model = ImageListModel(parent_widget=self)
         # Default View
         mode_widget = self.top_bar_widget.mode_container.mode_menu
@@ -331,7 +331,7 @@ class LibraryWidget(QWidget, iUtils):
             if widget_size_name == default_size:
                 widget.setSelected()
 
-    '''  UTILS '''
+    """  UTILS """
 
     def getSelectionList(self):
         return self.model.metadata['selected']
@@ -342,7 +342,7 @@ class LibraryWidget(QWidget, iUtils):
     def closeFullScreenImageWidget(self):
         self.view_layout.setCurrentIndex(0)
 
-    ''' API '''
+    """ API """
 
     @property
     def library_dir(self):
@@ -354,10 +354,10 @@ class LibraryWidget(QWidget, iUtils):
 
     @property
     def drag_image_path(self):
-        '''
+        """
         Path to the image, upon drop this will be the text
         that is dropped into text editable fields
-        '''
+        """
         return self._drag_image_path
 
     @drag_image_path.setter
@@ -370,10 +370,10 @@ class LibraryWidget(QWidget, iUtils):
 
     @property
     def drag_proxy_image_path(self):
-        '''
+        """
         path to proxy image to be displayed to the user
         during a drag operation
-        '''
+        """
         return self._drag_proxy_image_path
 
     @drag_proxy_image_path.setter
@@ -393,10 +393,10 @@ class LibraryWidget(QWidget, iUtils):
         self._drop_action_list = drop_action_list
 
     def add_drop_action(self, widget_list, method):
-        '''
+        """
         @widget_list: <list> of widgets to install the event filter on
         @method: <fun> method to run during the drop event
-        '''
+        """
         self.drop_action_list.append(
             {
                 'widget_list': widget_list,
@@ -405,7 +405,7 @@ class LibraryWidget(QWidget, iUtils):
         )
 
     def imageClickedEvent(self, event, widget):
-        '''
+        """
         @event: <QEvent> mousePressEvent
         @widget: <ImageWidget> the current image that the user has
             clicked on with the middle mouse button
@@ -413,21 +413,21 @@ class LibraryWidget(QWidget, iUtils):
             This is meant to be overwritten when the you subclass this
             bad boy... if you want some of that sweet sweet drag/drop
             functionality
-        '''
+        """
         if widget.button == Qt.MiddleButton:
-            '''
+            """
             install event filters
-            '''
+            """
             for action in self.drop_action_list:
                 widget_list = action['widget_list']
                 # method = action['method']
                 for w in widget_list:
                     w.removeEventFilter(self)
                     w.installEventFilter(self)
-            '''
+            """
             get the image displayed to the user during the drag operation
             and the path to the file location if it is dropped in a text field
-            '''
+            """
             try:
                 self.drag_image_path
                 self.drag_proxy_image_path
@@ -484,7 +484,7 @@ class LibraryWidget(QWidget, iUtils):
     def mouseReleaseEvent(self, *args, **kwargs):
         print("mouse release event ( library )")
         return QWidget.mouseReleaseEvent(self, *args, **kwargs)
-    ''' PROPERTIES '''
+    """ PROPERTIES """
 
     @property
     def temp_selection_list(self):
@@ -512,13 +512,13 @@ class LibraryWidget(QWidget, iUtils):
         self.thumbnail_view.setModel(model)
         self.detailed_view.setModel(model)
 
-    ''' EVENTS '''
+    """ EVENTS """
 
     def activateFullScreenDisplay(self):
-        '''
+        """
         Gets the current list of items selected by the user
         and displays them full screen in contact sheet format
-        '''
+        """
         view_layout = self.view_layout
         if view_layout.currentIndex() == 0:
             self.view_layout.setCurrentIndex(1)
@@ -538,19 +538,19 @@ class LibraryWidget(QWidget, iUtils):
 
 
 class FullScreenImageViewer(ThumbnailViewWidget):
-    '''
+    """
     Widget that is displayed when the user click/drags on a
     thumbnail a certain distance to activate.
 
     Hit escape to close.  There is no other way to go back, because
     I really don't think it's worth wasting the screen real estate on that...
-    '''
+    """
     def __init__(self, parent=None):
         super(FullScreenImageViewer, self).__init__(parent)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
-        self.setToolTip('''
+        self.setToolTip("""
     LMB Click:
         Select image ( If the border is yellow, the image is considered to be "selected")
     LMB Click + Drag:
@@ -563,21 +563,21 @@ class FullScreenImageViewer(ThumbnailViewWidget):
             None: All images
     MMB Click + Drag:
         Drop into a tab to get the desired results for each DCC.
-        ''')
+        """)
 
     def getImageSize(self):
-        '''
+        """
         Gets the max image height/width based off of the algo here:
         https://math.stackexchange.com/questions/466198/algorithm-to-get-the-maximum-size-of-n-squares-that-fit-into-a-rectangle-with-a/466248
-        '''
+        """
 
         # get attributes
         n = len(gUtils.getMainWidget(self, 'Library').temp_selection_list)
         if n == 0:
-            '''
+            """
             small hack, when the widget is initializing it will try to divide by 0
             This is just a hack to force it not to make any errors... 
-            '''
+            """
             return 1
         x = self.width()
         y = self.height()
@@ -634,10 +634,10 @@ class FullScreenImageViewer(ThumbnailViewWidget):
         return cell_size
 
     def createModelFromSelectionList(self, selection_list=None):
-        '''
+        """
         creates a new model for itself based off of the user selection
         that is stored in the main model
-        '''
+        """
         view_list = []
         model = ImageListModel(parent_widget=self)
         for filepath in selection_list:
@@ -694,7 +694,7 @@ class FullScreenImageViewer(ThumbnailViewWidget):
         self.widget_list = widget_list
         self.layoutWidgets(num_columns=self.num_columns)
 
-    ''' PROPERTIES '''
+    """ PROPERTIES """
 
     @property
     def widget_list(self):
@@ -707,13 +707,13 @@ class FullScreenImageViewer(ThumbnailViewWidget):
     def appendToImageList(self, widget):
         self._image_list.append(widget)
 
-    ''' EVENTS '''
+    """ EVENTS """
     def nextImage(self, selected=True):
-        '''
+        """
         sets the next image for all selected images
         @selected: <bool> if True, will only set the next image
             of the selected image.  If False, will update ALL images
-        '''
+        """
         for widget in self.widget_list:
             if selected is True:
                 if widget.isSelected() is True:
@@ -722,11 +722,11 @@ class FullScreenImageViewer(ThumbnailViewWidget):
                 widget.nextImage()
 
     def previousImage(self, selected=True):
-        '''
+        """
         sets the previous image for all selected images
         @selected: <bool> if True, will only set the previous image
             of the selected image.  If False, will update ALL images
-        '''
+        """
         #image_list = iUtils.getModel(self).metadata['selected']
         for widget in self.widget_list:
             if selected is True:
@@ -736,20 +736,20 @@ class FullScreenImageViewer(ThumbnailViewWidget):
                 widget.previousImage()
 
     def hideEvent(self, *args, **kwargs):
-        '''
+        """
         When this widget is hidden from view, it returns the
         previous selection back to the user
-        '''
+        """
         main_widget = gUtils.getMainWidget(self, 'Library')
         main_widget.model.metadata['selected'] = main_widget.temp_selection_list
         main_widget.model.updateViews()
         return ThumbnailViewWidget.hideEvent(self, *args, **kwargs)
 
     def resizeEvent(self, event, *args, **kwargs):
-        '''
+        """
         When this widget is resized, it updates the sizes of the widgets
         to get the most possible space
-        '''
+        """
         main_widget = gUtils.getMainWidget(self, 'Library')
         self.update(selection_list=main_widget.temp_selection_list)
         #return ThumbnailViewWidget.resizeEvent(self, event, *args, **kwargs)
@@ -907,9 +907,9 @@ class FullScreenImageItem(ImageWidget.ImageWidget):
 
 
 class ListViewMainWidget(QScrollArea):
-    '''
+    """
     primary layout of the contact sheet
-    '''
+    """
     def __init__(self, parent=None):
         super(ListViewMainWidget, self).__init__(parent)
 
@@ -927,13 +927,13 @@ class ListViewMainWidget(QScrollArea):
 
 
 class SearchBar(QLineEdit):
-    '''
+    """
     bottom search bar
     used by user to filter the search results being display to them
-    '''
+    """
     def __init__(self, parent=None):
         super(SearchBar, self).__init__(parent)
-        self.setToolTip('''
+        self.setToolTip("""
     Search Bar:
         columnname{regex, regex}
             ie
@@ -959,14 +959,14 @@ class SearchBar(QLineEdit):
 
         Any items selected will remain selected when searching,
         this is only a display update.
-        ''')
+        """)
 
     def keyPressEvent(self, event, *args, **kwargs):
-        '''
+        """
         On Enter/Return:
             Will update all of the views based on the parameters
             specified by the user.
-        '''
+        """
         accepted_keys = [Qt.Key_Enter, Qt.Key_Return]
         if event.key() in accepted_keys:
             model = iUtils.getModel(self)
@@ -977,7 +977,7 @@ class SearchBar(QLineEdit):
 
 
 class DirList(QTreeWidget):
-    '''
+    """
     View of all of the sub directories of the location specified in
     library_dir.
 
@@ -985,7 +985,7 @@ class DirList(QTreeWidget):
     widgets init function when this widget is instantiated.
     This should potentially be moved to an environment variable,
     as well as having a user defined location?
-    '''
+    """
     def __init__(self, library_dir=None, parent=None):
         super(DirList, self).__init__(parent)
         # self.main_widget = main_widget
@@ -996,10 +996,10 @@ class DirList(QTreeWidget):
             self.populate(directory)
 
     def populate(self, directory):
-        '''
+        """
         Creates all of the items for the model to replicate a hierarchical
         representation of the file system
-        '''
+        """
         def populateChildren(item=None, directory=None):
             children = os.listdir(directory)
             if len(children) > 0:
@@ -1031,11 +1031,11 @@ class DirList(QTreeWidget):
         populateChildren(item=item, directory=directory)
 
     def selectionChanged(self, *args, **kwargs):
-        '''
+        """
         When the user clicks on a new location, this will update the
         views to display all of the images located in that directory
         and its subdirectories in the view
-        '''
+        """
         main_widget = gUtils.getMainWidget(self, 'Library')
 
         # get all items

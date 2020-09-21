@@ -50,8 +50,7 @@ from cgwidgets.utils import (
 from cgwidgets.delegates import SlideDelegate
 
 from cgwidgets.settings.colors import (
-    RGBA_SELECTED_HOVER,
-    RGBA_OUTLINE
+    iColor
 )
 
 from cgwidgets.widgets import FloatInputWidget
@@ -129,12 +128,12 @@ Notes:
         self.setMiddleItemBorderColor((18, 18, 18))
         self.setMiddleItemBorderWidth(5)
         self.setSlideDistance(.01)
-        self.setSelectionColor(RGBA_SELECTED_HOVER)
+        self.setSelectionColor(iColor.rgba_hover)
         self.setItemHeight(50)
 
-        bg_color = guessBackgroundColor(self.parent().styleSheet())
-        self.setBGSlideColor(bg_color)
-        self.setFGSlideColor((128, 32, 32, 255))
+        #bg_color = guessBackgroundColor(self.parent().styleSheet())
+        self.bg_slide_color = iColor.rgba_background
+        self.fg_slide_color = iColor.rgba_background_selected
 
         self.middle_item_index = int(len(value_list) * 0.5)
 
@@ -146,6 +145,7 @@ Notes:
             | Qt.FramelessWindowHint
             | Qt.Popup
         )
+        self.setStyleSheet(iColor.default_style_sheet)
 
         # create widgets
         for value in value_list:
@@ -170,30 +170,33 @@ Notes:
         # set significant digits
         self.__setSignificantDigits()
 
-        #self.updateLadderItemStyleSheet()
-
     """ API """
-    def getBGSlideColor(self):
+    """ COLORS """
+    @property
+    def bg_slide_color(self):
         return self._bg_slide_color
 
-    def setBGSlideColor(self, color):
+    @bg_slide_color.setter
+    def bg_slide_color(self, color):
         self._bg_slide_color = color
 
         # update slidebar
         for item in self.item_list:
             if not isinstance(item, LadderMiddleItem):
-                    item.slidebar.setBGSlideColor(color)
+                item.slidebar.bg_slide_color = color
 
-    def getFGSlideColor(self):
+    @property
+    def fg_slide_color(self):
         return self._fg_slide_color
 
-    def setFGSlideColor(self, color):
-        self._fg_slide_color = color
+    @fg_slide_color.setter
+    def fg_slide_color(self, fg_slide_color):
+        self._fg_slide_color = fg_slide_color
 
         # update slidebar
         for item in self.item_list:
             if not isinstance(item, LadderMiddleItem):
-                    item.slidebar.setFGSlideColor(color)
+                    item.slidebar.fg_slide_color = fg_slide_color
 
     def getItemHeight(self):
         return self._item_height
@@ -235,10 +238,8 @@ Notes:
         self,
         boolean,
         alignment=Qt.AlignRight,
-        depth=50,
-        fg_color=(32, 32, 32, 255),
-        bg_color=(32, 128, 32, 255),
         breed=SlideDelegate.UNIT,
+        depth=50,
         display_widget=None
     ):
         """
@@ -264,6 +265,7 @@ Notes:
                     starts to click/drag to slide
             **  breed (SlideDelegate.TYPE): What type of visual cue to display.
                     Other options HUE, SATURATION, VALUE
+            **  display_widget (widget)
         """
         # delete old slidebar
         self.__setSlideBar(False)
@@ -276,8 +278,6 @@ Notes:
         if boolean is True:
             self.__setSlideBar(
                 boolean,
-                bg_color=bg_color,
-                fg_color=fg_color,
                 depth=depth,
                 alignment=alignment,
                 breed=breed,
@@ -480,8 +480,6 @@ Notes:
         boolean,
         alignment=Qt.AlignRight,
         depth=50,
-        fg_color=(32, 32, 32, 255),
-        bg_color=(32, 128, 32, 255),
         breed=SlideDelegate.UNIT,
         display_widget=None
     ):
@@ -498,8 +496,8 @@ Notes:
                         breed=breed,
                         display_widget=display_widget
                     )
-                    slidebar.setBGSlideColor(bg_color)
-                    slidebar.setFGSlideColor(fg_color)
+                    slidebar.bg_slide_color = self.bg_slide_color
+                    slidebar.fg_slide_color = self.fg_slide_color
                     slidebar.setDepth(depth)
 
                     slidebar.setAlignment(alignment)
@@ -611,9 +609,9 @@ Args:
         kwargs = {
             'selected_color': repr(self.parent().getSelectionColor()),
             'slider_pos1': self.slider_pos,
-            'slider_pos2': self.slider_pos + 0.11,
-            'bgcolor': self.parent().getBGSlideColor(),
-            'fgcolor': self.parent().getFGSlideColor(),
+            'slider_pos2': self.slider_pos + 0.01,
+            'bgcolor': self.parent().bg_slide_color,
+            'fgcolor': self.parent().fg_slide_color,
         }
         #
         style_sheet = """
@@ -721,7 +719,7 @@ Args:
         return math.fabs(math.modf(magnitude)[0])
 
     def __updateSignificantDigits(self, value):
-        '''
+        """
         updates the significant digits
 
         This is used to ensure that the floating point precision is
@@ -732,14 +730,14 @@ Args:
 
         Returns:
             None
-        '''
+        """
         sig_digits = self.parent()._significant_digits
         str_val = str(value).split('.')[0].replace('-', '')
         int_len = len(str_val)
         getcontext().prec = sig_digits + int_len
 
     def __getMagnitude(self, start_pos, current_pos):
-        '''
+        """
         returns the magnitude of a user click/drop operation
 
         Args:
@@ -750,7 +748,7 @@ Args:
                 current position of the cursor
         Returns:
             float
-        '''
+        """
         # get magnitude
         xoffset = start_pos.x() - current_pos.x()
         yoffset = start_pos.y() - current_pos.y()
@@ -878,8 +876,8 @@ def main():
             # ladder.setMiddleItemBorderColor((255, 0, 255))
             # ladder.setMiddleItemBorderWidth(2)
             # ladder.setItemHeight(50)
-            # ladder.setFGSlideColor((255, 128, 32, 255))
-            # ladder.setBGSlideColor((0, 128, 255, 255))
+            # ladder.fg_slide_color = (255, 128, 32, 255)
+            # ladder.bg_slide_color = (0, 128, 255, 255)
 
         def setValue(self, value):
             self.setText(str(value))

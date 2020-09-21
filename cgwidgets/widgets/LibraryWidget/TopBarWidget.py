@@ -7,14 +7,14 @@ from .__utils__ import iUtils
 from cgwidgets import utils as gUtils
 
 class TopBarMainWidget(QWidget):
-    '''
+    """
     Has all of the user input settings for manipulating/adjusting
     how the Library is displayed to them
 
     @publish_toggle <QPushButton>
         Toggles if the GUI is in Get or Set mode
 
-    '''
+    """
     def __init__(self, parent=None):
         super(TopBarMainWidget, self).__init__(parent)
         self.main_layout = QHBoxLayout()
@@ -27,7 +27,7 @@ class TopBarMainWidget(QWidget):
         self.main_layout.addWidget(self.size_button_container)
         self.main_layout.addWidget(self.mode_container)
 
-    ''' USER wtf '''
+    """ USER wtf """
 
 
 class TopBarWidgetContainer(QGroupBox):
@@ -97,10 +97,10 @@ class ModeContainer(TopBarWidgetContainer):
 
 
 class ImageSizeButtonContainer(TopBarWidgetContainer):
-    '''
+    """
     Container holding all of the squares to change the
     size that the image is displayed to the user
-    '''
+    """
     def __init__(self, parent=None):
         super(ImageSizeButtonContainer, self).__init__(parent, title='Display Size', layout='h')
         # attrs
@@ -128,7 +128,7 @@ class ImageSizeButtonContainer(TopBarWidgetContainer):
 
 
 class ImageSizeButton(QPushButton):
-    '''
+    """
     Single button that allows users to change the size thumbnail_views
     displayed to them in the shader library
 
@@ -137,7 +137,7 @@ class ImageSizeButton(QPushButton):
         character and displayed on the button
     @index: <int> index of size in the overall list, used to determine
         the size of the widget displayed to the user
-    '''
+    """
     def __init__(self, parent=None, image_size=None, name=None, index=None):
         super(ImageSizeButton, self).__init__(parent)
         self.setCheckable(True)
@@ -162,9 +162,9 @@ class ImageSizeButton(QPushButton):
         self.clicked.connect(self.setSelected)
 
     def clearUserSelection(self):
-        '''
+        """
         Clears the previous thumbnail selected by the user
-        '''
+        """
         thumbnail_view_widgets = self.parent().thumbnail_view_buttons
         for size_name in list(thumbnail_view_widgets.keys()):
             size_button = thumbnail_view_widgets[size_name]
@@ -174,9 +174,9 @@ class ImageSizeButton(QPushButton):
         pass
 
     def setSelected(self):
-        '''
+        """
         Updates the thumbnail size of the directory views
-        '''
+        """
         # set up main widget properties
         model = iUtils.getModel(self)
         self.clearUserSelection()

@@ -8,7 +8,7 @@ from .__utils__ import iUtils
 from cgwidgets import utils as gUtils
 
 class PublishWidget(QWidget):
-    '''
+    """
     @frame: <path to files> raw renders (exrs)
     @proxy: <path to files> downres renders (jpg)
     @data: <path to files> importable files
@@ -25,7 +25,7 @@ class PublishWidget(QWidget):
             Light Rig
         lighttex <texture>
             Textures meant to be plugged into lights
-    '''
+    """
     def __init__(self, parent=None):
         super(PublishWidget, self).__init__(parent)
         # Container Style Sheet
@@ -49,10 +49,10 @@ class PublishWidget(QWidget):
         self.publish_widgets = {}
         self.createGUI()
 
-    ''' CREATE GUI '''
+    """ CREATE GUI """
 
     def createGUI(self):
-        '''
+        """
         creates the publish GUI
         @frame                    :                    raw renders (exrs)
         @proxy                    :                    downres renders (jpg)
@@ -61,7 +61,7 @@ class PublishWidget(QWidget):
         @note                      :                    notes
         @default_image      :                    default display image
         @type                      :
-        '''
+        """
         # main layout
         layout = QVBoxLayout()
         layout.setAlignment(Qt.AlignTop)
@@ -82,10 +82,10 @@ class PublishWidget(QWidget):
         return container
 
     def createPublishParameters(self):
-        '''
+        """
         Creates all the inputs for the user to fill in
         that will be embedded into the JSON file
-        '''
+        """
 
         # create container
         container = self.createContainer('OPTIONS')
@@ -105,11 +105,11 @@ class PublishWidget(QWidget):
         self.layout().addWidget(container)
 
     def createPublishGroup(self):
-        '''
+        """
         Creates the button the user pressed to publish the JSON
         file, and the input location for the user to determine where
         the JSON file will be saved
-        '''
+        """
         # Create group container
         container = self.createContainer('PUBLISH')
 
@@ -125,13 +125,13 @@ class PublishWidget(QWidget):
         # add container to main layout
         self.layout().addWidget(container)
 
-    ''' UTILS '''
+    """ UTILS """
 
     def publish(self):
-        '''
+        """
         publishes the json file to the location selected in the tree widget
         by the user
-        '''
+        """
         publish_file = {}
         publish_file['iskatanalibrary'] = True
         for option in self.publish_widgets.keys():
@@ -146,11 +146,11 @@ class PublishWidget(QWidget):
 
 
 class UserInput(QWidget):
-    '''
+    """
     Default user input widget, this one consist of one row in the VBox
 
     @name: <str> name of the parameter displayed to the user
-    '''
+    """
     def __init__(self, parent=None, name=None):
         super(UserInput, self).__init__(parent)
 
@@ -162,10 +162,10 @@ class UserInput(QWidget):
         self.name = name
 
     def getValue(self):
-        '''
+        """
         Abstract method for children, this will be required
         to return the call to get the values
-        '''
+        """
         return 'If this is returning, you did it wrong'
 
     @property

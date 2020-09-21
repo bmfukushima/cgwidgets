@@ -9,7 +9,7 @@ from cgwidgets.utils import installLadderDelegate
 
 
 class LadderWidget(QWidget):
-    '''
+    """
 Widget with a LadderDelegate for editing
 
 Args:
@@ -23,7 +23,7 @@ Args:
             need to implement a "setValue()" method on that widget and
             have it set the display value.
 
-    '''
+    """
     def __init__(
         self,
         parent=None,
@@ -64,7 +64,6 @@ if __name__ == '__main__':
         True,
         alignment=Qt.AlignBottom,
         depth=10,
-        fg_color=(128, 128, 32, 255),
         display_widget=label.window()
     )
 

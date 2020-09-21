@@ -6,9 +6,9 @@ os.environ['QT_API'] = 'pyside2'
 import qtpy
 
 print(
-'''
+"""
 QT_API == {}
-'''.format(qtpy.API)
+""".format(qtpy.API)
 )
 
 from qtpy.QtGui import *

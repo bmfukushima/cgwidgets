@@ -63,7 +63,7 @@ class AbstractInputWidget(QLineEdit):
         #style_sheet = getTopBorderStyleSheet(self._rgba_border, 2)
         self.setStyleSheet("border: None; background-color: rgba(0,0,0,{background_color});".format(background_color=self.background_color))
 
-    ''' PROPERTIES '''
+    """ PROPERTIES """
     def appendKey(self, key):
         self.getKeyList().append(key)
 
@@ -122,7 +122,7 @@ class AbstractInputWidget(QLineEdit):
         validation = self._validate_user_input()
         return validation
 
-    ''' SIGNALS / EVENTS '''
+    """ SIGNALS / EVENTS """
     def focusInEvent(self, *args, **kwargs):
         self.setOrigValue(self.text())
         return QLineEdit.focusInEvent(self, *args, **kwargs)
@@ -152,7 +152,9 @@ class AbstractInputGroupContainer(QFrame):
         self.group_box = AbstractInputGroup(parent=parent, title=title)
         self.layout().addWidget(self.group_box)
         self.group_box.display_background = False
-        #self.setStyleSheet("background-color:rgba(0,0,255,255)")
+
+    def setTitle(self, title):
+        self.group_box.setTitle(title)
 
 
 class AbstractInputGroup(QGroupBox):
@@ -168,13 +170,14 @@ class AbstractInputGroup(QGroupBox):
         # setup main layout
         QBoxLayout(QBoxLayout.TopToBottom, self)
         self.layout().setAlignment(Qt.AlignTop)
-        # create seperator
-        seperator = AbstractHLine(self)
-        seperator.setStyleSheet("""
+
+        # create separator
+        separator = AbstractHLine(self)
+        separator.setStyleSheet("""
             background-color: rgba{rgba_text_color};
             margin: 30px;
             """.format(rgba_text_color=repr(iColor.rgba_text_color)))
-        self.layout().addWidget(seperator)
+        self.layout().addWidget(separator)
 
         # set up default attrs
         if title:

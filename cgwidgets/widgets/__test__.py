@@ -10,20 +10,20 @@ from . import LibraryWidget
 from . import ColorWidget
 from . import LadderWidget
 
-'''
+"""
 pyqt5
 pyqt4
 pyside
 pyside2
-'''
+"""
 print(
-'''
+"""
 QT_API == {}
-'''.format(qtpy.API)
+""".format(qtpy.API)
 )
 
 #print(os.environ['QT_API'])
-''' UNIT TESTS '''
+""" UNIT TESTS """
 app = QApplication(sys.argv)
 
 # Library Widget

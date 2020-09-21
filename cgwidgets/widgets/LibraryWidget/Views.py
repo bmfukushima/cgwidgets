@@ -1,4 +1,4 @@
-'''
+"""
 Detailed:
     # required...
     - Text Edit fields need to be changed... so users can't break them...
@@ -11,7 +11,7 @@ Detailed:
 List:
     one long list? Like really freaking long?
 
-'''
+"""
 from collections import OrderedDict
 import json
 import math
@@ -28,7 +28,7 @@ from cgwidgets import utils as gUtils
 
 
 class ImageListModel(QAbstractTableModel):
-    '''
+    """
     [ row(columns), row(columns), row(columns) ]
     @selection_list: < list > of < ImageWidgets > that are currently selected
         by the user.
@@ -53,7 +53,7 @@ class ImageListModel(QAbstractTableModel):
             selection
             hidden
             etc
-    '''
+    """
     def __init__(self, parent_widget=None, filedirs_list=[]):
         super(ImageListModel, self).__init__()
         # self.selection_list = []
@@ -84,59 +84,16 @@ class ImageListModel(QAbstractTableModel):
     def rowCount(self, parent=None):
         return len(self.imageJSONList)
 
-    ''' DEPRECATED... since we're using custom views'''
-    """
-    def data(self, index, role):
-        print (index, role)
-        row = index.row()
-        column = index.column()
 
-        if role == Qt.DisplayRole:
-            try:
-                return self.imageJSONList[row][self.key_map[column]]
-            except KeyError:
-                return ''
-        '''
-        if role == Qt.DecorationRole:
-            if column == 0:
-                jsondata = self.imageJSONList[row]
-                proxy_image_dir = jsondata['proxy']
-                try:
-                    default_image = jsondata['default_image']
-                    if not os.path.isfile('/'.join([proxy_image_dir, default_image])):
-                        proxy_images = os.listdir(proxy_image_dir)
-                        default_image = proxy_images[int(len(proxy_images) / 2)]
-                except KeyError:
-                    proxy_images = os.listdir(proxy_image_dir)
-                    default_image = proxy_images[int(len(proxy_images) / 2)]
-                finally:
-                    display_image_path = '/'.join([proxy_image_dir, default_image])
 
-                pixmap = QPixmap(display_image_path)
-                pixmap.scaledToHeight(100)
-                icon = QIcon(pixmap)
-                # icon.pixmap(QSize(100, 100))
-                return icon
-        '''
-
-    def headerData(self, section, orientation, role):
-        print(section, orientation, role)
-        if orientation == Qt.Horizontal:
-            if role == Qt.DisplayRole:
-                return self.key_map[section]
-            '''
-            if role == Qt.DisplayRole:
-                return ( 50 , 100 )
-            '''
-    """
-    ''' UTILS '''
+    """ UTILS """
 
     def populateModelFromDirectory(self, filedirs_list):
-        '''
+        """
         populates all of the items in the model from a model
         specified on disk
         @filedir: <str> path to directory
-        '''
+        """
         # combine directories together
         items = []
         for filedir in filedirs_list:
@@ -159,9 +116,9 @@ class ImageListModel(QAbstractTableModel):
         self.imageJSONList = row_list
 
     def populateModelFromList(self, json_list):
-        '''
+        """
         @row_list: <list> of json file paths
-        '''
+        """
         # check data, if good add it to the row list
         row_list = []
         for filepath in json_list:
@@ -193,14 +150,14 @@ class ImageListModel(QAbstractTableModel):
             pass
 
     def populateHideList(self, user_search_text):
-        '''
+        """
         @user_search_text: < str >
             string input from the user in the search bar widget
             this should be in the format of
                 jsonkey{regex, regex, regex}
                 ie
                     name{.*}
-        '''
+        """
         # reset hidden list
         self.metadata['hidden'] = []
         # get search text list...
@@ -233,10 +190,10 @@ class ImageListModel(QAbstractTableModel):
                             try:
                                 hide_list.remove(jsondata['filepath'])
                             except ValueError:
-                                '''
+                                """
                                 bypass incase this gets multiple
                                 hits from the regex list
-                                '''
+                                """
                                 pass
                 except KeyError:
                     print('{key} does not exist in {file}'.format(
@@ -247,10 +204,10 @@ class ImageListModel(QAbstractTableModel):
         self.metadata['hidden'] = hide_list
 
     def updateViews(self):
-        '''
+        """
         Updates all of the views, this is not attached to this model
         in any way... so I could probably just send this to a iUtils...
-        '''
+        """
         main_widget = gUtils.getMainWidget(self._parent_widget, 'Library')
 
         detailed_view = main_widget.detailed_view
@@ -261,7 +218,7 @@ class ImageListModel(QAbstractTableModel):
         for view in views:
             view.update()
 
-    ''' PROPERTIES '''
+    """ PROPERTIES """
 
     @property
     def parent_widget(self):
@@ -297,9 +254,9 @@ class ImageListModel(QAbstractTableModel):
 
 
 class ThumbnailViewWidget(QScrollArea):
-    '''
+    """
     primary layout of the contact sheet
-    '''
+    """
     def __init__(self, parent=None):
         super(ThumbnailViewWidget, self).__init__(parent)
         self.top_level_widget = QWidget()
@@ -322,14 +279,14 @@ class ThumbnailViewWidget(QScrollArea):
         self.top_level_widget.setSizePolicy(
             QSizePolicy.Fixed, QSizePolicy.Fixed
         )
-        '''
+        """
         self.setMinimumHeight(1)
 
         self.top_level_widget.setSizePolicy(
             QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding
         )
-        '''
-    ''' PROPERTIES '''
+        """
+    """ PROPERTIES """
     @property
     def spacing(self):
         return self._spacing
@@ -362,7 +319,7 @@ class ThumbnailViewWidget(QScrollArea):
     def widget_list(self, widget_list):
         self._widget_list = widget_list
 
-    ''' FUNCTIONS '''
+    """ FUNCTIONS """
 
     def setModel(self, model):
         self.model = model
@@ -395,19 +352,19 @@ class ThumbnailViewWidget(QScrollArea):
         self.widget_list = widget_list
         self.layoutWidgets()
 
-        '''
+        """
         try:
             self.model.metadata['selected'] = new_selection_list
         except AttributeError:
             # running in IDE mode
             pass
-        '''
+        """
 
     def getNumColumns(self):
-        '''
+        """
         @return: <int> number of columns based off of the
             size of the image
-        '''
+        """
         # get attributes
         image_size = self.image_size
         w = self.geometry().width() - 50
@@ -466,7 +423,7 @@ class ThumbnailViewWidget(QScrollArea):
             else:
                 widget.image_widget.setUnselected()
 
-    ''' EVENTS '''
+    """ EVENTS """
 
     def resizeEvent(self, event, *args, **kwargs):
         self.layoutWidgets()
@@ -474,10 +431,10 @@ class ThumbnailViewWidget(QScrollArea):
 
 
 class ThumbnailViewItem(QWidget):
-    '''
+    """
     Thumbnail Item for the ThumbnailView
     @json: <dict> json file data
-    '''
+    """
     def __init__(
             self,
             parent=None,
@@ -504,7 +461,7 @@ class ThumbnailViewItem(QWidget):
         self.label.setFixedWidth(image_size)
         vbox.addWidget(self.label)
 
-    ''' PROPERTIES '''
+    """ PROPERTIES """
     @property
     def json(self):
         return self._json
@@ -531,7 +488,7 @@ class ThumbnailViewItem(QWidget):
 
 
 class DetailedViewWidget(QWidget):
-    '''
+    """
     @header_height < int > height of the horizontal header
         spacer | hheader
     @column_spacing < int > white space between columns
@@ -539,16 +496,16 @@ class DetailedViewWidget(QWidget):
     @row_spacing < int > white space between rows
     @row_height < int > height of rows
     @column_width < int > width of columns
-    '''
+    """
     def __init__(self, parent=None, model=None):
         super(DetailedViewWidget, self).__init__(parent)
 
-        self.setStyleSheet('''
+        self.setStyleSheet("""
         border-width: 0px;
         border: None;
         margin: 0px;
         padding: 0px;
-        ''')
+        """)
         # global attrs
         self.key_map = [
             'name',
@@ -590,22 +547,22 @@ class DetailedViewWidget(QWidget):
         self.main_layout.addLayout(self.main_vlayout)
 
     def resetHeaderWidgetLists(self):
-        '''
+        """
         Each horizontal header item has a list of all of the
         widgets that are in that column.  This list is used
         for column based operations.
 
         This function clears that list
-        '''
+        """
         header_items = self.hheader.getHeaderItems()
         for key in list(header_items.keys()):
             widget = header_items[key]
             widget.resetWidgetList()
 
     def setModel(self, model):
-        '''
+        """
         sets the model
-        '''
+        """
         self.model = model
 
         # reset
@@ -643,7 +600,7 @@ class DetailedViewWidget(QWidget):
             else:
                 widget.setUnselected()
 
-    '''  PROPERTIES '''
+    """  PROPERTIES """
 
     @property
     def header_height(self):
@@ -693,11 +650,11 @@ class DetailedViewWidget(QWidget):
 
     @row_height.setter
     def row_height(self, row_height):
-        '''
+        """
         sets the row height and updates the widgets...
         should probably break this into an update
         method as well...
-        '''
+        """
         self._row_height = row_height
 
         # update row heights
@@ -717,10 +674,10 @@ class DetailedViewWidget(QWidget):
 
 
 class DetailedViewTable(QScrollArea):
-    '''
+    """
     Directory folder viewed as a detailed view.  This a display option
     for the user that is changed by the "mode" drop down.
-    '''
+    """
     def __init__(self, parent=None, hscrollbar=None, vscrollbar=None):
         super(DetailedViewTable, self).__init__(parent)
         self.setStyleSheet("border:None")
@@ -735,9 +692,9 @@ class DetailedViewTable(QScrollArea):
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
 
     def setupMainLayout(self):
-        '''
+        """
         Sets up the main layout for the entire widget
-        '''
+        """
         # set up top level layout/widget
         self.main_widget = QWidget()
         self.main_layout = QVBoxLayout()
@@ -761,10 +718,10 @@ class DetailedViewTable(QScrollArea):
 
 
 class DetailedViewVerticalHeader(QWidget):
-    '''
+    """
     @header_items: <dict> of widget
         header_items[key] = widget
-    '''
+    """
     def __init__(self, parent=None, vscrollbar=None):
         super(DetailedViewVerticalHeader, self).__init__(parent)
         # setup widgets
@@ -810,13 +767,6 @@ class DetailedViewVerticalHeader(QWidget):
         self.main_widget.setStyleSheet("border:None")
         self.main_scrollarea.setStyleSheet("border:None")
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.MinimumExpanding)
-        """
-        self.setStyleSheet('''
-        border-width: 0px;
-        margin: 0px;
-        padding: 0px;
-        ''')
-        """
 
     def getRowHeight(self):
         try:
@@ -833,20 +783,10 @@ class DetailedViewVerticalHeader(QWidget):
     def pixmap(self, pixmap):
         self._pixmap = pixmap
 
-    """
-    def updateImageWidgets(self):
-        '''
-        when the size changes, this updates the image
-        that is displayed to the user.
-        '''
-        gUtils.clearLayout(self.main_layout)
-        self.populate(self.jsonlist)
-    """
-
     def update(self):
-        '''
+        """
         updates the row height
-        '''
+        """
         gUtils.clearLayout(self.main_layout)
         self.populate()
 
@@ -868,10 +808,10 @@ class DetailedViewVerticalHeader(QWidget):
 
 
 class DetailedViewHorizontalHeader(QScrollArea):
-    '''
+    """
     @header_items: <dict> of widget
         header_items[key] = widget
-    '''
+    """
     def __init__(self, parent=None, hscrollbar=None):
         super(DetailedViewHorizontalHeader, self).__init__(parent)
         self.setStyleSheet("border:None")
@@ -916,12 +856,12 @@ class DetailedViewHorizontalHeader(QScrollArea):
         self._header_items[name] = widget
 
     def updateColumnsWidth(self):
-        '''
+        """
 
         When the splitter is moved, this will update all of the items
         in this column to have the same width as the corresponding
         item in the header
-        '''
+        """
         header_items = self.getHeaderItems()
         for key in list(header_items.keys()):
             widget = header_items[key]
@@ -929,11 +869,11 @@ class DetailedViewHorizontalHeader(QScrollArea):
 
 
 class DetailedViewHorizontalHeaderItem(QLabel):
-    '''
+    """
     Individual item in the header
     @widget_list: <list> of <QWidget>
         This is a container for all of the widgets in the column.
-    '''
+    """
     def __init__(self, parent=None, text=None):
         super(DetailedViewHorizontalHeaderItem, self).__init__(parent)
         self.resetWidgetList()
@@ -955,10 +895,10 @@ class DetailedViewHorizontalHeaderItem(QLabel):
 
 
 class DetailedViewItem(QGroupBox):
-    '''
+    """
     A single row in the detailed view
     @json <dict> json data
-    '''
+    """
     def __init__(self, parent=None, jsondata=None):
         super(DetailedViewItem, self).__init__(parent)
         self.json = jsondata
@@ -968,10 +908,10 @@ class DetailedViewItem(QGroupBox):
         self.setLayout(self.main_layout)
         self.populate()
         self.setMinimumWidth(1)
-        self.setStyleSheet('''
+        self.setStyleSheet("""
             border: None;
             margin: 0px;
-        ''')
+        """)
 
     @property
     def json(self):

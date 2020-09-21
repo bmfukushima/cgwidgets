@@ -1,4 +1,4 @@
-'''
+"""
 
 SlideDelegate --> SlideBreed -->AbstractSlideDisplay
 To Do...
@@ -26,7 +26,7 @@ To Do...
 
             SlideDelegate --> getBreedWidget
 
-'''
+"""
 import math
 
 from qtpy.QtWidgets import QDesktopWidget, QApplication, QWidget
@@ -122,7 +122,7 @@ Notes:
                 self.alignToDisplay(alignment)
 
     def alignToWidget(self, alignment, widget):
-        '''
+        """
         Determines where on the monitor the widget should be located
 
         Args:
@@ -134,7 +134,7 @@ Notes:
                     AlignBottom
             *    widget (QWidget): The QWidget that the slide bar should be
                     aligned to.
-        '''
+        """
 
         screen_pos = getGlobalPos(widget)
 
@@ -273,15 +273,17 @@ Attributes:
         )
 
         # set default attrs
-        self.setBGSlideColor(bg_slide_color)
+        self.bg_slide_color = bg_slide_color
         self.setFGSlideColor(fg_slide_color)
         self.update(0.0)
 
     """ PROPERTIES """
-    def getBGSlideColor(self):
+    @property
+    def bg_slide_color(self):
         return self._bg_slide_color
 
-    def setBGSlideColor(self, bg_slide_color):
+    @bg_slide_color.setter
+    def bg_slide_color(self, bg_slide_color):
         self._bg_slide_color = bg_slide_color
 
     def getFGSlideColor(self):
@@ -299,7 +301,6 @@ Attributes:
         Args:
             *   pos (float): what percentage the user has travelled towards
                     the next tick.
-
         """
 
         # align horizontally
@@ -315,7 +316,7 @@ Attributes:
             """.format(
                     pos1=str(pos),
                     pos2=str(pos + 0.0001),
-                    bgcolor=repr(self.getBGSlideColor()),
+                    bgcolor=repr(self.bg_slide_color),
                     fgcolor=repr(self.getFGSlideColor())
                 )
         # align vertically
@@ -331,7 +332,7 @@ Attributes:
             """.format(
                     pos1=str(pos),
                     pos2=str(pos + 0.0001),
-                    bgcolor=repr(self.getBGSlideColor()),
+                    bgcolor=repr(self.bg_slide_color),
                     fgcolor=repr(self.getFGSlideColor())
                 )
         try:
@@ -384,7 +385,7 @@ class SlideDelegate(QWidget):
         self.setBreed(breed)
 
         # set initial attributes
-        self.setBGSlideColor((32, 32, 32, 128))
+        self.bg_slide_color = (32, 32, 32, 128)
         self.setFGSlideColor((32, 128, 32, 255))
         self.setDepth(50)
         self.setAlignment(Qt.AlignBottom)
@@ -410,10 +411,12 @@ class SlideDelegate(QWidget):
     def setAlignment(self, alignment):
         self._alignment = alignment
 
-    def getBGSlideColor(self):
+    @property
+    def bg_slide_color(self):
         return self._bg_slide_color
 
-    def setBGSlideColor(self, color):
+    @bg_slide_color.setter
+    def bg_slide_color(self, color):
         self._bg_slide_color = color
 
     def getFGSlideColor(self):
@@ -433,7 +436,7 @@ class SlideDelegate(QWidget):
         breed = self.getBreed()
         if breed == SlideDelegate.UNIT:
             return UnitSlideDisplay(
-                bg_slide_color=self.getBGSlideColor(),
+                bg_slide_color=self.bg_slide_color,
                 fg_slide_color=self.getFGSlideColor(),
                 alignment=self.getAlignment(),
                 display_widget=self._display_widget,
@@ -509,7 +512,7 @@ if __name__ == '__main__':
     mw.setLayout(ml)
 
     w2 = QWidget(mw)
-    w2.setStyleSheet('background-color: rgba(0,255,255,255)')
+    #w2.setStyleSheet('background-color: rgba(0,255,255,255)')
     l2 = QVBoxLayout()
     w2.setLayout(l2)
 

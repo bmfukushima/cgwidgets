@@ -1,4 +1,4 @@
-'''
+"""
 Drop menu needs to populate based off of type sent to it
 shader
     katana
@@ -6,7 +6,7 @@ shader
     material (import as material)
     subnet
 
-'''
+"""
 import os
 import json
 
@@ -19,7 +19,7 @@ from cgwidgets import utils as gUtils
 
 
 class ImageWidget(QLabel):
-    '''
+    """
     temperature = property(get_temperature,set_temperature)
     @ImageWidget <QLabel> Meant to be used as a super class for the
         Main/Default Images.  These classes will be the object types for
@@ -31,7 +31,7 @@ class ImageWidget(QLabel):
     @current_image: name of the current image being displayed proxy
     @json_file: full path to json file hosting all of the meta data
     @file_extension: extension of files to use
-    '''
+    """
     def __init__(
         self,
         parent=None,
@@ -43,7 +43,7 @@ class ImageWidget(QLabel):
         # True: do not flip | False:  flip the switch
         self._activated = False
 
-    ''' PROPERTIES '''
+    """ PROPERTIES """
 
     def isSelected(self):
         model = iUtils().getModel(self)
@@ -60,18 +60,18 @@ class ImageWidget(QLabel):
         model.appendToSelectionList(self.json_file)
 
     def setUnselected(self):
-        style_sheet = '''
+        style_sheet = """
             border-style: solid;\
             border-width:2px;\
             border-color: rgba(0,0,0,0)\
-        '''
+        """
         self.setStyleSheet(style_sheet)
         model = iUtils().getModel(self)
         model.removeFromSelectionList(self.json_file)
 
-    '''
+    """
     button <QButton> current button being pressed
-    '''
+    """
     @property
     def button(self):
         return self._button
@@ -80,9 +80,9 @@ class ImageWidget(QLabel):
     def button(self, button):
         self._button = button
 
-    '''
+    """
     image_list <list> list of all files in the directory of proxy image
-    '''
+    """
     @property
     def proxyImageList(self):
         return self._proxy_image_list
@@ -91,10 +91,10 @@ class ImageWidget(QLabel):
     def proxyImageList(self, image_list):
         self._proxy_image_list = image_list
 
-    '''
+    """
     image_index <int> index of sorted(list(os.listdir))
         of file in the proxy image directory ( proxyImageDir )
-    '''
+    """
     @property
     def proxyImageIndex(self):
         return self._image_index
@@ -103,7 +103,7 @@ class ImageWidget(QLabel):
     def proxyImageIndex(self, image_index=0):
         self._image_index = image_index
 
-    ''' image_width <int> '''
+    """ image_width <int> """
     @property
     def image_width(self):
         return self._image_width
@@ -112,7 +112,7 @@ class ImageWidget(QLabel):
     def image_width(self, image_width):
         self._image_width = image_width
 
-    ''' proxy_file_extension <str> '''
+    """ proxy_file_extension <str> """
     @property
     def proxyFileExtension(self):
         return self._proxy_file_extension
@@ -121,7 +121,7 @@ class ImageWidget(QLabel):
     def proxyFileExtension(self, proxy_file_extension):
         self._proxy_file_extension = proxy_file_extension
 
-    ''' file_extension '''
+    """ file_extension """
     @property
     def fileExtension(self):
         if hasattr(self, 'file_extension') is False:
@@ -132,7 +132,7 @@ class ImageWidget(QLabel):
     def fileExtension(self, file_extension):
         self._file_extension = file_extension
 
-    ''' init_pos <QPoint>'''
+    """ init_pos <QPoint>"""
     @property
     def initPos(self):
         return self._init_pos
@@ -141,16 +141,16 @@ class ImageWidget(QLabel):
     def initPos(self, init_pos):
         self._init_pos = init_pos
 
-    ''' image_dir <str> '''
+    """ image_dir <str> """
     @property
     def proxyImageDir(self):
         return self._image_dir
 
     @proxyImageDir.setter
     def proxyImageDir(self, image_dir):
-        '''
+        """
         name of the directory containing the image sequence
-        '''
+        """
         self._image_dir = image_dir
 
     @property # str < file_name>
@@ -159,9 +159,9 @@ class ImageWidget(QLabel):
 
     @currentImage.setter
     def currentImage(self, current_image):
-        '''
+        """
         current image is the local name of the image in the dir
-        '''
+        """
 
         self._current_image = current_image
 
@@ -171,9 +171,9 @@ class ImageWidget(QLabel):
 
     @currentPixmap.setter
     def currentPixmap(self, current_pixmap):
-        '''
+        """
         the current image is a full file path to an image on disk
-        '''
+        """
         self.pixmap = QPixmap(current_pixmap)
         self.pixmap = self.pixmap.scaledToWidth(self.image_width)
         self.setPixmap(self.pixmap)
@@ -187,14 +187,14 @@ class ImageWidget(QLabel):
     def json_file(self, json_file):
         self._json_file = json_file
 
-    ''' UTILS '''
+    """ UTILS """
 
     def setImage(self, direction='next'):
-        '''
+        """
         Displays the previous/next image to the user depending
         on the input given to direction
         @direction: <str> if it will display the next/previous image
-        '''
+        """
         current_index = self.proxyImageIndex
         image_list = self.proxyImageList
         if direction is 'next':
@@ -217,7 +217,7 @@ class ImageWidget(QLabel):
     def previousImage(self):
         self.setImage(direction='previous')
 
-    ''' EVENTS '''
+    """ EVENTS """
 
     def mousePressEvent(self, event, *args, **kwargs):
         self.button = event.button()
@@ -256,10 +256,10 @@ class ImageWidget(QLabel):
 
 
 class DefaultImage(ImageWidget):
-    '''
+    """
     Displays the image to the user in the tab.  This is the image that is
     displayed in the contact sheet in the WrappingLayout
-    '''
+    """
     def __init__(
         self,
         parent=None,
@@ -267,9 +267,9 @@ class DefaultImage(ImageWidget):
         json_file=None
     ):
         super(ImageWidget, self).__init__(parent)
-        '''
+        """
         @image_dir : path to directory with image sequence inside
-        '''
+        """
         self._activated = False
 
         self.json_file = json_file
@@ -297,14 +297,14 @@ class DefaultImage(ImageWidget):
         self.currentPixmap = current_image
 
         # set default style sheet
-        style_sheet = '''
+        style_sheet = """
             border-style: solid;\
             border-width:2px;\
             border-color: rgba(0,0,0,0)\
-        '''
+        """
         self.setStyleSheet(style_sheet)
 
-    ''' EVENTS '''
+    """ EVENTS """
 
     def mouseMoveEvent(self, event, *args, **kwargs):
         def leftMousePress():
@@ -313,13 +313,13 @@ class DefaultImage(ImageWidget):
             # mouse move distance
             mmd = init_pos - pos.x()
             activation_distance = 20
-            '''
+            """
             change the image to the next one in the sequence
             based off of how far the mouse moves
             @mmd: how far the mouse has moved
             @change_distance: how far the mouse has to move
                 before an update is trigger
-            '''
+            """
             if mmd > activation_distance or mmd < -activation_distance:
                 # Flip selected
                 self.setSelected()
@@ -342,21 +342,21 @@ class DefaultImage(ImageWidget):
             middleMousePress()
         return QLabel.mouseMoveEvent(self, event, *args, **kwargs)
 
-    '''
+    """
     def mouseReleaseEvent(self, event, *args, **kwargs):
         if self.button == Qt.LeftButton:
             model = iUtils().getModel(self)
             model.updateViews()
             return ImageWidget.mouseReleaseEvent(self, event, *args, **kwargs)
-    '''
+    """
 
 
 class DropMenu(QDialog):
-    '''
+    """
     Popup menu that is displayed when a user CTRL+Drag/Drops into
     the Nodegraph.  This will popup options for the user, if there are
     multiple options for them to select from.
-    '''
+    """
     def __init__(
         self,
         parent=None,

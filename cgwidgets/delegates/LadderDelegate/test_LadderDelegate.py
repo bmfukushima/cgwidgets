@@ -45,11 +45,11 @@ class iTest():
 
     @staticmethod
     def userClickDrag(test, distance, delegate):
-        '''
+        """
         Tests a user click/drag operation.  When the delegate opens, a user
         can click + drag on a value to determine how much to update the
         parent widget.
-        '''
+        """
         from decimal import Decimal, getcontext
 
         item_list = delegate.item_list
@@ -97,7 +97,7 @@ class iTest():
                     except AssertionError:
                         pass
                         """
-                        print('''
+                        print("""
 
 return val == {return_val}
 current_val == {current_val}
@@ -105,7 +105,7 @@ current_val == {current_val}
 float(return val) == {freturn_val}
 float(current_val) == {fcurrent_val}
 
-'''.format(
+""".format(
     return_val=return_val,
     current_val=current_val,
     freturn_val=float(return_val),
@@ -118,10 +118,10 @@ float(current_val) == {fcurrent_val}
 
 
 class TestLadderDelegate(unittest.TestCase):
-    '''
+    """
     # install delegate
     # click / drag
-    '''
+    """
     @classmethod
     def setUpClass(cls):
         printStartTest('Ladder Delegate')

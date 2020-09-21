@@ -22,13 +22,12 @@ from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 from qtpy.QtGui import *
 
-#from ...delegates import LadderDelegate
 from cgwidgets.utils import installLadderDelegate
 from cgwidgets.widgets import FloatInputWidget
 
 
 class ColorWidget(QWidget):
-    '''
+    """
     @attr: <str> katana attribute to adjust
     @color: <str> rgb '0.8 0.8 0.8'
     @main_widget: primary widget to get modules from
@@ -39,18 +38,16 @@ class ColorWidget(QWidget):
         'is_array': '0',
         'attr_name': '',
         'attr_loc': 'material.dlSurfaceParams.color'
-    '''
+    """
     def __init__(
                 self,
                 parent=None,
                 attr=None,
                 color='.5 0.18 0.18',
-                #main_widget=None,
                 widget_default_data=None
                 ):
         super(ColorWidget, self).__init__(parent)
         main_layout = QVBoxLayout()
-        #self.main_widget = main_widget
 
         self.widget_default_data = widget_default_data
         self.attr = attr
@@ -63,7 +60,7 @@ class ColorWidget(QWidget):
         rgb_list = [float(value) for value in color.split(' ') if value != '']
         color = QColor()
         color.setRgb(rgb_list[0]*255, rgb_list[1]*255, rgb_list[2]*255)
-        #self.setColor(color)
+
         #  ----------------------------------------------- setup rgb
         self.rgb_layout = QHBoxLayout()
         self.rgb_layout.setSpacing(SETTINGS.PADDING * 2)
@@ -99,13 +96,6 @@ class ColorWidget(QWidget):
         self.stacked_layout.addWidget(self.display_color_widget)
         self.stacked_layout.setCurrentIndex(0)
 
-        '''
-        main_layout.addLayout(self.stacked_layout, 0, 0, 1, 1)
-        main_layout.addLayout(self.rgb_layout, 1, 0, 1, 1)
-        main_layout.addLayout(self.hsv_layout, 2, 0, 1, 1)
-        '''
-        #main_layout.setContentsMargins(0,0,0,0)
-        #main_layout.setSpacing(0)
         main_layout.addLayout(self.stacked_layout)
         main_layout.addLayout(self.rgb_layout)
         main_layout.addLayout(self.hsv_layout)
@@ -119,9 +109,9 @@ class ColorWidget(QWidget):
         return 'color'
 
     def updateFromStr(self, color):
-        '''
+        """
         @color <str> color strf 'r g b'
-        '''
+        """
         red, green, blue = color.split(' ')
         color = QColor()
         color.setRgb(
@@ -165,11 +155,11 @@ class ColorWidget(QWidget):
             self.hsv_layout.itemAt(2).widget().layout().itemAt(0).widget().setValue(str(val), update=False)
 
     def setColor(self, color):
-        '''
+        """
         @color <QColor>
         sets the color of the label on top of the color selector,
         this will also update the HSV/RGB boxes aswell
-        '''
+        """
         #  =====================================================
         # sets the color, this sends a signal to the main widget to set the
         # value of the color on the actual opscript.  So that it will actually
@@ -187,14 +177,6 @@ class ColorWidget(QWidget):
                 border-color: rgba(%s, %s, %s, 255);'
                 % (SETTINGS.PADDING, red, green, blue)
             )
-            value = '%s %s %s' % (red, green, blue)
-            '''
-            self.main_widget.setValue(
-                attr=self.attr,
-                value=value,
-                widget_default_data=self.widget_default_data
-                )
-            '''
 
     def getColor(self):
         if not hasattr(self, 'color'):
@@ -219,7 +201,6 @@ class ValueLabel(FloatInputWidget):
         self.setAlignment(Qt.AlignLeft)
         # set up ladder delegate
         value_list = [0.0001, 0.001, 0.01, 0.1]
-        pos = QCursor.pos()
         installLadderDelegate(
             self,
             user_input=QEvent.MouseButtonPress,
@@ -239,6 +220,7 @@ class ValueLabel(FloatInputWidget):
             this is primarily used with ladder widgets.  If it is set
             to None, it will just use the 'value' arg coming in
         """
+        value = float(value)
         # =======================================================================
         # Add offset (if applicable)
         # =======================================================================
@@ -354,10 +336,10 @@ class ColorLabel(ValueLabel):
         return 'colorlabel'
 
     def setColor(self, value):
-        '''
+        """
         @value colorf
         updates the background color of the widget
-        '''
+        """
         value = value * 255
 
         if self.channel == 0:
@@ -449,12 +431,12 @@ class ColorDisplayWidget(QWidget):
 
 
 class ColorPickerWidget(QWidget):
-    '''
+    """
     MainWindow
         --> Layout
             --> GraphicsView (GLWidget)
                 --> GraphicsScene
-    '''
+    """
     def __init__(self, parent=None, main_widget=None):
         super(ColorPickerWidget, self).__init__(parent)
         # =======================================================================
@@ -487,11 +469,11 @@ class ColorPickerWidget(QWidget):
 
 
 class ColorGraphicsView(QGraphicsView):
-    '''
+    """
     @previous_size: <geometry> hold the previous position
         so that a resize event can recalculate the cross hair
         based off of this geometry
-    '''
+    """
     def __init__(self, parent=None, main_widget=None):
         super(ColorGraphicsView, self).__init__(parent)
         self.main_widget = main_widget
@@ -564,9 +546,9 @@ class ColorGraphicsView(QGraphicsView):
         return self.previous_size
 
     def resizeEvent(self, *args, **kwargs):
-        '''
+        """
         allow widget to resize with the rectangle...
-        '''
+        """
         # there has to be a better way to set this...
 
         # =======================================================================
@@ -649,9 +631,9 @@ class ColorGraphicsScene(QGraphicsScene):
         self.crosshair_pos = pos
 
     def updateCrosshair(self, pos):
-        '''
+        """
         @pos: <QPoint> new position to set the cross hair to
-        '''
+        """
         crosshair_radius = self.CROSSHAIR_RADIUS * .5
         xpos = pos.x()
         ypos = pos.y()
@@ -666,9 +648,9 @@ class ColorGraphicsScene(QGraphicsScene):
         self.setCrosshairPos(pos)
 
     def setupGradient(self, value=None, sat=None):
-        '''
+        """
         draws the background color square for the main widget
-        '''
+        """
         if not value:
             value = 255
         if not sat:
@@ -826,12 +808,12 @@ class SETTINGS(object):
             PADDING * 2,                           # border-radius
             DARK_GREEN_STRRGBA,        # border color
         )
-    '''
+    """
     QListView::item:selected:active {
         background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                                     stop: 0 #6a6ea9, stop: 1 #888dd9);
     }
-    '''
+    """
     # FLOATING WIDGET
     FLOATING_LISTWIDGET_SS = \
         'QListView::item:hover{\

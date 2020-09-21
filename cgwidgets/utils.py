@@ -29,11 +29,11 @@ def guessBackgroundColor(style_sheet):
 
 
 def printStartTest(name):
-    print('''
+    print("""
 
 ----------------------------------------------------------------------
 ----------------------------------------------------------------------
-''')
+""")
     print('Starting {} unittest...'.format(name))
 
 
@@ -258,7 +258,7 @@ def installLadderDelegate(
 
 
 def getGlobalPos(widget):
-    '''
+    """
     returns the global position of the widget provided, because Qt
     does such a lovely job of doing this out of box and making it
     so simple
@@ -269,7 +269,7 @@ def getGlobalPos(widget):
             widget to return screen space position of
 
     returns: <QPoint>
-    '''
+    """
     parent = widget.parentWidget()
     if parent is None:
         #top_level_widget = widget.window()

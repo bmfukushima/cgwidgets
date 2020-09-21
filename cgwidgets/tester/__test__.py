@@ -22,14 +22,14 @@ def testWidgets():
 def mainFunction():
     # print header
     print(
-        '''
+        """
 ####################################################################
 ####################################################################
                 QT_API    == {0}
                 Version   == {1}
                 Python    == {2}
 ####################################################################
-        '''.format(
+        """.format(
             qtpy.API,
             __version__,
             platform.python_version()
@@ -42,18 +42,18 @@ def mainFunction():
     testWidgets()
 
     # print closer
-    print('''
+    print("""
 
 END
 
-    ''')
+    """)
 
 
 if __name__ == '__main__':
     print(
-    '''
+    """
     QT_API == {}
-    '''.format(qtpy.API)
+    """.format(qtpy.API)
     )
 
     app = QApplication(sys.argv)
