@@ -9,23 +9,21 @@ from cgwidgets.widgets import (
     AbstractBooleanInputWidget
 )
 
-from cgwidgets.widgets import TansuModelViewWidget
+from cgwidgets.widgets import TansuModelViewWidget, TansuModelDelegateWidget
 
 
-class InputGroup(AbstractInputGroupBox):
+class GroupInputWidget(AbstractInputGroupBox):
     """
     A container for holding user parameters.  The default main
     widget is a TansuWidget which can have the individual widgets
     added to ti
     """
     def __init__(self, parent=None, title=None):
-        super(InputGroup, self).__init__(parent, title)
+        super(GroupInputWidget, self).__init__(parent, title)
 
         # setup main widget
-        self.main_widget = TansuModelViewWidget(self)
-        self.main_widget.setViewPosition(TansuModelViewWidget.WEST)
-        self.main_widget.setMultiSelect(True)
-        self.main_widget.setMultiSelectDirection(Qt.Vertical)
+        self.main_widget = GroupInputTansuWidget(self)
+
         self.layout().addWidget(self.main_widget)
 
     def insertInputWidget(self, index, widget, name, type=None):
@@ -43,6 +41,26 @@ class InputGroup(AbstractInputGroupBox):
 
     def removeInputWidget(self, index):
         self.main_widget.removeTab(index)
+
+
+class GroupInputTansuWidget(TansuModelViewWidget):
+    def __init__(self, parent=None):
+        super(GroupInputTansuWidget, self).__init__(parent)
+        self.setViewPosition(TansuModelViewWidget.WEST)
+        self.setMultiSelect(True)
+        self.setMultiSelectDirection(Qt.Vertical)
+        self.setDelegateType(TansuModelViewWidget.DYNAMIC)
+
+    def createTansuModelDelegateWidget(self, name, widget):
+        """
+        Creates a new tab widget widget...
+        TODO:
+            Move to base tansu?
+        """
+        display_widget = TansuModelDelegateWidget(self, name)
+        display_widget.setMainWidget(widget)
+
+        return display_widget
 
 
 class FloatInputWidget(AbstractFloatInputWidget):
@@ -78,7 +96,7 @@ if __name__ == "__main__":
     input_widget1.setTriggerEvent(triggerEvent)
     input_widget2 = FloatInputWidget()
     input_widget3 = FloatInputWidget()
-    gw = InputGroup('cool stuff')
+    gw = GroupInputWidget('cool stuff')
     gw.insertInputWidget(0, input_widget1, 'test 1')
     gw.insertInputWidget(0, input_widget2, 'test 2')
     gw.insertInputWidget(0, input_widget3, 'test 3')

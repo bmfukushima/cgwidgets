@@ -1,18 +1,25 @@
 # https://doc.qt.io/qt-5/model-view-programming.html#model-view-classes
+from cgwidgets.widgets.Tansu import (
+    iDynamicWidget
+)
 
 
-class TansuModelItem(object):
+class TansuModelItem(iDynamicWidget):
     """
 
     Attributes:
         delegate_widget (QWidget): Widget to be shown when this item is
             selected
+        dynamic_widget_base_class (QWidget): Widget to be shown when this item is
+            selected if the Tansu is in DYNAMIC mode.
     """
     def __init__(self, name, parent=None):
         self._name = name
         self._children = []
         self._parent = parent
         self._delegate_widget = None
+        self._dynamicWidgetFunction = None
+
         self._is_selected = False
 
         if parent is not None:

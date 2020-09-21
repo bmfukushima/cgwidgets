@@ -23,11 +23,11 @@ from cgwidgets.settings.colors import iColor
 
 from cgwidgets.widgets import AbstractInputGroup
 from cgwidgets.widgets.Tansu import (
-    BaseTansuWidget, TansuModel
+    BaseTansuWidget, TansuModel, iDynamicWidget
 )
 
 
-class TansuModelViewWidget(BaseTansuWidget):
+class TansuModelViewWidget(BaseTansuWidget, iDynamicWidget):
     """
     This is the designing portion of this editor.  This is where the TD
     will design a custom UI/hooks/handlers for the tool for the end user,
@@ -266,6 +266,9 @@ class TansuModelViewWidget(BaseTansuWidget):
         """
         Updates which widgets should be shown/hidden based off of
         the current models selection list
+
+        TODO:
+            update for dynamic?
         """
         if self.getDelegateType() == TansuModelViewWidget.STACKED:
             self.toggleDelegateSpacerWidget()
@@ -333,7 +336,7 @@ class TansuModelViewWidget(BaseTansuWidget):
         """
         if selected:
             # create dynamic widget
-            dynamic_widget = self.createNewDynamicWidget(name=item.name())
+            dynamic_widget = self.createNewDynamicWidget(item)
             self.delegateWidget().addWidget(dynamic_widget)
             item.setDelegateWidget(dynamic_widget)
             self.updateDynamicWidget(dynamic_widget, item)
@@ -345,38 +348,37 @@ class TansuModelViewWidget(BaseTansuWidget):
                 pass
 
     """ DYNAMIC WIDGET """
-    def createNewDynamicWidget(self, name="Nothing Selected..."):
-        dynamic_widget_class = self.getDynamicWidgetBaseClass()
+    def createNewDynamicWidget(self, item):
+        name = item.name()
+        # check item for dynamic base class if it has that, use that
+        if item.getDynamicWidgetBaseClass():
+            dynamic_widget_class = item.getDynamicWidgetBaseClass()
+            print('creating item')
+        else:
+            print('creating tansu')
+            dynamic_widget_class = self.getDynamicWidgetBaseClass()
+
         new_dynamic_widget = dynamic_widget_class()
         new_widget = self.createTansuModelDelegateWidget(name, new_dynamic_widget)
         return new_widget
 
-    def __dynamicWidgetFunction(self):
-        pass
-
-    def setDynamicUpdateFunction(self, function):
-        self.__dynamicWidgetFunction = function
-
-    def setDynamicWidgetBaseClass(self, widget):
-        """
-        Sets the constructor for the dynamic widget.  Everytime
-        a new dynamic widget is created. It will use this base class
-        """
-        self._dynamic_widget_base_class = widget
-
-    def getDynamicWidgetBaseClass(self):
-        return self._dynamic_widget_base_class
-
-    def updateDynamicWidget(self, widget, label, *args, **kwargs):
+    def updateDynamicWidget(self, widget, item, *args, **kwargs):
         """
         Updates the dynamic widget
 
         Args:
             widget (DynamicWidget) The dynamic widget that should be updated
-            label (TabTansuLabelWidget): The tab label that should be updated
+            item (TabTansuLabelWidget): The tab label that should be updated
         """
         # needs to pick which to update...
-        self.__dynamicWidgetFunction(widget, label, *args, **kwargs)
+        if item.getDynamicUpdateFunction():
+            print ('item update')
+            dynamic_update_function = item.getDynamicUpdateFunction()
+        else:
+            print ('tansu update')
+            dynamic_update_function = self.getDynamicUpdateFunction()
+
+        dynamic_update_function(widget, item, *args, **kwargs)
 
     """ EVENTS """
     def showEvent(self, event):
@@ -724,12 +726,12 @@ if __name__ == "__main__":
     # w.setViewWidget(new_view)
     # w.setViewPosition(TansuModelViewWidget.NORTH)
 
-    # dw = TabTansuDynamicWidgetExample
-    # w.setDelegateType(
-    #     TansuModelViewWidget.DYNAMIC,
-    #     dynamic_widget=TabTansuDynamicWidgetExample,
-    #     dynamic_function=TabTansuDynamicWidgetExample.updateGUI
-    # )
+    dw = TabTansuDynamicWidgetExample
+    w.setDelegateType(
+        TansuModelViewWidget.DYNAMIC,
+        dynamic_widget=TabTansuDynamicWidgetExample,
+        dynamic_function=TabTansuDynamicWidgetExample.updateGUI
+    )
 
     for x in range(3):
         widget = QLabel(str(x))
