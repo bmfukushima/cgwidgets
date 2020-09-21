@@ -230,14 +230,16 @@ class TansuModelViewWidget(BaseTansuWidget, iDynamicWidget):
         elif self.getViewPosition() == TansuModelViewWidget.EAST:
             self.moveSplitter(self.width() - self.view_width, 1)
 
-    def createTansuModelDelegateWidget(self, name, widget):
+    def createTansuModelDelegateWidget(self, item, widget):
         """
         Creates a new tab widget widget...
         TODO:
             Move to base tansu?
         """
+        name = item.name()
         display_widget = TansuModelDelegateWidget(self, name)
         display_widget.setMainWidget(widget)
+        display_widget.setItem(item)
 
         return display_widget
 
@@ -353,13 +355,11 @@ class TansuModelViewWidget(BaseTansuWidget, iDynamicWidget):
         # check item for dynamic base class if it has that, use that
         if item.getDynamicWidgetBaseClass():
             dynamic_widget_class = item.getDynamicWidgetBaseClass()
-            print('creating item')
         else:
-            print('creating tansu')
             dynamic_widget_class = self.getDynamicWidgetBaseClass()
 
         new_dynamic_widget = dynamic_widget_class()
-        new_widget = self.createTansuModelDelegateWidget(name, new_dynamic_widget)
+        new_widget = self.createTansuModelDelegateWidget(item, new_dynamic_widget)
         return new_widget
 
     def updateDynamicWidget(self, widget, item, *args, **kwargs):
@@ -372,10 +372,8 @@ class TansuModelViewWidget(BaseTansuWidget, iDynamicWidget):
         """
         # needs to pick which to update...
         if item.getDynamicUpdateFunction():
-            print ('item update')
             dynamic_update_function = item.getDynamicUpdateFunction()
         else:
-            print ('tansu update')
             dynamic_update_function = self.getDynamicUpdateFunction()
 
         dynamic_update_function(widget, item, *args, **kwargs)
@@ -439,12 +437,12 @@ class TansuModelViewWidget(BaseTansuWidget, iDynamicWidget):
             pass
         elif value == TansuModelViewWidget.DYNAMIC:
             # preflight check
-            if not dynamic_widget:
-                print ("provide a widget to use...")
-                return
-            if not dynamic_function:
-                print ("provide a function to use...")
-                return
+            # if not dynamic_widget:
+            #     print ("provide a widget to use...")
+            #     return
+            # if not dynamic_function:
+            #     print ("provide a function to use...")
+            #     return
             self.setDynamicWidgetBaseClass(dynamic_widget)
             self.setDynamicUpdateFunction(dynamic_function)
 
@@ -611,6 +609,10 @@ class TansuModelDelegateWidget(AbstractInputGroup):
     This is a clone of the InputGroup... but I'm getting
     stuck in import recursion land... so... this is a copy
     paste.  Sorry. deal with it.
+    Attributes:
+        main_widget (QWidget): the main display widget
+        item (TansuModelItem): The item from the model that is associated with
+            this delegate
     """
     def __init__(self, parent=None, title=None):
         super(TansuModelDelegateWidget, self).__init__(parent, title)
@@ -631,6 +633,11 @@ class TansuModelDelegateWidget(AbstractInputGroup):
     def getMainWidget(self):
         return self._main_widget
 
+    def setItem(self, item):
+        self._item = item
+
+    def item(self):
+        return self._item
 
 # need to do a QAbstractItemView injection here...
 

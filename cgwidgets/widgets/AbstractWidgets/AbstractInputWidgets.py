@@ -65,7 +65,7 @@ class AbstractInputWidget(QLineEdit):
         self.updateStyleSheet()
 
         # set up signals
-        self.editingFinished.connect(self.finishInput)
+        self.editingFinished.connect(self.userInputEvent)
 
     def updateStyleSheet(self):
         #style_sheet = getTopBorderStyleSheet(self._rgba_border, 2)
@@ -148,7 +148,7 @@ class AbstractInputWidget(QLineEdit):
         Evaluates the users input, this is important
         when using numbers
         """
-        return str(eval(self.text()))
+        return self.text()
 
     """ TRIGGER """
     def __trigger_event(self, *args, **kwargs):
@@ -173,7 +173,7 @@ class AbstractInputWidget(QLineEdit):
         self.setOrigValue(self.text())
         return QLineEdit.focusInEvent(self, *args, **kwargs)
 
-    def finishInput(self):
+    def userInputEvent(self):
         is_valid = self.checkInput()
 
         if is_valid:
@@ -187,10 +187,6 @@ class AbstractInputWidget(QLineEdit):
         if event.button() == Qt.MiddleButton:
             return
         return QLineEdit.mousePressEvent(self, event, *args, **kwargs)
-
-    def keyPressEvent(self, event, *args, **kwargs):
-        if event.key() in self.getKeyList():
-            return QLineEdit.keyPressEvent(self, event, *args, **kwargs)
 
 
 class AbstractNumberInputWidget(AbstractInputWidget):
@@ -243,7 +239,11 @@ class AbstractNumberInputWidget(AbstractInputWidget):
         self._do_math = do_math
         self._allow_negative = allow_negative
 
+    """ LADDER """
     def setValue(self, value):
+        """
+        This is only used for the ladder if it is setup
+        """
         self.setText(str(value))
 
     def setUseLadder(
@@ -276,9 +276,9 @@ class AbstractNumberInputWidget(AbstractInputWidget):
             else:
                 outline_color = iColor.rgba_outline
             self.ladder.setStyleSheet("""
-            AbstractNumberInputWidget{{border: 1px solid rgba{RGBA_OUTLINE}}}
+            AbstractNumberInputWidget{{border: 1px solid rgba{outline_color}}}
             """.format(
-                RGBA_OUTLINE=repr(outline_color))
+                outline_color=repr(outline_color))
             )
         else:
             if hasattr(self, 'ladder'):
@@ -289,6 +289,7 @@ class AbstractNumberInputWidget(AbstractInputWidget):
     def getUseLadder(self):
         return self._use_ladder_delegate
 
+    """ PROPERTIES """
     def setAllowNegative(self, _allow_negative):
         self._allow_negative = _allow_negative
 
@@ -318,8 +319,20 @@ class AbstractNumberInputWidget(AbstractInputWidget):
             except:
                 return False
 
+    def getInput(self):
+        """
+        Evaluates the users input, this is important
+        when using numbers
+        """
+        return str(eval(self.text()))
+
+    def keyPressEvent(self, event, *args, **kwargs):
+        if event.key() in self.getKeyList():
+            return QLineEdit.keyPressEvent(self, event, *args, **kwargs)
+
 
 class AbstractFloatInputWidget(AbstractNumberInputWidget):
+    TYPE = 'float'
     def __init__(
         self, parent=None, allow_negative=True, do_math=True
     ):
@@ -328,9 +341,6 @@ class AbstractFloatInputWidget(AbstractNumberInputWidget):
         )
         self.appendKey(Qt.Key_Period)
         self.setValidateInputFunction(self.validateInput)
-
-    def __repr__(self):
-        return ('float')
 
     def validateInput(self):
         """
@@ -348,6 +358,7 @@ class AbstractFloatInputWidget(AbstractNumberInputWidget):
 
 
 class AbstractIntInputWidget(AbstractNumberInputWidget):
+    TYPE = 'int'
     def __init__(
         self, parent=None, allow_negative=True, do_math=True
     ):
@@ -355,9 +366,6 @@ class AbstractIntInputWidget(AbstractNumberInputWidget):
             parent, allow_negative, do_math
         )
         self.setValidateInputFunction(self.validateInput)
-
-    def __repr__(self):
-        return ('int')
 
     def validateInput(self):
         """
@@ -375,23 +383,66 @@ class AbstractIntInputWidget(AbstractNumberInputWidget):
 
 
 class AbstractStringInputWidget(AbstractInputWidget):
+    TYPE = 'string'
     def __init__(self, parent=None):
         super(AbstractStringInputWidget, self).__init__(parent)
+        self.setValidateInputFunction(self.validateInput)
 
-    def __repr__(self):
-        return ('string')
+    def validateInput(self):
+        return True
 
 
 class AbstractBooleanInputWidget(QLabel):
-    def __init__(self, parent=None):
+    TYPE = 'bool'
+    def __init__(self, parent=None, is_clicked=False):
         super(AbstractBooleanInputWidget, self).__init__(parent)
-        style_sheet = """
-        QLabel[is_clicked=true]{background-color: rgba{clicked_color};
-        QLabel
-        """
+        self.is_clicked = is_clicked
 
+    def setupStyleSheet(self):
+        style_sheet_args = iColor.style_sheet_args
+        style_sheet_args['name'] = type(self).__name__
+        style_sheet = """
+        QLabel[is_clicked=true]{{
+            border: 3px solid rgba{rgba_accept}
+        }}
+        QLabel[is_clicked=false]{{
+            border: 3px solid rgba{rgba_cancel};
+        }};
+        """.format(
+            **style_sheet_args
+        )
+        self.setStyleSheet(style_sheet)
+
+    """ TRIGGER """
+    """
+    Im being lazy, this is a copy and paste from the AbstractInputWidget
+    """
+    def __trigger_event(self, *args, **kwargs):
+        pass
+
+    def setTriggerEvent(self, function):
+        """
+        Sets the function that should be triggered everytime
+        the user finishes editing this widget
+        """
+        self.__trigger_event = function
+
+    def triggerEvent(self, *args, **kwargs):
+        """
+        Internal event to run everytime the user triggers an update.  This
+        will need to be called on every type of widget.
+        """
+        self.__trigger_event(*args, **kwargs)
+
+    """ EVENTS """
+    def mouseReleaseEvent(self, event):
+        self.is_clicked = not self.is_clicked
+        self.triggerEvent()
+        return QLabel.mouseReleaseEvent(self, event)
+
+    """ PROPERTIES """
     @property
-    def is_clicked(self, is_clicked):
+    def is_clicked(self):
         return self._is_clicked
 
     @is_clicked.setter
@@ -406,21 +457,22 @@ if __name__ == "__main__":
     from qtpy.QtWidgets import QApplication, QWidget, QVBoxLayout
     from qtpy.QtGui import QCursor
     app = QApplication(sys.argv)
-    w = QWidget()
-    l = QVBoxLayout(w)
-    l.setAlignment(Qt.AlignTop)
-    input_widget = AbstractFloatInputWidget()
-    gw = AbstractInputGroup(title='cool stuff')
-    gw.layout().addWidget(input_widget)
+    # w = QWidget()
+    # l = QVBoxLayout(w)
+    # l.setAlignment(Qt.AlignTop)
+    # input_widget = AbstractFloatInputWidget()
+    # gw = AbstractInputGroup(title='cool stuff')
+    # gw.layout().addWidget(input_widget)
+    #
+    #
+    # asdf = AbstractInputGroupBox(title='not cool')
+    # i2 = AbstractFloatInputWidget()
+    # asdf.layout().addWidget(i2)
+    # #gw.display_background = False
+    # l.addWidget(gw)
+    # l.addWidget(asdf)
 
-
-    asdf = AbstractInputGroupBox(title='not cool')
-    i2 = AbstractFloatInputWidget()
-    asdf.layout().addWidget(i2)
-    #gw.display_background = False
-    l.addWidget(gw)
-    l.addWidget(asdf)
-
+    w = AbstractBooleanInputWidget()
     w.resize(500, 500)
     w.show()
     w.move(QCursor.pos())

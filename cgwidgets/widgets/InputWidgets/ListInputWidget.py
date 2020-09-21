@@ -28,6 +28,7 @@ class ListInputWidget(QComboBox):
         previous_text (str): the previous items text.  This is stored for cancel events
             and allowing the user to return to the previous item after cancelling.
     """
+    TYPE = 'list'
     def __init__(self, parent=None):
         super(ListInputWidget, self).__init__(parent)
         self.main_widget = self.parent()

@@ -7,8 +7,6 @@ from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 from qtpy.QtGui import *
 
-from cgwidgets.settings.colors import RGBA_DEFAULT_BACKGROUND
-
 
 def getFontSize(application):
     """

@@ -35,38 +35,10 @@ def getTopBorderStyleSheet(border_color, border_width):
     )
     return style_sheet
 
-################################
-#########    COLORS    ###########
-################################
-""" DEFAULTS """
-RGBA_DEFAULT_BACKGROUND = (32, 32, 32, 255)
-RGBA_DEFAULT_BACKGROUND_SELECTED = multiplyRGBAValues(RGBA_DEFAULT_BACKGROUND)
-
-
-""" ACCEPTS / DECLINE / MAYBE"""
-RGBA_ACCEPT = (64, 128, 64, 255)
-RGBA_CANCEL = (128, 64, 64, 255)
-RGBA_MAYBE = (64, 64, 128, 255)
-RGBA_ERROR = (192, 0, 0, 255)
-
-RGBA_ACCEPT_HOVER = multiplyRGBAValues(RGBA_ACCEPT)
-RGBA_CANCEL_HOVER = multiplyRGBAValues(RGBA_CANCEL)
-RGBA_MAYBE_HOVER = multiplyRGBAValues(RGBA_MAYBE)
-RGBA_ERROR_HOVER = multiplyRGBAValues(RGBA_ERROR)
-
 """ TANSU """
 RGBA_TANSU_FLAG = (10, 20, 95, 255)
 RGBA_TANSU_HANDLE = (10, 95, 20, 255)
 RGBA_TANSU_HANDLE_HOVER = multiplyRGBAValues(RGBA_TANSU_HANDLE)
-
-""" SELECTED """
-
-
-""" OUTLINE """
-RGBA_OUTLINE = (180, 70, 10, 255)
-RGBA_OUTLINE_HOVER = (255, 100, 15, 255)
-
-from qtpy.QtWidgets import QWidget
 
 
 class iColor(object):
@@ -82,16 +54,33 @@ class iColor(object):
 
     """
 
-    rgba_background = RGBA_DEFAULT_BACKGROUND
-    rgba_background_selected = RGBA_DEFAULT_BACKGROUND_SELECTED
-    rgba_outline = RGBA_OUTLINE
-    rgba_outline_hover = RGBA_OUTLINE_HOVER
+    """ background"""
+    rgba_background = (32, 32, 32, 255)
+    rgba_background_selected = multiplyRGBAValues(rgba_background)
 
+    """ outline """
+    rgba_outline = (180, 70, 10, 255)
+    rgba_outline_hover = (255, 100, 15, 255)
+
+    """ text """
     rgba_text_color = (128, 128, 128, 255)
     rgba_text_color_hover = multiplyRGBAValues(rgba_text_color)
 
+    """ hover / select"""
     rgba_selected = (96, 96, 192, 255)
     rgba_hover = multiplyRGBAValues(rgba_selected)
+
+    """ accept / decline"""
+    rgba_accept = (64, 128, 64, 255)
+    rgba_cancel = (128, 64, 64, 255)
+    rgba_maybe = (64, 64, 128, 255)
+    rgba_error = (192, 0, 0, 255)
+    rgba_accept_hover = multiplyRGBAValues(rgba_accept)
+    rgba_cancel_hover = multiplyRGBAValues(rgba_cancel)
+    rgba_maybe_hover = multiplyRGBAValues(rgba_maybe)
+    rgba_error_hover = multiplyRGBAValues(rgba_error)
+
+    """ default style sheet args"""
 
     style_sheet_args = {
         'rgba_background' : repr(rgba_background),
@@ -101,7 +90,15 @@ class iColor(object):
         'rgba_selected' : repr(rgba_selected),
         'rgba_hover' : repr(rgba_hover),
         'rgba_text_color' : repr(rgba_text_color),
-        'rgba_text_color_hover' : repr(rgba_text_color_hover)
+        'rgba_text_color_hover' : repr(rgba_text_color_hover),
+        'rgba_accept': repr(rgba_accept),
+        'rgba_cancel': repr(rgba_cancel),
+        'rgba_maybe': repr(rgba_maybe),
+        'rgba_error': repr(rgba_error),
+        'rgba_accept_hover': repr(rgba_accept_hover),
+        'rgba_cancel_hover': repr(rgba_cancel_hover),
+        'rgba_maybe_hover': repr(rgba_maybe_hover),
+        'rgba_error_hover': repr(rgba_error_hover),
     }
 
     default_style_sheet = """
