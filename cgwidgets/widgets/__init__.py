@@ -21,11 +21,6 @@ from .Tansu import BaseTansuWidget as BaseTansuWidget
 from .Tansu import TansuModelViewWidget as TansuModelViewWidget
 from .Tansu import TansuListView as TansuListView
 
-from .Tansu import TabTansuWidget as TabTansuWidget
-from .Tansu import TabTansuLabelWidget as TabTansuLabelWidget
-from .Tansu import iTabTansuLabel as iTabTansuLabel
-
-
 """ INPUT WIDGETS """
 from .InputWidgets import FloatInputWidget as FloatInputWidget
 from .InputWidgets import IntInputWidget as IntInputWidget

@@ -8,7 +8,7 @@ from cgwidgets.widgets import (
     AbstractBooleanInputWidget
 )
 
-from cgwidgets.widgets import TabTansuWidget
+from cgwidgets.widgets import TansuModelViewWidget
 
 
 class InputGroup(AbstractInputGroup):
@@ -21,8 +21,8 @@ class InputGroup(AbstractInputGroup):
         super(InputGroup, self).__init__(parent, title)
 
         # setup main widget
-        self.main_widget = TabTansuWidget(self)
-        self.main_widget.setTabBarPosition(TabTansuWidget.WEST)
+        self.main_widget = TansuModelViewWidget(self)
+        self.main_widget.setTabBarPosition(TansuModelViewWidget.WEST)
         self.main_widget.setMultiSelect(True)
         self.main_widget.setMultiSelectDirection(Qt.Vertical)
         self.layout().addWidget(self.main_widget)
