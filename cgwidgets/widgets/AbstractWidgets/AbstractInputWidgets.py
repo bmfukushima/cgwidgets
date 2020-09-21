@@ -12,7 +12,7 @@ TODO:
             - ladder middle widget can use base class widgets...
 
 Input Group
-    AbstractInputGroup (QGroupBox)
+    AbstractInputGroupBox (QGroupBox)
         | -- TabTansuWidget
                 | -* InputWidget
 
@@ -26,7 +26,7 @@ Input Widgets
 """
 
 from qtpy.QtWidgets import (
-    QLineEdit, QLabel, QGroupBox, QBoxLayout, QSizePolicy, QFrame, QApplication, QWidget, QVBoxLayout
+    QLineEdit, QLabel
 )
 from qtpy.QtCore import Qt, QEvent
 
@@ -36,7 +36,7 @@ from cgwidgets.utils import (
 )
 from cgwidgets.settings.colors import iColor
 
-from cgwidgets.widgets.AbstractWidgets import AbstractVLine, AbstractHLine
+from cgwidgets.widgets.AbstractWidgets import AbstractInputGroupBox, AbstractInputGroup
 
 
 class AbstractInputWidget(QLineEdit):
@@ -45,23 +45,28 @@ class AbstractInputWidget(QLineEdit):
 
     Attributes:
         orig_value (str): the previous value set by the user
+        key_list (list): of Qt.Key_KEY.  List of keys that are currently
+            valid for this widget.
+        rgba_background (rgba): value of rgba_background transparency
         rgba_border (rgba): color of the border...
-        background_color (int): value of background_color transparency
     """
-    RGBA_BORDER_COLOR = iColor.rgba_outline
-    ALPHA = 48
 
     def __init__(self, parent=None):
         super(AbstractInputWidget, self).__init__(parent)
+        # setup default args
         self._key_list = []
-        self.rgba_border = AbstractInputWidget.RGBA_BORDER_COLOR
-        self.background_color = AbstractInputWidget.ALPHA
+
+        # set up style
+        self.rgba_border = iColor.rgba_outline
+        self.rgba_background = iColor.rgba_background
         self.updateStyleSheet()
+
+        # set up signals
         self.editingFinished.connect(self.finishInput)
 
     def updateStyleSheet(self):
         #style_sheet = getTopBorderStyleSheet(self._rgba_border, 2)
-        self.setStyleSheet("border: None; background-color: rgba(0,0,0,{background_color});".format(background_color=self.background_color))
+        self.setStyleSheet("border: None; background-color: rgba{rgba_background};".format(rgba_background=self.rgba_background))
 
     """ PROPERTIES """
     def appendKey(self, key):
@@ -82,13 +87,6 @@ class AbstractInputWidget(QLineEdit):
     def getOrigValue(self):
         return self._orig_value
 
-    def getInput(self):
-        """
-        Evaluates the users input, this is important
-        when using numbers
-        """
-        return str(eval(self.text()))
-
     @property
     def rgba_border(self):
         return self._rgba_border
@@ -98,12 +96,12 @@ class AbstractInputWidget(QLineEdit):
         self._rgba_border = _rgba_border
 
     @property
-    def background_color(self):
-        return self._background_color
+    def rgba_background(self):
+        return self._rgba_background
 
-    @background_color.setter
-    def background_color(self, _background_color):
-        self._background_color = _background_color
+    @rgba_background.setter
+    def rgba_background(self, _rgba_background):
+        self._rgba_background = _rgba_background
         self.updateStyleSheet()
 
     """ UTILS """
@@ -122,6 +120,31 @@ class AbstractInputWidget(QLineEdit):
         validation = self._validate_user_input()
         return validation
 
+    def getInput(self):
+        """
+        Evaluates the users input, this is important
+        when using numbers
+        """
+        return str(eval(self.text()))
+
+    """ TRIGGER """
+    def __trigger_event(self, *args, **kwargs):
+        pass
+
+    def setTriggerEvent(self, function):
+        """
+        Sets the function that should be triggered everytime
+        the user finishes editing this widget
+        """
+        self.__trigger_event = function
+
+    def triggerEvent(self, *args, **kwargs):
+        """
+        Internal event to run everytime the user triggers an update.  This
+        will need to be called on every type of widget.
+        """
+        self.__trigger_event(*args, **kwargs)
+
     """ SIGNALS / EVENTS """
     def focusInEvent(self, *args, **kwargs):
         self.setOrigValue(self.text())
@@ -132,6 +155,8 @@ class AbstractInputWidget(QLineEdit):
 
         if is_valid:
             self.setText(self.getInput())
+            self.triggerEvent(self.getInput())
+
         else:
             self.setText(self.getOrigValue())
 
@@ -143,134 +168,6 @@ class AbstractInputWidget(QLineEdit):
     def keyPressEvent(self, event, *args, **kwargs):
         if event.key() in self.getKeyList():
             return QLineEdit.keyPressEvent(self, event, *args, **kwargs)
-
-
-class AbstractInputGroupContainer(QFrame):
-    def __init__(self, parent=None, title='None'):
-        super(AbstractInputGroupContainer, self).__init__(parent)
-        QVBoxLayout(self)
-        self.group_box = AbstractInputGroup(parent=parent, title=title)
-        self.layout().addWidget(self.group_box)
-        self.group_box.display_background = False
-
-    def setTitle(self, title):
-        self.group_box.setTitle(title)
-
-
-class AbstractInputGroup(QGroupBox):
-    """
-    Group box containing the user input parameters widgets.
-    """
-    RGBA_BORDER_COLOR = iColor.rgba_outline
-    PADDING = 3
-    BACKGROUND_COLOR = iColor.rgba_background
-
-    def __init__(self, parent=None, title=None):
-        super(AbstractInputGroup, self).__init__(parent)
-        # setup main layout
-        QBoxLayout(QBoxLayout.TopToBottom, self)
-        self.layout().setAlignment(Qt.AlignTop)
-
-        # create separator
-        separator = AbstractHLine(self)
-        separator.setStyleSheet("""
-            background-color: rgba{rgba_text_color};
-            margin: 30px;
-            """.format(rgba_text_color=repr(iColor.rgba_text_color)))
-        self.layout().addWidget(separator)
-
-        # set up default attrs
-        if title:
-            self.setTitle(title)
-        self._rgba_border = AbstractInputGroup.RGBA_BORDER_COLOR
-        self._padding = AbstractInputGroup.PADDING
-        self._background_color = AbstractInputGroup.BACKGROUND_COLOR
-
-        # setup display styles
-        self.display_background = True
-        self.updateStyleSheet()
-
-        font_size = getFontSize(QApplication)
-        self.layout().setContentsMargins(self.padding*3, font_size*2, self.padding*3, font_size)
-        self.layout().setSpacing(font_size)
-        self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
-
-    def updateStyleSheet(self):
-        font_size = getFontSize(QApplication)
-        style_sheet = """
-            QGroupBox::title{{
-            subcontrol-origin: margin;
-            subcontrol-position: top center; 
-            padding: -{padding}px {paddingX2}px;
-            }}
-            QGroupBox[display_background=true]{{
-                background-color: rgba{background_color};
-                border-width: 1px;
-                border-radius: {paddingX2};
-                border-style: solid;
-                border-color: rgba{border_color};
-                margin-top: {font_size};
-                margin-bottom: {padding};
-                margin-left: {padding};
-                margin-right:  {padding};
-            }}
-            QGroupBox[display_background=false]{{
-                background-color: rgba(0,0,0,0);
-                border: None;
-                margin-top: 1ex;
-                margin-bottom: {padding};
-                margin-left: {padding};
-                margin-right:  {padding};
-            }}
-        """.format(
-            font_size=font_size,
-            padding=self.padding,
-            paddingX2=(self.padding*2),
-            background_color=repr(self.background_color),
-            border_color=repr(self.rgba_border)
-        )
-        self.setStyleSheet(style_sheet)
-
-    """PROPERTIES"""
-    @property
-    def background_color(self):
-        return self._background_color
-
-    @background_color.setter
-    def background_color(self, _background_color):
-        self._background_color = _background_color
-
-    @property
-    def display_background(self):
-        return self._display_background
-
-    @display_background.setter
-    def display_background(self, _display_background):
-        self._display_background = _display_background
-        self.setProperty('display_background', _display_background)
-        updateStyleSheet(self)
-
-    @property
-    def padding(self):
-        return self._padding
-
-    @padding.setter
-    def padding(self, _padding):
-        self._padding = _padding
-        self.updateStyleSheet()
-
-    """ COLORS """
-    @property
-    def rgba_border(self):
-        return self._rgba_border
-
-    @rgba_border.setter
-    def rgba_border(self, _rgba_border):
-        self._rgba_border = _rgba_border
-        self.user_input_widget.rgba_border = _rgba_border
-
-        self.updateStyleSheet()
-        self.user_input_widget.updateStyleSheet()
 
 
 class AbstractNumberInputWidget(AbstractInputWidget):
@@ -350,13 +247,13 @@ class AbstractNumberInputWidget(AbstractInputWidget):
                 display_widget=self.parent()
                 )
             # set up outline on ladder
-            base_group = getWidgetAncestor(self, AbstractInputGroup)
+            base_group = getWidgetAncestor(self, AbstractInputGroupBox)
             if base_group:
                 outline_color = base_group.rgba_border
             else:
                 outline_color = iColor.rgba_outline
             self.ladder.setStyleSheet("""
-            QWidget{{border: 1px solid rgba{RGBA_OUTLINE}}}
+            AbstractNumberInputWidget{{border: 1px solid rgba{RGBA_OUTLINE}}}
             """.format(
                 RGBA_OUTLINE=repr(outline_color))
             )
@@ -490,11 +387,11 @@ if __name__ == "__main__":
     l = QVBoxLayout(w)
     l.setAlignment(Qt.AlignTop)
     input_widget = AbstractFloatInputWidget()
-    gw = AbstractInputGroupContainer(title='cool stuff')
+    gw = AbstractInputGroup(title='cool stuff')
     gw.layout().addWidget(input_widget)
 
 
-    asdf = AbstractInputGroup(title='not cool')
+    asdf = AbstractInputGroupBox(title='not cool')
     i2 = AbstractFloatInputWidget()
     asdf.layout().addWidget(i2)
     #gw.display_background = False

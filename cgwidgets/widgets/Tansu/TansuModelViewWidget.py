@@ -21,7 +21,7 @@ from qtpy.QtGui import QCursor
 from cgwidgets.utils import getWidgetAncestor
 from cgwidgets.settings.colors import iColor
 
-from cgwidgets.widgets import AbstractInputGroupContainer
+from cgwidgets.widgets import AbstractInputGroup
 from cgwidgets.widgets.Tansu import (
     BaseTansuWidget, TansuModel
 )
@@ -603,7 +603,7 @@ class TansuMainDelegateWidget(BaseTansuWidget):
                 tab_tansu_widget.updateDelegateDisplay()
 
 
-class TansuModelDelegateWidget(AbstractInputGroupContainer):
+class TansuModelDelegateWidget(AbstractInputGroup):
     """
     This is a clone of the InputGroup... but I'm getting
     stuck in import recursion land... so... this is a copy

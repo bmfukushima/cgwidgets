@@ -1,7 +1,8 @@
+from qtpy.QtWidgets import QSplitter, QLabel
 from qtpy.QtCore import Qt
 
 from cgwidgets.widgets import (
-    AbstractInputGroup,
+    AbstractInputGroupBox,
     AbstractFloatInputWidget,
     AbstractIntInputWidget,
     AbstractStringInputWidget,
@@ -11,7 +12,7 @@ from cgwidgets.widgets import (
 from cgwidgets.widgets import TansuModelViewWidget
 
 
-class InputGroup(AbstractInputGroup):
+class InputGroup(AbstractInputGroupBox):
     """
     A container for holding user parameters.  The default main
     widget is a TansuWidget which can have the individual widgets
@@ -22,7 +23,7 @@ class InputGroup(AbstractInputGroup):
 
         # setup main widget
         self.main_widget = TansuModelViewWidget(self)
-        self.main_widget.setTabBarPosition(TansuModelViewWidget.WEST)
+        self.main_widget.setViewPosition(TansuModelViewWidget.WEST)
         self.main_widget.setMultiSelect(True)
         self.main_widget.setMultiSelectDirection(Qt.Vertical)
         self.layout().addWidget(self.main_widget)
@@ -38,7 +39,7 @@ class InputGroup(AbstractInputGroup):
         """
         if type:
             name = "{name}  |  {type}".format(name=name, type=str(type))
-        self.main_widget.insertTab(index, name, widget=widget)
+        self.main_widget.insertViewItem(index, name, widget=widget)
 
     def removeInputWidget(self, index):
         self.main_widget.removeTab(index)
@@ -71,8 +72,10 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     w = QWidget()
     l = QVBoxLayout(w)
-
+    def triggerEvent(value):
+        print (value)
     input_widget1 = FloatInputWidget()
+    input_widget1.setTriggerEvent(triggerEvent)
     input_widget2 = FloatInputWidget()
     input_widget3 = FloatInputWidget()
     gw = InputGroup('cool stuff')
