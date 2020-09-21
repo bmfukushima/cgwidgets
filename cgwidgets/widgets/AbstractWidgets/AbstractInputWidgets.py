@@ -49,6 +49,7 @@ class AbstractInputWidget(QLineEdit):
             valid for this widget.
         rgba_background (rgba): value of rgba_background transparency
         rgba_border (rgba): color of the border...
+        rgba_text_color (rgba): color of text
     """
 
     def __init__(self, parent=None):
@@ -59,6 +60,8 @@ class AbstractInputWidget(QLineEdit):
         # set up style
         self.rgba_border = iColor.rgba_outline
         self.rgba_background = iColor.rgba_background
+        self.rgba_text_color = iColor.rgba_text_color
+
         self.updateStyleSheet()
 
         # set up signals
@@ -66,7 +69,18 @@ class AbstractInputWidget(QLineEdit):
 
     def updateStyleSheet(self):
         #style_sheet = getTopBorderStyleSheet(self._rgba_border, 2)
-        self.setStyleSheet("border: None; background-color: rgba{rgba_background};".format(rgba_background=self.rgba_background))
+        style_sheet_args = iColor.style_sheet_args
+        style_sheet_args.update({
+            "rgba_background": repr(self.rgba_background),
+            "rgba_border": repr(self.rgba_border),
+            "rgba_text_color": repr(self.rgba_text_color)
+        })
+        style_sheet = """
+            border: None;
+            background-color: rgba{rgba_background};
+            color: rgba{rgba_text_color}
+        """.format(**style_sheet_args)
+        self.setStyleSheet(style_sheet)
 
     """ PROPERTIES """
     def appendKey(self, key):
@@ -102,7 +116,16 @@ class AbstractInputWidget(QLineEdit):
     @rgba_background.setter
     def rgba_background(self, _rgba_background):
         self._rgba_background = _rgba_background
-        self.updateStyleSheet()
+        #self.updateStyleSheet()
+
+    @property
+    def rgba_text_color(self):
+        return self._rgba_text_color
+
+    @rgba_text_color.setter
+    def rgba_text_color(self, _rgba_text_color):
+        self._rgba_text_color = _rgba_text_color
+        #self.updateStyleSheet()
 
     """ UTILS """
     def setValidateInputFunction(self, function):
@@ -397,8 +420,7 @@ if __name__ == "__main__":
     #gw.display_background = False
     l.addWidget(gw)
     l.addWidget(asdf)
-    w.setStyleSheet("background-color: rgba(255,0,0,255); border: 3px solid rgba(255,255,0,255)")
-    #gw.setStyleSheet("background-color: rgba(0, 255,0,255); border: 3px solid rgba(255,255,0,255)")
+
     w.resize(500, 500)
     w.show()
     w.move(QCursor.pos())

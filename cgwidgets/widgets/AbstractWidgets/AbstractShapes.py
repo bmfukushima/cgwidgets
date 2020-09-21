@@ -80,9 +80,7 @@ class AbstractInputGroupBox(QGroupBox):
     """
     Group box containing the user input parameters widgets.
     """
-    RGBA_BORDER_COLOR = iColor.rgba_outline
     PADDING = 3
-    BACKGROUND_COLOR = iColor.rgba_background
 
     def __init__(self, parent=None, title=None):
         super(AbstractInputGroupBox, self).__init__(parent)
@@ -101,9 +99,10 @@ class AbstractInputGroupBox(QGroupBox):
         # set up default attrs
         if title:
             self.setTitle(title)
-        self._rgba_border = AbstractInputGroupBox.RGBA_BORDER_COLOR
+        self._rgba_border = iColor.rgba_outline
         self._padding = AbstractInputGroupBox.PADDING
-        self._rgba_background = AbstractInputGroupBox.BACKGROUND_COLOR
+        self._rgba_background = iColor.rgba_background
+        self._rgba_text_color = iColor.rgba_text_color
 
         # setup display styles
         self.display_background = True
@@ -116,11 +115,21 @@ class AbstractInputGroupBox(QGroupBox):
 
     def updateStyleSheet(self):
         font_size = getFontSize(QApplication)
+        style_sheet_args = iColor.style_sheet_args
+        style_sheet_args.update({
+            "font_size" : font_size,
+            "padding" : self.padding,
+            "paddingX2" : (self.padding * 2),
+            "rgba_background" : repr(self.rgba_background),
+            "border_color" : repr(self.rgba_border),
+            "color" : repr(self.rgba_text_color)
+        })
         style_sheet = """
             QGroupBox::title{{
-            subcontrol-origin: margin;
-            subcontrol-position: top center; 
-            padding: -{padding}px {paddingX2}px;
+                subcontrol-origin: margin;
+                subcontrol-position: top center; 
+                padding: -{padding}px {paddingX2}px;
+                color: rgba{rgba_text_color};
             }}
             QGroupBox[display_background=true]{{
                 background-color: rgba{rgba_background};
@@ -142,11 +151,7 @@ class AbstractInputGroupBox(QGroupBox):
                 margin-right:  {padding};
             }}
         """.format(
-            font_size=font_size,
-            padding=self.padding,
-            paddingX2=(self.padding*2),
-            rgba_background=repr(self.rgba_background),
-            border_color=repr(self.rgba_border)
+            **style_sheet_args
         )
         self.setStyleSheet(style_sheet)
 
@@ -158,6 +163,15 @@ class AbstractInputGroupBox(QGroupBox):
     @rgba_background.setter
     def rgba_background(self, _rgba_background):
         self._rgba_background = _rgba_background
+
+    @property
+    def rgba_text_color(self):
+        return self._rgba_text_color
+
+    @rgba_text_color.setter
+    def rgba_text_color(self, _rgba_text_color):
+        self._rgba_text_color = _rgba_text_color
+        #self.updateStyleSheet()
 
     @property
     def display_background(self):

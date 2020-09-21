@@ -603,6 +603,7 @@ class TansuMainDelegateWidget(BaseTansuWidget):
             tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
             if tab_tansu_widget:
                 tab_tansu_widget.updateDelegateDisplay()
+                tab_tansu_widget.toggleDelegateSpacerWidget()
 
 
 class TansuModelDelegateWidget(AbstractInputGroup):

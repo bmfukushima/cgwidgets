@@ -253,14 +253,18 @@ class BaseTansuWidget(QSplitter):
             color (rgba): color to display when not hovering over handle
             hover_color (rgba): color to display when hover over handle
         """
-        style_sheet_args = {
+
+        style_sheet_args = iColor.style_sheet_args
+        style_sheet_args.update({
             'rgba_flag': repr(self.rgba_flag),
             'rgba_handle': repr(self.rgba_handle),
             'rgba_handle_hover': repr(self.rgba_handle_hover),
             'rgba_background': repr(self.rgba_background)
-        }
+        })
         style_sheet = """
-            BaseTansuWidget{{background-color: rgba{rgba_background}}}
+            BaseTansuWidget{{
+                background-color: rgba{rgba_background};
+            }}
             BaseTansuWidget[is_solo_view=true]{{
                 border: 3px solid rgba{rgba_flag}; 
             }}
