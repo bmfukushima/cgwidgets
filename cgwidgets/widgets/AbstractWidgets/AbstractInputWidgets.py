@@ -167,7 +167,10 @@ class AbstractInputWidget(QLineEdit):
             self.setText(self.getInput())
             #TODO This doesn't exist in this ffunctino... moved to iGroupInput
             # or somewhere more logical...
-            self.triggerEvent(self.getInput())
+            try:
+                self.triggerEvent(self.getInput())
+            except AttributeError:
+                pass
 
         else:
             self.setText(self.getOrigValue())
@@ -225,8 +228,8 @@ class AbstractNumberInputWidget(AbstractInputWidget):
     ):
         super(AbstractNumberInputWidget, self).__init__(parent)
         self.setKeyList(AbstractNumberInputWidget.KEY_LIST)
-        self._do_math = do_math
-        self._allow_negative = allow_negative
+        self.setDoMath(do_math)
+        self.setAllowNegative(allow_negative)
 
     """ LADDER """
     def setValue(self, value):
@@ -308,13 +311,6 @@ class AbstractNumberInputWidget(AbstractInputWidget):
             except:
                 return False
 
-    def getInput(self):
-        """
-        Evaluates the users input, this is important
-        when using numbers
-        """
-        return str(eval(self.text()))
-
     def keyPressEvent(self, event, *args, **kwargs):
         if event.key() in self.getKeyList():
             return QLineEdit.keyPressEvent(self, event, *args, **kwargs)
@@ -338,12 +334,19 @@ class AbstractFloatInputWidget(AbstractNumberInputWidget):
         if not self.validateEvaluation(): return
 
         # check if float
-        user_input = self.text()
+        user_input = self.getInput()
         try:
             float(user_input)
             return True
         except ValueError:
             return False
+
+    def getInput(self):
+        """
+        Evaluates the users input, this is important
+        when using numbers
+        """
+        return str(eval(self.text()))
 
 
 class AbstractIntInputWidget(AbstractNumberInputWidget):
@@ -362,13 +365,21 @@ class AbstractIntInputWidget(AbstractNumberInputWidget):
         """
         if not self.validateEvaluation(): return
 
-        # check if float
-        user_input = self.text()
+        # check if int
+        user_input = self.getInput()
+
         try:
-            int(user_input)
+            int(float(user_input))
             return True
         except ValueError:
             return False
+
+    def getInput(self):
+        """
+        Evaluates the users input, this is important
+        when using numbers
+        """
+        return str(int(eval(self.text())))
 
 
 class AbstractStringInputWidget(AbstractInputWidget):
@@ -426,7 +437,12 @@ class AbstractBooleanInputWidget(QLabel):
     """ EVENTS """
     def mouseReleaseEvent(self, event):
         self.is_clicked = not self.is_clicked
-        #self.triggerEvent()
+
+        # run user triggered event
+        try:
+            self.triggerEvent()
+        except AttributeError:
+            pass
         return QLabel.mouseReleaseEvent(self, event)
 
     """ PROPERTIES """
@@ -461,7 +477,8 @@ if __name__ == "__main__":
     # l.addWidget(gw)
     # l.addWidget(asdf)
 
-    w = AbstractBooleanInputWidget()
+    w = AbstractIntInputWidget()
+    w.setDoMath(True)
     w.resize(500, 500)
     w.show()
     w.move(QCursor.pos())

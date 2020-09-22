@@ -154,8 +154,8 @@ class iGroupInput(object):
         """
         try:
             widget = getWidgetAncestor(self, TansuModelDelegateWidget)
-            widget.item().setValue(self.text())
-            widget.item().userInputEvent(self.text())
+            widget.item().setValue(self.getInput())
+            widget.item().userInputEvent(self.getInput())
         except AttributeError:
             pass
 
@@ -174,7 +174,7 @@ class iGroupInput(object):
 class FloatInputWidget(AbstractFloatInputWidget, iGroupInput):
     def __init__(self, parent=None):
         super(FloatInputWidget, self).__init__(parent)
-        #self.setDoMath(True)
+        self.setDoMath(True)
 
 
 class IntInputWidget(AbstractIntInputWidget, iGroupInput):
@@ -336,7 +336,7 @@ if __name__ == "__main__":
 
     def test(value):
         testwidget.setText(str(value))
-        print ('value == %s'%value)
+
     gw = GroupInputWidget('cool stuff')
 
     # add user inputs
@@ -348,7 +348,8 @@ if __name__ == "__main__":
 
     gw.display_background = False
     l.addWidget(gw)
-    w = FloatInputWidget()
+
+    #w = FloatInputWidget()
     # w = ListInputWidget()
     # w.populate(['a','b','c','d'])
     #w.setInputBaseClass(ListInputWidget)
