@@ -35,6 +35,16 @@ class UserInputItem(TansuModelItem):
     def setValue(self, value):
         self._value = value
 
+    """ setup user input event """
+    def __userInputEvent(self, value):
+        return
+
+    def setUserInputEvent(self, function):
+        self.__userInputEvent = function
+
+    def userInputEvent(self, value):
+        self.__userInputEvent(value)
+
 
 class GroupInputWidget(AbstractInputGroupBox):
     def __init__(self, parent=None, title=None):
@@ -56,7 +66,7 @@ class GroupInputWidget(AbstractInputGroupBox):
 
         self.layout().addWidget(self.main_widget)
 
-    def insertInputWidget(self, index, widget, name, value=''):
+    def insertInputWidget(self, index, widget, name, userInputEvent, value=''):
         """
         Inserts a widget into the Main Widget
 
@@ -64,14 +74,18 @@ class GroupInputWidget(AbstractInputGroupBox):
         widget (InputWidget)
         name (str)
         type (str):
+        userInputEvent (fun)
+        value (str): current value if any should be set.  Bolean types will
+            have this automatically overwritten to false in their constructor
         """
         #if type:
         name = "{name}  |  {type}".format(name=name, type=widget.TYPE)
         #self.main_widget.insertViewItem(index, name, widget=widget)
-        view_item = self.main_widget.insertViewItem(index, name)
-        view_item.setValue(value)
-        view_item.setDynamicWidgetBaseClass(widget)
-        view_item.setDynamicUpdateFunction(widget.updateFunction)
+        user_input_item = self.main_widget.insertViewItem(index, name)
+        user_input_item.setValue(value)
+        user_input_item.setDynamicWidgetBaseClass(widget)
+        user_input_item.setDynamicUpdateFunction(widget.updateFunction)
+        user_input_item.setUserInputEvent(userInputEvent)
 
     def removeInputWidget(self, index):
         self.main_widget.removeTab(index)
@@ -125,7 +139,7 @@ class iGroupInput(object):
             pass
 
         # add user input event
-        self.userInputEvent()
+        widget.item().userInputEvent(self.text())
 
     @staticmethod
     def updateFunction(widget, item):
@@ -134,16 +148,6 @@ class iGroupInput(object):
         the display text to the user
         """
         widget.getMainWidget().setText(str(item.getValue()))
-
-    """ setup user input event """
-    def __userInputEvent(self):
-        return
-
-    def setUserInputEvent(self, function):
-        self.__userInputEvent = function
-
-    def userInputEvent(self):
-        self.__userInputEvent()
 
 
 class FloatInputWidget(AbstractFloatInputWidget, iGroupInput):
@@ -176,7 +180,7 @@ class BooleanInputWidget(AbstractBooleanInputWidget, iGroupInput):
         self.is_clicked = self.is_clicked
 
         # add user input event
-        self.userInputEvent()
+        widget.item().userInputEvent(self.is_clicked)
 
     @staticmethod
     def updateFunction(widget, item):
@@ -272,18 +276,21 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     w = QWidget()
     l = QVBoxLayout(w)
-
+    testwidget = QLabel()
+    testwidget.setText('init')
+    l.addWidget(testwidget)
+    def test(value):
+        testwidget.setText(str(value))
+        print ('value == %s'%value)
     gw = GroupInputWidget('cool stuff')
 
-    gw.insertInputWidget(0, FloatInputWidget, 'Float')
-    gw.insertInputWidget(0, FloatInputWidget, 'Int')
-    gw.insertInputWidget(0, BooleanInputWidget, 'Boolean')
-    gw.insertInputWidget(0, StringInputWidget, 'String')
+    gw.insertInputWidget(0, FloatInputWidget, 'Float', test)
+    gw.insertInputWidget(0, FloatInputWidget, 'Int', test)
+    gw.insertInputWidget(0, BooleanInputWidget, 'Boolean', test)
+    gw.insertInputWidget(0, StringInputWidget, 'String', test)
 
-    print (gw.main_widget.model())
-    #gw.insertInputWidget(0, ListInputWidget, 'List')
-    #gw.layout().itemAt(0).populate(['a','b','c','d'])
-    #input_widget1.setUseLadder(True)
+
+
     gw.display_background = False
     l.addWidget(gw)
     #w = BooleanInputWidget()

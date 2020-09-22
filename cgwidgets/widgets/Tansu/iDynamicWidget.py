@@ -1,4 +1,14 @@
 class iDynamicWidget(object):
+    def setUserInputFunction(self, function):
+        self.userInputFunction = function
+
+    def getUserInputFunction(self):
+        return self.userInputFunction
+
+    def userInputFunction(self):
+        print ("user input!!")
+        return
+
     def setDynamicWidgetBaseClass(self, widget):
         """
         Sets the constructor for the dynamic widget.  Everytime
@@ -14,7 +24,10 @@ class iDynamicWidget(object):
     def setDynamicUpdateFunction(self, function):
         self._dynamicWidgetFunction = function
 
+    #@userInputFunction
     def getDynamicUpdateFunction(self):
         if self._dynamicWidgetFunction:
             return self._dynamicWidgetFunction
         return None
+
+
