@@ -13,6 +13,7 @@ from qtpy.QtWidgets import QSplitter, QLabel, QFrame, QBoxLayout, QLineEdit
 from qtpy.QtCore import Qt
 
 from cgwidgets.widgets import (
+    AbstractInputGroup,
     AbstractInputGroupBox,
     AbstractFloatInputWidget,
     AbstractIntInputWidget,
@@ -44,7 +45,7 @@ class UserInputItem(TansuModelItem):
         self.__userInputEvent = function
 
     def userInputEvent(self, value):
-        self.__userInputEvent(value)
+        self.__userInputEvent(self, value)
 
     """ args """
     def setArgs(self, args):
@@ -63,7 +64,7 @@ class UserInputItem(TansuModelItem):
         del self.getArgs()[arg]
 
 
-class GroupInputWidget(AbstractInputGroupBox):
+class GroupInputWidget(AbstractInputGroup):
     def __init__(self, parent=None, title=None):
         """
     A container for holding user parameters.  The default main
@@ -79,9 +80,8 @@ class GroupInputWidget(AbstractInputGroupBox):
         super(GroupInputWidget, self).__init__(parent, title)
 
         # setup main widget
-        self.main_widget = GroupInputTansuWidget(self)
-
-        self.layout().addWidget(self.main_widget)
+        self.group_box.main_widget = GroupInputTansuWidget(self)
+        self.group_box.layout().addWidget(self.group_box.main_widget)
 
     def insertInputWidget(self, index, widget, name, userInputEvent, data={}):
         """
@@ -99,7 +99,7 @@ class GroupInputWidget(AbstractInputGroupBox):
         name = "{name}  |  {type}".format(name=name, type=widget.TYPE)
         data['value'] = ''
         # create item
-        user_input_item = self.main_widget.insertViewItem(index, name)
+        user_input_item = self.group_box.main_widget.insertViewItem(index, name)
 
         # setup new item
         user_input_item.setArgs(data)
@@ -108,7 +108,7 @@ class GroupInputWidget(AbstractInputGroupBox):
         user_input_item.setUserInputEvent(userInputEvent)
 
     def removeInputWidget(self, index):
-        self.main_widget.removeTab(index)
+        self.group_box.main_widget.removeTab(index)
 
 
 class GroupInputTansuWidget(TansuModelViewWidget):
@@ -137,6 +137,9 @@ class iGroupInput(object):
         """
         Sets the function that should be triggered everytime
         the user finishes editing this widget
+
+        This function should take two args
+        widget/item, value
         """
         self.__trigger_event = function
 
@@ -235,7 +238,7 @@ class ListInputWidget(AbstractListInputWidget, iGroupInput):
         self.line_edit.editingFinished.connect(self.userFinishedEditing)
 
     def userFinishedEditing(self):
-        self.triggerEvent(self.currentText())
+        self.triggerEvent(self, self.currentText())
         return AbstractListInputWidget.userFinishedEditing(self)
 
     def updateUserInputItem(self, *args):
@@ -289,18 +292,27 @@ class UserInputWidget(QFrame):
 
         # set up display
         self._label.setToolTip(note)
+        self.setLabelWidth(100)
+        self.layout().setSpacing(50)
         self.setupStyleSheet()
 
     def setupStyleSheet(self):
-        style_sheet = iColor.createDefaultStyleSheet(self)
+        style_sheet_args = iColor.style_sheet_args
+        style_sheet = """
+        QLabel{{color: rgba{rgba_text_color}}}
+        UserInputWidget{{background-color: rgba{rgba_background_1}}}
+        """.format(
+            **style_sheet_args
+        )
         self.setStyleSheet(style_sheet)
-        self._label.setStyleSheet(
-            self._label.styleSheet() + 'color: rgba{rgba_text_color}'.format(
-                rgba_text_color=iColor.rgba_text_color))
+        # self._label.setStyleSheet(
+        #     self._label.styleSheet() + 'color: rgba{rgba_text_color}'.format(
+        #         rgba_text_color=iColor.rgba_text_color))
 
     def setToolTip(self, tool_tip):
         self._label.setToolTip(tool_tip)
 
+    """ PROPERTIES """
     def setName(self, name):
         self._label.setText(name)
 
@@ -319,8 +331,19 @@ class UserInputWidget(QFrame):
     def getInputBaseClass(self):
         return self._input_widget_base_class
 
-    def setUserInputEvent(self, function):
-        self._input_widget.setUserInputEvent(function)
+    def labelWidth(self):
+        return self._label_width
+
+    def setLabelWidth(self, width):
+        self._label_width = width
+        self._label.setFixedWidth(width)
+
+    """ EVENTS """
+    def setTriggerEvent(self, function):
+        self._input_widget.setTriggerEvent(function)
+
+    # def setUserInputEvent(self, function):
+    #     self._input_widget.setUserInputEvent(function)
 
 
 if __name__ == "__main__":
@@ -334,10 +357,12 @@ if __name__ == "__main__":
     testwidget.setText('init')
     l.addWidget(testwidget)
 
-    def test(value):
-        testwidget.setText(str(value))
+    def test(widget, value):
+        print(widget, value)
+        #widget.setText(str(value))
 
-    gw = GroupInputWidget('cool stuff')
+    """ group insert """
+    gw = GroupInputWidget(parent=None, title='cool stuff')
 
     # add user inputs
     gw.insertInputWidget(0, FloatInputWidget, 'Float', test)
@@ -349,7 +374,43 @@ if __name__ == "__main__":
     gw.display_background = False
     l.addWidget(gw)
 
-    #w = FloatInputWidget()
+    """ normal widgets """
+    float_input_widget = FloatInputWidget()
+    int_input_widget = IntInputWidget()
+    boolean_input_widget = BooleanInputWidget()
+    string_input_widget = StringInputWidget()
+    list_input_widget = ListInputWidget()
+
+    l.addWidget(float_input_widget)
+    l.addWidget(int_input_widget)
+    l.addWidget(boolean_input_widget)
+    l.addWidget(string_input_widget)
+    l.addWidget(list_input_widget)
+
+    float_input_widget.setTriggerEvent(test)
+    int_input_widget.setTriggerEvent(test)
+    boolean_input_widget.setTriggerEvent(test)
+    string_input_widget.setTriggerEvent(test)
+    list_input_widget.setTriggerEvent(test)
+
+    """ Label widgets """
+    u_float_input_widget = UserInputWidget(name="float", widget_type=FloatInputWidget)
+    u_int_input_widget = UserInputWidget(name="int", widget_type=IntInputWidget)
+    u_boolean_input_widget = UserInputWidget(name="bool", widget_type=BooleanInputWidget)
+    u_string_input_widget = UserInputWidget(name='str', widget_type=StringInputWidget)
+    u_list_input_widget = UserInputWidget(name='list', widget_type=ListInputWidget)
+
+    l.addWidget(u_float_input_widget)
+    l.addWidget(u_int_input_widget)
+    l.addWidget(u_boolean_input_widget)
+    l.addWidget(u_string_input_widget)
+    l.addWidget(u_list_input_widget)
+
+    u_float_input_widget.setTriggerEvent(test)
+    u_int_input_widget.setTriggerEvent(test)
+    u_boolean_input_widget.setTriggerEvent(test)
+    u_string_input_widget.setTriggerEvent(test)
+    u_list_input_widget.setTriggerEvent(test)
     # w = ListInputWidget()
     # w.populate(['a','b','c','d'])
     #w.setInputBaseClass(ListInputWidget)

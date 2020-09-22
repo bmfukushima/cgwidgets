@@ -492,14 +492,14 @@ class TansuModelViewWidget(BaseTansuWidget, iDynamicWidget):
                 border: {outline_width}px solid rgba{rgba_outline} ;
                 border-right: None;
                 border-top: None;
-                background-color: rgba{rgba_background};
+                background-color: rgba{rgba_background_0};
                 color: rgba{rgba_text_color};
             }}
             {type}::item:selected{{
                 border: {outline_width}px solid rgba{rgba_outline} ;
                 border-right: None;
                 border-bottom: None;
-                background-color: rgba{rgba_background_selected};
+                background-color: rgba{rgba_background_1};
                 color: rgba{rgba_selected};
             }}
             {splitter_style_sheet}
@@ -511,14 +511,14 @@ class TansuModelViewWidget(BaseTansuWidget, iDynamicWidget):
                 border: {outline_width}px solid rgba{rgba_outline};
                 border-right: None;
                 border-bottom: None;
-                background-color: rgba{rgba_background};
+                background-color: rgba{rgba_background_0};
                 color: rgba{rgba_text_color};
             }}
             {type}::item:selected{{
                 border: {outline_width}px solid rgba{rgba_outline} ;
                 border-right: None;
                 border-top: None;
-                background-color: rgba{rgba_background_selected};
+                background-color: rgba{rgba_background_1};
                 color: rgba{rgba_selected};
             }}
             {splitter_style_sheet}
@@ -530,14 +530,14 @@ class TansuModelViewWidget(BaseTansuWidget, iDynamicWidget):
                 border: {outline_width}px solid rgba{rgba_outline};
                 border-top: None;
                 border-right: None;
-                background-color: rgba{rgba_background};
+                background-color: rgba{rgba_background_0};
                 color: rgba{rgba_text_color}
             }}
             {type}::item:selected{{
                 border: {outline_width}px solid rgba{rgba_outline} ;
                 border-top: None;
                 border-left: None;
-                background-color: rgba{rgba_background_selected};
+                background-color: rgba{rgba_background_1};
                 color: rgba{rgba_selected};
             }}
             {splitter_style_sheet}
@@ -549,14 +549,14 @@ class TansuModelViewWidget(BaseTansuWidget, iDynamicWidget):
                 border: {outline_width}px solid rgba{rgba_outline};
                 border-top: None;
                 border-left: None;
-                background-color: rgba{rgba_background};
+                background-color: rgba{rgba_background_0};
                 color: rgba{rgba_text_color}
             }}
             {type}::item:selected{{
                 border: {outline_width}px solid rgba{rgba_outline} ;
                 border-top: None;
                 border-right: None;
-                background-color: rgba{rgba_background_selected};
+                background-color: rgba{rgba_background_1};
                 color: rgba{rgba_selected};
             }}
             {splitter_style_sheet}
@@ -589,7 +589,7 @@ class TansuMainDelegateWidget(BaseTansuWidget):
     """
     def __init__(self, parent=None):
         super(TansuMainDelegateWidget, self).__init__(parent)
-        self.rgba_background = iColor.rgba_outline
+        self.rgba_background = iColor["rgba_outline"]
 
     def showEvent(self, event):
         tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
@@ -620,7 +620,7 @@ class TansuModelDelegateWidget(AbstractInputGroup):
         self.setStyleSheet("""
             TansuModelDelegateWidget{{background-color: rgba{background_color}}}
         """.format(
-            background_color=iColor.rgba_background_selected
+            background_color=iColor["rgba_background_1"]
         ))
 
     def setMainWidget(self, widget):

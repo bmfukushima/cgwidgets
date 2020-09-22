@@ -58,9 +58,9 @@ class AbstractInputWidget(QLineEdit):
         self._key_list = []
 
         # set up style
-        self.rgba_border = iColor.rgba_outline
-        self.rgba_background = iColor.rgba_background
-        self.rgba_text_color = iColor.rgba_text_color
+        self.rgba_border = iColor["rgba_outline"]
+        self.rgba_background = iColor["rgba_background_0"]
+        self.rgba_text_color = iColor["rgba_text_color"]
 
         self.updateStyleSheet()
 
@@ -71,13 +71,13 @@ class AbstractInputWidget(QLineEdit):
         #style_sheet = getTopBorderStyleSheet(self._rgba_border, 2)
         style_sheet_args = iColor.style_sheet_args
         style_sheet_args.update({
-            "rgba_background": repr(self.rgba_background),
+            "rgba_background_0": repr(self.rgba_background),
             "rgba_border": repr(self.rgba_border),
             "rgba_text_color": repr(self.rgba_text_color)
         })
         style_sheet = """
             border: None;
-            background-color: rgba{rgba_background};
+            background-color: rgba{rgba_background_0};
             color: rgba{rgba_text_color}
         """.format(**style_sheet_args)
         self.setStyleSheet(style_sheet)
@@ -168,7 +168,7 @@ class AbstractInputWidget(QLineEdit):
             #TODO This doesn't exist in this ffunctino... moved to iGroupInput
             # or somewhere more logical...
             try:
-                self.triggerEvent(self.getInput())
+                self.triggerEvent(self, self.getInput())
             except AttributeError:
                 pass
 
@@ -266,7 +266,7 @@ class AbstractNumberInputWidget(AbstractInputWidget):
             if base_group:
                 outline_color = base_group.rgba_border
             else:
-                outline_color = iColor.rgba_outline
+                outline_color = iColor["rgba_outline"]
             self.ladder.setStyleSheet("""
             AbstractNumberInputWidget{{border: 1px solid rgba{outline_color}}}
             """.format(
@@ -402,6 +402,7 @@ class AbstractBooleanInputWidget(QLabel):
         style_sheet_args = iColor.style_sheet_args
         style_sheet_args['name'] = type(self).__name__
         style_sheet = """
+        QLabel{{background-color: rgba{rgba_background_0}}}
         QLabel[is_clicked=true]{{
             border: 3px solid rgba{rgba_accept}
         }}
@@ -440,7 +441,7 @@ class AbstractBooleanInputWidget(QLabel):
 
         # run user triggered event
         try:
-            self.triggerEvent()
+            self.triggerEvent(self, self.is_clicked)
         except AttributeError:
             pass
         return QLabel.mouseReleaseEvent(self, event)

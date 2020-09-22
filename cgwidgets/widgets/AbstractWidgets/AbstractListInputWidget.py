@@ -1,3 +1,9 @@
+"""
+TODO
+    Move this into custom LineEdit with model/completer.  Similair to the
+    AbstractFileBrowser currently located in KatanaBebop
+"""
+
 from qtpy.QtWidgets import (
     QComboBox, QLineEdit, QCompleter, QSizePolicy
 )
@@ -8,6 +14,8 @@ from qtpy.QtGui import(
 from qtpy.QtCore import (
     QEvent, Qt, QSortFilterProxyModel
 )
+
+from cgwidgets.settings.colors import iColor
 
 
 class AbstractListInputWidget(QComboBox):
@@ -36,7 +44,8 @@ class AbstractListInputWidget(QComboBox):
         self.setExistsFlag(True)
 
         # setup line edit
-        self.line_edit = QLineEdit("Select & Focus", self)
+        #self.line_edit = QLineEdit("Select & Focus", self)
+        self.line_edit = AbstractListInputWidgetLineEdit(self)
         self.line_edit.editingFinished.connect(self.userFinishedEditing)
         self.setLineEdit(self.line_edit)
 
@@ -215,15 +224,18 @@ class AbstractListInputWidget(QComboBox):
     def resizeEvent(self, event):
         width = self.width()
         dropdown_width = int(width * 0.35)
+        style_sheet_args = iColor.style_sheet_args
+        style_sheet_args['width'] = dropdown_width
         style_sheet = """
-        QComboBox {
-            border: 1px solid;
-            border-color: rgba(0,0,0,0);
-            }
-            QComboBox::drop-down {
-                width: %spx;
-            }
-        """ % (dropdown_width)
+        QComboBox {{
+            border: None;
+            background-color: rgba{rgba_background_0}
+            }}
+            QComboBox::drop-down {{
+                width: {width}px;
+                border: None;
+            }}
+        """.format(**style_sheet_args)
         self.setStyleSheet(style_sheet)
         return QComboBox.resizeEvent(self, event)
 
@@ -251,6 +263,10 @@ class AbstractListInputWidget(QComboBox):
             ]:
                 self.__selectionChangedEmit()
 
+        elif event.type() == QEvent.MouseButtonPress:
+            self.completer.setPopup(self.view())
+
+
         return QComboBox.event(self, event, *args, **kwargs)
 
     """ PROPERTIES """
@@ -275,3 +291,13 @@ class AbstractListInputWidget(QComboBox):
     @previous_text.setter
     def previous_text(self, previous_text):
         self._previous_text = previous_text
+
+
+class AbstractListInputWidgetLineEdit(QLineEdit):
+    def __init__(self, parent=None):
+        super(AbstractListInputWidgetLineEdit, self).__init__(parent)
+
+    def mousePressEvent(self, event):
+        #self.parent().completer.popup()
+        #self.parent().completer.popup().show()
+        return QLineEdit.mousePressEvent(self, event)

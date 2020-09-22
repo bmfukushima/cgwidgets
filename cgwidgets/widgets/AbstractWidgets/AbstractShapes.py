@@ -55,6 +55,9 @@ class AbstractInputGroup(QFrame):
         self.layout().addWidget(self.group_box)
         self.group_box.display_background = False
 
+        self.setStyleSheet("background-color: rgba{rgba_background_0}".format(**iColor.style_sheet_args))
+
+
     def setTitle(self, title):
         self.group_box.setTitle(title)
 
@@ -93,16 +96,16 @@ class AbstractInputGroupBox(QGroupBox):
         self.separator.setStyleSheet("""
             background-color: rgba{rgba_text_color};
             margin: 30px;
-            """.format(rgba_text_color=repr(iColor.rgba_text_color)))
+            """.format(rgba_text_color=repr(iColor["rgba_text_color"])))
         self.layout().addWidget(self.separator)
 
         # set up default attrs
         if title:
             self.setTitle(title)
-        self._rgba_border = iColor.rgba_outline
+        self._rgba_border = iColor["rgba_outline"]
         self._padding = AbstractInputGroupBox.PADDING
-        self._rgba_background = iColor.rgba_background
-        self._rgba_text_color = iColor.rgba_text_color
+        self._rgba_background = iColor["rgba_background_0"]
+        self._rgba_text_color = iColor["rgba_text_color"]
 
         # setup display styles
         self.display_background = True
@@ -120,7 +123,7 @@ class AbstractInputGroupBox(QGroupBox):
             "font_size" : font_size,
             "padding" : self.padding,
             "paddingX2" : (self.padding * 2),
-            "rgba_background" : repr(self.rgba_background),
+            "rgba_background_0" : repr(self.rgba_background),
             "border_color" : repr(self.rgba_border),
             "color" : repr(self.rgba_text_color)
         })
@@ -132,7 +135,7 @@ class AbstractInputGroupBox(QGroupBox):
                 color: rgba{rgba_text_color};
             }}
             QGroupBox[display_background=true]{{
-                background-color: rgba{rgba_background};
+                background-color: rgba{rgba_background_0};
                 border-width: 1px;
                 border-radius: {paddingX2};
                 border-style: solid;

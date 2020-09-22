@@ -128,12 +128,12 @@ Notes:
         self.setMiddleItemBorderColor((18, 18, 18))
         self.setMiddleItemBorderWidth(5)
         self.setSlideDistance(.01)
-        self.setSelectionColor(iColor.rgba_hover)
+        self.setSelectionColor(iColor["rgba_hover"])
         self.setItemHeight(50)
 
         #bg_color = guessBackgroundColor(self.parent().styleSheet())
-        self.bg_slide_color = iColor.rgba_background
-        self.fg_slide_color = iColor.rgba_background_selected
+        self.bg_slide_color = iColor["rgba_background_0"]
+        self.fg_slide_color = iColor["rgba_background_1"]
 
         self.middle_item_index = int(len(value_list) * 0.5)
 

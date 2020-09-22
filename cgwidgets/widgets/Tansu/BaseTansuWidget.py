@@ -11,9 +11,6 @@ from qtpy.QtCore import Qt
 from qtpy.QtGui import QCursor
 
 from cgwidgets.settings.colors import(
-    RGBA_TANSU_FLAG,
-    RGBA_TANSU_HANDLE,
-    RGBA_TANSU_HANDLE_HOVER,
     iColor
 )
 
@@ -42,7 +39,7 @@ class BaseTansuWidget(QSplitter):
     """
     HANDLE_WIDTH = 2
     FULLSCREEN_HOTKEY = 96
-    FLAG_COLOR = RGBA_TANSU_FLAG
+    FLAG_COLOR = iColor["rgba_tansu_flag"]
 
     def __init__(self, parent=None, orientation=Qt.Vertical):
         super(BaseTansuWidget, self).__init__(parent)
@@ -53,10 +50,10 @@ class BaseTansuWidget(QSplitter):
         self._solo_view_hotkey = BaseTansuWidget.FULLSCREEN_HOTKEY
 
         # set colors
-        self._rgba_handle = iColor.rgba_outline
-        self._rgba_handle_hover = iColor.rgba_outline_hover
-        self._rgba_flag = iColor.rgba_hover
-        self._rgba_background = iColor.rgba_background
+        self._rgba_handle = iColor["rgba_outline"]
+        self._rgba_handle_hover = iColor["rgba_outline_hover"]
+        self._rgba_flag = iColor["rgba_hover"]
+        self._rgba_background = iColor["rgba_background_0"]
         self.setOrientation(orientation)
 
         # set up handle defaults
@@ -263,7 +260,7 @@ class BaseTansuWidget(QSplitter):
         })
         style_sheet = """
             BaseTansuWidget{{
-                background-color: rgba{rgba_background};
+                background-color: rgba{rgba_background_0};
             }}
             BaseTansuWidget[is_solo_view=true]{{
                 border: 3px solid rgba{rgba_flag}; 
