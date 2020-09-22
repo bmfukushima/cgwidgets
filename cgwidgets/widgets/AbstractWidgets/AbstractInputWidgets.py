@@ -65,7 +65,7 @@ class AbstractInputWidget(QLineEdit):
         self.updateStyleSheet()
 
         # set up signals
-        self.editingFinished.connect(self.userInputEvent)
+        self.editingFinished.connect(self.userFinishedEditing)
 
     def updateStyleSheet(self):
         #style_sheet = getTopBorderStyleSheet(self._rgba_border, 2)
@@ -150,34 +150,17 @@ class AbstractInputWidget(QLineEdit):
         """
         return self.text()
 
-    """ TRIGGER """
-    def __trigger_event(self, *args, **kwargs):
-        pass
-
-    def setTriggerEvent(self, function):
-        """
-        Sets the function that should be triggered everytime
-        the user finishes editing this widget
-        """
-        self.__trigger_event = function
-
-    def triggerEvent(self, *args, **kwargs):
-        """
-        Internal event to run everytime the user triggers an update.  This
-        will need to be called on every type of widget.
-        """
-        self.__trigger_event(*args, **kwargs)
-
     """ SIGNALS / EVENTS """
     def focusInEvent(self, *args, **kwargs):
         self.setOrigValue(self.text())
         return QLineEdit.focusInEvent(self, *args, **kwargs)
 
-    def userInputEvent(self):
+    def userFinishedEditing(self):
         is_valid = self.checkInput()
 
         if is_valid:
             self.setText(self.getInput())
+            #TODO This doesn't exist in this ffunctino... moved to iGroupInput
             self.triggerEvent(self.getInput())
 
         else:

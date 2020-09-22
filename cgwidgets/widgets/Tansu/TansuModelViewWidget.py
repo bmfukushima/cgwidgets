@@ -149,7 +149,7 @@ class TansuModelViewWidget(BaseTansuWidget, iDynamicWidget):
         # add to layout if stacked
         if self.getDelegateType() == TansuModelViewWidget.STACKED:
             # create tab widget widget
-            view_delegate_widget = self.createTansuModelDelegateWidget(name, widget)
+            view_delegate_widget = self.createTansuModelDelegateWidget(view_item, widget)
             view_item.setDelegateWidget(view_delegate_widget)
 
             # insert tab widget
@@ -387,16 +387,17 @@ class TansuModelViewWidget(BaseTansuWidget, iDynamicWidget):
 
         model = self.model()
         num_items = model.getRootItem().childCount()
+        if 0 < num_items:
+            # update width
+            if self.getViewPosition() in [
+                TansuModelViewWidget.NORTH,
+                TansuModelViewWidget.SOUTH
+            ]:
+                width = int( self.width() / num_items )
+                if TansuModel.ITEM_WIDTH < width:
+                    model.item_width = width
+                    self.setupStyleSheet()
 
-        # update width
-        if self.getViewPosition() in [
-            TansuModelViewWidget.NORTH,
-            TansuModelViewWidget.SOUTH
-        ]:
-            width = int( self.width() / num_items )
-            if TansuModel.ITEM_WIDTH < width:
-                model.item_width = width
-                self.setupStyleSheet()
         return BaseTansuWidget.resizeEvent(self, event)
 
     """ PROPERTIES """
@@ -641,11 +642,12 @@ class TansuModelDelegateWidget(AbstractInputGroup):
 
 # need to do a QAbstractItemView injection here...
 
+
 class TansuListView(QListView):
     def __init__(self, parent=None):
         super(TansuListView, self).__init__(parent)
-
-        self.setStyleSheet(self.styleSheet() + iColor.default_style_sheet)
+        style_sheet = iColor.createDefaultStyleSheet(self, updated_args=self.styleSheet())
+        self.setStyleSheet(style_sheet)
 
         self.setEditTriggers(QAbstractItemView.DoubleClicked)
 

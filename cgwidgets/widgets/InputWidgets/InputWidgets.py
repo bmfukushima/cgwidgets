@@ -1,4 +1,15 @@
-from qtpy.QtWidgets import QSplitter, QLabel
+from qtpy.QtWidgets import (
+    QComboBox, QLineEdit, QCompleter, QSizePolicy
+)
+
+from qtpy.QtGui import(
+    QStandardItem, QStandardItemModel
+)
+from qtpy.QtCore import (
+    QEvent, Qt, QSortFilterProxyModel
+)
+
+from qtpy.QtWidgets import QSplitter, QLabel, QFrame, QBoxLayout, QLineEdit
 from qtpy.QtCore import Qt
 
 from cgwidgets.widgets import (
@@ -6,12 +17,15 @@ from cgwidgets.widgets import (
     AbstractFloatInputWidget,
     AbstractIntInputWidget,
     AbstractStringInputWidget,
-    AbstractBooleanInputWidget
+    AbstractBooleanInputWidget,
+    AbstractVLine
 )
 
 from cgwidgets.widgets import TansuModelViewWidget, TansuModelDelegateWidget, TansuModelItem
 
 from cgwidgets.utils import getWidgetAncestor, updateStyleSheet
+
+from cgwidgets.settings.colors import iColor
 
 
 class UserInputItem(TansuModelItem):
@@ -81,12 +95,34 @@ class iGroupInput(object):
     def __init__(self):
         self.setTriggerEvent(self.updateItem)
 
+    """ TRIGGER """
+    def __trigger_event(self, *args, **kwargs):
+        pass
+
+    def setTriggerEvent(self, function):
+        """
+        Sets the function that should be triggered everytime
+        the user finishes editing this widget
+        """
+        self.__trigger_event = function
+
+    def triggerEvent(self, *args, **kwargs):
+        """
+        Internal event to run everytime the user triggers an update.  This
+        will need to be called on every type of widget.
+        """
+        self.__trigger_event(*args, **kwargs)
+
+    """ TANSU UPDATE """
     def updateItem(self, *args):
         """
         When the user inputs text, this will update the model item
         """
-        widget = getWidgetAncestor(self, TansuModelDelegateWidget)
-        widget.item().setValue(self.text())
+        try:
+            widget = getWidgetAncestor(self, TansuModelDelegateWidget)
+            widget.item().setValue(self.text())
+        except AttributeError:
+            pass
 
         # add user input event
         self.userInputEvent()
@@ -125,7 +161,7 @@ class StringInputWidget(AbstractStringInputWidget, iGroupInput):
         super(StringInputWidget, self).__init__(parent)
 
 
-class BooleanInputWidget(AbstractBooleanInputWidget):
+class BooleanInputWidget(AbstractBooleanInputWidget, iGroupInput):
     def __init__(self, parent=None, is_clicked=False):
         super(BooleanInputWidget, self).__init__(parent, is_clicked=is_clicked)
         self.setTriggerEvent(self.updateItem)
@@ -158,15 +194,75 @@ class BooleanInputWidget(AbstractBooleanInputWidget):
         widget.getMainWidget().is_clicked = value
         updateStyleSheet(widget.getMainWidget())
 
-    """ setup user input event """
-    def __userInputEvent(self):
-        return
+
+class ListInputWidget(QComboBox, iGroupInput):
+    pass
+
+
+class UserInputWidget(QFrame):
+    """
+    name (str): the name displayed to the user
+    input_widget (InputWidgetInstance): The instance of the input widget type
+        that is displayed to the user for manipulation
+    input_widget_base_class (InputWidgetClass): The type of input widget that this is
+        displaying to the user
+            Options are:
+                BooleanInputWidget
+                StringInputWidget
+                IntInputWidget
+                FloatInputWidget
+                ListInputWidget
+    """
+    def __init__(self, parent=None, name="None", note="None", widget_type=StringInputWidget):
+        super(UserInputWidget, self).__init__(parent)
+        QBoxLayout(QBoxLayout.LeftToRight, self)
+
+        # set up attrs
+        self.setInputBaseClass(widget_type)
+
+        # setup layout
+        self._label = QLabel(name)
+        self._separator = AbstractVLine()
+        self._input_widget = widget_type()
+
+        self.layout().addWidget(self._label)
+        self.layout().addWidget(self._separator)
+        self.layout().addWidget(self._input_widget)
+
+        # set up display
+        self._label.setToolTip(note)
+        self.setupStyleSheet()
+
+    def setupStyleSheet(self):
+        style_sheet = iColor.createDefaultStyleSheet(self)
+        self.setStyleSheet(style_sheet)
+        self._label.setStyleSheet(
+            self._label.styleSheet() + 'color: rgba{rgba_text_color}'.format(
+                rgba_text_color=iColor.rgba_text_color))
+
+    def setToolTip(self, tool_tip):
+        self._label.setToolTip(tool_tip)
+
+    def setName(self, name):
+        self._label.setText(name)
+
+    def getName(self):
+        return self._label.text()
+
+    def setInputWidget(self, _input_widget):
+        self._input_widget = _input_widget
+
+    def getInputWidget(self):
+        return self._input_widget
+
+    def setInputBaseClass(self, _input_widget_base_class):
+        self._input_widget_base_class = _input_widget_base_class
+
+    def getInputBaseClass(self):
+        return self._input_widget_base_class
 
     def setUserInputEvent(self, function):
-        self.__userInputEvent = function
-
-    def userInputEvent(self):
-        self.__userInputEvent()
+        self._input_widget.setUserInputEvent(function)
 
 
 if __name__ == "__main__":
@@ -184,10 +280,16 @@ if __name__ == "__main__":
     gw.insertInputWidget(0, BooleanInputWidget, 'Boolean')
     gw.insertInputWidget(0, StringInputWidget, 'String')
 
+    print (gw.main_widget.model())
+    #gw.insertInputWidget(0, ListInputWidget, 'List')
+    #gw.layout().itemAt(0).populate(['a','b','c','d'])
     #input_widget1.setUseLadder(True)
     gw.display_background = False
     l.addWidget(gw)
     #w = BooleanInputWidget()
+    # w = ListInputWidget()
+    # w.populate(['a','b','c','d'])
+    #w.setInputBaseClass(ListInputWidget)
     w.resize(500, 500)
     w.show()
     w.move(QCursor.pos())

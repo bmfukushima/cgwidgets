@@ -145,7 +145,9 @@ Notes:
             | Qt.FramelessWindowHint
             | Qt.Popup
         )
-        self.setStyleSheet(iColor.default_style_sheet)
+
+        style_sheet = iColor.createDefaultStyleSheet(self)
+        self.setStyleSheet(style_sheet)
 
         # create widgets
         for value in value_list:
