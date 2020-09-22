@@ -45,6 +45,22 @@ class UserInputItem(TansuModelItem):
     def userInputEvent(self, value):
         self.__userInputEvent(value)
 
+    """ args """
+    def setArgs(self, args):
+        self._args = args
+
+    def getArgs(self):
+        return self._args
+
+    def getArg(self, arg):
+        return self.getArgs()[arg]
+
+    def addArg(self, arg, value):
+        self.getArgs()[arg] = value
+
+    def removeArg(self, arg):
+        del self.getArgs()[arg]
+
 
 class GroupInputWidget(AbstractInputGroupBox):
     def __init__(self, parent=None, title=None):
@@ -66,7 +82,7 @@ class GroupInputWidget(AbstractInputGroupBox):
 
         self.layout().addWidget(self.main_widget)
 
-    def insertInputWidget(self, index, widget, name, userInputEvent, value=''):
+    def insertInputWidget(self, index, widget, name, userInputEvent, data={}):
         """
         Inserts a widget into the Main Widget
 
@@ -82,7 +98,9 @@ class GroupInputWidget(AbstractInputGroupBox):
         name = "{name}  |  {type}".format(name=name, type=widget.TYPE)
         #self.main_widget.insertViewItem(index, name, widget=widget)
         user_input_item = self.main_widget.insertViewItem(index, name)
-        user_input_item.setValue(value)
+        #user_input_item.setValue(value)
+        data['value'] = ''
+        user_input_item.setArgs(data)
         user_input_item.setDynamicWidgetBaseClass(widget)
         user_input_item.setDynamicUpdateFunction(widget.updateFunction)
         user_input_item.setUserInputEvent(userInputEvent)
@@ -147,7 +165,8 @@ class iGroupInput(object):
         When the dynamic widget is created.  This will set
         the display text to the user
         """
-        widget.getMainWidget().setText(str(item.getValue()))
+        value = item.getArg('value')
+        widget.getMainWidget().setText(str(value))
 
 
 class FloatInputWidget(AbstractFloatInputWidget, iGroupInput):
@@ -191,16 +210,31 @@ class BooleanInputWidget(AbstractBooleanInputWidget, iGroupInput):
         # get default value
         # this is because the default value is set as '' during the constructor in
         # GroupInputWidget --> insertInputWidget
-        if not item.getValue():
+        try:
+            value = item.args['value']
+        except:
             value = False
-        else:
-            value = item.getValue()
+        # if not item.getValue():
+        #     value = False
+        # else:
+        #     value = item.getValue()
         widget.getMainWidget().is_clicked = value
         updateStyleSheet(widget.getMainWidget())
 
 
 class ListInputWidget(QComboBox, iGroupInput):
-    pass
+    TYPE = "List"
+    def __init__(self, parent=None):
+        super(ListInputWidget, self).__init__(parent)
+        self.setTriggerEvent(self.updateItem)
+        #self.setupStyleSheet()
+
+    def updateItem(self, *args):
+        print (args)
+
+    @staticmethod
+    def updateFunction(widget, item):
+        print(widget, item)
 
 
 class UserInputWidget(QFrame):
@@ -279,17 +313,18 @@ if __name__ == "__main__":
     testwidget = QLabel()
     testwidget.setText('init')
     l.addWidget(testwidget)
+
     def test(value):
         testwidget.setText(str(value))
         print ('value == %s'%value)
     gw = GroupInputWidget('cool stuff')
 
+    # add user inputs
     gw.insertInputWidget(0, FloatInputWidget, 'Float', test)
     gw.insertInputWidget(0, FloatInputWidget, 'Int', test)
     gw.insertInputWidget(0, BooleanInputWidget, 'Boolean', test)
     gw.insertInputWidget(0, StringInputWidget, 'String', test)
-
-
+    gw.insertInputWidget(0, ListInputWidget, 'List', test)
 
     gw.display_background = False
     l.addWidget(gw)
