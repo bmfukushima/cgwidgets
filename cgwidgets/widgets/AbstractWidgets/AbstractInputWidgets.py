@@ -156,11 +156,17 @@ class AbstractInputWidget(QLineEdit):
         return QLineEdit.focusInEvent(self, *args, **kwargs)
 
     def userFinishedEditing(self):
+        """
+        When the user has finished editing.  This will do a check to see
+        if the input is valid, and then if it is, do something with that value
+        if it isn't then it will return it to the previous value.
+        """
         is_valid = self.checkInput()
 
         if is_valid:
             self.setText(self.getInput())
             #TODO This doesn't exist in this ffunctino... moved to iGroupInput
+            # or somewhere more logical...
             self.triggerEvent(self.getInput())
 
         else:
@@ -396,31 +402,31 @@ class AbstractBooleanInputWidget(QLabel):
         )
         self.setStyleSheet(style_sheet)
 
-    """ TRIGGER """
-    """
-    Im being lazy, this is a copy and paste from the AbstractInputWidget
-    """
-    def __trigger_event(self, *args, **kwargs):
-        pass
-
-    def setTriggerEvent(self, function):
-        """
-        Sets the function that should be triggered everytime
-        the user finishes editing this widget
-        """
-        self.__trigger_event = function
-
-    def triggerEvent(self, *args, **kwargs):
-        """
-        Internal event to run everytime the user triggers an update.  This
-        will need to be called on every type of widget.
-        """
-        self.__trigger_event(*args, **kwargs)
+    # """ TRIGGER """
+    # """
+    # Im being lazy, this is a copy and paste from the AbstractInputWidget
+    # """
+    # def __trigger_event(self, *args, **kwargs):
+    #     pass
+    #
+    # def setTriggerEvent(self, function):
+    #     """
+    #     Sets the function that should be triggered everytime
+    #     the user finishes editing this widget
+    #     """
+    #     self.__trigger_event = function
+    #
+    # def triggerEvent(self, *args, **kwargs):
+    #     """
+    #     Internal event to run everytime the user triggers an update.  This
+    #     will need to be called on every type of widget.
+    #     """
+    #     self.__trigger_event(*args, **kwargs)
 
     """ EVENTS """
     def mouseReleaseEvent(self, event):
         self.is_clicked = not self.is_clicked
-        self.triggerEvent()
+        #self.triggerEvent()
         return QLabel.mouseReleaseEvent(self, event)
 
     """ PROPERTIES """

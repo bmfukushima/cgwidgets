@@ -1,4 +1,4 @@
-"""import sys
+import sys
 import os
 
 os.environ['QT_API'] = "pyside2"
@@ -37,7 +37,7 @@ color_widget = ColorWidget()
 color_widget.show()
 #color_widget.close()
 sys.exit(app.exec_())
-"""
+
 
 import unittest
 import sys

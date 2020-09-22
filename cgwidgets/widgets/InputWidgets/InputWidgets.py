@@ -18,7 +18,8 @@ from cgwidgets.widgets import (
     AbstractIntInputWidget,
     AbstractStringInputWidget,
     AbstractBooleanInputWidget,
-    AbstractVLine
+    AbstractVLine,
+    AbstractListInputWidget
 )
 
 from cgwidgets.widgets import TansuModelViewWidget, TansuModelDelegateWidget, TansuModelItem
@@ -94,15 +95,16 @@ class GroupInputWidget(AbstractInputGroupBox):
         value (str): current value if any should be set.  Bolean types will
             have this automatically overwritten to false in their constructor
         """
-        #if type:
+        # setup attrs
         name = "{name}  |  {type}".format(name=name, type=widget.TYPE)
-        #self.main_widget.insertViewItem(index, name, widget=widget)
-        user_input_item = self.main_widget.insertViewItem(index, name)
-        #user_input_item.setValue(value)
         data['value'] = ''
+        # create item
+        user_input_item = self.main_widget.insertViewItem(index, name)
+
+        # setup new item
         user_input_item.setArgs(data)
         user_input_item.setDynamicWidgetBaseClass(widget)
-        user_input_item.setDynamicUpdateFunction(widget.updateFunction)
+        user_input_item.setDynamicUpdateFunction(widget.updateDynamicWidget)
         user_input_item.setUserInputEvent(userInputEvent)
 
     def removeInputWidget(self, index):
@@ -125,7 +127,7 @@ class iGroupInput(object):
     widget types so that they will be compatible with the GroupInputWidgets
     """
     def __init__(self):
-        self.setTriggerEvent(self.updateItem)
+        self.setTriggerEvent(self.updateUserInputItem)
 
     """ TRIGGER """
     def __trigger_event(self, *args, **kwargs):
@@ -146,21 +148,21 @@ class iGroupInput(object):
         self.__trigger_event(*args, **kwargs)
 
     """ TANSU UPDATE """
-    def updateItem(self, *args):
+    def updateUserInputItem(self, *args):
         """
         When the user inputs text, this will update the model item
         """
         try:
             widget = getWidgetAncestor(self, TansuModelDelegateWidget)
             widget.item().setValue(self.text())
+            widget.item().userInputEvent(self.text())
         except AttributeError:
             pass
 
         # add user input event
-        widget.item().userInputEvent(self.text())
 
     @staticmethod
-    def updateFunction(widget, item):
+    def updateDynamicWidget(widget, item):
         """
         When the dynamic widget is created.  This will set
         the display text to the user
@@ -172,6 +174,7 @@ class iGroupInput(object):
 class FloatInputWidget(AbstractFloatInputWidget, iGroupInput):
     def __init__(self, parent=None):
         super(FloatInputWidget, self).__init__(parent)
+        #self.setDoMath(True)
 
 
 class IntInputWidget(AbstractIntInputWidget, iGroupInput):
@@ -187,54 +190,71 @@ class StringInputWidget(AbstractStringInputWidget, iGroupInput):
 class BooleanInputWidget(AbstractBooleanInputWidget, iGroupInput):
     def __init__(self, parent=None, is_clicked=False):
         super(BooleanInputWidget, self).__init__(parent, is_clicked=is_clicked)
-        self.setTriggerEvent(self.updateItem)
+        self.setTriggerEvent(self.updateUserInputItem)
         self.setupStyleSheet()
 
-    def updateItem(self, *args):
+    def updateUserInputItem(self, *args):
         """
         When the user clicks on this
         """
-        widget = getWidgetAncestor(self, TansuModelDelegateWidget)
-        widget.item().setValue(self.is_clicked)
-        self.is_clicked = self.is_clicked
+        try:
+            widget = getWidgetAncestor(self, TansuModelDelegateWidget)
+            widget.item().setValue(self.is_clicked)
+            self.is_clicked = self.is_clicked
 
-        # add user input event
-        widget.item().userInputEvent(self.is_clicked)
+            # add user input event
+            widget.item().userInputEvent(self.is_clicked)
+        except AttributeError:
+            pass
 
     @staticmethod
-    def updateFunction(widget, item):
+    def updateDynamicWidget(widget, item):
         """
         When the dynamic widget is created.  This will set
         the display text to the user
-        """
         # get default value
         # this is because the default value is set as '' during the constructor in
         # GroupInputWidget --> insertInputWidget
+        """
+        # get value
         try:
-            value = item.args['value']
+            value = item.getArg['value']
         except:
             value = False
-        # if not item.getValue():
-        #     value = False
-        # else:
-        #     value = item.getValue()
+
+        # toggle
         widget.getMainWidget().is_clicked = value
         updateStyleSheet(widget.getMainWidget())
 
 
-class ListInputWidget(QComboBox, iGroupInput):
+class ListInputWidget(AbstractListInputWidget, iGroupInput):
     TYPE = "List"
     def __init__(self, parent=None):
         super(ListInputWidget, self).__init__(parent)
-        self.setTriggerEvent(self.updateItem)
-        #self.setupStyleSheet()
+        self.setTriggerEvent(self.updateUserInputItem)
+        self.line_edit.editingFinished.connect(self.userFinishedEditing)
 
-    def updateItem(self, *args):
-        print (args)
+    def userFinishedEditing(self):
+        self.triggerEvent(self.currentText())
+        return AbstractListInputWidget.userFinishedEditing(self)
+
+    def updateUserInputItem(self, *args):
+        try:
+            widget = getWidgetAncestor(self, TansuModelDelegateWidget)
+            widget.item().setValue(self.currentText())
+
+            # add user input event
+            widget.item().userInputEvent(self.currentText())
+
+        except AttributeError:
+
+            pass
 
     @staticmethod
-    def updateFunction(widget, item):
-        print(widget, item)
+    def updateDynamicWidget(widget, item):
+        item_list = item.getArg('items_list')
+        widget.getMainWidget().populate(item_list)
+        # print(widget, item)
 
 
 class UserInputWidget(QFrame):
@@ -321,17 +341,18 @@ if __name__ == "__main__":
 
     # add user inputs
     gw.insertInputWidget(0, FloatInputWidget, 'Float', test)
-    gw.insertInputWidget(0, FloatInputWidget, 'Int', test)
+    gw.insertInputWidget(0, IntInputWidget, 'Int', test)
     gw.insertInputWidget(0, BooleanInputWidget, 'Boolean', test)
     gw.insertInputWidget(0, StringInputWidget, 'String', test)
-    gw.insertInputWidget(0, ListInputWidget, 'List', test)
+    gw.insertInputWidget(0, ListInputWidget, 'List', test, data={'items_list':['a','b','c','d']})
 
     gw.display_background = False
     l.addWidget(gw)
-    #w = BooleanInputWidget()
+    w = FloatInputWidget()
     # w = ListInputWidget()
     # w.populate(['a','b','c','d'])
     #w.setInputBaseClass(ListInputWidget)
+
     w.resize(500, 500)
     w.show()
     w.move(QCursor.pos())

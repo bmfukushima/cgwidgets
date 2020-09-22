@@ -9,5 +9,6 @@ from .AbstractInputWidgets import AbstractFloatInputWidget as AbstractFloatInput
 from .AbstractInputWidgets import AbstractIntInputWidget as AbstractIntInputWidget
 from .AbstractInputWidgets import AbstractStringInputWidget as AbstractStringInputWidget
 from .AbstractInputWidgets import AbstractBooleanInputWidget as AbstractBooleanInputWidget
+from .AbstractListInputWidget import AbstractListInputWidget as AbstractListInputWidget
 
 

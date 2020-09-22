@@ -16,6 +16,7 @@ from .AbstractWidgets import AbstractFloatInputWidget as AbstractFloatInputWidge
 from .AbstractWidgets import AbstractIntInputWidget as AbstractIntInputWidget
 from .AbstractWidgets import AbstractStringInputWidget as AbstractStringInputWidget
 from .AbstractWidgets import AbstractBooleanInputWidget as AbstractBooleanInputWidget
+from .AbstractWidgets import AbstractListInputWidget as AbstractListInputWidget
 
 """ TANSU """
 from .Tansu import TansuModelItem as TansuModelItem
