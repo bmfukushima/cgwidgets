@@ -424,6 +424,14 @@ class TansuModelViewWidget(BaseTansuWidget, iDynamicWidget):
 
         return BaseTansuWidget.resizeEvent(self, event)
 
+    def keyPressEvent(self, event):
+        """
+        TODO
+            stop this event from happening?
+            Only want the child tansu to register... not this one...
+        """
+        return self.delegateWidget().keyPressEvent(event)
+
     """ PROPERTIES """
     """ selection """
     def setMultiSelect(self, enabled):
@@ -484,12 +492,7 @@ class TansuModelViewWidget(BaseTansuWidget, iDynamicWidget):
 
         """
         self.setHandleWidth(0)
-        # splitter_style_sheet = """
-        #     BaseTansuWidget::handle {{
-        #         border: None;
-        #         background-color: rgba(0,0,0,0);
-        #     }}
-        # """
+
         view_style_sheet = """
         {type}{{
             border:None;

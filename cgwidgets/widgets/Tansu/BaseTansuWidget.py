@@ -56,13 +56,12 @@ class BaseTansuWidget(QSplitter):
         self._rgba_handle = iColor["rgba_outline"]
         self._rgba_handle_hover = iColor["rgba_outline_hover"]
         self._rgba_flag = iColor["rgba_hover"]
-        self._rgba_background = iColor["rgba_background_0"]
+        self._rgba_background = iColor["rgba_background_invisible"]
         self.setOrientation(orientation)
 
         # set up handle defaults
         self.setHandleWidth(BaseTansuWidget.HANDLE_WIDTH)
         self._handle_length = -1
-        #self.updateStyleSheet()
 
     """ UTILS """
     def displayAllWidgets(self, value):
@@ -127,6 +126,7 @@ class BaseTansuWidget(QSplitter):
         self.toggleIsSoloView(not self.isSoloView())
 
     def keyPressEvent(self, event):
+        print('base press')
         if event.key() == self.soloViewHotkey():
             self.toggleIsSoloView(True)
             return
