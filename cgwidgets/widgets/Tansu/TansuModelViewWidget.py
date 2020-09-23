@@ -13,7 +13,7 @@ TODO:
 """
 
 from qtpy.QtWidgets import (
-    QWidget, QListView, QAbstractItemView, QScrollArea, QTableView, QSizePolicy
+    QWidget, QListView, QAbstractItemView, QScrollArea, QTableView, QSizePolicy, QSplitter
 )
 from qtpy.QtCore import Qt, QModelIndex
 from qtpy.QtGui import QCursor
@@ -27,7 +27,7 @@ from cgwidgets.widgets.Tansu import (
 )
 
 
-class TansuModelViewWidget(BaseTansuWidget, iDynamicWidget):
+class TansuModelViewWidget(QSplitter, iDynamicWidget):
     """
     This is the designing portion of this editor.  This is where the TD
     will design a custom UI/hooks/handlers for the tool for the end user,
@@ -99,10 +99,10 @@ class TansuModelViewWidget(BaseTansuWidget, iDynamicWidget):
         self.setDelegateWidget(delegate_widget)
         self._temp_proxy_widget = QWidget()
         self._temp_proxy_widget.setObjectName("proxy_widget")
-        self._temp_proxy_widget.setStyleSheet("""
-            QWidget#proxy_widget{{background-color:rgba{rgba_background_0}}}
-            """.format(**iColor.style_sheet_args)
-        )
+        # self._temp_proxy_widget.setStyleSheet("""
+        #     QWidget#proxy_widget{{background-color:rgba{rgba_background_0}}}
+        #     """.format(**iColor.style_sheet_args)
+        # )
 
         self.delegateWidget().addWidget(self._temp_proxy_widget)
 
@@ -405,7 +405,7 @@ class TansuModelViewWidget(BaseTansuWidget, iDynamicWidget):
     def showEvent(self, event):
         self.setViewWidgetToDefaultSize()
         self.updateStyleSheet()
-        return BaseTansuWidget.showEvent(self, event)
+        return QSplitter.showEvent(self, event)
 
     def resizeEvent(self, event):
 
@@ -421,8 +421,9 @@ class TansuModelViewWidget(BaseTansuWidget, iDynamicWidget):
                 if TansuModel.ITEM_WIDTH < width:
                     model.item_width = width
                     self.updateStyleSheet()
+        return QSplitter.resizeEvent(self, event)
+        #return BaseTansuWidget.resizeEvent(self, event)
 
-        return BaseTansuWidget.resizeEvent(self, event)
 
     def keyPressEvent(self, event):
         """
@@ -782,9 +783,18 @@ if __name__ == "__main__":
     #     dynamic_function=TabTansuDynamicWidgetExample.updateGUI
     # )
 
+    main_splitter = BaseTansuWidget()
+    main_splitter.handle_length = 100
+    main_splitter.setObjectName("main")
+    main_splitter.addWidget(QLabel('a'))
+    main_splitter.addWidget(QLabel('b'))
+    main_splitter.addWidget(QLabel('c'))
+    w.insertViewItem(0, 'tansu', widget=main_splitter)
+
     for x in range(3):
         widget = QLabel(str(x))
         w.insertViewItem(x, str(x), widget=widget)
+
 
     w.resize(500, 500)
     w.delegateWidget().handle_length = 100
