@@ -13,7 +13,7 @@ TODO:
 """
 
 from qtpy.QtWidgets import (
-    QWidget, QListView, QAbstractItemView, QScrollArea, QTableView
+    QWidget, QListView, QAbstractItemView, QScrollArea, QTableView, QSizePolicy
 )
 from qtpy.QtCore import Qt, QModelIndex
 from qtpy.QtGui import QCursor
@@ -203,21 +203,29 @@ class TansuModelViewWidget(BaseTansuWidget, iDynamicWidget):
             self.setOrientation(Qt.Horizontal)
             self.viewWidget().setOrientation(Qt.Horizontal)
             self.insertWidget(0, self.viewWidget())
+            self.setStretchFactor(0, 0)
+            self.setStretchFactor(1, 1)
 
         elif direction == TansuModelViewWidget.EAST:
             self.setOrientation(Qt.Horizontal)
             self.viewWidget().setOrientation(Qt.Horizontal)
             self.insertWidget(1, self.viewWidget())
+            self.setStretchFactor(1, 0)
+            self.setStretchFactor(0, 1)
 
         elif direction == TansuModelViewWidget.NORTH:
             self.setOrientation(Qt.Vertical)
             self.viewWidget().setOrientation(Qt.Vertical)
             self.insertWidget(0, self.viewWidget())
+            self.setStretchFactor(0, 0)
+            self.setStretchFactor(1, 1)
 
         elif direction == TansuModelViewWidget.SOUTH:
             self.setOrientation(Qt.Vertical)
             self.viewWidget().setOrientation(Qt.Vertical)
             self.insertWidget(1, self.viewWidget())
+            self.setStretchFactor(1, 0)
+            self.setStretchFactor(0, 1)
 
         # make uncollapsible
         self.setCollapsible(0, False)

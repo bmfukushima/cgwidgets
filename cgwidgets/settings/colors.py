@@ -111,6 +111,7 @@
 class Colors(dict):
     def __init__(self):
         """ background"""
+        self["rgba_background_invisible"] = (0, 0, 0, 0)
         self["rgba_background_0"] = (32, 32, 32, 255)
         self["rgba_background_1"] = Colors.multiplyRGBAValues(self["rgba_background_0"])
         self["rgba_background_2"] = Colors.multiplyRGBAValues(self["rgba_background_1"])

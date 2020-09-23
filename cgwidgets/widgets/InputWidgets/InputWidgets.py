@@ -122,7 +122,7 @@ class GroupInputTansuWidget(TansuModelViewWidget):
 
         self.handle_length = 50
         self.delegateWidget().handle_length = 50
-        self.setupStyleSheet()
+        self.updateStyleSheet()
 
 
 class iGroupInput(object):
