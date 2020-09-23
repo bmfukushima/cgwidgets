@@ -178,6 +178,52 @@ class AbstractListInputWidget(QComboBox):
         else:
             return False
 
+    def setupStyleSheet(self):
+        width = self.width()
+        dropdown_width = int(width * 0.35)
+        style_sheet_args = iColor.style_sheet_args
+        style_sheet_args['width'] = dropdown_width
+        # QComboBox {{
+        #     border: None;
+        #     background-color: rgba{rgba_background_0}
+        # }}
+        style_sheet = """
+            QComboBox{{
+                border: None;
+                background-color: rgba{rgba_background_0};
+                color: rgba{rgba_text_color};
+            }}
+            QComboBox::drop-down {{
+                width: {width}px;
+            }}
+            QLineEdit{{
+                border: None;
+                background-color: rgba{rgba_background_0};
+                color: rgba{rgba_text_color};
+            }}
+            QListView{{
+                border: None;
+                background-color: rgba{rgba_background_0};
+                color: rgba{rgba_text_color};
+            }}
+            QListView::item:hover{{
+                background-color: rgba(255,0,0,255);
+            }}
+        """.format(**style_sheet_args)
+
+        self.completer.popup().setStyleSheet("""
+            QListView{{
+                border: None;
+                background-color: rgba{rgba_background_0};
+                color: rgba{rgba_text_color};
+            }}
+            QListView::item:hover{{
+                background-color: rgba(255,0,0,255);
+            }}
+        """.format(**style_sheet_args))
+
+        self.setStyleSheet(style_sheet)
+
     """ API """
     def __selectionChangedEmit(self):
         pass
@@ -222,21 +268,7 @@ class AbstractListInputWidget(QComboBox):
             self.setCurrentIndexToText(self.previous_text)
 
     def resizeEvent(self, event):
-        width = self.width()
-        dropdown_width = int(width * 0.35)
-        style_sheet_args = iColor.style_sheet_args
-        style_sheet_args['width'] = dropdown_width
-        style_sheet = """
-        QComboBox {{
-            border: None;
-            background-color: rgba{rgba_background_0}
-            }}
-            QComboBox::drop-down {{
-                width: {width}px;
-                border: None;
-            }}
-        """.format(**style_sheet_args)
-        self.setStyleSheet(style_sheet)
+        self.setupStyleSheet()
         return QComboBox.resizeEvent(self, event)
 
     def event(self, event, *args, **kwargs):
@@ -265,7 +297,6 @@ class AbstractListInputWidget(QComboBox):
 
         elif event.type() == QEvent.MouseButtonPress:
             self.completer.setPopup(self.view())
-
 
         return QComboBox.event(self, event, *args, **kwargs)
 

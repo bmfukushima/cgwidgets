@@ -98,6 +98,11 @@ class TansuModelViewWidget(BaseTansuWidget, iDynamicWidget):
         delegate_widget = TansuMainDelegateWidget()
         self.setDelegateWidget(delegate_widget)
         self._temp_proxy_widget = QWidget()
+        self._temp_proxy_widget.setObjectName("proxy_widget")
+        self._temp_proxy_widget.setStyleSheet("""
+            QWidget#proxy_widget{{background-color:rgba{rgba_background_0}}}
+            """.format(**iColor.style_sheet_args)
+        )
 
         self.delegateWidget().addWidget(self._temp_proxy_widget)
 
@@ -117,6 +122,8 @@ class TansuModelViewWidget(BaseTansuWidget, iDynamicWidget):
         self.setMultiSelect(TansuModelViewWidget.MULTI)
 
         self.setViewWidgetToDefaultSize()
+
+        self.setupStyleSheet()
 
     def insertViewItem(self, row, name, parent=None, widget=None):
         """
@@ -303,6 +310,14 @@ class TansuModelViewWidget(BaseTansuWidget, iDynamicWidget):
             item.setSelected(False)
             self.__updateDelegateItem(item, False)
 
+        # update delegate background
+        if hasattr(self, '_delegate_widget'):
+            selection = self.viewWidget().selectionModel().selectedIndexes()
+            if len(selection) == 0:
+                self.delegateWidget().rgba_background = iColor['rgba_background_0']
+            else:
+                self.delegateWidget().rgba_background = iColor['rgba_background_1']
+
     def __updateDelegateItem(self, item, selected):
         """
         item (TansuModelItem)
@@ -381,6 +396,7 @@ class TansuModelViewWidget(BaseTansuWidget, iDynamicWidget):
     """ EVENTS """
     def showEvent(self, event):
         self.setViewWidgetToDefaultSize()
+        self.setupStyleSheet()
         return BaseTansuWidget.showEvent(self, event)
 
     def resizeEvent(self, event):
@@ -472,21 +488,35 @@ class TansuModelViewWidget(BaseTansuWidget, iDynamicWidget):
         #         background-color: rgba(0,0,0,0);
         #     }}
         # """
+        view_style_sheet = """
+        {type}{{
+            border:None;
+            background-color: rgba{rgba_background_0}
+        }}
+            """.format(
+            type=type(self.viewWidget()).__name__,
+            rgba_background_0=iColor['rgba_background_0']
+        )
+
         splitter_style_sheet = """
             QSplitter::handle {{
                 border: None;
                 color: rgba(255,0,0,255);
             }}
         """
+
         view_position = self.getViewPosition()
         style_sheet_args = iColor.style_sheet_args
         style_sheet_args.update({
             'outline_width': TansuModelViewWidget.OUTLINE_WIDTH,
             'type': type(self.viewWidget()).__name__,
-            'splitter_style_sheet': splitter_style_sheet
+            'splitter_style_sheet': splitter_style_sheet,
+            'view_style_sheet': view_style_sheet,
         })
+
         if view_position == TansuModelViewWidget.NORTH:
             style_sheet = """
+            {view_style_sheet}
             {type}::item:hover{{color: rgba{rgba_hover}}}
             {type}::item{{
                 border: {outline_width}px solid rgba{rgba_outline} ;
@@ -506,6 +536,7 @@ class TansuModelViewWidget(BaseTansuWidget, iDynamicWidget):
             """.format(**style_sheet_args)
         elif view_position == TansuModelViewWidget.SOUTH:
             style_sheet = """
+            {view_style_sheet}
             {type}::item:hover{{color: rgba{rgba_hover}}}
             {type}::item{{
                 border: {outline_width}px solid rgba{rgba_outline};
@@ -525,6 +556,7 @@ class TansuModelViewWidget(BaseTansuWidget, iDynamicWidget):
             """.format(**style_sheet_args)
         elif view_position == TansuModelViewWidget.EAST:
             style_sheet = """
+            {view_style_sheet}
             {type}::item:hover{{color: rgba{rgba_hover}}}
             {type}::item{{
                 border: {outline_width}px solid rgba{rgba_outline};
@@ -544,6 +576,7 @@ class TansuModelViewWidget(BaseTansuWidget, iDynamicWidget):
             """.format(**style_sheet_args)
         elif view_position == TansuModelViewWidget.WEST:
             style_sheet = """
+            {view_style_sheet}
             {type}::item:hover{{color: rgba{rgba_hover}}}
             {type}::item{{
                 border: {outline_width}px solid rgba{rgba_outline};
@@ -646,8 +679,8 @@ class TansuModelDelegateWidget(AbstractInputGroup):
 class TansuListView(QListView):
     def __init__(self, parent=None):
         super(TansuListView, self).__init__(parent)
-        style_sheet = iColor.createDefaultStyleSheet(self, updated_args=self.styleSheet())
-        self.setStyleSheet(style_sheet)
+        #style_sheet = iColor.createDefaultStyleSheet(self, updated_args=self.styleSheet())
+        #self.setStyleSheet(style_sheet)
 
         self.setEditTriggers(QAbstractItemView.DoubleClicked)
 
@@ -727,7 +760,8 @@ if __name__ == "__main__":
 
     w = TansuModelViewWidget()
     w.setViewPosition(TansuModelViewWidget.NORTH)
-    #w.setMultiSelect(True)
+
+    w.setMultiSelect(True)
     w.setMultiSelectDirection(Qt.Vertical)
     #
     # new_view = TansuListView()
@@ -748,7 +782,7 @@ if __name__ == "__main__":
         w.insertViewItem(x, str(x), widget=widget)
 
     w.resize(500, 500)
-
+    w.delegateWidget().handle_length = 100
     #w.setStyleSheet(iColor.default_style_sheet)
     # new_index = self.model().index(index, 1, parent)
     # view_item = new_index.internalPointer()
@@ -769,5 +803,6 @@ if __name__ == "__main__":
     # display_widget = TansuModelDelegateWidget('alskdjf')
     # display_widget.setMainWidget(widget)
     w.show()
+
     w.move(QCursor.pos())
     sys.exit(app.exec_())

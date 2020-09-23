@@ -120,6 +120,10 @@ class GroupInputTansuWidget(TansuModelViewWidget):
         self.setMultiSelect(True)
         self.setMultiSelectDirection(Qt.Vertical)
 
+        self.handle_length = 50
+        self.delegateWidget().handle_length = 50
+        self.setupStyleSheet()
+
 
 class iGroupInput(object):
     """

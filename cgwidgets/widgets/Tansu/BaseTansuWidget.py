@@ -32,6 +32,9 @@ class BaseTansuWidget(QSplitter):
         # not used... but I set them up anyways lol
         currentIndex (int): The current index
         currentWidget (widget): The current widget
+        handle_width (int): width of the handle
+        handle_length (int): length of handle:
+            if set to -1, this will returen the entire length
 
     Class Attributes:
         HANDLE_WIDTH: Default size of the handle
@@ -58,6 +61,7 @@ class BaseTansuWidget(QSplitter):
 
         # set up handle defaults
         self.setHandleWidth(BaseTansuWidget.HANDLE_WIDTH)
+        self._handle_length = -1
         self.updateStyleSheet()
 
     """ UTILS """
@@ -139,6 +143,9 @@ class BaseTansuWidget(QSplitter):
         for widget in widget_list:
             widget.show()
 
+    def resizeEvent(self, event):
+        self.updateStyleSheet()
+
     """ SOLO VIEW """
     def isSoloView(self):
         return self._is_solo_view
@@ -219,6 +226,49 @@ class BaseTansuWidget(QSplitter):
     def setSoloViewHotkey(self, solo_view_hotkey):
         self._solo_view_hotkey = solo_view_hotkey
 
+    """ HANDLE """
+    @property
+    def handle_width(self):
+        return self._handle_width
+
+    @handle_width.setter
+    def handle_width(self, _handle_width):
+        self._handle_width = _handle_width
+        self.setHandleWidth(_handle_width)
+
+    @property
+    def handle_length(self):
+        return self._handle_length
+
+    @handle_length.setter
+    def handle_length(self, _handle_length):
+        self._handle_length = _handle_length
+        self.updateStyleSheet()
+
+    def getHandleLengthMargin(self):
+        """
+        Gets the length of the margins for the style sheet.
+        This will determine how far the margins for each handle should be
+        in order to constrain the handle to a static size.
+
+        Returns (str): <margin>px <margin>px
+            ie 10px 10px
+        """
+        if self.handle_length < 0:
+            return "10px 10px"
+
+        if self.orientation() == Qt.Vertical:
+            length = self.width()
+            margin = (length - self.handle_length) * 0.5
+            margins = "10px {margin}".format(margin=margin)
+
+        elif self.orientation() == Qt.Horizontal:
+            length = self.height()
+            margin = (length - self.handle_length) * 0.5
+            margins = "{margin} 10px".format(margin=margin)
+
+        return margins
+
     """ PROPERTIES """
     def getCurrentWidget(self):
         return self._current_widget
@@ -231,15 +281,6 @@ class BaseTansuWidget(QSplitter):
 
     def setCurrentIndex(self, current_index):
         self._current_index = current_index
-
-    @property
-    def handle_width(self):
-        return self._handle_width
-
-    @handle_width.setter
-    def handle_width(self, _handle_width):
-        self._handle_width = _handle_width
-        self.setHandleWidth(_handle_width)
 
     """ COLORS """
     def updateStyleSheet(self):
@@ -256,17 +297,19 @@ class BaseTansuWidget(QSplitter):
             'rgba_flag': repr(self.rgba_flag),
             'rgba_handle': repr(self.rgba_handle),
             'rgba_handle_hover': repr(self.rgba_handle_hover),
-            'rgba_background': repr(self.rgba_background)
+            'rgba_background': repr(self.rgba_background),
+            'handle_length_margin': self.getHandleLengthMargin()
         })
         style_sheet = """
             BaseTansuWidget{{
-                background-color: rgba{rgba_background_0};
+                background-color: rgba{rgba_background};
             }}
             BaseTansuWidget[is_solo_view=true]{{
                 border: 3px solid rgba{rgba_flag}; 
             }}
             QSplitter::handle {{
                 border: 1px double rgba{rgba_handle};
+                margin: {handle_length_margin};
             }}
             QSplitter::handle:hover {{
                 border: 2px double rgba{rgba_handle_hover};
@@ -310,7 +353,7 @@ class BaseTansuWidget(QSplitter):
 
     @rgba_background.setter
     def rgba_background(self, _rgba_background):
-        self._rgba_flag = _rgba_background
+        self._rgba_background = _rgba_background
         self.updateStyleSheet()
 
 
@@ -321,6 +364,7 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     main_splitter = BaseTansuWidget()
+    #main_splitter.handle_length = 100
     main_splitter.setObjectName("main")
     main_splitter.addWidget(QLabel('a'))
     main_splitter.addWidget(QLabel('b'))
@@ -334,7 +378,9 @@ if __name__ == "__main__":
 
     main_splitter.addWidget(splitter1)
     main_splitter.show()
-    main_splitter.setFixedSize(400, 400)
+    #main_splitter.updateStyleSheet()
+    #splitter1.updateStyleSheet()
+    #main_splitter.setFixedSize(400, 400)
     main_splitter.move(QCursor.pos())
     sys.exit(app.exec_())
 
