@@ -62,7 +62,7 @@ class BaseTansuWidget(QSplitter):
         # set up handle defaults
         self.setHandleWidth(BaseTansuWidget.HANDLE_WIDTH)
         self._handle_length = -1
-        self.updateStyleSheet()
+        #self.updateStyleSheet()
 
     """ UTILS """
     def displayAllWidgets(self, value):
@@ -144,6 +144,8 @@ class BaseTansuWidget(QSplitter):
             widget.show()
 
     def resizeEvent(self, event):
+        """TODO why was I resizing here..."""
+        #pass
         self.updateStyleSheet()
 
     """ SOLO VIEW """
@@ -364,7 +366,7 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     main_splitter = BaseTansuWidget()
-    #main_splitter.handle_length = 100
+    main_splitter.handle_length = 100
     main_splitter.setObjectName("main")
     main_splitter.addWidget(QLabel('a'))
     main_splitter.addWidget(QLabel('b'))

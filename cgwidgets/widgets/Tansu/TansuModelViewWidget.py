@@ -123,7 +123,7 @@ class TansuModelViewWidget(BaseTansuWidget, iDynamicWidget):
 
         self.setViewWidgetToDefaultSize()
 
-        self.setupStyleSheet()
+        self.updateStyleSheet()
 
     def insertViewItem(self, row, name, parent=None, widget=None):
         """
@@ -396,7 +396,7 @@ class TansuModelViewWidget(BaseTansuWidget, iDynamicWidget):
     """ EVENTS """
     def showEvent(self, event):
         self.setViewWidgetToDefaultSize()
-        self.setupStyleSheet()
+        self.updateStyleSheet()
         return BaseTansuWidget.showEvent(self, event)
 
     def resizeEvent(self, event):
@@ -412,7 +412,7 @@ class TansuModelViewWidget(BaseTansuWidget, iDynamicWidget):
                 width = int( self.width() / num_items )
                 if TansuModel.ITEM_WIDTH < width:
                     model.item_width = width
-                    self.setupStyleSheet()
+                    self.updateStyleSheet()
 
         return BaseTansuWidget.resizeEvent(self, event)
 
@@ -453,13 +453,7 @@ class TansuModelViewWidget(BaseTansuWidget, iDynamicWidget):
         if value == TansuModelViewWidget.STACKED:
             pass
         elif value == TansuModelViewWidget.DYNAMIC:
-            # preflight check
-            # if not dynamic_widget:
-            #     print ("provide a widget to use...")
-            #     return
-            # if not dynamic_function:
-            #     print ("provide a function to use...")
-            #     return
+
             self.setDynamicWidgetBaseClass(dynamic_widget)
             self.setDynamicUpdateFunction(dynamic_function)
 
@@ -476,7 +470,7 @@ class TansuModelViewWidget(BaseTansuWidget, iDynamicWidget):
         self._view_item_type = view_item_type
 
     """ LAYOUT """
-    def setupStyleSheet(self):
+    def updateStyleSheet(self):
         """
         Sets the style sheet for the outline based off of the direction of the parent.
 
@@ -622,7 +616,7 @@ class TansuMainDelegateWidget(BaseTansuWidget):
     """
     def __init__(self, parent=None):
         super(TansuMainDelegateWidget, self).__init__(parent)
-        self.rgba_background = iColor["rgba_outline"]
+        self.rgba_background = iColor["rgba_background_0"]
 
     def showEvent(self, event):
         tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
@@ -771,11 +765,11 @@ if __name__ == "__main__":
     # w.setViewPosition(TansuModelViewWidget.NORTH)
 
     dw = TabTansuDynamicWidgetExample
-    w.setDelegateType(
-        TansuModelViewWidget.DYNAMIC,
-        dynamic_widget=TabTansuDynamicWidgetExample,
-        dynamic_function=TabTansuDynamicWidgetExample.updateGUI
-    )
+    # w.setDelegateType(
+    #     TansuModelViewWidget.DYNAMIC,
+    #     dynamic_widget=TabTansuDynamicWidgetExample,
+    #     dynamic_function=TabTansuDynamicWidgetExample.updateGUI
+    # )
 
     for x in range(3):
         widget = QLabel(str(x))
