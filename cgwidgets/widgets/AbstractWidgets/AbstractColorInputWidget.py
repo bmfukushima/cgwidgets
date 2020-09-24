@@ -1,17 +1,19 @@
 """
-KATANA BUGS:
-    - Drag outside...
-        - Hitbox is not correct, skewed by what appears to be the
-            border-width to the topleft
-IDEA:
-    Put ring of default colors around the color widget for quick color selection
-
-#-------------------------------------------------------------------------- Bugs
-
-ColorValueInputWidget --> Set Color
-    Disabling style sheets for now...
-    as they were overriding the delegate...
-    will need to rethink this...
+TODO:
+    Linear Gradients
+        * Draw all linear gradients
+        * Linear gradients update the QColor
+        * Setup linear gradients triggers
+        * Update values in labels widget
+                - Set the manipulated thingy to the selected text color?
+                    No idea how to do this...
+                       unless you use multiple labels...
+    Display Label
+        * Show current values
+    Annoying
+        * Flickering on Linear Gradient drag
+        * Foreground gradient is causing alpha overlay issue...
+            - Force the for ground into one gradient?
 """
 
 import sys
@@ -52,7 +54,18 @@ class AbstractColorGradientMainWidget(QStackedWidget):
 
     Widgets
         | -- color_picker (ColorGradientWidget)
+                | -- VBox
+                        TODO:
+                            (Change to box? So you can set orientation?)
+                        | -- QGraphicsView
+                        | -- QGraphicsLabel
+                TODO:
+                        Add labels to bottom
+                        display_values_widget
         | -- display_color_widget (ColorDisplayLabel)
+                TODO:
+                    Add the RGBA | HSV values to the label
+                    Potentially make this into a Layout?
     """
     def __init__(self, parent=None):
         super(AbstractColorGradientMainWidget, self).__init__(parent=parent)
@@ -174,9 +187,11 @@ class ColorGradientWidget(QWidget):
 
         self.scene = ColorGraphicsScene(self)
         self.view = ColorGraphicsView(self.scene)
+        # TODO Display values while manipulating
+        self.display_values_widget = QLabel('DISPLAY THE VALUES HERE!')
 
         layout.addWidget(self.view)
-
+        layout.addWidget(self.display_values_widget)
         self.setStyleSheet("border:None")
 
     def mousePressEvent(self, *args, **kwargs):
@@ -232,6 +247,15 @@ class ColorGraphicsView(QGraphicsView):
 
     """ EVENTS """
     def mousePressEvent(self, *args, **kwargs):
+        """
+        TODO
+            Determine which gradient should be used by the user...
+                - ALT / ALT+SHIFT COMBOS?
+                - Can I reuse the LMB/MMB/RMB defaults?
+            RGBA --> LMB
+            HSV
+            RGB
+        """
         modifiers = QApplication.keyboardModifiers()
         if modifiers == Qt.AltModifier:
             self.__hideRGBACrosshair(True)
@@ -368,7 +392,9 @@ class ColorGraphicsScene(QGraphicsScene):
 
         # create scene
         self.setSceneRect(0, 0, 500, 500)
+        # TODO MOVE THIS SOMEWHERE USEFUL?
         self.gradient_type = ColorGraphicsScene.RGBA
+        self.gradient_type = ColorGraphicsScene.RED
         self.drawRGBACrosshair()
         self.drawLinearCrosshair()
 
@@ -479,7 +505,6 @@ class ColorGraphicsScene(QGraphicsScene):
         self._gradient_type = gradient_type
 
     """ CROSSHAIR"""
-
     def drawLinearCrosshair(self):
         """
         Creates the initial linear crosshair.  Note that this is hard coded to setup
@@ -489,15 +514,11 @@ class ColorGraphicsScene(QGraphicsScene):
         """
         # vertical line
         self.linear_topline_item = LineSegment(width=2)
-        # self.linear_topline_item.setLine(0, 0, 10, 0)
         self.linear_botline_item = LineSegment(width=2)
-        # self.linear_botline_item.setLine(0, self.height(), 10, self.height())
 
         # horizontal line
         self.linear_leftline_item = LineSegment(width=2)
-        # self.linear_leftline_item.setLine(0, 0, 0, self.height())
         self.linear_rightline_item = LineSegment(width=2)
-        # self.linear_rightline_item.setLine(10, 0, 10, self.height())
 
         # create linear cross hair items group
         self.linear_crosshair_item = QGraphicsItemGroup()
