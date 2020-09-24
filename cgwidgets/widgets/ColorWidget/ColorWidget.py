@@ -582,7 +582,7 @@ class ColorGraphicsView(QGraphicsView):
         xpos = crosshair_xpos * rect.width()
         ypos = crosshair_ypos * rect.height()
         new_pos = QPoint(xpos, ypos)
-        self.scene().updateCrosshair(new_pos)
+        #self.scene().updateCrosshair(new_pos)
 
         self.setPreviousSize(rect)
         return QGraphicsView.resizeEvent(self, *args, **kwargs)
