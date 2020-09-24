@@ -17,7 +17,7 @@ from qtpy.QtGui import (
 
 import sys
 
-from cgwidgets.widgets.Tansu import TansuModelItem
+from cgwidgets.widgets.TansuWidget import TansuModelItem
 from cgwidgets.settings.colors import iColor
 
 

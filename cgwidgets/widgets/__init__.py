@@ -19,13 +19,13 @@ from .AbstractWidgets import AbstractBooleanInputWidget as AbstractBooleanInputW
 from .AbstractWidgets import AbstractListInputWidget as AbstractListInputWidget
 
 """ TANSU """
-from .Tansu import TansuModelItem as TansuModelItem
-from .Tansu import TansuModel as TansuModel
+from .TansuWidget import TansuModelItem as TansuModelItem
+from .TansuWidget import TansuModel as TansuModel
 
-from .Tansu import BaseTansuWidget as BaseTansuWidget
-from .Tansu import TansuModelViewWidget as TansuModelViewWidget
-from .Tansu import TansuListView as TansuListView
-from .Tansu import TansuModelDelegateWidget as TansuModelDelegateWidget
+from .TansuWidget import BaseTansuWidget as BaseTansuWidget
+from .TansuWidget import TansuModelViewWidget as TansuModelViewWidget
+from .TansuWidget import TansuListView as TansuListView
+from .TansuWidget import TansuModelDelegateWidget as TansuModelDelegateWidget
 
 """ INPUT WIDGETS """
 from .InputWidgets import FloatInputWidget as FloatInputWidget

@@ -22,7 +22,7 @@ from cgwidgets.utils import getWidgetAncestor
 from cgwidgets.settings.colors import iColor
 
 from cgwidgets.widgets import AbstractInputGroup
-from cgwidgets.widgets.Tansu import (
+from cgwidgets.widgets.TansuWidget import (
     BaseTansuWidget, TansuModel, iDynamicWidget
 )
 

@@ -1,5 +1,5 @@
 # https://doc.qt.io/qt-5/model-view-programming.html#model-view-classes
-from cgwidgets.widgets.Tansu import (
+from cgwidgets.widgets.TansuWidget import (
     iDynamicWidget
 )
 

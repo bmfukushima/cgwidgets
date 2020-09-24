@@ -28,6 +28,8 @@ from cgwidgets.widgets import FloatInputWidget
 
 class ColorWidget(QWidget):
     """
+    Color popup widget for the user to adjust color inputs.
+
     @attr: <str> katana attribute to adjust
     @color: <str> rgb '0.8 0.8 0.8'
     @main_widget: primary widget to get modules from
