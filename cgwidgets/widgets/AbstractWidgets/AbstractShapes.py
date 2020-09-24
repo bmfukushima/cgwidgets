@@ -94,9 +94,9 @@ class AbstractInputGroupBox(QGroupBox):
         # create separator
         self.separator = AbstractHLine(self)
         self.separator.setStyleSheet("""
-            background-color: rgba{rgba_text_color};
+            background-color: rgba{rgba_text};
             margin: 30px;
-            """.format(rgba_text_color=repr(iColor["rgba_text_color"])))
+            """.format(rgba_text=repr(iColor["rgba_text"])))
         self.layout().addWidget(self.separator)
 
         # set up default attrs
@@ -105,7 +105,7 @@ class AbstractInputGroupBox(QGroupBox):
         self._rgba_border = iColor["rgba_outline"]
         self._padding = AbstractInputGroupBox.PADDING
         self._rgba_background = iColor["rgba_background_0"]
-        self._rgba_text_color = iColor["rgba_text_color"]
+        self._rgba_text = iColor["rgba_text"]
 
         # setup display styles
         self.display_background = True
@@ -125,14 +125,14 @@ class AbstractInputGroupBox(QGroupBox):
             "paddingX2" : (self.padding * 2),
             "rgba_background_0" : repr(self.rgba_background),
             "border_color" : repr(self.rgba_border),
-            "color" : repr(self.rgba_text_color)
+            "color" : repr(self.rgba_text)
         })
         style_sheet = """
             QGroupBox::title{{
                 subcontrol-origin: margin;
                 subcontrol-position: top center; 
                 padding: -{padding}px {paddingX2}px;
-                color: rgba{rgba_text_color};
+                color: rgba{rgba_text};
             }}
             QGroupBox[display_background=true]{{
                 background-color: rgba{rgba_background_0};
@@ -168,12 +168,12 @@ class AbstractInputGroupBox(QGroupBox):
         self._rgba_background = _rgba_background
 
     @property
-    def rgba_text_color(self):
-        return self._rgba_text_color
+    def rgba_text(self):
+        return self._rgba_text
 
-    @rgba_text_color.setter
-    def rgba_text_color(self, _rgba_text_color):
-        self._rgba_text_color = _rgba_text_color
+    @rgba_text.setter
+    def rgba_text(self, _rgba_text):
+        self._rgba_text = _rgba_text
         #self.updateStyleSheet()
 
     @property

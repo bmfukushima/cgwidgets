@@ -318,7 +318,7 @@ class LineEdit(QLineEdit):
             border:None;
             background-color: rgba{rgba_background_0};
             selection-background-color: rgba{rgba_selected};
-            color: rgba{rgba_text_color}
+            color: rgba{rgba_text}
         }}
 
         """.format(**style_sheet_args)
@@ -390,7 +390,7 @@ class CompleterPopup(QListView):
         CompleterPopup{{
             border: 1px solid rgba{rgba_outline};
             background-color: rgba{rgba_background_0};
-            color: rgba{rgba_text_color};
+            color: rgba{rgba_text};
         }}
         CompleterPopup::item:selected{{
             color: rgba{rgba_hover};
@@ -400,7 +400,7 @@ class CompleterPopup(QListView):
         CompleterPopup::item{{
             border: None ;
             background-color: rgba{rgba_background_0};
-            color: rgba{rgba_text_color};
+            color: rgba{rgba_text};
         }}
 
         """.format(**style_sheet_args)

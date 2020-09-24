@@ -49,7 +49,7 @@ class AbstractInputWidget(QLineEdit):
             valid for this widget.
         rgba_background (rgba): value of rgba_background transparency
         rgba_border (rgba): color of the border...
-        rgba_text_color (rgba): color of text
+        rgba_text (rgba): color of text
     """
 
     def __init__(self, parent=None):
@@ -60,7 +60,7 @@ class AbstractInputWidget(QLineEdit):
         # set up style
         self.rgba_border = iColor["rgba_outline"]
         self.rgba_background = iColor["rgba_background_0"]
-        self.rgba_text_color = iColor["rgba_text_color"]
+        self.rgba_text = iColor["rgba_text"]
 
         self.updateStyleSheet()
 
@@ -73,12 +73,12 @@ class AbstractInputWidget(QLineEdit):
         style_sheet_args.update({
             "rgba_background_0": repr(self.rgba_background),
             "rgba_border": repr(self.rgba_border),
-            "rgba_text_color": repr(self.rgba_text_color)
+            "rgba_text": repr(self.rgba_text)
         })
         style_sheet = """
             border: None;
             background-color: rgba{rgba_background_0};
-            color: rgba{rgba_text_color}
+            color: rgba{rgba_text}
         """.format(**style_sheet_args)
         self.setStyleSheet(style_sheet)
 
@@ -119,12 +119,12 @@ class AbstractInputWidget(QLineEdit):
         #self.updateStyleSheet()
 
     @property
-    def rgba_text_color(self):
-        return self._rgba_text_color
+    def rgba_text(self):
+        return self._rgba_text
 
-    @rgba_text_color.setter
-    def rgba_text_color(self, _rgba_text_color):
-        self._rgba_text_color = _rgba_text_color
+    @rgba_text.setter
+    def rgba_text(self, _rgba_text):
+        self._rgba_text = _rgba_text
         #self.updateStyleSheet()
 
     """ UTILS """

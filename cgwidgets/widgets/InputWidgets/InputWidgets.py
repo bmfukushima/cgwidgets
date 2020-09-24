@@ -303,15 +303,15 @@ class UserInputWidget(QFrame):
     def setupStyleSheet(self):
         style_sheet_args = iColor.style_sheet_args
         style_sheet = """
-        QLabel{{color: rgba{rgba_text_color}}}
+        QLabel{{color: rgba{rgba_text}}}
         UserInputWidget{{background-color: rgba{rgba_background_1}}}
         """.format(
             **style_sheet_args
         )
         self.setStyleSheet(style_sheet)
         # self._label.setStyleSheet(
-        #     self._label.styleSheet() + 'color: rgba{rgba_text_color}'.format(
-        #         rgba_text_color=iColor.rgba_text_color))
+        #     self._label.styleSheet() + 'color: rgba{rgba_text}'.format(
+        #         rgba_text=iColor.rgba_text))
 
     def setToolTip(self, tool_tip):
         self._label.setToolTip(tool_tip)

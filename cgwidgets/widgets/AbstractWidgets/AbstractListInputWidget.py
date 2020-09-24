@@ -191,7 +191,7 @@ class AbstractListInputWidget(QComboBox):
             QComboBox{{
                 border: None;
                 background-color: rgba{rgba_background_0};
-                color: rgba{rgba_text_color};
+                color: rgba{rgba_text};
             }}
             QComboBox::drop-down {{
                 width: {width}px;
@@ -199,12 +199,12 @@ class AbstractListInputWidget(QComboBox):
             QLineEdit{{
                 border: None;
                 background-color: rgba{rgba_background_0};
-                color: rgba{rgba_text_color};
+                color: rgba{rgba_text};
             }}
             QListView{{
                 border: None;
                 background-color: rgba{rgba_background_0};
-                color: rgba{rgba_text_color};
+                color: rgba{rgba_text};
             }}
             QListView::item:hover{{
                 background-color: rgba(255,0,0,255);
@@ -215,7 +215,7 @@ class AbstractListInputWidget(QComboBox):
             QListView{{
                 border: None;
                 background-color: rgba{rgba_background_0};
-                color: rgba{rgba_text_color};
+                color: rgba{rgba_text};
             }}
             QListView::item:hover{{
                 background-color: rgba(255,0,0,255);

@@ -408,7 +408,6 @@ class TansuModelViewWidget(QSplitter, iDynamicWidget):
         return QSplitter.showEvent(self, event)
 
     def resizeEvent(self, event):
-
         model = self.model()
         num_items = model.getRootItem().childCount()
         if 0 < num_items:
@@ -422,7 +421,6 @@ class TansuModelViewWidget(QSplitter, iDynamicWidget):
                     model.item_width = width
                     self.updateStyleSheet()
         return QSplitter.resizeEvent(self, event)
-        #return BaseTansuWidget.resizeEvent(self, event)
 
 
     def keyPressEvent(self, event):
@@ -529,7 +527,7 @@ class TansuModelViewWidget(QSplitter, iDynamicWidget):
                 border-right: None;
                 border-top: None;
                 background-color: rgba{rgba_background_0};
-                color: rgba{rgba_text_color};
+                color: rgba{rgba_text};
             }}
             {type}::item:selected{{
                 border: {outline_width}px solid rgba{rgba_outline} ;
@@ -549,7 +547,7 @@ class TansuModelViewWidget(QSplitter, iDynamicWidget):
                 border-right: None;
                 border-bottom: None;
                 background-color: rgba{rgba_background_0};
-                color: rgba{rgba_text_color};
+                color: rgba{rgba_text};
             }}
             {type}::item:selected{{
                 border: {outline_width}px solid rgba{rgba_outline} ;
@@ -569,7 +567,7 @@ class TansuModelViewWidget(QSplitter, iDynamicWidget):
                 border-top: None;
                 border-right: None;
                 background-color: rgba{rgba_background_0};
-                color: rgba{rgba_text_color}
+                color: rgba{rgba_text}
             }}
             {type}::item:selected{{
                 border: {outline_width}px solid rgba{rgba_outline} ;
@@ -589,7 +587,7 @@ class TansuModelViewWidget(QSplitter, iDynamicWidget):
                 border-top: None;
                 border-left: None;
                 background-color: rgba{rgba_background_0};
-                color: rgba{rgba_text_color}
+                color: rgba{rgba_text}
             }}
             {type}::item:selected{{
                 border: {outline_width}px solid rgba{rgba_outline} ;
