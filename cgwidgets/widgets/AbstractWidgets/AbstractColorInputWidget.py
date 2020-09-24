@@ -43,6 +43,13 @@ class AbstractColorGradientMainWidget(QStackedWidget):
     Displays the color swatch to the user.  This color swatch will have a cross
     hair where the user can select the color that they want to use
 
+    Attributes:
+        linear_crosshair_direction (Qt.Direction): Direction that the crosshair
+            will travel when doing a 1D selection (HSV/RGB)
+        color (QColor): The current color that is being returned
+            TODO
+                setColor needs to have a userTrigger on it to do some operation...
+
     Widgets
         | -- color_picker (ColorGradientWidget)
         | -- display_color_widget (ColorDisplayLabel)
@@ -51,6 +58,7 @@ class AbstractColorGradientMainWidget(QStackedWidget):
         super(AbstractColorGradientMainWidget, self).__init__(parent=parent)
         # setup attrs
         self._border_width = 10
+        self._linear_crosshair_direction = Qt.Horizontal
 
         # create widgets
         self.color_picker_widget = ColorGradientWidget()
@@ -59,7 +67,7 @@ class AbstractColorGradientMainWidget(QStackedWidget):
         self.addWidget(self.display_color_widget)
         self.addWidget(self.color_picker_widget)
 
-        self.setColor(QColor(128,128,255))
+        self.setColor(QColor(128, 128, 255))
 
     """ API """
     def setRGBACrosshairPosition(self, pos):
@@ -103,6 +111,13 @@ class AbstractColorGradientMainWidget(QStackedWidget):
         if not hasattr(self, '_color'):
             self._color = QColor()
         return self._color
+
+    def setLinearCrosshairDirection(self, direction=Qt.Horizontal):
+        self._linear_crosshair_direction = direction
+        self.getScene().setLinearCrosshairDirection(direction)
+
+    def getLinearCrosshairDirection(self):
+        return self._linear_crosshair_direction
 
     """ UTILS """
     def getScene(self):
@@ -175,7 +190,6 @@ class ColorGradientWidget(QWidget):
 
 class ColorGraphicsView(QGraphicsView):
     """
-
     Attributes:
         previous_size (geometry) hold the previous position
             so that a resize event can recalculate the cross hair
@@ -196,19 +210,19 @@ class ColorGraphicsView(QGraphicsView):
                 RGBA color picker
         """
         if hide is True:
-            self.scene().rgba_crosshair.hide()
+            self.scene().rgba_crosshair_item.hide()
         else:
-            self.scene().rgba_crosshair.show()
+            self.scene().rgba_crosshair_item.show()
 
     def __updateRGBACrosshairOnResize(self):
         """
         Updates the RGBA crosshair to the correct position.
         """
-        crosshair_pos = self.scene().getRGBACrosshairPos()
+        rgba_crosshair_pos = self.scene().getRGBACrosshairPos()
         old_width = self.getPreviousSize().width()
         old_height = self.getPreviousSize().height()
-        crosshair_xpos = crosshair_pos.x() / old_width
-        crosshair_ypos = crosshair_pos.y() / old_height
+        crosshair_xpos = rgba_crosshair_pos.x() / old_width
+        crosshair_ypos = rgba_crosshair_pos.y() / old_height
 
         # get new crosshair position
         xpos = crosshair_xpos * self.geometry().width()
@@ -240,6 +254,7 @@ class ColorGraphicsView(QGraphicsView):
         This move event will determine if the values should be updated
         this will need to update the hsv/rgba moves aswell
         """
+        self.scene().setLinearCrosshairPos(event.pos())
         if self._picking:
             if self.scene().gradient_type == ColorGraphicsScene.RGBA:
                 self._getRGBAValue(event)
@@ -343,51 +358,19 @@ class ColorGraphicsScene(QGraphicsScene):
     SATURATION = 'saturation'
     VALUE = 'value'
     RGBA = 'rgba'
+
     def __init__(self, parent=None):
         super(ColorGraphicsScene, self).__init__(parent)
         # setup default attrs
         self.CROSSHAIR_RADIUS = 10
-        self._crosshair_pos = QPoint(0, 0)
+        self._rgba_crosshair_pos = QPoint(0, 0)
+        self._linear_crosshair_size = 15
 
         # create scene
         self.setSceneRect(0, 0, 500, 500)
         self.gradient_type = ColorGraphicsScene.RGBA
         self.drawRGBACrosshair()
-
-    """ UTILS """
-    def drawRGBACrosshair(self):
-        # vertical line
-
-        self.vlinetop_item = LineSegment()
-        self.vlinetop_item.setLine(0, 0, 0, self.height())
-        self.vlinebot_item = LineSegment()
-        self.vlinebot_item.setLine(0, 0, 0, self.height())
-
-        # horizontal line
-        self.hlinetop_item = LineSegment()
-        self.hlinetop_item.setLine(0, 0, self.width(), 0)
-        self.hlinebot_item = LineSegment()
-        self.hlinebot_item.setLine(0, 0, self.width(), 0)
-
-        # crosshair circle
-        self.crosshair_circle = QGraphicsEllipseItem()
-        self.crosshair_circle.setRect(
-            -(self.CROSSHAIR_RADIUS * 0.5),
-            -(self.CROSSHAIR_RADIUS * 0.5),
-            self.CROSSHAIR_RADIUS,
-            self.CROSSHAIR_RADIUS
-        )
-
-        # add items
-        self.rgba_crosshair = QGraphicsItemGroup()
-
-        self.rgba_crosshair.addToGroup(self.crosshair_circle)
-        self.rgba_crosshair.addToGroup(self.vlinetop_item)
-        self.rgba_crosshair.addToGroup(self.vlinebot_item)
-        self.rgba_crosshair.addToGroup(self.hlinetop_item)
-        self.rgba_crosshair.addToGroup(self.hlinebot_item)
-
-        self.addItem(self.rgba_crosshair)
+        self.drawLinearCrosshair()
 
     """ DRAW GRADIENTS """
     def create1DGradient(
@@ -495,13 +478,124 @@ class ColorGraphicsScene(QGraphicsScene):
     def gradient_type(self, gradient_type):
         self._gradient_type = gradient_type
 
-
     """ CROSSHAIR"""
+
+    def drawLinearCrosshair(self):
+        """
+        Creates the initial linear crosshair.  Note that this is hard coded to setup
+        to be drawn horizontally.  You can update the direction with
+        setLinearCrosshairDirection(Qt.Direction) on the
+        AbstractColorGradientMainWidget.
+        """
+        # vertical line
+        self.linear_topline_item = LineSegment(width=2)
+        # self.linear_topline_item.setLine(0, 0, 10, 0)
+        self.linear_botline_item = LineSegment(width=2)
+        # self.linear_botline_item.setLine(0, self.height(), 10, self.height())
+
+        # horizontal line
+        self.linear_leftline_item = LineSegment(width=2)
+        # self.linear_leftline_item.setLine(0, 0, 0, self.height())
+        self.linear_rightline_item = LineSegment(width=2)
+        # self.linear_rightline_item.setLine(10, 0, 10, self.height())
+
+        # create linear cross hair items group
+        self.linear_crosshair_item = QGraphicsItemGroup()
+        self.linear_crosshair_item.addToGroup(self.linear_botline_item)
+        self.linear_crosshair_item.addToGroup(self.linear_rightline_item)
+        self.linear_crosshair_item.addToGroup(self.linear_topline_item)
+        self.linear_crosshair_item.addToGroup(self.linear_leftline_item)
+
+        # add group item
+        self.setLinearCrosshairDirection(Qt.Horizontal)
+        self.addItem(self.linear_crosshair_item)
+
+    def setLinearCrosshairPos(self, pos):
+        """
+        Places the crosshair at a specific  location in the widget.  This is generally
+        used when updating color values, and passing them back to the color widget.
+        """
+        main_widget = getWidgetAncestor(self, AbstractColorGradientMainWidget)
+        direction = main_widget.getLinearCrosshairDirection()
+        if direction == Qt.Horizontal:
+            self.linear_crosshair_item.setPos(pos.x(), 0)
+        elif direction == Qt.Vertical:
+            self.linear_crosshair_item.setPos(0, pos.y())
+
+    def setLinearCrosshairDirection(self, direction):
+        """
+        Sets the direction of travel of the linear crosshair.  This will also update
+        the display of the crosshair
+        """
+        # set direction
+        self._linear_crosshair_direction = direction
+        self._linear_crosshair_size
+
+        # update display
+        if direction == Qt.Horizontal:
+            self.linear_topline_item.setLine(0, 0, 10, 0)
+            self.linear_botline_item.setLine(0, self.height(), 10, self.height())
+
+            self.linear_leftline_item.setLine(0, 0, 0, self.height())
+            self.linear_rightline_item.setLine(10, 0, 10, self.height())
+
+        elif direction == Qt.Vertical:
+            self.linear_topline_item.setLine(0, 0, self.width(), 0)
+            self.linear_botline_item.setLine(0, 10, self.width(), 10)
+
+            self.linear_leftline_item.setLine(0, 0, 0, 10)
+            self.linear_rightline_item.setLine(self.width(), 0, self.width(), 10)
+
+    def getLinearCrosshairDirection(self):
+        return self._linear_crosshair_direction
+
+    """ RGBA """
+    def drawRGBACrosshair(self):
+        """
+        rgba_topline_item
+        rgba_botline_item
+        rgba_leftline_item
+        rgba_rightline_item:
+        rgba_crosshair_item_circle: center portion of crosshair
+
+        """
+        # vertical line
+        self.rgba_topline_item = LineSegment()
+        self.rgba_topline_item.setLine(0, 0, 0, self.height())
+        self.rgba_botline_item = LineSegment()
+        self.rgba_botline_item.setLine(0, 0, 0, self.height())
+
+        # horizontal line
+        self.rgba_leftline_item = LineSegment()
+        self.rgba_leftline_item.setLine(0, 0, self.width(), 0)
+        self.rgba_rightline_item = LineSegment()
+        self.rgba_rightline_item.setLine(0, 0, self.width(), 0)
+
+        # crosshair circle
+        self.rgba_crosshair_item_circle = QGraphicsEllipseItem()
+        self.rgba_crosshair_item_circle.setRect(
+            -(self.CROSSHAIR_RADIUS * 0.5),
+            -(self.CROSSHAIR_RADIUS * 0.5),
+            self.CROSSHAIR_RADIUS,
+            self.CROSSHAIR_RADIUS
+        )
+
+        # add items
+        self.rgba_crosshair_item = QGraphicsItemGroup()
+
+        self.rgba_crosshair_item.addToGroup(self.rgba_crosshair_item_circle)
+        self.rgba_crosshair_item.addToGroup(self.rgba_topline_item)
+        self.rgba_crosshair_item.addToGroup(self.rgba_botline_item)
+        self.rgba_crosshair_item.addToGroup(self.rgba_leftline_item)
+        self.rgba_crosshair_item.addToGroup(self.rgba_rightline_item)
+
+        self.addItem(self.rgba_crosshair_item)
+
     def getRGBACrosshairPos(self):
-        return self._crosshair_pos
+        return self._rgba_crosshair_pos
 
     def setRGBACrosshairPos(self, pos):
-        self._crosshair_pos = pos
+        self._rgba_crosshair_pos = pos
 
     def updateRGBACrosshair(self, pos):
         """
@@ -513,11 +607,11 @@ class ColorGraphicsScene(QGraphicsScene):
         ypos = pos.y()
 
         # update items positions
-        self.crosshair_circle.setPos(pos)
-        self.vlinetop_item.setLine(xpos, 0, xpos, ypos - crosshair_radius)
-        self.vlinebot_item.setLine(xpos, ypos + crosshair_radius, xpos, self.height())
-        self.hlinetop_item.setLine(0, ypos, xpos - crosshair_radius, ypos)
-        self.hlinebot_item.setLine(xpos + crosshair_radius, ypos, self.width(), ypos)
+        self.rgba_crosshair_item_circle.setPos(pos)
+        self.rgba_topline_item.setLine(xpos, 0, xpos, ypos - crosshair_radius)
+        self.rgba_botline_item.setLine(xpos, ypos + crosshair_radius, xpos, self.height())
+        self.rgba_leftline_item.setLine(0, ypos, xpos - crosshair_radius, ypos)
+        self.rgba_rightline_item.setLine(xpos + crosshair_radius, ypos, self.width(), ypos)
 
         self.setRGBACrosshairPos(pos)
 
@@ -526,10 +620,10 @@ class LineSegment(QGraphicsLineItem):
     """
     Abstract line segment to be used fro the crosshair
     """
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, width=1):
         super(LineSegment, self).__init__(parent)
         pen = self.pen()
-        pen.setWidth(1)
+        pen.setWidth(width)
         self.setPen(pen)
 
 
@@ -550,242 +644,10 @@ class ColorDisplayLabel(QLabel):
         return QLabel.enterEvent(self, *args, **kwargs)
 
 
-# class SETTINGS(object):
-#     GRID_SIZE = 50
-#     GRID_BORDER_WIDTH = 3
-#     HUD_BORDER_WIDTH = 1
-#     HUD_BORDER_OFFSET = 3
-#     PADDING = 3
-#     ALPHA = '48'
-#     CREATE_LABEL_WIDTH = 150
-#     SELECTION_WIDTH = 15
-#
-#     # ===============================================================================
-#     # COLORS
-#     # ===============================================================================
-#     #Darkest (letters)
-#     DARK_GREEN_ORIG = '.01600 .16827 .03560'
-#
-#     DARK_GREEN_RGB = QColor()
-#     #DARK_GREEN_RGB.setRgbF(.016 * 255, .16827 * 255, .03560 * 255)
-#     DARK_GREEN_RGB.setRgb(18, 86, 36)
-#
-#     DARK_GREEN_STRI = '16, 86, 36'
-#     DARK_GREEN_STRRGBA = '16, 86, 36, 255'
-#     #DARK_GREEN_STRI = '8, 86, 18'
-#
-#     DARK_GREEN_HSV = QColor()
-#     DARK_GREEN_HSV.setHsvF(.5, .9, .17)
-#
-#     MID_GREEN_STRRGBA = '64, 128, 64, 255'
-#
-#     LIGHT_GREEN_RGB = QColor()
-#     #LIGHT_GREEN_RGB.setRgb(10.08525, 95.9463, 20.9814)
-#     LIGHT_GREEN_RGB.setRgb(90, 180, 90)
-#     LIGHT_GREEN_STRRGBA = '90, 180, 90, 255'
-#
-#     DARK_RED_RGB = QColor()
-#     DARK_RED_RGB.setRgb(86, 18, 36)
-#
-#     LOCAL_YELLOW_STRRGBA = '240, 200, 0, 255'
-#     DARK_YELLOW_STRRGBA = '112, 112, 0, 255'
-#
-#     DARK_GRAY_STRRGBA = '64, 64, 64, 255'
-#
-#     FULL_TRANSPARENT_STRRGBA = '0, 0, 0, 0'
-#     DARK_TRANSPARENT_STRRGBA ='0, 0, 0, 48'
-#     LIGHT_TRANSPARENT_STRRGBA ='255, 255, 255, 12'
-#
-#     # ===============================================================================
-#     # STYLE SHEETS
-#     # ===============================================================================
-#     BUTTON_SELECTED = \
-#         'border-width: 2px; \
-#         border-color: rgba(%s) ; \
-#         border-style: solid' \
-#         % LOCAL_YELLOW_STRRGBA
-#
-#     BUTTON_DEFAULT = \
-#         'border-width: 1px; \
-#         border-color: rgba(%s) ; \
-#         border-style: solid' \
-#         % DARK_GRAY_STRRGBA
-#
-#     TOOLTIP = 'QToolTip{ \
-#                         background-color: rgb(%s); \
-#                         color: rgb(%s); \
-#                         border: black solid 1px\
-#                     } \
-#                     ' % (DARK_GRAY_STRRGBA,             # Tool Tip BG
-#                         LOCAL_YELLOW_STRRGBA)      # Tool Tip Color
-#
-#     # GROUP_BOX_HUD_WIDGET
-#     GROUP_BOX_HUD_WIDGET = \
-#         'QGroupBox{\
-#             background-color: rgba(0,0,0,%s);\
-#             border-width: %spx; \
-#             border-radius: %spx;\
-#             border-style: solid; \
-#             border-color: rgba(%s); \
-#         } \
-#         ' % (
-#             ALPHA,
-#             GRID_BORDER_WIDTH,                               # border-width
-#             PADDING * 2,                           # border-radius
-#             DARK_GREEN_STRRGBA,        # border color
-#         )
-#     """
-#     QListView::item:selected:active {
-#         background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-#                                     stop: 0 #6a6ea9, stop: 1 #888dd9);
-#     }
-#     """
-#     # FLOATING WIDGET
-#     FLOATING_LISTWIDGET_SS = \
-#         'QListView::item:hover{\
-#         color: rgba(%s);\
-#         }\
-#         QListView{\
-#         background-color: rgba(%s); \
-#         selection-color: rgba(%s);\
-#         selection-background-color: rgba(%s);\
-#         } ' % (
-#             LIGHT_GREEN_STRRGBA,
-#             FULL_TRANSPARENT_STRRGBA,
-#             LOCAL_YELLOW_STRRGBA,
-#             FULL_TRANSPARENT_STRRGBA,
-#         )
-#     FLOATING_LISTWIDGETHUD_SS = \
-#         'QListView::item:hover{\
-#         color: rgba(%s);\
-#         }\
-#         QListView{\
-#         background-color: rgba(%s); \
-#         selection-color: rgba(%s);\
-#         selection-background-color: rgba(%s);\
-#         } ' % (
-#             LIGHT_GREEN_STRRGBA,
-#             DARK_TRANSPARENT_STRRGBA,
-#             LOCAL_YELLOW_STRRGBA,
-#             FULL_TRANSPARENT_STRRGBA,
-#         )
-#
-#     FLOATING_WIDGET_HUD_SS =\
-#         'QWidget.UserHUD{background-color: rgba(0,0,0,0); \
-#         border-width: %spx; \
-#         border-style: solid; \
-#         border-color: rgba(%s);} \
-#         ' % (
-#             HUD_BORDER_WIDTH,
-#             DARK_GREEN_STRRGBA
-#         )
-#     # ===============================================================================
-#     # GROUP BOX MASTER STYLE SHEET
-#     # ===============================================================================
-#
-#     # REGEX
-#     background_color = r"background-color: .*?(?=\))"
-#     border_radius = r"border-width: .*?(?=p)"
-#     border_color = r"border-color: rgba\(.*?(?=\))"
-#     color = r"color: rgba\(.*?(?=\))"
-#
-#     # MASTER
-#     GROUP_BOX_SS = \
-#         'QGroupBox::title{\
-#         subcontrol-origin: margin;\
-#         subcontrol-position: top center; \
-#         padding: -%spx %spx; \
-#         } \
-#         QGroupBox{\
-#             background-color: rgba(0,0,0,%s);\
-#             border-width: %spx; \
-#             border-radius: %spx;\
-#             border-style: solid; \
-#             border-color: rgba(%s); \
-#             margin-top: 1ex;\
-#             margin-bottom: %s;\
-#             margin-left: %s;\
-#             margin-right: %s;\
-#         } \
-#         %s \
-#         ' % (
-#             PADDING,                               # padding text height
-#             PADDING * 2,                       # padding offset
-#             ALPHA,
-#             1,                               # border-width
-#             PADDING * 2,                           # border-radius
-#             MID_GREEN_STRRGBA,        # border color
-#             PADDING,                                   # margin-bottom
-#             PADDING,                                   # margin-left
-#             PADDING,                                   # margin-right
-#             TOOLTIP
-#         )
-#
-#
-#     # GROUP_BOX_SS_TRANSPARENT
-#     GROUP_BOX_SS_TRANSPARENT = re.sub(
-#         background_color,
-#         'background-color: rgba(0,0,0,0',
-#         GROUP_BOX_SS
-#     )
-#
-#     # GROUP_BOX_USER_NODE
-#     GROUP_BOX_USER_NODE = str(GROUP_BOX_SS)
-#
-#
-#     # GROUP_BOX_USER_SELECTED_NODE
-#     GROUP_BOX_USER_NODE_SELECTED = re.sub(
-#         background_color,
-#         'background-color: rgba(%s,%s' % (DARK_GREEN_STRI, ALPHA),
-#         GROUP_BOX_SS,
-#         1
-#     )
-#     GROUP_BOX_USER_NODE_SELECTED = re.sub(
-#         border_color,
-#         'border-color: rgba(%s' % (LOCAL_YELLOW_STRRGBA),
-#         GROUP_BOX_USER_NODE_SELECTED,
-#         1
-#     )
-#
-#     # GROUP_BOX_EDIT_PARAMS
-#     GROUP_BOX_EDIT_PARAMS = re.sub(
-#         border_radius,
-#         'border-width: 2',
-#         GROUP_BOX_SS
-#     )
-#     GROUP_BOX_EDIT_PARAMS = re.sub(
-#         border_color,
-#         'border-color: rgba(%s' % (DARK_GREEN_STRRGBA),
-#         GROUP_BOX_EDIT_PARAMS
-#     )
-#
-#     GROUP_BOX_HUDDISPLAY = \
-#         'QGroupBox::title{\
-#         subcontrol-origin: margin;\
-#         subcontrol-position: top center; \
-#         padding: -%spx %spx; \
-#         } \
-#         QGroupBox{\
-#             background-color: rgba(%s);\
-#             border-width: %spx; \
-#             border-radius: %spx;\
-#             border-style: solid; \
-#             border-color: rgba(%s); \
-#             margin-top: 1ex;\
-#         } \
-#         ' % (
-#             PADDING,
-#             PADDING * 2,
-#             FULL_TRANSPARENT_STRRGBA,
-#             1,                               # border-width
-#             PADDING * 2,                           # border-radius
-#             MID_GREEN_STRRGBA,        # border color
-#     )
-
-
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     color_widget = AbstractColorGradientMainWidget()
+    #color_widget.setLinearCrosshairDirection(Qt.Vertical)
     color_widget.show()
     sys.exit(app.exec_())
 
