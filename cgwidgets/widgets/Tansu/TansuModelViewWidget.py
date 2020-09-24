@@ -764,6 +764,14 @@ if __name__ == "__main__":
     from PyQt5.QtGui import QCursor
     app = QApplication(sys.argv)
 
+
+    class test(BaseTansuWidget):
+        def __init__(self, parent=None):
+            super(test, self).__init__(parent)
+            self.addWidget(QLabel('a'))
+            self.addWidget(QLabel('b'))
+            self.addWidget(QLabel('c'))
+
     w = TansuModelViewWidget()
     w.setViewPosition(TansuModelViewWidget.NORTH)
 
@@ -782,7 +790,7 @@ if __name__ == "__main__":
     #     dynamic_widget=TabTansuDynamicWidgetExample,
     #     dynamic_function=TabTansuDynamicWidgetExample.updateGUI
     # )
-
+    asdf = test(w)
     main_splitter = BaseTansuWidget()
     main_splitter.handle_length = 100
     main_splitter.setObjectName("main")
@@ -790,6 +798,7 @@ if __name__ == "__main__":
     main_splitter.addWidget(QLabel('b'))
     main_splitter.addWidget(QLabel('c'))
     w.insertViewItem(0, 'tansu', widget=main_splitter)
+    w.insertViewItem(0, 'subclass', widget=asdf)
 
     for x in range(3):
         widget = QLabel(str(x))

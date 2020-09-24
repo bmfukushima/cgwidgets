@@ -360,11 +360,14 @@ class BaseTansuWidget(QSplitter):
         self.updateStyleSheet()
 
 
+
+
 if __name__ == "__main__":
     import sys
     from PyQt5.QtWidgets import QApplication, QLabel
     from PyQt5.QtGui import QCursor
     app = QApplication(sys.argv)
+
 
     main_splitter = BaseTansuWidget()
     main_splitter.handle_length = 100
@@ -373,6 +376,7 @@ if __name__ == "__main__":
     main_splitter.addWidget(QLabel('b'))
     main_splitter.addWidget(QLabel('c'))
 
+
     splitter1 = BaseTansuWidget(orientation=Qt.Horizontal)
     splitter1.setObjectName("embed")
     for x in range(3):
@@ -380,6 +384,7 @@ if __name__ == "__main__":
         splitter1.addWidget(l)
 
     main_splitter.addWidget(splitter1)
+
     main_splitter.show()
     #main_splitter.updateStyleSheet()
     #splitter1.updateStyleSheet()

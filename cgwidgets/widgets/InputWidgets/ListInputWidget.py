@@ -1,5 +1,5 @@
 from qtpy.QtWidgets import (
-    QComboBox, QLineEdit, QCompleter, QSizePolicy
+    QComboBox, QLineEdit, QCompleter, QSizePolicy, QVBoxLayout
 )
 
 from qtpy.QtGui import(
@@ -274,3 +274,194 @@ class ListInputWidget(QComboBox):
     @previous_text.setter
     def previous_text(self, previous_text):
         self._previous_text = previous_text
+
+
+from qtpy.QtCore import QAbstractListModel, Qt, QRegExp
+from qtpy.QtWidgets import QLineEdit, QCompleter, QListView
+from qtpy.QtGui import QStandardItem, QStandardItemModel
+
+from cgwidgets.settings.colors import iColor
+from cgwidgets.utils import getBottomLeftPos
+
+
+class LineEdit(QLineEdit):
+    """
+    Signals:
+    QLineEdit
+        QCompleter
+            | -- QSortFilterProxyModel --> QAbstractListModel (Custom Model)
+            | -- Popup
+                    | -- QListView (CompleterPopup)
+
+
+    """
+    def __init__(self, parent=None, item_list=[]):
+        super(LineEdit, self).__init__(parent)
+        # setup custom completer
+        self.setupCustomModelCompleter(item_list)
+
+        # setup style
+        self.updateStyleSheet()
+
+        # setup signals
+        self.textChanged.connect(self.filterCompletionResults)
+
+    """ Style Sheet"""
+    def updateStyleSheet(self):
+        style_sheet_args = iColor.style_sheet_args
+        style_sheet_args.update({
+            'type': type(self).__name__
+        })
+
+        style_sheet = """
+        {type}{{
+            border:None;
+            background-color: rgba{rgba_background_0};
+            selection-background-color: rgba{rgba_selected};
+            color: rgba{rgba_text_color}
+        }}
+
+        """.format(**style_sheet_args)
+
+        self.setStyleSheet(style_sheet)
+
+    """ COMPLETER """
+    def setupCustomModelCompleter(self, item_list):
+        """
+        Creates a new completely custom completer
+
+        Args:
+            item_list (list): of strings to be the list of things
+                that is displayed to the user
+        """
+        # create completer/models
+        completer = CustomModelCompleter()
+        self.source_model = CustomModel(item_list=item_list)
+        self.proxy_model = QSortFilterProxyModel()
+        self.proxy_model.setSourceModel(self.source_model)
+
+        # set models
+        completer.setModel(self.proxy_model)
+        completer.popup().setModel(self.proxy_model)
+
+        # set item for popup
+        # this makes it so that the stylesheet can be attached...
+        # https://forum.qt.io/topic/26703/solved-stylize-using-css-and-editable-qcombobox-s-completions-list-view/7
+        delegate = QStyledItemDelegate()
+        completer.popup().setItemDelegate(delegate)
+
+        # set completer
+        self.setCompleter(completer)
+
+    def filterCompletionResults(self):
+        """
+        Filter the current proxy model based off of the text in the input string
+        """
+        pattern = QRegExp(
+            str(self.text()),
+            Qt.CaseInsensitive,
+            QRegExp.FixedString
+        )
+        self.proxy_model.setFilterRegExp(pattern)
+
+    def mouseReleaseEvent(self, event):
+        # update the current proxy model based off the current text
+        self.filterCompletionResults()
+
+        # show the pop completer
+        view = self.completer().popup()
+        view.show()
+        pos = getBottomLeftPos(self)
+        view.move(pos)
+
+        delegate = QStyledItemDelegate()
+        #delegate.setStyleSheet('background-color:rgb(255,0,255)')
+        view.setItemDelegate(delegate)
+        # return
+        return QLineEdit.mouseReleaseEvent(self, event)
+
+
+class CompleterPopup(QListView):
+    def __init__(self, parent=None):
+        super(CompleterPopup, self).__init__(parent)
+        style_sheet_args = iColor.style_sheet_args
+
+        style_sheet = """
+        CompleterPopup{{
+            border: 1px solid rgba{rgba_outline};
+            background-color: rgba{rgba_background_0};
+            color: rgba{rgba_text_color};
+        }}
+        CompleterPopup::item:selected{{
+            color: rgba{rgba_hover};
+            background-color: rgba{rgba_background_2};
+        }}
+        CompleterPopup::item:hover{{color: rgba{rgba_hover}}}
+        CompleterPopup::item{{
+            border: None ;
+            background-color: rgba{rgba_background_0};
+            color: rgba{rgba_text_color};
+        }}
+
+        """.format(**style_sheet_args)
+
+        self.setStyleSheet(style_sheet)
+
+
+class CustomModelCompleter(QCompleter):
+    def __init__(self, parent=None):
+        super(CustomModelCompleter, self).__init__(parent)
+        popup = CompleterPopup()
+        self.setPopup(popup)
+
+
+class CustomModel(QAbstractListModel):
+    def __init__(self, parent=None, item_list=[]):
+        super(CustomModel, self).__init__(parent)
+
+        self.item_list = item_list
+
+    def rowCount(self, parent):
+        return len(self.item_list)
+
+    def data(self, index, role):
+        if role == Qt.DisplayRole:
+            # displays this when the custom view is shown
+            return self.item_list[index.row()]
+        elif role == Qt.EditRole:
+            # returns this when an item is selected
+            return self.item_list[index.row()]
+
+    @property
+    def item_list(self):
+        return self._item_list
+
+    @item_list.setter
+    def item_list(self, item_list):
+        self._item_list = item_list
+
+
+if __name__ == "__main__":
+    import sys
+    from qtpy.QtWidgets import QApplication, QListView, QWidget, QLabel, QStyledItemDelegate
+    from qtpy.QtGui import QCursor
+
+    app = QApplication(sys.argv)
+    w = QWidget()
+    l = QVBoxLayout(w)
+    r = LineEdit(item_list=['a', 'b', 'c', 'aa', 'bb', 'cc'])
+    e = CompleterPopup()
+    l.addWidget(r)
+    l.addWidget(e)
+    e.setModel(r.proxy_model)
+
+    # item_list = ['a', 'b', 'c', 'aa', 'bb', 'cc']
+    # w=QListView()
+    # w.setStyleSheet("""
+    #     QListView::item:selected{background-color: rgba(255,0,0,255);}
+    # """)
+    # model = CustomModel(item_list=item_list)
+    # w.setModel(model)
+    w.show()
+    w.move(QCursor.pos())
+    sys.exit(app.exec_())

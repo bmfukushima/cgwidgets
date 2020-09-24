@@ -50,6 +50,7 @@ def getWidgetUnderCursor():
     widget = qApp.widgetAt(pos)
     return widget
 # this needs to die
+
 def getMainWidget(widget, name):
     """
     searchs widgets parents until it finds one with the name
@@ -93,6 +94,30 @@ def getWidgetAncestor(widget, instance_type):
             return getWidgetAncestor(widget.parent(), instance_type)
         else:
             return None
+
+
+def getBottomLeftPos(widget):
+    """
+    Returns the bottom left position of the specific widget.  This is mainly for
+    lining up any sort of popups and what not.
+
+    Args:
+        widget (QWidget): Widget whose position you want to return
+    Returns (QPoint): Point in world space of the bottom left coordinate
+        of the widget given
+    """
+
+    # get pos
+    if widget.parent():
+        pos = widget.parent().mapToGlobal(widget.geometry().bottomLeft())
+    else:
+        pos = widget.geometry().bottomLeft()
+
+    # back up clause
+    if not pos:
+        pos = QPoint(0, 0)
+
+    return pos
 
 
 def clearLayout(layout, start=None, end=None):
