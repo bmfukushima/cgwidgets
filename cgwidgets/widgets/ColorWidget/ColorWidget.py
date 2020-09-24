@@ -8,7 +8,7 @@ IDEA:
 
 #-------------------------------------------------------------------------- Bugs
 
-ColorLabel --> Set Color
+ColorValueInputWidget --> Set Color
     Disabling style sheets for now...
     as they were overriding the delegate...
     will need to rethink this...
@@ -37,14 +37,11 @@ class ColorWidget(QWidget):
         'default_value': '0.800000011921 0.800000011921 0.800000011921',
         'name': 'color',
         'data_type': 'color',
-        'is_array': '0',
-        'attr_name': '',
-        'attr_loc': 'material.dlSurfaceParams.color'
+        'is_array': '0'
     """
     def __init__(
                 self,
                 parent=None,
-                attr=None,
                 color='.5 0.18 0.18',
                 widget_default_data=None
                 ):
@@ -52,7 +49,6 @@ class ColorWidget(QWidget):
         main_layout = QVBoxLayout()
 
         self.widget_default_data = widget_default_data
-        self.attr = attr
         self.setLayout(main_layout)
         self.display_color_widget = ColorDisplayWidget(parent=self, main_widget=self)
         self.display_color_label = self.display_color_widget.color_label
@@ -62,36 +58,36 @@ class ColorWidget(QWidget):
         rgb_list = [float(value) for value in color.split(' ') if value != '']
         color = QColor()
         color.setRgb(rgb_list[0]*255, rgb_list[1]*255, rgb_list[2]*255)
-
-        #  ----------------------------------------------- setup rgb
-        self.rgb_layout = QHBoxLayout()
-        self.rgb_layout.setSpacing(SETTINGS.PADDING * 2)
-        for count, value in enumerate(rgb_list):
-            widget = ColorLabel(main_widget=self, value=value, channel=count)
-
-            self.rgb_layout.addWidget(widget)
-        #  ----------------------------------------------- setup HSV
-        self.hsv_layout = QHBoxLayout()
-        self.hsv_layout.setSpacing(0)
-        hsv = self.getColor()
-        hsv_list = [hsv.hue()/359, hsv.saturation()/255, hsv.value()/255]
-        # setup gradient
-        self.display_color_picker.scene.setupGradient(
-            value=hsv.value(),
-            sat=hsv.saturation()
-        )
-        for count, value in enumerate(hsv_list):
-            group_box = HSVGroupBox(parent=self)
-            if count == 0:
-                group_box.setTitle('H')
-            elif count == 1:
-                group_box.setTitle('S')
-            elif count == 2:
-                group_box.setTitle('V')
-            widget = HSVLabel(main_widget=self, value=value, channel=count)
-
-            group_box.layout().addWidget(widget)
-            self.hsv_layout.addWidget(group_box)
+        #
+        # #  ----------------------------------------------- setup rgb
+        # self.rgb_layout = QHBoxLayout()
+        # self.rgb_layout.setSpacing(SETTINGS.PADDING * 2)
+        # for count, value in enumerate(rgb_list):
+        #     widget = ColorValueInputWidget(main_widget=self, value=value, channel=count)
+        #
+        #     self.rgb_layout.addWidget(widget)
+        # #  ----------------------------------------------- setup HSV
+        # self.hsv_layout = QHBoxLayout()
+        # self.hsv_layout.setSpacing(0)
+        # hsv = self.getColor()
+        # hsv_list = [hsv.hue()/359, hsv.saturation()/255, hsv.value()/255]
+        # # setup gradient
+        # self.display_color_picker.scene.setupGradient(
+        #     value=hsv.value(),
+        #     sat=hsv.saturation()
+        # )
+        # for count, value in enumerate(hsv_list):
+        #     group_box = HSVGroupBox(parent=self)
+        #     if count == 0:
+        #         group_box.setTitle('H')
+        #     elif count == 1:
+        #         group_box.setTitle('S')
+        #     elif count == 2:
+        #         group_box.setTitle('V')
+        #     widget = HSVValueInputWidget(main_widget=self, value=value, channel=count)
+        #
+        #     group_box.layout().addWidget(widget)
+        #     self.hsv_layout.addWidget(group_box)
 
         # setup layouts
         self.stacked_layout = QStackedLayout()
@@ -99,8 +95,8 @@ class ColorWidget(QWidget):
         self.stacked_layout.setCurrentIndex(0)
 
         main_layout.addLayout(self.stacked_layout)
-        main_layout.addLayout(self.rgb_layout)
-        main_layout.addLayout(self.hsv_layout)
+        # main_layout.addLayout(self.rgb_layout)
+        # main_layout.addLayout(self.hsv_layout)
         self.setColor(color)
         self.setStyleSheet(
             "QLineEdit { background-color: rgba(0,0,0,0);\
@@ -317,7 +313,7 @@ class ValueLabel(FloatInputWidget):
         return QLineEdit.mousePressEvent(self, event, *args, **kwargs)
 
 
-class ColorLabel(ValueLabel):
+class ColorValueInputWidget(ValueLabel):
     def __init__(
             self,
             parent=None,
@@ -326,7 +322,7 @@ class ColorLabel(ValueLabel):
             channel=None
             ):
 
-        super(ColorLabel, self).__init__(parent=parent)
+        super(ColorValueInputWidget, self).__init__(parent=parent)
         self.main_widget = main_widget
         self.channel = channel
         self.setValue(value, update=False)
@@ -395,12 +391,12 @@ class HSVGroupBox(QGroupBox):
         self.setStyleSheet(SETTINGS.GROUP_BOX_SS)
 
 
-class HSVLabel(ValueLabel):
+class HSVValueInputWidget(ValueLabel):
     def __init__(self, parent=None,
                  main_widget=None,
                  value=None,
                  channel=None):
-        super(HSVLabel, self).__init__(parent=parent)
+        super(HSVValueInputWidget, self).__init__(parent=parent)
         self.main_widget = main_widget
         self.channel = channel
         self.setValue(value, update=False)

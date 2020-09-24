@@ -55,7 +55,7 @@ class AbstractInputGroup(QFrame):
         self.layout().addWidget(self.group_box)
         self.group_box.display_background = False
 
-        self.setStyleSheet("background-color: rgba{rgba_background_0}".format(**iColor.style_sheet_args))
+        self.setStyleSheet("background-color: rgba{rgba_gray_0}".format(**iColor.style_sheet_args))
 
 
     def setTitle(self, title):
@@ -104,7 +104,7 @@ class AbstractInputGroupBox(QGroupBox):
             self.setTitle(title)
         self._rgba_border = iColor["rgba_outline"]
         self._padding = AbstractInputGroupBox.PADDING
-        self._rgba_background = iColor["rgba_background_0"]
+        self._rgba_background = iColor["rgba_gray_0"]
         self._rgba_text = iColor["rgba_text"]
 
         # setup display styles
@@ -123,7 +123,7 @@ class AbstractInputGroupBox(QGroupBox):
             "font_size" : font_size,
             "padding" : self.padding,
             "paddingX2" : (self.padding * 2),
-            "rgba_background_0" : repr(self.rgba_background),
+            "rgba_gray_0" : repr(self.rgba_background),
             "border_color" : repr(self.rgba_border),
             "color" : repr(self.rgba_text)
         })
@@ -135,7 +135,7 @@ class AbstractInputGroupBox(QGroupBox):
                 color: rgba{rgba_text};
             }}
             QGroupBox[display_background=true]{{
-                background-color: rgba{rgba_background_0};
+                background-color: rgba{rgba_gray_0};
                 border-width: 1px;
                 border-radius: {paddingX2};
                 border-style: solid;

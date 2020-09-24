@@ -92,7 +92,7 @@ class TansuModel(QAbstractItemModel):
             return None
         # if role == Qt.BackgroundRole:
         #     if item.isSelected():
-        #         return QBrush(QColor(*iColor.rgba_background_selected))
+        #         return QBrush(QColor(*iColor.rgba_gray_selected))
         #     else:
         #         return QBrush(QColor(*iColor.rgba_background))
 

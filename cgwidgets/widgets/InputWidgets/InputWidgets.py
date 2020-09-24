@@ -304,7 +304,7 @@ class UserInputWidget(QFrame):
         style_sheet_args = iColor.style_sheet_args
         style_sheet = """
         QLabel{{color: rgba{rgba_text}}}
-        UserInputWidget{{background-color: rgba{rgba_background_1}}}
+        UserInputWidget{{background-color: rgba{rgba_gray_1}}}
         """.format(
             **style_sheet_args
         )

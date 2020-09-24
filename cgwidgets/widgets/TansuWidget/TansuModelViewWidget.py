@@ -100,7 +100,7 @@ class TansuModelViewWidget(QSplitter, iDynamicWidget):
         self._temp_proxy_widget = QWidget()
         self._temp_proxy_widget.setObjectName("proxy_widget")
         # self._temp_proxy_widget.setStyleSheet("""
-        #     QWidget#proxy_widget{{background-color:rgba{rgba_background_0}}}
+        #     QWidget#proxy_widget{{background-color:rgba{rgba_gray_0}}}
         #     """.format(**iColor.style_sheet_args)
         # )
 
@@ -322,9 +322,9 @@ class TansuModelViewWidget(QSplitter, iDynamicWidget):
         if hasattr(self, '_delegate_widget'):
             selection = self.viewWidget().selectionModel().selectedIndexes()
             if len(selection) == 0:
-                self.delegateWidget().rgba_background = iColor['rgba_background_0']
+                self.delegateWidget().rgba_background = iColor['rgba_gray_0']
             else:
-                self.delegateWidget().rgba_background = iColor['rgba_background_1']
+                self.delegateWidget().rgba_background = iColor['rgba_gray_1']
 
     def __updateDelegateItem(self, item, selected):
         """
@@ -495,11 +495,11 @@ class TansuModelViewWidget(QSplitter, iDynamicWidget):
         view_style_sheet = """
         {type}{{
             border:None;
-            background-color: rgba{rgba_background_0}
+            background-color: rgba{rgba_gray_0}
         }}
             """.format(
             type=type(self.viewWidget()).__name__,
-            rgba_background_0=iColor['rgba_background_0']
+            rgba_gray_0=iColor['rgba_gray_0']
         )
 
         splitter_style_sheet = """
@@ -526,14 +526,14 @@ class TansuModelViewWidget(QSplitter, iDynamicWidget):
                 border: {outline_width}px solid rgba{rgba_outline} ;
                 border-right: None;
                 border-top: None;
-                background-color: rgba{rgba_background_0};
+                background-color: rgba{rgba_gray_0};
                 color: rgba{rgba_text};
             }}
             {type}::item:selected{{
                 border: {outline_width}px solid rgba{rgba_outline} ;
                 border-right: None;
                 border-bottom: None;
-                background-color: rgba{rgba_background_1};
+                background-color: rgba{rgba_gray_1};
                 color: rgba{rgba_selected};
             }}
             {splitter_style_sheet}
@@ -546,14 +546,14 @@ class TansuModelViewWidget(QSplitter, iDynamicWidget):
                 border: {outline_width}px solid rgba{rgba_outline};
                 border-right: None;
                 border-bottom: None;
-                background-color: rgba{rgba_background_0};
+                background-color: rgba{rgba_gray_0};
                 color: rgba{rgba_text};
             }}
             {type}::item:selected{{
                 border: {outline_width}px solid rgba{rgba_outline} ;
                 border-right: None;
                 border-top: None;
-                background-color: rgba{rgba_background_1};
+                background-color: rgba{rgba_gray_1};
                 color: rgba{rgba_selected};
             }}
             {splitter_style_sheet}
@@ -566,14 +566,14 @@ class TansuModelViewWidget(QSplitter, iDynamicWidget):
                 border: {outline_width}px solid rgba{rgba_outline};
                 border-top: None;
                 border-right: None;
-                background-color: rgba{rgba_background_0};
+                background-color: rgba{rgba_gray_0};
                 color: rgba{rgba_text}
             }}
             {type}::item:selected{{
                 border: {outline_width}px solid rgba{rgba_outline} ;
                 border-top: None;
                 border-left: None;
-                background-color: rgba{rgba_background_1};
+                background-color: rgba{rgba_gray_1};
                 color: rgba{rgba_selected};
             }}
             {splitter_style_sheet}
@@ -586,14 +586,14 @@ class TansuModelViewWidget(QSplitter, iDynamicWidget):
                 border: {outline_width}px solid rgba{rgba_outline};
                 border-top: None;
                 border-left: None;
-                background-color: rgba{rgba_background_0};
+                background-color: rgba{rgba_gray_0};
                 color: rgba{rgba_text}
             }}
             {type}::item:selected{{
                 border: {outline_width}px solid rgba{rgba_outline} ;
                 border-top: None;
                 border-right: None;
-                background-color: rgba{rgba_background_1};
+                background-color: rgba{rgba_gray_1};
                 color: rgba{rgba_selected};
             }}
             {splitter_style_sheet}
@@ -626,7 +626,7 @@ class TansuMainDelegateWidget(BaseTansuWidget):
     """
     def __init__(self, parent=None):
         super(TansuMainDelegateWidget, self).__init__(parent)
-        self.rgba_background = iColor["rgba_background_0"]
+        self.rgba_background = iColor["rgba_gray_0"]
 
     def showEvent(self, event):
         tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
@@ -657,7 +657,7 @@ class TansuModelDelegateWidget(AbstractInputGroup):
         self.setStyleSheet("""
             TansuModelDelegateWidget{{background-color: rgba{background_color}}}
         """.format(
-            background_color=iColor["rgba_background_1"]
+            background_color=iColor["rgba_gray_1"]
         ))
 
     def setMainWidget(self, widget):

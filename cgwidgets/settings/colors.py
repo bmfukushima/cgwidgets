@@ -2,12 +2,12 @@ class Colors(dict):
     def __init__(self):
         """ background"""
         self["rgba_invisible"] = (0, 0, 0, 0)
-        self["rgba_background_0"] = (32, 32, 32, 255)
-        self["rgba_background_1"] = Colors.multiplyRGBAValues(self["rgba_background_0"])
-        self["rgba_background_2"] = Colors.multiplyRGBAValues(self["rgba_background_1"])
-        self["rgba_background_3"] = Colors.multiplyRGBAValues(self["rgba_background_2"])
-        self["rgba_background_4"] = Colors.multiplyRGBAValues(self["rgba_background_3"])
-        #self["rgba_background_selected"] = Colors.multiplyRGBAValues(self["rgba_background_0"])
+        self["rgba_gray_0"] = (32, 32, 32, 255)
+        self["rgba_gray_1"] = Colors.multiplyRGBAValues(self["rgba_gray_0"], golden_ratio=True)
+        self["rgba_gray_2"] = Colors.multiplyRGBAValues(self["rgba_gray_1"], golden_ratio=True)
+        self["rgba_gray_3"] = Colors.multiplyRGBAValues(self["rgba_gray_2"], golden_ratio=True)
+        self["rgba_gray_4"] = Colors.multiplyRGBAValues(self["rgba_gray_3"], golden_ratio=True)
+        #self["rgba_gray_selected"] = Colors.multiplyRGBAValues(self["rgba_gray_0"])
 
         """ outline """
         self["rgba_outline"] = (180, 70, 10, 255)
@@ -53,16 +53,22 @@ class Colors(dict):
         instance (object): object whose class type should have this
             style sheet attached onto
         """
-        style_sheet_args = iColor.style_sheet_args
-        style_sheet_args['type'] = type(current_instance).__name__
-        style_sheet_args.update(updated_args)
 
+        args = {
+            'type': type(current_instance).__name__,
+            'rgba_background': iColor['rgba_gray_0'],
+            'rgba_text': iColor['rgba_text'],
+            'additional_args': ''
+        }
+
+        args.update(updated_args)
         default_style_sheet = """
         {type}{{
-                background-color: rgba{rgba_background_0};
+                background-color: rgba{rgba_background};
                 color: rgba{rgba_text};
                 border: None;}}
-        """.format(**style_sheet_args)
+        {additional_args}
+        """.format(**args)
         return default_style_sheet
 
     @staticmethod

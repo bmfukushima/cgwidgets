@@ -316,7 +316,7 @@ class LineEdit(QLineEdit):
         style_sheet = """
         {type}{{
             border:None;
-            background-color: rgba{rgba_background_0};
+            background-color: rgba{rgba_gray_0};
             selection-background-color: rgba{rgba_selected};
             color: rgba{rgba_text}
         }}
@@ -389,17 +389,17 @@ class CompleterPopup(QListView):
         style_sheet = """
         CompleterPopup{{
             border: 1px solid rgba{rgba_outline};
-            background-color: rgba{rgba_background_0};
+            background-color: rgba{rgba_gray_0};
             color: rgba{rgba_text};
         }}
         CompleterPopup::item:selected{{
             color: rgba{rgba_hover};
-            background-color: rgba{rgba_background_2};
+            background-color: rgba{rgba_gray_2};
         }}
         CompleterPopup::item:hover{{color: rgba{rgba_hover}}}
         CompleterPopup::item{{
             border: None ;
-            background-color: rgba{rgba_background_0};
+            background-color: rgba{rgba_gray_0};
             color: rgba{rgba_text};
         }}
 

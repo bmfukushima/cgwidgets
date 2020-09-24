@@ -132,8 +132,8 @@ Notes:
         self.setItemHeight(50)
 
         #bg_color = guessBackgroundColor(self.parent().styleSheet())
-        self.bg_slide_color = iColor["rgba_background_0"]
-        self.fg_slide_color = iColor["rgba_background_1"]
+        self.bg_slide_color = iColor["rgba_gray_0"]
+        self.fg_slide_color = iColor["rgba_gray_1"]
 
         self.middle_item_index = int(len(value_list) * 0.5)
 

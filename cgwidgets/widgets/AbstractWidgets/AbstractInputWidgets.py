@@ -59,7 +59,7 @@ class AbstractInputWidget(QLineEdit):
 
         # set up style
         self.rgba_border = iColor["rgba_outline"]
-        self.rgba_background = iColor["rgba_background_0"]
+        self.rgba_background = iColor["rgba_gray_0"]
         self.rgba_text = iColor["rgba_text"]
 
         self.updateStyleSheet()
@@ -71,13 +71,13 @@ class AbstractInputWidget(QLineEdit):
         #style_sheet = getTopBorderStyleSheet(self._rgba_border, 2)
         style_sheet_args = iColor.style_sheet_args
         style_sheet_args.update({
-            "rgba_background_0": repr(self.rgba_background),
+            "rgba_gray_0": repr(self.rgba_background),
             "rgba_border": repr(self.rgba_border),
             "rgba_text": repr(self.rgba_text)
         })
         style_sheet = """
             border: None;
-            background-color: rgba{rgba_background_0};
+            background-color: rgba{rgba_gray_0};
             color: rgba{rgba_text}
         """.format(**style_sheet_args)
         self.setStyleSheet(style_sheet)
@@ -402,7 +402,7 @@ class AbstractBooleanInputWidget(QLabel):
         style_sheet_args = iColor.style_sheet_args
         style_sheet_args['name'] = type(self).__name__
         style_sheet = """
-        QLabel{{background-color: rgba{rgba_background_0}}}
+        QLabel{{background-color: rgba{rgba_gray_0}}}
         QLabel[is_clicked=true]{{
             border: 3px solid rgba{rgba_accept}
         }}

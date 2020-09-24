@@ -185,12 +185,12 @@ class AbstractListInputWidget(QComboBox):
         style_sheet_args['width'] = dropdown_width
         # QComboBox {{
         #     border: None;
-        #     background-color: rgba{rgba_background_0}
+        #     background-color: rgba{rgba_gray_0}
         # }}
         style_sheet = """
             QComboBox{{
                 border: None;
-                background-color: rgba{rgba_background_0};
+                background-color: rgba{rgba_gray_0};
                 color: rgba{rgba_text};
             }}
             QComboBox::drop-down {{
@@ -198,12 +198,12 @@ class AbstractListInputWidget(QComboBox):
             }}
             QLineEdit{{
                 border: None;
-                background-color: rgba{rgba_background_0};
+                background-color: rgba{rgba_gray_0};
                 color: rgba{rgba_text};
             }}
             QListView{{
                 border: None;
-                background-color: rgba{rgba_background_0};
+                background-color: rgba{rgba_gray_0};
                 color: rgba{rgba_text};
             }}
             QListView::item:hover{{
@@ -214,7 +214,7 @@ class AbstractListInputWidget(QComboBox):
         self.completer.popup().setStyleSheet("""
             QListView{{
                 border: None;
-                background-color: rgba{rgba_background_0};
+                background-color: rgba{rgba_gray_0};
                 color: rgba{rgba_text};
             }}
             QListView::item:hover{{
