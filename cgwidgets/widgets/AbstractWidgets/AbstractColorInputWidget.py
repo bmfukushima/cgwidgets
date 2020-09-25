@@ -83,7 +83,9 @@ class AbstractColorGradientMainWidget(QStackedWidget):
         self.addWidget(self.display_color_widget)
         self.addWidget(self.color_picker_widget)
 
-        self.setColor(QColor(128, 128, 255))
+        default_color = QColor()
+        default_color.setRgbF(0.5, 0.5, 1.0, 1.0)
+        self.setColor(default_color)
 
     """ API """
     def setRGBACrosshairPosition(self, pos):
@@ -507,8 +509,8 @@ class ColorGraphicsScene(QGraphicsScene):
     def create1DGradient(
         self,
         direction=Qt.Horizontal,
-        color1=QColor(0, 0, 0, 255),
-        color2=QColor(255, 255, 255, 255)
+        color1=(0, 0, 0, 1),
+        color2=(1, 1, 1, 1)
     ):
         """
         Creates 1D Linear gradient to be displayed to the user.
@@ -520,14 +522,22 @@ class ColorGraphicsScene(QGraphicsScene):
 
         Returns (QBrush)
         """
+        # create QColor Floats
+        colorA = QColor()
+        colorA.setRgbF(*color1)
+        colorB = QColor()
+        colorB.setRgbF(*color2)
+
+        # set direction
         if direction == Qt.Horizontal:
             gradient = QLinearGradient(0, 0, self.width(), 0)
         elif direction == Qt.Vertical:
             gradient = QLinearGradient(0, 0, 0, self.height())
 
+        # create brush
         gradient.setSpread(QGradient.RepeatSpread)
-        gradient.setColorAt(0, color1)
-        gradient.setColorAt(1, color2)
+        gradient.setColorAt(0, colorA)
+        gradient.setColorAt(1, colorB)
         gradient_brush = QBrush(gradient)
         return gradient_brush
 
@@ -537,12 +547,13 @@ class ColorGraphicsScene(QGraphicsScene):
         This wil look at the property "gradient_type" and set the
         gradient according to that.
         """
+        self.setForegroundBrush(QBrush())
         if self.gradient_type == ColorGraphicsScene.RED:
-            background_gradient = self.create1DGradient(color2=QColor(255, 0, 0, 255))
+            background_gradient = self.create1DGradient(color2=(1, 0, 0, 1))
         elif self.gradient_type == ColorGraphicsScene.GREEN:
-            background_gradient = self.create1DGradient(color2=QColor(0, 255, 0, 255))
+            background_gradient = self.create1DGradient(color2=(0, 1, 0, 1))
         elif self.gradient_type == ColorGraphicsScene.BLUE:
-            background_gradient = self.create1DGradient(color2=QColor(0, 0, 255, 255))
+            background_gradient = self.create1DGradient(color2=(0, 0, 1, 1))
         elif self.gradient_type == ColorGraphicsScene.ALPHA:
             background_gradient = self.create1DGradient()
         elif self.gradient_type == ColorGraphicsScene.HUE:
@@ -557,12 +568,12 @@ class ColorGraphicsScene(QGraphicsScene):
             # black_gradient.setSpread(QGradient.RepeatSpread)
             # black_gradient.setColorAt(0, QColor(0, 0, 0, 0))
             # black_gradient.setColorAt(1, QColor(value, value, value, 255))
-            # foreground_gradient = self.create1DGradient(
-            #     direction=Qt.Vertical,
-            #     color1=QColor(0, 0, 0, 0),
-            #     color2=QColor(255, 255, 255, 255),
-            # )
-            # self.setForegroundBrush(foreground_gradient)
+            foreground_gradient = self.create1DGradient(
+                direction=Qt.Vertical,
+                color1=(0, 0, 0, 0),
+                color2=(1, 1, 1, 1),
+            )
+            self.setForegroundBrush(foreground_gradient)
 
         self.setBackgroundBrush(background_gradient)
 
@@ -572,8 +583,8 @@ class ColorGraphicsScene(QGraphicsScene):
         """
 
         # get Value from main widget
-        value = 255
-        sat = 255
+        value = 1
+        sat = 1
 
         color_gradient = QLinearGradient(0, 0, self.width(), 0)
 
@@ -582,23 +593,14 @@ class ColorGraphicsScene(QGraphicsScene):
         for x in range(num_colors):
             pos = (1 / num_colors) * (x)
             color = QColor()
-            color.setHsv(x * (360/num_colors), sat, value)
+            print(x * (1/num_colors))
+            color.setHsvF(x * (1/num_colors), sat, value)
             color_gradient.setColorAt(pos, color)
-        # set red to end
-        color = QColor()
-        color.setHsv(0, sat, value)
-        color_gradient.setColorAt(1, color)
 
-        # black_gradient = QLinearGradient(0, 0, 0, self.height())
-        # black_gradient.setSpread(QGradient.RepeatSpread)
-        # black_gradient.setColorAt(0, QColor(0, 0, 0, 0))
-        # black_gradient.setColorAt(1, QColor(value, value, value, 255))
+        # how to add FG here?
 
         color_gradient_brush = QBrush(color_gradient)
-        #black_gradient_brush = QBrush(black_gradient)
         return color_gradient_brush
-        self.setBackgroundBrush(color_gradient_brush)
-        #self.setForegroundBrush(black_gradient_brush)
 
     """ PROPERTIES """
     @property
