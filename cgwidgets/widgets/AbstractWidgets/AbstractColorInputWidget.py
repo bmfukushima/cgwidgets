@@ -38,8 +38,8 @@ from qtpy.QtGui import (
     QColor, QLinearGradient, QGradient, QBrush
 )
 
-from cgwidgets.utils import installLadderDelegate, getWidgetAncestor
-from cgwidgets.widgets import AbstractLine
+from cgwidgets.utils import installLadderDelegate, getWidgetAncestor, updateStyleSheet
+from cgwidgets.widgets import AbstractLine, AbstractInputGroup
 from cgwidgets.settings.colors import iColor
 
 
@@ -184,17 +184,17 @@ class ColorGradientWidget(QWidget):
     def __init__(self, parent=None):
         super(ColorGradientWidget, self).__init__(parent)
 
-        layout = QVBoxLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        self.setLayout(layout)
+        QVBoxLayout(self)
+        self.layout().setContentsMargins(0, 0, 0, 0)
+        self.layout().setSpacing(0)
 
         self.scene = ColorGraphicsScene(self)
         self.view = ColorGraphicsView(self.scene)
         # TODO Display values while manipulating
         self.display_values_widget = DisplayValuesGroupWidget(self)
 
-        layout.addWidget(self.view)
-        layout.addWidget(self.display_values_widget)
+        self.layout().addWidget(self.view)
+        self.layout().addWidget(self.display_values_widget)
         self.setStyleSheet("border:None")
 
     def mousePressEvent(self, *args, **kwargs):
@@ -709,30 +709,43 @@ class ColorDisplayLabel(QLabel):
         return QLabel.enterEvent(self, *args, **kwargs)
 
 
-class DisplayValuesGroupWidget(QWidget):
+class DisplayValuesGroupWidget(QFrame):
     """
     Widget that will contain all of the display values for the user.
+
+    Args:
+        direction (QBoxLayout.Direction): direction that this widget should be
+            set up in.  LeftToRight | RightToLeft | TopToBottom | BottomToTop
+
+    Attributes:
+        widget_dict (dict): of DisplayLabels whose keys will be the title
+            of the widget.  These will correspond with the
+            ColorGraphicsScene.TYPE.  However, there will be no option
+            for RGBA / rgba.  So don't use that...
 
     Widgets
         | -- QBoxLayout
                 | -* DisplayLabel
 
-    Args:
-        direction (QBoxLayout.Direction): direction that this widget should be
-            set up in.  LeftToRight | RightToLeft | TopToBottom | BottomToTop
     """
     def __init__(self, parent=None, direction=QBoxLayout.LeftToRight):
         super(DisplayValuesGroupWidget, self).__init__(parent)
         QBoxLayout(direction, self)
+        self._widget_dict = {}
         for title in ['hue', 'saturation', 'value']:
-            label = DisplayLabel(self, title=title, direction=direction)
+            label = DisplayLabel(self, title=title)
             self.layout().addWidget(label)
+            self._widget_dict[title] = label
 
         for title in ['red', 'green', 'blue']:
-            label = DisplayLabel(self, title=title, direction=direction)
+            label = DisplayLabel(self, title=title)
             self.layout().addWidget(label)
+            self._widget_dict[title] = label
 
         self.updateStyleSheet()
+
+    def getWidgetDict(self):
+        return self._widget_dict
 
     def updateStyleSheet(self):
         # QLabel{{
@@ -747,7 +760,40 @@ class DisplayValuesGroupWidget(QWidget):
         """.format(**iColor.style_sheet_args))
 
 
-class DisplayLabel(QWidget):
+class DisplayLabel(AbstractInputGroup):
+    """
+    Attributes:
+        name (str)
+        value (str)
+        selected (bool)
+
+    Widgets:
+        | -- QBoxLayout
+                | -- label_widget (QLabel)
+                | -- divider_widget (AbstractLine)
+                | -- value_widget (QLabel)
+    """
+    def __init__(self, parent=None, title='None', value='None'):
+        super(DisplayLabel, self).__init__(parent, title)
+        # setup attrs
+        self._value = value
+        self._is_selected = False
+        self.setSelected(True)
+
+        # setup GUI
+        self.value_widget = QLabel(value)
+        self.value_widget.setAlignment(Qt.AlignCenter)
+        self.insertWidget(1, self.value_widget)
+
+    """ PROPERTIES """
+    def setValue(self, value):
+        self._value = value
+
+    def getValue(self):
+        return self._value
+
+
+class DisplayLabelA(QWidget):
     """
 
     Attributes:
@@ -763,7 +809,7 @@ class DisplayLabel(QWidget):
                 | -- value_widget (QLabel)
     """
     def __init__(self, parent=None, title='None', value='None', direction=QBoxLayout.LeftToRight):
-        super(DisplayLabel, self).__init__(parent)
+        super(DisplayLabelA, self).__init__(parent)
         # setup attrs
         self._direction = direction
         self._title = title
@@ -783,8 +829,6 @@ class DisplayLabel(QWidget):
         # finalize attrs
         self.setDirection(direction)
         self.divider_widget.setLineWidth(1)
-
-
 
     """ PROPERTIES """
     def setTitle(self, title):
@@ -826,7 +870,6 @@ class DisplayLabel(QWidget):
             self.setFrameShape(QFrame.HLine)
         elif direction == Qt.Horizontal:
             self.setFrameShape(QFrame.VLine)
-
 
 
 if __name__ == '__main__':

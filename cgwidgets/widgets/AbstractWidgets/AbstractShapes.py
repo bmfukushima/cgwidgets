@@ -57,12 +57,22 @@ class AbstractInputGroup(QFrame):
 
         self.setStyleSheet("background-color: rgba{rgba_gray_0}".format(**iColor.style_sheet_args))
 
+    """ PROPERTIES """
+    def isSelected(self):
+        return self._is_selected
+
+    def setSelected(self, selected):
+        self._is_selected = selected
+        self.setProperty("is_selected", selected)
+        self.group_box.setSelected(selected)
+
     def getTitle(self):
         return self.group_box.title()
 
     def setTitle(self, title):
         self.group_box.setTitle(title)
 
+    """ INSERT WIDGETS """
     def insertWidget(self, index, widget):
         self.group_box.layout().insertWidget(index, widget)
 
@@ -136,6 +146,12 @@ class AbstractInputGroupBox(QGroupBox):
                 padding: -{padding}px {paddingX2}px;
                 color: rgba{rgba_text};
             }}
+            QGroupBox[is_selected=true]::title{{
+                subcontrol-origin: margin;
+                subcontrol-position: top center; 
+                padding: -{padding}px {paddingX2}px;
+                color: rgba{rgba_selected};
+            }}
             QGroupBox[display_background=true]{{
                 background-color: rgba{rgba_gray_0};
                 border-width: 1px;
@@ -161,6 +177,15 @@ class AbstractInputGroupBox(QGroupBox):
         self.setStyleSheet(style_sheet)
 
     """PROPERTIES"""
+    def isSelected(self):
+        return self._is_selected
+
+    def setSelected(self, selected):
+        self._is_selected = selected
+        self.setProperty("is_selected", selected)
+        updateStyleSheet(self)
+        print('setting qgroupbox to %s' % selected)
+
     @property
     def rgba_background(self):
         return self._rgba_background
