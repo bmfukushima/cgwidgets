@@ -31,7 +31,7 @@ from qtpy.QtWidgets import (
     QApplication,
     QStackedWidget, QStackedLayout, QVBoxLayout, QWidget,
     QGraphicsView, QGraphicsScene, QGraphicsEllipseItem, QGraphicsItemGroup,
-    QGraphicsLineItem, QLabel, QBoxLayout, QFrame
+    QGraphicsLineItem, QLabel, QBoxLayout, QFrame, QLineEdit
 )
 from qtpy.QtCore import (Qt, QPoint, QPointF)
 from qtpy.QtGui import (
@@ -232,7 +232,20 @@ class ColorGraphicsView(QGraphicsView):
         else:
             self.scene().rgba_crosshair_item.show()
 
-    def __updateRGBACrosshairOnResize(self, direction):
+    def __hideLinearCrosshair(self, hide=True):
+        """
+        Determines if the cross hair for the RGBA picker should be shown/hidden
+
+        Args:
+            hide (bool): if true, hides the RGBA color picker, if false, shows the
+                RGBA color picker
+        """
+        if hide is True:
+            self.scene().linear_crosshair_item.hide()
+        else:
+            self.scene().linear_crosshair_item.show()
+
+    def __updateRGBACrosshairOnResize(self):
         """
         Updates the RGBA crosshair to the correct position.
         """
@@ -274,7 +287,7 @@ class ColorGraphicsView(QGraphicsView):
         self.scene().setLinearCrosshairDirection(direction)
 
     """ EVENTS """
-    def mousePressEvent(self, *args, **kwargs):
+    def mousePressEvent(self, event, *args, **kwargs):
         """
         TODO
             Determine which gradient should be used by the user...
@@ -283,23 +296,53 @@ class ColorGraphicsView(QGraphicsView):
             RGBA --> LMB
             HSV
             RGB
+        Attrs:
+            _picking (bool): tells the widget that the user is now attempting
+                to pick a value
+            _in_gradient_widget (bool) tells the widget that the cursor is
+                in the gradient widget
         """
         modifiers = QApplication.keyboardModifiers()
-        if modifiers == Qt.AltModifier:
-            self.__hideRGBACrosshair(True)
+        #print (event.button())
+        button = event.button()
+        # move rgba
+        """
+        
+        """
+        # HSV
+        self._picking = True
+        self._in_gradient_widget = True
 
-        else:
-            self._picking = True
-            self._in_color_widget = True
+        # setup default crosshair
+        self.__hideRGBACrosshair(True)
+        self.__hideLinearCrosshair(False)
 
+        if not modifiers:
+            if button == Qt.LeftButton:
+                self.__hideRGBACrosshair(False)
+                self.__hideLinearCrosshair(True)
+                self.scene().gradient_type = ColorGraphicsScene.RGBA
+            elif button == Qt.MiddleButton:
+                self.scene().gradient_type = ColorGraphicsScene.VALUE
+            elif button == Qt.RightButton:
+                self.scene().gradient_type = ColorGraphicsScene.HUE
+
+        #RGB
+        elif modifiers == Qt.AltModifier:
+            if button == Qt.LeftButton:
+                self.scene().gradient_type = ColorGraphicsScene.RED
+            elif button == Qt.MiddleButton:
+                self.scene().gradient_type = ColorGraphicsScene.GREEN
+            elif button == Qt.RightButton:
+                self.scene().gradient_type = ColorGraphicsScene.BLUE
+
+        self.scene().drawGradient()
         self.setCursor(Qt.BlankCursor)
 
-        return QGraphicsView.mousePressEvent(self, *args, **kwargs)
+        return QGraphicsView.mousePressEvent(self, event,*args, **kwargs)
 
     def mouseMoveEvent(self, event, *args, **kwargs):
         modifiers = QApplication.keyboardModifiers()
-        if modifiers == Qt.AltModifier:
-            return
 
         # TODO Setup value getters/setters
         """
@@ -315,7 +358,12 @@ class ColorGraphicsView(QGraphicsView):
 
     def mouseReleaseEvent(self, *args, **kwargs):
         # reset everything back to default state
+        # reset gradient
         self.__hideRGBACrosshair(False)
+        self.__hideLinearCrosshair(True)
+        self.scene().gradient_type = ColorGraphicsScene.RGBA
+        self.scene().drawGradient()
+        # reset picking attrs
         self._picking = False
         self.unsetCursor()
         return QGraphicsView.mouseReleaseEvent(self, *args, **kwargs)
@@ -340,14 +388,14 @@ class ColorGraphicsView(QGraphicsView):
         # update gradient
         self.scene().drawGradient()
 
-        # update RGBA Crosshair
-        if self.scene().gradient_type == ColorGraphicsScene.RGBA:
-            self.__updateRGBACrosshairOnResize()
+        # update crosshair
+        # RGBA Crosshair
+        self.__updateRGBACrosshairOnResize()
 
-        else:
-            main_widget = getWidgetAncestor(self, AbstractColorGradientMainWidget)
-            direction = main_widget.getLinearCrosshairDirection()
-            self.__updateLinearCrosshairOnResize(direction)
+        # Linear crosshair
+        main_widget = getWidgetAncestor(self, AbstractColorGradientMainWidget)
+        direction = main_widget.getLinearCrosshairDirection()
+        self.__updateLinearCrosshairOnResize(direction)
 
         self.setPreviousSize(rect)
         return QGraphicsView.resizeEvent(self, *args, **kwargs)
@@ -367,13 +415,13 @@ class ColorGraphicsView(QGraphicsView):
         right = left + self.geometry().width()
         bot = top + self.geometry().height()
         if pos.y() < top or pos.y() > bot or pos.x() < left or pos.x() > right:
-            if self._in_color_widget == True:
+            if self._in_gradient_widget == True:
                 self.setCursor(Qt.CrossCursor)
-                self._in_color_widget = False
+                self._in_gradient_widget = False
         else:
-            if self._in_color_widget == False:
+            if self._in_gradient_widget == False:
                 self.setCursor(Qt.BlankCursor)
-                self._in_color_widget = True
+                self._in_gradient_widget = True
 
     def _pickColor(self, pos):
         """
@@ -428,9 +476,8 @@ class ColorGraphicsScene(QGraphicsScene):
 
         # create scene
         self.setSceneRect(0, 0, 500, 500)
-        # TODO MOVE THIS SOMEWHERE USEFUL?
         self.gradient_type = ColorGraphicsScene.RGBA
-        self.gradient_type = ColorGraphicsScene.RED
+        # TODO MOVE THIS SOMEWHERE USEFUL?
         self.drawRGBACrosshair()
         self.drawLinearCrosshair()
 
@@ -477,23 +524,23 @@ class ColorGraphicsScene(QGraphicsScene):
         elif self.gradient_type == ColorGraphicsScene.ALPHA:
             background_gradient = self.create1DGradient()
         elif self.gradient_type == ColorGraphicsScene.HUE:
-            pass
+            background_gradient = self.create1DGradient()
         elif self.gradient_type == ColorGraphicsScene.SATURATION:
-            pass
+            background_gradient = self.create1DGradient()
         elif self.gradient_type == ColorGraphicsScene.VALUE:
-            pass
+            background_gradient = self.create1DGradient()
         elif self.gradient_type == ColorGraphicsScene.RGBA:
             background_gradient = self._drawRGBAGradient()
             # black_gradient = QLinearGradient(0, 0, 0, self.height())
             # black_gradient.setSpread(QGradient.RepeatSpread)
             # black_gradient.setColorAt(0, QColor(0, 0, 0, 0))
             # black_gradient.setColorAt(1, QColor(value, value, value, 255))
-            foreground_gradient = self.create1DGradient(
-                direction=Qt.Vertical,
-                color1=QColor(0, 0, 0, 0),
-                color2=QColor(255, 255, 255, 255),
-            )
-            self.setForegroundBrush(foreground_gradient)
+            # foreground_gradient = self.create1DGradient(
+            #     direction=Qt.Vertical,
+            #     color1=QColor(0, 0, 0, 0),
+            #     color2=QColor(255, 255, 255, 255),
+            # )
+            # self.setForegroundBrush(foreground_gradient)
 
         self.setBackgroundBrush(background_gradient)
 
@@ -781,7 +828,7 @@ class DisplayLabel(AbstractInputGroup):
         self.setSelected(True)
 
         # setup GUI
-        self.value_widget = QLabel(value)
+        self.value_widget = QLineEdit()
         self.value_widget.setAlignment(Qt.AlignCenter)
         self.insertWidget(1, self.value_widget)
 
