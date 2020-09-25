@@ -31,7 +31,7 @@ from qtpy.QtWidgets import (
 )
 from qtpy.QtCore import (Qt, QPoint, QPointF)
 from qtpy.QtGui import (
-    QColor, QLinearGradient, QGradient, QBrush
+    QColor, QLinearGradient, QGradient, QBrush, QCursor
 )
 
 from cgwidgets.utils import installLadderDelegate, getWidgetAncestor, updateStyleSheet
@@ -361,18 +361,36 @@ class ColorGraphicsView(QGraphicsView):
         # HSV
         self._picking = True
         self._in_gradient_widget = True
-
+        self._orig_pos = QCursor.pos()
         # setup default crosshair
         self.__hideRGBACrosshair(True)
         self.__hideLinearCrosshair(False)
-        #
+
+        # TODO get default linear positions
+        """
+        TODO:
+            Get default linear positions here
+            get pos
+            store original pos
+            set pos
+            
+            mouse release:
+                restore pos
+            
+        """
         #RGB
+        main_widget = getWidgetAncestor(self, AbstractColorGradientMainWidget)
+        color = main_widget.getColor()
+        pos = QPoint(0, 0)
         if modifiers == Qt.AltModifier:
             if button == Qt.LeftButton:
+                pos = QPoint(color.redF() * self.width(), color.redF() * self.height())
                 self.scene().gradient_type = ColorGraphicsScene.RED
             elif button == Qt.MiddleButton:
+                pos = QPoint(color.greenF() * self.width(), color.greenF() * self.height())
                 self.scene().gradient_type = ColorGraphicsScene.GREEN
             elif button == Qt.RightButton:
+                pos = QPoint(color.blueF() * self.width(), color.blueF() * self.height())
                 self.scene().gradient_type = ColorGraphicsScene.BLUE
 
         # HSV
@@ -382,8 +400,10 @@ class ColorGraphicsView(QGraphicsView):
                 self.__hideLinearCrosshair(True)
                 self.scene().gradient_type = ColorGraphicsScene.RGBA
             elif button == Qt.MiddleButton:
+                pos = QPoint(color.valueF() * self.width(), color.valueF() * self.height())
                 self.scene().gradient_type = ColorGraphicsScene.VALUE
             elif button == Qt.RightButton:
+                pos = QPoint(color.saturationF() * self.width(), color.saturationF() * self.height())
                 self.scene().gradient_type = ColorGraphicsScene.SATURATION
 
         # update display label to show selected value
@@ -393,8 +413,13 @@ class ColorGraphicsView(QGraphicsView):
 
         # draw gradient / hide cursor
         self.scene().drawGradient()
+
+        # set up cursor
         self.setCursor(Qt.BlankCursor)
-        
+        if pos:
+            self.scene().setLinearCrosshairPos(pos)
+            QCursor.setPos(self.mapToGlobal(pos))
+
         return QGraphicsView.mousePressEvent(self, event,*args, **kwargs)
 
     def mouseMoveEvent(self, event, *args, **kwargs):
@@ -418,7 +443,10 @@ class ColorGraphicsView(QGraphicsView):
 
         # reset picking attrs
         self._picking = False
+
+        # reset cursor
         self.unsetCursor()
+        QCursor.setPos(self._orig_pos)
 
         # disable labels
         color_arg_widgets_dict = self.parent().display_values_widget.getWidgetDict()
@@ -731,6 +759,9 @@ class ColorGraphicsScene(QGraphicsScene):
         # add group item
         self.setLinearCrosshairDirection(Qt.Horizontal)
         self.addItem(self.linear_crosshair_item)
+
+        # hide by default
+        self.linear_crosshair_item.hide()
 
     def getLinearCrosshairPos(self):
         return self._linear_crosshair_pos

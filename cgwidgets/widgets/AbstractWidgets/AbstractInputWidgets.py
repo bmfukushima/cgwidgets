@@ -26,7 +26,7 @@ Input Widgets
 """
 
 from qtpy.QtWidgets import (
-    QLineEdit, QLabel
+    QLineEdit, QLabel, QApplication
 )
 from qtpy.QtCore import Qt, QEvent
 
@@ -214,7 +214,6 @@ class AbstractNumberInputWidget(AbstractInputWidget):
         Qt.Key_CapsLock
     ]
     MATH_KEYS = [
-        Qt.Key_V,
         Qt.Key_Plus,
         Qt.Key_plusminus,
         Qt.Key_Minus,
@@ -312,8 +311,16 @@ class AbstractNumberInputWidget(AbstractInputWidget):
                 return False
 
     def keyPressEvent(self, event, *args, **kwargs):
-        if event.key() in self.getKeyList():
-            return QLineEdit.keyPressEvent(self, event, *args, **kwargs)
+        modifiers = QApplication.keyboardModifiers()
+        # add control modifiers back
+        if modifiers:
+            if modifiers == Qt.ControlModifier:
+                return QLineEdit.keyPressEvent(self, event, *args, **kwargs)
+
+        # default action
+        else:
+            if event.key() in self.getKeyList():
+                return QLineEdit.keyPressEvent(self, event, *args, **kwargs)
 
 
 class AbstractFloatInputWidget(AbstractNumberInputWidget):
