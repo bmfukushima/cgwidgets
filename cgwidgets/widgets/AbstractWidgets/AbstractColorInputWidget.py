@@ -1,8 +1,6 @@
 """
 TODO:
     Linear Gradients
-        * Draw all linear gradients
-        * Linear gradients update the QColor
         * Setup linear gradients triggers
         * Update values in labels widget
                 - Set the manipulated thingy to the selected text color?
@@ -123,7 +121,26 @@ class AbstractColorGradientMainWidget(QStackedWidget):
         self._color = color
         self.updateDisplayBorder()
         self.setRGBACrosshairPositionFromColor(color)
-        # self.setRGBACrosshairPosition()
+
+        # update display args
+        widget_dict = self.color_picker_widget.display_values_widget.getWidgetDict()
+        new_color_args = {
+            "hue" : color.hueF(),
+            "value" : color.valueF(),
+            "saturation" : color.saturationF(),
+            "red" : color.redF(),
+            "green" : color.greenF(),
+            "blue" : color.blueF()
+        }
+
+        for color_arg in widget_dict:
+            # get value widget
+            widget = widget_dict[color_arg]
+            value_widget = widget.value_widget
+
+            # set new value
+            value = new_color_args[color_arg]
+            widget.setValue(value)
 
     def getColor(self):
         if not hasattr(self, '_color'):
@@ -305,12 +322,9 @@ class ColorGraphicsView(QGraphicsView):
                 in the gradient widget
         """
         modifiers = QApplication.keyboardModifiers()
-        #print (event.button())
         button = event.button()
         # move rgba
-        """
-        
-        """
+
         # HSV
         self._picking = True
         self._in_gradient_widget = True
@@ -319,6 +333,7 @@ class ColorGraphicsView(QGraphicsView):
         self.__hideRGBACrosshair(True)
         self.__hideLinearCrosshair(False)
 
+        # HSV
         if not modifiers:
             if button == Qt.LeftButton:
                 self.__hideRGBACrosshair(False)
@@ -327,7 +342,7 @@ class ColorGraphicsView(QGraphicsView):
             elif button == Qt.MiddleButton:
                 self.scene().gradient_type = ColorGraphicsScene.VALUE
             elif button == Qt.RightButton:
-                self.scene().gradient_type = ColorGraphicsScene.HUE
+                self.scene().gradient_type = ColorGraphicsScene.SATURATION
 
         #RGB
         elif modifiers == Qt.AltModifier:
@@ -405,19 +420,56 @@ class ColorGraphicsView(QGraphicsView):
 
     """ SELECTION """
     def _getColor(self, event):
+        """
+        Gets the color from the user selection and sends it to the
+        setColor on the main widget ( AbstractColorGradientMainWidget )
+
+        """
+        # get attrs
+        color_display_widget = getWidgetAncestor(self.scene(), AbstractColorGradientMainWidget)
         selection_type = self.scene().gradient_type
+
         if  selection_type == ColorGraphicsScene.RGBA:
+            # RGBA (HUE / VALUE)
             color = self._getRGBAValue(event)
+            color_display_widget.setColor(color)
+            return
         else:
 
-            scene = self.scene()
-            pos = event.globalPos()
-            color = self._pickColor(pos)
             self.scene().setLinearCrosshairPos(event.pos())
+            #self.__hideLinearCrosshair(True)
+            orig_color = color_display_widget.getColor()
+            pos = event.globalPos()
+            new_color = self._pickColor(pos)
+            #self.__hideLinearCrosshair(False)
 
-        print(selection_type, color.getRgb())
-        color_display_widget = getWidgetAncestor(self.scene(), AbstractColorGradientMainWidget)
-        color_display_widget.setColor(color)
+            # saturation
+            if selection_type == ColorGraphicsScene.SATURATION:
+                hue = orig_color.hueF()
+                sat = new_color.valueF()
+                value = orig_color.valueF()
+                orig_color.setHsvF(hue, sat, value)
+            # value
+            elif selection_type == ColorGraphicsScene.VALUE:
+                hue = orig_color.hueF()
+                sat = orig_color.saturationF()
+                value = new_color.valueF()
+                orig_color.setHsvF(hue, sat, value)
+            # red
+            elif selection_type == ColorGraphicsScene.RED:
+                red = new_color.redF()
+                orig_color.setRedF(red)
+            # green
+            elif selection_type == ColorGraphicsScene.GREEN:
+                green = new_color.greenF()
+                orig_color.setGreenF(green)
+            # blue
+            elif selection_type == ColorGraphicsScene.BLUE:
+                blue = new_color.blueF()
+                orig_color.setBlueF(blue)
+
+            color_display_widget.setColor(orig_color)
+            return
 
     def _getRGBAValue(self, event):
         """
@@ -463,7 +515,9 @@ class ColorGraphicsView(QGraphicsView):
         )
         img = pixmap.toImage()
         color = QColor(img.pixel(0, 0))
-
+        if color.valueF() == 0:
+            pos = QPoint(pos.x() + 1, pos.y() + 1)
+            return self._pickColor(pos)
         return color
 
     """ PROPERTIES """
@@ -593,7 +647,6 @@ class ColorGraphicsScene(QGraphicsScene):
         for x in range(num_colors):
             pos = (1 / num_colors) * (x)
             color = QColor()
-            print(x * (1/num_colors))
             color.setHsvF(x * (1/num_colors), sat, value)
             color_gradient.setColorAt(pos, color)
 
@@ -668,18 +721,18 @@ class ColorGraphicsScene(QGraphicsScene):
 
         # update display
         if direction == Qt.Horizontal:
-            self.linear_topline_item.setLine(0, 0, 10, 0)
-            self.linear_botline_item.setLine(0, self.height(), 10, self.height())
+            self.linear_topline_item.setLine(-5, 0, 5, 0)
+            self.linear_botline_item.setLine(-5, self.height(), 5, self.height())
 
-            self.linear_leftline_item.setLine(0, 0, 0, self.height())
-            self.linear_rightline_item.setLine(10, 0, 10, self.height())
+            self.linear_leftline_item.setLine(-5, 0, -5, self.height())
+            self.linear_rightline_item.setLine(5, 0, 5, self.height())
 
         elif direction == Qt.Vertical:
-            self.linear_topline_item.setLine(0, 0, self.width(), 0)
-            self.linear_botline_item.setLine(0, 10, self.width(), 10)
+            self.linear_topline_item.setLine(0, -5, self.width(), -5)
+            self.linear_botline_item.setLine(0, 5, self.width(), 5)
 
-            self.linear_leftline_item.setLine(0, 0, 0, 10)
-            self.linear_rightline_item.setLine(self.width(), 0, self.width(), 10)
+            self.linear_leftline_item.setLine(0, -5, 0, 5)
+            self.linear_rightline_item.setLine(self.width(), -5, self.width(), 5)
 
     def getLinearCrosshairDirection(self):
         return self._linear_crosshair_direction
@@ -853,12 +906,16 @@ class DisplayLabel(AbstractInputGroup):
 
         # setup GUI
         self.value_widget = QLineEdit()
-        self.value_widget.setAlignment(Qt.AlignCenter)
+        self.value_widget.setStyleSheet("color: rgba{rgba_text}".format(**iColor.style_sheet_args))
+        self.value_widget.setAlignment(Qt.AlignLeft)
+        #self.value_widget.setAlignment(Qt.AlignCenter)
         self.insertWidget(1, self.value_widget)
 
     """ PROPERTIES """
     def setValue(self, value):
         self._value = value
+        self.value_widget.setText(str(value))
+        self.value_widget.setCursorPosition(0)
 
     def getValue(self):
         return self._value
