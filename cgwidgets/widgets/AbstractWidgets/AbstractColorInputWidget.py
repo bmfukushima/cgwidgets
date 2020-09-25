@@ -349,10 +349,11 @@ class ColorGraphicsView(QGraphicsView):
         This move event will determine if the values should be updated
         this will need to update the hsv/rgba moves aswell
         """
-        self.scene().setLinearCrosshairPos(event.pos())
+
         if self._picking:
-            if self.scene().gradient_type == ColorGraphicsScene.RGBA:
-                self._getRGBAValue(event)
+            self._getColor(event)
+            # if self.scene().gradient_type == ColorGraphicsScene.RGBA:
+            #     self._getRGBAValue(event)
 
         return QGraphicsView.mouseMoveEvent(self, event, *args, **kwargs)
 
@@ -401,11 +402,31 @@ class ColorGraphicsView(QGraphicsView):
         return QGraphicsView.resizeEvent(self, *args, **kwargs)
 
     """ SELECTION """
+    def _getColor(self, event):
+        selection_type = self.scene().gradient_type
+        if  selection_type == ColorGraphicsScene.RGBA:
+            color = self._getRGBAValue(event)
+        else:
+
+            scene = self.scene()
+            pos = event.globalPos()
+            color = self._pickColor(pos)
+            self.scene().setLinearCrosshairPos(event.pos())
+
+        print(selection_type, color.getRgb())
+        color_display_widget = getWidgetAncestor(self.scene(), AbstractColorGradientMainWidget)
+        color_display_widget.setColor(color)
+
     def _getRGBAValue(self, event):
+        """
+        Gets the RGBA color
+
+        Returns (QColor)
+        """
         # get color
         scene = self.scene()
         pos = event.globalPos()
-        self._pickColor(pos)
+        color = self._pickColor(pos)
         scene.updateRGBACrosshair(event.pos())
 
         # check mouse position...
@@ -414,6 +435,7 @@ class ColorGraphicsView(QGraphicsView):
         left = top_left.x()
         right = left + self.geometry().width()
         bot = top + self.geometry().height()
+
         if pos.y() < top or pos.y() > bot or pos.x() < left or pos.x() > right:
             if self._in_gradient_widget == True:
                 self.setCursor(Qt.CrossCursor)
@@ -422,6 +444,8 @@ class ColorGraphicsView(QGraphicsView):
             if self._in_gradient_widget == False:
                 self.setCursor(Qt.BlankCursor)
                 self._in_gradient_widget = True
+
+        return color
 
     def _pickColor(self, pos):
         """
@@ -438,9 +462,7 @@ class ColorGraphicsView(QGraphicsView):
         img = pixmap.toImage()
         color = QColor(img.pixel(0, 0))
 
-        # might want to check here to make sure it's not grabbing black?
-        color_display_widget = getWidgetAncestor(self.scene(), AbstractColorGradientMainWidget)
-        color_display_widget.setColor(color)
+        return color
 
     """ PROPERTIES """
     def setPreviousSize(self, geometry):
@@ -576,7 +598,7 @@ class ColorGraphicsScene(QGraphicsScene):
         #black_gradient_brush = QBrush(black_gradient)
         return color_gradient_brush
         self.setBackgroundBrush(color_gradient_brush)
-        self.setForegroundBrush(black_gradient_brush)
+        #self.setForegroundBrush(black_gradient_brush)
 
     """ PROPERTIES """
     @property

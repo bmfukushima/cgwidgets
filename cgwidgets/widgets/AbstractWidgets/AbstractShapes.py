@@ -184,7 +184,6 @@ class AbstractInputGroupBox(QGroupBox):
         self._is_selected = selected
         self.setProperty("is_selected", selected)
         updateStyleSheet(self)
-        print('setting qgroupbox to %s' % selected)
 
     @property
     def rgba_background(self):
