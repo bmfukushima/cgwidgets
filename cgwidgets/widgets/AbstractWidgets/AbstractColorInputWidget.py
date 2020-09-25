@@ -1,20 +1,18 @@
 """
 TODO:
-    Linear Gradients
-        * Setup linear gradients triggers
-        * Update values in labels widget
-                - Set the manipulated thingy to the selected text color?
-                    No idea how to do this...
-                       unless you use multiple labels...
+    Display Value Labels
+        *   Make this adjustable with the INPUT WIDGETS
+        *   Default height / width
+        *   Finish setting up position...
+                NORTH / EAST do not work
+                    gradient looks like its always drawing from 0,0
+                    instead of with the offset
     Display Label
         * Show current values
         * background
                 - semi transparent?
                 - middle gray?
-    Annoying
-        * Flickering on Linear Gradient drag
-        * Foreground gradient is causing alpha overlay issue...
-            - Force the for ground into one gradient?
+
 """
 
 import sys
@@ -37,7 +35,7 @@ from qtpy.QtGui import (
 )
 
 from cgwidgets.utils import installLadderDelegate, getWidgetAncestor, updateStyleSheet
-from cgwidgets.widgets import AbstractLine, AbstractInputGroup
+from cgwidgets.widgets import AbstractLine, AbstractInputGroup, FloatInputWidget
 from cgwidgets.settings.colors import iColor
 
 
@@ -60,14 +58,16 @@ class AbstractColorGradientMainWidget(QStackedWidget):
                             (Change to box? So you can set orientation?)
                         | -- QGraphicsView
                         | -- QGraphicsLabel
-                TODO:
-                        Add labels to bottom
-                        display_values_widget
         | -- display_color_widget (ColorDisplayLabel)
                 TODO:
                     Add the RGBA | HSV values to the label
                     Potentially make this into a Layout?
     """
+    NORTH = 'north'
+    SOUTH = 'south'
+    EAST = 'east'
+    WEST = 'west'
+
     def __init__(self, parent=None):
         super(AbstractColorGradientMainWidget, self).__init__(parent=parent)
         # setup attrs
@@ -105,10 +105,11 @@ class AbstractColorGradientMainWidget(QStackedWidget):
         """
         scene = self.getScene()
         xpos = (color.hueF() * scene.width())
-        ypos = math.fabs((color.valueF() * scene.height()) - scene.height())
+        ypos = math.fabs((color.saturationF() * scene.height()) - scene.height())
 
         pos = QPoint(xpos, ypos)
-        self.setRGBACrosshairPosition(pos)
+        #self.setRGBACrosshairPosition(pos)
+        scene.updateRGBACrosshair(pos)
 
     def setColor(self, color):
         """
@@ -156,6 +157,21 @@ class AbstractColorGradientMainWidget(QStackedWidget):
 
     def getLinearCrosshairDirection(self):
         return self._linear_crosshair_direction
+
+    def setDisplayLocation(self, position=SOUTH):
+        """
+        When manipulating in the color picker, this will set the position
+        of the display labels for the user.
+
+        Args
+            position (AbstractColorGradientMainWidget.POSITION): the position
+                for the labels to be displayed at.
+
+        TODO:
+            This only works for SOUTH at the moment... need to update gradient
+            draw to fully support all directions...
+        """
+        self.color_picker_widget.setLabelPosition(position)
 
     """ UTILS """
     def getScene(self):
@@ -206,18 +222,39 @@ class ColorGradientWidget(QWidget):
     def __init__(self, parent=None):
         super(ColorGradientWidget, self).__init__(parent)
 
-        QVBoxLayout(self)
+        QBoxLayout(QBoxLayout.TopToBottom, self)
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.layout().setSpacing(0)
 
         self.scene = ColorGraphicsScene(self)
         self.view = ColorGraphicsView(self.scene)
-        # TODO Display values while manipulating
         self.display_values_widget = DisplayValuesGroupWidget(self)
 
-        self.layout().addWidget(self.view)
         self.layout().addWidget(self.display_values_widget)
+        self.layout().addWidget(self.view)
         self.setStyleSheet("border:None")
+
+    def setLabelPosition(self, position):
+        """
+        Sets the display labels position.  Valid inputs are
+        AbstractColorGradientMainWidget.DIRECTION
+            NORTH | SOUTH | EAST | WEST
+
+        TODO:
+            Directions need to be moved into settings/utils
+        """
+        if position == AbstractColorGradientMainWidget.NORTH:
+            self.layout().setDirection(QBoxLayout.TopToBottom)
+            self.display_values_widget.layout().setDirection(QBoxLayout.LeftToRight)
+        elif position == AbstractColorGradientMainWidget.SOUTH:
+            self.layout().setDirection(QBoxLayout.BottomToTop)
+            self.display_values_widget.layout().setDirection(QBoxLayout.LeftToRight)
+        elif position == AbstractColorGradientMainWidget.EAST:
+            self.layout().setDirection(QBoxLayout.LeftToRight)
+            self.display_values_widget.layout().setDirection(QBoxLayout.TopToBottom)
+        elif position == AbstractColorGradientMainWidget.WEST:
+            self.layout().setDirection(QBoxLayout.RightToLeft)
+            self.display_values_widget.layout().setDirection(QBoxLayout.TopToBottom)
 
     def mousePressEvent(self, *args, **kwargs):
         return QWidget.mousePressEvent(self, *args, **kwargs)
@@ -311,13 +348,6 @@ class ColorGraphicsView(QGraphicsView):
     """ EVENTS """
     def mousePressEvent(self, event, *args, **kwargs):
         """
-        TODO
-            Determine which gradient should be used by the user...
-                - ALT / ALT+SHIFT COMBOS?
-                - Can I reuse the LMB/MMB/RMB defaults?
-            RGBA --> LMB
-            HSV
-            RGB
         Attrs:
             _picking (bool): tells the widget that the user is now attempting
                 to pick a value
@@ -335,7 +365,7 @@ class ColorGraphicsView(QGraphicsView):
         # setup default crosshair
         self.__hideRGBACrosshair(True)
         self.__hideLinearCrosshair(False)
-
+        #
         #RGB
         if modifiers == Qt.AltModifier:
             if button == Qt.LeftButton:
@@ -364,22 +394,16 @@ class ColorGraphicsView(QGraphicsView):
         # draw gradient / hide cursor
         self.scene().drawGradient()
         self.setCursor(Qt.BlankCursor)
-
+        
         return QGraphicsView.mousePressEvent(self, event,*args, **kwargs)
 
     def mouseMoveEvent(self, event, *args, **kwargs):
-        modifiers = QApplication.keyboardModifiers()
-
-        # TODO Setup value getters/setters
         """
         This move event will determine if the values should be updated
         this will need to update the hsv/rgba moves aswell
         """
-
         if self._picking:
             self._getColor(event)
-            # if self.scene().gradient_type == ColorGraphicsScene.RGBA:
-            #     self._getRGBAValue(event)
 
         return QGraphicsView.mouseMoveEvent(self, event, *args, **kwargs)
 
@@ -452,7 +476,6 @@ class ColorGraphicsView(QGraphicsView):
             color_display_widget.setColor(color)
             return
         else:
-
             self.scene().setLinearCrosshairPos(event.pos())
             orig_color = color_display_widget.getColor()
             pos = event.globalPos()
@@ -497,6 +520,7 @@ class ColorGraphicsView(QGraphicsView):
         pos = event.globalPos()
         color = self._pickColor(pos)
         scene.updateRGBACrosshair(event.pos())
+        #print('setting this to %s'%pos)
 
         # check mouse position...
         top_left = self.mapToGlobal(self.pos())
@@ -549,7 +573,6 @@ class ColorGraphicsScene(QGraphicsScene):
     """
     The widget that is responsible for displaying the color gradient to the user
     """
-
     RED = 'red'
     GREEN = 'green'
     BLUE = 'blue'
@@ -570,7 +593,6 @@ class ColorGraphicsScene(QGraphicsScene):
         # create scene
         self.setSceneRect(0, 0, 500, 500)
         self.gradient_type = ColorGraphicsScene.RGBA
-        # TODO MOVE THIS SOMEWHERE USEFUL?
         self.drawRGBACrosshair()
         self.drawLinearCrosshair()
 
@@ -883,6 +905,9 @@ class DisplayValuesGroupWidget(QFrame):
 
         self.updateStyleSheet()
 
+    def setLayoutDirection(self, direction):
+        self.layout().setDirection(direction)
+
     def getWidgetDict(self):
         return self._widget_dict
 
@@ -920,8 +945,8 @@ class DisplayLabel(AbstractInputGroup):
 
         # setup GUI
         # TODO Make user input floats here...
-        self.value_widget = QLineEdit()
-        self.value_widget.setStyleSheet("color: rgba{rgba_text}".format(**iColor.style_sheet_args))
+        self.value_widget = FloatInputWidget()
+        #self.value_widget.setStyleSheet("color: rgba{rgba_text}".format(**iColor.style_sheet_args))
         self.value_widget.setAlignment(Qt.AlignLeft)
         self.insertWidget(1, self.value_widget)
 
@@ -1018,6 +1043,7 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     color_widget = AbstractColorGradientMainWidget()
     #color_widget.setLinearCrosshairDirection(Qt.Vertical)
+    color_widget.setDisplayLocation(position=AbstractColorGradientMainWidget.WEST)
     color_widget.show()
     sys.exit(app.exec_())
 
