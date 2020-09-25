@@ -115,8 +115,12 @@ class AbstractColorGradientMainWidget(QStackedWidget):
         Sets the current color of this widget to the one provided.  This will
         update the display border, as well as the crosshair position in the
         gradient widget.
+
         Args:
             color (QColor): color to be set to
+
+        TODO:
+            Add user trigger event here
         """
         self._color = color
         self.updateDisplayBorder()
@@ -136,7 +140,6 @@ class AbstractColorGradientMainWidget(QStackedWidget):
         for color_arg in widget_dict:
             # get value widget
             widget = widget_dict[color_arg]
-            value_widget = widget.value_widget
 
             # set new value
             value = new_color_args[color_arg]
@@ -333,8 +336,17 @@ class ColorGraphicsView(QGraphicsView):
         self.__hideRGBACrosshair(True)
         self.__hideLinearCrosshair(False)
 
+        #RGB
+        if modifiers == Qt.AltModifier:
+            if button == Qt.LeftButton:
+                self.scene().gradient_type = ColorGraphicsScene.RED
+            elif button == Qt.MiddleButton:
+                self.scene().gradient_type = ColorGraphicsScene.GREEN
+            elif button == Qt.RightButton:
+                self.scene().gradient_type = ColorGraphicsScene.BLUE
+
         # HSV
-        if not modifiers:
+        else:
             if button == Qt.LeftButton:
                 self.__hideRGBACrosshair(False)
                 self.__hideLinearCrosshair(True)
@@ -344,15 +356,12 @@ class ColorGraphicsView(QGraphicsView):
             elif button == Qt.RightButton:
                 self.scene().gradient_type = ColorGraphicsScene.SATURATION
 
-        #RGB
-        elif modifiers == Qt.AltModifier:
-            if button == Qt.LeftButton:
-                self.scene().gradient_type = ColorGraphicsScene.RED
-            elif button == Qt.MiddleButton:
-                self.scene().gradient_type = ColorGraphicsScene.GREEN
-            elif button == Qt.RightButton:
-                self.scene().gradient_type = ColorGraphicsScene.BLUE
+        # update display label to show selected value
+        color_arg_widgets_dict = self.parent().display_values_widget.getWidgetDict()
+        if self.scene().gradient_type != ColorGraphicsScene.RGBA:
+            color_arg_widgets_dict[self.scene().gradient_type].setSelected(True)
 
+        # draw gradient / hide cursor
         self.scene().drawGradient()
         self.setCursor(Qt.BlankCursor)
 
@@ -376,14 +385,22 @@ class ColorGraphicsView(QGraphicsView):
 
     def mouseReleaseEvent(self, *args, **kwargs):
         # reset everything back to default state
+
         # reset gradient
         self.__hideRGBACrosshair(False)
         self.__hideLinearCrosshair(True)
         self.scene().gradient_type = ColorGraphicsScene.RGBA
         self.scene().drawGradient()
+
         # reset picking attrs
         self._picking = False
         self.unsetCursor()
+
+        # disable labels
+        color_arg_widgets_dict = self.parent().display_values_widget.getWidgetDict()
+        for color_arg in color_arg_widgets_dict:
+            color_arg_widgets_dict[color_arg].setSelected(False)
+
         return QGraphicsView.mouseReleaseEvent(self, *args, **kwargs)
 
     def resizeEvent(self, *args, **kwargs):
@@ -437,11 +454,9 @@ class ColorGraphicsView(QGraphicsView):
         else:
 
             self.scene().setLinearCrosshairPos(event.pos())
-            #self.__hideLinearCrosshair(True)
             orig_color = color_display_widget.getColor()
             pos = event.globalPos()
             new_color = self._pickColor(pos)
-            #self.__hideLinearCrosshair(False)
 
             # saturation
             if selection_type == ColorGraphicsScene.SATURATION:
@@ -902,13 +917,12 @@ class DisplayLabel(AbstractInputGroup):
         # setup attrs
         self._value = value
         self._is_selected = False
-        self.setSelected(True)
 
         # setup GUI
+        # TODO Make user input floats here...
         self.value_widget = QLineEdit()
         self.value_widget.setStyleSheet("color: rgba{rgba_text}".format(**iColor.style_sheet_args))
         self.value_widget.setAlignment(Qt.AlignLeft)
-        #self.value_widget.setAlignment(Qt.AlignCenter)
         self.insertWidget(1, self.value_widget)
 
     """ PROPERTIES """
