@@ -516,6 +516,7 @@ class ColorGraphicsView(QGraphicsView):
         Returns (QColor)
         """
         # get color
+        #TODO check distance?
         scene = self.scene()
         pos = event.globalPos()
         color = self._pickColor(pos)
@@ -686,7 +687,10 @@ class ColorGraphicsScene(QGraphicsScene):
             color = QColor()
             color.setHsvF(x * (1/num_colors), sat, value)
             color_gradient.setColorAt(pos, color)
-
+        # set red to end
+        color = QColor()
+        color.setHsvF(1, sat, value)
+        color_gradient.setColorAt(1, color)
         # how to add FG here?
 
         color_gradient_brush = QBrush(color_gradient)
