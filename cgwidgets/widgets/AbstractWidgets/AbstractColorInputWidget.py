@@ -488,6 +488,73 @@ class ColorGraphicsView(QGraphicsView):
         return QGraphicsView.resizeEvent(self, *args, **kwargs)
 
     """ SELECTION """
+    def _checkMousePos(self, pos):
+        """
+        Checks the mouse position to determine its relation to the current
+        widget.
+
+        Returns (dict) of booleans
+            INSIDE, NORTH, SOUTH, EAST, WEST
+            if the arg is True then that is true.  Ie if North is true, then the cursor
+            is north of the widget.  If INSIDE is True, then all of the other
+            args must be False, and the cursor is inside of the widget still.
+
+        """
+        # setup return attrs
+        return_dict = {
+            "INSIDE" : True,
+            "NORTH" : False,
+            "EAST" : False,
+            "SOUTH" : False,
+            "WEST" : False
+        }
+
+        # check mouse position...
+        top_left = self.mapToGlobal(self.pos())
+        top = top_left.y()
+        left = top_left.x()
+        right = left + self.geometry().width()
+        bot = top + self.geometry().height()
+
+        # update dictionary based off of mouse position
+        if top > pos.y():
+            return_dict["NORTH"] = True
+            return_dict["INSIDE"] = False
+        if right < pos.x():
+            return_dict["EAST"] = True
+            return_dict["INSIDE"] = False
+        if bot < pos.y():
+            return_dict["SOUTH"] = True
+            return_dict["INSIDE"] = False
+        if left > pos.x():
+            return_dict["WEST"] = True
+            return_dict["INSIDE"] = False
+
+        return return_dict
+
+    def _checkLinearCrosshairValue(self, value, pos):
+        """
+        Checks the position of the cursor to determine if it is
+        inside of the widget still or not.  If it is not, it will return values
+        of 0.0 or 1.0.  If it is, it will return the current value.
+
+        Args:
+            value (float): between the 0-1 ragne
+            pos (QPoint): Global position of the cursor
+        """
+
+        cursor_sector_dict = self._checkMousePos(pos)
+        # check cursor
+        if cursor_sector_dict['INSIDE'] is True:
+            return value
+
+        elif cursor_sector_dict['NORTH'] is True or cursor_sector_dict['EAST'] is True:
+            return 1.0
+        elif cursor_sector_dict['SOUTH'] is True or cursor_sector_dict['WEST'] is True:
+            return 0.0
+        else:
+            return value
+
     def _getColor(self, event):
         """
         Gets the color from the user selection and sends it to the
@@ -498,11 +565,14 @@ class ColorGraphicsView(QGraphicsView):
         color_display_widget = getWidgetAncestor(self.scene(), AbstractColorGradientMainWidget)
         selection_type = self.scene().gradient_type
 
-        if  selection_type == ColorGraphicsScene.RGBA:
-            # RGBA (HUE / VALUE)
+        # 2D Gradient
+        if selection_type == ColorGraphicsScene.RGBA:
+            # RGBA (HUE / SATURATION)
             color = self._getRGBAValue(event)
             color_display_widget.setColor(color)
             return
+
+        # Linear Gradient
         else:
             self.scene().setLinearCrosshairPos(event.pos())
             orig_color = color_display_widget.getColor()
@@ -514,24 +584,32 @@ class ColorGraphicsView(QGraphicsView):
                 hue = orig_color.hueF()
                 sat = new_color.valueF()
                 value = orig_color.valueF()
+                sat = self._checkLinearCrosshairValue(sat, pos)
+
                 orig_color.setHsvF(hue, sat, value)
             # value
             elif selection_type == ColorGraphicsScene.VALUE:
+                # get HSV values
                 hue = orig_color.hueF()
                 sat = orig_color.saturationF()
                 value = new_color.valueF()
+                value = self._checkLinearCrosshairValue(value, pos)
+
                 orig_color.setHsvF(hue, sat, value)
             # red
             elif selection_type == ColorGraphicsScene.RED:
                 red = new_color.redF()
+                red = self._checkLinearCrosshairValue(red, pos)
                 orig_color.setRedF(red)
             # green
             elif selection_type == ColorGraphicsScene.GREEN:
                 green = new_color.greenF()
+                green = self._checkLinearCrosshairValue(green, pos)
                 orig_color.setGreenF(green)
             # blue
             elif selection_type == ColorGraphicsScene.BLUE:
                 blue = new_color.blueF()
+                blue = self._checkLinearCrosshairValue(blue, pos)
                 orig_color.setBlueF(blue)
 
             color_display_widget.setColor(orig_color)
@@ -549,7 +627,6 @@ class ColorGraphicsView(QGraphicsView):
         pos = event.globalPos()
         color = self._pickColor(pos)
         scene.updateRGBACrosshair(event.pos())
-        #print('setting this to %s'%pos)
 
         # check mouse position...
         top_left = self.mapToGlobal(self.pos())
