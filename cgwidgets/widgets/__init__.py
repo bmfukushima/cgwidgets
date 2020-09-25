@@ -7,6 +7,7 @@ THE IMPORT ORDER MATTERS!!
 """
 
 """ IMPORT ABSTRACT WIDGETS """
+from .AbstractWidgets import AbstractLine as AbstractLine
 from .AbstractWidgets import AbstractHLine as AbstractHLine
 from .AbstractWidgets import AbstractVLine as AbstractVLine
 from .AbstractWidgets import AbstractInputGroupBox as AbstractInputGroupBox

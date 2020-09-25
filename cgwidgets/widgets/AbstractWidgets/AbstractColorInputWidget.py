@@ -10,6 +10,9 @@ TODO:
                        unless you use multiple labels...
     Display Label
         * Show current values
+        * background
+                - semi transparent?
+                - middle gray?
     Annoying
         * Flickering on Linear Gradient drag
         * Foreground gradient is causing alpha overlay issue...
@@ -28,7 +31,7 @@ from qtpy.QtWidgets import (
     QApplication,
     QStackedWidget, QStackedLayout, QVBoxLayout, QWidget,
     QGraphicsView, QGraphicsScene, QGraphicsEllipseItem, QGraphicsItemGroup,
-    QGraphicsLineItem, QLabel
+    QGraphicsLineItem, QLabel, QBoxLayout, QFrame
 )
 from qtpy.QtCore import (Qt, QPoint, QPointF)
 from qtpy.QtGui import (
@@ -36,7 +39,7 @@ from qtpy.QtGui import (
 )
 
 from cgwidgets.utils import installLadderDelegate, getWidgetAncestor
-from cgwidgets.widgets import FloatInputWidget
+from cgwidgets.widgets import AbstractLine
 from cgwidgets.settings.colors import iColor
 
 
@@ -188,7 +191,7 @@ class ColorGradientWidget(QWidget):
         self.scene = ColorGraphicsScene(self)
         self.view = ColorGraphicsView(self.scene)
         # TODO Display values while manipulating
-        self.display_values_widget = QLabel('DISPLAY THE VALUES HERE!')
+        self.display_values_widget = DisplayValuesGroupWidget(self)
 
         layout.addWidget(self.view)
         layout.addWidget(self.display_values_widget)
@@ -229,10 +232,11 @@ class ColorGraphicsView(QGraphicsView):
         else:
             self.scene().rgba_crosshair_item.show()
 
-    def __updateRGBACrosshairOnResize(self):
+    def __updateRGBACrosshairOnResize(self, direction):
         """
         Updates the RGBA crosshair to the correct position.
         """
+
         rgba_crosshair_pos = self.scene().getRGBACrosshairPos()
         old_width = self.getPreviousSize().width()
         old_height = self.getPreviousSize().height()
@@ -244,6 +248,30 @@ class ColorGraphicsView(QGraphicsView):
         ypos = crosshair_ypos * self.geometry().height()
         new_pos = QPoint(xpos, ypos)
         self.scene().updateRGBACrosshair(new_pos)
+
+    def __updateLinearCrosshairOnResize(self, direction):
+        """
+        Updates the linear crosshair on resize.
+
+        This is currently piggy backing on the direction setting
+        mechanism.  As by default that will redraw the crosshair
+        """
+        # get pos
+        rgba_crosshair_pos = self.scene().getLinearCrosshairPos()
+        old_width = self.getPreviousSize().width()
+        old_height = self.getPreviousSize().height()
+        crosshair_xpos = rgba_crosshair_pos.x() / old_width
+        crosshair_ypos = rgba_crosshair_pos.y() / old_height
+
+        # update linear crosshair position
+        xpos = crosshair_xpos * self.geometry().width()
+        ypos = crosshair_ypos * self.geometry().height()
+        new_pos = QPoint(xpos, ypos)
+        self.scene().setLinearCrosshairPos(new_pos)
+
+        # update the cross hair size
+        #direction = self.scene().getLinearCrosshairDirection()
+        self.scene().setLinearCrosshairDirection(direction)
 
     """ EVENTS """
     def mousePressEvent(self, *args, **kwargs):
@@ -309,10 +337,17 @@ class ColorGraphicsView(QGraphicsView):
             rect.height()
         )
 
-        # update cross
+        # update gradient
         self.scene().drawGradient()
+
+        # update RGBA Crosshair
         if self.scene().gradient_type == ColorGraphicsScene.RGBA:
             self.__updateRGBACrosshairOnResize()
+
+        else:
+            main_widget = getWidgetAncestor(self, AbstractColorGradientMainWidget)
+            direction = main_widget.getLinearCrosshairDirection()
+            self.__updateLinearCrosshairOnResize(direction)
 
         self.setPreviousSize(rect)
         return QGraphicsView.resizeEvent(self, *args, **kwargs)
@@ -388,6 +423,7 @@ class ColorGraphicsScene(QGraphicsScene):
         # setup default attrs
         self.CROSSHAIR_RADIUS = 10
         self._rgba_crosshair_pos = QPoint(0, 0)
+        self._linear_crosshair_pos = QPoint(0, 0)
         self._linear_crosshair_size = 15
 
         # create scene
@@ -531,6 +567,9 @@ class ColorGraphicsScene(QGraphicsScene):
         self.setLinearCrosshairDirection(Qt.Horizontal)
         self.addItem(self.linear_crosshair_item)
 
+    def getLinearCrosshairPos(self):
+        return self._linear_crosshair_pos
+
     def setLinearCrosshairPos(self, pos):
         """
         Places the crosshair at a specific  location in the widget.  This is generally
@@ -539,9 +578,13 @@ class ColorGraphicsScene(QGraphicsScene):
         main_widget = getWidgetAncestor(self, AbstractColorGradientMainWidget)
         direction = main_widget.getLinearCrosshairDirection()
         if direction == Qt.Horizontal:
+            pos = QPoint(pos.x(), 0)
             self.linear_crosshair_item.setPos(pos.x(), 0)
+            self._linear_crosshair_pos = pos
         elif direction == Qt.Vertical:
+            pos = QPoint(0, pos.y())
             self.linear_crosshair_item.setPos(0, pos.y())
+            self._linear_crosshair_pos = pos
 
     def setLinearCrosshairDirection(self, direction):
         """
@@ -550,7 +593,7 @@ class ColorGraphicsScene(QGraphicsScene):
         """
         # set direction
         self._linear_crosshair_direction = direction
-        self._linear_crosshair_size
+        #self._linear_crosshair_size
 
         # update display
         if direction == Qt.Horizontal:
@@ -648,6 +691,7 @@ class LineSegment(QGraphicsLineItem):
         self.setPen(pen)
 
 
+""" DISPLAY LABELS"""
 class ColorDisplayLabel(QLabel):
     #  ==========================================================================
     # Display color swatch to the user
@@ -663,6 +707,126 @@ class ColorDisplayLabel(QLabel):
         color_display_widget = getWidgetAncestor(self, AbstractColorGradientMainWidget)
         color_display_widget.setCurrentIndex(1)
         return QLabel.enterEvent(self, *args, **kwargs)
+
+
+class DisplayValuesGroupWidget(QWidget):
+    """
+    Widget that will contain all of the display values for the user.
+
+    Widgets
+        | -- QBoxLayout
+                | -* DisplayLabel
+
+    Args:
+        direction (QBoxLayout.Direction): direction that this widget should be
+            set up in.  LeftToRight | RightToLeft | TopToBottom | BottomToTop
+    """
+    def __init__(self, parent=None, direction=QBoxLayout.LeftToRight):
+        super(DisplayValuesGroupWidget, self).__init__(parent)
+        QBoxLayout(direction, self)
+        for title in ['hue', 'saturation', 'value']:
+            label = DisplayLabel(self, title=title, direction=direction)
+            self.layout().addWidget(label)
+
+        for title in ['red', 'green', 'blue']:
+            label = DisplayLabel(self, title=title, direction=direction)
+            self.layout().addWidget(label)
+
+        self.updateStyleSheet()
+
+    def updateStyleSheet(self):
+        # QLabel{{
+        #     color: rgba{rgba_text}
+        # }}
+        # DisplayValuesGroupWidget{{
+        #     background-color: rgba{rgba_gray_0}
+        # }}
+        self.setStyleSheet("""
+        background-color: rgba{rgba_gray_0}
+
+        """.format(**iColor.style_sheet_args))
+
+
+class DisplayLabel(QWidget):
+    """
+
+    Attributes:
+        title (str)
+        value (str)
+        is_selected (bool)
+        direction (QBoxLayout.LeftToRight)
+
+    Widgets:
+        | -- QBoxLayout
+                | -- label_widget (QLabel)
+                | -- divider_widget (AbstractLine)
+                | -- value_widget (QLabel)
+    """
+    def __init__(self, parent=None, title='None', value='None', direction=QBoxLayout.LeftToRight):
+        super(DisplayLabel, self).__init__(parent)
+        # setup attrs
+        self._direction = direction
+        self._title = title
+        self._value = value
+        self._is_selected = False
+
+        # set up gui
+        QBoxLayout(direction, self)
+        self.title_widget = QLabel(title)
+        self.divider_widget = QFrame()
+        self.value_widget = QLabel(value)
+
+        self.layout().addWidget(self.title_widget)
+        self.layout().addWidget(self.divider_widget)
+        self.layout().addWidget(self.value_widget)
+
+        # finalize attrs
+        self.setDirection(direction)
+        self.divider_widget.setLineWidth(1)
+
+
+
+    """ PROPERTIES """
+    def setTitle(self, title):
+        self._title = title
+        self.title_widget.setText(str(title))
+
+    def getTitle(self):
+        return self._title
+
+    def setValue(self, value):
+        self._value = value
+        self.value_widget.setText(str(value))
+
+    def getValue(self):
+        return self._value
+
+    def isSelected(self):
+        return self._is_selected
+
+    def setSelected(self, is_selected):
+        self._is_selected = is_selected
+
+    def getDirection(self):
+        return self._direction
+
+    def setDirection(self, direction):
+        """
+        Sets the layout direction of this widget.
+
+        Args:
+            direction (Qt.Direction): Which way this widget should be laid out.
+        """
+        # set attrs
+        self._direction = direction
+
+        # set widget directions
+        self.layout().setDirection(direction)
+        if direction == Qt.Vertical:
+            self.setFrameShape(QFrame.HLine)
+        elif direction == Qt.Horizontal:
+            self.setFrameShape(QFrame.VLine)
+
 
 
 if __name__ == '__main__':

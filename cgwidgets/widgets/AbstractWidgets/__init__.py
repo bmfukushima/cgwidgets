@@ -1,4 +1,5 @@
 """ IMPORT SHAPES """
+from .AbstractShapes import AbstractLine as AbstractLine
 from .AbstractShapes import AbstractHLine as AbstractHLine
 from .AbstractShapes import AbstractVLine as AbstractVLine
 from .AbstractShapes import AbstractInputGroupBox as AbstractInputGroupBox

@@ -57,6 +57,8 @@ class AbstractInputGroup(QFrame):
 
         self.setStyleSheet("background-color: rgba{rgba_gray_0}".format(**iColor.style_sheet_args))
 
+    def getTitle(self):
+        return self.group_box.title()
 
     def setTitle(self, title):
         self.group_box.setTitle(title)
