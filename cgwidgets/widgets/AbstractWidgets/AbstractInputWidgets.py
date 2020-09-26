@@ -164,7 +164,7 @@ class AbstractInputWidget(QLineEdit):
             #TODO This doesn't exist in this ffunctino... moved to iGroupInput
             # or somewhere more logical...
             try:
-                self.triggerEvent(self, self.getInput())
+                self.userFinishedEditingEvent(self, self.getInput())
             except AttributeError:
                 pass
 
@@ -247,30 +247,29 @@ class AbstractNumberInputWidget(AbstractInputWidget):
                 user_input=user_input,
                 value_list=value_list
             )
-            # set up ladder discrete drag
-            self.ladder.setDiscreteDrag(True, alignment=Qt.AlignLeft, depth=10)
-            self.ladder.setDiscreteDrag(
-                True,
-                alignment=alignment,
-                depth=10,
-                fg_color=(128, 128, 255, 255),
-                display_widget=self.parent()
-                )
-            # set up outline on ladder
-            base_group = getWidgetAncestor(self, AbstractInputGroupBox)
-            if base_group:
-                outline_color = base_group.rgba_border
-            else:
-                outline_color = iColor["rgba_outline"]
-            self.ladder.setStyleSheet("""
-            AbstractNumberInputWidget{{border: 1px solid rgba{outline_color}}}
-            """.format(
-                outline_color=repr(outline_color))
-            )
-        else:
-            if hasattr(self, 'ladder'):
-                self.ladder.setParent(None)
-        pass
+        #     # set up ladder discrete drag
+        #     self.ladder.setDiscreteDrag(True, alignment=Qt.AlignLeft, depth=10)
+        #     self.ladder.setDiscreteDrag(
+        #         True,
+        #         alignment=alignment,
+        #         depth=10,
+        #         display_widget=self.parent()
+        #         )
+        #     # set up outline on ladder
+        #     base_group = getWidgetAncestor(self, AbstractInputGroupBox)
+        #     if base_group:
+        #         outline_color = base_group.rgba_border
+        #     else:
+        #         outline_color = iColor["rgba_outline"]
+        #     self.ladder.setStyleSheet("""
+        #     AbstractNumberInputWidget{{border: 1px solid rgba{outline_color}}}
+        #     """.format(
+        #         outline_color=repr(outline_color))
+        #     )
+        # else:
+        #     if hasattr(self, 'ladder'):
+        #         self.ladder.setParent(None)
+        # pass
         self._use_ladder_delegate = _use_ladder_delegate
 
     def getUseLadder(self):
@@ -426,22 +425,22 @@ class AbstractBooleanInputWidget(QLabel):
     # """
     # Im being lazy, this is a copy and paste from the AbstractInputWidget
     # """
-    # def __trigger_event(self, *args, **kwargs):
+    # def __user_input_event(self, *args, **kwargs):
     #     pass
     #
-    # def setTriggerEvent(self, function):
+    # def setUserFinishedEditingEvent(self, function):
     #     """
     #     Sets the function that should be triggered everytime
     #     the user finishes editing this widget
     #     """
-    #     self.__trigger_event = function
+    #     self.__user_input_event = function
     #
-    # def triggerEvent(self, *args, **kwargs):
+    # def userFinishedEditingEvent(self, *args, **kwargs):
     #     """
     #     Internal event to run everytime the user triggers an update.  This
     #     will need to be called on every type of widget.
     #     """
-    #     self.__trigger_event(*args, **kwargs)
+    #     self.__user_input_event(*args, **kwargs)
 
     """ EVENTS """
     def mouseReleaseEvent(self, event):
@@ -449,7 +448,7 @@ class AbstractBooleanInputWidget(QLabel):
 
         # run user triggered event
         try:
-            self.triggerEvent(self, self.is_clicked)
+            self.userFinishedEditingEvent(self, self.is_clicked)
         except AttributeError:
             pass
         return QLabel.mouseReleaseEvent(self, event)

@@ -263,7 +263,7 @@ class AbstractListInputWidget(QComboBox):
         if is_input_valid:
             self.__selectionChangedEmit()
             self.previous_text = self.currentText()
-            #self.triggerEvent(self.currentText())
+            #self.userFinishedEditingEvent(self.currentText())
         else:
             self.setCurrentIndexToText(self.previous_text)
 

@@ -131,13 +131,13 @@ class iGroupInput(object):
     widget types so that they will be compatible with the GroupInputWidgets
     """
     def __init__(self):
-        self.setTriggerEvent(self.updateUserInputItem)
+        self.setUserFinishedEditingEvent(self.updateUserInputItem)
 
     """ TRIGGER """
-    def __trigger_event(self, *args, **kwargs):
+    def __user_input_event(self, *args, **kwargs):
         pass
 
-    def setTriggerEvent(self, function):
+    def setUserFinishedEditingEvent(self, function):
         """
         Sets the function that should be triggered everytime
         the user finishes editing this widget
@@ -145,14 +145,14 @@ class iGroupInput(object):
         This function should take two args
         widget/item, value
         """
-        self.__trigger_event = function
+        self.__user_input_event = function
 
-    def triggerEvent(self, *args, **kwargs):
+    def userFinishedEditingEvent(self, *args, **kwargs):
         """
         Internal event to run everytime the user triggers an update.  This
         will need to be called on every type of widget.
         """
-        self.__trigger_event(*args, **kwargs)
+        self.__user_input_event(*args, **kwargs)
 
     """ TANSU UPDATE """
     def updateUserInputItem(self, *args):
@@ -197,7 +197,7 @@ class StringInputWidget(AbstractStringInputWidget, iGroupInput):
 class BooleanInputWidget(AbstractBooleanInputWidget, iGroupInput):
     def __init__(self, parent=None, is_clicked=False):
         super(BooleanInputWidget, self).__init__(parent, is_clicked=is_clicked)
-        self.setTriggerEvent(self.updateUserInputItem)
+        self.setUserFinishedEditingEvent(self.updateUserInputItem)
         self.setupStyleSheet()
 
     def updateUserInputItem(self, *args):
@@ -238,11 +238,11 @@ class ListInputWidget(AbstractListInputWidget, iGroupInput):
     TYPE = "List"
     def __init__(self, parent=None):
         super(ListInputWidget, self).__init__(parent)
-        self.setTriggerEvent(self.updateUserInputItem)
+        self.setUserFinishedEditingEvent(self.updateUserInputItem)
         self.line_edit.editingFinished.connect(self.userFinishedEditing)
 
     def userFinishedEditing(self):
-        self.triggerEvent(self, self.currentText())
+        self.userFinishedEditingEvent(self, self.currentText())
         return AbstractListInputWidget.userFinishedEditing(self)
 
     def updateUserInputItem(self, *args):
@@ -343,8 +343,8 @@ class UserInputWidget(QFrame):
         self._label.setFixedWidth(width)
 
     """ EVENTS """
-    def setTriggerEvent(self, function):
-        self._input_widget.setTriggerEvent(function)
+    def setUserFinishedEditingEvent(self, function):
+        self._input_widget.setUserFinishedEditingEvent(function)
 
     # def setUserInputEvent(self, function):
     #     self._input_widget.setUserInputEvent(function)
@@ -380,6 +380,7 @@ if __name__ == "__main__":
 
     """ normal widgets """
     float_input_widget = FloatInputWidget()
+    float_input_widget.setUseLadder(True)
     int_input_widget = IntInputWidget()
     boolean_input_widget = BooleanInputWidget()
     string_input_widget = StringInputWidget()
@@ -391,11 +392,11 @@ if __name__ == "__main__":
     l.addWidget(string_input_widget)
     l.addWidget(list_input_widget)
 
-    float_input_widget.setTriggerEvent(test)
-    int_input_widget.setTriggerEvent(test)
-    boolean_input_widget.setTriggerEvent(test)
-    string_input_widget.setTriggerEvent(test)
-    list_input_widget.setTriggerEvent(test)
+    float_input_widget.setUserFinishedEditingEvent(test)
+    int_input_widget.setUserFinishedEditingEvent(test)
+    boolean_input_widget.setUserFinishedEditingEvent(test)
+    string_input_widget.setUserFinishedEditingEvent(test)
+    list_input_widget.setUserFinishedEditingEvent(test)
 
     """ Label widgets """
     u_float_input_widget = UserInputWidget(name="float", widget_type=FloatInputWidget)
@@ -410,11 +411,11 @@ if __name__ == "__main__":
     l.addWidget(u_string_input_widget)
     l.addWidget(u_list_input_widget)
 
-    u_float_input_widget.setTriggerEvent(test)
-    u_int_input_widget.setTriggerEvent(test)
-    u_boolean_input_widget.setTriggerEvent(test)
-    u_string_input_widget.setTriggerEvent(test)
-    u_list_input_widget.setTriggerEvent(test)
+    u_float_input_widget.setUserFinishedEditingEvent(test)
+    u_int_input_widget.setUserFinishedEditingEvent(test)
+    u_boolean_input_widget.setUserFinishedEditingEvent(test)
+    u_string_input_widget.setUserFinishedEditingEvent(test)
+    u_list_input_widget.setUserFinishedEditingEvent(test)
     # w = ListInputWidget()
     # w.populate(['a','b','c','d'])
     #w.setInputBaseClass(ListInputWidget)
