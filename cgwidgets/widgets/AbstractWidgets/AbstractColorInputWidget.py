@@ -25,17 +25,17 @@ import re
 
 from qtpy.QtWidgets import (
     QApplication,
-    QStackedWidget, QStackedLayout, QVBoxLayout, QWidget,
+    QStackedWidget, QWidget,
     QGraphicsView, QGraphicsScene, QGraphicsEllipseItem, QGraphicsItemGroup,
-    QGraphicsLineItem, QLabel, QBoxLayout, QFrame, QLineEdit
+    QGraphicsLineItem, QLabel, QBoxLayout, QFrame
 )
-from qtpy.QtCore import (Qt, QPoint, QPointF)
+from qtpy.QtCore import (Qt, QPoint, QEvent)
 from qtpy.QtGui import (
     QColor, QLinearGradient, QGradient, QBrush, QCursor
 )
 
-from cgwidgets.utils import installLadderDelegate, getWidgetAncestor, updateStyleSheet
-from cgwidgets.widgets import AbstractLine, AbstractInputGroup, FloatInputWidget
+from cgwidgets.utils import installLadderDelegate, getWidgetAncestor, updateStyleSheet, checkMousePos
+from cgwidgets.widgets import AbstractInputGroup, FloatInputWidget
 from cgwidgets.settings.colors import iColor
 
 
@@ -260,8 +260,10 @@ class ColorGradientWidget(QWidget):
         return QWidget.mousePressEvent(self, *args, **kwargs)
 
     def leaveEvent(self, *args, **kwargs):
-        color_widget = getWidgetAncestor(self, AbstractColorGradientMainWidget)
-        color_widget.setCurrentIndex(0)
+        cursor_sector_dict = checkMousePos(QCursor.pos(), self)
+        if cursor_sector_dict["INSIDE"] is False:
+            color_widget = getWidgetAncestor(self, AbstractColorGradientMainWidget)
+            color_widget.setCurrentIndex(0)
         return QWidget.leaveEvent(self, *args, **kwargs)
 
 
@@ -367,18 +369,6 @@ class ColorGraphicsView(QGraphicsView):
         self.__hideRGBACrosshair(True)
         self.__hideLinearCrosshair(False)
 
-        # TODO get default linear positions
-        """
-        TODO:
-            Get default linear positions here
-            get pos
-            store original pos
-            set pos
-            
-            mouse release:
-                restore pos
-            
-        """
         #RGB
         main_widget = getWidgetAncestor(self, AbstractColorGradientMainWidget)
         color = main_widget.getColor()
@@ -416,7 +406,7 @@ class ColorGraphicsView(QGraphicsView):
         self.scene().drawGradient()
 
         # set up cursor
-        #self.setCursor(Qt.BlankCursor)
+        self.setCursor(Qt.BlankCursor)
         if pos:
             self.scene().setLinearCrosshairPos(pos)
             QCursor.setPos(self.mapToGlobal(pos))
@@ -490,52 +480,52 @@ class ColorGraphicsView(QGraphicsView):
         return QGraphicsView.resizeEvent(self, *args, **kwargs)
 
     """ SELECTION """
-    def _checkMousePos(self, pos):
-        """
-        Checks the mouse position to determine its relation to the current
-        widget.
-
-        Args:
-            pos (QPoint): current cursor position in global space
-
-        Returns (dict) of booleans
-            INSIDE, NORTH, SOUTH, EAST, WEST
-            if the arg is True then that is true.  Ie if North is true, then the cursor
-            is north of the widget.  If INSIDE is True, then all of the other
-            args must be False, and the cursor is inside of the widget still.
-
-        """
-        # setup return attrs
-        return_dict = {
-            "INSIDE" : True,
-            "NORTH" : False,
-            "EAST" : False,
-            "SOUTH" : False,
-            "WEST" : False
-        }
-
-        # check mouse position...
-        top_left = self.mapToGlobal(self.geometry().topLeft())
-        top = top_left.y()
-        left = top_left.x()
-        right = left + self.geometry().width()
-        bot = top + self.geometry().height()
-
-        # update dictionary based off of mouse position
-        if top > pos.y():
-            return_dict["NORTH"] = True
-            return_dict["INSIDE"] = False
-        if right < pos.x():
-            return_dict["EAST"] = True
-            return_dict["INSIDE"] = False
-        if bot < pos.y():
-            return_dict["SOUTH"] = True
-            return_dict["INSIDE"] = False
-        if left > pos.x():
-            return_dict["WEST"] = True
-            return_dict["INSIDE"] = False
-
-        return return_dict
+    # def _checkMousePos(self, pos):
+    #     """
+    #     Checks the mouse position to determine its relation to the current
+    #     widget.
+    #
+    #     Args:
+    #         pos (QPoint): current cursor position in global space
+    #
+    #     Returns (dict) of booleans
+    #         INSIDE, NORTH, SOUTH, EAST, WEST
+    #         if the arg is True then that is true.  Ie if North is true, then the cursor
+    #         is north of the widget.  If INSIDE is True, then all of the other
+    #         args must be False, and the cursor is inside of the widget still.
+    #
+    #     """
+    #     # setup return attrs
+    #     return_dict = {
+    #         "INSIDE" : True,
+    #         "NORTH" : False,
+    #         "EAST" : False,
+    #         "SOUTH" : False,
+    #         "WEST" : False
+    #     }
+    #
+    #     # check mouse position...
+    #     top_left = self.mapToGlobal(self.geometry().topLeft())
+    #     top = top_left.y()
+    #     left = top_left.x()
+    #     right = left + self.geometry().width()
+    #     bot = top + self.geometry().height()
+    #
+    #     # update dictionary based off of mouse position
+    #     if top > pos.y():
+    #         return_dict["NORTH"] = True
+    #         return_dict["INSIDE"] = False
+    #     if right < pos.x():
+    #         return_dict["EAST"] = True
+    #         return_dict["INSIDE"] = False
+    #     if bot < pos.y():
+    #         return_dict["SOUTH"] = True
+    #         return_dict["INSIDE"] = False
+    #     if left > pos.x():
+    #         return_dict["WEST"] = True
+    #         return_dict["INSIDE"] = False
+    #
+    #     return return_dict
 
     def _getColor(self, event):
         """
@@ -606,7 +596,7 @@ class ColorGraphicsView(QGraphicsView):
         scene.updateRGBACrosshair(event.pos())
 
         # update cursor display depending on if the cursor is inside of the widget or not
-        cursor_sector_dict = self._checkMousePos(pos)
+        cursor_sector_dict = checkMousePos(pos, self)
         is_inside = cursor_sector_dict['INSIDE']
         if not is_inside:
             if self._in_gradient_widget is True:
@@ -638,7 +628,7 @@ class ColorGraphicsView(QGraphicsView):
         position in space.  It also cannot get the final 0/1 values =
         """
         if constrain_to_picker is True:
-            cursor_sector_dict = self._checkMousePos(pos)
+            cursor_sector_dict = checkMousePos(pos, self)
             if cursor_sector_dict["INSIDE"] is False:
                 top_left = self.mapToGlobal(self.pos())
                 top = top_left.y()
@@ -984,9 +974,10 @@ class LineSegment(QGraphicsLineItem):
 
 """ DISPLAY LABELS"""
 class ColorDisplayLabel(QLabel):
-    #  ==========================================================================
-    # Display color swatch to the user
-    #  ==========================================================================
+    """
+    This is the cover that goes over the gradient so that it doesn't spam color at
+    the user and hurt their precious precious eyes
+    """
     def __init__(self, parent=None):
         super(ColorDisplayLabel, self).__init__(parent=parent)
         updated_args = {'rgba_background': iColor['rgba_gray_2']}
@@ -1076,6 +1067,16 @@ class DisplayLabel(AbstractInputGroup):
 
         self.setStyleSheet("background-color: rgba{rgba_gray_1}".format(**iColor.style_sheet_args))
 
+        # install ladder widget
+        self.ladder = installLadderDelegate(
+            self.value_widget,
+            user_input=QEvent.MouseButtonPress,
+            value_list=[0.0001, 0.001, 0.01, 0.1]
+        )
+
+    def setValue(self, value):
+        self.setText(str(value))
+
     """ PROPERTIES """
     def setValue(self, value):
         self._value = value
@@ -1092,6 +1093,7 @@ if __name__ == '__main__':
     #color_widget.setLinearCrosshairDirection(Qt.Vertical)
     color_widget.setDisplayLocation(position=AbstractColorGradientMainWidget.WEST)
     color_widget.show()
+    color_widget.move(QCursor.pos())
     sys.exit(app.exec_())
 
 

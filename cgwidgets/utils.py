@@ -8,6 +8,55 @@ from qtpy.QtCore import *
 from qtpy.QtGui import *
 
 
+def checkMousePos(pos, widget):
+    """
+    Checks the mouse position to determine its relation to the current
+    widget.
+
+    Args:
+        pos (QPoint): current cursor position in global space
+        widget (QWidget): current widget to check to see if the cursor
+            is inside of or not
+    Returns (dict) of booleans
+        INSIDE, NORTH, SOUTH, EAST, WEST
+        if the arg is True then that is true.  Ie if North is true, then the cursor
+        is north of the widget.  If INSIDE is True, then all of the other
+        args must be False, and the cursor is inside of the widget still.
+
+    """
+    # setup return attrs
+    return_dict = {
+        "INSIDE" : True,
+        "NORTH" : False,
+        "EAST" : False,
+        "SOUTH" : False,
+        "WEST" : False
+    }
+
+    # check mouse position...
+    top_left = widget.mapToGlobal(widget.geometry().topLeft())
+    top = top_left.y()
+    left = top_left.x()
+    right = left + widget.geometry().width()
+    bot = top + widget.geometry().height()
+
+    # update dictionary based off of mouse position
+    if top > pos.y():
+        return_dict["NORTH"] = True
+        return_dict["INSIDE"] = False
+    if right < pos.x():
+        return_dict["EAST"] = True
+        return_dict["INSIDE"] = False
+    if bot < pos.y():
+        return_dict["SOUTH"] = True
+        return_dict["INSIDE"] = False
+    if left > pos.x():
+        return_dict["WEST"] = True
+        return_dict["INSIDE"] = False
+
+    return return_dict
+
+
 def getFontSize(application):
     """
     Returns the current systems font size
