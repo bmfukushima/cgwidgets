@@ -311,9 +311,10 @@ class AbstractNumberInputWidget(AbstractInputWidget):
                 return False
 
     def keyPressEvent(self, event, *args, **kwargs):
-        modifiers = QApplication.keyboardModifiers()
+        modifiers = event.modifiers()
         # add control modifiers back
         if modifiers:
+            print(modifiers)
             if modifiers == Qt.ControlModifier:
                 return QLineEdit.keyPressEvent(self, event, *args, **kwargs)
 

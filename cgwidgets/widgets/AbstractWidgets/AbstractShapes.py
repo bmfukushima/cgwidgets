@@ -128,7 +128,7 @@ class AbstractInputGroupBox(QGroupBox):
         self.layout().setSpacing(font_size)
         self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
 
-    def updateStyleSheet(self):
+    def updateStyleSheet(self, args={}):
         font_size = getFontSize(QApplication)
         style_sheet_args = iColor.style_sheet_args
         style_sheet_args.update({
@@ -139,6 +139,8 @@ class AbstractInputGroupBox(QGroupBox):
             "border_color" : repr(self.rgba_border),
             "color" : repr(self.rgba_text)
         })
+        style_sheet_args.update(args)
+
         style_sheet = """
             QGroupBox::title{{
                 subcontrol-origin: margin;

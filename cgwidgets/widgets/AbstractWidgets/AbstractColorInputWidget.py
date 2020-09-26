@@ -360,6 +360,7 @@ class ColorGraphicsView(QGraphicsView):
 
         # HSV
         self._picking = True
+        self._black_select = False
         self._in_gradient_widget = True
         self._orig_pos = QCursor.pos()
         # setup default crosshair
@@ -415,7 +416,7 @@ class ColorGraphicsView(QGraphicsView):
         self.scene().drawGradient()
 
         # set up cursor
-        self.setCursor(Qt.BlankCursor)
+        #self.setCursor(Qt.BlankCursor)
         if pos:
             self.scene().setLinearCrosshairPos(pos)
             QCursor.setPos(self.mapToGlobal(pos))
@@ -443,6 +444,7 @@ class ColorGraphicsView(QGraphicsView):
 
         # reset picking attrs
         self._picking = False
+        self._black_select = False
 
         # reset cursor
         self.unsetCursor()
@@ -493,6 +495,9 @@ class ColorGraphicsView(QGraphicsView):
         Checks the mouse position to determine its relation to the current
         widget.
 
+        Args:
+            pos (QPoint): current cursor position in global space
+
         Returns (dict) of booleans
             INSIDE, NORTH, SOUTH, EAST, WEST
             if the arg is True then that is true.  Ie if North is true, then the cursor
@@ -510,7 +515,7 @@ class ColorGraphicsView(QGraphicsView):
         }
 
         # check mouse position...
-        top_left = self.mapToGlobal(self.pos())
+        top_left = self.mapToGlobal(self.geometry().topLeft())
         top = top_left.y()
         left = top_left.x()
         right = left + self.geometry().width()
@@ -532,29 +537,6 @@ class ColorGraphicsView(QGraphicsView):
 
         return return_dict
 
-    def _checkLinearCrosshairValue(self, value, pos):
-        """
-        Checks the position of the cursor to determine if it is
-        inside of the widget still or not.  If it is not, it will return values
-        of 0.0 or 1.0.  If it is, it will return the current value.
-
-        Args:
-            value (float): between the 0-1 ragne
-            pos (QPoint): Global position of the cursor
-        """
-
-        cursor_sector_dict = self._checkMousePos(pos)
-        # check cursor
-        if cursor_sector_dict['INSIDE'] is True:
-            return value
-
-        elif cursor_sector_dict['NORTH'] is True or cursor_sector_dict['EAST'] is True:
-            return 1.0
-        elif cursor_sector_dict['SOUTH'] is True or cursor_sector_dict['WEST'] is True:
-            return 0.0
-        else:
-            return value
-
     def _getColor(self, event):
         """
         Gets the color from the user selection and sends it to the
@@ -575,8 +557,9 @@ class ColorGraphicsView(QGraphicsView):
         # Linear Gradient
         else:
             self.scene().setLinearCrosshairPos(event.pos())
-            orig_color = color_display_widget.getColor()
+
             pos = event.globalPos()
+            orig_color = color_display_widget.getColor()
             new_color = self._pickColor(pos)
 
             # saturation
@@ -584,7 +567,6 @@ class ColorGraphicsView(QGraphicsView):
                 hue = orig_color.hueF()
                 sat = new_color.valueF()
                 value = orig_color.valueF()
-                sat = self._checkLinearCrosshairValue(sat, pos)
 
                 orig_color.setHsvF(hue, sat, value)
             # value
@@ -593,23 +575,18 @@ class ColorGraphicsView(QGraphicsView):
                 hue = orig_color.hueF()
                 sat = orig_color.saturationF()
                 value = new_color.valueF()
-                value = self._checkLinearCrosshairValue(value, pos)
-
                 orig_color.setHsvF(hue, sat, value)
             # red
             elif selection_type == ColorGraphicsScene.RED:
                 red = new_color.redF()
-                red = self._checkLinearCrosshairValue(red, pos)
                 orig_color.setRedF(red)
             # green
             elif selection_type == ColorGraphicsScene.GREEN:
                 green = new_color.greenF()
-                green = self._checkLinearCrosshairValue(green, pos)
                 orig_color.setGreenF(green)
             # blue
             elif selection_type == ColorGraphicsScene.BLUE:
                 blue = new_color.blueF()
-                blue = self._checkLinearCrosshairValue(blue, pos)
                 orig_color.setBlueF(blue)
 
             color_display_widget.setColor(orig_color)
@@ -625,7 +602,7 @@ class ColorGraphicsView(QGraphicsView):
         #TODO check distance?
         scene = self.scene()
         pos = event.globalPos()
-        color = self._pickColor(pos)
+        color = self._pickColor(pos, constrain_to_picker=False)
         scene.updateRGBACrosshair(event.pos())
 
         # update cursor display depending on if the cursor is inside of the widget or not
@@ -642,11 +619,45 @@ class ColorGraphicsView(QGraphicsView):
 
         return color
 
-    def _pickColor(self, pos):
+    def _pickColor(self, pos, constrain_to_picker=True):
         """
         picks the the current color displayed on screen at
         the current location of the cursor
+
+        Args:
+            pos (QPoint): Global pos
+            constrain_to_pick (bool): determines whether or not the crosshair
+                should be forced to remain inside of the picker while the user
+                is selecting.
         """
+        # preflight check (cursor)
+        # forces the cursor to remain inside of the color picker
+        # TODO Removing bouncing
+        """
+        display is bouncing when reaching ends as it snaps back to the last
+        position in space.  It also cannot get the final 0/1 values =
+        """
+        if constrain_to_picker is True:
+            cursor_sector_dict = self._checkMousePos(pos)
+            if cursor_sector_dict["INSIDE"] is False:
+                top_left = self.mapToGlobal(self.pos())
+                top = top_left.y()
+                left = top_left.x()
+                right = left + self.geometry().width()
+                bottom = top + self.geometry().height()
+
+                if cursor_sector_dict["NORTH"] is True:
+                    pos.setY(top + 1)
+                if cursor_sector_dict["EAST"] is True:
+                    pos.setX(right - 1)
+                if cursor_sector_dict["SOUTH"] is True:
+                    pos.setY(bottom - 1)
+                if cursor_sector_dict["WEST"] is True:
+                    pos.setX(left + 1)
+
+                QCursor.setPos(pos)
+
+        # get pixel data
         desktop = QApplication.desktop().winId()
         screen = QApplication.primaryScreen()
         pixmap = screen.grabWindow(
@@ -656,9 +667,13 @@ class ColorGraphicsView(QGraphicsView):
         )
         img = pixmap.toImage()
         color = QColor(img.pixel(0, 0))
+
+        # if pure black recurse
         if color.valueF() == 0:
+            self._black_select = True
             pos = QPoint(pos.x() + 1, pos.y() + 1)
             return self._pickColor(pos)
+
         return color
 
     """ PROPERTIES """
@@ -843,17 +858,23 @@ class ColorGraphicsScene(QGraphicsScene):
         """
         Places the crosshair at a specific  location in the widget.  This is generally
         used when updating color values, and passing them back to the color widget.
+
+        This is in LOCAL space
         """
+        # get crosshair direction
         main_widget = getWidgetAncestor(self, AbstractColorGradientMainWidget)
         direction = main_widget.getLinearCrosshairDirection()
+
+        # set cross hair pos
         if direction == Qt.Horizontal:
             pos = QPoint(pos.x(), 0)
             self.linear_crosshair_item.setPos(pos.x(), 0)
-            self._linear_crosshair_pos = pos
         elif direction == Qt.Vertical:
             pos = QPoint(0, pos.y())
             self.linear_crosshair_item.setPos(0, pos.y())
-            self._linear_crosshair_pos = pos
+
+        # update pos attr
+        self._linear_crosshair_pos = pos
 
     def setLinearCrosshairDirection(self, direction):
         """
@@ -928,6 +949,7 @@ class ColorGraphicsScene(QGraphicsScene):
         return self._rgba_crosshair_pos
 
     def setRGBACrosshairPos(self, pos):
+        """ This is in LOCAL space """
         self._rgba_crosshair_pos = pos
 
     def updateRGBACrosshair(self, pos):
@@ -1020,14 +1042,9 @@ class DisplayValuesGroupWidget(QFrame):
         return self._widget_dict
 
     def updateStyleSheet(self):
-        # QLabel{{
-        #     color: rgba{rgba_text}
-        # }}
-        # DisplayValuesGroupWidget{{
-        #     background-color: rgba{rgba_gray_0}
-        # }}
+
         self.setStyleSheet("""
-        background-color: rgba{rgba_gray_0}
+        background-color: rgba{rgba_gray_1}
 
         """.format(**iColor.style_sheet_args))
 
@@ -1054,9 +1071,10 @@ class DisplayLabel(AbstractInputGroup):
         # setup GUI
         # TODO Make user input floats here...
         self.value_widget = FloatInputWidget()
-        #self.value_widget.setStyleSheet("color: rgba{rgba_text}".format(**iColor.style_sheet_args))
         self.value_widget.setAlignment(Qt.AlignLeft)
         self.insertWidget(1, self.value_widget)
+
+        self.setStyleSheet("background-color: rgba{rgba_gray_1}".format(**iColor.style_sheet_args))
 
     """ PROPERTIES """
     def setValue(self, value):
@@ -1066,85 +1084,6 @@ class DisplayLabel(AbstractInputGroup):
 
     def getValue(self):
         return self._value
-
-
-class DisplayLabelA(QWidget):
-    """
-
-    Attributes:
-        title (str)
-        value (str)
-        is_selected (bool)
-        direction (QBoxLayout.LeftToRight)
-
-    Widgets:
-        | -- QBoxLayout
-                | -- label_widget (QLabel)
-                | -- divider_widget (AbstractLine)
-                | -- value_widget (QLabel)
-    """
-    def __init__(self, parent=None, title='None', value='None', direction=QBoxLayout.LeftToRight):
-        super(DisplayLabelA, self).__init__(parent)
-        # setup attrs
-        self._direction = direction
-        self._title = title
-        self._value = value
-        self._is_selected = False
-
-        # set up gui
-        QBoxLayout(direction, self)
-        self.title_widget = QLabel(title)
-        self.divider_widget = QFrame()
-        self.value_widget = QLabel(value)
-
-        self.layout().addWidget(self.title_widget)
-        self.layout().addWidget(self.divider_widget)
-        self.layout().addWidget(self.value_widget)
-
-        # finalize attrs
-        self.setDirection(direction)
-        self.divider_widget.setLineWidth(1)
-
-    """ PROPERTIES """
-    def setTitle(self, title):
-        self._title = title
-        self.title_widget.setText(str(title))
-
-    def getTitle(self):
-        return self._title
-
-    def setValue(self, value):
-        self._value = value
-        self.value_widget.setText(str(value))
-
-    def getValue(self):
-        return self._value
-
-    def isSelected(self):
-        return self._is_selected
-
-    def setSelected(self, is_selected):
-        self._is_selected = is_selected
-
-    def getDirection(self):
-        return self._direction
-
-    def setDirection(self, direction):
-        """
-        Sets the layout direction of this widget.
-
-        Args:
-            direction (Qt.Direction): Which way this widget should be laid out.
-        """
-        # set attrs
-        self._direction = direction
-
-        # set widget directions
-        self.layout().setDirection(direction)
-        if direction == Qt.Vertical:
-            self.setFrameShape(QFrame.HLine)
-        elif direction == Qt.Horizontal:
-            self.setFrameShape(QFrame.VLine)
 
 
 if __name__ == '__main__':

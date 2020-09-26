@@ -465,7 +465,7 @@ class ColorPickerWidget(QWidget):
         self.parent().layout().setCurrentIndex(0)
         return QWidget.leaveEvent(self, *args, **kwargs)
 
-
+0
 class ColorGraphicsView(QGraphicsView):
     """
     @previous_size: <geometry> hold the previous position
