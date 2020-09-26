@@ -29,7 +29,7 @@ Args:
         parent=None,
         value_list=[0.0001, 0.001, 0.01, 0.1],
         widget=None,
-        user_input=QEvent.MouseButtonPress
+        user_input=QEvent.MouseButtonRelease
     ):
         super(LadderWidget, self).__init__(parent)
         # setup widget

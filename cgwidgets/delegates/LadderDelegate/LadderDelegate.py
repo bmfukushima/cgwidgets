@@ -79,7 +79,7 @@ Args:
     **  user_input: (QEvent.Type):
             The action for the user to do to trigger the ladder to be installed
                 ie.
-            QEvent.MouseButtonPress
+            QEvent.MouseButtonRelease
 
 Attributes:
     rgba_bg_slide (rgba int):
@@ -105,7 +105,7 @@ Attributes:
     user_input (QEvent): Event to be used on the widget to allow
         the trigger to popup the ladder delegate
            ie
-            QEvent.MouseButtonPress
+            QEvent.MouseButtonRelease
 Notes:
     -   The setValue, will then need to do the final math to calculate
             the result
@@ -116,7 +116,7 @@ Notes:
             self,
             parent=None,
             value_list=[0.001, 0.01, 0.1, 1, 10, 100, 1000],
-            user_input=QEvent.MouseButtonPress,
+            user_input=QEvent.MouseButtonRelease,
     ):
         super(LadderDelegate, self).__init__(parent)
         layout = QVBoxLayout()
@@ -568,6 +568,21 @@ Notes:
 
     def showEvent(self, *args, **kwargs):
         self.middle_item.setValue(self.getValue())
+
+        # start the continued selection event
+
+        # get selection attrs
+        cursor_position = self.parent().cursorPosition()
+        start = self.parent().selectionStart()
+        length = self.parent().selectionLength()
+
+        # set middle item
+        self.middle_item.setFocus(True)
+        self.middle_item.setCursorPosition(cursor_position)
+        if start != -1:
+            self.middle_item.setSelection(start, length)
+
+        #
         self.__updateUserInputs()
         return QWidget.showEvent(self, *args, **kwargs)
 
@@ -630,7 +645,7 @@ Attributes:
     def keyPressEvent(self, event):
         if event.key() in [Qt.Key_Return, Qt.Key_Enter]:
             self.parent().hide()
-        return QLineEdit.keyPressEvent(self, event)
+        return FloatInputWidget.keyPressEvent(self, event)
 
     def tempSetValue(self):
         self.parent().parent().setValue(str(self.text()))
@@ -879,7 +894,7 @@ def main():
             pos = QCursor.pos()
             ladder = installLadderDelegate(
                 self,
-                user_input=QEvent.MouseButtonPress,
+                user_input=QEvent.MouseButtonRelease,
                 value_list=value_list
             )
 
@@ -914,13 +929,13 @@ def main():
         float_input
     )
 
-    ladder.setDiscreteDrag(True, alignment=Qt.AlignLeft, depth=10)
-    ladder.setDiscreteDrag(
-        True,
-        alignment=Qt.AlignBottom,
-        depth=10,
-        display_widget=w2
-        )
+    #ladder.setDiscreteDrag(True, alignment=Qt.AlignLeft, depth=10)
+    # ladder.setDiscreteDrag(
+    #     True,
+    #     alignment=Qt.AlignBottom,
+    #     depth=10,
+    #     display_widget=w2
+    #     )
     # ladder.setMiddleItemBorderColor((255, 0, 255))
     # ladder.setMiddleItemBorderWidth(2)
     # ladder.setItemHeight(50)

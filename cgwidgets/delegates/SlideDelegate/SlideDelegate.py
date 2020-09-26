@@ -447,7 +447,7 @@ class SlideDelegate(QWidget):
 
     """ EVENTS """
     def eventFilter(self, obj, event, *args, **kwargs):
-        if event.type() == QEvent.MouseButtonPress:
+        if event.type() == QEvent.MouseButtonRelease:
             self.slidebar = self.getBreedWidget()
             self.slidebar.setWidgetPosition(
                 self.getAlignment(), widget=self._display_widget
@@ -489,7 +489,7 @@ if __name__ == '__main__':
             pos = QCursor.pos()
             ladder = installLadderDelegate(
                 self,
-                user_input=QEvent.MouseButtonPress,
+                user_input=QEvent.MouseButtonRelease,
                 value_list=value_list
             )
 

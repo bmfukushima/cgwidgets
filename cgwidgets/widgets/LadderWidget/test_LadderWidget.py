@@ -21,7 +21,7 @@ class TestLadderWidget(unittest.TestCase):
         self.ladder1 = LadderWidget(
             value_list=[0.0001, 0.001, 0.01, 0.1],
             widget=QLabel(),
-            user_input=QEvent.MouseButtonPress
+            user_input=QEvent.MouseButtonRelease
         )
 
     def test_popUp(self):

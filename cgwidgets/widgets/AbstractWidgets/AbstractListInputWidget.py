@@ -295,7 +295,7 @@ class AbstractListInputWidget(QComboBox):
             ]:
                 self.__selectionChangedEmit()
 
-        elif event.type() == QEvent.MouseButtonPress:
+        elif event.type() == QEvent.MouseButtonRelease:
             self.completer.setPopup(self.view())
 
         return QComboBox.event(self, event, *args, **kwargs)

@@ -201,7 +201,7 @@ class ValueLabel(FloatInputWidget):
         value_list = [0.0001, 0.001, 0.01, 0.1]
         installLadderDelegate(
             self,
-            user_input=QEvent.MouseButtonPress,
+            user_input=QEvent.MouseButtonRelease,
             value_list=value_list
         )
         #self.home(False)

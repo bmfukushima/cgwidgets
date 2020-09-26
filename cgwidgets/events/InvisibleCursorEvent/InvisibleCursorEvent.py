@@ -27,7 +27,7 @@ infinite distance without disrupting the user.
         """
 
         # do work
-        if event.type() == QEvent.MouseButtonPress:
+        if event.type() == QEvent.MouseButtonRelease:
             self._init_pos = obj.mapToGlobal(event.pos())
             obj.window().setCursor(Qt.BlankCursor)
         elif event.type() == QEvent.MouseMove:

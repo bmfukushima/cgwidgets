@@ -148,7 +148,7 @@ class TestParentWidget(QLineEdit):
         #pos = QCursor.pos()
         self.ladder = installLadderDelegate(
             self,
-            user_input=QEvent.MouseButtonPress,
+            user_input=QEvent.MouseButtonRelease,
             value_list=value_list
         )
 

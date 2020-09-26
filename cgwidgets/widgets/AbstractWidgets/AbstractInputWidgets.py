@@ -236,7 +236,7 @@ class AbstractNumberInputWidget(AbstractInputWidget):
     def setUseLadder(
             self,
             _use_ladder_delegate,
-            user_input=QEvent.MouseButtonPress,
+            user_input=QEvent.MouseButtonRelease,
             value_list=[0.01, 0.1, 1, 10],
             alignment=Qt.AlignLeft
     ):

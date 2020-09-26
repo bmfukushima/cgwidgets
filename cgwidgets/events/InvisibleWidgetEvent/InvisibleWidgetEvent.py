@@ -26,7 +26,7 @@ Args:
             self._hide_widget = hide_widget
 
     def eventFilter(self, obj, event, *args, **kwargs):
-        if event.type() == QEvent.MouseButtonPress:
+        if event.type() == QEvent.MouseButtonRelease:
             # region = QRegion(0, 0, 0, 0)
             region = region = QRegion(self._hide_widget.frameGeometry())
             self._hide_widget.setMask(region)
