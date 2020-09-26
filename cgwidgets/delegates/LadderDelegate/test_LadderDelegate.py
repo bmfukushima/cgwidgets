@@ -99,20 +99,20 @@ class iTest():
                         """
                         print("""
 
-return val == {return_val}
-current_val == {current_val}
-
-float(return val) == {freturn_val}
-float(current_val) == {fcurrent_val}
-
-""".format(
-    return_val=return_val,
-    current_val=current_val,
-    freturn_val=float(return_val),
-    fcurrent_val=float(current_val),
-)
-)
-"""
+                # return val == {return_val}
+                # current_val == {current_val}
+                #
+                # float(return val) == {freturn_val}
+                # float(current_val) == {fcurrent_val}
+                #
+                # """.format(
+                #     return_val=return_val,
+                #     current_val=current_val,
+                #     freturn_val=float(return_val),
+                #     fcurrent_val=float(current_val),
+                # )
+                # )
+                # """
                 # pen up
                 QTest.mouseRelease(item, Qt.LeftButton)
 

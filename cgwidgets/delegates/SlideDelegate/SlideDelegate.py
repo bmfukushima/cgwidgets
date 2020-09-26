@@ -498,7 +498,6 @@ if __name__ == '__main__':
                 True,
                 alignment=Qt.AlignLeft,
                 depth=10,
-                fg_color=(128, 128, 32, 255),
                 display_widget=self.parent().parent()
                 )
             # ladder.setDiscreteDrag(True, alignment=Qt.AlignLeft)

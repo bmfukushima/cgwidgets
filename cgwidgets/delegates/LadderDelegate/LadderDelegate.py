@@ -56,7 +56,7 @@ from cgwidgets.settings.colors import (
 from cgwidgets.widgets import FloatInputWidget
 
 
-class LadderDelegate(QWidget):
+class LadderDelegate(QFrame):
     """
 Widget that should be added as a popup during an event.  This should be
 installed with the utils.installLadderDelegate(widget).
@@ -82,10 +82,10 @@ Args:
             QEvent.MouseButtonPress
 
 Attributes:
-    bg_slide_color (rgba int):
+    rgba_bg_slide (rgba int):
             The bg color that is displayed to the user when the use
             starts to click/drag to slide
-    fg_slide_color (rgba int):
+    rgba_fg_slide (rgba int):
         The bg color that is displayed to the user when the use
         starts to click/drag to slide
     item_height (int): The height of each individual adjustable item.
@@ -124,18 +124,23 @@ Notes:
 
         # default attrs
         self._slider_pos = 0
-        self.setUserInput(user_input)
+        self.setUserInputTrigger(user_input)
         self.setMiddleItemBorderColor((18, 18, 18))
         self.setMiddleItemBorderWidth(5)
         self.setSlideDistance(.01)
-        self.setSelectionColor(iColor["rgba_hover"])
         self.setItemHeight(50)
 
-        #bg_color = guessBackgroundColor(self.parent().styleSheet())
-        self.bg_slide_color = iColor["rgba_gray_0"]
-        self.fg_slide_color = iColor["rgba_gray_1"]
+        # setup default colors
+        self.rgba_selection = iColor["rgba_hover"]
+        self.rgba_bg_slide = iColor["rgba_gray_0"]
+        self.rgba_fg_slide = iColor["rgba_gray_1"]
 
+        # create items
         self.middle_item_index = int(len(value_list) * 0.5)
+        self.__createItems(value_list)
+
+        # set significant digits
+        self.__setSignificantDigits()
 
         # set up style
         layout.setContentsMargins(0, 0, 0, 0)
@@ -145,66 +150,77 @@ Notes:
             | Qt.FramelessWindowHint
             | Qt.Popup
         )
+        self.updateStyleSheet()
 
-        style_sheet = iColor.createDefaultStyleSheet(self)
+    """ COLORS """
+    def updateStyleSheet(self):
+        style_sheet_args = iColor.style_sheet_args
+        update_kwargs = {
+            'selected_color': repr(self.rgba_selection),
+            'slider_pos1': self.slider_pos,
+            'slider_pos2': self.slider_pos + 0.01,
+            'rgba_bg_slide': self.rgba_bg_slide,
+            'rgba_fg_slide': self.rgba_fg_slide,
+        }
+
+        style_sheet_args.update(update_kwargs)
+        #                 background-color: rgba{rgba_gray_0}
+
+        style_sheet = """
+        LadderDelegate{{
+            background-color: rgba{rgba_gray_0};
+            border: 1px solid rgba{rgba_outline}
+        }}
+        LadderItem{{
+            color: rgba{rgba_text};
+            background-color: rgba{rgba_gray_0}
+        }}
+        LadderItem::hover[is_active=false]{{background-color: rgba{rgba_selected}}}
+        LadderItem[is_active=true]{{background-color: rgba{rgba_selected}}}
+        LadderItem[gradient_on=true]{{background: qlineargradient(
+           x1:{slider_pos1} y1:0,
+           x2:{slider_pos2} y2:0,
+           stop:0 rgba{rgba_bg_slide},
+           stop:1 rgba{rgba_fg_slide}
+       );
+       }}
+        """.format(**style_sheet_args)
+
         self.setStyleSheet(style_sheet)
 
-        # create widgets
-        for value in value_list:
-            widget = LadderItem(
-                value_mult=value
-            )
-            layout.addWidget(widget)
-            self.item_list.append(widget)
-
-        # special handler for display widget
-        self.middle_item = LadderMiddleItem(
-            parent=self,
-            value=self.getValue()
-        )
-        layout.insertWidget(self.middle_item_index, self.middle_item)
-
-        # populate item list
-        item_list = self.item_list
-        item_list.insert(self.middle_item_index, self.middle_item)
-        self.item_list = item_list
-
-        # set significant digits
-        self.__setSignificantDigits()
-
-    """ API """
-    """ COLORS """
     @property
-    def bg_slide_color(self):
-        return self._bg_slide_color
+    def rgba_bg_slide(self):
+        return self._rgba_bg_slide
 
-    @bg_slide_color.setter
-    def bg_slide_color(self, color):
-        self._bg_slide_color = color
+    @rgba_bg_slide.setter
+    def rgba_bg_slide(self, color):
+        self._rgba_bg_slide = color
 
         # update slidebar
         for item in self.item_list:
             if not isinstance(item, LadderMiddleItem):
-                item.slidebar.bg_slide_color = color
+                item.slidebar.rgba_bg_slide = color
 
     @property
-    def fg_slide_color(self):
-        return self._fg_slide_color
+    def rgba_fg_slide(self):
+        return self._rgba_fg_slide
 
-    @fg_slide_color.setter
-    def fg_slide_color(self, fg_slide_color):
-        self._fg_slide_color = fg_slide_color
+    @rgba_fg_slide.setter
+    def rgba_fg_slide(self, rgba_fg_slide):
+        self._rgba_fg_slide = rgba_fg_slide
 
         # update slidebar
         for item in self.item_list:
             if not isinstance(item, LadderMiddleItem):
-                    item.slidebar.fg_slide_color = fg_slide_color
+                    item.slidebar.rgba_fg_slide = rgba_fg_slide
 
-    def getItemHeight(self):
-        return self._item_height
+    @property
+    def rgba_selection(self):
+        return self._rgba_selection
 
-    def setItemHeight(self, item_height):
-        self._item_height = item_height
+    @rgba_selection.setter
+    def rgba_selection(self, rgba_selection):
+        self._rgba_selection = rgba_selection
 
     def getMiddleItemBorderColor(self):
         return self._middle_item_border_color
@@ -218,22 +234,17 @@ Notes:
     def setMiddleItemBorderWidth(self, border_width):
         self._middle_item_border_width = border_width
 
-    def getSelectionColor(self):
-        return self._selection_color
-
-    def setSelectionColor(self, color):
-        self._selection_color = color
-
+    """ UTILS """
     def getSlideDistance(self):
         return self._slide_distance
 
     def setSlideDistance(self, slide_distance):
         self._slide_distance = slide_distance
 
-    def getUserInput(self):
+    def getUserInputTrigger(self):
         return self._user_input
 
-    def setUserInput(self, user_input):
+    def setUserInputTrigger(self, user_input):
         self._user_input = user_input
 
     def setDiscreteDrag(
@@ -259,10 +270,10 @@ Notes:
                     on its orientation
             **  alignment (QtCore.Qt.Align): where the widget should be align
                     relative to the display
-            **  bg_slide_color (rgba int 0-255):
+            **  rgba_bg_slide (rgba int 0-255):
                     The bg color that is displayed to the user when the user
                     starts to click/drag to slide
-            **  fg_slide_color (rgba int 0-255):
+            **  rgba_fg_slide (rgba int 0-255):
                     The bg color that is displayed to the user when the use
                     starts to click/drag to slide
             **  breed (SlideDelegate.TYPE): What type of visual cue to display.
@@ -285,6 +296,13 @@ Notes:
                 breed=breed,
                 display_widget=display_widget
             )
+
+    """ SIZE """
+    def getItemHeight(self):
+        return self._item_height
+
+    def setItemHeight(self, item_height):
+        self._item_height = item_height
 
     """ PROPERTIES """
     @property
@@ -389,6 +407,34 @@ Notes:
             return None
 
     """ UTILS """
+    def __createItems(self, value_list):
+        """
+        Creates all of the item labels/inputs for the ladder.
+
+        Args:
+            value_list (list): of floats that will determine the slide
+                options available to the user.
+        """
+        # create widgets
+        for value in value_list:
+            widget = LadderItem(
+                value_mult=value
+            )
+            self.layout().addWidget(widget)
+            self.item_list.append(widget)
+
+        # special handler for display widget
+        self.middle_item = LadderMiddleItem(
+            parent=self,
+            value=self.getValue()
+        )
+        self.layout().insertWidget(self.middle_item_index, self.middle_item)
+
+        # populate item list
+        item_list = self.item_list
+        item_list.insert(self.middle_item_index, self.middle_item)
+        self.item_list = item_list
+
     def __setSignificantDigits(self):
         """
         sets the number of significant digits to round to
@@ -431,6 +477,10 @@ Notes:
         # set adjustable items
         height = self.getItemHeight()
         width = self.parent().width()
+
+        # update main width
+        self.setFixedWidth(width+2)
+
         for item in self.item_list:
             item.setFixedSize(width, height)
 
@@ -498,8 +548,8 @@ Notes:
                         breed=breed,
                         display_widget=display_widget
                     )
-                    slidebar.bg_slide_color = self.bg_slide_color
-                    slidebar.fg_slide_color = self.fg_slide_color
+                    slidebar.rgba_bg_slide = self.rgba_bg_slide
+                    slidebar.rgba_fg_slide = self.rgba_fg_slide
                     slidebar.setDepth(depth)
 
                     slidebar.setAlignment(alignment)
@@ -544,7 +594,7 @@ Notes:
         if self.getValue() is None:
             # print('This widgets like numbers. Not whatever you put in here.')
             return QWidget.eventFilter(self, obj, event, *args, **kwargs)
-        if event.type() == self.getUserInput():
+        if event.type() == self.getUserInputTrigger():
             self.show()
         return QWidget.eventFilter(self, obj, event, *args, **kwargs)
 
@@ -568,6 +618,14 @@ Attributes:
         super(LadderMiddleItem, self).__init__(parent)
         self.setValue(value)
         self.editingFinished.connect(self.tempSetValue)
+
+    def mousePressEvent(self, event):
+        self.parent().is_active = True
+        return FloatInputWidget.mousePressEvent(self, event)
+
+    def mouseReleaseEvent(self, event):
+        self.parent().is_active = False
+        return FloatInputWidget.mouseReleaseEvent(self, event)
 
     def keyPressEvent(self, event):
         if event.key() in [Qt.Key_Return, Qt.Key_Enter]:
@@ -603,35 +661,9 @@ Args:
 
         # set default attrs
         self.is_active = False
+        self.slider_pos = 0
         self._value_mult = value_mult
         self.setText(str(value_mult))
-
-    """ STYLE SHEETS"""
-    def updateLadderItemStyleSheet(self):
-        kwargs = {
-            'selected_color': repr(self.parent().getSelectionColor()),
-            'slider_pos1': self.slider_pos,
-            'slider_pos2': self.slider_pos + 0.01,
-            'bgcolor': self.parent().bg_slide_color,
-            'fgcolor': self.parent().fg_slide_color,
-        }
-        #
-        style_sheet = """
-            LadderItem::hover[is_active=false]{{background-color: rgba{selected_color}}}
-            LadderItem[is_active=true]{{background-color: rgba{selected_color}}}
-            LadderItem[gradient_on=true]{{background: qlineargradient(
-               x1:{slider_pos1} y1:0,
-               x2:{slider_pos2} y2:0,
-               stop:0 rgba{bgcolor},
-               stop:1 rgba{fgcolor}
-           );
-           }}
-           """.format(**kwargs)
-
-        item_list = self.parent().item_list
-        for index, item in enumerate(item_list):
-            item.setStyleSheet(style_sheet)
-            updateStyleSheet(item)
 
     def setGradientEnable(self, enable):
         """
@@ -769,24 +801,6 @@ Args:
         return magnitude
 
     """ EVENTS """
-    # def enterEvent(self, *args, **kwargs):
-    #     """
-    #     hack to set up hover color for QLabels
-    #     """
-    #     if self.parent().is_active is False:
-    #         self.setStyleSheet(
-    #             'background-color: rgba{selected_color}'.format(
-    #                 selected_color=repr(self.parent().getSelectionColor()))
-    #             )
-    #     return QLabel.enterEvent(self, *args, **kwargs)
-    #
-    # def leaveEvent(self, *args, **kwargs):
-    #     """
-    #     hack to set up hover color for QLabels
-    #     reset to default values
-    #     """
-    #     self.setStyleSheet(self.default_stylesheet)
-    #     return QLabel.leaveEvent(self, *args, **kwargs)
 
     def mousePressEvent(self, event, *args, **kwargs):
         """
@@ -824,7 +838,8 @@ Args:
             self.slider_pos = math.fabs(math.modf(magnitude)[0])
 
             # update style sheets
-            self.updateLadderItemStyleSheet()
+            self.parent().slider_pos = self.slider_pos
+            self.parent().updateStyleSheet()
             if self.num_ticks != int(magnitude):
                 # reset values
                 self.num_ticks = int(magnitude)
@@ -851,6 +866,7 @@ Args:
 
 def main():
     import sys
+    app = QApplication(sys.argv)
 
     from cgwidgets.utils import installLadderDelegate
 
@@ -878,33 +894,53 @@ def main():
             # ladder.setMiddleItemBorderColor((255, 0, 255))
             # ladder.setMiddleItemBorderWidth(2)
             # ladder.setItemHeight(50)
-            # ladder.fg_slide_color = (255, 128, 32, 255)
-            # ladder.bg_slide_color = (0, 128, 255, 255)
+            # ladder.rgba_fg_slide = (255, 128, 32, 255)
+            # ladder.rgba_bg_slide = (0, 128, 255, 255)
 
         def setValue(self, value):
             self.setText(str(value))
 
-    app = QApplication(sys.argv)
     mw = QWidget()
-    #mw.setStyleSheet("background-color: rgb(200,0,0,255")
+
     ml = QVBoxLayout()
     mw.setLayout(ml)
 
     w2 = QWidget(mw)
     l2 = QVBoxLayout()
     w2.setLayout(l2)
+    float_input = FloatInputWidget()
+    float_input.setDoMath(True)
+    ladder = installLadderDelegate(
+        float_input
+    )
 
-    menu = TestWidget(w2)
-    l2.addWidget(menu)
+    ladder.setDiscreteDrag(True, alignment=Qt.AlignLeft, depth=10)
+    ladder.setDiscreteDrag(
+        True,
+        alignment=Qt.AlignBottom,
+        depth=10,
+        display_widget=w2
+        )
+    # ladder.setMiddleItemBorderColor((255, 0, 255))
+    # ladder.setMiddleItemBorderWidth(2)
+    # ladder.setItemHeight(50)
+    # ladder.rgba_fg_slide = (255, 128, 32, 255)
+    # ladder.rgba_bg_slide = (0, 128, 255, 255)
+
+    l2.addWidget(float_input)
     l2.addWidget(QPushButton('BUTTTON'))
     l2.addWidget(QLabel('LABELLLLL'))
 
     ml.addWidget(w2)
     mw.show()
     mw.move(QCursor.pos())
+
     sys.exit(app.exec_())
 
 
 if __name__ == '__main__':
+
     main()
+
+
     #help(LadderDelegate)

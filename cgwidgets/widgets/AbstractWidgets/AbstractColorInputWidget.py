@@ -1,17 +1,26 @@
 """
 TODO:
+    Hue adjust -->
+        Shift + LMB?
     Display Value Labels
         *   Make this adjustable with the INPUT WIDGETS
+                - Connect to gradients
+                    will need a flag to stop recursion...
         *   Default height / width
         *   Finish setting up position...
                 NORTH / EAST do not work
                     gradient looks like its always drawing from 0,0
                     instead of with the offset
-    Display Label
+        *   Ladder
+                * Hover colors
+                * Outline colors
+                * Range... Abstract Input widgets... need range
+    CLOCK ( Display Label )
         * Show current values
         * background
                 - semi transparent?
                 - middle gray?
+
 
 """
 
