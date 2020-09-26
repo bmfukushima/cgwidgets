@@ -628,19 +628,15 @@ class ColorGraphicsView(QGraphicsView):
         color = self._pickColor(pos)
         scene.updateRGBACrosshair(event.pos())
 
-        # check mouse position...
-        top_left = self.mapToGlobal(self.pos())
-        top = top_left.y()
-        left = top_left.x()
-        right = left + self.geometry().width()
-        bot = top + self.geometry().height()
-
-        if pos.y() < top or pos.y() > bot or pos.x() < left or pos.x() > right:
-            if self._in_gradient_widget == True:
+        # update cursor display depending on if the cursor is inside of the widget or not
+        cursor_sector_dict = self._checkMousePos(pos)
+        is_inside = cursor_sector_dict['INSIDE']
+        if not is_inside:
+            if self._in_gradient_widget is True:
                 self.setCursor(Qt.CrossCursor)
                 self._in_gradient_widget = False
         else:
-            if self._in_gradient_widget == False:
+            if self._in_gradient_widget is False:
                 self.setCursor(Qt.BlankCursor)
                 self._in_gradient_widget = True
 
