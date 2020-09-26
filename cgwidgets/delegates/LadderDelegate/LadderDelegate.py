@@ -570,18 +570,16 @@ Notes:
         self.middle_item.setValue(self.getValue())
 
         # start the continued selection event
-
         # get selection attrs
-        cursor_position = self.parent().cursorPosition()
-        start = self.parent().selectionStart()
-        length = self.parent().selectionLength()
-
-        # set middle item
-        self.middle_item.setFocus(True)
-        self.middle_item.setCursorPosition(cursor_position)
-        if start != -1:
-            self.middle_item.setSelection(start, length)
-
+        # cursor_position = self.parent().cursorPosition()
+        # start = self.parent().selectionStart()
+        # length = self.parent().selectionLength()
+        #
+        # # set middle item
+        # self.middle_item.setFocus(True)
+        # self.middle_item.setCursorPosition(cursor_position)
+        # if start != -1:
+        #     self.middle_item.setSelection(start, length)
         #
         self.__updateUserInputs()
         return QWidget.showEvent(self, *args, **kwargs)
@@ -609,8 +607,9 @@ Notes:
         if self.getValue() is None:
             # print('This widgets like numbers. Not whatever you put in here.')
             return QWidget.eventFilter(self, obj, event, *args, **kwargs)
-        if event.type() == self.getUserInputTrigger():
-            self.show()
+        if self.parent().selectionLength() == 0:
+            if event.type() == self.getUserInputTrigger():
+                self.show()
         return QWidget.eventFilter(self, obj, event, *args, **kwargs)
 
 

@@ -309,7 +309,6 @@ class AbstractNumberInputWidget(AbstractInputWidget):
         modifiers = event.modifiers()
         # add control modifiers back
         if modifiers:
-            print(modifiers)
             # user control operations (copy/paste/etc)
             if modifiers == Qt.ControlModifier:
                 return QLineEdit.keyPressEvent(self, event, *args, **kwargs)
