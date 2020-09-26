@@ -581,6 +581,7 @@ Notes:
         # if start != -1:
         #     self.middle_item.setSelection(start, length)
         #
+        self.middle_item.setCursorPosition(0)
         self.__updateUserInputs()
         return QWidget.showEvent(self, *args, **kwargs)
 
@@ -632,6 +633,7 @@ Attributes:
         super(LadderMiddleItem, self).__init__(parent)
         self.setValue(value)
         self.editingFinished.connect(self.tempSetValue)
+        self.setStyleSheet("background-color: rgba{rgba_blue_3}".format(**iColor.style_sheet_args))
 
     def mousePressEvent(self, event):
         self.parent().is_active = True

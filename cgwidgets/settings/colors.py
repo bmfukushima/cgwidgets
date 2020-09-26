@@ -7,11 +7,27 @@ class Colors(dict):
         self["rgba_gray_2"] = Colors.multiplyRGBAValues(self["rgba_gray_1"], golden_ratio=True)
         self["rgba_gray_3"] = Colors.multiplyRGBAValues(self["rgba_gray_2"], golden_ratio=True)
         self["rgba_gray_4"] = Colors.multiplyRGBAValues(self["rgba_gray_3"], golden_ratio=True)
+
+        """ blue """
+        self["rgba_blue_0"] = (0, 0, 32, 255)
+        self["rgba_blue_1"] = Colors.multiplyRGBAValues(self["rgba_blue_0"], golden_ratio=True)
+        self["rgba_blue_2"] = Colors.multiplyRGBAValues(self["rgba_blue_1"], golden_ratio=True)
+        self["rgba_blue_3"] = Colors.multiplyRGBAValues(self["rgba_blue_2"], golden_ratio=True)
+        self["rgba_blue_4"] = Colors.multiplyRGBAValues(self["rgba_blue_3"], golden_ratio=True)
+
+        """ green """
+        self["rgba_green_0"] = (0, 32, 0, 255)
+        self["rgba_green_1"] = Colors.multiplyRGBAValues(self["rgba_green_0"], golden_ratio=True)
+        self["rgba_green_2"] = Colors.multiplyRGBAValues(self["rgba_green_1"], golden_ratio=True)
+        self["rgba_green_3"] = Colors.multiplyRGBAValues(self["rgba_green_2"], golden_ratio=True)
+        self["rgba_green_4"] = Colors.multiplyRGBAValues(self["rgba_green_3"], golden_ratio=True)
         #self["rgba_gray_selected"] = Colors.multiplyRGBAValues(self["rgba_gray_0"])
 
         """ outline """
-        self["rgba_outline"] = (180, 70, 10, 255)
-        self["rgba_outline_hover"] = (255, 100, 15, 255)
+        # self["rgba_outline"] = (180, 70, 10, 255)
+        # self["rgba_outline_hover"] = (255, 100, 15, 255)
+        self["rgba_outline"] = self["rgba_green_3"]
+        self["rgba_outline_hover"] = self["rgba_green_4"]
 
         """ text """
         self["rgba_text"] = (192, 192, 192, 255)
