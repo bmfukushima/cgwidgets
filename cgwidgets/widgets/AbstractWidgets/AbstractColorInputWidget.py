@@ -34,7 +34,7 @@ import re
 
 from qtpy.QtWidgets import (
     QApplication,
-    QStackedWidget, QWidget,
+    QStackedWidget, QWidget, QVBoxLayout,
     QGraphicsView, QGraphicsScene, QGraphicsEllipseItem, QGraphicsItemGroup,
     QGraphicsLineItem, QLabel, QBoxLayout, QFrame
 )
@@ -48,7 +48,7 @@ from cgwidgets.widgets import AbstractInputGroup, FloatInputWidget
 from cgwidgets.settings.colors import iColor
 
 
-class AbstractColorGradientMainWidget(QStackedWidget):
+class AbstractColorInputWidget(QStackedWidget):
     """
     Displays the color swatch to the user.  This color swatch will have a cross
     hair where the user can select the color that they want to use
@@ -62,15 +62,19 @@ class AbstractColorGradientMainWidget(QStackedWidget):
 
     Widgets
         | -- color_picker (ColorGradientWidget)
-                | -- VBox
-                        TODO:
-                            (Change to box? So you can set orientation?)
-                        | -- QGraphicsView
+                | -- BoxLayout
+                        | -- QWidget
+                        |       | -- QGraphicsView
                         | -- QGraphicsLabel
         | -- display_color_widget (ColorDisplayLabel)
                 TODO:
                     Add the RGBA | HSV values to the label
                     Potentially make this into a Layout?
+
+    TODO
+        *   Previous Colors Module
+                Key press event
+                    Toggle current index to show previous colors
     """
     NORTH = 'north'
     SOUTH = 'south'
@@ -78,7 +82,7 @@ class AbstractColorGradientMainWidget(QStackedWidget):
     WEST = 'west'
 
     def __init__(self, parent=None):
-        super(AbstractColorGradientMainWidget, self).__init__(parent=parent)
+        super(AbstractColorInputWidget, self).__init__(parent=parent)
         # setup attrs
         self._border_width = 10
         self._linear_crosshair_direction = Qt.Horizontal
@@ -173,7 +177,7 @@ class AbstractColorGradientMainWidget(QStackedWidget):
         of the display labels for the user.
 
         Args
-            position (AbstractColorGradientMainWidget.POSITION): the position
+            position (AbstractColorInputWidget.POSITION): the position
                 for the labels to be displayed at.
 
         TODO:
@@ -204,7 +208,7 @@ class AbstractColorGradientMainWidget(QStackedWidget):
         }
         self.setStyleSheet(
             """
-            AbstractColorGradientMainWidget{{
+            AbstractColorInputWidget{{
             border: {border_width} solid rgba{color}
             }}
             """.format(**kwargs)
@@ -219,6 +223,11 @@ class AbstractColorGradientMainWidget(QStackedWidget):
     @border_width.setter
     def border_width(self, border_width):
         self._border_width = border_width
+
+
+class ColorGradientMainWidget(QWidget):
+    def __init__(self, parent=None):
+        super(ColorGradientMainWidget, self).__init__(parent)
 
 
 class ColorGradientWidget(QWidget):
@@ -237,31 +246,36 @@ class ColorGradientWidget(QWidget):
 
         self.scene = ColorGraphicsScene(self)
         self.view = ColorGraphicsView(self.scene)
+
+        # intermediate widget for scene
+        self.view_widget = QWidget()
+        self.view_layout = QVBoxLayout(self.view_widget)
+        self.view_layout.addWidget(self.view)
         self.display_values_widget = DisplayValuesGroupWidget(self)
 
         self.layout().addWidget(self.display_values_widget)
-        self.layout().addWidget(self.view)
+        self.layout().addWidget(self.view_widget)
         self.setStyleSheet("border:None")
 
     def setLabelPosition(self, position):
         """
         Sets the display labels position.  Valid inputs are
-        AbstractColorGradientMainWidget.DIRECTION
+        AbstractColorInputWidget.DIRECTION
             NORTH | SOUTH | EAST | WEST
 
         TODO:
             Directions need to be moved into settings/utils
         """
-        if position == AbstractColorGradientMainWidget.NORTH:
+        if position == AbstractColorInputWidget.NORTH:
             self.layout().setDirection(QBoxLayout.TopToBottom)
             self.display_values_widget.layout().setDirection(QBoxLayout.LeftToRight)
-        elif position == AbstractColorGradientMainWidget.SOUTH:
+        elif position == AbstractColorInputWidget.SOUTH:
             self.layout().setDirection(QBoxLayout.BottomToTop)
             self.display_values_widget.layout().setDirection(QBoxLayout.LeftToRight)
-        elif position == AbstractColorGradientMainWidget.EAST:
+        elif position == AbstractColorInputWidget.EAST:
             self.layout().setDirection(QBoxLayout.LeftToRight)
             self.display_values_widget.layout().setDirection(QBoxLayout.TopToBottom)
-        elif position == AbstractColorGradientMainWidget.WEST:
+        elif position == AbstractColorInputWidget.WEST:
             self.layout().setDirection(QBoxLayout.RightToLeft)
             self.display_values_widget.layout().setDirection(QBoxLayout.TopToBottom)
 
@@ -271,7 +285,7 @@ class ColorGradientWidget(QWidget):
     def leaveEvent(self, *args, **kwargs):
         cursor_sector_dict = checkMousePos(QCursor.pos(), self)
         if cursor_sector_dict["INSIDE"] is False:
-            color_widget = getWidgetAncestor(self, AbstractColorGradientMainWidget)
+            color_widget = getWidgetAncestor(self, AbstractColorInputWidget)
             color_widget.setCurrentIndex(0)
         return QWidget.leaveEvent(self, *args, **kwargs)
 
@@ -379,7 +393,7 @@ class ColorGraphicsView(QGraphicsView):
         self.__hideLinearCrosshair(False)
 
         #RGB
-        main_widget = getWidgetAncestor(self, AbstractColorGradientMainWidget)
+        main_widget = getWidgetAncestor(self, AbstractColorInputWidget)
         color = main_widget.getColor()
         pos = QPoint(0, 0)
         if modifiers == Qt.AltModifier:
@@ -407,7 +421,8 @@ class ColorGraphicsView(QGraphicsView):
                 self.scene().gradient_type = ColorGraphicsScene.SATURATION
 
         # update display label to show selected value
-        color_arg_widgets_dict = self.parent().display_values_widget.getWidgetDict()
+        color_gradient_widget = getWidgetAncestor(self, ColorGradientWidget)
+        color_arg_widgets_dict = color_gradient_widget.display_values_widget.getWidgetDict()
         if self.scene().gradient_type != ColorGraphicsScene.RGBA:
             color_arg_widgets_dict[self.scene().gradient_type].setSelected(True)
 
@@ -450,7 +465,8 @@ class ColorGraphicsView(QGraphicsView):
         QCursor.setPos(self._orig_pos)
 
         # disable labels
-        color_arg_widgets_dict = self.parent().display_values_widget.getWidgetDict()
+        color_gradient_widget = getWidgetAncestor(self, ColorGradientWidget)
+        color_arg_widgets_dict = color_gradient_widget.display_values_widget.getWidgetDict()
         for color_arg in color_arg_widgets_dict:
             color_arg_widgets_dict[color_arg].setSelected(False)
 
@@ -481,7 +497,7 @@ class ColorGraphicsView(QGraphicsView):
         self.__updateRGBACrosshairOnResize()
 
         # Linear crosshair
-        main_widget = getWidgetAncestor(self, AbstractColorGradientMainWidget)
+        main_widget = getWidgetAncestor(self, AbstractColorInputWidget)
         direction = main_widget.getLinearCrosshairDirection()
         self.__updateLinearCrosshairOnResize(direction)
 
@@ -539,11 +555,11 @@ class ColorGraphicsView(QGraphicsView):
     def _getColor(self, event):
         """
         Gets the color from the user selection and sends it to the
-        setColor on the main widget ( AbstractColorGradientMainWidget )
+        setColor on the main widget ( AbstractColorInputWidget )
 
         """
         # get attrs
-        color_display_widget = getWidgetAncestor(self.scene(), AbstractColorGradientMainWidget)
+        color_display_widget = getWidgetAncestor(self.scene(), AbstractColorInputWidget)
         selection_type = self.scene().gradient_type
 
         # 2D Gradient
@@ -737,9 +753,9 @@ class ColorGraphicsScene(QGraphicsScene):
 
         # set direction
         if direction == Qt.Horizontal:
-            gradient = QLinearGradient(0, 0, self.width(), 0)
+            gradient = QLinearGradient(0, 0, self.width()+10, 0)
         elif direction == Qt.Vertical:
-            gradient = QLinearGradient(0, 0, 0, self.height())
+            gradient = QLinearGradient(0, 0, 0, self.height()+10)
 
         # create brush
         gradient.setSpread(QGradient.RepeatSpread)
@@ -826,7 +842,7 @@ class ColorGraphicsScene(QGraphicsScene):
         Creates the initial linear crosshair.  Note that this is hard coded to setup
         to be drawn horizontally.  You can update the direction with
         setLinearCrosshairDirection(Qt.Direction) on the
-        AbstractColorGradientMainWidget.
+        AbstractColorInputWidget.
         """
         # vertical line
         self.linear_topline_item = LineSegment(width=2)
@@ -861,7 +877,7 @@ class ColorGraphicsScene(QGraphicsScene):
         This is in LOCAL space
         """
         # get crosshair direction
-        main_widget = getWidgetAncestor(self, AbstractColorGradientMainWidget)
+        main_widget = getWidgetAncestor(self, AbstractColorInputWidget)
         direction = main_widget.getLinearCrosshairDirection()
 
         # set cross hair pos
@@ -995,7 +1011,7 @@ class ColorDisplayLabel(QLabel):
         self.setStyleSheet(style_sheet)
 
     def enterEvent(self, *args, **kwargs):
-        color_display_widget = getWidgetAncestor(self, AbstractColorGradientMainWidget)
+        color_display_widget = getWidgetAncestor(self, AbstractColorInputWidget)
         color_display_widget.setCurrentIndex(1)
         return QLabel.enterEvent(self, *args, **kwargs)
 
@@ -1098,9 +1114,9 @@ class DisplayLabel(AbstractInputGroup):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    color_widget = AbstractColorGradientMainWidget()
+    color_widget = AbstractColorInputWidget()
     #color_widget.setLinearCrosshairDirection(Qt.Vertical)
-    color_widget.setDisplayLocation(position=AbstractColorGradientMainWidget.WEST)
+    color_widget.setDisplayLocation(position=AbstractColorInputWidget.EAST)
     color_widget.show()
     color_widget.move(QCursor.pos())
     sys.exit(app.exec_())
