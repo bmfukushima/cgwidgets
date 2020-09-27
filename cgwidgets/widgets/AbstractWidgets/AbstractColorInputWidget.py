@@ -68,7 +68,7 @@ class AbstractColorInputWidget(QStackedWidget):
                         | -- QWidget
                         |       | -- QGraphicsView
                         | -- QGraphicsLabel
-        | -- display_color_widget (ColorDisplayLabel)
+        | -- clock_display_widget (ClockDisplayWidget)
                 TODO:
                     Add the RGBA | HSV values to the label
                     Potentially make this into a Layout?
@@ -91,9 +91,9 @@ class AbstractColorInputWidget(QStackedWidget):
 
         # create widgets
         self.color_picker_widget = ColorGradientMainWidget()
-        self.display_color_widget = ColorDisplayLabel()
+        self.clock_display_widget = ClockDisplayWidget()
 
-        self.addWidget(self.display_color_widget)
+        self.addWidget(self.clock_display_widget)
         self.addWidget(self.color_picker_widget)
 
         default_color = QColor()
@@ -236,7 +236,7 @@ class ColorGradientMainWidget(QWidget):
 
         # create widgets
         self.color_gradient_view_widget = ColorGradientWidget(self)
-        self.display_values_widget = DisplayValuesGroupWidget(self)
+        self.display_values_widget = ColorGradientHeaderWidget(self)
 
         # add widgets to layout
         self.layout().addWidget(self.display_values_widget)
@@ -1005,26 +1005,7 @@ class LineSegment(QGraphicsLineItem):
         self.setPen(pen)
 
 
-""" DISPLAY LABELS"""
-class ColorDisplayLabel(QLabel):
-    """
-    This is the cover that goes over the gradient so that it doesn't spam color at
-    the user and hurt their precious precious eyes
-    """
-    def __init__(self, parent=None):
-        super(ColorDisplayLabel, self).__init__(parent=parent)
-        updated_args = {'rgba_background': iColor['rgba_gray_2']}
-        style_sheet = iColor.createDefaultStyleSheet(self, updated_args)
-
-        self.setStyleSheet(style_sheet)
-
-    def enterEvent(self, *args, **kwargs):
-        color_display_widget = getWidgetAncestor(self, AbstractColorInputWidget)
-        color_display_widget.setCurrentIndex(1)
-        return QLabel.enterEvent(self, *args, **kwargs)
-
-
-class DisplayValuesGroupWidget(QFrame):
+class ColorGradientHeaderWidget(QFrame):
     """
     Widget that will contain all of the display values for the user.
 
@@ -1040,20 +1021,20 @@ class DisplayValuesGroupWidget(QFrame):
 
     Widgets
         | -- QBoxLayout
-                | -* DisplayLabel
+                | -* ColorGradientHeaderWidgetItem
 
     """
     def __init__(self, parent=None, direction=QBoxLayout.LeftToRight):
-        super(DisplayValuesGroupWidget, self).__init__(parent)
+        super(ColorGradientHeaderWidget, self).__init__(parent)
         QBoxLayout(direction, self)
         self._widget_dict = {}
         for title in ['hue', 'saturation', 'value']:
-            label = DisplayLabel(self, title=title)
+            label = ColorGradientHeaderWidgetItem(self, title=title)
             self.layout().addWidget(label)
             self._widget_dict[title] = label
 
         for title in ['red', 'green', 'blue']:
-            label = DisplayLabel(self, title=title)
+            label = ColorGradientHeaderWidgetItem(self, title=title)
             self.layout().addWidget(label)
             self._widget_dict[title] = label
 
@@ -1073,7 +1054,7 @@ class DisplayValuesGroupWidget(QFrame):
         """.format(**iColor.style_sheet_args))
 
 
-class DisplayLabel(AbstractInputGroup):
+class ColorGradientHeaderWidgetItem(AbstractInputGroup):
     """
     Attributes:
         name (str)
@@ -1087,7 +1068,7 @@ class DisplayLabel(AbstractInputGroup):
                 | -- value_widget (QLabel)
     """
     def __init__(self, parent=None, title='None', value='None'):
-        super(DisplayLabel, self).__init__(parent, title)
+        super(ColorGradientHeaderWidgetItem, self).__init__(parent, title)
         # setup attrs
         self._value = value
         self._is_selected = False
@@ -1118,6 +1099,25 @@ class DisplayLabel(AbstractInputGroup):
 
     def getValue(self):
         return self._value
+
+
+""" DISPLAY LABELS"""
+class ClockDisplayWidget(QLabel):
+    """
+    This is the cover that goes over the gradient so that it doesn't spam color at
+    the user and hurt their precious precious eyes
+    """
+    def __init__(self, parent=None):
+        super(ClockDisplayWidget, self).__init__(parent=parent)
+        updated_args = {'rgba_background': iColor['rgba_gray_2']}
+        style_sheet = iColor.createDefaultStyleSheet(self, updated_args)
+
+        self.setStyleSheet(style_sheet)
+
+    def enterEvent(self, *args, **kwargs):
+        color_display_widget = getWidgetAncestor(self, AbstractColorInputWidget)
+        color_display_widget.setCurrentIndex(1)
+        return QLabel.enterEvent(self, *args, **kwargs)
 
 
 if __name__ == '__main__':

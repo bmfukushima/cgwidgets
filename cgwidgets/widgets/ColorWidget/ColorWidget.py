@@ -422,8 +422,8 @@ class ColorDisplayWidget(QWidget):
         self.setLayout(layout)
         self.color_picker = ColorPickerWidget(main_widget=main_widget)
         # not using this any more... and was to lazy to remove...
-        # self.color_label --> ColorDisplayLabel lol
-        self.color_label = ColorDisplayLabel(main_widget=main_widget)
+        # self.clock_display --> ClockDisplayWidget lol
+        self.color_label = ClockDisplayWidget(main_widget=main_widget)
         layout.addWidget(self.color_label)
         layout.addWidget(self.color_picker)
 
@@ -693,12 +693,12 @@ class LineSegment(QGraphicsLineItem):
         self.setPen(pen)
 
 
-class ColorDisplayLabel(QLabel):
+class ClockDisplayWidget(QLabel):
     #  ==========================================================================
     # Display color swatch to the user
     #  ==========================================================================
     def __init__(self, parent=None, main_widget=None):
-        super(ColorDisplayLabel, self).__init__(parent=parent)
+        super(ClockDisplayWidget, self).__init__(parent=parent)
         self.main_widget = main_widget
         self.setStyleSheet(
             'background-color: rgba(%s); color: rgb(200,200,64)'
