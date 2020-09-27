@@ -54,9 +54,11 @@ class AbstractColorInputWidget(QStackedWidget):
     hair where the user can select the color that they want to use
 
     Attributes:
+        border_width (int): The width of the border that displays the color
+            to the user
+        color (QColor): The current color that is being returned
         linear_crosshair_direction (Qt.Direction): Direction that the crosshair
             will travel when doing a 1D selection (HSV/RGB)
-        color (QColor): The current color that is being returned
             TODO
                 setColor needs to have a userTrigger on it to do some operation...
 
@@ -88,7 +90,7 @@ class AbstractColorInputWidget(QStackedWidget):
         self._linear_crosshair_direction = Qt.Horizontal
 
         # create widgets
-        self.color_picker_widget = ColorGradientWidget()
+        self.color_picker_widget = ColorGradientMainWidget()
         self.display_color_widget = ColorDisplayLabel()
 
         self.addWidget(self.display_color_widget)
@@ -188,7 +190,7 @@ class AbstractColorInputWidget(QStackedWidget):
 
     """ UTILS """
     def getScene(self):
-        return self.color_picker_widget.scene
+        return self.color_picker_widget.color_gradient_view_widget.scene
 
     def updateDisplayBorder(self, color=None):
         """
@@ -228,33 +230,18 @@ class AbstractColorInputWidget(QStackedWidget):
 class ColorGradientMainWidget(QWidget):
     def __init__(self, parent=None):
         super(ColorGradientMainWidget, self).__init__(parent)
-
-
-class ColorGradientWidget(QWidget):
-    """
-    MainWindow
-        --> Layout
-            --> GraphicsView (GLWidget)
-                --> GraphicsScene
-    """
-    def __init__(self, parent=None):
-        super(ColorGradientWidget, self).__init__(parent)
-
         QBoxLayout(QBoxLayout.TopToBottom, self)
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.layout().setSpacing(0)
 
-        self.scene = ColorGraphicsScene(self)
-        self.view = ColorGraphicsView(self.scene)
-
-        # intermediate widget for scene
-        self.view_widget = QWidget()
-        self.view_layout = QVBoxLayout(self.view_widget)
-        self.view_layout.addWidget(self.view)
+        # create widgets
+        self.color_gradient_view_widget = ColorGradientWidget(self)
         self.display_values_widget = DisplayValuesGroupWidget(self)
 
+        # add widgets to layout
         self.layout().addWidget(self.display_values_widget)
-        self.layout().addWidget(self.view_widget)
+        self.layout().addWidget(self.color_gradient_view_widget)
+
         self.setStyleSheet("border:None")
 
     def setLabelPosition(self, position):
@@ -279,15 +266,34 @@ class ColorGradientWidget(QWidget):
             self.layout().setDirection(QBoxLayout.RightToLeft)
             self.display_values_widget.layout().setDirection(QBoxLayout.TopToBottom)
 
-    def mousePressEvent(self, *args, **kwargs):
-        return QWidget.mousePressEvent(self, *args, **kwargs)
-
     def leaveEvent(self, *args, **kwargs):
         cursor_sector_dict = checkMousePos(QCursor.pos(), self)
         if cursor_sector_dict["INSIDE"] is False:
             color_widget = getWidgetAncestor(self, AbstractColorInputWidget)
             color_widget.setCurrentIndex(0)
         return QWidget.leaveEvent(self, *args, **kwargs)
+
+
+class ColorGradientWidget(QWidget):
+    """
+    MainWindow
+        --> Layout
+            --> GraphicsView (GLWidget)
+                --> GraphicsScene
+    """
+    def __init__(self, parent=None):
+        super(ColorGradientWidget, self).__init__(parent)
+        QVBoxLayout(self)
+
+        self.scene = ColorGraphicsScene(self)
+        self.view = ColorGraphicsView(self.scene)
+
+        self.layout().addWidget(self.view)
+
+        self.layout().setContentsMargins(0, 0, 0, 0)
+
+    def mousePressEvent(self, *args, **kwargs):
+        return QWidget.mousePressEvent(self, *args, **kwargs)
 
 
 class ColorGraphicsView(QGraphicsView):
@@ -421,7 +427,7 @@ class ColorGraphicsView(QGraphicsView):
                 self.scene().gradient_type = ColorGraphicsScene.SATURATION
 
         # update display label to show selected value
-        color_gradient_widget = getWidgetAncestor(self, ColorGradientWidget)
+        color_gradient_widget = getWidgetAncestor(self, ColorGradientMainWidget)
         color_arg_widgets_dict = color_gradient_widget.display_values_widget.getWidgetDict()
         if self.scene().gradient_type != ColorGraphicsScene.RGBA:
             color_arg_widgets_dict[self.scene().gradient_type].setSelected(True)
@@ -465,7 +471,7 @@ class ColorGraphicsView(QGraphicsView):
         QCursor.setPos(self._orig_pos)
 
         # disable labels
-        color_gradient_widget = getWidgetAncestor(self, ColorGradientWidget)
+        color_gradient_widget = getWidgetAncestor(self, ColorGradientMainWidget)
         color_arg_widgets_dict = color_gradient_widget.display_values_widget.getWidgetDict()
         for color_arg in color_arg_widgets_dict:
             color_arg_widgets_dict[color_arg].setSelected(False)
@@ -753,9 +759,9 @@ class ColorGraphicsScene(QGraphicsScene):
 
         # set direction
         if direction == Qt.Horizontal:
-            gradient = QLinearGradient(0, 0, self.width()+10, 0)
+            gradient = QLinearGradient(0, 0, self.width(), 0)
         elif direction == Qt.Vertical:
-            gradient = QLinearGradient(0, 0, 0, self.height()+10)
+            gradient = QLinearGradient(0, 0, 0, self.height())
 
         # create brush
         gradient.setSpread(QGradient.RepeatSpread)
@@ -787,10 +793,7 @@ class ColorGraphicsScene(QGraphicsScene):
             background_gradient = self.create1DGradient()
         elif self.gradient_type == ColorGraphicsScene.RGBA:
             background_gradient = self._drawRGBAGradient()
-            # black_gradient = QLinearGradient(0, 0, 0, self.height())
-            # black_gradient.setSpread(QGradient.RepeatSpread)
-            # black_gradient.setColorAt(0, QColor(0, 0, 0, 0))
-            # black_gradient.setColorAt(1, QColor(value, value, value, 255))
+
             foreground_gradient = self.create1DGradient(
                 direction=Qt.Vertical,
                 color1=(0, 0, 0, 0),
@@ -823,7 +826,12 @@ class ColorGraphicsScene(QGraphicsScene):
         color.setHsvF(1, sat, value)
         color_gradient.setColorAt(1, color)
         # how to add FG here?
+        QColor(0, 0, 0, 0)
 
+        # black_gradient = QLinearGradient(0, 0, 0, self.height())
+        # black_gradient.setSpread(QGradient.RepeatSpread)
+        # black_gradient.setColorAt(0, QColor(0, 0, 0, 0))
+        # black_gradient.setColorAt(1, QColor(value, value, value, 255))
         color_gradient_brush = QBrush(color_gradient)
         return color_gradient_brush
 
