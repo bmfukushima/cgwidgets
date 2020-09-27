@@ -581,7 +581,12 @@ Notes:
         # if start != -1:
         #     self.middle_item.setSelection(start, length)
         #
-        self.middle_item.setCursorPosition(0)
+
+        # reset cursor position
+        cursor_position = self.parent().cursorPosition()
+        self.middle_item.setFocus(True)
+        self.middle_item.setCursorPosition(cursor_position)
+
         self.__updateUserInputs()
         return QWidget.showEvent(self, *args, **kwargs)
 
