@@ -18,7 +18,7 @@ from qtpy.QtWidgets import (
 from qtpy.QtCore import Qt, QModelIndex
 from qtpy.QtGui import QCursor
 
-from cgwidgets.utils import getWidgetAncestor
+from cgwidgets.utils import getWidgetAncestor, attrs
 from cgwidgets.settings.colors import iColor
 
 from cgwidgets.widgets import AbstractInputGroup
@@ -71,17 +71,13 @@ class TansuModelViewWidget(QSplitter, iDynamicWidget):
                                     | -- Stacked/Dynamic Widget (main_widget)
 
     """
-    NORTH = 'north'
-    SOUTH = 'south'
-    EAST = 'east'
-    WEST = 'west'
     OUTLINE_WIDTH = 1
     STACKED = 'stacked'
     DYNAMIC = 'dynamic'
     MULTI = False
     TYPE = STACKED
 
-    def __init__(self, parent=None, direction=NORTH):
+    def __init__(self, parent=None, direction=attrs.NORTH):
         super(TansuModelViewWidget, self).__init__(parent)
         # etc attrs
         self.setHandleWidth(0)
@@ -199,28 +195,28 @@ class TansuModelViewWidget(QSplitter, iDynamicWidget):
         self._direction = direction
         self.viewWidget().setParent(None)
 
-        if direction == TansuModelViewWidget.WEST:
+        if direction == attrs.WEST:
             self.setOrientation(Qt.Horizontal)
             self.viewWidget().setOrientation(Qt.Horizontal)
             self.insertWidget(0, self.viewWidget())
             self.setStretchFactor(0, 0)
             self.setStretchFactor(1, 1)
 
-        elif direction == TansuModelViewWidget.EAST:
+        elif direction == attrs.EAST:
             self.setOrientation(Qt.Horizontal)
             self.viewWidget().setOrientation(Qt.Horizontal)
             self.insertWidget(1, self.viewWidget())
             self.setStretchFactor(1, 0)
             self.setStretchFactor(0, 1)
 
-        elif direction == TansuModelViewWidget.NORTH:
+        elif direction == attrs.NORTH:
             self.setOrientation(Qt.Vertical)
             self.viewWidget().setOrientation(Qt.Vertical)
             self.insertWidget(0, self.viewWidget())
             self.setStretchFactor(0, 0)
             self.setStretchFactor(1, 1)
 
-        elif direction == TansuModelViewWidget.SOUTH:
+        elif direction == attrs.SOUTH:
             self.setOrientation(Qt.Vertical)
             self.viewWidget().setOrientation(Qt.Vertical)
             self.insertWidget(1, self.viewWidget())
@@ -236,13 +232,13 @@ class TansuModelViewWidget(QSplitter, iDynamicWidget):
         """
         Moves the main slider to make the tab label bar the default startup size
         """
-        if self.getViewPosition() == TansuModelViewWidget.NORTH:
+        if self.getViewPosition() == attrs.NORTH:
             self.moveSplitter(self.view_height, 1)
-        elif self.getViewPosition() == TansuModelViewWidget.SOUTH:
+        elif self.getViewPosition() == attrs.SOUTH:
             self.moveSplitter(self.height() - self.view_height, 1)
-        elif self.getViewPosition() == TansuModelViewWidget.WEST:
+        elif self.getViewPosition() == attrs.WEST:
             self.moveSplitter(self.view_width, 1)
-        elif self.getViewPosition() == TansuModelViewWidget.EAST:
+        elif self.getViewPosition() == attrs.EAST:
             self.moveSplitter(self.width() - self.view_width, 1)
 
     def createTansuModelDelegateWidget(self, item, widget):
@@ -413,8 +409,8 @@ class TansuModelViewWidget(QSplitter, iDynamicWidget):
         if 0 < num_items:
             # update width
             if self.getViewPosition() in [
-                TansuModelViewWidget.NORTH,
-                TansuModelViewWidget.SOUTH
+                attrs.NORTH,
+                attrs.SOUTH
             ]:
                 width = int( self.width() / num_items )
                 if TansuModel.ITEM_WIDTH < width:
@@ -518,7 +514,7 @@ class TansuModelViewWidget(QSplitter, iDynamicWidget):
             'view_style_sheet': view_style_sheet,
         })
 
-        if view_position == TansuModelViewWidget.NORTH:
+        if view_position == attrs.NORTH:
             style_sheet = """
             {view_style_sheet}
             {type}::item:hover{{color: rgba{rgba_hover}}}
@@ -538,7 +534,7 @@ class TansuModelViewWidget(QSplitter, iDynamicWidget):
             }}
             {splitter_style_sheet}
             """.format(**style_sheet_args)
-        elif view_position == TansuModelViewWidget.SOUTH:
+        elif view_position == attrs.SOUTH:
             style_sheet = """
             {view_style_sheet}
             {type}::item:hover{{color: rgba{rgba_hover}}}
@@ -558,7 +554,7 @@ class TansuModelViewWidget(QSplitter, iDynamicWidget):
             }}
             {splitter_style_sheet}
             """.format(**style_sheet_args)
-        elif view_position == TansuModelViewWidget.EAST:
+        elif view_position == attrs.EAST:
             style_sheet = """
             {view_style_sheet}
             {type}::item:hover{{color: rgba{rgba_hover}}}
@@ -578,7 +574,7 @@ class TansuModelViewWidget(QSplitter, iDynamicWidget):
             }}
             {splitter_style_sheet}
             """.format(**style_sheet_args)
-        elif view_position == TansuModelViewWidget.WEST:
+        elif view_position == attrs.WEST:
             style_sheet = """
             {view_style_sheet}
             {type}::item:hover{{color: rgba{rgba_hover}}}
@@ -771,7 +767,7 @@ if __name__ == "__main__":
             self.addWidget(QLabel('c'))
 
     w = TansuModelViewWidget()
-    w.setViewPosition(TansuModelViewWidget.NORTH)
+    w.setViewPosition(attrs.NORTH)
 
     w.setMultiSelect(True)
     w.setMultiSelectDirection(Qt.Vertical)

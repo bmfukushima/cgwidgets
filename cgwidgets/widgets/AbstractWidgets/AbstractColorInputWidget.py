@@ -7,10 +7,6 @@ TODO:
                 - Connect to gradients
                     will need a flag to stop recursion...
         *   Default height / width
-        *   Finish setting up position...
-                NORTH / EAST do not work
-                    gradient looks like its always drawing from 0,0
-                    instead of with the offset
         *   Ladder
                 * Hover colors
                 * Outline colors
@@ -43,7 +39,8 @@ from qtpy.QtGui import (
     QColor, QLinearGradient, QGradient, QBrush, QCursor
 )
 
-from cgwidgets.utils import installLadderDelegate, getWidgetAncestor, updateStyleSheet, checkMousePos
+from cgwidgets.utils import installLadderDelegate, getWidgetAncestor, updateStyleSheet, checkMousePos, attrs
+
 from cgwidgets.widgets import AbstractInputGroup, FloatInputWidget
 from cgwidgets.settings.colors import iColor
 
@@ -78,10 +75,10 @@ class AbstractColorInputWidget(QStackedWidget):
                 Key press event
                     Toggle current index to show previous colors
     """
-    NORTH = 'north'
-    SOUTH = 'south'
-    EAST = 'east'
-    WEST = 'west'
+    # NORTH = 'north'
+    # SOUTH = 'south'
+    # EAST = 'east'
+    # WEST = 'west'
 
     def __init__(self, parent=None):
         super(AbstractColorInputWidget, self).__init__(parent=parent)
@@ -173,7 +170,7 @@ class AbstractColorInputWidget(QStackedWidget):
     def getLinearCrosshairDirection(self):
         return self._linear_crosshair_direction
 
-    def setDisplayLocation(self, position=SOUTH):
+    def setDisplayLocation(self, position=attrs.SOUTH):
         """
         When manipulating in the color picker, this will set the position
         of the display labels for the user.
@@ -186,7 +183,7 @@ class AbstractColorInputWidget(QStackedWidget):
             This only works for SOUTH at the moment... need to update gradient
             draw to fully support all directions...
         """
-        self.color_picker_widget.setLabelPosition(position)
+        self.color_picker_widget.setHeaderPosition(position)
 
     """ UTILS """
     def getScene(self):
@@ -244,7 +241,7 @@ class ColorGradientMainWidget(QWidget):
 
         self.setStyleSheet("border:None")
 
-    def setLabelPosition(self, position):
+    def setHeaderPosition(self, position):
         """
         Sets the display labels position.  Valid inputs are
         AbstractColorInputWidget.DIRECTION
@@ -253,16 +250,16 @@ class ColorGradientMainWidget(QWidget):
         TODO:
             Directions need to be moved into settings/utils
         """
-        if position == AbstractColorInputWidget.NORTH:
+        if position == attrs.NORTH:
             self.layout().setDirection(QBoxLayout.TopToBottom)
             self.display_values_widget.layout().setDirection(QBoxLayout.LeftToRight)
-        elif position == AbstractColorInputWidget.SOUTH:
+        elif position == attrs.SOUTH:
             self.layout().setDirection(QBoxLayout.BottomToTop)
             self.display_values_widget.layout().setDirection(QBoxLayout.LeftToRight)
-        elif position == AbstractColorInputWidget.EAST:
+        elif position == attrs.EAST:
             self.layout().setDirection(QBoxLayout.LeftToRight)
             self.display_values_widget.layout().setDirection(QBoxLayout.TopToBottom)
-        elif position == AbstractColorInputWidget.WEST:
+        elif position == attrs.WEST:
             self.layout().setDirection(QBoxLayout.RightToLeft)
             self.display_values_widget.layout().setDirection(QBoxLayout.TopToBottom)
 
@@ -1131,7 +1128,7 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     color_widget = AbstractColorInputWidget()
     #color_widget.setLinearCrosshairDirection(Qt.Vertical)
-    color_widget.setDisplayLocation(position=AbstractColorInputWidget.EAST)
+    color_widget.setDisplayLocation(position=attrs.EAST)
     color_widget.show()
     color_widget.move(QCursor.pos())
     sys.exit(app.exec_())
