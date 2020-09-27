@@ -28,7 +28,7 @@ from qtpy.QtCore import Qt, QEvent
 
 from cgwidgets.utils import (
     updateStyleSheet, clearLayout, installLadderDelegate, getWidgetAncestor,
-    getFontSize, checkIfValueInRange
+    getFontSize, checkIfValueInRange, checkNegative
 )
 from cgwidgets.settings.colors import iColor
 
@@ -225,6 +225,7 @@ class AbstractNumberInputWidget(AbstractInputWidget):
         self.setKeyList(AbstractNumberInputWidget.KEY_LIST)
         self.setDoMath(do_math)
         self.setRange(False)
+        self.setAllowNegative(True)
 
     """ LADDER """
     def setValue(self, value):
@@ -248,6 +249,7 @@ class AbstractNumberInputWidget(AbstractInputWidget):
                 value_list=value_list
             )
             self.ladder.setRange(self.range_enabled, self.range_min, self.range_max)
+            self.ladder.setAllowNegative(self.getAllowNegative())
 
         #     # set up ladder discrete drag
         #     self.ladder.setDiscreteDrag(True, alignment=Qt.AlignLeft, depth=10)
@@ -278,6 +280,15 @@ class AbstractNumberInputWidget(AbstractInputWidget):
         return self._use_ladder_delegate
 
     """ PROPERTIES """
+    def setAllowNegative(self, enabled):
+        self._allow_negative = enabled
+
+        if hasattr(self, 'ladder'):
+            self.ladder.setAllowNegative(enabled)
+
+    def getAllowNegative(self):
+        return self._allow_negative
+
     def setDoMath(self, _do_math):
         self._do_math = _do_math
 
@@ -363,6 +374,7 @@ class AbstractFloatInputWidget(AbstractNumberInputWidget):
         when using numbers
         """
         value = eval(self.text())
+        value = checkNegative(self.getAllowNegative(), value)
         value = checkIfValueInRange(self.range_enabled, value, self.range_min, self.range_max)
         return str(value)
 
@@ -398,6 +410,7 @@ class AbstractIntInputWidget(AbstractNumberInputWidget):
         when using numbers
         """
         value = eval(self.text())
+        value = checkNegative(self.getAllowNegative(), value)
         value = checkIfValueInRange(self.range_enabled, value, self.range_min, self.range_max)
         return str(int(value))
 

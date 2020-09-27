@@ -39,6 +39,7 @@ from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 
 from cgwidgets.utils import (
+    checkNegative,
     checkIfValueInRange,
     getGlobalPos,
     guessBackgroundColor,
@@ -155,6 +156,7 @@ Notes:
 
         # post flight attr set
         self.setRange(False)
+        self._allow_negative = True
 
     """ API """
     def setRange(self, enabled, range_min=0, range_max=1):
@@ -167,6 +169,11 @@ Notes:
         self.range_max = range_max
 
         self.middle_item.setRange(enabled, range_min, range_max)
+
+    def setAllowNegative(self, enabled):
+        self._allow_negative = enabled
+
+        self.middle_item.setAllowNegative(enabled)
 
     def getSlideDistance(self):
         return self._slide_distance
@@ -391,10 +398,15 @@ Notes:
             widget will run this method last when setting the value
         """
         if value is not None:
+            # preflight checks on value
+            value = checkNegative(self._allow_negative, value)
             value = checkIfValueInRange(self.range_enabled, value, self.range_min, self.range_max)
+
+            # set value
             self._value = value
             parent = self.parent()
-            # set value
+
+            # update other widgets
             self.middle_item.setValue(str(self._value))
             try:
                 parent.setText(str(self._value))

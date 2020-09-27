@@ -1036,6 +1036,7 @@ class ColorGradientHeaderWidget(QFrame):
 
         for title in ['red', 'green', 'blue']:
             label = ColorGradientHeaderWidgetItem(self, title=title)
+            label.setAllowNegative(False)
             self.layout().addWidget(label)
             self._widget_dict[title] = label
 
@@ -1082,8 +1083,8 @@ class ColorGradientHeaderWidgetItem(AbstractInputGroup):
 
         self.setStyleSheet("background-color: rgba{rgba_gray_1}".format(**iColor.style_sheet_args))
 
-    def setValue(self, value):
-        self.setText(str(value))
+    # def setValue(self, value):
+    #     self.setText(str(value))
 
     """ PROPERTIES """
     def setValue(self, value):
@@ -1100,6 +1101,12 @@ class ColorGradientHeaderWidgetItem(AbstractInputGroup):
         """
         self.value_widget.setRange(enable, range_min, range_max)
 
+    def setAllowNegative(self, enabled):
+        """
+        Determines if the input will be allowed to go into negative numbers or
+        not
+        """
+        self.value_widget.setAllowNegative(enabled)
 
 """ DISPLAY LABELS"""
 class ClockDisplayWidget(QLabel):

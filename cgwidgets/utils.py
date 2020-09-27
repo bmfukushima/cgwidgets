@@ -8,6 +8,19 @@ from qtpy.QtCore import *
 from qtpy.QtGui import *
 
 
+def checkNegative(enabled, value):
+    """
+    Checks to determine if this value should be allowed to be negative or not
+
+    Args:
+        value (float)
+    """
+    if enabled is False:
+        if value < 0:
+            value = 0
+    return value
+
+
 def checkIfValueInRange(enabled, value, range_min, range_max):
     """
     if set range is enabled, this will force user inputs into the specified range
