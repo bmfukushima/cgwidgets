@@ -28,7 +28,7 @@ from qtpy.QtCore import Qt, QEvent
 
 from cgwidgets.utils import (
     updateStyleSheet, clearLayout, installLadderDelegate, getWidgetAncestor,
-    getFontSize
+    getFontSize, checkIfValueInRange
 )
 from cgwidgets.settings.colors import iColor
 
@@ -224,7 +224,7 @@ class AbstractNumberInputWidget(AbstractInputWidget):
         super(AbstractNumberInputWidget, self).__init__(parent)
         self.setKeyList(AbstractNumberInputWidget.KEY_LIST)
         self.setDoMath(do_math)
-        self.setAllowNegative(allow_negative)
+        self.setRange(False)
 
     """ LADDER """
     def setValue(self, value):
@@ -247,6 +247,8 @@ class AbstractNumberInputWidget(AbstractInputWidget):
                 user_input=user_input,
                 value_list=value_list
             )
+            self.ladder.setRange(self.range_enabled, self.range_min, self.range_max)
+
         #     # set up ladder discrete drag
         #     self.ladder.setDiscreteDrag(True, alignment=Qt.AlignLeft, depth=10)
         #     self.ladder.setDiscreteDrag(
@@ -276,12 +278,6 @@ class AbstractNumberInputWidget(AbstractInputWidget):
         return self._use_ladder_delegate
 
     """ PROPERTIES """
-    def setAllowNegative(self, _allow_negative):
-        self._allow_negative = _allow_negative
-
-    def getAllowNegative(self):
-        return self._allow_negative
-
     def setDoMath(self, _do_math):
         self._do_math = _do_math
 
@@ -295,6 +291,20 @@ class AbstractNumberInputWidget(AbstractInputWidget):
 
     def getDoMath(self):
         return self._do_math
+
+    def setRange(self, enabled, range_min=0, range_max=1):
+        """
+        Determines if this widget has a specified range.  Going over this
+        range will clip values into that range
+        """
+        # setup default attrs
+        self.range_enabled = enabled
+        self.range_min = range_min
+        self.range_max = range_max
+
+        # set up ladder
+        if hasattr(self, 'ladder'):
+            self.ladder.setRange(enabled, range_min, range_max)
 
     def validateEvaluation(self):
         # evaluate if math
@@ -352,7 +362,9 @@ class AbstractFloatInputWidget(AbstractNumberInputWidget):
         Evaluates the users input, this is important
         when using numbers
         """
-        return str(eval(self.text()))
+        value = eval(self.text())
+        value = checkIfValueInRange(self.range_enabled, value, self.range_min, self.range_max)
+        return str(value)
 
 
 class AbstractIntInputWidget(AbstractNumberInputWidget):
@@ -385,7 +397,9 @@ class AbstractIntInputWidget(AbstractNumberInputWidget):
         Evaluates the users input, this is important
         when using numbers
         """
-        return str(int(eval(self.text())))
+        value = eval(self.text())
+        value = checkIfValueInRange(self.range_enabled, value, self.range_min, self.range_max)
+        return str(int(value))
 
 
 class AbstractStringInputWidget(AbstractInputWidget):

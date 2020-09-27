@@ -8,6 +8,27 @@ from qtpy.QtCore import *
 from qtpy.QtGui import *
 
 
+def checkIfValueInRange(enabled, value, range_min, range_max):
+    """
+    if set range is enabled, this will force user inputs into the specified range
+
+    Args:
+        enabled (bool): Determines whether or not to do this operation or not
+            Decided to just leave this in here, as it makes the code at the other
+            level look neater.
+        value (float): value to check
+        range_min (float):
+        range_max (float):
+    """
+    if enabled is True:
+        if value < range_min:
+            value = range_min
+        elif range_max < value:
+            value = range_max
+
+    return value
+
+
 def checkMousePos(pos, widget):
     """
     Checks the mouse position to determine its relation to the current

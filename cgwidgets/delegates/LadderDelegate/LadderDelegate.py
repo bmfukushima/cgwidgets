@@ -39,6 +39,7 @@ from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 
 from cgwidgets.utils import (
+    checkIfValueInRange,
     getGlobalPos,
     guessBackgroundColor,
     installInvisibleCursorEvent,
@@ -152,6 +153,83 @@ Notes:
         )
         self.updateStyleSheet()
 
+        # post flight attr set
+        self.setRange(False)
+
+    """ API """
+    def setRange(self, enabled, range_min=0, range_max=1):
+        """
+        Determines if this widget has a specified range.  Going over this
+        range will clip values into that range
+        """
+        self.range_enabled = enabled
+        self.range_min = range_min
+        self.range_max = range_max
+
+        self.middle_item.setRange(enabled, range_min, range_max)
+
+    def getSlideDistance(self):
+        return self._slide_distance
+
+    def setSlideDistance(self, slide_distance):
+        self._slide_distance = slide_distance
+
+    def getUserInputTrigger(self):
+        return self._user_input
+
+    def setUserInputTrigger(self, user_input):
+        self._user_input = user_input
+
+    def setDiscreteDrag(
+        self,
+        boolean,
+        alignment=Qt.AlignRight,
+        breed=SlideDelegate.UNIT,
+        depth=50,
+        display_widget=None
+    ):
+        """
+        Discrete drag is a display mode that happens when
+        the user manipulates an item in the ladder ( click + drag +release)
+
+        On pen down, the cursor will dissapear and a visual cue will be added
+        based on the alignment kwarg. Pen drag will update the visual cue
+        to show the user how close they are to the next tick.
+
+        Args:
+            *   boolean (boolean): Whether or not to enable/disable discrete
+                    drag mode
+            **  depth (int): how wide/tall the widget should be depending
+                    on its orientation
+            **  alignment (QtCore.Qt.Align): where the widget should be align
+                    relative to the display
+            **  rgba_bg_slide (rgba int 0-255):
+                    The bg color that is displayed to the user when the user
+                    starts to click/drag to slide
+            **  rgba_fg_slide (rgba int 0-255):
+                    The bg color that is displayed to the user when the use
+                    starts to click/drag to slide
+            **  breed (SlideDelegate.TYPE): What type of visual cue to display.
+                    Other options HUE, SATURATION, VALUE
+            **  display_widget (widget)
+        """
+        # delete old slidebar
+        self.__setSlideBar(False)
+
+        # set cursor drag mode
+        self.__setInvisibleCursor(boolean)
+        self.__setInvisibleWidget(boolean)
+
+        # create new slide bar
+        if boolean is True:
+            self.__setSlideBar(
+                boolean,
+                depth=depth,
+                alignment=alignment,
+                breed=breed,
+                display_widget=display_widget
+            )
+
     """ COLORS """
     def updateStyleSheet(self):
         style_sheet_args = iColor.style_sheet_args
@@ -234,69 +312,6 @@ Notes:
     def setMiddleItemBorderWidth(self, border_width):
         self._middle_item_border_width = border_width
 
-    """ UTILS """
-    def getSlideDistance(self):
-        return self._slide_distance
-
-    def setSlideDistance(self, slide_distance):
-        self._slide_distance = slide_distance
-
-    def getUserInputTrigger(self):
-        return self._user_input
-
-    def setUserInputTrigger(self, user_input):
-        self._user_input = user_input
-
-    def setDiscreteDrag(
-        self,
-        boolean,
-        alignment=Qt.AlignRight,
-        breed=SlideDelegate.UNIT,
-        depth=50,
-        display_widget=None
-    ):
-        """
-        Discrete drag is a display mode that happens when
-        the user manipulates an item in the ladder ( click + drag +release)
-
-        On pen down, the cursor will dissapear and a visual cue will be added
-        based on the alignment kwarg. Pen drag will update the visual cue
-        to show the user how close they are to the next tick.
-
-        Args:
-            *   boolean (boolean): Whether or not to enable/disable discrete
-                    drag mode
-            **  depth (int): how wide/tall the widget should be depending
-                    on its orientation
-            **  alignment (QtCore.Qt.Align): where the widget should be align
-                    relative to the display
-            **  rgba_bg_slide (rgba int 0-255):
-                    The bg color that is displayed to the user when the user
-                    starts to click/drag to slide
-            **  rgba_fg_slide (rgba int 0-255):
-                    The bg color that is displayed to the user when the use
-                    starts to click/drag to slide
-            **  breed (SlideDelegate.TYPE): What type of visual cue to display.
-                    Other options HUE, SATURATION, VALUE
-            **  display_widget (widget)
-        """
-        # delete old slidebar
-        self.__setSlideBar(False)
-
-        # set cursor drag mode
-        self.__setInvisibleCursor(boolean)
-        self.__setInvisibleWidget(boolean)
-
-        # create new slide bar
-        if boolean is True:
-            self.__setSlideBar(
-                boolean,
-                depth=depth,
-                alignment=alignment,
-                breed=breed,
-                display_widget=display_widget
-            )
-
     """ SIZE """
     def getItemHeight(self):
         return self._item_height
@@ -376,6 +391,7 @@ Notes:
             widget will run this method last when setting the value
         """
         if value is not None:
+            value = checkIfValueInRange(self.range_enabled, value, self.range_min, self.range_max)
             self._value = value
             parent = self.parent()
             # set value
@@ -934,6 +950,7 @@ def main():
     ladder = installLadderDelegate(
         float_input
     )
+    ladder.setRange(True, 0, 2)
 
     #ladder.setDiscreteDrag(True, alignment=Qt.AlignLeft, depth=10)
     # ladder.setDiscreteDrag(

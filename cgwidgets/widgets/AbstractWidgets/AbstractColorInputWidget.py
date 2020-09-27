@@ -1030,6 +1030,7 @@ class ColorGradientHeaderWidget(QFrame):
         self._widget_dict = {}
         for title in ['hue', 'saturation', 'value']:
             label = ColorGradientHeaderWidgetItem(self, title=title)
+            label.setRange(True, 0, 1)
             self.layout().addWidget(label)
             self._widget_dict[title] = label
 
@@ -1074,19 +1075,12 @@ class ColorGradientHeaderWidgetItem(AbstractInputGroup):
         self._is_selected = False
 
         # setup GUI
-        # TODO Make user input floats here...
         self.value_widget = FloatInputWidget()
+        self.value_widget.setUseLadder(True, value_list=[0.0001, 0.001, 0.01, 0.1])
         self.value_widget.setAlignment(Qt.AlignLeft)
         self.insertWidget(1, self.value_widget)
 
         self.setStyleSheet("background-color: rgba{rgba_gray_1}".format(**iColor.style_sheet_args))
-
-        # install ladder widget
-        self.ladder = installLadderDelegate(
-            self.value_widget,
-            user_input=QEvent.MouseButtonRelease,
-            value_list=[0.0001, 0.001, 0.01, 0.1]
-        )
 
     def setValue(self, value):
         self.setText(str(value))
@@ -1099,6 +1093,12 @@ class ColorGradientHeaderWidgetItem(AbstractInputGroup):
 
     def getValue(self):
         return self._value
+
+    def setRange(self, enable, range_min, range_max):
+        """
+        Sets the range of the user input
+        """
+        self.value_widget.setRange(enable, range_min, range_max)
 
 
 """ DISPLAY LABELS"""
