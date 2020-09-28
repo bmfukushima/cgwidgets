@@ -6,18 +6,11 @@ TODO:
         *   Make this adjustable with the INPUT WIDGETS
                 - Connect to gradients
                     will need a flag to stop recursion...
-        *   Default height / width
-        *   Ladder
-                * Hover colors
-                * Outline colors
-                * Range... Abstract Input widgets... need range
     CLOCK ( Display Label )
         * Show current values
         * background
                 - semi transparent?
                 - middle gray?
-
-
 """
 
 import sys
@@ -31,9 +24,7 @@ from qtpy.QtGui import (
 )
 
 from cgwidgets.utils import getWidgetAncestor, attrs
-
 from cgwidgets.settings.colors import iColor
-
 from cgwidgets.widgets.InputWidgets.ColorInputWidget import ColorGradientMainWidget
 
 
@@ -159,11 +150,10 @@ class ColorInputWidget(QStackedWidget):
         return self._color
 
     def setLinearCrosshairDirection(self, direction=Qt.Horizontal):
-        self._linear_crosshair_direction = direction
-        self.getScene().setLinearCrosshairDirection(direction)
+        self.getScene().linear_crosshair_item.setDirection(direction)
 
     def getLinearCrosshairDirection(self):
-        return self._linear_crosshair_direction
+        return self.getScene().linear_crosshair_item.getDirection()
 
     def setDisplayLocation(self, position=attrs.SOUTH):
         """

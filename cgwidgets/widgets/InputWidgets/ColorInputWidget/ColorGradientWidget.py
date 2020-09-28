@@ -15,10 +15,11 @@ from qtpy.QtGui import (
 )
 
 from cgwidgets.utils import getWidgetAncestor, checkMousePos, attrs, getWidgetAncestorByName
-
 from cgwidgets.widgets.InputWidgets import FloatInputWidget
 from cgwidgets.widgets.AbstractWidgets import AbstractInputGroup
 from cgwidgets.settings.colors import iColor
+
+from cgwidgets.widgets.InputWidgets.ColorInputWidget import LineSegment, OneDPickerItem
 
 
 class ColorGradientMainWidget(QWidget):
@@ -164,30 +165,31 @@ class ColorGraphicsView(QGraphicsView):
         ypos = crosshair_ypos * self.geometry().height()
         new_pos = QPoint(xpos, ypos)
         self.scene().updateRGBACrosshair(new_pos)
+        #self.scene().linear_crosshair_item.setCrosshairPos(new_pos)
 
-    def __updateLinearCrosshairOnResize(self, direction):
-        """
-        Updates the linear crosshair on resize.
-
-        This is currently piggy backing on the direction setting
-        mechanism.  As by default that will redraw the crosshair
-        """
-        # get pos
-        rgba_crosshair_pos = self.scene().getLinearCrosshairPos()
-        old_width = self.getPreviousSize().width()
-        old_height = self.getPreviousSize().height()
-        crosshair_xpos = rgba_crosshair_pos.x() / old_width
-        crosshair_ypos = rgba_crosshair_pos.y() / old_height
-
-        # update linear crosshair position
-        xpos = crosshair_xpos * self.geometry().width()
-        ypos = crosshair_ypos * self.geometry().height()
-        new_pos = QPoint(xpos, ypos)
-        self.scene().setLinearCrosshairPos(new_pos)
-
-        # update the cross hair size
-        # direction = self.scene().getLinearCrosshairDirection()
-        self.scene().setLinearCrosshairDirection(direction)
+    # def __updateLinearCrosshairOnResize(self, direction):
+    #     """
+    #     Updates the linear crosshair on resize.
+    #
+    #     This is currently piggy backing on the direction setting
+    #     mechanism.  As by default that will redraw the crosshair
+    #     """
+    #     # get pos
+    #     linear_crosshair_pos = self.scene().linear_crosshair_item.pos()
+    #     old_width = self.getPreviousSize().width()
+    #     old_height = self.getPreviousSize().height()
+    #     crosshair_xpos = linear_crosshair_pos.x() / old_width
+    #     crosshair_ypos = linear_crosshair_pos.y() / old_height
+    #
+    #     # update linear crosshair position
+    #     xpos = crosshair_xpos * self.geometry().width()
+    #     ypos = crosshair_ypos * self.geometry().height()
+    #     new_pos = QPoint(xpos, ypos)
+    #     self.scene().linear_crosshair_item.setCrosshairPos(new_pos)
+    #
+    #     # update the cross hair size
+    #     # direction = self.scene().getLinearCrosshairDirection()
+    #     self.scene().linear_crosshair_item.setDirection(direction)
 
     """ EVENTS """
 
@@ -253,7 +255,7 @@ class ColorGraphicsView(QGraphicsView):
             # set up cursor
             self.setCursor(Qt.BlankCursor)
             if pos:
-                self.scene().setLinearCrosshairPos(pos)
+                self.scene().linear_crosshair_item.setCrosshairPos(pos)
                 QCursor.setPos(self.mapToGlobal(pos))
 
         return QGraphicsView.mousePressEvent(self, event, *args, **kwargs)
@@ -325,10 +327,10 @@ class ColorGraphicsView(QGraphicsView):
         self.__updateRGBACrosshairOnResize()
 
         # Linear crosshair
-        main_widget = getWidgetAncestorByName(self, "ColorInputWidget")
-        direction = main_widget.getLinearCrosshairDirection()
-        self.__updateLinearCrosshairOnResize(direction)
-
+        # main_widget = getWidgetAncestorByName(self, "ColorInputWidget")
+        # direction = main_widget.getLinearCrosshairDirection()
+        # self.__updateLinearCrosshairOnResize(direction)
+        self.scene().linear_crosshair_item.updateGeometry(self.width(), self.height())
         self.setPreviousSize(rect)
         return QGraphicsView.resizeEvent(self, *args, **kwargs)
 
@@ -400,7 +402,7 @@ class ColorGraphicsView(QGraphicsView):
 
         # Linear Gradient
         else:
-            self.scene().setLinearCrosshairPos(event.pos())
+            self.scene().linear_crosshair_item.setCrosshairPos(event.pos())
 
             pos = event.globalPos()
             orig_color = color_display_widget.getColor()
@@ -720,78 +722,81 @@ class ColorGraphicsScene(QGraphicsScene):
         ColorInputWidget.
         """
         # vertical line
-        self.linear_topline_item = LineSegment(width=1)
-        self.linear_botline_item = LineSegment(width=1)
-
-        # horizontal line
-        self.linear_leftline_item = LineSegment(width=1)
-        self.linear_rightline_item = LineSegment(width=1)
-
-        # create linear cross hair items group
-        self.linear_crosshair_item = QGraphicsItemGroup()
-        self.linear_crosshair_item.addToGroup(self.linear_botline_item)
-        self.linear_crosshair_item.addToGroup(self.linear_rightline_item)
-        self.linear_crosshair_item.addToGroup(self.linear_topline_item)
-        self.linear_crosshair_item.addToGroup(self.linear_leftline_item)
+        # self.linear_topline_item = LineSegment(width=1)
+        # self.linear_botline_item = LineSegment(width=1)
+        #
+        # # horizontal line
+        # self.linear_leftline_item = LineSegment(width=1)
+        # self.linear_rightline_item = LineSegment(width=1)
+        #
+        # # create linear cross hair items group
+        # self.linear_crosshair_item = QGraphicsItemGroup()
+        # self.linear_crosshair_item.addToGroup(self.linear_botline_item)
+        # self.linear_crosshair_item.addToGroup(self.linear_rightline_item)
+        # self.linear_crosshair_item.addToGroup(self.linear_topline_item)
+        # self.linear_crosshair_item.addToGroup(self.linear_leftline_item)
+        self.linear_crosshair_item = OneDPickerItem()
+        self.linear_crosshair_item.setWidth(self.width())
+        self.linear_crosshair_item.setHeight(self.height())
+        self.linear_crosshair_item.setDirection(Qt.Horizontal)
 
         # add group item
-        self.setLinearCrosshairDirection(Qt.Horizontal)
         self.addItem(self.linear_crosshair_item)
 
         # hide by default
         self.linear_crosshair_item.hide()
 
-    def getLinearCrosshairPos(self):
-        return self._linear_crosshair_pos
+    # def getLinearCrosshairPos(self):
+    #     return self._linear_crosshair_pos
 
-    def setLinearCrosshairPos(self, pos):
-        """
-        Places the crosshair at a specific  location in the widget.  This is generally
-        used when updating color values, and passing them back to the color widget.
+    # def setLinearCrosshairPos(self, pos):
+    #     """
+    #     Places the crosshair at a specific  location in the widget.  This is generally
+    #     used when updating color values, and passing them back to the color widget.
+    #
+    #     This is in LOCAL space
+    #     """
+    #     # get crosshair direction
+    #     main_widget = getWidgetAncestorByName(self, "ColorInputWidget")
+    #     direction = main_widget.getLinearCrosshairDirection()
+    #
+    #     # set cross hair pos
+    #     if direction == Qt.Horizontal:
+    #         pos = QPoint(pos.x(), 0)
+    #         self.linear_crosshair_item.setPos(pos.x(), 0)
+    #     elif direction == Qt.Vertical:
+    #         pos = QPoint(0, pos.y())
+    #         self.linear_crosshair_item.setPos(0, pos.y())
+    #
+    #     # update pos attr
+    #     self._linear_crosshair_pos = pos
 
-        This is in LOCAL space
-        """
-        # get crosshair direction
-        main_widget = getWidgetAncestorByName(self, "ColorInputWidget")
-        direction = main_widget.getLinearCrosshairDirection()
+    # def setLinearCrosshairDirection(self, direction):
+    #     """
+    #     Sets the direction of travel of the linear crosshair.  This will also update
+    #     the display of the crosshair
+    #     """
+    #     # set direction
+    #     self._linear_crosshair_direction = direction
+    #     # self._linear_crosshair_size
+    #
+    #     # update display
+    #     if direction == Qt.Horizontal:
+    #         self.linear_topline_item.setLine(-5, 0, 5, 0)
+    #         self.linear_botline_item.setLine(-5, self.height(), 5, self.height())
+    #
+    #         self.linear_leftline_item.setLine(-5, 0, -5, self.height())
+    #         self.linear_rightline_item.setLine(5, 0, 5, self.height())
+    #
+    #     elif direction == Qt.Vertical:
+    #         self.linear_topline_item.setLine(0, -5, self.width(), -5)
+    #         self.linear_botline_item.setLine(0, 5, self.width(), 5)
+    #
+    #         self.linear_leftline_item.setLine(0, -5, 0, 5)
+    #         self.linear_rightline_item.setLine(self.width(), -5, self.width(), 5)
 
-        # set cross hair pos
-        if direction == Qt.Horizontal:
-            pos = QPoint(pos.x(), 0)
-            self.linear_crosshair_item.setPos(pos.x(), 0)
-        elif direction == Qt.Vertical:
-            pos = QPoint(0, pos.y())
-            self.linear_crosshair_item.setPos(0, pos.y())
-
-        # update pos attr
-        self._linear_crosshair_pos = pos
-
-    def setLinearCrosshairDirection(self, direction):
-        """
-        Sets the direction of travel of the linear crosshair.  This will also update
-        the display of the crosshair
-        """
-        # set direction
-        self._linear_crosshair_direction = direction
-        # self._linear_crosshair_size
-
-        # update display
-        if direction == Qt.Horizontal:
-            self.linear_topline_item.setLine(-5, 0, 5, 0)
-            self.linear_botline_item.setLine(-5, self.height(), 5, self.height())
-
-            self.linear_leftline_item.setLine(-5, 0, -5, self.height())
-            self.linear_rightline_item.setLine(5, 0, 5, self.height())
-
-        elif direction == Qt.Vertical:
-            self.linear_topline_item.setLine(0, -5, self.width(), -5)
-            self.linear_botline_item.setLine(0, 5, self.width(), 5)
-
-            self.linear_leftline_item.setLine(0, -5, 0, 5)
-            self.linear_rightline_item.setLine(self.width(), -5, self.width(), 5)
-
-    def getLinearCrosshairDirection(self):
-        return self._linear_crosshair_direction
+    # def getLinearCrosshairDirection(self):
+    #     return self._linear_crosshair_direction
 
     """ RGBA """
 
@@ -871,75 +876,6 @@ class ColorGraphicsScene(QGraphicsScene):
         self.rgba_foreground = RGBAForegroundGradient(self.width(), self.height())
         self.addItem(self.rgba_foreground)
         self.rgba_foreground.setZValue(-10)
-
-
-class LineSegment(QGraphicsItemGroup):
-    """
-    One individual line segment.  This is a group because it needs to create two
-    lines in order to create a multi colored dashed pattern.
-    """
-
-    def __init__(self, parent=None, width=1):
-        super(LineSegment, self).__init__(parent)
-
-        # create lines
-        self.line_1 = QGraphicsLineItem()
-        self.line_2 = QGraphicsLineItem()
-
-        line_length = 2
-        line_space = 5
-        total_line_space = line_length + (2 * line_space)
-
-        # set pen
-        pen1 = QPen()
-        pen1.setColor(QColor(0, 0, 0))
-        pen1.setDashPattern([line_length, total_line_space])
-        pen1.setWidth(width)
-        self.line_1.setPen(pen1)
-
-        pen2 = QPen()
-        pen2.setColor(QColor(255, 255, 255))
-        pen2.setDashPattern([line_length, total_line_space])
-        pen2.setDashOffset(line_length + line_space)
-        pen2.setWidth(width)
-        self.line_2.setPen(pen2)
-
-        # add lines to group
-        self.addToGroup(self.line_1)
-        self.addToGroup(self.line_2)
-
-    def setLine(self, x, y, width, height):
-        self.line_1.setLine(x, y, width, height)
-        self.line_2.setLine(x, y, width, height)
-
-
-# class LineSegment(QGraphicsLineItem):
-#     """
-#     Abstract line segment to be used fro the crosshair
-#     """
-#     def __init__(self, parent=None, width=1):
-#         super(LineSegment, self).__init__(parent)
-#         pen = self.pen()
-#         # #pen.Qt.CustomDashLine()
-#         # brush = QBrush()
-#         # pen_style = Qt.DashLine
-#         # color = QColor(0, 128, 0)
-#         # # morse_code = [
-#         # #     1, 1, 1, 1, 1, 3,
-#         # #     3, 1, 1, 1, 3, 1, 1, 3,
-#         # #     1, 1, 3, 1, 1, 3,
-#         # #     1, 1, 1, 3,
-#         # #     1, 1, 3, 1, 3, 1, 1, 3,
-#         # #     3, 7
-#         # # ]
-#         #
-#         # #morse_code = [x * width for x in morse_code]
-#         # #pen.setDashPattern(morse_code)
-#         # pen.setStyle(pen_style)
-#         # pen.setColor(color)
-#         # #pen.setBrush(brush)
-#         pen.setWidth(width)
-#         self.setPen(pen)
 
 
 class RGBAForegroundGradient(QGraphicsItem):
