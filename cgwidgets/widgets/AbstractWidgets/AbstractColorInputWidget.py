@@ -281,10 +281,10 @@ class ColorGradientMainWidget(QWidget):
         self._header_position = position
 
     def leaveEvent(self, *args, **kwargs):
-        cursor_sector_dict = checkMousePos(QCursor.pos(), self)
-        if cursor_sector_dict["INSIDE"] is False:
-            color_widget = getWidgetAncestor(self, AbstractColorInputWidget)
-            color_widget.setCurrentIndex(0)
+        # cursor_sector_dict = checkMousePos(QCursor.pos(), self)
+        # if cursor_sector_dict["INSIDE"] is False:
+        color_widget = getWidgetAncestor(self, AbstractColorInputWidget)
+        color_widget.setCurrentIndex(0)
         return QWidget.leaveEvent(self, *args, **kwargs)
 
 
