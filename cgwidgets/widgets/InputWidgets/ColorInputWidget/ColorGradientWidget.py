@@ -1,32 +1,6 @@
-"""
-TODO:
-    Hue adjust -->
-        Shift + LMB?
-    Display Value Labels
-        *   Make this adjustable with the INPUT WIDGETS
-                - Connect to gradients
-                    will need a flag to stop recursion...
-        *   Default height / width
-        *   Ladder
-                * Hover colors
-                * Outline colors
-                * Range... Abstract Input widgets... need range
-    CLOCK ( Display Label )
-        * Show current values
-        * background
-                - semi transparent?
-                - middle gray?
-
-
-"""
-
 import sys
 import math
 import re
-
-# from qtpy.QtWidgets import *
-# from qtpy.QtCore import *
-# from qtpy.QtGui import *
 
 from qtpy.QtWidgets import (
     QApplication,
@@ -40,189 +14,11 @@ from qtpy.QtGui import (
     QColor, QLinearGradient, QGradient, QBrush, QCursor, QPen
 )
 
-from cgwidgets.utils import getWidgetAncestor, checkMousePos, attrs
+from cgwidgets.utils import getWidgetAncestor, checkMousePos, attrs, getWidgetAncestorByName
 
-from cgwidgets.widgets import AbstractInputGroup, FloatInputWidget
+from cgwidgets.widgets.InputWidgets import FloatInputWidget
+from cgwidgets.widgets.AbstractWidgets import AbstractInputGroup
 from cgwidgets.settings.colors import iColor
-
-
-class AbstractColorInputWidget(QStackedWidget):
-    """
-    Displays the color swatch to the user.  This color swatch will have a cross
-    hair where the user can select the color that they want to use
-
-    Attributes:
-        border_width (int): The width of the border that displays the color
-            to the user
-        color (QColor): The current color that is being returned
-        linear_crosshair_direction (Qt.Direction): Direction that the crosshair
-            will travel when doing a 1D selection (HSV/RGB)
-            TODO
-                setColor needs to have a userTrigger on it to do some operation...
-
-    Widgets
-        | -- color_picker (ColorGradientWidget)
-                | -- BoxLayout
-                        | -- QWidget
-                        |       | -- QGraphicsView
-                        | -- QGraphicsLabel
-        | -- clock_display_widget (ClockDisplayWidget)
-                TODO:
-                    Add the RGBA | HSV values to the label
-                    Potentially make this into a Layout?
-
-    TODO
-        *   Previous Colors Module
-                Key press event
-                    Toggle current index to show previous colors
-    """
-    # NORTH = 'north'
-    # SOUTH = 'south'
-    # EAST = 'east'
-    # WEST = 'west'
-
-    def __init__(self, parent=None):
-        super(AbstractColorInputWidget, self).__init__(parent=parent)
-        # setup attrs
-        self._border_width = 10
-        self._linear_crosshair_direction = Qt.Horizontal
-
-        # create widgets
-        self.color_picker_widget = ColorGradientMainWidget()
-        self.clock_display_widget = ClockDisplayWidget()
-
-        self.addWidget(self.clock_display_widget)
-        self.addWidget(self.color_picker_widget)
-
-        default_color = QColor()
-        default_color.setRgbF(0.5, 0.5, 1.0, 1.0)
-        self.setColor(default_color)
-
-    """ API """
-    def setRGBACrosshairPosition(self, pos):
-        """
-        Interface to set the cross hair position on the scene
-
-        Args:
-            pos (QPoint):
-        """
-        scene = self.getScene()
-        scene.setRGBACrosshairPos(pos)
-
-    # def setRGBACrosshairPositionFromColor(self, color):
-    #     """
-    #     Sets the crosshair position to color provided.
-    #
-    #     color (QColor):
-    #         color to search for in the crosshair position
-    #     """
-    #     scene = self.getScene()
-    #     xpos = (color.hueF() * scene.width())
-    #     ypos = math.fabs((color.saturationF() * scene.height()) - scene.height())
-    #
-    #     pos = QPoint(xpos, ypos)
-    #
-    #     scene.updateRGBACrosshair(pos)
-
-    def setColor(self, color):
-        """
-        Sets the current color of this widget to the one provided.  This will
-        update the display border, as well as the crosshair position in the
-        gradient widget.
-
-        Args:
-            color (QColor): color to be set to
-
-        TODO:
-            Add user trigger event here
-        """
-        self._color = color
-        self.updateDisplayBorder()
-        #self.setRGBACrosshairPositionFromColor(color)
-
-        # update display args
-        widget_dict = self.color_picker_widget.color_gradient_header_widget.getWidgetDict()
-        new_color_args = {
-            "hue" : color.hueF(),
-            "value" : color.valueF(),
-            "saturation" : color.saturationF(),
-            "red" : color.redF(),
-            "green" : color.greenF(),
-            "blue" : color.blueF()
-        }
-
-        for color_arg in widget_dict:
-            # get value widget
-            widget = widget_dict[color_arg]
-
-            # set new value
-            value = new_color_args[color_arg]
-            widget.setValue(value)
-
-    def getColor(self):
-        if not hasattr(self, '_color'):
-            self._color = QColor()
-        return self._color
-
-    def setLinearCrosshairDirection(self, direction=Qt.Horizontal):
-        self._linear_crosshair_direction = direction
-        self.getScene().setLinearCrosshairDirection(direction)
-
-    def getLinearCrosshairDirection(self):
-        return self._linear_crosshair_direction
-
-    def setDisplayLocation(self, position=attrs.SOUTH):
-        """
-        When manipulating in the color picker, this will set the position
-        of the display labels for the user.
-
-        Args
-            position (AbstractColorInputWidget.POSITION): the position
-                for the labels to be displayed at.
-
-        TODO:
-            This only works for SOUTH at the moment... need to update gradient
-            draw to fully support all directions...
-        """
-        self.color_picker_widget.setHeaderPosition(position)
-
-    """ UTILS """
-    def getScene(self):
-        return self.color_picker_widget.color_gradient_view_widget.scene
-
-    def updateDisplayBorder(self, color=None):
-        """
-        Updates the border color that is displayed to the user
-        Args:
-            color (QColor): color to set the border to, if no color is provided,
-                this by default will use the getColor() method
-        """
-        # get color
-        if not color:
-            color = self.getColor()
-
-        # set up style sheet
-        kwargs = {
-            "color" : repr(color.getRgb()),
-            "border_width" : self.border_width
-        }
-        self.setStyleSheet(
-            """
-            AbstractColorInputWidget{{
-            border: {border_width} solid rgba{color}
-            }}
-            """.format(**kwargs)
-        )
-
-    """ PROPERTIES"""
-
-    @property
-    def border_width(self):
-        return self._border_width
-
-    @border_width.setter
-    def border_width(self, border_width):
-        self._border_width = border_width
 
 
 class ColorGradientMainWidget(QWidget):
@@ -257,7 +53,7 @@ class ColorGradientMainWidget(QWidget):
     def setHeaderPosition(self, position):
         """
         Sets the display labels position.  Valid inputs are
-        AbstractColorInputWidget.DIRECTION
+        ColorInputWidget.DIRECTION
             NORTH | SOUTH | EAST | WEST
 
         """
@@ -283,7 +79,7 @@ class ColorGradientMainWidget(QWidget):
     def leaveEvent(self, *args, **kwargs):
         # cursor_sector_dict = checkMousePos(QCursor.pos(), self)
         # if cursor_sector_dict["INSIDE"] is False:
-        color_widget = getWidgetAncestor(self, AbstractColorInputWidget)
+        color_widget = getWidgetAncestorByName(self, "ColorInputWidget")
         color_widget.setCurrentIndex(0)
         return QWidget.leaveEvent(self, *args, **kwargs)
 
@@ -295,6 +91,7 @@ class ColorGradientWidget(QWidget):
             --> GraphicsView (GLWidget)
                 --> GraphicsScene
     """
+
     def __init__(self, parent=None):
         super(ColorGradientWidget, self).__init__(parent)
         QVBoxLayout(self)
@@ -317,12 +114,14 @@ class ColorGraphicsView(QGraphicsView):
             so that a resize event can recalculate the cross hair
             based off of this geometry
     """
+
     def __init__(self, parent=None):
         super(ColorGraphicsView, self).__init__(parent)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
     """ UTILS """
+
     def __hideRGBACrosshair(self, hide=True):
         """
         Determines if the cross hair for the RGBA picker should be shown/hidden
@@ -387,10 +186,11 @@ class ColorGraphicsView(QGraphicsView):
         self.scene().setLinearCrosshairPos(new_pos)
 
         # update the cross hair size
-        #direction = self.scene().getLinearCrosshairDirection()
+        # direction = self.scene().getLinearCrosshairDirection()
         self.scene().setLinearCrosshairDirection(direction)
 
     """ EVENTS """
+
     def mousePressEvent(self, event, *args, **kwargs):
         """
         Attrs:
@@ -413,8 +213,8 @@ class ColorGraphicsView(QGraphicsView):
             self.__hideRGBACrosshair(True)
             self.__hideLinearCrosshair(False)
 
-            #RGB
-            main_widget = getWidgetAncestor(self, AbstractColorInputWidget)
+            # RGB
+            main_widget = getWidgetAncestorByName(self, "ColorInputWidget")
             color = main_widget.getColor()
             pos = QPoint(0, 0)
             if modifiers == Qt.AltModifier:
@@ -456,7 +256,7 @@ class ColorGraphicsView(QGraphicsView):
                 self.scene().setLinearCrosshairPos(pos)
                 QCursor.setPos(self.mapToGlobal(pos))
 
-        return QGraphicsView.mousePressEvent(self, event,*args, **kwargs)
+        return QGraphicsView.mousePressEvent(self, event, *args, **kwargs)
 
     def mouseMoveEvent(self, event, *args, **kwargs):
         """
@@ -492,12 +292,11 @@ class ColorGraphicsView(QGraphicsView):
             color_arg_widgets_dict[color_arg].setSelected(False)
 
         # update RGBA cross hair pos
-        main_widget = getWidgetAncestor(self, AbstractColorInputWidget)
+        main_widget = getWidgetAncestorByName(self, "ColorInputWidget")
         xpos = (main_widget.getColor().hueF() * self.width())
         ypos = math.fabs((main_widget.getColor().saturationF() * self.height()) - self.height())
         pos = QPoint(xpos, ypos)
         self.scene().updateRGBACrosshair(pos)
-
 
         return QGraphicsView.mouseReleaseEvent(self, *args, **kwargs)
 
@@ -526,7 +325,7 @@ class ColorGraphicsView(QGraphicsView):
         self.__updateRGBACrosshairOnResize()
 
         # Linear crosshair
-        main_widget = getWidgetAncestor(self, AbstractColorInputWidget)
+        main_widget = getWidgetAncestorByName(self, "ColorInputWidget")
         direction = main_widget.getLinearCrosshairDirection()
         self.__updateLinearCrosshairOnResize(direction)
 
@@ -534,6 +333,7 @@ class ColorGraphicsView(QGraphicsView):
         return QGraphicsView.resizeEvent(self, *args, **kwargs)
 
     """ SELECTION """
+
     # def _checkMousePos(self, pos):
     #     """
     #     Checks the mouse position to determine its relation to the current
@@ -584,11 +384,11 @@ class ColorGraphicsView(QGraphicsView):
     def _getColor(self, event):
         """
         Gets the color from the user selection and sends it to the
-        setColor on the main widget ( AbstractColorInputWidget )
+        setColor on the main widget ( ColorInputWidget )
 
         """
         # get attrs
-        color_display_widget = getWidgetAncestor(self.scene(), AbstractColorInputWidget)
+        color_display_widget = getWidgetAncestorByName(self, "ColorInputWidget")
         selection_type = self.scene().gradient_type
 
         # 2D Gradient
@@ -643,26 +443,26 @@ class ColorGraphicsView(QGraphicsView):
         Returns (QColor)
         """
         # get color
-        #TODO check distance?
+        # TODO check distance?
 
         # todo flickers
         """
         This either flickers, or grabs the wrong value... its like picking the less bad
         option =/
-        
+
         could make the cursor black/white... and ignore?
-        
+
         foreground alpha is messing up display
         """
         scene = self.scene()
         pos = event.globalPos()
-        #scene.rgba_crosshair_item.hide()
+        # scene.rgba_crosshair_item.hide()
         scene.updateRGBACrosshair(event.pos())
-        #QApplication.processEvents()
+        # QApplication.processEvents()
         color = self._pickColor(pos, constrain_to_picker=False)
 
-        #scene.update()
-        #scene.rgba_crosshair_item.show()
+        # scene.update()
+        # scene.rgba_crosshair_item.show()
 
         # update cursor display depending on if the cursor is inside of the widget or not
         cursor_sector_dict = checkMousePos(pos, self)
@@ -676,7 +476,7 @@ class ColorGraphicsView(QGraphicsView):
                 self.setCursor(Qt.BlankCursor)
                 self._in_gradient_widget = True
 
-        #scene.rgba_crosshair_item.show()
+        # scene.rgba_crosshair_item.show()
         return color
 
     def _pickColor(self, pos, constrain_to_picker=True):
@@ -717,7 +517,7 @@ class ColorGraphicsView(QGraphicsView):
 
                 QCursor.setPos(pos)
 
-        #self.scene().rgba_crosshair_item.hide()
+        # self.scene().rgba_crosshair_item.hide()
         # get pixel data
         desktop = QApplication.desktop().winId()
         screen = QApplication.primaryScreen()
@@ -730,7 +530,7 @@ class ColorGraphicsView(QGraphicsView):
         color = QColor(img.pixel(0, 0))
 
         # if pure black recurse
-        #if color.valueF() == 0:
+        # if color.valueF() == 0:
         # TODO
         """
         Grabbing color of picker because fails
@@ -743,6 +543,7 @@ class ColorGraphicsView(QGraphicsView):
         return color
 
     """ PROPERTIES """
+
     def setPreviousSize(self, geometry):
         self.previous_size = geometry
 
@@ -781,11 +582,12 @@ class ColorGraphicsScene(QGraphicsScene):
         self._drawRGBAForegroundItem()
 
     """ DRAW GRADIENTS """
+
     def create1DGradient(
-        self,
-        direction=Qt.Horizontal,
-        color1=(0, 0, 0, 1),
-        color2=(1, 1, 1, 1)
+            self,
+            direction=Qt.Horizontal,
+            color1=(0, 0, 0, 1),
+            color2=(1, 1, 1, 1)
     ):
         """
         Creates 1D Linear gradient to be displayed to the user.
@@ -847,16 +649,16 @@ class ColorGraphicsScene(QGraphicsScene):
             """
             for some reason the darker it gets the harder of a time the picker has
             and the steps become larger and larger =/
-            
+
             something with update cross hair pos?
-            
+
             141 setColor 
             self.setRGBACrosshairPositionFromColor(color)
             """
             # get value
-            main_widget = getWidgetAncestor(self, AbstractColorInputWidget)
+            main_widget = getWidgetAncestorByName(self, "ColorInputWidget")
             value = main_widget.getColor().valueF()
-            #value = .5
+            # value = .5
             # setup foreground gradient item
             foreground_gradient = self.create1DGradient(
                 direction=Qt.Vertical,
@@ -888,7 +690,7 @@ class ColorGraphicsScene(QGraphicsScene):
         for x in range(num_colors):
             pos = (1 / num_colors) * (x)
             color = QColor()
-            color.setHsvF(x * (1/num_colors), sat, value)
+            color.setHsvF(x * (1 / num_colors), sat, value)
             color_gradient.setColorAt(pos, color)
         # set red to end
         color = QColor()
@@ -899,6 +701,7 @@ class ColorGraphicsScene(QGraphicsScene):
         return color_gradient_brush
 
     """ PROPERTIES """
+
     @property
     def gradient_type(self):
         return self._gradient_type
@@ -908,12 +711,13 @@ class ColorGraphicsScene(QGraphicsScene):
         self._gradient_type = gradient_type
 
     """ CROSSHAIR"""
+
     def drawLinearCrosshair(self):
         """
         Creates the initial linear crosshair.  Note that this is hard coded to setup
         to be drawn horizontally.  You can update the direction with
         setLinearCrosshairDirection(Qt.Direction) on the
-        AbstractColorInputWidget.
+        ColorInputWidget.
         """
         # vertical line
         self.linear_topline_item = LineSegment(width=1)
@@ -948,7 +752,7 @@ class ColorGraphicsScene(QGraphicsScene):
         This is in LOCAL space
         """
         # get crosshair direction
-        main_widget = getWidgetAncestor(self, AbstractColorInputWidget)
+        main_widget = getWidgetAncestorByName(self, "ColorInputWidget")
         direction = main_widget.getLinearCrosshairDirection()
 
         # set cross hair pos
@@ -969,7 +773,7 @@ class ColorGraphicsScene(QGraphicsScene):
         """
         # set direction
         self._linear_crosshair_direction = direction
-        #self._linear_crosshair_size
+        # self._linear_crosshair_size
 
         # update display
         if direction == Qt.Horizontal:
@@ -990,6 +794,7 @@ class ColorGraphicsScene(QGraphicsScene):
         return self._linear_crosshair_direction
 
     """ RGBA """
+
     def drawRGBACrosshair(self):
         """
         rgba_topline_item
@@ -1073,6 +878,7 @@ class LineSegment(QGraphicsItemGroup):
     One individual line segment.  This is a group because it needs to create two
     lines in order to create a multi colored dashed pattern.
     """
+
     def __init__(self, parent=None, width=1):
         super(LineSegment, self).__init__(parent)
 
@@ -1094,7 +900,7 @@ class LineSegment(QGraphicsItemGroup):
         pen2 = QPen()
         pen2.setColor(QColor(255, 255, 255))
         pen2.setDashPattern([line_length, total_line_space])
-        pen2.setDashOffset(line_length+line_space)
+        pen2.setDashOffset(line_length + line_space)
         pen2.setWidth(width)
         self.line_2.setPen(pen2)
 
@@ -1142,6 +948,7 @@ class RGBAForegroundGradient(QGraphicsItem):
 
     Items fill is determined by their paint method
     """
+
     def __init__(self, width, height):
         super(RGBAForegroundGradient, self).__init__()
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
@@ -1165,6 +972,7 @@ class RGBAForegroundGradient(QGraphicsItem):
         return self._rectangle
 
     """ PROPERTIES """
+
     def getGradient(self):
         return self._gradient
 
@@ -1198,6 +1006,7 @@ class ColorGradientHeaderWidget(QFrame):
                 | -* ColorGradientHeaderWidgetItem
 
     """
+
     def __init__(self, parent=None, direction=QBoxLayout.LeftToRight):
         super(ColorGradientHeaderWidget, self).__init__(parent)
         # setup default attrs
@@ -1222,6 +1031,7 @@ class ColorGradientHeaderWidget(QFrame):
         self.updateStyleSheet()
 
     """ SETUP DEFAULT SIZE"""
+
     def getSize(self):
         return self._size
 
@@ -1258,6 +1068,7 @@ class ColorGradientHeaderWidgetItem(AbstractInputGroup):
                 | -- divider_widget (AbstractLine)
                 | -- value_widget (QLabel)
     """
+
     def __init__(self, parent=None, title='None', value='None'):
         super(ColorGradientHeaderWidgetItem, self).__init__(parent, title)
         # setup attrs
@@ -1278,6 +1089,7 @@ class ColorGradientHeaderWidgetItem(AbstractInputGroup):
     #     self.setText(str(value))
 
     """ PROPERTIES """
+
     def setValue(self, value):
         self._value = value
         self.value_widget.setText(str(value))
@@ -1300,38 +1112,12 @@ class ColorGradientHeaderWidgetItem(AbstractInputGroup):
         self.value_widget.setAllowNegative(enabled)
 
 
-""" DISPLAY LABELS"""
-class ClockDisplayWidget(QLabel):
-    """
-    This is the cover that goes over the gradient so that it doesn't spam color at
-    the user and hurt their precious precious eyes
-    """
-    def __init__(self, parent=None):
-        super(ClockDisplayWidget, self).__init__(parent=parent)
-        updated_args = {'rgba_background': iColor['rgba_gray_2']}
-        style_sheet = iColor.createDefaultStyleSheet(self, updated_args)
-
-        self.setStyleSheet(style_sheet)
-
-    def enterEvent(self, *args, **kwargs):
-        color_display_widget = getWidgetAncestor(self, AbstractColorInputWidget)
-        color_display_widget.setCurrentIndex(1)
-        return QLabel.enterEvent(self, *args, **kwargs)
-
-
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    color_widget = AbstractColorInputWidget()
+    color_widget = ColorGradientMainWidget()
     #color_widget.setLinearCrosshairDirection(Qt.Vertical)
-    color_widget.setDisplayLocation(position=attrs.NORTH)
+    #color_widget.setDisplayLocation(position=attrs.NORTH)
     color_widget.show()
     color_widget.move(QCursor.pos())
     sys.exit(app.exec_())
-
-
-
-
-
-
-
 

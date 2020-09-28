@@ -179,6 +179,33 @@ def getWidgetAncestor(widget, instance_type):
             return None
 
 
+def getWidgetAncestorByName(widget, widget_name):
+    """
+    Recursively searches up from the current widget
+    until an widget of the specified instance is found
+
+    Args:
+        widget (QWidget): widget to search from
+        widget_name (str): object name returned by __name__
+            field of the object.
+    """
+    if hasattr(widget, '__name__'):
+        if widget.__name__() == widget_name:
+            return widget
+        else:
+            parent = widget.parent()
+            if parent:
+                return getWidgetAncestorByName(widget.parent(), widget_name)
+            else:
+                return None
+    else:
+        parent = widget.parent()
+        if parent:
+            return getWidgetAncestorByName(widget.parent(), widget_name)
+        else:
+            return None
+
+
 def getBottomLeftPos(widget):
     """
     Returns the bottom left position of the specific widget.  This is mainly for

@@ -1,0 +1,2 @@
+from .ColorGradientWidget import ColorGradientMainWidget as ColorGradientMainWidget
+from .ColorInputWidget import ColorInputWidget as ColorInputWidget

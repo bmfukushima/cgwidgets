@@ -5,3 +5,6 @@ from .InputWidgets import BooleanInputWidget as BooleanInputWidget
 from .InputWidgets import GroupInputWidget as GroupInputWidget
 
 from .ListInputWidget import ListInputWidget as ListInputWidget
+
+# from .ColorInputWidget import ColorGradientMainWidget as ColorGradientMainWidget
+# from .ColorInputWidget import ColorInputWidget as ColorInputWidget
