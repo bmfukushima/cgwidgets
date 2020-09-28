@@ -401,59 +401,60 @@ class ColorGraphicsView(QGraphicsView):
         """
         modifiers = QApplication.keyboardModifiers()
         button = event.button()
-        # move rgba
+        if button in [Qt.LeftButton, Qt.RightButton, Qt.MiddleButton]:
+            # move rgba
 
-        # HSV
-        self._picking = True
-        self._black_select = False
-        self._in_gradient_widget = True
-        self._orig_pos = QCursor.pos()
-        # setup default crosshair
-        self.__hideRGBACrosshair(True)
-        self.__hideLinearCrosshair(False)
+            # HSV
+            self._picking = True
+            self._black_select = False
+            self._in_gradient_widget = True
+            self._orig_pos = QCursor.pos()
+            # setup default crosshair
+            self.__hideRGBACrosshair(True)
+            self.__hideLinearCrosshair(False)
 
-        #RGB
-        main_widget = getWidgetAncestor(self, AbstractColorInputWidget)
-        color = main_widget.getColor()
-        pos = QPoint(0, 0)
-        if modifiers == Qt.AltModifier:
-            if button == Qt.LeftButton:
-                pos = QPoint(color.redF() * self.width(), color.redF() * self.height())
-                self.scene().gradient_type = ColorGraphicsScene.RED
-            elif button == Qt.MiddleButton:
-                pos = QPoint(color.greenF() * self.width(), color.greenF() * self.height())
-                self.scene().gradient_type = ColorGraphicsScene.GREEN
-            elif button == Qt.RightButton:
-                pos = QPoint(color.blueF() * self.width(), color.blueF() * self.height())
-                self.scene().gradient_type = ColorGraphicsScene.BLUE
+            #RGB
+            main_widget = getWidgetAncestor(self, AbstractColorInputWidget)
+            color = main_widget.getColor()
+            pos = QPoint(0, 0)
+            if modifiers == Qt.AltModifier:
+                if button == Qt.LeftButton:
+                    pos = QPoint(color.redF() * self.width(), color.redF() * self.height())
+                    self.scene().gradient_type = ColorGraphicsScene.RED
+                elif button == Qt.MiddleButton:
+                    pos = QPoint(color.greenF() * self.width(), color.greenF() * self.height())
+                    self.scene().gradient_type = ColorGraphicsScene.GREEN
+                elif button == Qt.RightButton:
+                    pos = QPoint(color.blueF() * self.width(), color.blueF() * self.height())
+                    self.scene().gradient_type = ColorGraphicsScene.BLUE
 
-        # HSV
-        else:
-            if button == Qt.LeftButton:
-                self.__hideRGBACrosshair(False)
-                self.__hideLinearCrosshair(True)
-                self.scene().gradient_type = ColorGraphicsScene.RGBA
-            elif button == Qt.MiddleButton:
-                pos = QPoint(color.valueF() * self.width(), color.valueF() * self.height())
-                self.scene().gradient_type = ColorGraphicsScene.VALUE
-            elif button == Qt.RightButton:
-                pos = QPoint(color.saturationF() * self.width(), color.saturationF() * self.height())
-                self.scene().gradient_type = ColorGraphicsScene.SATURATION
+            # HSV
+            else:
+                if button == Qt.LeftButton:
+                    self.__hideRGBACrosshair(False)
+                    self.__hideLinearCrosshair(True)
+                    self.scene().gradient_type = ColorGraphicsScene.RGBA
+                elif button == Qt.MiddleButton:
+                    pos = QPoint(color.valueF() * self.width(), color.valueF() * self.height())
+                    self.scene().gradient_type = ColorGraphicsScene.VALUE
+                elif button == Qt.RightButton:
+                    pos = QPoint(color.saturationF() * self.width(), color.saturationF() * self.height())
+                    self.scene().gradient_type = ColorGraphicsScene.SATURATION
 
-        # update display label to show selected value
-        color_gradient_widget = getWidgetAncestor(self, ColorGradientMainWidget)
-        color_arg_widgets_dict = color_gradient_widget.color_gradient_header_widget.getWidgetDict()
-        if self.scene().gradient_type != ColorGraphicsScene.RGBA:
-            color_arg_widgets_dict[self.scene().gradient_type].setSelected(True)
+            # update display label to show selected value
+            color_gradient_widget = getWidgetAncestor(self, ColorGradientMainWidget)
+            color_arg_widgets_dict = color_gradient_widget.color_gradient_header_widget.getWidgetDict()
+            if self.scene().gradient_type != ColorGraphicsScene.RGBA:
+                color_arg_widgets_dict[self.scene().gradient_type].setSelected(True)
 
-        # draw gradient / hide cursor
-        self.scene().drawGradient()
+            # draw gradient / hide cursor
+            self.scene().drawGradient()
 
-        # set up cursor
-        self.setCursor(Qt.BlankCursor)
-        if pos:
-            self.scene().setLinearCrosshairPos(pos)
-            QCursor.setPos(self.mapToGlobal(pos))
+            # set up cursor
+            self.setCursor(Qt.BlankCursor)
+            if pos:
+                self.scene().setLinearCrosshairPos(pos)
+                QCursor.setPos(self.mapToGlobal(pos))
 
         return QGraphicsView.mousePressEvent(self, event,*args, **kwargs)
 
@@ -721,7 +722,12 @@ class ColorGraphicsView(QGraphicsView):
         color = QColor(img.pixel(0, 0))
 
         # if pure black recurse
-        if color.valueF() == 0:
+        #if color.valueF() == 0:
+        # TODO
+        """
+        Grabbing color of picker because fails
+        """
+        if color.valueF() < .0001:
             self._black_select = True
             pos = QPoint(pos.x() + 1, pos.y() + 1)
             return self._pickColor(pos)
@@ -829,15 +835,25 @@ class ColorGraphicsScene(QGraphicsScene):
         elif self.gradient_type == ColorGraphicsScene.RGBA:
             background_gradient = self._drawRGBAGradient()
 
+            # TODO Update value of foreground gradient
+            """
+            for some reason the darker it gets the harder of a time the picker has
+            and the steps become larger and larger =/
+            """
+            # get value
+            main_widget = getWidgetAncestor(self, AbstractColorInputWidget)
+            #value = main_widget.getColor().valueF()
+            value = 1
             # setup foreground gradient item
             foreground_gradient = self.create1DGradient(
                 direction=Qt.Vertical,
                 color1=(0, 0, 0, 0),
-                color2=(1, 1, 1, 1),
+                color2=(value, value, value, 1),
             )
 
             self.rgba_foreground.updateSize(QRectF(0, 0, self.width(), self.height()))
             self.rgba_foreground.setGradient(foreground_gradient)
+
             self.rgba_foreground.show()
 
         # set gradient
