@@ -25,7 +25,7 @@ from qtpy.QtGui import (
 
 from cgwidgets.utils import getWidgetAncestor, attrs
 from cgwidgets.settings.colors import iColor
-from cgwidgets.widgets.InputWidgets.ColorInputWidget import ColorGradientMainWidget
+from cgwidgets.widgets.InputWidgets.ColorInputWidget import ColorGradientMainWidget, ClockDisplayWidget
 
 
 class ColorInputWidget(QStackedWidget):
@@ -93,21 +93,6 @@ class ColorInputWidget(QStackedWidget):
         """
         scene = self.getScene()
         scene.setRGBACrosshairPos(pos)
-
-    # def setRGBACrosshairPositionFromColor(self, color):
-    #     """
-    #     Sets the crosshair position to color provided.
-    #
-    #     color (QColor):
-    #         color to search for in the crosshair position
-    #     """
-    #     scene = self.getScene()
-    #     xpos = (color.hueF() * scene.width())
-    #     ypos = math.fabs((color.saturationF() * scene.height()) - scene.height())
-    #
-    #     pos = QPoint(xpos, ypos)
-    #
-    #     scene.updateRGBACrosshair(pos)
 
     def setColor(self, color):
         """
@@ -210,22 +195,7 @@ class ColorInputWidget(QStackedWidget):
 
 
 """ DISPLAY LABELS"""
-class ClockDisplayWidget(QLabel):
-    """
-    This is the cover that goes over the gradient so that it doesn't spam color at
-    the user and hurt their precious precious eyes
-    """
-    def __init__(self, parent=None):
-        super(ClockDisplayWidget, self).__init__(parent=parent)
-        updated_args = {'rgba_background': iColor['rgba_gray_2']}
-        style_sheet = iColor.createDefaultStyleSheet(self, updated_args)
 
-        self.setStyleSheet(style_sheet)
-
-    def enterEvent(self, *args, **kwargs):
-        color_display_widget = getWidgetAncestor(self, ColorInputWidget)
-        color_display_widget.setCurrentIndex(1)
-        return QLabel.enterEvent(self, *args, **kwargs)
 
 
 if __name__ == '__main__':

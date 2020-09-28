@@ -19,7 +19,7 @@ from cgwidgets.widgets.InputWidgets import FloatInputWidget
 from cgwidgets.widgets.AbstractWidgets import AbstractInputGroup
 from cgwidgets.settings.colors import iColor
 
-from cgwidgets.widgets.InputWidgets.ColorInputWidget import LineSegment, OneDPickerItem
+from cgwidgets.widgets.InputWidgets.ColorInputWidget import LineSegment, ColorPickerItem1D
 
 
 class ColorGradientMainWidget(QWidget):
@@ -167,32 +167,7 @@ class ColorGraphicsView(QGraphicsView):
         self.scene().updateRGBACrosshair(new_pos)
         #self.scene().linear_crosshair_item.setCrosshairPos(new_pos)
 
-    # def __updateLinearCrosshairOnResize(self, direction):
-    #     """
-    #     Updates the linear crosshair on resize.
-    #
-    #     This is currently piggy backing on the direction setting
-    #     mechanism.  As by default that will redraw the crosshair
-    #     """
-    #     # get pos
-    #     linear_crosshair_pos = self.scene().linear_crosshair_item.pos()
-    #     old_width = self.getPreviousSize().width()
-    #     old_height = self.getPreviousSize().height()
-    #     crosshair_xpos = linear_crosshair_pos.x() / old_width
-    #     crosshair_ypos = linear_crosshair_pos.y() / old_height
-    #
-    #     # update linear crosshair position
-    #     xpos = crosshair_xpos * self.geometry().width()
-    #     ypos = crosshair_ypos * self.geometry().height()
-    #     new_pos = QPoint(xpos, ypos)
-    #     self.scene().linear_crosshair_item.setCrosshairPos(new_pos)
-    #
-    #     # update the cross hair size
-    #     # direction = self.scene().getLinearCrosshairDirection()
-    #     self.scene().linear_crosshair_item.setDirection(direction)
-
     """ EVENTS """
-
     def mousePressEvent(self, event, *args, **kwargs):
         """
         Attrs:
@@ -735,7 +710,7 @@ class ColorGraphicsScene(QGraphicsScene):
         # self.linear_crosshair_item.addToGroup(self.linear_rightline_item)
         # self.linear_crosshair_item.addToGroup(self.linear_topline_item)
         # self.linear_crosshair_item.addToGroup(self.linear_leftline_item)
-        self.linear_crosshair_item = OneDPickerItem()
+        self.linear_crosshair_item = ColorPickerItem1D()
         self.linear_crosshair_item.setWidth(self.width())
         self.linear_crosshair_item.setHeight(self.height())
         self.linear_crosshair_item.setDirection(Qt.Horizontal)

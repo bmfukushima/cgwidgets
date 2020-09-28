@@ -61,12 +61,12 @@ class LineSegment(QGraphicsItemGroup):
         self.line_2.setLine(x, y, width, height)
 
 
-class TwoDPickerItem(QGraphicsItemGroup):
+class ColorPickerItem2D(QGraphicsItemGroup):
     def __init__(self, parent=None):
-        super(TwoDPickerItem, self).__init__(parent)
+        super(ColorPickerItem2D, self).__init__(parent)
 
 
-class OneDPickerItem(QGraphicsItemGroup):
+class ColorPickerItem1D(QGraphicsItemGroup):
     """
     Bar picker item.  This is a 1D bar that will slide back and forth
     over the gradient to show what color is currently being selected.
@@ -78,7 +78,7 @@ class OneDPickerItem(QGraphicsItemGroup):
 
     """
     def __init__(self, parent=None):
-        super(OneDPickerItem, self).__init__(parent)
+        super(ColorPickerItem1D, self).__init__(parent)
 
         """
         Creates the initial linear crosshair.  Note that this is hard coded to setup
