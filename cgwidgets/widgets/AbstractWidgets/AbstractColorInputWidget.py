@@ -37,7 +37,7 @@ from qtpy.QtWidgets import (
 )
 from qtpy.QtCore import (Qt, QPoint, QEvent, QSize, QRectF)
 from qtpy.QtGui import (
-    QColor, QLinearGradient, QGradient, QBrush, QCursor
+    QColor, QLinearGradient, QGradient, QBrush, QCursor, QPen
 )
 
 from cgwidgets.utils import getWidgetAncestor, checkMousePos, attrs
@@ -109,20 +109,20 @@ class AbstractColorInputWidget(QStackedWidget):
         scene = self.getScene()
         scene.setRGBACrosshairPos(pos)
 
-    def setRGBACrosshairPositionFromColor(self, color):
-        """
-        Sets the crosshair position to color provided.
-
-        color (QColor):
-            color to search for in the crosshair position
-        """
-        scene = self.getScene()
-        xpos = (color.hueF() * scene.width())
-        ypos = math.fabs((color.saturationF() * scene.height()) - scene.height())
-
-        pos = QPoint(xpos, ypos)
-        #self.setRGBACrosshairPosition(pos)
-        scene.updateRGBACrosshair(pos)
+    # def setRGBACrosshairPositionFromColor(self, color):
+    #     """
+    #     Sets the crosshair position to color provided.
+    #
+    #     color (QColor):
+    #         color to search for in the crosshair position
+    #     """
+    #     scene = self.getScene()
+    #     xpos = (color.hueF() * scene.width())
+    #     ypos = math.fabs((color.saturationF() * scene.height()) - scene.height())
+    #
+    #     pos = QPoint(xpos, ypos)
+    #
+    #     scene.updateRGBACrosshair(pos)
 
     def setColor(self, color):
         """
@@ -138,7 +138,7 @@ class AbstractColorInputWidget(QStackedWidget):
         """
         self._color = color
         self.updateDisplayBorder()
-        self.setRGBACrosshairPositionFromColor(color)
+        #self.setRGBACrosshairPositionFromColor(color)
 
         # update display args
         widget_dict = self.color_picker_widget.color_gradient_header_widget.getWidgetDict()
@@ -491,6 +491,14 @@ class ColorGraphicsView(QGraphicsView):
         for color_arg in color_arg_widgets_dict:
             color_arg_widgets_dict[color_arg].setSelected(False)
 
+        # update RGBA cross hair pos
+        main_widget = getWidgetAncestor(self, AbstractColorInputWidget)
+        xpos = (main_widget.getColor().hueF() * self.width())
+        ypos = math.fabs((main_widget.getColor().saturationF() * self.height()) - self.height())
+        pos = QPoint(xpos, ypos)
+        self.scene().updateRGBACrosshair(pos)
+
+
         return QGraphicsView.mouseReleaseEvent(self, *args, **kwargs)
 
     def resizeEvent(self, *args, **kwargs):
@@ -839,11 +847,16 @@ class ColorGraphicsScene(QGraphicsScene):
             """
             for some reason the darker it gets the harder of a time the picker has
             and the steps become larger and larger =/
+            
+            something with update cross hair pos?
+            
+            141 setColor 
+            self.setRGBACrosshairPositionFromColor(color)
             """
             # get value
             main_widget = getWidgetAncestor(self, AbstractColorInputWidget)
-            #value = main_widget.getColor().valueF()
-            value = 1
+            value = main_widget.getColor().valueF()
+            #value = .5
             # setup foreground gradient item
             foreground_gradient = self.create1DGradient(
                 direction=Qt.Vertical,
@@ -903,12 +916,12 @@ class ColorGraphicsScene(QGraphicsScene):
         AbstractColorInputWidget.
         """
         # vertical line
-        self.linear_topline_item = LineSegment(width=2)
-        self.linear_botline_item = LineSegment(width=2)
+        self.linear_topline_item = LineSegment(width=1)
+        self.linear_botline_item = LineSegment(width=1)
 
         # horizontal line
-        self.linear_leftline_item = LineSegment(width=2)
-        self.linear_rightline_item = LineSegment(width=2)
+        self.linear_leftline_item = LineSegment(width=1)
+        self.linear_rightline_item = LineSegment(width=1)
 
         # create linear cross hair items group
         self.linear_crosshair_item = QGraphicsItemGroup()
@@ -1000,6 +1013,7 @@ class ColorGraphicsScene(QGraphicsScene):
 
         # crosshair circle
         self.rgba_crosshair_item_circle = QGraphicsEllipseItem()
+
         self.rgba_crosshair_item_circle.setRect(
             -(self.CROSSHAIR_RADIUS * 0.5),
             -(self.CROSSHAIR_RADIUS * 0.5),
@@ -1054,33 +1068,72 @@ class ColorGraphicsScene(QGraphicsScene):
         self.rgba_foreground.setZValue(-10)
 
 
-class LineSegment(QGraphicsLineItem):
+class LineSegment(QGraphicsItemGroup):
     """
-    Abstract line segment to be used fro the crosshair
+    One individual line segment.  This is a group because it needs to create two
+    lines in order to create a multi colored dashed pattern.
     """
     def __init__(self, parent=None, width=1):
         super(LineSegment, self).__init__(parent)
-        pen = self.pen()
-        # #pen.Qt.CustomDashLine()
-        # brush = QBrush()
-        # pen_style = Qt.DashLine
-        # color = QColor(0, 128, 0)
-        # # morse_code = [
-        # #     1, 1, 1, 1, 1, 3,
-        # #     3, 1, 1, 1, 3, 1, 1, 3,
-        # #     1, 1, 3, 1, 1, 3,
-        # #     1, 1, 1, 3,
-        # #     1, 1, 3, 1, 3, 1, 1, 3,
-        # #     3, 7
-        # # ]
-        #
-        # #morse_code = [x * width for x in morse_code]
-        # #pen.setDashPattern(morse_code)
-        # pen.setStyle(pen_style)
-        # pen.setColor(color)
-        # #pen.setBrush(brush)
-        pen.setWidth(width)
-        self.setPen(pen)
+
+        # create lines
+        self.line_1 = QGraphicsLineItem()
+        self.line_2 = QGraphicsLineItem()
+
+        line_length = 2
+        line_space = 5
+        total_line_space = line_length + (2 * line_space)
+
+        # set pen
+        pen1 = QPen()
+        pen1.setColor(QColor(0, 0, 0))
+        pen1.setDashPattern([line_length, total_line_space])
+        pen1.setWidth(width)
+        self.line_1.setPen(pen1)
+
+        pen2 = QPen()
+        pen2.setColor(QColor(255, 255, 255))
+        pen2.setDashPattern([line_length, total_line_space])
+        pen2.setDashOffset(line_length+line_space)
+        pen2.setWidth(width)
+        self.line_2.setPen(pen2)
+
+        # add lines to group
+        self.addToGroup(self.line_1)
+        self.addToGroup(self.line_2)
+
+    def setLine(self, x, y, width, height):
+        self.line_1.setLine(x, y, width, height)
+        self.line_2.setLine(x, y, width, height)
+
+
+# class LineSegment(QGraphicsLineItem):
+#     """
+#     Abstract line segment to be used fro the crosshair
+#     """
+#     def __init__(self, parent=None, width=1):
+#         super(LineSegment, self).__init__(parent)
+#         pen = self.pen()
+#         # #pen.Qt.CustomDashLine()
+#         # brush = QBrush()
+#         # pen_style = Qt.DashLine
+#         # color = QColor(0, 128, 0)
+#         # # morse_code = [
+#         # #     1, 1, 1, 1, 1, 3,
+#         # #     3, 1, 1, 1, 3, 1, 1, 3,
+#         # #     1, 1, 3, 1, 1, 3,
+#         # #     1, 1, 1, 3,
+#         # #     1, 1, 3, 1, 3, 1, 1, 3,
+#         # #     3, 7
+#         # # ]
+#         #
+#         # #morse_code = [x * width for x in morse_code]
+#         # #pen.setDashPattern(morse_code)
+#         # pen.setStyle(pen_style)
+#         # pen.setColor(color)
+#         # #pen.setBrush(brush)
+#         pen.setWidth(width)
+#         self.setPen(pen)
 
 
 class RGBAForegroundGradient(QGraphicsItem):
