@@ -58,10 +58,7 @@ class ColorInputWidget(QStackedWidget):
                 Key press event
                     Toggle current index to show previous colors
     """
-    # NORTH = 'north'
-    # SOUTH = 'south'
-    # EAST = 'east'
-    # WEST = 'west'
+
 
     def __init__(self, parent=None):
         super(ColorInputWidget, self).__init__(parent=parent)

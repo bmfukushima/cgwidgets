@@ -1,3 +1,10 @@
+"""
+TODO:
+    pretty much this entire module...
+    ColorPicker2D
+
+"""
+
 import sys
 import math
 import re

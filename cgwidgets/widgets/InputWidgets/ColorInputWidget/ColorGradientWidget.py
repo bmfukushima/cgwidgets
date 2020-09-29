@@ -197,31 +197,31 @@ class ColorGraphicsView(QGraphicsView):
             if modifiers == Qt.AltModifier:
                 if button == Qt.LeftButton:
                     pos = QPoint(color.redF() * self.width(), color.redF() * self.height())
-                    self.scene().gradient_type = ColorGraphicsScene.RED
+                    self.scene().gradient_type = attrs.RED
                 elif button == Qt.MiddleButton:
                     pos = QPoint(color.greenF() * self.width(), color.greenF() * self.height())
-                    self.scene().gradient_type = ColorGraphicsScene.GREEN
+                    self.scene().gradient_type = attrs.GREEN
                 elif button == Qt.RightButton:
                     pos = QPoint(color.blueF() * self.width(), color.blueF() * self.height())
-                    self.scene().gradient_type = ColorGraphicsScene.BLUE
+                    self.scene().gradient_type = attrs.BLUE
 
             # HSV
             else:
                 if button == Qt.LeftButton:
                     self.__hideRGBACrosshair(False)
                     self.__hideLinearCrosshair(True)
-                    self.scene().gradient_type = ColorGraphicsScene.RGBA
+                    self.scene().gradient_type = attrs.RGBA
                 elif button == Qt.MiddleButton:
                     pos = QPoint(color.valueF() * self.width(), color.valueF() * self.height())
-                    self.scene().gradient_type = ColorGraphicsScene.VALUE
+                    self.scene().gradient_type = attrs.VALUE
                 elif button == Qt.RightButton:
                     pos = QPoint(color.saturationF() * self.width(), color.saturationF() * self.height())
-                    self.scene().gradient_type = ColorGraphicsScene.SATURATION
+                    self.scene().gradient_type = attrs.SATURATION
 
             # update display label to show selected value
             color_gradient_widget = getWidgetAncestor(self, ColorGradientMainWidget)
             color_arg_widgets_dict = color_gradient_widget.color_gradient_header_widget.getWidgetDict()
-            if self.scene().gradient_type != ColorGraphicsScene.RGBA:
+            if self.scene().gradient_type != attrs.RGBA:
                 color_arg_widgets_dict[self.scene().gradient_type].setSelected(True)
 
             # draw gradient / hide cursor
@@ -251,7 +251,7 @@ class ColorGraphicsView(QGraphicsView):
         # reset gradient
         self.__hideRGBACrosshair(False)
         self.__hideLinearCrosshair(True)
-        self.scene().gradient_type = ColorGraphicsScene.RGBA
+        self.scene().gradient_type = attrs.RGBA
         self.scene().drawGradient()
 
         # reset picking attrs
@@ -369,7 +369,7 @@ class ColorGraphicsView(QGraphicsView):
         selection_type = self.scene().gradient_type
 
         # 2D Gradient
-        if selection_type == ColorGraphicsScene.RGBA:
+        if selection_type == attrs.RGBA:
             # RGBA (HUE / SATURATION)
             color = self._getRGBAValue(event)
             color_display_widget.setColor(color)
@@ -384,29 +384,29 @@ class ColorGraphicsView(QGraphicsView):
             new_color = self._pickColor(pos)
 
             # saturation
-            if selection_type == ColorGraphicsScene.SATURATION:
+            if selection_type == attrs.SATURATION:
                 hue = orig_color.hueF()
                 sat = new_color.valueF()
                 value = orig_color.valueF()
 
                 orig_color.setHsvF(hue, sat, value)
             # value
-            elif selection_type == ColorGraphicsScene.VALUE:
+            elif selection_type == attrs.VALUE:
                 # get HSV values
                 hue = orig_color.hueF()
                 sat = orig_color.saturationF()
                 value = new_color.valueF()
                 orig_color.setHsvF(hue, sat, value)
             # red
-            elif selection_type == ColorGraphicsScene.RED:
+            elif selection_type == attrs.RED:
                 red = new_color.redF()
                 orig_color.setRedF(red)
             # green
-            elif selection_type == ColorGraphicsScene.GREEN:
+            elif selection_type == attrs.GREEN:
                 green = new_color.greenF()
                 orig_color.setGreenF(green)
             # blue
-            elif selection_type == ColorGraphicsScene.BLUE:
+            elif selection_type == attrs.BLUE:
                 blue = new_color.blueF()
                 orig_color.setBlueF(blue)
 
@@ -534,14 +534,6 @@ class ColorGraphicsScene(QGraphicsScene):
     """
     The widget that is responsible for displaying the color gradient to the user
     """
-    RED = 'red'
-    GREEN = 'green'
-    BLUE = 'blue'
-    ALPHA = 'alpha'
-    HUE = 'hue'
-    SATURATION = 'saturation'
-    VALUE = 'value'
-    RGBA = 'rgba'
 
     def __init__(self, parent=None):
         super(ColorGraphicsScene, self).__init__(parent)
@@ -553,7 +545,7 @@ class ColorGraphicsScene(QGraphicsScene):
 
         # create scene
         self.setSceneRect(0, 0, 500, 500)
-        self.gradient_type = ColorGraphicsScene.RGBA
+        self.gradient_type = attrs.RGBA
         self.drawRGBACrosshair()
         self.drawLinearCrosshair()
         self._drawRGBAForegroundItem()
@@ -605,21 +597,21 @@ class ColorGraphicsScene(QGraphicsScene):
         self.rgba_foreground.hide()
 
         # get gradient
-        if self.gradient_type == ColorGraphicsScene.RED:
+        if self.gradient_type == attrs.RED:
             background_gradient = self.create1DGradient(color2=(1, 0, 0, 1))
-        elif self.gradient_type == ColorGraphicsScene.GREEN:
+        elif self.gradient_type == attrs.GREEN:
             background_gradient = self.create1DGradient(color2=(0, 1, 0, 1))
-        elif self.gradient_type == ColorGraphicsScene.BLUE:
+        elif self.gradient_type == attrs.BLUE:
             background_gradient = self.create1DGradient(color2=(0, 0, 1, 1))
-        elif self.gradient_type == ColorGraphicsScene.ALPHA:
+        elif self.gradient_type == attrs.ALPHA:
             background_gradient = self.create1DGradient()
-        elif self.gradient_type == ColorGraphicsScene.HUE:
+        elif self.gradient_type == attrs.HUE:
             background_gradient = self.create1DGradient()
-        elif self.gradient_type == ColorGraphicsScene.SATURATION:
+        elif self.gradient_type == attrs.SATURATION:
             background_gradient = self.create1DGradient()
-        elif self.gradient_type == ColorGraphicsScene.VALUE:
+        elif self.gradient_type == attrs.VALUE:
             background_gradient = self.create1DGradient()
-        elif self.gradient_type == ColorGraphicsScene.RGBA:
+        elif self.gradient_type == attrs.RGBA:
             background_gradient = self._drawRGBAGradient()
 
             # TODO Update value of foreground gradient
@@ -678,7 +670,6 @@ class ColorGraphicsScene(QGraphicsScene):
         return color_gradient_brush
 
     """ PROPERTIES """
-
     @property
     def gradient_type(self):
         return self._gradient_type
@@ -696,20 +687,6 @@ class ColorGraphicsScene(QGraphicsScene):
         setLinearCrosshairDirection(Qt.Direction) on the
         ColorInputWidget.
         """
-        # vertical line
-        # self.linear_topline_item = LineSegment(width=1)
-        # self.linear_botline_item = LineSegment(width=1)
-        #
-        # # horizontal line
-        # self.linear_leftline_item = LineSegment(width=1)
-        # self.linear_rightline_item = LineSegment(width=1)
-        #
-        # # create linear cross hair items group
-        # self.linear_crosshair_item = QGraphicsItemGroup()
-        # self.linear_crosshair_item.addToGroup(self.linear_botline_item)
-        # self.linear_crosshair_item.addToGroup(self.linear_rightline_item)
-        # self.linear_crosshair_item.addToGroup(self.linear_topline_item)
-        # self.linear_crosshair_item.addToGroup(self.linear_leftline_item)
         self.linear_crosshair_item = ColorPickerItem1D()
         self.linear_crosshair_item.setWidth(self.width())
         self.linear_crosshair_item.setHeight(self.height())
