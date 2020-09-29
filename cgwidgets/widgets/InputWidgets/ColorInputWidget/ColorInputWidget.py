@@ -24,7 +24,7 @@ from qtpy.QtGui import (
 )
 
 from cgwidgets.utils import getWidgetAncestor, attrs
-from cgwidgets.settings.colors import iColor
+from cgwidgets.settings.colors import iColor, getHSVRGBAFloatFromColor
 from cgwidgets.widgets.InputWidgets.ColorInputWidget import ColorGradientMainWidget, ClockDisplayWidget
 
 
@@ -105,19 +105,12 @@ class ColorInputWidget(QStackedWidget):
         """
         self._color = color
         self.updateDisplayBorder()
-        #self.setRGBACrosshairPositionFromColor(color)
+
+        # get data
+        widget_dict = self.color_picker_widget.color_gradient_header_widget.getWidgetDict()
+        new_color_args = getHSVRGBAFloatFromColor(color)
 
         # update display args
-        widget_dict = self.color_picker_widget.color_gradient_header_widget.getWidgetDict()
-        new_color_args = {
-            "hue" : color.hueF(),
-            "value" : color.valueF(),
-            "saturation" : color.saturationF(),
-            "red" : color.redF(),
-            "green" : color.greenF(),
-            "blue" : color.blueF()
-        }
-
         for color_arg in widget_dict:
             # get value widget
             widget = widget_dict[color_arg]

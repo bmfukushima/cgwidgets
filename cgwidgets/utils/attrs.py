@@ -13,3 +13,6 @@ HUE = 'hue'
 SATURATION = 'saturation'
 VALUE = 'value'
 RGBA = 'rgba'
+
+RGBA_LIST = [RED, GREEN, BLUE, ALPHA]
+HSV_LIST = [HUE, SATURATION, VALUE]

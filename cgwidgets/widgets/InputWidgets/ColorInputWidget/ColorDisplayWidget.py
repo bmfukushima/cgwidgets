@@ -1,4 +1,5 @@
 import sys
+import math
 
 from qtpy.QtWidgets import (
     QApplication, QLabel, QVBoxLayout,
@@ -10,14 +11,19 @@ from qtpy.QtGui import (
     QColor, QCursor, QPen, QLinearGradient, QBrush, QGradient
 )
 
+from cgwidgets.widgets import FloatInputWidget
 from cgwidgets.utils import attrs, getWidgetAncestorByName, draw
-from cgwidgets.settings.colors import iColor
+from cgwidgets.settings.colors import iColor, getHSVRGBAFloatFromColor
 
 
 class ClockDisplayWidget(QWidget):
     """
     This is the cover that goes over the gradient so that it doesn't spam color at
     the user and hurt their precious precious eyes
+
+    Attributes:
+        color_args_values_dict (dict): of key pair values relating to the
+            individual display values of each color arg
     """
     def __init__(self, parent=None):
         super(ClockDisplayWidget, self).__init__(parent=parent)
@@ -32,19 +38,78 @@ class ClockDisplayWidget(QWidget):
         # setup display
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.setStyleSheet("background-color: rgba{rgba_gray_2}".format(**iColor.style_sheet_args))
+        self.createDisplayLabels()
+        self.updateDisplayLabelsPosition()
+        self.updateDisplay()
 
-    def updateDisplay(self, color):
+    def createDisplayLabels(self):
+        self.color_args_values_dict = {}
+
+        # create clock hands
+        for index, color_arg in enumerate(attrs.RGBA_LIST + attrs.HSV_LIST):
+            new_item = FloatInputWidget(self)
+            new_item.setUseLadder(True, value_list=[0.0001, 0.001, 0.01, 0.1])
+            new_item.setRange(True, 0, 1)
+            #new_item = QLabel(self)
+            self.color_args_values_dict[color_arg] = new_item
+            new_item.setStyleSheet("background-color: rgba(0,0,0,0);")
+
+    def updateDisplayLabelsPosition(self):
+        self._placeLabelsFromListInCircle(attrs.RGBA_LIST, offset=-1.5)
+        self._placeLabelsFromListInCircle(attrs.HSV_LIST, offset=2)
+
+    def _placeLabelsFromListInCircle(self, color_args_list, offset=0):
+        """
+        Places labels in a circle around the origin based off of the length
+
+        color_args_list (list): list of color args to be placed
+        offset (float): how many rotational ticks to offset
+
+        Attrs:
+            orig_x (float): x origin
+            orig_y (float): y origin
+            length (float): how for to place the widget from origin
+            rotational_tick (radian): how many degrees one tick is in radians
+        """
+        orig_x = self.width() * 0.5
+        orig_y = self.height() * 0.5
+        length = min(orig_x, orig_y)
+        rotational_tick = 1 / ( len(color_args_list) * 2 )
+
+        for index, color_arg in enumerate(color_args_list):
+            widget = self.color_args_values_dict[color_arg]
+            rotation = (index+ offset) * rotational_tick
+
+            x0 = (length * math.cos(2 * math.pi * rotation))
+            y0 = (length * math.sin(2 * math.pi * rotation))
+            x0 += orig_x
+            y0 *= 0.8
+            y0 += orig_y
+            widget.move(x0, y0)
+
+    def updateDisplay(self, color=QColor(128, 128, 255, 255)):
         """
         Runs through every widget, and sets their crosshair based off of the
         color that is provided
 
         color (QColor): color to update the display to
         """
+        color_args_dict = getHSVRGBAFloatFromColor(color)
+        for color_arg in self.color_args_values_dict:
+            # get value widget
+            widget = self.color_args_values_dict[color_arg]
+
+            # set new value
+            print(str(color_args_dict[color_arg]))
+            widget.setText(str(color_args_dict[color_arg]))
+            widget.setCursorPosition(0)
+
         # get widget list
         # compare args?
         pass
 
     def resizeEvent(self, event):
+        self.updateDisplayLabelsPosition()
         return QWidget.resizeEvent(self, event)
 
     def enterEvent(self, *args, **kwargs):
@@ -89,21 +154,15 @@ class ClockDisplayScene(QGraphicsScene):
     Attributes:
         hands_items (dict): dictionary of all of the hands items mapped to
             "hue" : item
-        rgba_list  (list): of strings for each RGBA color arg
-            ["red", "green", "blue", "alpha"]
-        hsv_list (list): of strings for each HSV color arg
-            ["hue", "saturation", "value"]
         hand_length (int): length of the hand (the long portion)
         value (float): The current value of this specific slider
     """
     def __init__(self, parent=None):
         super(ClockDisplayScene, self).__init__(parent)
         self.hands_items = {}
-        self.rgba_list = [attrs.RED, attrs.GREEN, attrs.BLUE, attrs.ALPHA]
-        self.hsv_list = [attrs.HUE, attrs.SATURATION, attrs.VALUE]
 
         # create clock hands
-        for color_arg in self.rgba_list + self.hsv_list:
+        for color_arg in attrs.RGBA_LIST + attrs.HSV_LIST:
             new_item = ClockHandGroupItem(color_arg)
             self.hands_items[color_arg] = new_item
             self.addItem(new_item)
@@ -120,7 +179,7 @@ class ClockDisplayScene(QGraphicsScene):
         length = min(width, height) * 0.5
         orig_x = width / 2
         orig_y = height / 2
-        for count, color_arg in enumerate(self.hsv_list):
+        for count, color_arg in enumerate(attrs.HSV_LIST):
             hand = self.hands_items[color_arg]
             hand.show()
 
@@ -139,7 +198,7 @@ class ClockDisplayScene(QGraphicsScene):
             hand.setRotation(count * 60 + 30)
             hand.setPos(orig_x, orig_y)
 
-        for count, color_arg in enumerate(self.rgba_list):
+        for count, color_arg in enumerate(attrs.RGBA_LIST):
             hand = self.hands_items[color_arg]
             hand.show()
 
@@ -219,24 +278,6 @@ class ClockHandGroupItem(QGraphicsItemGroup):
             the same axis as the hand
         """
         self.hand_crosshair.setLine(width, height)
-
-
-class ClockHandItem_OLD(QGraphicsLineItem):
-    def __init__(self, parent=None):
-        super(ClockHandItem_OLD, self).__init__(parent)
-
-        self.setLine(0, 0, 0, 50)
-
-        pen = QPen()
-        pen.setColor(QColor(255, 0, 0))
-        pen.setWidth(1)
-        self.setPen(pen)
-
-        # pen1 = QPen()
-        # pen1.setColor(QColor(0, 0, 0))
-        # pen1.setDashPattern([line_length, total_line_space])
-        # pen1.setWidth(width)
-        # self.line_1.setPen(pen1)
 
 
 class ClockHandItem(QGraphicsItem):

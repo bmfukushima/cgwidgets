@@ -14,7 +14,6 @@ from qtpy.QtCore import Qt
 
 from cgwidgets.widgets import (
     AbstractInputGroup,
-    AbstractInputGroupBox,
     AbstractFloatInputWidget,
     AbstractIntInputWidget,
     AbstractStringInputWidget,
@@ -25,7 +24,7 @@ from cgwidgets.widgets import (
 
 from cgwidgets.widgets import TansuModelViewWidget, TansuModelDelegateWidget, TansuModelItem
 
-from cgwidgets.utils import getWidgetAncestor, updateStyleSheet
+from cgwidgets.utils import getWidgetAncestor, updateStyleSheet, attrs
 
 from cgwidgets.settings.colors import iColor
 
@@ -116,7 +115,7 @@ class GroupInputTansuWidget(TansuModelViewWidget):
         super(GroupInputTansuWidget, self).__init__(parent)
         self.model().setItemType(UserInputItem)
         self.setDelegateType(TansuModelViewWidget.DYNAMIC)
-        self.setViewPosition(TansuModelViewWidget.WEST)
+        self.setViewPosition(attrs.WEST)
         self.setMultiSelect(True)
         self.setMultiSelectDirection(Qt.Vertical)
 

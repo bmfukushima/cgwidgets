@@ -592,6 +592,7 @@ Notes:
     """ EVENTS """
     def hideEvent(self, *args, **kwargs):
         self.is_active = False
+        self.parent().setCursorPosition(0)
         return QWidget.hideEvent(self, *args, **kwargs)
 
     def showEvent(self, *args, **kwargs):
@@ -666,7 +667,11 @@ Attributes:
         super(LadderMiddleItem, self).__init__(parent)
         self.setValue(value)
         self.editingFinished.connect(self.tempSetValue)
-        self.setStyleSheet("background-color: rgba{rgba_blue_3}".format(**iColor.style_sheet_args))
+        self.setStyleSheet(
+            """
+            background-color: rgba{rgba_blue_3};
+            color: rgba{rgba_text}
+            """.format(**iColor.style_sheet_args))
 
     def mousePressEvent(self, event):
         self.parent().is_active = True

@@ -126,5 +126,18 @@ class Colors(dict):
 
         return tuple(new_color)
 
+def getHSVRGBAFloatFromColor(color):
+    new_color_args = {
+        "hue": color.hueF(),
+        "value": color.valueF(),
+        "saturation": color.saturationF(),
+        "red": color.redF(),
+        "green": color.greenF(),
+        "blue": color.blueF(),
+        "alpha": color.alphaF()
+    }
+
+    return new_color_args
+
 
 iColor = Colors()
