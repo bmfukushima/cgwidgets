@@ -176,6 +176,15 @@ class AbstractInputWidget(QLineEdit):
             return
         return QLineEdit.mousePressEvent(self, event, *args, **kwargs)
 
+    # def leaveEvent(self, event):
+    #     self.setCursorPosition(0)
+    #     return QLineEdit.leaveEvent(self, event)
+
+    # def focusOutEvent(self, event):
+    #     self.setCursorPosition(0)
+    #     print('focus out')
+    #     return QLineEdit.focusOutEvent(self, event)
+
 
 class AbstractNumberInputWidget(AbstractInputWidget):
     """
@@ -326,6 +335,7 @@ class AbstractNumberInputWidget(AbstractInputWidget):
             except:
                 return False
 
+    """ EVENTS """
     def keyPressEvent(self, event, *args, **kwargs):
         modifiers = event.modifiers()
         # add control modifiers back
@@ -342,6 +352,11 @@ class AbstractNumberInputWidget(AbstractInputWidget):
             if event.key() in self.getKeyList():
                 return QLineEdit.keyPressEvent(self, event, *args, **kwargs)
 
+    def focusOutEvent(self, event):
+        return_val = QLineEdit.focusOutEvent(self, event)
+        self.setCursorPosition(0)
+        return return_val
+        print('focus out')
 
 class AbstractFloatInputWidget(AbstractNumberInputWidget):
     TYPE = 'float'

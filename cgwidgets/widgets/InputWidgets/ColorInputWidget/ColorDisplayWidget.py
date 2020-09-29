@@ -1,10 +1,19 @@
+"""
+TODO:
+    Cursor Position setting to last instead of first?
+        self.setCursorPosition(0)
+            FloatInputWidget
+            LadderDelegate
+
+"""
+
 import sys
 import math
 
 from qtpy.QtWidgets import (
     QApplication, QLabel, QVBoxLayout,
     QGraphicsView, QGraphicsScene, QGraphicsItemGroup, QGraphicsTextItem, QGraphicsItem,
-    QGraphicsLineItem, QWidget
+    QGraphicsLineItem, QWidget, QFrame, QHBoxLayout
 )
 from qtpy.QtCore import (Qt, QPoint, QRectF)
 from qtpy.QtGui import (
@@ -12,7 +21,7 @@ from qtpy.QtGui import (
 )
 
 from cgwidgets.widgets import FloatInputWidget
-from cgwidgets.utils import attrs, getWidgetAncestorByName, draw
+from cgwidgets.utils import attrs, draw, getWidgetAncestorByName, getFontSize
 from cgwidgets.settings.colors import iColor, getHSVRGBAFloatFromColor
 
 
@@ -29,6 +38,7 @@ class ClockDisplayWidget(QWidget):
         super(ClockDisplayWidget, self).__init__(parent=parent)
         # create scene
         QVBoxLayout(self)
+        self._offset = 30
 
         self.scene = ClockDisplayScene(self)
         self.view = ClockDisplayView(self.scene)
@@ -42,6 +52,21 @@ class ClockDisplayWidget(QWidget):
         self._updateDisplayLabelsPosition()
         self.updateDisplay()
 
+    """ API """
+    def getOffset(self):
+        return self._offset
+
+    def setOffset(self, offset):
+        self._offset = offset
+
+        # update all hands offsets...
+        for color_arg in attrs.RGBA_LIST + attrs.HSV_LIST:
+            hand_widget = self.scene.hands_items[color_arg]
+            hand_widget.setOffset(offset)
+
+        # update display
+        self.updateDisplay()
+
     def updateDisplay(self, color=QColor(128, 128, 255, 255)):
         """
         Runs through every widget, and sets their crosshair based off of the
@@ -50,45 +75,52 @@ class ClockDisplayWidget(QWidget):
         color (QColor): color to update the display to
         """
         color_args_dict = getHSVRGBAFloatFromColor(color)
-
-        for color_arg in self.color_args_values_dict:
+        # update headers
+        self.rgba_header_widget.updateUserInputs(color_args_dict)
+        self.hsv_header_widget.updateUserInputs(color_args_dict)
+        # update hands
+        for color_arg in color_args_dict:
             # get value widget
-            input_widget = self.color_args_values_dict[color_arg]
-            hand_widget = self.scene.hands_items[color_arg]
-
-            # set new value
             value = color_args_dict[color_arg]
-            input_widget.setText(str(value))
-            input_widget.setCursorPosition(0)
 
+            # set hand widget
+            hand_widget = self.scene.hands_items[color_arg]
             hand_widget.setValue(value)
-            print ('setting %s to %s'%(color_arg, str(value)))
-
-        # get widget list
-        # compare args?
-        pass
 
     """ UTILS """
     def _createDisplayLabels(self):
-        self.color_args_values_dict = {}
+        self.rgba_header_widget = ClockHeaderWidget(self)
+        self.rgba_header_widget.layout().setAlignment(Qt.AlignRight)
+        self.rgba_header_widget.createDisplayLabels(attrs.RGBA_LIST)
 
-        # create clock hands
-        for index, color_arg in enumerate(attrs.RGBA_LIST + attrs.HSV_LIST):
-            new_item = FloatInputWidget(self)
-            new_item.setUseLadder(True, value_list=[0.0001, 0.001, 0.01, 0.1])
-            new_item.setRange(True, 0, 1)
-            #new_item = QLabel(self)
-            self.color_args_values_dict[color_arg] = new_item
-            new_item.setStyleSheet("background-color: rgba(0,0,0,0); border: None")
+        self.hsv_header_widget = ClockHeaderWidget(self)
+        self.hsv_header_widget.layout().setAlignment(Qt.AlignLeft)
+        self.hsv_header_widget.createDisplayLabels(attrs.HSV_LIST)
 
     def _updateDisplayLabelsPosition(self):
         """
         On resize, this will update the position of all of the user inputs
 
         """
-        self._placeLabelsFromListInCircle(attrs.RGBA_LIST, offset=-1.5)
-        self._placeLabelsFromListInCircle(attrs.HSV_LIST, offset=2)
+        length = min(self.width(), self.height()) * 0.5
+        orig_x = self.width() * 0.5
+        orig_y = self.height() * 0.5
+        font_size = getFontSize(QApplication) + 2
 
+        # set HSV Header
+        self.hsv_header_widget.move(orig_x + self.getOffset(), orig_y + font_size)
+        self.hsv_header_widget.setFixedSize(orig_x, font_size)
+
+        # set RGBA Header
+        self.rgba_header_widget.move(0, orig_y + font_size)
+        self.rgba_header_widget.setFixedSize(orig_x - self.getOffset(), font_size)
+
+
+        # OLD CIRCLE PLACEMENT
+        # self._placeLabelsFromListInCircle(attrs.RGBA_LIST, offset=-1.5)
+        # self._placeLabelsFromListInCircle(attrs.HSV_LIST, offset=2)
+
+    """ NOT IN USE BUT I LIKE THIS CODE"""
     def _placeLabelsFromListInCircle(self, color_args_list, offset=0):
         """
         Places labels in a circle around the origin based off of the length
@@ -138,6 +170,48 @@ class ClockDisplayWidget(QWidget):
     def showEvent(self, event):
         self.updateDisplay()
         return QWidget.showEvent(self, event)
+
+
+class ClockHeaderWidget(QFrame):
+    def __init__(self, parent=None):
+        super(ClockHeaderWidget, self).__init__(parent)
+        QHBoxLayout(self)
+        self.layout().setContentsMargins(0, 0, 0, 0)
+        self.color_args_values_dict = {}
+        self.setStyleSheet("background-color: rgba(0,255,0,255)")
+
+    def createDisplayLabels(self, color_args_list):
+        self.color_args_values_dict = {}
+
+        # create clock hands
+        for index, color_arg in enumerate(color_args_list):
+            new_item = FloatInputWidget(self)
+            new_item.setFixedWidth(50)
+            new_item.setAlignment(Qt.AlignLeft)
+            new_item.setUseLadder(True, value_list=[0.0001, 0.001, 0.01, 0.1])
+            new_item.setRange(True, 0, 1)
+            self.color_args_values_dict[color_arg] = new_item
+            self.layout().addWidget(new_item)
+            new_item.setStyleSheet("background-color: rgba(0,0,0,0); border: None")
+
+    def updateUserInputs(self, color_args_dict):
+        """
+        Updates the user inputs with the color args dict provided
+
+        """
+        for color_arg in self.color_args_values_dict:
+            # get value widget
+            try:
+                input_widget = self.color_args_values_dict[color_arg]
+                #hand_widget = self.scene.hands_items[color_arg]
+
+                # set new value
+                value = color_args_dict[color_arg]
+                input_widget.setText(str(value))
+                input_widget.setCursorPosition(0)
+            except KeyError:
+                pass
+            #hand_widget.setValue(value)
 
 
 class ClockDisplayView(QGraphicsView):
@@ -212,7 +286,7 @@ class ClockDisplayScene(QGraphicsScene):
 
             # transform hand
             hand.setTransformOriginPoint(0, 10)
-            hand.setRotation(count * 60 + 30)
+            hand.setRotation(count * 60 + 30 + 270)
             hand.setPos(orig_x, orig_y)
 
         # update rgba list
@@ -232,7 +306,7 @@ class ClockDisplayScene(QGraphicsScene):
 
             # transform hand
             hand.setTransformOriginPoint(0, 10)
-            hand.setRotation(count * 45 + 180 + 22.5)
+            hand.setRotation(count * 45 + 90 + 22.5)
             hand.setPos(orig_x, orig_y)
 
 
@@ -424,6 +498,7 @@ class ClockHandPickerItem(QGraphicsLineItem):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     color_widget = ClockDisplayWidget()
+    color_widget.setOffset(50)
     # color_widget.setLinearCrosshairDirection(Qt.Vertical)
     color_widget.show()
     color_widget.move(QCursor.pos())
