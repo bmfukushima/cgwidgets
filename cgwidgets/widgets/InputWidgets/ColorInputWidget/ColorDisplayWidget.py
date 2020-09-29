@@ -52,9 +52,14 @@ class ClockDisplayWidget(QWidget):
             new_item.setRange(True, 0, 1)
             #new_item = QLabel(self)
             self.color_args_values_dict[color_arg] = new_item
-            new_item.setStyleSheet("background-color: rgba(0,0,0,0);")
+            new_item.setStyleSheet("background-color: rgba(0,0,0,0); border: None")
 
     def updateDisplayLabelsPosition(self):
+        """
+        On resize, this will update the position of all of the user inputs
+
+        :return:
+        """
         self._placeLabelsFromListInCircle(attrs.RGBA_LIST, offset=-1.5)
         self._placeLabelsFromListInCircle(attrs.HSV_LIST, offset=2)
 
@@ -95,14 +100,18 @@ class ClockDisplayWidget(QWidget):
         color (QColor): color to update the display to
         """
         color_args_dict = getHSVRGBAFloatFromColor(color)
+
         for color_arg in self.color_args_values_dict:
             # get value widget
-            widget = self.color_args_values_dict[color_arg]
+            input_widget = self.color_args_values_dict[color_arg]
+            hand_widget = self.scene.hands_items[color_arg]
 
             # set new value
-            print(str(color_args_dict[color_arg]))
-            widget.setText(str(color_args_dict[color_arg]))
-            widget.setCursorPosition(0)
+            value = color_args_dict[color_arg]
+            input_widget.setText(str(value))
+            input_widget.setCursorPosition(0)
+
+            hand_widget.setValue(value)
 
         # get widget list
         # compare args?
@@ -191,7 +200,7 @@ class ClockDisplayScene(QGraphicsScene):
             hand.updateGradient()
 
             # set crosshair pos
-            hand.setValue(0.25)
+            #hand.setValue(0.25)
 
             # transform hand
             hand.setTransformOriginPoint(0, 10)
