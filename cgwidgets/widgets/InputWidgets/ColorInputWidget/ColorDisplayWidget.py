@@ -1,18 +1,17 @@
 import sys
 
 from qtpy.QtWidgets import (
-    QApplication, QStackedWidget, QLabel, QFrame, QVBoxLayout,
+    QApplication, QLabel, QVBoxLayout,
     QGraphicsView, QGraphicsScene, QGraphicsItemGroup, QGraphicsTextItem, QGraphicsItem,
-    QGraphicsRectItem, QGraphicsLineItem, QWidget
+    QGraphicsLineItem, QWidget
 )
 from qtpy.QtCore import (Qt, QPoint, QRectF)
 from qtpy.QtGui import (
     QColor, QCursor, QPen, QLinearGradient, QBrush, QGradient
 )
 
-from cgwidgets.utils import getWidgetAncestor, attrs, getWidgetAncestorByName
+from cgwidgets.utils import attrs, getWidgetAncestorByName, draw
 from cgwidgets.settings.colors import iColor
-from cgwidgets.widgets.InputWidgets.ColorInputWidget import ColorGradientMainWidget
 
 
 class ClockDisplayWidget(QWidget):
@@ -246,11 +245,16 @@ class ClockHandItem(QGraphicsItem):
 
     Items fill is determined by their paint method
     Args:
+
         gradient_type (attrs.COLOR): What type of gradient this is
             RED | GREEN | BLUE | ALPHA | HUE | SAT | VALUE
+
     Attributes:
-        width (int)
-        length (int)
+        gradient (QLinearGradient): The gradient to be displayed.  This is wrapped
+            in a QBrush in the paint event
+        width (int): how wide the line is
+        offset (int): how far from the origin (center) the line is
+        length (int): how long the line is
     """
 
     def __init__(self, gradient_type):
@@ -275,88 +279,19 @@ class ClockHandItem(QGraphicsItem):
         """
         return self._rectangle
 
-    """ DRAW """
-    # TODO FIX COPY /PASTE
-    # This is a copy / paste from the ColorGradientWidget
-    def create1DGradient(
-            self,
-            direction=Qt.Horizontal,
-            color1=(0, 0, 0, 1),
-            color2=(1, 1, 1, 1)
-    ):
-        """
-        Creates 1D Linear gradient to be displayed to the user.
-
-        Args:
-            direction (Qt.Direction): The direction the gradient should go
-            color1 (QColor): The first color in the gradient, the default value is black.
-            color2 (QColor): The second color in the gradient, the default value is white.
-
-        Returns (QBrush)
-        """
-        # create QColor Floats
-        colorA = QColor()
-        colorA.setRgbF(*color1)
-        colorB = QColor()
-        colorB.setRgbF(*color2)
-
-        # set direction
-
-        # if direction == Qt.Horizontal:
-        #     gradient = QLinearGradient(0, 0, self.width(), 0)
-        # elif direction == Qt.Vertical:
-        #     gradient = QLinearGradient(0, 0, 0, self.height())
-
-        gradient = QLinearGradient(QPoint(0, self.offset()), QPoint(self.width(), self.length() + self.offset()))
-        # create brush
-        gradient.setSpread(QGradient.RepeatSpread)
-        gradient.setColorAt(0, colorA)
-        gradient.setColorAt(1, colorB)
-        gradient_brush = QBrush(gradient)
-        return gradient_brush
-
     def updateGradient(self):
-        if self.gradient_type == attrs.RED:
-            self._gradient = self.create1DGradient(color2=(1, 0, 0, 1))
-        elif self.gradient_type == attrs.GREEN:
-            self._gradient = self.create1DGradient(color2=(0, 1, 0, 1))
-        elif self.gradient_type == attrs.BLUE:
-            self._gradient = self.create1DGradient(color2=(0, 0, 1, 1))
-        elif self.gradient_type == attrs.ALPHA:
-            self._gradient = self.create1DGradient(color1=(0, 0, 0, 0))
-        elif self.gradient_type == attrs.HUE:
-                # get Value from main widget
-                value = 1
-                sat = 1
-                self._gradient = QLinearGradient(QPoint(0, self.offset()),
-                                           QPoint(self.width(), self.length() + self.offset()))
-
-
-                num_colors = 6
-                self._gradient.setSpread(QGradient.RepeatSpread)
-                for x in range(num_colors):
-                    pos = (1 / num_colors) * (x)
-                    color = QColor()
-                    color.setHsvF(x * (1 / num_colors), sat, value)
-                    self._gradient.setColorAt(pos, color)
-                # set red to end
-                color = QColor()
-                color.setHsvF(1, sat, value)
-                self._gradient.setColorAt(1, color)
-
-        elif self.gradient_type == attrs.SATURATION:
-            self._gradient = self.create1DGradient()
-        elif self.gradient_type == attrs.VALUE:
-            self._gradient = self.create1DGradient()
-        self.setGradient(QBrush(self._gradient))
+        """
+        Draws the gradient
+        """
+        if not hasattr(self, '_gradient'):
+            self._gradient = draw.drawColorTypeGradient(self.gradient_type, self.width(), self.length())
+            self.setGradient(self._gradient)
+        # update gradient size
+        self._gradient.setStart(QPoint(0, self.offset()))
+        self._gradient.setFinalStop(QPoint(self.width(), self.length() + self.offset()))
 
     def paint(self, painter=None, style=None, widget=None):
-        # self._brush = QBrush(Qt.black)
-        # gradient = QLinearGradient(QPoint(0, 0), QPoint(self.width(), self.length()))
-        # gradient.setColorAt(0, QColor(255, 0, 0, 255))
-        # gradient.setColorAt(1, QColor(0, 0, 0, 255))
-        # self.setGradient(QBrush(gradient))
-        painter.fillRect(self._rectangle, self.getGradient())
+        painter.fillRect(self._rectangle, QBrush(self.getGradient()))
 
     """ PROPERTIES """
     def getGradient(self):
