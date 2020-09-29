@@ -38,11 +38,38 @@ class ClockDisplayWidget(QWidget):
         # setup display
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.setStyleSheet("background-color: rgba{rgba_gray_2}".format(**iColor.style_sheet_args))
-        self.createDisplayLabels()
-        self.updateDisplayLabelsPosition()
+        self._createDisplayLabels()
+        self._updateDisplayLabelsPosition()
         self.updateDisplay()
 
-    def createDisplayLabels(self):
+    def updateDisplay(self, color=QColor(128, 128, 255, 255)):
+        """
+        Runs through every widget, and sets their crosshair based off of the
+        color that is provided
+
+        color (QColor): color to update the display to
+        """
+        color_args_dict = getHSVRGBAFloatFromColor(color)
+
+        for color_arg in self.color_args_values_dict:
+            # get value widget
+            input_widget = self.color_args_values_dict[color_arg]
+            hand_widget = self.scene.hands_items[color_arg]
+
+            # set new value
+            value = color_args_dict[color_arg]
+            input_widget.setText(str(value))
+            input_widget.setCursorPosition(0)
+
+            hand_widget.setValue(value)
+            print ('setting %s to %s'%(color_arg, str(value)))
+
+        # get widget list
+        # compare args?
+        pass
+
+    """ UTILS """
+    def _createDisplayLabels(self):
         self.color_args_values_dict = {}
 
         # create clock hands
@@ -54,11 +81,10 @@ class ClockDisplayWidget(QWidget):
             self.color_args_values_dict[color_arg] = new_item
             new_item.setStyleSheet("background-color: rgba(0,0,0,0); border: None")
 
-    def updateDisplayLabelsPosition(self):
+    def _updateDisplayLabelsPosition(self):
         """
         On resize, this will update the position of all of the user inputs
 
-        :return:
         """
         self._placeLabelsFromListInCircle(attrs.RGBA_LIST, offset=-1.5)
         self._placeLabelsFromListInCircle(attrs.HSV_LIST, offset=2)
@@ -92,33 +118,10 @@ class ClockDisplayWidget(QWidget):
             y0 += orig_y
             widget.move(x0, y0)
 
-    def updateDisplay(self, color=QColor(128, 128, 255, 255)):
-        """
-        Runs through every widget, and sets their crosshair based off of the
-        color that is provided
-
-        color (QColor): color to update the display to
-        """
-        color_args_dict = getHSVRGBAFloatFromColor(color)
-
-        for color_arg in self.color_args_values_dict:
-            # get value widget
-            input_widget = self.color_args_values_dict[color_arg]
-            hand_widget = self.scene.hands_items[color_arg]
-
-            # set new value
-            value = color_args_dict[color_arg]
-            input_widget.setText(str(value))
-            input_widget.setCursorPosition(0)
-
-            hand_widget.setValue(value)
-
-        # get widget list
-        # compare args?
-        pass
-
+    """ EVENTS """
     def resizeEvent(self, event):
-        self.updateDisplayLabelsPosition()
+        self._updateDisplayLabelsPosition()
+        self.updateDisplay()
         return QWidget.resizeEvent(self, event)
 
     def enterEvent(self, *args, **kwargs):
@@ -131,6 +134,10 @@ class ClockDisplayWidget(QWidget):
         if color_display_widget:
             color_display_widget.setCurrentIndex(1)
         return QLabel.enterEvent(self, *args, **kwargs)
+
+    def showEvent(self, event):
+        self.updateDisplay()
+        return QWidget.showEvent(self, event)
 
 
 class ClockDisplayView(QGraphicsView):
@@ -188,6 +195,7 @@ class ClockDisplayScene(QGraphicsScene):
         length = min(width, height) * 0.5
         orig_x = width / 2
         orig_y = height / 2
+        # update hsv list
         for count, color_arg in enumerate(attrs.HSV_LIST):
             hand = self.hands_items[color_arg]
             hand.show()
@@ -207,6 +215,7 @@ class ClockDisplayScene(QGraphicsScene):
             hand.setRotation(count * 60 + 30)
             hand.setPos(orig_x, orig_y)
 
+        # update rgba list
         for count, color_arg in enumerate(attrs.RGBA_LIST):
             hand = self.hands_items[color_arg]
             hand.show()
@@ -219,7 +228,7 @@ class ClockDisplayScene(QGraphicsScene):
             hand.updateGradient()
 
             # set crosshair pos
-            hand.setValue(0.25)
+            #hand.setValue(0.25)
 
             # transform hand
             hand.setTransformOriginPoint(0, 10)
