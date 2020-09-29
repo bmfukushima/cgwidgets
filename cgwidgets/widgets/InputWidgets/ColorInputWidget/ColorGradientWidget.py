@@ -14,7 +14,7 @@ from qtpy.QtGui import (
     QColor, QLinearGradient, QGradient, QBrush, QCursor, QPen
 )
 
-from cgwidgets.utils import getWidgetAncestor, checkMousePos, attrs, getWidgetAncestorByName
+from cgwidgets.utils import attrs, draw, getWidgetAncestor, checkMousePos,  getWidgetAncestorByName
 from cgwidgets.widgets.InputWidgets import FloatInputWidget
 from cgwidgets.widgets.AbstractWidgets import AbstractInputGroup
 from cgwidgets.settings.colors import iColor
@@ -551,123 +551,36 @@ class ColorGraphicsScene(QGraphicsScene):
         self._drawRGBAForegroundItem()
 
     """ DRAW GRADIENTS """
+    def drawGradient(self, direction=Qt.Horizontal):
 
-    def create1DGradient(
-            self,
-            direction=Qt.Horizontal,
-            color1=(0, 0, 0, 1),
-            color2=(1, 1, 1, 1)
-    ):
-        """
-        Creates 1D Linear gradient to be displayed to the user.
-
-        Args:
-            direction (Qt.Direction): The direction the gradient should go
-            color1 (QColor): The first color in the gradient, the default value is black.
-            color2 (QColor): The second color in the gradient, the default value is white.
-
-        Returns (QBrush)
-        """
-        # create QColor Floats
-        colorA = QColor()
-        colorA.setRgbF(*color1)
-        colorB = QColor()
-        colorB.setRgbF(*color2)
-
-        # set direction
-        if direction == Qt.Horizontal:
-            gradient = QLinearGradient(0, 0, self.width(), 0)
-        elif direction == Qt.Vertical:
-            gradient = QLinearGradient(0, 0, 0, self.height())
-
-        # create brush
-        gradient.setSpread(QGradient.RepeatSpread)
-        gradient.setColorAt(0, colorA)
-        gradient.setColorAt(1, colorB)
-        gradient_brush = QBrush(gradient)
-        return gradient_brush
-
-    def drawGradient(self):
-        """
-        Primary drawing function of the gradient.
-        This wil look at the property "gradient_type" and set the
-        gradient according to that.
-        """
-        # hide rgba foreground item
+        _gradient = draw.drawColorTypeGradient(self.gradient_type, self.width(), self.height())
         self.rgba_foreground.hide()
+        # update gradient size
+        if direction == Qt.Horizontal:
+            _gradient.setFinalStop(QPoint(self.width(), 0))
+        elif direction == Qt.Vertical:
+            _gradient.setFinalStop(QPoint(0, self.height()))
 
-        # get gradient
-        if self.gradient_type == attrs.RED:
-            background_gradient = self.create1DGradient(color2=(1, 0, 0, 1))
-        elif self.gradient_type == attrs.GREEN:
-            background_gradient = self.create1DGradient(color2=(0, 1, 0, 1))
-        elif self.gradient_type == attrs.BLUE:
-            background_gradient = self.create1DGradient(color2=(0, 0, 1, 1))
-        elif self.gradient_type == attrs.ALPHA:
-            background_gradient = self.create1DGradient()
-        elif self.gradient_type == attrs.HUE:
-            background_gradient = self.create1DGradient()
-        elif self.gradient_type == attrs.SATURATION:
-            background_gradient = self.create1DGradient()
-        elif self.gradient_type == attrs.VALUE:
-            background_gradient = self.create1DGradient()
-        elif self.gradient_type == attrs.RGBA:
-            background_gradient = self._drawRGBAGradient()
-
+        if self.gradient_type == attrs.RGBA:
             # TODO Update value of foreground gradient
             """
             for some reason the darker it gets the harder of a time the picker has
             and the steps become larger and larger =/
-
+    
             something with update cross hair pos?
-
-            141 setColor 
+    
+            141 setColor
             self.setRGBACrosshairPositionFromColor(color)
             """
             # get value
             main_widget = getWidgetAncestorByName(self, "ColorInputWidget")
             value = main_widget.getColor().valueF()
-            # value = .5
-            # setup foreground gradient item
-            foreground_gradient = self.create1DGradient(
-                direction=Qt.Vertical,
-                color1=(0, 0, 0, 0),
-                color2=(value, value, value, 1),
-            )
-
             self.rgba_foreground.updateSize(QRectF(0, 0, self.width(), self.height()))
-            self.rgba_foreground.setGradient(foreground_gradient)
+            self.rgba_foreground.updateGradient(value, self.width(), self.height())
 
             self.rgba_foreground.show()
 
-        # set gradient
-        self.setBackgroundBrush(background_gradient)
-
-    def _drawRGBAGradient(self):
-        """
-        draws the background color square for the main widget
-        """
-
-        # get Value from main widget
-        value = 1
-        sat = 1
-
-        color_gradient = QLinearGradient(0, 0, self.width(), 0)
-
-        num_colors = 6
-        color_gradient.setSpread(QGradient.RepeatSpread)
-        for x in range(num_colors):
-            pos = (1 / num_colors) * (x)
-            color = QColor()
-            color.setHsvF(x * (1 / num_colors), sat, value)
-            color_gradient.setColorAt(pos, color)
-        # set red to end
-        color = QColor()
-        color.setHsvF(1, sat, value)
-        color_gradient.setColorAt(1, color)
-
-        color_gradient_brush = QBrush(color_gradient)
-        return color_gradient_brush
+        self.setBackgroundBrush(QBrush(_gradient))
 
     """ PROPERTIES """
     @property
@@ -844,10 +757,14 @@ class RGBAForegroundGradient(QGraphicsItem):
 
         self._brush = QBrush(Qt.black)
 
-        gradient = QLinearGradient(QPoint(0, 0), QPoint(width, height))
-        gradient.setColorAt(0, QColor(255, 0, 0, 255))
-        gradient.setColorAt(1, QColor(0, 0, 255, 0))
-        self.setGradient(QBrush(gradient))
+        self._gradient = draw.create1DGradient(
+            100,
+            100,
+            direction=Qt.Vertical,
+            color1=(0, 0, 0, 0),
+            color2=(1, 1, 1, 1),
+        )
+        self.setGradient(self._gradient)
 
     def setBrush(self, brush):
         self._brush = brush
@@ -860,6 +777,23 @@ class RGBAForegroundGradient(QGraphicsItem):
         return self._rectangle
 
     """ PROPERTIES """
+
+    def updateGradient(self, value, width, height):
+        """
+        Creates a new gradient based off of new parameters.
+        This normally happens during a color change, or a widget resize event.
+        width (int) :
+        height (int) :
+        value (float) : 0-1 float value
+        """
+        _gradient = draw.create1DGradient(
+            width,
+            height,
+            direction=Qt.Vertical,
+            color1=(0, 0, 0, 0),
+            color2=(value, value, value, 1),
+        )
+        self.setGradient(_gradient)
 
     def getGradient(self):
         return self._gradient

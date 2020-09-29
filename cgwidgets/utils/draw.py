@@ -61,7 +61,7 @@ def drawColorTypeGradient(gradient_type, width, height):
         _gradient = create1DGradient(width, height, color2=(0, 0, 1, 1))
     elif gradient_type == attrs.ALPHA:
         _gradient = create1DGradient(width, height, color1=(0, 0, 0, 0))
-    elif gradient_type == attrs.HUE:
+    elif gradient_type in [attrs.HUE, attrs.RGBA]:
         # get Value from main widget
         value = 1
         sat = 1
@@ -79,9 +79,11 @@ def drawColorTypeGradient(gradient_type, width, height):
         _gradient.setColorAt(1, color)
 
     elif gradient_type == attrs.SATURATION:
-        _gradient = create1DGradient(width, height, )
+        _gradient = create1DGradient(width, height)
     elif gradient_type == attrs.VALUE:
-        _gradient = create1DGradient(width, height, )
+        _gradient = create1DGradient(width, height)
+    else:
+        _gradient = create1DGradient(width, height)
 
     return _gradient
 
