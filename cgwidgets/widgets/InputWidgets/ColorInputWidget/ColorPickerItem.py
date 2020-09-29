@@ -5,67 +5,10 @@ TODO:
 
 """
 
-import sys
-import math
-import re
+from qtpy.QtWidgets import (QGraphicsItemGroup,)
+from qtpy.QtCore import (Qt, QPoint)
 
-from qtpy.QtWidgets import (
-    QApplication,
-    QStackedWidget, QWidget, QVBoxLayout,
-    QGraphicsView, QGraphicsScene, QGraphicsEllipseItem, QGraphicsItemGroup,
-    QGraphicsLineItem, QLabel, QBoxLayout, QFrame, QGraphicsItem,
-    QSizePolicy
-)
-from qtpy.QtCore import (Qt, QPoint, QEvent, QSize, QRectF)
-from qtpy.QtGui import (
-    QColor, QLinearGradient, QGradient, QBrush, QCursor, QPen
-)
-
-from cgwidgets.utils import getWidgetAncestor, checkMousePos, attrs, getWidgetAncestorByName
-
-from cgwidgets.widgets.InputWidgets import FloatInputWidget
-from cgwidgets.widgets.AbstractWidgets import AbstractInputGroup
-from cgwidgets.settings.colors import iColor
-
-
-class LineSegment(QGraphicsItemGroup):
-    """
-    One individual line segment.  This is a group because it needs to create two
-    lines in order to create a multi colored dashed pattern.
-    """
-
-    def __init__(self, parent=None, width=1):
-        super(LineSegment, self).__init__(parent)
-
-        # create lines
-        self.line_1 = QGraphicsLineItem()
-        self.line_2 = QGraphicsLineItem()
-
-        line_length = 2
-        line_space = 5
-        total_line_space = line_length + (2 * line_space)
-
-        # set pen
-        pen1 = QPen()
-        pen1.setColor(QColor(0, 0, 0))
-        pen1.setDashPattern([line_length, total_line_space])
-        pen1.setWidth(width)
-        self.line_1.setPen(pen1)
-
-        pen2 = QPen()
-        pen2.setColor(QColor(255, 255, 255))
-        pen2.setDashPattern([line_length, total_line_space])
-        pen2.setDashOffset(line_length + line_space)
-        pen2.setWidth(width)
-        self.line_2.setPen(pen2)
-
-        # add lines to group
-        self.addToGroup(self.line_1)
-        self.addToGroup(self.line_2)
-
-    def setLine(self, x, y, width, height):
-        self.line_1.setLine(x, y, width, height)
-        self.line_2.setLine(x, y, width, height)
+from cgwidgets.utils.draw import DualColoredLineSegment
 
 
 class ColorPickerItem2D(QGraphicsItemGroup):
@@ -94,12 +37,12 @@ class ColorPickerItem1D(QGraphicsItemGroup):
         ColorInputWidget.
         """
         # vertical line
-        self.linear_topline_item = LineSegment(width=1)
-        self.linear_botline_item = LineSegment(width=1)
+        self.linear_topline_item = DualColoredLineSegment(width=1)
+        self.linear_botline_item = DualColoredLineSegment(width=1)
 
         # horizontal line
-        self.linear_leftline_item = LineSegment(width=1)
-        self.linear_rightline_item = LineSegment(width=1)
+        self.linear_leftline_item = DualColoredLineSegment(width=1)
+        self.linear_rightline_item = DualColoredLineSegment(width=1)
 
         # create linear cross hair items group
         self.addToGroup(self.linear_botline_item)

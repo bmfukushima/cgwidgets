@@ -1,5 +1,6 @@
+from qtpy.QtWidgets import QGraphicsItemGroup, QGraphicsLineItem
 from qtpy.QtCore import Qt, QRectF, QPoint
-from qtpy.QtGui import QColor, QBrush, QLinearGradient, QGradient
+from qtpy.QtGui import QColor, QBrush, QLinearGradient, QGradient, QPen
 
 from cgwidgets.utils import attrs
 
@@ -86,6 +87,101 @@ def drawColorTypeGradient(gradient_type, width, height):
         _gradient = create1DGradient(width, height)
 
     return _gradient
+
+
+class DualColoredLineSegment(QGraphicsItemGroup):
+    """
+    One individual line segment.  This is a group because it needs to create two
+    lines in order to create a multi colored dashed pattern.
+
+    Attributes:
+        spacing (int): how much space in pixels are between each line segment
+    """
+
+    def __init__(self, parent=None, width=1, color1=QColor(0, 0, 0), color2=QColor(1, 1, 1)):
+        super(DualColoredLineSegment, self).__init__(parent)
+
+        # create lines
+        self.line_1 = QGraphicsLineItem()
+        self.line_2 = QGraphicsLineItem()
+
+        self.width = width
+        self._length = 2
+        self._spacing = 5
+
+        # set pen
+        self.setColor1(color1)
+        self.setColor1(color2)
+
+        # add lines to group
+        self.addToGroup(self.line_1)
+        self.addToGroup(self.line_2)
+
+    """ DISPLAY"""
+    def setColor1(self, color):
+        """
+        Sets the first line to the specified color
+
+        Args:
+            color (QColor): color for the line to be set to
+        """
+        pen = self.createPen(color)
+        self.line_1.setPen(pen)
+
+    def setColor2(self, color):
+        """
+        Sets the first line to the specified color
+
+        Args:
+            color (QColor): color for the line to be set to
+        """
+        pen = self.createPen(color)
+        self.line_2.setPen(pen)
+
+    def updatePen(self):
+        for line in [self.line_1, self.line_2]:
+            pen = line.pen()
+            total_line_space = self.length() + (2 * self.spacing())
+            pen.setDashPattern([self.length(), total_line_space])
+            pen.setWidth(self.width)
+            line.setPen(pen)
+
+    def createPen(self, color):
+        """
+        Creates a pen of the color specified
+
+        Args:
+            color (QColor): color for the line to be set to
+        """
+        pen = QPen()
+        pen.setColor(color)
+        total_line_space = self.length() + (2 * self.spacing())
+        pen.setDashPattern([self.length(), total_line_space])
+        pen.setWidth(self.width)
+        return pen
+
+    def setLine(self, x, y, width, height):
+        self.line_1.setLine(x, y, width, height)
+        self.line_2.setLine(x, y, width, height)
+
+    """ PROPERTIES """
+    def width(self):
+        return self._width
+
+    def setWidth(self, width):
+        self._width = width
+
+    def length(self):
+        return self._length
+
+    def setLength(self, length):
+        self._length = length
+
+    def spacing(self):
+        return self._spacing
+
+    def setSpacing(self, spacing):
+        self._spacing = spacing
 
 
 if __name__ == '__main__':

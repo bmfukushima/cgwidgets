@@ -194,7 +194,6 @@ class ColorInputWidget(QStackedWidget):
 """ DISPLAY LABELS"""
 
 
-
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     color_widget = ColorInputWidget()

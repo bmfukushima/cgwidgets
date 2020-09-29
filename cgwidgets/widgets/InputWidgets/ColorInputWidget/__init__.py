@@ -1,4 +1,4 @@
-from .ColorPickerItem import LineSegment, ColorPickerItem1D
+from .ColorPickerItem import ColorPickerItem1D
 from .ColorGradientWidget import ColorGradientMainWidget as ColorGradientMainWidget
 from .ColorDisplayWidget import ClockDisplayWidget
 

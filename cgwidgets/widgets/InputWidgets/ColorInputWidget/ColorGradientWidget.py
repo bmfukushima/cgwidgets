@@ -15,11 +15,12 @@ from qtpy.QtGui import (
 )
 
 from cgwidgets.utils import attrs, draw, getWidgetAncestor, checkMousePos,  getWidgetAncestorByName
+from cgwidgets.utils.draw import DualColoredLineSegment
 from cgwidgets.widgets.InputWidgets import FloatInputWidget
 from cgwidgets.widgets.AbstractWidgets import AbstractInputGroup
 from cgwidgets.settings.colors import iColor
 
-from cgwidgets.widgets.InputWidgets.ColorInputWidget import LineSegment, ColorPickerItem1D
+from cgwidgets.widgets.InputWidgets.ColorInputWidget import ColorPickerItem1D
 
 
 class ColorGradientMainWidget(QWidget):
@@ -675,15 +676,15 @@ class ColorGraphicsScene(QGraphicsScene):
 
         """
         # vertical line
-        self.rgba_topline_item = LineSegment()
+        self.rgba_topline_item = DualColoredLineSegment()
         self.rgba_topline_item.setLine(0, 0, 0, self.height())
-        self.rgba_botline_item = LineSegment()
+        self.rgba_botline_item = DualColoredLineSegment()
         self.rgba_botline_item.setLine(0, 0, 0, self.height())
 
         # horizontal line
-        self.rgba_leftline_item = LineSegment()
+        self.rgba_leftline_item = DualColoredLineSegment()
         self.rgba_leftline_item.setLine(0, 0, self.width(), 0)
-        self.rgba_rightline_item = LineSegment()
+        self.rgba_rightline_item = DualColoredLineSegment()
         self.rgba_rightline_item.setLine(0, 0, self.width(), 0)
 
         # crosshair circle
