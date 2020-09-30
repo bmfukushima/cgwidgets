@@ -170,46 +170,49 @@ class ClockDisplayWidget(QWidget):
         the widget
 
         """
-        #length = min(self.width(), self.height()) * 0.5
+        length = min(self.width(), self.height()) * 0.5
         # setup default attrs
         orig_x = self.width() * 0.5
         orig_y = self.height() * 0.5
         font_size = getFontSize(QApplication) + 2
         placement = None
         size = 50
-        # align to top / bottom
-        if self.height() > self.width():
-            placement = attrs.VERTICAL
-            self.hsv_header_widget.move(0, self.height() - size)
-            self.hsv_header_widget.setFixedSize(self.width(), size)
-            self.hsv_header_widget.layout().setDirection(QBoxLayout.LeftToRight)
+        # setup full length
+        if length < size * 3:
+            # align to top / bottom
+            if self.height() > self.width():
+                placement = attrs.VERTICAL
+                self.hsv_header_widget.move(0, self.height() - size)
+                self.hsv_header_widget.setFixedSize(self.width(), size)
+                self.hsv_header_widget.layout().setDirection(QBoxLayout.LeftToRight)
 
-            self.rgba_header_widget.move(0, 0)
-            self.rgba_header_widget.setFixedSize(self.width(), size)
-            self.rgba_header_widget.layout().setDirection(QBoxLayout.LeftToRight)
+                self.rgba_header_widget.move(0, 0)
+                self.rgba_header_widget.setFixedSize(self.width(), size)
+                self.rgba_header_widget.layout().setDirection(QBoxLayout.LeftToRight)
 
-        # align to sides
+            # align to sides
+            else:
+                placement = attrs.HORIZONTAL
+                ypos = (self.height() * 0.5) - (1.5 * self.hsv_header_widget.item_height)
+                self.hsv_header_widget.move(0, ypos)
+                self.hsv_header_widget.setFixedSize(size, self.height())
+                self.hsv_header_widget.layout().setDirection(QBoxLayout.TopToBottom)
+
+                ypos = (self.height() * 0.5) - (2 * self.rgba_header_widget.item_height)
+                self.rgba_header_widget.move(self.width() - size, ypos)
+                self.rgba_header_widget.setFixedSize(size, self.height())
+                self.rgba_header_widget.layout().setDirection(QBoxLayout.TopToBottom)
+
+        # setup middle
         else:
-            placement = attrs.HORIZONTAL
-            ypos = (self.height() * 0.5) - (1.5 * self.hsv_header_widget.item_height)
-            self.hsv_header_widget.move(0, ypos)
-            self.hsv_header_widget.setFixedSize(size, self.height())
-            self.hsv_header_widget.layout().setDirection(QBoxLayout.TopToBottom)
-
-            ypos = (self.height() * 0.5) - (2 * self.rgba_header_widget.item_height)
-            self.rgba_header_widget.move(self.width() - size, ypos)
-            self.rgba_header_widget.setFixedSize(size, self.height())
-            self.rgba_header_widget.layout().setDirection(QBoxLayout.TopToBottom)
-
-
-        # # set HSV Header
-        # self.hsv_header_widget.move(orig_x + self.offset(), orig_y)
-        # self.hsv_header_widget.setFixedSize(orig_x, font_size * 13)
-        #
-        # # set RGBA Header
-        # self.rgba_header_widget.move(0, orig_y - font_size)
-        # self.rgba_header_widget.setFixedSize(orig_x - self.offset(), font_size * 13)
-
+            # set HSV Header
+            self.hsv_header_widget.move(orig_x + self.offset(), orig_y - font_size)
+            self.hsv_header_widget.setFixedSize(orig_x, font_size * 13)
+            self.hsv_header_widget.layout().setDirection(QBoxLayout.LeftToRight)
+            # set RGBA Header
+            self.rgba_header_widget.move(0, orig_y - font_size)
+            self.rgba_header_widget.setFixedSize(orig_x - self.offset(), font_size * 13)
+            self.rgba_header_widget.layout().setDirection(QBoxLayout.LeftToRight)
 
         # OLD CIRCLE PLACEMENT
         # self._placeLabelsFromListInCircle(attrs.RGBA_LIST, offset=-1.5)
@@ -275,14 +278,17 @@ class ClockHeaderWidget(QFrame):
     def __init__(self, parent=None):
         super(ClockHeaderWidget, self).__init__(parent)
         QBoxLayout(QBoxLayout.LeftToRight, self)
-        self.item_height = getFontSize(QApplication) * 3 + 5
 
-        # TODO Style sheet here...
+        # set up attrs
+        self.item_height = getFontSize(QApplication) * 3 + 5
+        self.item_width = 40
+        self.color_header_items_dict = {}
+
+       # set up display
         self.setStyleSheet("background-color: rgba(0,0,0,0)")
         self.layout().setAlignment(Qt.AlignTop)
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.layout().setSpacing(0)
-        self.color_header_items_dict = {}
 
     def createHeaderItems(self, color_args_list):
         self.color_header_items_dict = {}
@@ -292,6 +298,7 @@ class ClockHeaderWidget(QFrame):
             #new_item = FloatInputWidget(self)
             new_item = ColorGradientHeaderWidgetItem(self, title=color_arg[0], value=0)
             new_item.setFixedHeight(self.item_height)
+            new_item.setMinimumWidth(self.item_width)
             new_item.value_widget.color_arg = color_arg
             new_item.value_widget.setUserFinishedEditingEvent(self.userInputEvent)
 
@@ -688,8 +695,6 @@ class ColorGradientHeaderWidgetItem(AbstractInputGroup):
         self.setStyleSheet("background-color: rgba(0,0,0,0)")
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.layout().setSpacing(0)
-        self.setMinimumWidth(40)
-        # self.setFixedHeight(getFontSize(QApplication) * 3 + 5)
 
         # group box
         self.group_box.display_background = True
