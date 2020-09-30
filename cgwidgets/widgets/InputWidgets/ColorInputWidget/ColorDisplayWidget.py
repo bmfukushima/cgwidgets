@@ -50,19 +50,21 @@ class ClockDisplayWidget(QWidget):
         self.setStyleSheet("background-color: rgba{rgba_gray_2}".format(**iColor.style_sheet_args))
         self._createDisplayLabels()
         self._updateDisplayLabelsPosition()
+        self.setOffset(30)
         self.updateDisplay()
 
     """ API """
-    def getOffset(self):
-        return self._offset
+    def offset(self):
+        return self.scene.offset()
 
     def setOffset(self, offset):
-        self._offset = offset
+        #self._offset = offset
+        self.scene.setOffset(offset)
 
         # update all hands offsets...
         for color_arg in attrs.RGBA_LIST + attrs.HSV_LIST:
             hand_widget = self.scene.hands_items[color_arg]
-            hand_widget.setOffset(offset)
+            hand_widget.hand.updateOffset(offset)
 
         # update display
         self.updateDisplay()
@@ -108,12 +110,12 @@ class ClockDisplayWidget(QWidget):
         font_size = getFontSize(QApplication) + 2
 
         # set HSV Header
-        self.hsv_header_widget.move(orig_x + self.getOffset(), orig_y + font_size)
+        self.hsv_header_widget.move(orig_x + self.offset(), orig_y + font_size)
         self.hsv_header_widget.setFixedSize(orig_x, font_size)
 
         # set RGBA Header
         self.rgba_header_widget.move(0, orig_y + font_size)
-        self.rgba_header_widget.setFixedSize(orig_x - self.getOffset(), font_size)
+        self.rgba_header_widget.setFixedSize(orig_x - self.offset(), font_size)
 
 
         # OLD CIRCLE PLACEMENT
@@ -249,6 +251,7 @@ class ClockDisplayScene(QGraphicsScene):
     """
     def __init__(self, parent=None):
         super(ClockDisplayScene, self).__init__(parent)
+        self.setOffset(30)
         self.hands_items = {}
 
         # create clock hands
@@ -275,7 +278,7 @@ class ClockDisplayScene(QGraphicsScene):
             hand.show()
 
             # resize hand length
-            _length = length - hand.getOffset()
+            _length = length - self.offset()
             if length < 0:
                 hand.hide()
             hand.setLength(_length)
@@ -295,7 +298,7 @@ class ClockDisplayScene(QGraphicsScene):
             hand.show()
 
             # resize hand length
-            _length = length - hand.getOffset()
+            _length = length - self.offset()
             if length < 0:
                 hand.hide()
             hand.setLength(_length)
@@ -308,6 +311,12 @@ class ClockDisplayScene(QGraphicsScene):
             hand.setTransformOriginPoint(0, 10)
             hand.setRotation(count * 45 + 90 + 22.5)
             hand.setPos(orig_x, orig_y)
+
+    def offset(self):
+        return self._offset
+
+    def setOffset(self, offset):
+        self._offset = offset
 
 
 class ClockHandGroupItem(QGraphicsItemGroup):
@@ -322,8 +331,7 @@ class ClockHandGroupItem(QGraphicsItemGroup):
         self.addToGroup(self.hand_crosshair)
 
         # setup default attrs
-        self.setLength(50)
-        self.setOffset(30)
+        self._length = 50
 
     """ EVENTS"""
     def mousePressEvent(self, event):
@@ -335,12 +343,6 @@ class ClockHandGroupItem(QGraphicsItemGroup):
         self.hand.updateGradient()
 
     """ PROPERTIES """
-    def getOffset(self):
-        return self.hand.offset()
-
-    def setOffset(self, offset):
-        self.hand.setOffset(offset)
-
     def getValue(self):
         return self._value
 
@@ -351,7 +353,7 @@ class ClockHandGroupItem(QGraphicsItemGroup):
             of the length of the hand.
         """
         self._value = value
-        self.hand_crosshair.setPos(0, (self.length() * value) + self.getOffset())
+        self.hand_crosshair.setPos(0, (self.length() * value) + self.scene().offset())
 
     def length(self):
         return self._length
@@ -419,9 +421,15 @@ class ClockHandItem(QGraphicsItem):
         if not hasattr(self, '_gradient'):
             self._gradient = draw.drawColorTypeGradient(self.gradient_type, self.width(), self.length())
             self.setGradient(self._gradient)
-        # update gradient size
-        self._gradient.setStart(QPoint(0, self.offset()))
-        self._gradient.setFinalStop(QPoint(self.width(), self.length() + self.offset()))
+
+        try:
+            # update gradient size
+            self._gradient.setStart(QPoint(0, self.scene().offset()))
+            #self._gradient.setFinalStop(QPoint(self.width(), self.length() + self.offset()))
+            self._gradient.setFinalStop(QPoint(self.width(), self.length() + self.scene().offset()))
+        except AttributeError:
+            # not yet initialized
+            pass
 
     def paint(self, painter=None, style=None, widget=None):
         painter.fillRect(self._rectangle, QBrush(self.getGradient()))
@@ -433,19 +441,15 @@ class ClockHandItem(QGraphicsItem):
     def setGradient(self, gradient):
         self._gradient = gradient
 
-    def offset(self):
-        return self._offset
-
-    def setOffset(self, offset):
+    def updateOffset(self, offset):
         rect = QRectF(0, offset, self._width, self._length)
-        self._offset = offset
         self._rectangle = rect
 
     def length(self):
         return self._length
 
     def setLength(self, length):
-        rect = QRectF(0, self._offset, self._width, length)
+        rect = QRectF(0, self.scene().offset(), self._width, length)
         self._length = length
         self._rectangle = rect
 
@@ -458,7 +462,7 @@ class ClockHandItem(QGraphicsItem):
          ClockHandPickerItem.setSize()
             this needs to update the hand width so that it will scale.
         """
-        rect = QRectF(0, self._offset, self._width, self._length)
+        rect = QRectF(0, self.scene().offset(), self._width, self._length)
         self._width = width
         self._rectangle = rect
         # setSize
@@ -498,7 +502,6 @@ class ClockHandPickerItem(QGraphicsLineItem):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     color_widget = ClockDisplayWidget()
-    color_widget.setOffset(50)
     # color_widget.setLinearCrosshairDirection(Qt.Vertical)
     color_widget.show()
     color_widget.move(QCursor.pos())
