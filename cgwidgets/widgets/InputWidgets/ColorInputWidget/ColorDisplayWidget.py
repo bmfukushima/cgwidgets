@@ -21,7 +21,7 @@ from qtpy.QtWidgets import (
     QApplication, QLabel, QVBoxLayout,
     QGraphicsView, QGraphicsScene, QGraphicsItemGroup, QGraphicsTextItem, QGraphicsItem,
     QGraphicsEllipseItem,
-    QGraphicsLineItem, QWidget, QFrame, QHBoxLayout
+    QGraphicsLineItem, QWidget, QFrame, QHBoxLayout, QBoxLayout
 )
 from qtpy.QtCore import (Qt, QPoint, QRectF)
 from qtpy.QtGui import (
@@ -39,7 +39,7 @@ class ClockDisplayWidget(QWidget):
     the user and hurt their precious precious eyes
 
     Attributes:
-        color_args_values_dict (dict): of key pair values relating to the
+        color_header_items_dict (dict): of key pair values relating to the
             individual display values of each color arg
     """
     def __init__(self, parent=None):
@@ -57,8 +57,8 @@ class ClockDisplayWidget(QWidget):
         # setup display
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.setStyleSheet("background-color: rgba{rgba_gray_2}".format(**iColor.style_sheet_args))
-        self._createDisplayLabels()
-        self._updateDisplayLabelsPosition()
+        self._createHeaderWidgetItems()
+        self._updateHeaderWidgetPosition()
         self.setOffset(30)
         self.updateDisplay()
 
@@ -132,8 +132,10 @@ class ClockDisplayWidget(QWidget):
 
     def updateDisplay(self):
         """
-        Runs through every widget, and sets their crosshair based off of the
-        color that is provided
+        Updates the entire display based off of the current color.
+        This will update the
+            * hands
+            * header
 
         color (QColor): color to update the display to
         """
@@ -152,32 +154,61 @@ class ClockDisplayWidget(QWidget):
             hand_widget.setValue(value)
 
     """ UTILS """
-    def _createDisplayLabels(self):
+    def _createHeaderWidgetItems(self):
         self.rgba_header_widget = ClockHeaderWidget(self)
-        self.rgba_header_widget.layout().setAlignment(Qt.AlignRight)
-        self.rgba_header_widget.createDisplayLabels(attrs.RGBA_LIST)
+        self.rgba_header_widget.layout().setAlignment(Qt.AlignRight | Qt.AlignTop)
+        self.rgba_header_widget.createHeaderItems(attrs.RGBA_LIST)
 
         self.hsv_header_widget = ClockHeaderWidget(self)
-        self.hsv_header_widget.layout().setAlignment(Qt.AlignLeft)
-        self.hsv_header_widget.createDisplayLabels(attrs.HSV_LIST)
+        self.hsv_header_widget.layout().setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        self.hsv_header_widget.createHeaderItems(attrs.HSV_LIST)
 
-    def _updateDisplayLabelsPosition(self):
+    def _updateHeaderWidgetPosition(self):
         """
         On resize, this will update the position of all of the user inputs
+        This will do a dynamic placement based off of the current ratio of
+        the widget
 
         """
-        length = min(self.width(), self.height()) * 0.5
+        #length = min(self.width(), self.height()) * 0.5
+        # setup default attrs
         orig_x = self.width() * 0.5
         orig_y = self.height() * 0.5
         font_size = getFontSize(QApplication) + 2
+        placement = None
+        size = 50
+        # align to top / bottom
+        if self.height() > self.width():
+            placement = attrs.VERTICAL
+            self.hsv_header_widget.move(0, self.height() - size)
+            self.hsv_header_widget.setFixedSize(self.width(), size)
+            self.hsv_header_widget.layout().setDirection(QBoxLayout.LeftToRight)
 
-        # set HSV Header
-        self.hsv_header_widget.move(orig_x + self.offset(), orig_y)
-        self.hsv_header_widget.setFixedSize(orig_x, font_size * 13)
+            self.rgba_header_widget.move(0, 0)
+            self.rgba_header_widget.setFixedSize(self.width(), size)
+            self.rgba_header_widget.layout().setDirection(QBoxLayout.LeftToRight)
 
-        # set RGBA Header
-        self.rgba_header_widget.move(0, orig_y)
-        self.rgba_header_widget.setFixedSize(orig_x - self.offset(), font_size * 13)
+        # align to sides
+        else:
+            placement = attrs.HORIZONTAL
+            ypos = (self.height() * 0.5) - (1.5 * self.hsv_header_widget.item_height)
+            self.hsv_header_widget.move(0, ypos)
+            self.hsv_header_widget.setFixedSize(size, self.height())
+            self.hsv_header_widget.layout().setDirection(QBoxLayout.TopToBottom)
+
+            ypos = (self.height() * 0.5) - (2 * self.rgba_header_widget.item_height)
+            self.rgba_header_widget.move(self.width() - size, ypos)
+            self.rgba_header_widget.setFixedSize(size, self.height())
+            self.rgba_header_widget.layout().setDirection(QBoxLayout.TopToBottom)
+
+
+        # # set HSV Header
+        # self.hsv_header_widget.move(orig_x + self.offset(), orig_y)
+        # self.hsv_header_widget.setFixedSize(orig_x, font_size * 13)
+        #
+        # # set RGBA Header
+        # self.rgba_header_widget.move(0, orig_y - font_size)
+        # self.rgba_header_widget.setFixedSize(orig_x - self.offset(), font_size * 13)
 
 
         # OLD CIRCLE PLACEMENT
@@ -204,8 +235,8 @@ class ClockDisplayWidget(QWidget):
         rotational_tick = 1 / ( len(color_args_list) * 2 )
 
         for index, color_arg in enumerate(color_args_list):
-            widget = self.color_args_values_dict[color_arg]
-            rotation = (index+ offset) * rotational_tick
+            widget = self.color_header_items_dict[color_arg]
+            rotation = (index + offset) * rotational_tick
 
             x0 = (length * math.cos(2 * math.pi * rotation))
             y0 = (length * math.sin(2 * math.pi * rotation))
@@ -216,7 +247,7 @@ class ClockDisplayWidget(QWidget):
 
     """ EVENTS """
     def resizeEvent(self, event):
-        self._updateDisplayLabelsPosition()
+        self._updateHeaderWidgetPosition()
         self.updateDisplay()
         return QWidget.resizeEvent(self, event)
 
@@ -237,36 +268,46 @@ class ClockDisplayWidget(QWidget):
 
 
 class ClockHeaderWidget(QFrame):
+    """
+    This bar runs through the middle and holds all of the manually
+    user input fields.
+    """
     def __init__(self, parent=None):
         super(ClockHeaderWidget, self).__init__(parent)
-        QHBoxLayout(self)
-        self.layout().setContentsMargins(0, 0, 0, 0)
-        self.color_args_values_dict = {}
+        QBoxLayout(QBoxLayout.LeftToRight, self)
+        self.item_height = getFontSize(QApplication) * 3 + 5
 
-    def createDisplayLabels(self, color_args_list):
-        self.color_args_values_dict = {}
+        # TODO Style sheet here...
+        self.setStyleSheet("background-color: rgba(0,0,0,0)")
+        self.layout().setAlignment(Qt.AlignTop)
+        self.layout().setContentsMargins(0, 0, 0, 0)
+        self.layout().setSpacing(0)
+        self.color_header_items_dict = {}
+
+    def createHeaderItems(self, color_args_list):
+        self.color_header_items_dict = {}
 
         # create clock hands
         for index, color_arg in enumerate(color_args_list):
             #new_item = FloatInputWidget(self)
-            new_item = ColorGradientHeaderWidgetItem(self, title=color_arg, value=0)
+            new_item = ColorGradientHeaderWidgetItem(self, title=color_arg[0], value=0)
+            new_item.setFixedHeight(self.item_height)
             new_item.value_widget.color_arg = color_arg
             new_item.value_widget.setUserFinishedEditingEvent(self.userInputEvent)
-            print(new_item.value_widget)
 
-            self.color_args_values_dict[color_arg] = new_item
+            self.color_header_items_dict[color_arg] = new_item
             self.layout().addWidget(new_item)
-            new_item.setStyleSheet("background-color: rgba(0,0,0,0); border: None")
+            #new_item.setStyleSheet("background-color: rgba(0,0,0,0); border: None")
 
     def updateUserInputs(self, color_args_dict):
         """
         Updates the user inputs with the color args dict provided
 
         """
-        for color_arg in self.color_args_values_dict:
+        for color_arg in self.color_header_items_dict:
             # get value widget
             try:
-                input_widget = self.color_args_values_dict[color_arg]
+                input_widget = self.color_header_items_dict[color_arg]
                 #hand_widget = self.scene.hands_items[color_arg]
 
                 # set new value
@@ -598,6 +639,7 @@ class CenterManipulatorItem(QGraphicsEllipseItem):
             -(radius * 2),
         )
 
+
 """ TODO COPY PASTE FROM GRADIENT """
 class ColorGradientHeaderWidgetItem(AbstractInputGroup):
     """
@@ -621,21 +663,51 @@ class ColorGradientHeaderWidgetItem(AbstractInputGroup):
 
         # setup GUI
         self.value_widget = FloatInputWidget()
-        #self.value_widget = ColorGradientHeaderWidgetItem(self)
         self.value_widget.setUseLadder(True, value_list=[0.0001, 0.001, 0.01, 0.1])
         self.setRange(True, 0, 1)
         self.value_widget.setAlignment(Qt.AlignLeft)
         self.insertWidget(1, self.value_widget)
 
-        self.setStyleSheet("background-color: rgba{rgba_gray_1}".format(**iColor.style_sheet_args))
-        self.setFixedWidth(125)
-        self.setFixedHeight(100)
+        # update style sheets / margins
+        self.setupDisplayProperties()
 
-    # def setValue(self, value):
-    #     self.setText(str(value))
+    def setupDisplayProperties(self):
+        """
+        sets up all of the display properties for each widget
+            group_box (AbstractInputGroupBox)
+                * disable separator
+            value_widget (FloatInputWidget)
+
+            Updates to
+                * stylesheet
+                * content margins
+                * spacing
+
+        """
+        # self
+        self.setStyleSheet("background-color: rgba(0,0,0,0)")
+        self.layout().setContentsMargins(0, 0, 0, 0)
+        self.layout().setSpacing(0)
+        self.setMinimumWidth(40)
+        # self.setFixedHeight(getFontSize(QApplication) * 3 + 5)
+
+        # group box
+        self.group_box.display_background = True
+        self.group_box.rgba_background = (0, 0, 0, 32)
+        self.group_box.layout().setContentsMargins(0, 7, 0, 0)
+        self.group_box.layout().setSpacing(0)
+        self.group_box.displaySeparator(False)
+        self.group_box.padding = 0
+        self.group_box.updateStyleSheet()
+
+        # input widget
+        self.value_widget.setStyleSheet("""
+            background-color: rgba{rgba_invisible};
+            color: rgba{rgba_text};
+            border: None
+        """.format(**iColor.style_sheet_args))
 
     """ PROPERTIES """
-
     def setValue(self, value):
         self._value = value
         self.value_widget.setText(str(value))

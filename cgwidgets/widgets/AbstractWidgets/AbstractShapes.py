@@ -171,7 +171,7 @@ class AbstractInputGroupBox(QGroupBox):
                 margin-top: 1ex;
                 margin-bottom: {padding};
                 margin-left: {padding};
-                margin-right:  {padding};
+                margin-right: {padding};
             }}
         """.format(
             **style_sheet_args
@@ -179,6 +179,12 @@ class AbstractInputGroupBox(QGroupBox):
         self.setStyleSheet(style_sheet)
 
     """PROPERTIES"""
+    def displaySeparator(self, display):
+        if display is True:
+            self.separator.show()
+        elif display is False:
+            self.separator.hide()
+
     def isSelected(self):
         return self._is_selected
 

@@ -4,7 +4,7 @@ SOUTH = 'south'
 EAST = 'east'
 WEST = 'west'
 
-#COLORS
+# COLORS
 RED = 'red'
 GREEN = 'green'
 BLUE = 'blue'
@@ -16,3 +16,7 @@ RGBA = 'rgba'
 
 RGBA_LIST = [RED, GREEN, BLUE, ALPHA]
 HSV_LIST = [HUE, SATURATION, VALUE]
+
+# ALIGNMENT
+VERTICAL = 'vertical'
+HORIZONTAL = 'horizontal'
