@@ -47,6 +47,7 @@ class ClockDisplayWidget(QWidget):
         # create scene
         QVBoxLayout(self)
         self._offset = 30
+        self._header_item_size = 50
         self._color = QColor(128, 128, 255)
 
         self.scene = ClockDisplayScene(self)
@@ -91,6 +92,18 @@ class ClockDisplayWidget(QWidget):
         self._color = color
         self.scene.center_manipulator_item.setColor(color)
         self.updateDisplay()
+
+    def headerItemSize(self):
+        return self._header_item_size
+
+    def setHeaderItemSize(self, header_item_size):
+        """
+        Sets the header_item_size of this widget
+
+        Args:
+            header_item_size (QColor):
+        """
+        self._header_item_size = header_item_size
 
     def setColorArgValue(self, arg, value):
         """
@@ -163,7 +176,6 @@ class ClockDisplayWidget(QWidget):
         self.hsv_header_widget.layout().setAlignment(Qt.AlignLeft | Qt.AlignTop)
         self.hsv_header_widget.createHeaderItems(attrs.HSV_LIST)
 
-
     """ PLACE HEADER"""
     def _updateHeaderWidgetPosition(self):
         """
@@ -174,33 +186,25 @@ class ClockDisplayWidget(QWidget):
         """
         length = min(self.width(), self.height()) * 0.5
         # setup default attrs
-
-        font_size = getFontSize(QApplication) + 2
-        placement = None
-        size = 50
         # setup full length
-        if length < size * 3:
+        if length < self.headerItemSize() * 3:
             # align to top / bottom
             if self.height() > self.width():
-                placement = attrs.VERTICAL
-                self._placeHeaderVertical(size)
-
+                self._placeHeaderVertical()
             # align to sides
             else:
-                placement = attrs.HORIZONTAL
-                self._placeHeaderHorizontal(size)
+                self._placeHeaderHorizontal()
 
         # setup middle
         else:
             self._placeHeaderCenter()
             # set HSV Header
 
-
         # OLD CIRCLE PLACEMENT
         # self._placeLabelsFromListInCircle(attrs.RGBA_LIST, offset=-1.5)
         # self._placeLabelsFromListInCircle(attrs.HSV_LIST, offset=2)
 
-    def _placeHeaderVertical(self, item_height):
+    def _placeHeaderVertical(self):
         """
         Places the header vertically.  This will place the HSV header on the bottom
         of the display, and the RGBA header on the top of the display.
@@ -208,15 +212,15 @@ class ClockDisplayWidget(QWidget):
         Args:
             item_height (int): this will determine how tall each item is
         """
-        self.hsv_header_widget.move(0, self.height() - item_height)
-        self.hsv_header_widget.setFixedSize(self.width(), item_height)
+        self.hsv_header_widget.move(0, self.height() - self.headerItemSize())
+        self.hsv_header_widget.setFixedSize(self.width(), self.headerItemSize())
         self.hsv_header_widget.layout().setDirection(QBoxLayout.LeftToRight)
 
         self.rgba_header_widget.move(0, 0)
-        self.rgba_header_widget.setFixedSize(self.width(), item_height)
+        self.rgba_header_widget.setFixedSize(self.width(), self.headerItemSize())
         self.rgba_header_widget.layout().setDirection(QBoxLayout.LeftToRight)
 
-    def _placeHeaderHorizontal(self, item_width):
+    def _placeHeaderHorizontal(self):
         """
         Places the header horizontally.  This will put the HSV header on the left
         side of the display, and the RGBA header on the right side of the display
@@ -227,13 +231,13 @@ class ClockDisplayWidget(QWidget):
         # set hsv header
         ypos = (self.height() * 0.5) - (1.5 * self.hsv_header_widget.item_height)
         self.hsv_header_widget.move(0, ypos)
-        self.hsv_header_widget.setFixedSize(item_width, self.height())
+        self.hsv_header_widget.setFixedSize(self.headerItemSize(), self.height())
         self.hsv_header_widget.layout().setDirection(QBoxLayout.TopToBottom)
 
         # set rgba header
         ypos = (self.height() * 0.5) - (2 * self.rgba_header_widget.item_height)
-        self.rgba_header_widget.move(self.width() - item_width, ypos)
-        self.rgba_header_widget.setFixedSize(item_width, self.height())
+        self.rgba_header_widget.move(self.width() - self.headerItemSize(), ypos)
+        self.rgba_header_widget.setFixedSize(self.headerItemSize(), self.height())
         self.rgba_header_widget.layout().setDirection(QBoxLayout.TopToBottom)
 
     def _placeHeaderCenter(self):
@@ -430,13 +434,28 @@ class ClockDisplayScene(QGraphicsScene):
         Updates the size of the individual hands
         orig_x / y (float): center of scene
         length ( float): how long each hand should be
+
+        Todo:
+            figure out how to do the differential for the offset of the widgets
         """
+        # get attrs
         rect = self.sceneRect()
         width = rect.width()
         height = rect.height()
         length = min(width, height) * 0.5
         orig_x = width / 2
         orig_y = height / 2
+        main_widget = getWidgetAncestor(self, ClockDisplayWidget)
+        widget_size = main_widget.headerItemSize()
+
+        # setup offset for header items
+        test_offset = math.fabs(width-height)
+
+        widget_offset = widget_size * 2
+        if test_offset < widget_offset:
+            #length -= math.fabs(test_offset - 50)
+            length -= widget_size
+
         # update hsv list
         for count, color_arg in enumerate(attrs.HSV_LIST):
             hand = self.hands_items[color_arg]
