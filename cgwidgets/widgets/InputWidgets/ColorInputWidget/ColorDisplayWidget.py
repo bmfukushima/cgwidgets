@@ -163,6 +163,8 @@ class ClockDisplayWidget(QWidget):
         self.hsv_header_widget.layout().setAlignment(Qt.AlignLeft | Qt.AlignTop)
         self.hsv_header_widget.createHeaderItems(attrs.HSV_LIST)
 
+
+    """ PLACE HEADER"""
     def _updateHeaderWidgetPosition(self):
         """
         On resize, this will update the position of all of the user inputs
@@ -172,8 +174,7 @@ class ClockDisplayWidget(QWidget):
         """
         length = min(self.width(), self.height()) * 0.5
         # setup default attrs
-        orig_x = self.width() * 0.5
-        orig_y = self.height() * 0.5
+
         font_size = getFontSize(QApplication) + 2
         placement = None
         size = 50
@@ -182,41 +183,77 @@ class ClockDisplayWidget(QWidget):
             # align to top / bottom
             if self.height() > self.width():
                 placement = attrs.VERTICAL
-                self.hsv_header_widget.move(0, self.height() - size)
-                self.hsv_header_widget.setFixedSize(self.width(), size)
-                self.hsv_header_widget.layout().setDirection(QBoxLayout.LeftToRight)
-
-                self.rgba_header_widget.move(0, 0)
-                self.rgba_header_widget.setFixedSize(self.width(), size)
-                self.rgba_header_widget.layout().setDirection(QBoxLayout.LeftToRight)
+                self._placeHeaderVertical(size)
 
             # align to sides
             else:
                 placement = attrs.HORIZONTAL
-                ypos = (self.height() * 0.5) - (1.5 * self.hsv_header_widget.item_height)
-                self.hsv_header_widget.move(0, ypos)
-                self.hsv_header_widget.setFixedSize(size, self.height())
-                self.hsv_header_widget.layout().setDirection(QBoxLayout.TopToBottom)
-
-                ypos = (self.height() * 0.5) - (2 * self.rgba_header_widget.item_height)
-                self.rgba_header_widget.move(self.width() - size, ypos)
-                self.rgba_header_widget.setFixedSize(size, self.height())
-                self.rgba_header_widget.layout().setDirection(QBoxLayout.TopToBottom)
+                self._placeHeaderHorizontal(size)
 
         # setup middle
         else:
+            self._placeHeaderCenter()
             # set HSV Header
-            self.hsv_header_widget.move(orig_x + self.offset(), orig_y - font_size)
-            self.hsv_header_widget.setFixedSize(orig_x, font_size * 13)
-            self.hsv_header_widget.layout().setDirection(QBoxLayout.LeftToRight)
-            # set RGBA Header
-            self.rgba_header_widget.move(0, orig_y - font_size)
-            self.rgba_header_widget.setFixedSize(orig_x - self.offset(), font_size * 13)
-            self.rgba_header_widget.layout().setDirection(QBoxLayout.LeftToRight)
+
 
         # OLD CIRCLE PLACEMENT
         # self._placeLabelsFromListInCircle(attrs.RGBA_LIST, offset=-1.5)
         # self._placeLabelsFromListInCircle(attrs.HSV_LIST, offset=2)
+
+    def _placeHeaderVertical(self, item_height):
+        """
+        Places the header vertically.  This will place the HSV header on the bottom
+        of the display, and the RGBA header on the top of the display.
+
+        Args:
+            item_height (int): this will determine how tall each item is
+        """
+        self.hsv_header_widget.move(0, self.height() - item_height)
+        self.hsv_header_widget.setFixedSize(self.width(), item_height)
+        self.hsv_header_widget.layout().setDirection(QBoxLayout.LeftToRight)
+
+        self.rgba_header_widget.move(0, 0)
+        self.rgba_header_widget.setFixedSize(self.width(), item_height)
+        self.rgba_header_widget.layout().setDirection(QBoxLayout.LeftToRight)
+
+    def _placeHeaderHorizontal(self, item_width):
+        """
+        Places the header horizontally.  This will put the HSV header on the left
+        side of the display, and the RGBA header on the right side of the display
+        item_width (int): the fixed item_width this widget should take up.
+        Args:
+            item_width (int): this will determine how wide each item is
+        """
+        # set hsv header
+        ypos = (self.height() * 0.5) - (1.5 * self.hsv_header_widget.item_height)
+        self.hsv_header_widget.move(0, ypos)
+        self.hsv_header_widget.setFixedSize(item_width, self.height())
+        self.hsv_header_widget.layout().setDirection(QBoxLayout.TopToBottom)
+
+        # set rgba header
+        ypos = (self.height() * 0.5) - (2 * self.rgba_header_widget.item_height)
+        self.rgba_header_widget.move(self.width() - item_width, ypos)
+        self.rgba_header_widget.setFixedSize(item_width, self.height())
+        self.rgba_header_widget.layout().setDirection(QBoxLayout.TopToBottom)
+
+    def _placeHeaderCenter(self):
+        """
+        Places the header in the center
+        :return:
+        """
+        # get attrs
+        orig_x = self.width() * 0.5
+        orig_y = self.height() * 0.5
+
+        # set HSV header
+        self.hsv_header_widget.move(0, orig_y - (self.rgba_header_widget.item_height * 0.5))
+        self.hsv_header_widget.setFixedSize(orig_x - self.offset(), self.rgba_header_widget.item_height)
+        self.hsv_header_widget.layout().setDirection(QBoxLayout.LeftToRight)
+
+        # set RGBA Header
+        self.rgba_header_widget.move(orig_x + self.offset(), orig_y - (self.rgba_header_widget.item_height * 0.5))
+        self.rgba_header_widget.setFixedSize(orig_x - self.offset(), self.hsv_header_widget.item_height)
+        self.rgba_header_widget.layout().setDirection(QBoxLayout.LeftToRight)
 
     """ NOT IN USE BUT I LIKE THIS CODE"""
     def _placeLabelsFromListInCircle(self, color_args_list, offset=0):
