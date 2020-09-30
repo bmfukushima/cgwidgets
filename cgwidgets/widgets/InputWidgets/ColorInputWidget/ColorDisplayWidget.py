@@ -1,7 +1,5 @@
 """
 TODO:
-    *   Ladder seriously... modifiers get screwed up from the ladder sometimes...
-            this is suppperrr annoying.
     *   LadderDelegate | Live Sliding
             - Updates on parent widget only happen when the user
                 finishes editing.
@@ -12,6 +10,11 @@ TODO:
             - needs to calculate mouse distance moved, and updated color
                 based off of that
 
+Notes:
+    *   Border offset ( the area between the giant circle in the middle and
+        the surrounding hands / values ) is hard coded to 10.
+            - Gradient update
+            - Length update
 """
 
 import sys
@@ -70,10 +73,10 @@ class ClockDisplayWidget(QWidget):
     def setOffset(self, offset):
         self.scene.setOffset(offset)
 
-        # update all hands offsets...
-        for color_arg in attrs.RGBA_LIST + attrs.HSV_LIST:
-            hand_widget = self.scene.hands_items[color_arg]
-            hand_widget.hand.updateOffset(offset)
+        # # update all hands offsets...
+        # for color_arg in attrs.RGBA_LIST + attrs.HSV_LIST:
+        #     hand_widget = self.scene.hands_items[color_arg]
+        #     hand_widget.hand.updateOffset(offset)
 
         self.scene.center_manipulator_item.updateRadius(offset)
         # update display
@@ -187,7 +190,7 @@ class ClockDisplayWidget(QWidget):
         length = min(self.width(), self.height()) * 0.5
         # setup default attrs
         # setup full length
-        if length < self.headerItemSize() * 3:
+        if length < self.headerItemSize() * 4:
             # align to top / bottom
             if self.height() > self.width():
                 self._placeHeaderVertical()
@@ -248,15 +251,15 @@ class ClockDisplayWidget(QWidget):
         # get attrs
         orig_x = self.width() * 0.5
         orig_y = self.height() * 0.5
-
+        x_offset = 10
         # set HSV header
         self.hsv_header_widget.move(0, orig_y - (self.rgba_header_widget.item_height * 0.5))
-        self.hsv_header_widget.setFixedSize(orig_x - self.offset(), self.rgba_header_widget.item_height)
+        self.hsv_header_widget.setFixedSize(orig_x - self.offset() - x_offset, self.rgba_header_widget.item_height)
         self.hsv_header_widget.layout().setDirection(QBoxLayout.LeftToRight)
 
         # set RGBA Header
-        self.rgba_header_widget.move(orig_x + self.offset(), orig_y - (self.rgba_header_widget.item_height * 0.5))
-        self.rgba_header_widget.setFixedSize(orig_x - self.offset(), self.hsv_header_widget.item_height)
+        self.rgba_header_widget.move(orig_x + self.offset() + x_offset, orig_y - (self.rgba_header_widget.item_height * 0.5))
+        self.rgba_header_widget.setFixedSize(orig_x - self.offset() - x_offset, self.hsv_header_widget.item_height)
         self.rgba_header_widget.layout().setDirection(QBoxLayout.LeftToRight)
 
     """ NOT IN USE BUT I LIKE THIS CODE"""
@@ -460,6 +463,7 @@ class ClockDisplayScene(QGraphicsScene):
         for count, color_arg in enumerate(attrs.HSV_LIST):
             hand = self.hands_items[color_arg]
             hand.show()
+            print(hand)
 
             # resize hand length
             _length = length - self.offset()
@@ -472,6 +476,7 @@ class ClockDisplayScene(QGraphicsScene):
             #hand.setValue(0.25)
 
             # transform hand
+
             hand.setRotation(count * 60 + 30 + 270)
             hand.setPos(orig_x, orig_y)
 
@@ -536,7 +541,8 @@ class ClockHandGroupItem(QGraphicsItemGroup):
             of the length of the hand.
         """
         self._value = value
-        self.hand_crosshair.setPos(0, (self.length() * value) + self.scene().offset())
+        # TODO update value
+        self.hand_crosshair.setPos(0, (self.length() * value) + self.scene().offset() + 10)
 
     def length(self):
         return self._length
@@ -573,6 +579,9 @@ class ClockHandItem(QGraphicsItem):
         width (int): how wide the line is
         offset (int): how far from the origin (center) the line is
         length (int): how long the line is
+
+    Notes
+        Origin is in the setLength/setWidth functions and is linked to the "offset"
     """
 
     def __init__(self, gradient_type):
@@ -607,9 +616,11 @@ class ClockHandItem(QGraphicsItem):
 
         try:
             # update gradient size
-            self._gradient.setStart(QPoint(0, self.scene().offset()))
+            # todo
+            # this is
+            self._gradient.setStart(QPoint(0, self.scene().offset() + 10))
             #self._gradient.setFinalStop(QPoint(self.width(), self.length() + self.offset()))
-            self._gradient.setFinalStop(QPoint(self.width(), self.length() + self.scene().offset()))
+            self._gradient.setFinalStop(QPoint(self.width(), self.length() + self.scene().offset() + 10))
         except AttributeError:
             # not yet initialized
             pass
@@ -624,15 +635,15 @@ class ClockHandItem(QGraphicsItem):
     def setGradient(self, gradient):
         self._gradient = gradient
 
-    def updateOffset(self, offset):
-        rect = QRectF(0, offset, self._width, self._length)
-        self._rectangle = rect
+    # def updateOffset(self, offset):
+    #     rect = QRectF(0, offset, self._width, self._length)
+    #     self._rectangle = rect
 
     def length(self):
         return self._length
 
     def setLength(self, length):
-        rect = QRectF(0, self.scene().offset(), self._width, length)
+        rect = QRectF(0, self.scene().offset() + 10, self._width, length)
         self._length = length
         self._rectangle = rect
 
@@ -645,7 +656,7 @@ class ClockHandItem(QGraphicsItem):
          ClockHandPickerItem.setSize()
             this needs to update the hand width so that it will scale.
         """
-        rect = QRectF(0, self.scene().offset(), self._width, self._length)
+        rect = QRectF(0, self.scene().offset() + 10, self._width, self._length)
         self._width = width
         self._rectangle = rect
         # setSize
@@ -717,7 +728,6 @@ class ColorGradientHeaderWidgetItem(AbstractInputGroup):
                 | -- divider_widget (AbstractLine)
                 | -- value_widget (QLabel)
     """
-
     def __init__(self, parent=None, title='None', value='None'):
         super(ColorGradientHeaderWidgetItem, self).__init__(parent, title)
         # setup attrs
@@ -795,6 +805,7 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     color_widget = ClockDisplayWidget()
     color_widget.setColor(QColor(255,255,128))
+    color_widget.setOffset(40)
     # color_widget.setLinearCrosshairDirection(Qt.Vertical)
     color_widget.show()
     color_widget.move(QCursor.pos())
