@@ -1,9 +1,16 @@
 """
 TODO:
-    Cursor Position setting to last instead of first?
-        self.setCursorPosition(0)
-            FloatInputWidget
-            LadderDelegate
+    *   Ladder seriously... modifiers get screwed up from the ladder sometimes...
+            this is suppperrr annoying.
+    *   LadderDelegate | Live Sliding
+            - Updates on parent widget only happen when the user
+                finishes editing.
+            - Add mode to allow for continuous updates of the parent widget
+            - Probably check leave/close events?
+    *   Slide Bars | Add user interaction
+            - doesn't actually need to move the items...
+            - needs to calculate mouse distance moved, and updated color
+                based off of that
 
 """
 
@@ -22,7 +29,7 @@ from qtpy.QtGui import (
 )
 
 from cgwidgets.widgets import FloatInputWidget
-from cgwidgets.utils import attrs, draw, getWidgetAncestorByName, getFontSize
+from cgwidgets.utils import attrs, draw, getWidgetAncestor, getWidgetAncestorByName, getFontSize
 from cgwidgets.settings.colors import iColor, getHSVRGBAFloatFromColor
 
 
@@ -85,6 +92,44 @@ class ClockDisplayWidget(QWidget):
         self.scene.center_manipulator_item.setColor(color)
         self.updateDisplay()
 
+    def setColorArgValue(self, arg, value):
+        """
+
+        arg (attrs.COLOR_ARG):
+        value (float):
+        """
+        print(arg, value)
+        orig_color = self.color()
+        selection_type = arg
+        # saturation
+        if selection_type == attrs.SATURATION:
+            hue = orig_color.hueF()
+            sat = value
+            value = orig_color.valueF()
+            orig_color.setHsvF(hue, sat, value)
+        # value
+        elif selection_type == attrs.VALUE:
+            # get HSV values
+            hue = orig_color.hueF()
+            sat = orig_color.saturationF()
+            value = value
+            orig_color.setHsvF(hue, sat, value)
+        # red
+        elif selection_type == attrs.RED:
+            red = value
+            orig_color.setRedF(red)
+        # green
+        elif selection_type == attrs.GREEN:
+            green = value
+            orig_color.setGreenF(green)
+        # blue
+        elif selection_type == attrs.BLUE:
+            blue = value
+            orig_color.setBlueF(blue)
+
+        # set color from an arg value
+        self.setColor(orig_color)
+
     def updateDisplay(self):
         """
         Runs through every widget, and sets their crosshair based off of the
@@ -101,7 +146,7 @@ class ClockDisplayWidget(QWidget):
         for color_arg in color_args_dict:
             # get value widget
             value = color_args_dict[color_arg]
-            print ("%s == %s"%(color_arg, value))
+
             # set hand widget
             hand_widget = self.scene.hands_items[color_arg]
             hand_widget.setValue(value)
@@ -205,6 +250,8 @@ class ClockHeaderWidget(QFrame):
         # create clock hands
         for index, color_arg in enumerate(color_args_list):
             new_item = FloatInputWidget(self)
+            new_item.color_arg = color_arg
+            new_item.setUserFinishedEditingEvent(self.userInputEvent)
             new_item.setFixedWidth(50)
             new_item.setAlignment(Qt.AlignLeft)
             new_item.setUseLadder(True, value_list=[0.0001, 0.001, 0.01, 0.1])
@@ -231,6 +278,14 @@ class ClockHeaderWidget(QFrame):
             except KeyError:
                 pass
             #hand_widget.setValue(value)
+
+    def userInputEvent(self, widget, value):
+        color_arg = widget.color_arg
+
+        print(widget)
+        print(value)
+        main_widget = getWidgetAncestor(self, ClockDisplayWidget)
+        main_widget.setColorArgValue(color_arg, float(value))
 
 
 class ClockDisplayView(QGraphicsView):
@@ -527,6 +582,7 @@ class CenterManipulatorItem(QGraphicsEllipseItem):
     def __init__(self, parent=None):
         super(CenterManipulatorItem, self).__init__(parent)
         pen = self.pen()
+        pen.setStyle(Qt.NoPen)
         pen.setWidth(0)
         self.setPen(pen)
 

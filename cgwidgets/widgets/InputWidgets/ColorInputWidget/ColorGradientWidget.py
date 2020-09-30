@@ -383,7 +383,8 @@ class ColorGraphicsView(QGraphicsView):
             pos = event.globalPos()
             orig_color = color_display_widget.getColor()
             new_color = self._pickColor(pos)
-
+            # TODO DUPLICATE SET COLOR VALUE FROM ARG
+            """ TODO UPDATE COLOR"""
             # saturation
             if selection_type == attrs.SATURATION:
                 hue = orig_color.hueF()

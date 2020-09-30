@@ -347,6 +347,12 @@ class AbstractNumberInputWidget(AbstractInputWidget):
             if modifiers == Qt.ShiftModifier:
                 if event.key() in self.getKeyList():
                     return QLineEdit.keyPressEvent(self, event, *args, **kwargs)
+
+            # allow number pad shenanigans
+            if modifiers == Qt.KeypadModifier:
+                if event.key() in self.getKeyList():
+                    return QLineEdit.keyPressEvent(self, event, *args, **kwargs)
+
         # default action
         else:
             if event.key() in self.getKeyList():
@@ -356,7 +362,7 @@ class AbstractNumberInputWidget(AbstractInputWidget):
         return_val = QLineEdit.focusOutEvent(self, event)
         self.setCursorPosition(0)
         return return_val
-        print('focus out')
+
 
 class AbstractFloatInputWidget(AbstractNumberInputWidget):
     TYPE = 'float'
