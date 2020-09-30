@@ -59,7 +59,6 @@ class ColorInputWidget(QStackedWidget):
                     Toggle current index to show previous colors
     """
 
-
     def __init__(self, parent=None):
         super(ColorInputWidget, self).__init__(parent=parent)
         # setup attrs

@@ -408,6 +408,7 @@ Notes:
 
             # update other widgets
             self.middle_item.setValue(str(self._value))
+            self.middle_item.setCursorPosition(0)
             try:
                 parent.setText(str(self._value))
             except AttributeError:

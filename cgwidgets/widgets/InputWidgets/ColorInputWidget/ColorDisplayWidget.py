@@ -28,7 +28,7 @@ from qtpy.QtGui import (
     QColor, QCursor, QPen, QLinearGradient, QBrush, QGradient
 )
 
-from cgwidgets.widgets import FloatInputWidget
+from cgwidgets.widgets import FloatInputWidget, AbstractInputGroup
 from cgwidgets.utils import attrs, draw, getWidgetAncestor, getWidgetAncestorByName, getFontSize
 from cgwidgets.settings.colors import iColor, getHSVRGBAFloatFromColor
 
@@ -173,11 +173,11 @@ class ClockDisplayWidget(QWidget):
 
         # set HSV Header
         self.hsv_header_widget.move(orig_x + self.offset(), orig_y)
-        self.hsv_header_widget.setFixedSize(orig_x, font_size)
+        self.hsv_header_widget.setFixedSize(orig_x, font_size * 13)
 
         # set RGBA Header
         self.rgba_header_widget.move(0, orig_y)
-        self.rgba_header_widget.setFixedSize(orig_x - self.offset(), font_size)
+        self.rgba_header_widget.setFixedSize(orig_x - self.offset(), font_size * 13)
 
 
         # OLD CIRCLE PLACEMENT
@@ -242,20 +242,18 @@ class ClockHeaderWidget(QFrame):
         QHBoxLayout(self)
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.color_args_values_dict = {}
-        self.setStyleSheet("background-color: rgba(0,255,0,255)")
 
     def createDisplayLabels(self, color_args_list):
         self.color_args_values_dict = {}
 
         # create clock hands
         for index, color_arg in enumerate(color_args_list):
-            new_item = FloatInputWidget(self)
-            new_item.color_arg = color_arg
-            new_item.setUserFinishedEditingEvent(self.userInputEvent)
-            new_item.setFixedWidth(50)
-            new_item.setAlignment(Qt.AlignLeft)
-            new_item.setUseLadder(True, value_list=[0.0001, 0.001, 0.01, 0.1])
-            new_item.setRange(True, 0, 1)
+            #new_item = FloatInputWidget(self)
+            new_item = ColorGradientHeaderWidgetItem(self, title=color_arg, value=0)
+            new_item.value_widget.color_arg = color_arg
+            new_item.value_widget.setUserFinishedEditingEvent(self.userInputEvent)
+            print(new_item.value_widget)
+
             self.color_args_values_dict[color_arg] = new_item
             self.layout().addWidget(new_item)
             new_item.setStyleSheet("background-color: rgba(0,0,0,0); border: None")
@@ -273,17 +271,19 @@ class ClockHeaderWidget(QFrame):
 
                 # set new value
                 value = color_args_dict[color_arg]
-                input_widget.setText(str(value))
-                input_widget.setCursorPosition(0)
+                input_widget.setValue(str(value))
             except KeyError:
                 pass
             #hand_widget.setValue(value)
 
     def userInputEvent(self, widget, value):
-        color_arg = widget.color_arg
+        """
+        Updates the color based off of the specific input from the user
+        widget (FloatInputWidget):
+        value (str): string value set by the user
 
-        print(widget)
-        print(value)
+        """
+        color_arg = widget.color_arg
         main_widget = getWidgetAncestor(self, ClockDisplayWidget)
         main_widget.setColorArgValue(color_arg, float(value))
 
@@ -597,6 +597,65 @@ class CenterManipulatorItem(QGraphicsEllipseItem):
             -(radius * 2),
             -(radius * 2),
         )
+
+""" TODO COPY PASTE FROM GRADIENT """
+class ColorGradientHeaderWidgetItem(AbstractInputGroup):
+    """
+    Attributes:
+        name (str)
+        value (str)
+        selected (bool)
+
+    Widgets:
+        | -- QBoxLayout
+                | -- label_widget (QLabel)
+                | -- divider_widget (AbstractLine)
+                | -- value_widget (QLabel)
+    """
+
+    def __init__(self, parent=None, title='None', value='None'):
+        super(ColorGradientHeaderWidgetItem, self).__init__(parent, title)
+        # setup attrs
+        self._value = value
+        self._is_selected = False
+
+        # setup GUI
+        self.value_widget = FloatInputWidget()
+        #self.value_widget = ColorGradientHeaderWidgetItem(self)
+        self.value_widget.setUseLadder(True, value_list=[0.0001, 0.001, 0.01, 0.1])
+        self.setRange(True, 0, 1)
+        self.value_widget.setAlignment(Qt.AlignLeft)
+        self.insertWidget(1, self.value_widget)
+
+        self.setStyleSheet("background-color: rgba{rgba_gray_1}".format(**iColor.style_sheet_args))
+        self.setFixedWidth(125)
+        self.setFixedHeight(100)
+
+    # def setValue(self, value):
+    #     self.setText(str(value))
+
+    """ PROPERTIES """
+
+    def setValue(self, value):
+        self._value = value
+        self.value_widget.setText(str(value))
+        self.value_widget.setCursorPosition(0)
+
+    def getValue(self):
+        return self._value
+
+    def setRange(self, enable, range_min, range_max):
+        """
+        Sets the range of the user input
+        """
+        self.value_widget.setRange(enable, range_min, range_max)
+
+    def setAllowNegative(self, enabled):
+        """
+        Determines if the input will be allowed to go into negative numbers or
+        not
+        """
+        self.value_widget.setAllowNegative(enabled)
 
 
 if __name__ == '__main__':
