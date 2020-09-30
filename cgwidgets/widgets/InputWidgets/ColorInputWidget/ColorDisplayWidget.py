@@ -13,6 +13,7 @@ import math
 from qtpy.QtWidgets import (
     QApplication, QLabel, QVBoxLayout,
     QGraphicsView, QGraphicsScene, QGraphicsItemGroup, QGraphicsTextItem, QGraphicsItem,
+    QGraphicsEllipseItem,
     QGraphicsLineItem, QWidget, QFrame, QHBoxLayout
 )
 from qtpy.QtCore import (Qt, QPoint, QRectF)
@@ -39,6 +40,7 @@ class ClockDisplayWidget(QWidget):
         # create scene
         QVBoxLayout(self)
         self._offset = 30
+        self._color = QColor(128, 128, 255)
 
         self.scene = ClockDisplayScene(self)
         self.view = ClockDisplayView(self.scene)
@@ -58,7 +60,6 @@ class ClockDisplayWidget(QWidget):
         return self.scene.offset()
 
     def setOffset(self, offset):
-        #self._offset = offset
         self.scene.setOffset(offset)
 
         # update all hands offsets...
@@ -66,25 +67,41 @@ class ClockDisplayWidget(QWidget):
             hand_widget = self.scene.hands_items[color_arg]
             hand_widget.hand.updateOffset(offset)
 
+        self.scene.center_manipulator_item.updateRadius(offset)
         # update display
         self.updateDisplay()
 
-    def updateDisplay(self, color=QColor(128, 128, 255, 255)):
+    def color(self):
+        return self._color
+
+    def setColor(self, color):
+        """
+        Sets the color of this widget
+
+        Args:
+            color (QColor):
+        """
+        self._color = color
+        self.scene.center_manipulator_item.setColor(color)
+        self.updateDisplay()
+
+    def updateDisplay(self):
         """
         Runs through every widget, and sets their crosshair based off of the
         color that is provided
 
         color (QColor): color to update the display to
         """
-        color_args_dict = getHSVRGBAFloatFromColor(color)
+        color_args_dict = getHSVRGBAFloatFromColor(self._color)
         # update headers
         self.rgba_header_widget.updateUserInputs(color_args_dict)
         self.hsv_header_widget.updateUserInputs(color_args_dict)
+
         # update hands
         for color_arg in color_args_dict:
             # get value widget
             value = color_args_dict[color_arg]
-
+            print ("%s == %s"%(color_arg, value))
             # set hand widget
             hand_widget = self.scene.hands_items[color_arg]
             hand_widget.setValue(value)
@@ -110,11 +127,11 @@ class ClockDisplayWidget(QWidget):
         font_size = getFontSize(QApplication) + 2
 
         # set HSV Header
-        self.hsv_header_widget.move(orig_x + self.offset(), orig_y + font_size)
+        self.hsv_header_widget.move(orig_x + self.offset(), orig_y)
         self.hsv_header_widget.setFixedSize(orig_x, font_size)
 
         # set RGBA Header
-        self.rgba_header_widget.move(0, orig_y + font_size)
+        self.rgba_header_widget.move(0, orig_y)
         self.rgba_header_widget.setFixedSize(orig_x - self.offset(), font_size)
 
 
@@ -236,6 +253,9 @@ class ClockDisplayView(QGraphicsView):
         # update scene hands
         self.scene().updateHands()
 
+        # update center item
+        self.scene().center_manipulator_item.setPos(rect.width() * 0.5, rect.height() * 0.5)
+
         return QGraphicsView.resizeEvent(self, *args, **kwargs)
 
 
@@ -251,10 +271,15 @@ class ClockDisplayScene(QGraphicsScene):
     """
     def __init__(self, parent=None):
         super(ClockDisplayScene, self).__init__(parent)
-        self.setOffset(30)
-        self.hands_items = {}
+        self._offset = 30
+
+        # draw center manipulator
+        self.center_manipulator_item = CenterManipulatorItem()
+        self.addItem(self.center_manipulator_item)
 
         # create clock hands
+        self.hands_items = {}
+
         for color_arg in attrs.RGBA_LIST + attrs.HSV_LIST:
             new_item = ClockHandGroupItem(color_arg)
             self.hands_items[color_arg] = new_item
@@ -288,7 +313,6 @@ class ClockDisplayScene(QGraphicsScene):
             #hand.setValue(0.25)
 
             # transform hand
-            hand.setTransformOriginPoint(0, 10)
             hand.setRotation(count * 60 + 30 + 270)
             hand.setPos(orig_x, orig_y)
 
@@ -308,7 +332,7 @@ class ClockDisplayScene(QGraphicsScene):
             #hand.setValue(0.25)
 
             # transform hand
-            hand.setTransformOriginPoint(0, 10)
+            #hand.setTransformOriginPoint(0, 10)
             hand.setRotation(count * 45 + 90 + 22.5)
             hand.setPos(orig_x, orig_y)
 
@@ -499,9 +523,30 @@ class ClockHandPickerItem(QGraphicsLineItem):
         self.setPen(pen)
 
 
+class CenterManipulatorItem(QGraphicsEllipseItem):
+    def __init__(self, parent=None):
+        super(CenterManipulatorItem, self).__init__(parent)
+        pen = self.pen()
+        pen.setWidth(0)
+        self.setPen(pen)
+
+    def setColor(self, color=QColor(0, 0, 0)):
+        self.setBrush(QBrush(color))
+
+    def updateRadius(self, radius):
+        radius -= 4
+        self.setRect(
+            radius,
+            radius,
+            -(radius * 2),
+            -(radius * 2),
+        )
+
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     color_widget = ClockDisplayWidget()
+    color_widget.setColor(QColor(255,255,128))
     # color_widget.setLinearCrosshairDirection(Qt.Vertical)
     color_widget.show()
     color_widget.move(QCursor.pos())
