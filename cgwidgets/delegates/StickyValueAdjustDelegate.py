@@ -14,7 +14,7 @@ from qtpy.QtGui import QCursor
 from cgwidgets.utils import getMagnitude
 
 
-class ClickDragEvent(QWidget):
+class StickyValueAdjustDelegate(QWidget):
     """
     Registers a click/drag even for the user.  By default this will
     automatically update the widget provided.  However custom functionality
@@ -47,7 +47,7 @@ class ClickDragEvent(QWidget):
     ]
 
     def __init__(self, parent=None, widget=None):
-        super(ClickDragEvent, self).__init__(parent)
+        super(StickyValueAdjustDelegate, self).__init__(parent)
         self._pixels_per_tick = 100
         self._value_per_tick = 0.1
         self._dragging = False
@@ -57,7 +57,7 @@ class ClickDragEvent(QWidget):
 
     def eventFilter(self, obj, event, *args, **kwargs):
         # pen down
-        if event.type() in ClickDragEvent.input_events:
+        if event.type() in StickyValueAdjustDelegate.input_events:
             """
             _calc_pos (QPoint): Position to calculate magnitude from
             _cursor_pos (QPoint): Original cursor click point
@@ -79,7 +79,7 @@ class ClickDragEvent(QWidget):
                 obj.window().unsetCursor()
 
         # pen move
-        if event.type() in ClickDragEvent.move_events:
+        if event.type() in StickyValueAdjustDelegate.move_events:
             if self._dragging:
                 current_pos = QCursor.pos()
                 magnitude = getMagnitude(self._calc_pos, current_pos)
@@ -91,7 +91,7 @@ class ClickDragEvent(QWidget):
                 self.updateValue()
 
         # exit event
-        if event.type() in ClickDragEvent.exit_events:
+        if event.type() in StickyValueAdjustDelegate.exit_events:
             # force this widget to never loser focus on drag
             if self._dragging:
                 # update maths
@@ -168,18 +168,18 @@ class ClickDragEvent(QWidget):
         self.__updateFunction = updateFunction
 
 
-def installClickDragEvent(widget):
+def installStickyValueAdjustDelegate(widget):
     widget.setMouseTracking(True)
-    ef = ClickDragEvent(widget)
+    ef = StickyValueAdjustDelegate(widget)
     widget.installEventFilter(ef)
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     w = QLabel('1.0')
-    installClickDragEvent(w)
+    installStickyValueAdjustDelegate(w)
     w.show()
     w.move(QCursor.pos())
-    w.resize(100,100)
+    w.resize(100, 100)
 
     sys.exit(app.exec_())

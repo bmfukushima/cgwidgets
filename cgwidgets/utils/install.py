@@ -121,3 +121,10 @@ def installLadderDelegate(
     )
     widget.installEventFilter(ladder)
     return ladder
+
+
+def installStickyValueAdjustDelegate(widget):
+    from cgwidgets.events import StickyValueAdjustDelegate
+    widget.setMouseTracking(True)
+    ef = StickyValueAdjustDelegate(widget)
+    widget.installEventFilter(ef)
