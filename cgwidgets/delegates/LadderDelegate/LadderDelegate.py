@@ -907,6 +907,7 @@ Args:
             if self.num_ticks != int(magnitude):
                 # reset values
                 self.num_ticks = int(magnitude)
+                print(self.num_ticks)
 
                 # do math
                 offset *= self.num_ticks
