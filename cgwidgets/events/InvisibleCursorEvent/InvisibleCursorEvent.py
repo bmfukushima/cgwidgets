@@ -26,23 +26,30 @@ infinite distance without disrupting the user.
             return QWidget.eventFilter(self, obj, event, *args, **kwargs)
         """
 
-        # do work
-        if event.type() == QEvent.MouseButtonRelease:
+        # pen down
+        if event.type() == QEvent.MouseButtonPress:
             self._init_pos = obj.mapToGlobal(event.pos())
             obj.window().setCursor(Qt.BlankCursor)
-        elif event.type() == QEvent.MouseMove:
+
+        # pen move
+        if event.type() == QEvent.MouseMove:
             pos = obj.mapToGlobal(event.pos())
 
+            # wrap cursor
             if pos.x() > self._screen_resolution:
                 y_pos = pos.y()
                 QCursor().setPos(QPoint(1, y_pos))
             elif pos.x() < 1:
                 y_pos = pos.y()
                 QCursor().setPos(QPoint(self._screen_resolution - 1, y_pos))
-        elif event.type() == QEvent.MouseButtonRelease:
+
+        # pen release
+        if event.type() == QEvent.MouseButtonRelease:
+
             obj.window().unsetCursor()
             QCursor().setPos(self._init_pos)
 
+        # return
         return QWidget.eventFilter(self, obj, event, *args, **kwargs)
 
     def screen_resolutions(self):
@@ -59,5 +66,6 @@ if __name__ == '__main__':
     ef = InvisibleCursorEvent()
     w.installEventFilter(ef)
     w.show()
+    w.move(QCursor.pos())
 
     sys.exit(app.exec_())

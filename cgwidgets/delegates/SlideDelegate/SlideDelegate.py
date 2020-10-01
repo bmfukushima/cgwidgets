@@ -447,7 +447,7 @@ class SlideDelegate(QWidget):
 
     """ EVENTS """
     def eventFilter(self, obj, event, *args, **kwargs):
-        if event.type() == QEvent.MouseButtonRelease:
+        if event.type() == QEvent.MouseButtonPress:
             self.slidebar = self.getBreedWidget()
             self.slidebar.setWidgetPosition(
                 self.getAlignment(), widget=self._display_widget
@@ -522,4 +522,5 @@ if __name__ == '__main__':
 
     ml.addWidget(w2)
     mw.show()
+    mw.move(QCursor.pos())
     sys.exit(app.exec_())

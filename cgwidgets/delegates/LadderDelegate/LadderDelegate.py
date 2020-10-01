@@ -42,6 +42,7 @@ from cgwidgets.utils import (
     checkNegative,
     checkIfValueInRange,
     getGlobalPos,
+    getMagnitude,
     guessBackgroundColor,
     installInvisibleCursorEvent,
     installInvisibleWidgetEvent,
@@ -218,16 +219,20 @@ Notes:
                     starts to click/drag to slide
             **  breed (SlideDelegate.TYPE): What type of visual cue to display.
                     Other options HUE, SATURATION, VALUE
-            **  display_widget (widget)
+            **  display_widget (QWidget): The widget to display the slide bar on
+                    by default this will be the ladders parent
         """
         # delete old slidebar
         self.__setSlideBar(False)
 
         # set cursor drag mode
-        self.__setInvisibleCursor(boolean)
-        self.__setInvisibleWidget(boolean)
+        self.setInvisibleCursor(boolean)
+        self.setInvisibleWidget(boolean)
 
         # create new slide bar
+        if not display_widget:
+            display_widget = self.parent().parent()
+
         if boolean is True:
             self.__setSlideBar(
                 boolean,
@@ -236,6 +241,32 @@ Notes:
                 breed=breed,
                 display_widget=display_widget
             )
+
+    def setInvisibleCursor(self, boolean):
+        """
+        When the mouse is click/dragged in each individual
+        item, the cursor dissappears from the users view.  When
+        the user releases the trigger, it will show the cursor again
+        at the original clicking point.
+        """
+        for item in self.item_list:
+            if not isinstance(item, LadderMiddleItem):
+                if boolean is True:
+                    installInvisibleCursorEvent(item)
+                elif boolean is False:
+                    self.removeEventFilter(item)
+
+    def setInvisibleWidget(self, boolean):
+        """
+        When the mouse is click/dragged in each individual
+        item, ladder will dissapear from view.
+        """
+        for item in self.item_list:
+            if not isinstance(item, LadderMiddleItem):
+                if boolean is True:
+                    installInvisibleWidgetEvent(item, hide_widget=self)
+                elif boolean is False:
+                    item.removeEventFilter()
 
     """ COLORS """
     def updateStyleSheet(self):
@@ -530,32 +561,6 @@ Notes:
         )
         self.move(pos)
 
-    def __setInvisibleCursor(self, boolean):
-        """
-        When the mouse is click/dragged in each individual
-        item, the cursor dissappears from the users view.  When
-        the user releases the trigger, it will show the cursor again
-        at the original clicking point.
-        """
-        for item in self.item_list:
-            if not isinstance(item, LadderMiddleItem):
-                if boolean is True:
-                    installInvisibleCursorEvent(item)
-                elif boolean is False:
-                    self.removeEventFilter()
-
-    def __setInvisibleWidget(self, boolean):
-        """
-        When the mouse is click/dragged in each individual
-        item, ladder will dissapear from view.
-        """
-        for item in self.item_list:
-            if not isinstance(item, LadderMiddleItem):
-                if boolean is True:
-                    installInvisibleWidgetEvent(item, hide_widget=self)
-                elif boolean is False:
-                    item.removeEventFilter()
-
     def __setSlideBar(
         self,
         boolean,
@@ -804,7 +809,9 @@ Args:
                 registering the next tick/update in unit value.
         """
         current_pos = self.mapToGlobal(event.pos())
-        magnitude = self.__getMagnitude(self.start_pos, current_pos)
+        magnitude = getMagnitude(
+            self.start_pos, current_pos, multiplier=self.parent().getSlideDistance()
+        )
         return math.fabs(math.modf(magnitude)[0])
 
     def __updateSignificantDigits(self, value):
@@ -825,35 +832,35 @@ Args:
         int_len = len(str_val)
         getcontext().prec = sig_digits + int_len
 
-    def __getMagnitude(self, start_pos, current_pos):
-        """
-        returns the magnitude of a user click/drop operation
-
-        Args:
-            start_pos (QPoint)
-                initial point of the cursor.  This could be when the user
-                clicked, or when the last tick was registered
-            current_pos (QPoint)
-                current position of the cursor
-        Returns:
-            float
-        """
-        # get magnitude
-        xoffset = start_pos.x() - current_pos.x()
-        yoffset = start_pos.y() - current_pos.y()
-        magnitude = math.sqrt(
-            pow(xoffset, 2)
-            + pow(yoffset, 2)
-        )
-
-        # direction of magnitude
-        if xoffset > 0:
-            magnitude *= -1
-
-        # user mult
-        MAGNITUDE_MULTIPLIER = self.parent().getSlideDistance()
-        magnitude *= MAGNITUDE_MULTIPLIER
-        return magnitude
+    # def __getMagnitude(self, start_pos, current_pos):
+    #     """
+    #     returns the magnitude of a user click/drop operation
+    #
+    #     Args:
+    #         start_pos (QPoint)
+    #             initial point of the cursor.  This could be when the user
+    #             clicked, or when the last tick was registered
+    #         current_pos (QPoint)
+    #             current position of the cursor
+    #     Returns:
+    #         float
+    #     """
+    #     # get magnitude
+    #     xoffset = start_pos.x() - current_pos.x()
+    #     yoffset = start_pos.y() - current_pos.y()
+    #     magnitude = math.sqrt(
+    #         pow(xoffset, 2)
+    #         + pow(yoffset, 2)
+    #     )
+    #
+    #     # direction of magnitude
+    #     if xoffset > 0:
+    #         magnitude *= -1
+    #
+    #     # user mult
+    #     #MAGNITUDE_MULTIPLIER = self.parent().getSlideDistance()
+    #     magnitude *= MAGNITUDE_MULTIPLIER
+    #     return magnitude
 
     """ EVENTS """
 
@@ -881,7 +888,9 @@ Args:
         """
         if self.parent().is_active is True:
             # magnitude = self.__getMagnitude(self.start_pos, QCursor.pos())
-            magnitude = self.__getMagnitude(self.start_pos, self.mapToGlobal(event.pos()))
+            magnitude = getMagnitude(
+                self.start_pos, self.mapToGlobal(event.pos()), multiplier=self.parent().getSlideDistance()
+            )
             offset = self.value_mult
 
             # ===================================================================
@@ -938,7 +947,7 @@ def main():
                 value_list=value_list
             )
 
-            # ladder.setDiscreteDrag(True, alignment=Qt.AlignLeft, depth=10)
+            ladder.setDiscreteDrag(True, alignment=Qt.AlignLeft, depth=10)
             # ladder.setDiscreteDrag(
             #     True,
             #     alignment=Qt.AlignLeft,
@@ -968,9 +977,8 @@ def main():
     ladder = installLadderDelegate(
         float_input
     )
-    ladder.setRange(True, 0, 2)
 
-    #ladder.setDiscreteDrag(True, alignment=Qt.AlignLeft, depth=10)
+    ladder.setDiscreteDrag(True, alignment=Qt.AlignLeft, depth=10, display_widget=w2)
     # ladder.setDiscreteDrag(
     #     True,
     #     alignment=Qt.AlignBottom,
