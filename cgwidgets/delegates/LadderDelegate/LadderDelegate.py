@@ -907,7 +907,6 @@ Args:
             if self.num_ticks != int(magnitude):
                 # reset values
                 self.num_ticks = int(magnitude)
-                print(self.num_ticks)
 
                 # do math
                 offset *= self.num_ticks
@@ -948,19 +947,8 @@ def main():
                 value_list=value_list
             )
 
-            ladder.setDiscreteDrag(True, alignment=Qt.AlignLeft, depth=10)
-            # ladder.setDiscreteDrag(
-            #     True,
-            #     alignment=Qt.AlignLeft,
-            #     depth=10,
-            #     fg_color=(128, 128, 255, 255),
-            #     display_widget=self.parent()
-            #     )
-            # ladder.setMiddleItemBorderColor((255, 0, 255))
-            # ladder.setMiddleItemBorderWidth(2)
-            # ladder.setItemHeight(50)
-            # ladder.rgba_fg_slide = (255, 128, 32, 255)
-            # ladder.rgba_bg_slide = (0, 128, 255, 255)
+            #ladder.setDiscreteDrag(True, alignment=Qt.AlignLeft, depth=10)
+
 
         def setValue(self, value):
             self.setText(str(value))
@@ -979,7 +967,7 @@ def main():
         float_input
     )
 
-    ladder.setDiscreteDrag(True, alignment=Qt.AlignLeft, depth=10, display_widget=w2)
+    #ladder.setDiscreteDrag(True, alignment=Qt.AlignLeft, depth=10, display_widget=w2)
     # ladder.setDiscreteDrag(
     #     True,
     #     alignment=Qt.AlignBottom,

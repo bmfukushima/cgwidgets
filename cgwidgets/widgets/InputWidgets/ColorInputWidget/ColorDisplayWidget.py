@@ -34,7 +34,7 @@ from qtpy.QtGui import (
 from cgwidgets.widgets import FloatInputWidget, AbstractInputGroup
 from cgwidgets.utils import (
     attrs, draw, getWidgetAncestor, getWidgetAncestorByName,
-    getFontSize, getMagnitude
+    getFontSize, getMagnitude, installStickyValueAdjustDelegate
 )
 from cgwidgets.settings.colors import iColor, getHSVRGBAFloatFromColor
 
@@ -346,8 +346,10 @@ class ClockHeaderWidget(QFrame):
 
         # create clock hands
         for index, color_arg in enumerate(color_args_list):
-            #new_item = FloatInputWidget(self)
+            # create header
             new_item = ColorGradientHeaderWidgetItem(self, title=color_arg[0], value=0)
+
+            # setup header attrs
             new_item.setFixedHeight(self.item_height)
             new_item.setMinimumWidth(self.item_width)
             new_item.value_widget.color_arg = color_arg
@@ -413,6 +415,21 @@ class ClockDisplayView(QGraphicsView):
         return QGraphicsView.resizeEvent(self, *args, **kwargs)
 
 
+class TestFilter(QGraphicsItem):
+    def __init__(self, parent=None):
+        super(TestFilter, self).__init__(parent)
+
+    def sceneEventFilter(self, obj, event):
+        print (obj, event)
+        return True
+
+    def boundingRect(self):
+        return QRectF(0,0,0,0)
+
+    def paint(self, *args, **kwargs):
+        return None
+
+
 class ClockDisplayScene(QGraphicsScene):
     """
     Scene to display the clock
@@ -431,13 +448,30 @@ class ClockDisplayScene(QGraphicsScene):
         self.center_manipulator_item = CenterManipulatorItem()
         self.addItem(self.center_manipulator_item)
 
+        # create hands
+        self.createHands()
+
+    def createHands(self):
+        """
+        Creates all of the clock hands for RGBA / HSV and returns them
+        in the dict hands_items
+        """
         # create clock hands
         self.hands_items = {}
 
         for color_arg in attrs.RGBA_LIST + attrs.HSV_LIST:
             new_item = ClockHandGroupItem(color_arg)
-            self.hands_items[color_arg] = new_item
+
+            #installStickyValueAdjustDelegate(new_item)
+            from cgwidgets.delegates import StickyValueAdjustItemDelegate
+            # create item
             self.addItem(new_item)
+            self.hands_items[color_arg] = new_item
+
+            # add filter
+            stick_filter = StickyValueAdjustItemDelegate(widget=new_item)
+            self.addItem(stick_filter)
+            new_item.hand_crosshair.installSceneEventFilter(stick_filter)
 
     def updateHands(self):
         """
@@ -519,7 +553,7 @@ class ClockHandGroupItem(QGraphicsItemGroup):
         self.color_arg = gradient_type
         # create items
         self.hand = ClockHandItem(gradient_type)
-        self.hand_crosshair = ClockHandPickerItem()
+        self.hand_crosshair = ClockHandCrosshairItem()
 
         self.addToGroup(self.hand)
         self.addToGroup(self.hand_crosshair)
@@ -527,81 +561,81 @@ class ClockHandGroupItem(QGraphicsItemGroup):
         # setup default attrs
         self._length = 50
 
-    """ EVENTS"""
-    def mousePressEvent(self, event):
-        self._orig_pos = QCursor.pos()
-        print ('press it')
-    # TODO from ladder delegate
-    # def mouseMoveEvent(self, event, *args, **kwargs):
+    # """ EVENTS"""
+    # def mousePressEvent(self, event):
+    #     self._orig_pos = QCursor.pos()
+    #     print ('press it')
+    # # TODO from ladder delegate
+    # # def mouseMoveEvent(self, event, *args, **kwargs):
+    # #     """
+    # #     primary work horse for mouse movement slider
+    # #     """
+    # #     if self.parent().is_active is True:
+    # #         # magnitude = self.__getMagnitude(self.start_pos, QCursor.pos())
+    # #         magnitude = getMagnitude(
+    # #             self.start_pos, self.mapToGlobal(event.pos()), multiplier=self.parent().getSlideDistance()
+    # #         )
+    # #         offset = self.value_mult
+    # #
+    # #         # ===================================================================
+    # #         # update values
+    # #         # note: this will look for a change with num_ticks vs magnitude
+    # #         #         to determine when a full value changed has happened
+    # #         # ===================================================================
+    # #         # update value
+    # #         self.slider_pos = math.fabs(math.modf(magnitude)[0])
+    # #
+    # #         # update style sheets
+    # #         self.parent().slider_pos = self.slider_pos
+    # #         self.parent().updateStyleSheet()
+    # #         if self.num_ticks != int(magnitude):
+    # #             # reset values
+    # #             self.num_ticks = int(magnitude)
+    # #
+    # #             # do math
+    # #             offset *= self.num_ticks
+    # #             self.__updateSignificantDigits(Decimal(offset) + self.orig_value)
+    # #             return_val = Decimal(offset) + self.orig_value
+    # #
+    # #             # set value
+    # #             self.parent().setValue(return_val)
+    # #
+    # #     return QLabel.mouseMoveEvent(self, event, *args, **kwargs)
+    # def mouseMoveEvent(self, event):
     #     """
-    #     primary work horse for mouse movement slider
+    #     TODO Calculate magnitude
+    #         need to have it do the steps thing like the ladder...
+    #         how to create
+    #             module for
+    #                 mouse press
+    #                 mouse move
+    #                 mouse release...
+    #             install on ladder / this
     #     """
-    #     if self.parent().is_active is True:
-    #         # magnitude = self.__getMagnitude(self.start_pos, QCursor.pos())
-    #         magnitude = getMagnitude(
-    #             self.start_pos, self.mapToGlobal(event.pos()), multiplier=self.parent().getSlideDistance()
-    #         )
-    #         offset = self.value_mult
+    #     # get magnitude
+    #     current_pos = QCursor.pos()
+    #     start_pos = self._orig_pos
+    #     multiplier = 0.0001
+    #     magnitude = getMagnitude(start_pos, current_pos, multiplier=multiplier)
     #
-    #         # ===================================================================
-    #         # update values
-    #         # note: this will look for a change with num_ticks vs magnitude
-    #         #         to determine when a full value changed has happened
-    #         # ===================================================================
-    #         # update value
-    #         self.slider_pos = math.fabs(math.modf(magnitude)[0])
+    #     color_arg = self.color_arg
+    #     main_widget = getWidgetAncestor(self.scene().views()[0], ClockDisplayWidget)
+    #     value = float(self.getValue() + magnitude)
+    #     if value < 0:
+    #         value = 0
+    #     elif 1 < value:
+    #         value = 1
+    #     print(color_arg, value)
+    #     main_widget.setColorArgValue(color_arg, value)
+    #     main_widget.updateDisplay()
+    #     """
+    #     TODO
+    #     Update color here
     #
-    #         # update style sheets
-    #         self.parent().slider_pos = self.slider_pos
-    #         self.parent().updateStyleSheet()
-    #         if self.num_ticks != int(magnitude):
-    #             # reset values
-    #             self.num_ticks = int(magnitude)
+    #     """
     #
-    #             # do math
-    #             offset *= self.num_ticks
-    #             self.__updateSignificantDigits(Decimal(offset) + self.orig_value)
-    #             return_val = Decimal(offset) + self.orig_value
-    #
-    #             # set value
-    #             self.parent().setValue(return_val)
-    #
-    #     return QLabel.mouseMoveEvent(self, event, *args, **kwargs)
-    def mouseMoveEvent(self, event):
-        """
-        TODO Calculate magnitude
-            need to have it do the steps thing like the ladder...
-            how to create
-                module for
-                    mouse press
-                    mouse move
-                    mouse release...
-                install on ladder / this
-        """
-        # get magnitude
-        current_pos = QCursor.pos()
-        start_pos = self._orig_pos
-        multiplier = 0.0001
-        magnitude = getMagnitude(start_pos, current_pos, multiplier=multiplier)
-
-        color_arg = self.color_arg
-        main_widget = getWidgetAncestor(self.scene().views()[0], ClockDisplayWidget)
-        value = float(self.getValue() + magnitude)
-        if value < 0:
-            value = 0
-        elif 1 < value:
-            value = 1
-        print(color_arg, value)
-        main_widget.setColorArgValue(color_arg, value)
-        main_widget.updateDisplay()
-        """
-        TODO
-        Update color here
-        
-        """
-
-    def mouseReleaseEvent(self, event):
-        print ('release it')
+    # def mouseReleaseEvent(self, event):
+    #     print ('release it')
 
     """ DISPLAY """
     def updateGradient(self):
@@ -737,7 +771,7 @@ class ClockHandItem(QGraphicsItem):
     def setWidth(self, width):
         """
         TODO
-         ClockHandPickerItem.setSize()
+         ClockHandCrosshairItem.setSize()
             this needs to update the hand width so that it will scale.
         """
         rect = QRectF(0, self.scene().offset() + 10, self._width, self._length)
@@ -754,10 +788,10 @@ class ClockHandItem(QGraphicsItem):
         self._gradient_type = gradient_type
 
 
-class ClockHandPickerItem(QGraphicsLineItem):
+class ClockHandCrosshairItem(QGraphicsLineItem):
     def __init__(self, parent=None):
-        super(ClockHandPickerItem, self).__init__(parent)
-        self.setSize(15, 3)
+        super(ClockHandCrosshairItem, self).__init__(parent)
+        self.setSize(15, 6)
 
     def setSize(self, width, height, hand_width=4):
         """

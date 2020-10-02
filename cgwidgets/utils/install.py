@@ -124,7 +124,27 @@ def installLadderDelegate(
 
 
 def installStickyValueAdjustDelegate(widget):
-    from cgwidgets.events import StickyValueAdjustDelegate
+    from cgwidgets.delegates import StickyValueAdjustWidgetDelegate
+
     widget.setMouseTracking(True)
-    ef = StickyValueAdjustDelegate(widget)
+    ef = StickyValueAdjustWidgetDelegate(widget)
     widget.installEventFilter(ef)
+
+
+def installStickyValueAdjustDelegate(widget):
+    from cgwidgets.delegates import StickyValueAdjustWidgetDelegate
+
+    widget.setMouseTracking(True)
+    ef = StickyValueAdjustWidgetDelegate(widget)
+    widget.installEventFilter(ef)
+
+if __name__ == '__main__':
+    import sys
+    app = QApplication(sys.argv)
+    w = QLabel('1.0')
+    installStickyValueAdjustDelegate(w)
+    w.show()
+    w.move(QCursor.pos())
+    w.resize(100, 100)
+
+    sys.exit(app.exec_())
