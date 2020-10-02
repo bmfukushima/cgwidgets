@@ -68,7 +68,7 @@ class iStickyValueAdjustDelegate(object):
     def valuePerTick(self):
         return self._value_per_tick
 
-    def setPixelsPerTick(self, _value_per_tick):
+    def setValuePerTick(self, _value_per_tick):
         self._value_per_tick = _value_per_tick
 
     def pixelsPerTick(self):
@@ -99,6 +99,7 @@ class iStickyValueAdjustDelegate(object):
         to the new value based off of how far the cursor has moved
         """
         new_value = self._num_ticks * self.valuePerTick()
+        new_value += float(self.origValue())
         self.widget.setValue(new_value)
 
     def __updateFunction(self, original_value, slider_pos, num_ticks):
@@ -213,12 +214,6 @@ class StickyValueAdjustItemDelegate(QGraphicsItem, iStickyValueAdjustDelegate):
         return True
 
 
-def installStickyValueAdjustDelegate(widget):
-    widget.setMouseTracking(True)
-    ef = StickyValueAdjustWidgetDelegate(widget)
-    widget.installEventFilter(ef)
-
-
 class TestWidget(QLabel):
     def __init__(self, parent=None):
         super(TestWidget, self).__init__(parent)
@@ -226,11 +221,14 @@ class TestWidget(QLabel):
     def setValue(self, value):
         self.setText(str(value))
 
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-
+    from cgwidgets.utils import installStickyValueAdjustWidgetDelegate
     w = TestWidget('1.0')
-    installStickyValueAdjustDelegate(w)
+    ef = installStickyValueAdjustWidgetDelegate(w)
+    ef.setValuePerTick(.001)
+    ef.setPixelsPerTick(50)
     w.show()
     w.move(QCursor.pos())
     w.resize(100, 100)

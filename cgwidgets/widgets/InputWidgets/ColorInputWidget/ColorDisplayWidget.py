@@ -1,10 +1,12 @@
 """
 TODO:
     *   LadderDelegate | Live Sliding
+            - Install sticky drag on ladder
             - Updates on parent widget only happen when the user
                 finishes editing.
             - Add mode to allow for continuous updates of the parent widget
             - Probably check leave/close events?
+                    self.scene.update()
     *   Slide Bars | Add user interaction
             - doesn't actually need to move the items...
             - needs to calculate mouse distance moved, and updated color
@@ -34,7 +36,7 @@ from qtpy.QtGui import (
 from cgwidgets.widgets import FloatInputWidget, AbstractInputGroup
 from cgwidgets.utils import (
     attrs, draw, getWidgetAncestor, getWidgetAncestorByName,
-    getFontSize, getMagnitude, installStickyValueAdjustDelegate
+    getFontSize, getMagnitude, installStickyValueAdjustItemDelegate
 )
 from cgwidgets.settings.colors import iColor, getHSVRGBAFloatFromColor
 
@@ -97,6 +99,7 @@ class ClockDisplayWidget(QWidget):
         """
         self._color = color
         self.scene.center_manipulator_item.setColor(color)
+        self.scene.update()
         self.updateDisplay()
 
     def headerItemSize(self):
@@ -389,6 +392,100 @@ class ClockHeaderWidget(QFrame):
         main_widget.setColorArgValue(color_arg, float(value))
 
 
+""" TODO COPY PASTE FROM GRADIENT """
+class ColorGradientHeaderWidgetItem(AbstractInputGroup):
+    """
+    Attributes:
+        name (str)
+        value (str)
+        selected (bool)
+
+    Widgets:
+        | -- QBoxLayout
+                | -- label_widget (QLabel)
+                | -- divider_widget (AbstractLine)
+                | -- value_widget (QLabel)
+    """
+    def __init__(self, parent=None, title='None', value='None'):
+        super(ColorGradientHeaderWidgetItem, self).__init__(parent, title)
+        # setup attrs
+        self._value = value
+        self._is_selected = False
+
+        # setup GUI
+        self.value_widget = FloatInputWidget()
+
+        # setup ladder
+        self.value_widget.setUseLadder(True, value_list=[0.0001, 0.001, 0.01, 0.1])
+        display_widget = getWidgetAncestor(self, ClockDisplayWidget)
+        self.value_widget.ladder.setDiscreteDrag(
+            True, alignment=Qt.AlignLeft, depth=10, display_widget=display_widget
+        )
+        self.setRange(True, 0, 1)
+        self.value_widget.setAlignment(Qt.AlignLeft)
+        self.insertWidget(1, self.value_widget)
+
+        # update style sheets / margins
+        self.setupDisplayProperties()
+
+    def setupDisplayProperties(self):
+        """
+        sets up all of the display properties for each widget
+            group_box (AbstractInputGroupBox)
+                * disable separator
+            value_widget (FloatInputWidget)
+
+            Updates to
+                * stylesheet
+                * content margins
+                * spacing
+
+        """
+        # self
+        self.setStyleSheet("background-color: rgba(0,0,0,0)")
+        self.layout().setContentsMargins(0, 0, 0, 0)
+        self.layout().setSpacing(0)
+
+        # group box
+        self.group_box.display_background = True
+        self.group_box.rgba_background = (0, 0, 0, 32)
+        self.group_box.layout().setContentsMargins(0, 7, 0, 0)
+        self.group_box.layout().setSpacing(0)
+        self.group_box.displaySeparator(False)
+        self.group_box.padding = 0
+        self.group_box.updateStyleSheet()
+
+        # input widget
+        self.value_widget.setStyleSheet("""
+            background-color: rgba{rgba_invisible};
+            color: rgba{rgba_text};
+            border: None
+        """.format(**iColor.style_sheet_args))
+
+    """ PROPERTIES """
+    def setValue(self, value):
+        print('setting value to %s'%value)
+        self._value = value
+        self.value_widget.setText(str(value))
+        self.value_widget.setCursorPosition(0)
+
+    def getValue(self):
+        return self._value
+
+    def setRange(self, enable, range_min, range_max):
+        """
+        Sets the range of the user input
+        """
+        self.value_widget.setRange(enable, range_min, range_max)
+
+    def setAllowNegative(self, enabled):
+        """
+        Determines if the input will be allowed to go into negative numbers or
+        not
+        """
+        self.value_widget.setAllowNegative(enabled)
+
+
 class ClockDisplayView(QGraphicsView):
     def __init__(self, parent=None):
         super(ClockDisplayView, self).__init__(parent)
@@ -413,21 +510,6 @@ class ClockDisplayView(QGraphicsView):
         self.scene().center_manipulator_item.setPos(rect.width() * 0.5, rect.height() * 0.5)
 
         return QGraphicsView.resizeEvent(self, *args, **kwargs)
-
-
-class TestFilter(QGraphicsItem):
-    def __init__(self, parent=None):
-        super(TestFilter, self).__init__(parent)
-
-    def sceneEventFilter(self, obj, event):
-        print (obj, event)
-        return True
-
-    def boundingRect(self):
-        return QRectF(0,0,0,0)
-
-    def paint(self, *args, **kwargs):
-        return None
 
 
 class ClockDisplayScene(QGraphicsScene):
@@ -462,16 +544,18 @@ class ClockDisplayScene(QGraphicsScene):
         for color_arg in attrs.RGBA_LIST + attrs.HSV_LIST:
             new_item = ClockHandGroupItem(color_arg)
 
-            #installStickyValueAdjustDelegate(new_item)
-            from cgwidgets.delegates import StickyValueAdjustItemDelegate
+            #installStickyValueAdjustItemDelegate(new_item)
+            from cgwidgets.utils import installStickyValueAdjustItemDelegate
             # create item
             self.addItem(new_item)
             self.hands_items[color_arg] = new_item
 
             # add filter
-            stick_filter = StickyValueAdjustItemDelegate(widget=new_item)
+
+            stick_filter = installStickyValueAdjustItemDelegate(
+                new_item.hand_crosshair, pixels_per_tick=100, value_per_tick=0.011)
             self.addItem(stick_filter)
-            new_item.hand_crosshair.installSceneEventFilter(stick_filter)
+            #new_item.hand_crosshair.installSceneEventFilter(stick_filter)
 
     def updateHands(self):
         """
@@ -561,82 +645,6 @@ class ClockHandGroupItem(QGraphicsItemGroup):
         # setup default attrs
         self._length = 50
 
-    # """ EVENTS"""
-    # def mousePressEvent(self, event):
-    #     self._orig_pos = QCursor.pos()
-    #     print ('press it')
-    # # TODO from ladder delegate
-    # # def mouseMoveEvent(self, event, *args, **kwargs):
-    # #     """
-    # #     primary work horse for mouse movement slider
-    # #     """
-    # #     if self.parent().is_active is True:
-    # #         # magnitude = self.__getMagnitude(self.start_pos, QCursor.pos())
-    # #         magnitude = getMagnitude(
-    # #             self.start_pos, self.mapToGlobal(event.pos()), multiplier=self.parent().getSlideDistance()
-    # #         )
-    # #         offset = self.value_mult
-    # #
-    # #         # ===================================================================
-    # #         # update values
-    # #         # note: this will look for a change with num_ticks vs magnitude
-    # #         #         to determine when a full value changed has happened
-    # #         # ===================================================================
-    # #         # update value
-    # #         self.slider_pos = math.fabs(math.modf(magnitude)[0])
-    # #
-    # #         # update style sheets
-    # #         self.parent().slider_pos = self.slider_pos
-    # #         self.parent().updateStyleSheet()
-    # #         if self.num_ticks != int(magnitude):
-    # #             # reset values
-    # #             self.num_ticks = int(magnitude)
-    # #
-    # #             # do math
-    # #             offset *= self.num_ticks
-    # #             self.__updateSignificantDigits(Decimal(offset) + self.orig_value)
-    # #             return_val = Decimal(offset) + self.orig_value
-    # #
-    # #             # set value
-    # #             self.parent().setValue(return_val)
-    # #
-    # #     return QLabel.mouseMoveEvent(self, event, *args, **kwargs)
-    # def mouseMoveEvent(self, event):
-    #     """
-    #     TODO Calculate magnitude
-    #         need to have it do the steps thing like the ladder...
-    #         how to create
-    #             module for
-    #                 mouse press
-    #                 mouse move
-    #                 mouse release...
-    #             install on ladder / this
-    #     """
-    #     # get magnitude
-    #     current_pos = QCursor.pos()
-    #     start_pos = self._orig_pos
-    #     multiplier = 0.0001
-    #     magnitude = getMagnitude(start_pos, current_pos, multiplier=multiplier)
-    #
-    #     color_arg = self.color_arg
-    #     main_widget = getWidgetAncestor(self.scene().views()[0], ClockDisplayWidget)
-    #     value = float(self.getValue() + magnitude)
-    #     if value < 0:
-    #         value = 0
-    #     elif 1 < value:
-    #         value = 1
-    #     print(color_arg, value)
-    #     main_widget.setColorArgValue(color_arg, value)
-    #     main_widget.updateDisplay()
-    #     """
-    #     TODO
-    #     Update color here
-    #
-    #     """
-    #
-    # def mouseReleaseEvent(self, event):
-    #     print ('release it')
-
     """ DISPLAY """
     def updateGradient(self):
         self.hand.updateGradient()
@@ -652,19 +660,8 @@ class ClockHandGroupItem(QGraphicsItemGroup):
             of the length of the hand.
         """
         self._value = value
-        # TODO update value
+
         self.hand_crosshair.setPos(0, (self.length() * value) + self.scene().offset() + 10)
-
-    def pixelDistancePerTick(self):
-        return self._pixel_distance_pt
-
-    def setPixelDistancePerTick(self, _pixel_distance_pt):
-        """
-        sets the value, and updates the crosshair
-        value (float): value to be set to.  This is between 0-1 and will be a percentage
-            of the length of the hand.
-        """
-        self._pixel_distance_pt = _pixel_distance_pt
 
     def length(self):
         return self._length
@@ -810,6 +807,15 @@ class ClockHandCrosshairItem(QGraphicsLineItem):
         pen.setWidth(height)
         self.setPen(pen)
 
+    def setValue(self, value):
+        main_widget = getWidgetAncestor(self.scene().views()[0], ClockDisplayWidget)
+        # main widget
+        color_arg = self.group().color_arg
+        main_widget.setColorArgValue(color_arg, value)
+
+    def getValue(self):
+        return self.group().getValue()
+
 
 class CenterManipulatorItem(QGraphicsEllipseItem):
     def __init__(self, parent=None):
@@ -830,97 +836,6 @@ class CenterManipulatorItem(QGraphicsEllipseItem):
             -(radius * 2),
             -(radius * 2),
         )
-
-
-""" TODO COPY PASTE FROM GRADIENT """
-class ColorGradientHeaderWidgetItem(AbstractInputGroup):
-    """
-    Attributes:
-        name (str)
-        value (str)
-        selected (bool)
-
-    Widgets:
-        | -- QBoxLayout
-                | -- label_widget (QLabel)
-                | -- divider_widget (AbstractLine)
-                | -- value_widget (QLabel)
-    """
-    def __init__(self, parent=None, title='None', value='None'):
-        super(ColorGradientHeaderWidgetItem, self).__init__(parent, title)
-        # setup attrs
-        self._value = value
-        self._is_selected = False
-
-        # setup GUI
-        self.value_widget = FloatInputWidget()
-        self.value_widget.setUseLadder(True, value_list=[0.0001, 0.001, 0.01, 0.1])
-        display_widget = getWidgetAncestor(self, ClockDisplayWidget)
-        self.value_widget.ladder.setDiscreteDrag(
-            True, alignment=Qt.AlignLeft, depth=10, display_widget=display_widget
-        )
-        self.setRange(True, 0, 1)
-        self.value_widget.setAlignment(Qt.AlignLeft)
-        self.insertWidget(1, self.value_widget)
-
-        # update style sheets / margins
-        self.setupDisplayProperties()
-
-    def setupDisplayProperties(self):
-        """
-        sets up all of the display properties for each widget
-            group_box (AbstractInputGroupBox)
-                * disable separator
-            value_widget (FloatInputWidget)
-
-            Updates to
-                * stylesheet
-                * content margins
-                * spacing
-
-        """
-        # self
-        self.setStyleSheet("background-color: rgba(0,0,0,0)")
-        self.layout().setContentsMargins(0, 0, 0, 0)
-        self.layout().setSpacing(0)
-
-        # group box
-        self.group_box.display_background = True
-        self.group_box.rgba_background = (0, 0, 0, 32)
-        self.group_box.layout().setContentsMargins(0, 7, 0, 0)
-        self.group_box.layout().setSpacing(0)
-        self.group_box.displaySeparator(False)
-        self.group_box.padding = 0
-        self.group_box.updateStyleSheet()
-
-        # input widget
-        self.value_widget.setStyleSheet("""
-            background-color: rgba{rgba_invisible};
-            color: rgba{rgba_text};
-            border: None
-        """.format(**iColor.style_sheet_args))
-
-    """ PROPERTIES """
-    def setValue(self, value):
-        self._value = value
-        self.value_widget.setText(str(value))
-        self.value_widget.setCursorPosition(0)
-
-    def getValue(self):
-        return self._value
-
-    def setRange(self, enable, range_min, range_max):
-        """
-        Sets the range of the user input
-        """
-        self.value_widget.setRange(enable, range_min, range_max)
-
-    def setAllowNegative(self, enabled):
-        """
-        Determines if the input will be allowed to go into negative numbers or
-        not
-        """
-        self.value_widget.setAllowNegative(enabled)
 
 
 if __name__ == '__main__':

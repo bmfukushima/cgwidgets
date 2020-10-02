@@ -121,28 +121,41 @@ def installLadderDelegate(
     )
     widget.installEventFilter(ladder)
     return ladder
+#
 
-
-def installStickyValueAdjustDelegate(widget):
+def installStickyValueAdjustWidgetDelegate(
+        widget, pixels_per_tick=100, value_per_tick=0.01
+    ):
     from cgwidgets.delegates import StickyValueAdjustWidgetDelegate
 
     widget.setMouseTracking(True)
-    ef = StickyValueAdjustWidgetDelegate(widget)
-    widget.installEventFilter(ef)
+    event_filter = StickyValueAdjustWidgetDelegate(widget)
+    event_filter.setPixelsPerTick(pixels_per_tick)
+    event_filter.setValuePerTick(value_per_tick)
+
+    widget.installEventFilter(event_filter)
+    return event_filter
 
 
-def installStickyValueAdjustDelegate(widget):
-    from cgwidgets.delegates import StickyValueAdjustWidgetDelegate
+def installStickyValueAdjustItemDelegate(
+        item, pixels_per_tick=100, value_per_tick=0.01
+    ):
+    from cgwidgets.delegates import StickyValueAdjustItemDelegate
 
-    widget.setMouseTracking(True)
-    ef = StickyValueAdjustWidgetDelegate(widget)
-    widget.installEventFilter(ef)
+    #item.setMouseTracking(True)
+    event_filter = StickyValueAdjustItemDelegate(item)
+    event_filter.setPixelsPerTick(pixels_per_tick)
+    event_filter.setValuePerTick(value_per_tick)
+
+    item.installSceneEventFilter(event_filter)
+    return event_filter
+
 
 if __name__ == '__main__':
     import sys
     app = QApplication(sys.argv)
     w = QLabel('1.0')
-    installStickyValueAdjustDelegate(w)
+    installStickyValueAdjustWidgetDelegate(w)
     w.show()
     w.move(QCursor.pos())
     w.resize(100, 100)
