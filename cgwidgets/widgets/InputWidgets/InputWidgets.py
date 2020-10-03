@@ -128,12 +128,14 @@ class iGroupInput(object):
     """
     Interface for group input objects.  This is added to all of the input
     widget types so that they will be compatible with the GroupInputWidgets
+    user_input_event (function): function to be run when editing has completed
+    live_input_event (function); function to be run every time the text has changed
     """
     def __init__(self):
         self.setUserFinishedEditingEvent(self.updateUserInputItem)
 
     """ TRIGGER """
-    def __user_input_event(self, *args, **kwargs):
+    def __user_finished_editing_event(self, *args, **kwargs):
         pass
 
     def setUserFinishedEditingEvent(self, function):
@@ -144,14 +146,23 @@ class iGroupInput(object):
         This function should take two args
         widget/item, value
         """
-        self.__user_input_event = function
+        self.__user_finished_editing_event = function
 
     def userFinishedEditingEvent(self, *args, **kwargs):
         """
         Internal event to run everytime the user triggers an update.  This
         will need to be called on every type of widget.
         """
-        self.__user_input_event(*args, **kwargs)
+        self.__user_finished_editing_event(*args, **kwargs)
+
+    def __live_input_event(self, *args, **kwargs):
+        pass
+
+    def setLiveInputEvent(self, function):
+        self.__live_input_event = function
+
+    def liveInputEvent(self, *args, **kwargs):
+        self.__live_input_event(*args, **kwargs)
 
     """ TANSU UPDATE """
     def updateUserInputItem(self, *args):

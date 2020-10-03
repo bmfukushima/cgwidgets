@@ -356,8 +356,8 @@ class ClockHeaderWidget(QFrame):
             new_item.setFixedHeight(self.item_height)
             new_item.setMinimumWidth(self.item_width)
             new_item.value_widget.color_arg = color_arg
-            new_item.value_widget.setUserFinishedEditingEvent(self.userInputEvent)
-
+            #new_item.value_widget.setUserFinishedEditingEvent(self.userInputEvent)
+            new_item.value_widget.setLiveInputEvent(self.userInputEvent)
             self.color_header_items_dict[color_arg] = new_item
             self.layout().addWidget(new_item)
             #new_item.setStyleSheet("background-color: rgba(0,0,0,0); border: None")
@@ -381,6 +381,7 @@ class ClockHeaderWidget(QFrame):
             #hand_widget.setValue(value)
 
     def userInputEvent(self, widget, value):
+
         """
         Updates the color based off of the specific input from the user
         widget (FloatInputWidget):
@@ -485,6 +486,7 @@ class ColorGradientHeaderWidgetItem(AbstractInputGroup):
         self.value_widget.setAllowNegative(enabled)
 
 
+""" CLOCK GRAPHICS VIEW"""
 class ClockDisplayView(QGraphicsView):
     def __init__(self, parent=None):
         super(ClockDisplayView, self).__init__(parent)
@@ -515,6 +517,7 @@ class ClockDisplayView(QGraphicsView):
     def mouseMoveEvent(self, event):
         event.ignore()
         QGraphicsView.mouseMoveEvent(self, event)
+
 
 class ClockDisplayScene(QGraphicsScene):
     """

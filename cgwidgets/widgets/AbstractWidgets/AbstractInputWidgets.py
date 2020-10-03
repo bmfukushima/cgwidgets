@@ -52,7 +52,7 @@ class AbstractInputWidget(QLineEdit):
         super(AbstractInputWidget, self).__init__(parent)
         # setup default args
         self._key_list = []
-
+        self._orig_value = None
         # set up style
         self.rgba_border = iColor["rgba_outline"]
         self.rgba_background = iColor["rgba_gray_0"]
@@ -62,6 +62,7 @@ class AbstractInputWidget(QLineEdit):
 
         # set up signals
         self.editingFinished.connect(self.userFinishedEditing)
+        self.textChanged.connect(self.userContinouslyEditing)
 
     def updateStyleSheet(self):
         #style_sheet = getTopBorderStyleSheet(self._rgba_border, 2)
@@ -171,10 +172,29 @@ class AbstractInputWidget(QLineEdit):
         else:
             self.setText(self.getOrigValue())
 
+    def userContinouslyEditing(self):
+        """
+        This will run when the value is changed.  This is to do continous manipulations
+        """
+        is_valid = self.checkInput()
+
+        if is_valid:
+            self.setText(self.getInput())
+            #TODO This doesn't exist in this ffunctino... moved to iGroupInput
+            # or somewhere more logical...
+            try:
+                self.liveInputEvent(self, self.getInput())
+            except AttributeError:
+                pass
+
+        else:
+            self.setText(self.getOrigValue())
+
     def mousePressEvent(self, event, *args, **kwargs):
         if event.button() == Qt.MiddleButton:
             return
         return QLineEdit.mousePressEvent(self, event, *args, **kwargs)
+
 
     # def leaveEvent(self, event):
     #     self.setCursorPosition(0)
@@ -472,7 +492,7 @@ class AbstractBooleanInputWidget(QLabel):
     # """
     # Im being lazy, this is a copy and paste from the AbstractInputWidget
     # """
-    # def __user_input_event(self, *args, **kwargs):
+    # def __user_finished_editing_event(self, *args, **kwargs):
     #     pass
     #
     # def setUserFinishedEditingEvent(self, function):
@@ -480,14 +500,14 @@ class AbstractBooleanInputWidget(QLabel):
     #     Sets the function that should be triggered everytime
     #     the user finishes editing this widget
     #     """
-    #     self.__user_input_event = function
+    #     self.__user_finished_editing_event = function
     #
     # def userFinishedEditingEvent(self, *args, **kwargs):
     #     """
     #     Internal event to run everytime the user triggers an update.  This
     #     will need to be called on every type of widget.
     #     """
-    #     self.__user_input_event(*args, **kwargs)
+    #     self.__user_finished_editing_event(*args, **kwargs)
 
     """ EVENTS """
     def mouseReleaseEvent(self, event):
