@@ -48,7 +48,9 @@ class iStickyValueAdjustDelegate(object):
     ]
 
     exit_events = [
-        QEvent.Leave
+        QEvent.Leave,
+        QEvent.GraphicsSceneHoverLeave,
+        QEvent.DragLeave
     ]
 
     def __init__(self, widget=None):
@@ -100,6 +102,7 @@ class iStickyValueAdjustDelegate(object):
         """
         new_value = self._num_ticks * self.valuePerTick()
         new_value += float(self.origValue())
+
         self.widget.setValue(new_value)
 
     def __updateFunction(self, original_value, slider_pos, num_ticks):
@@ -190,11 +193,6 @@ class StickyValueAdjustWidgetDelegate(QWidget, iStickyValueAdjustDelegate):
         return QWidget.eventFilter(self, obj, event, *args, **kwargs)
 
 
-class TestFilter(QGraphicsItem):
-    def __init__(self, parent=None):
-        super(TestFilter, self).__init__(parent)
-
-
 class StickyValueAdjustItemDelegate(QGraphicsItem, iStickyValueAdjustDelegate):
     def __init__(self, parent=None, widget=None):
         super(StickyValueAdjustItemDelegate, self).__init__(parent)
@@ -210,9 +208,74 @@ class StickyValueAdjustItemDelegate(QGraphicsItem, iStickyValueAdjustDelegate):
         return None
 
     def sceneEventFilter(self, obj, event, *args, **kwargs):
-        self.stickyEventFilter(obj, event, *args, **kwargs)
-        return True
+        item = obj
+        obj = obj.scene().views()[0]
+        # pen press
+        if event.type() in iStickyValueAdjustDelegate.input_events:
+            """
+            _calc_pos (QPoint): Position to calculate magnitude from
+            _cursor_pos (QPoint): Original cursor click point
+            _num_ticks (int): the number of ticks 
+                value_mult * _num_ticks = value_offset
+            """
+            # setup default attrs
+            obj._calc_pos = QCursor.pos()
+            obj._cursor_pos = QCursor.pos()
+            obj._dragging = not obj._dragging
+            self._num_ticks = 0
+            self.updateOrigValue()
 
+            # toggle cursor display
+            if obj._dragging:
+                obj.setCursor(Qt.BlankCursor)
+                obj._current_item = item
+            else:
+                pass
+                obj.unsetCursor()
+            return True
+
+        # pen move
+        if event.type() in iStickyValueAdjustDelegate.move_events:
+            if obj._dragging:
+                current_pos = QCursor.pos()
+                magnitude = getMagnitude(obj._calc_pos, current_pos)
+                slider_pos, self._num_ticks = math.modf(magnitude / self.pixelsPerTick())
+
+                # update values
+                self.updateFunction(slider_pos, self._num_ticks)
+                self.updateValue()
+
+        # exit event
+        if event.type() in iStickyValueAdjustDelegate.exit_events:
+            # force this widget to never loser focus on drag
+            if obj._dragging:
+                # update maths
+                current_pos = QCursor.pos()
+                offset = (current_pos - obj._cursor_pos)
+                obj._calc_pos = obj._calc_pos - offset
+
+                # reset cursor position back to initial click position
+                QCursor.setPos(obj._cursor_pos)
+
+        # cancel event with escape key
+        if event.type() == QEvent.KeyPress:
+            if event.key() == Qt.Key_Escape:
+                obj.unsetCursor()
+                obj._dragging = False
+
+        return True
+    # def sceneEventFilter(self, obj, event, *args, **kwargs):
+    #     #self.stickyEventFilter(obj, event, *args, **kwargs)
+    #     return True
+
+
+""" TESTING """
+from qtpy.QtWidgets import (
+    QGraphicsView, QGraphicsScene, QGraphicsLineItem,
+QGraphicsEllipseItem
+)
+from qtpy.QtGui import QColor, QBrush
+from cgwidgets.utils import installStickyValueAdjustItemDelegate
 
 class TestWidget(QLabel):
     def __init__(self, parent=None):
@@ -222,13 +285,127 @@ class TestWidget(QLabel):
         self.setText(str(value))
 
 
+class StickyValueAdjustViewDelegate(QWidget):
+    def __init__(self, parent=None, widget=None):
+        super(StickyValueAdjustViewDelegate, self).__init__(parent)
+        iStickyValueAdjustDelegate.__init__(self, widget=widget)
+        self.setMouseTracking(True)
+
+    def eventFilter(self, obj, event, *args, **kwargs):
+        # pen down
+        if event.type() == QEvent.MouseButtonPress:
+            if obj._dragging is True:
+                obj._dragging = False
+                QCursor.setPos(obj._cursor_pos)
+                obj.unsetCursor()
+                return False
+
+        # mouse move
+        if event.type() == QEvent.MouseMove:
+            if obj._dragging is True:
+                current_pos = QCursor.pos()
+                magnitude = getMagnitude(obj._calc_pos, current_pos)
+                slider_pos, obj._current_item.event_filter._num_ticks = math.modf(magnitude / obj._current_item.event_filter.pixelsPerTick())
+
+                # update values
+                obj._current_item.event_filter.updateFunction(slider_pos, obj._current_item.event_filter._num_ticks)
+                obj._current_item.event_filter.updateValue()
+
+        # mouse leave
+        if event.type() == QEvent.Leave:
+            # force this widget to never loser focus on drag
+            if obj._dragging:
+                # update maths
+                current_pos = QCursor.pos()
+                offset = (current_pos - obj._cursor_pos)
+                obj._calc_pos = obj._calc_pos - offset
+
+                # reset cursor position back to initial click position
+                QCursor.setPos(obj._cursor_pos)
+
+        if event.type() == QEvent.KeyPress:
+            if event.key() == Qt.Key_Escape:
+                if obj._dragging is True:
+                    QCursor.setPos(obj._cursor_pos)
+                    obj.unsetCursor()
+                    obj._dragging = False
+                    #return True
+
+        return QWidget.eventFilter(self, obj, event, *args, **kwargs)
+
+
+class TestWidgetItem(QGraphicsView):
+    def __init__(self, parent=None):
+        super(TestWidgetItem, self).__init__(parent)
+        scene = QGraphicsScene()
+        self.setScene(scene)
+
+        self.line_item = QGraphicsLineItem()
+        self.line_item.setLine(0, 0, 10, 10)
+
+        self.circle_item = CenterManipulatorItem()
+        self.circle_item.setRect(10, 10, 50, 50)
+
+        self.scene().addItem(self.circle_item)
+        self.scene().addItem(self.line_item)
+
+        self.scene().setSceneRect(0,0,100,100)
+
+        self._dragging = False
+
+        self.setMouseTracking(True)
+
+
+    def mouseMoveEvent(self, event):
+        event.ignore()
+        QGraphicsView.mouseMoveEvent(self, event)
+
+
+class CenterManipulatorItem(QGraphicsEllipseItem):
+    def __init__(self, parent=None):
+        super(CenterManipulatorItem, self).__init__(parent)
+        # pen = self.pen()
+        # pen.setStyle(Qt.NoPen)
+        # pen.setWidth(0)
+        # self.setPen(pen)
+        self.value = 1
+
+    def setColor(self, color=QColor(255, 0, 0)):
+        self.setBrush(QBrush(color))
+
+    def setValue(self, value):
+        # print(value)
+        self.value = value
+
+    def getValue(self):
+        return self.value
+
+
+class LineItem(QGraphicsLineItem):
+    def __init__(self, parent=None):
+        super(CenterManipulatorItem, self).__init__(parent)
+        self.setLine(0,0, 25,25)
+        self.value = 1
+
+    def setColor(self, color=QColor(255, 0, 0)):
+        self.setBrush(QBrush(color))
+
+    def setValue(self, value):
+        self.value = value
+
+    def getValue(self):
+        return self.value
+
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    from cgwidgets.utils import installStickyValueAdjustWidgetDelegate
-    w = TestWidget('1.0')
-    ef = installStickyValueAdjustWidgetDelegate(w)
-    ef.setValuePerTick(.001)
-    ef.setPixelsPerTick(50)
+
+    w = TestWidgetItem()
+    ef = installStickyValueAdjustItemDelegate(w.circle_item)
+
+    # ef.setValuePerTick(.001)
+    # ef.setPixelsPerTick(50)
+
     w.show()
     w.move(QCursor.pos())
     w.resize(100, 100)

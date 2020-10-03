@@ -140,14 +140,41 @@ def installStickyValueAdjustWidgetDelegate(
 def installStickyValueAdjustItemDelegate(
         item, pixels_per_tick=100, value_per_tick=0.01
     ):
-    from cgwidgets.delegates import StickyValueAdjustItemDelegate
+    """
+    Installs a delegate on the widget which makes it so when the user clicks.
+    It will hide the cursor and allow the user to move the mouse around to
+    adjust the value of this widget.
 
-    #item.setMouseTracking(True)
+    Note:
+        You MUST override the mouseMoveEvent() of the QGraphicsView and reject
+        the event signal with event.reject()
+    item:
+    pixels_per_tick:
+    value_per_tick:
+    """
+    from cgwidgets.delegates import (
+        StickyValueAdjustItemDelegate,
+        StickyValueAdjustViewDelegate
+    )
+    # install view filter
+    view = item.scene().views()[0]
+    view_filter = StickyValueAdjustViewDelegate(view)
+    view.installEventFilter(view_filter)
+    view.setMouseTracking(True)
+    view._dragging = False
+
     event_filter = StickyValueAdjustItemDelegate(item)
     event_filter.setPixelsPerTick(pixels_per_tick)
     event_filter.setValuePerTick(value_per_tick)
 
     item.installSceneEventFilter(event_filter)
+    item.event_filter = event_filter
+
+
+    # view_filter = StickyValueAdjustViewDelegate()
+    # w.installEventFilter(view_filter)
+    # w.setMouseTracking(True)
+    # ef = installStickyValueAdjustItemDelegate(w.circle_item)
     return event_filter
 
 

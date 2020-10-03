@@ -464,7 +464,6 @@ class ColorGradientHeaderWidgetItem(AbstractInputGroup):
 
     """ PROPERTIES """
     def setValue(self, value):
-        print('setting value to %s'%value)
         self._value = value
         self.value_widget.setText(str(value))
         self.value_widget.setCursorPosition(0)
@@ -490,6 +489,8 @@ class ClockDisplayView(QGraphicsView):
     def __init__(self, parent=None):
         super(ClockDisplayView, self).__init__(parent)
 
+        self.scene().createHands()
+
     def resizeEvent(self, *args, **kwargs):
         """
         allow widget to resize with the rectangle...
@@ -511,6 +512,9 @@ class ClockDisplayView(QGraphicsView):
 
         return QGraphicsView.resizeEvent(self, *args, **kwargs)
 
+    def mouseMoveEvent(self, event):
+        event.ignore()
+        QGraphicsView.mouseMoveEvent(self, event)
 
 class ClockDisplayScene(QGraphicsScene):
     """
@@ -530,8 +534,8 @@ class ClockDisplayScene(QGraphicsScene):
         self.center_manipulator_item = CenterManipulatorItem()
         self.addItem(self.center_manipulator_item)
 
-        # create hands
-        self.createHands()
+        # # create hands
+        # self.createHands()
 
     def createHands(self):
         """
@@ -544,18 +548,14 @@ class ClockDisplayScene(QGraphicsScene):
         for color_arg in attrs.RGBA_LIST + attrs.HSV_LIST:
             new_item = ClockHandGroupItem(color_arg)
 
-            #installStickyValueAdjustItemDelegate(new_item)
             from cgwidgets.utils import installStickyValueAdjustItemDelegate
             # create item
             self.addItem(new_item)
             self.hands_items[color_arg] = new_item
 
             # add filter
-
-            stick_filter = installStickyValueAdjustItemDelegate(
-                new_item.hand_crosshair, pixels_per_tick=100, value_per_tick=0.011)
-            self.addItem(stick_filter)
-            #new_item.hand_crosshair.installSceneEventFilter(stick_filter)
+            installStickyValueAdjustItemDelegate(
+                new_item.hand_crosshair, pixels_per_tick=100, value_per_tick=0.01)
 
     def updateHands(self):
         """
@@ -808,6 +808,13 @@ class ClockHandCrosshairItem(QGraphicsLineItem):
         self.setPen(pen)
 
     def setValue(self, value):
+        # constrain to 0-1 range
+        if value < 0:
+            value = 0
+        elif 1 < value:
+            value = 1
+
+        # update color value
         main_widget = getWidgetAncestor(self.scene().views()[0], ClockDisplayWidget)
         # main widget
         color_arg = self.group().color_arg
