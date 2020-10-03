@@ -46,10 +46,12 @@ from cgwidgets.utils import (
     guessBackgroundColor,
     installInvisibleCursorEvent,
     installInvisibleWidgetEvent,
+    installStickyValueAdjustWidgetDelegate,
     installSlideDelegate,
     removeSlideDelegate,
     updateStyleSheet
 )
+
 from cgwidgets.delegates import SlideDelegate
 
 from cgwidgets.settings.colors import (
@@ -143,7 +145,7 @@ Notes:
         self.__createItems(value_list)
 
         # set significant digits
-        self.__setSignificantDigits()
+        # self.__setSignificantDigits()
 
         # set up style
         layout.setContentsMargins(0, 0, 0, 0)
@@ -160,6 +162,50 @@ Notes:
         self._allow_negative = True
 
     """ API """
+    def setValue(self, value):
+        """
+        value (float): Sets the value on the parent widget.
+            creating a setValue(value) method on the parent
+            widget will run this method last when setting the value
+        """
+        if value is not None:
+            # preflight checks on value
+            value = checkNegative(self._allow_negative, value)
+            value = checkIfValueInRange(self.range_enabled, value, self.range_min, self.range_max)
+
+            # set value
+            self._value = value
+            parent = self.parent()
+
+            # update other widgets
+            self.middle_item.setValue(str(self._value))
+            self.middle_item.setCursorPosition(0)
+            try:
+                parent.setText(str(self._value))
+            except AttributeError:
+                try:
+                    self.parent().setValue(self._value)
+                except AttributeError:
+                    return None
+
+    def getValue(self):
+        """
+        Returns:
+            current parent widgets value. Will attempt to look for the
+            default text() attr, however if it is not available, will look for
+            the parents getValue() method.
+        """
+        try:
+            self._value = float(self.parent().text())
+            return self._value
+        except AttributeError:
+            try:
+                return self.parent().getValue()
+            except AttributeError:
+                return None
+        except ValueError:
+            return None
+
     def setRange(self, enabled, range_min=0, range_max=1):
         """
         Determines if this widget has a specified range.  Going over this
@@ -422,50 +468,6 @@ Notes:
     def slider_pos(self, slider_pos):
         self._slider_pos = slider_pos
 
-    def setValue(self, value):
-        """
-        value (float): Sets the value on the parent widget.
-            creating a setValue(value) method on the parent
-            widget will run this method last when setting the value
-        """
-        if value is not None:
-            # preflight checks on value
-            value = checkNegative(self._allow_negative, value)
-            value = checkIfValueInRange(self.range_enabled, value, self.range_min, self.range_max)
-
-            # set value
-            self._value = value
-            parent = self.parent()
-
-            # update other widgets
-            self.middle_item.setValue(str(self._value))
-            self.middle_item.setCursorPosition(0)
-            try:
-                parent.setText(str(self._value))
-            except AttributeError:
-                try:
-                    self.parent().setValue(self._value)
-                except AttributeError:
-                    return None
-
-    def getValue(self):
-        """
-        Returns:
-            current parent widgets value. Will attempt to look for the
-            default text() attr, however if it is not available, will look for
-            the parents getValue() method.
-        """
-        try:
-            self._value = float(self.parent().text())
-            return self._value
-        except AttributeError:
-            try:
-                return self.parent().getValue()
-            except AttributeError:
-                return None
-        except ValueError:
-            return None
-
     """ UTILS """
     def __createItems(self, value_list):
         """
@@ -483,6 +485,21 @@ Notes:
             self.layout().addWidget(widget)
             self.item_list.append(widget)
 
+            # install click/drag mechanism
+            event_filter = installStickyValueAdjustWidgetDelegate(
+                widget, pixels_per_tick=100, value_per_tick=value)
+
+        self.__createMiddleItem()
+        #
+        # def testUpdate(original_value, slider_pos, num_ticks):
+        #     print('original_value == %s' % original_value)
+        #     print('slider pos == %s' % slider_pos)
+        #     print('num_ticks == %s' % num_ticks)
+
+    def __createMiddleItem(self):
+        """
+        Creates the middle item which is a FloatInputWidget for the user.
+        """
         # special handler for display widget
         self.middle_item = LadderMiddleItem(
             parent=self,
@@ -495,26 +512,26 @@ Notes:
         item_list.insert(self.middle_item_index, self.middle_item)
         self.item_list = item_list
 
-    def __setSignificantDigits(self):
-        """
-        sets the number of significant digits to round to
-
-        This is to avoid floating point errors...
-
-        Currently only working with what's set up... does not expand
-        when the number of sig digits increases... this really only needs
-        to work for decimals
-        """
-        self._significant_digits = 1
-        for item in self.item_list:
-            if item is not self.middle_item:
-                value = item.value_mult
-                string_value = ''.join(str(value).lstrip('0').rstrip('0').split('.'))
-                sig_digits = int(len(string_value))
-                if sig_digits > self._significant_digits:
-                    self._significant_digits = sig_digits
-
-        getcontext().prec = self._significant_digits
+    # def __setSignificantDigits(self):
+    #     """
+    #     sets the number of significant digits to round to
+    #
+    #     This is to avoid floating point errors...
+    #
+    #     Currently only working with what's set up... does not expand
+    #     when the number of sig digits increases... this really only needs
+    #     to work for decimals
+    #     """
+    #     self._significant_digits = 1
+    #     for item in self.item_list:
+    #         if item is not self.middle_item:
+    #             value = item.value_mult
+    #             string_value = ''.join(str(value).lstrip('0').rstrip('0').split('.'))
+    #             sig_digits = int(len(string_value))
+    #             if sig_digits > self._significant_digits:
+    #                 self._significant_digits = sig_digits
+    #
+    #     getcontext().prec = self._significant_digits
 
     def __updateUserInputs(self):
         """
@@ -736,64 +753,68 @@ Args:
                 item.setProperty('gradient_on', enable)
                 updateStyleSheet(item)
 
-    """ PROPERTIES """
-    @property
-    def num_ticks(self):
-        """
-        num_ticks (int): how many units the user has moved.
-            ( num_ticks * value_mult ) + orig_value = new_value
-        """
-        return self._num_ticks
+    def setValue(self, value):
+        self.parent().setValue(value)
+        #print("value == %s"%value)
 
-    @num_ticks.setter
-    def num_ticks(self, num_ticks):
-        self._num_ticks = num_ticks
-
-    @property
-    def orig_value(self):
-        """
-        orig_value (float): the value of the widget prior to starting a
-            value adjustment.  This is reset everytime a new value
-            adjustment is started.
-        """
-        return self._orig_value
-
-    @orig_value.setter
-    def orig_value(self, orig_value):
-        self._orig_value = Decimal(orig_value)
-
-    @property
-    def start_pos(self):
-        """
-        start_pos (QPoint): starting position of drag
-        """
-        if not hasattr(self, '_start_pos'):
-            self._start_pos = QCursor.pos()
-        return self._start_pos
-
-    @start_pos.setter
-    def start_pos(self, pos):
-        self._start_pos = pos
-
-    @property
-    def value_mult(self):
-        """
-        value_mult (float): how many units the drag should update
-        """
-        return self._value_mult
-
-    @value_mult.setter
-    def value_mult(self, value_mult):
-        self._value_mult = Decimal(value_mult)
-
-    @property
-    def is_active(self):
-        return self._is_active
-
-    @is_active.setter
-    def is_active(self, is_active):
-        self._is_active = is_active
-        self.setProperty("is_active", is_active)
+    # """ PROPERTIES """
+    # @property
+    # def num_ticks(self):
+    #     """
+    #     num_ticks (int): how many units the user has moved.
+    #         ( num_ticks * value_mult ) + orig_value = new_value
+    #     """
+    #     return self._num_ticks
+    #
+    # @num_ticks.setter
+    # def num_ticks(self, num_ticks):
+    #     self._num_ticks = num_ticks
+    #
+    # @property
+    # def orig_value(self):
+    #     """
+    #     orig_value (float): the value of the widget prior to starting a
+    #         value adjustment.  This is reset everytime a new value
+    #         adjustment is started.
+    #     """
+    #     return self._orig_value
+    #
+    # @orig_value.setter
+    # def orig_value(self, orig_value):
+    #     self._orig_value = Decimal(orig_value)
+    #
+    # @property
+    # def start_pos(self):
+    #     """
+    #     start_pos (QPoint): starting position of drag
+    #     """
+    #     if not hasattr(self, '_start_pos'):
+    #         self._start_pos = QCursor.pos()
+    #     return self._start_pos
+    #
+    # @start_pos.setter
+    # def start_pos(self, pos):
+    #     self._start_pos = pos
+    #
+    # @property
+    # def value_mult(self):
+    #     """
+    #     value_mult (float): how many units the drag should update
+    #     """
+    #     return self._value_mult
+    #
+    # @value_mult.setter
+    # def value_mult(self, value_mult):
+    #     self._value_mult = Decimal(value_mult)
+    #
+    # @property
+    # def is_active(self):
+    #     return self._is_active
+    #
+    # @is_active.setter
+    # def is_active(self, is_active):
+    #     self._is_active = is_active
+    #     self.setProperty("is_active", is_active)
 
     """ UTILS """
     def getCurrentPos(self, event):
@@ -832,6 +853,11 @@ Args:
         int_len = len(str_val)
         getcontext().prec = sig_digits + int_len
 
+    def mousePressEvent(self, event):
+        is_active = self.parent().is_active
+        self.parent().is_active = not is_active
+        return QLabel.mousePressEvent(self, event)
+
     # def __getMagnitude(self, start_pos, current_pos):
     #     """
     #     returns the magnitude of a user click/drop operation
@@ -864,68 +890,68 @@ Args:
 
     """ EVENTS """
 
-    def mousePressEvent(self, event, *args, **kwargs):
-        """
-        if the user clicks on the item, it will start the click/drag value adjust
-        """
-        # get initial position
-        self.start_pos = QCursor.pos()
-        self.parent().current_item = self
-
-        # initialize attrs
-        self.orig_value = self.parent().middle_item.getValue()
-        self.num_ticks = 0
-        self.parent().is_active = True
-        self.setGradientEnable(True)
-        self.is_active = True
-        self.slider_pos = 0
-
-        return QLabel.mousePressEvent(self, event, *args, **kwargs)
-
-    def mouseMoveEvent(self, event, *args, **kwargs):
-        """
-        primary work horse for mouse movement slider
-        """
-        if self.parent().is_active is True:
-            # magnitude = self.__getMagnitude(self.start_pos, QCursor.pos())
-            magnitude = getMagnitude(
-                self.start_pos, self.mapToGlobal(event.pos()), multiplier=self.parent().getSlideDistance()
-            )
-            offset = self.value_mult
-
-            # ===================================================================
-            # update values
-            # note: this will look for a change with num_ticks vs magnitude
-            #         to determine when a full value changed has happened
-            # ===================================================================
-            # update value
-            self.slider_pos = math.fabs(math.modf(magnitude)[0])
-
-            # update style sheets
-            self.parent().slider_pos = self.slider_pos
-            self.parent().updateStyleSheet()
-            if self.num_ticks != int(magnitude):
-                # reset values
-                self.num_ticks = int(magnitude)
-
-                # do math
-                offset *= self.num_ticks
-                self.__updateSignificantDigits(Decimal(offset) + self.orig_value)
-                return_val = Decimal(offset) + self.orig_value
-
-                # set value
-                self.parent().setValue(return_val)
-
-        return QLabel.mouseMoveEvent(self, event, *args, **kwargs)
-
-    def mouseReleaseEvent(self, *args, **kwargs):
-        # reset all of the items/attributes back to default
-        self.parent().is_active = False
-        self.is_active = False
-        self.parent().current_item = None
-        self.setGradientEnable(False)
-        updateStyleSheet(self)
-        return QLabel.mouseReleaseEvent(self, *args, **kwargs)
+    # def mousePressEvent(self, event, *args, **kwargs):
+    #     """
+    #     if the user clicks on the item, it will start the click/drag value adjust
+    #     """
+    #     # get initial position
+    #     self.start_pos = QCursor.pos()
+    #     self.parent().current_item = self
+    #
+    #     # initialize attrs
+    #     self.orig_value = self.parent().middle_item.getValue()
+    #     self.num_ticks = 0
+    #     self.parent().is_active = True
+    #     self.setGradientEnable(True)
+    #     self.is_active = True
+    #     self.slider_pos = 0
+    #
+    #     return QLabel.mousePressEvent(self, event, *args, **kwargs)
+    #
+    # def mouseMoveEvent(self, event, *args, **kwargs):
+    #     """
+    #     primary work horse for mouse movement slider
+    #     """
+    #     if self.parent().is_active is True:
+    #         # magnitude = self.__getMagnitude(self.start_pos, QCursor.pos())
+    #         magnitude = getMagnitude(
+    #             self.start_pos, self.mapToGlobal(event.pos()), multiplier=self.parent().getSlideDistance()
+    #         )
+    #         offset = self.value_mult
+    #
+    #         # ===================================================================
+    #         # update values
+    #         # note: this will look for a change with num_ticks vs magnitude
+    #         #         to determine when a full value changed has happened
+    #         # ===================================================================
+    #         # update value
+    #         self.slider_pos = math.fabs(math.modf(magnitude)[0])
+    #
+    #         # update style sheets
+    #         self.parent().slider_pos = self.slider_pos
+    #         self.parent().updateStyleSheet()
+    #         if self.num_ticks != int(magnitude):
+    #             # reset values
+    #             self.num_ticks = int(magnitude)
+    #
+    #             # do math
+    #             offset *= self.num_ticks
+    #             self.__updateSignificantDigits(Decimal(offset) + self.orig_value)
+    #             return_val = Decimal(offset) + self.orig_value
+    #
+    #             # set value
+    #             self.parent().setValue(return_val)
+    #
+    #     return QLabel.mouseMoveEvent(self, event, *args, **kwargs)
+    #
+    # def mouseReleaseEvent(self, *args, **kwargs):
+    #     # reset all of the items/attributes back to default
+    #     self.parent().is_active = False
+    #     self.is_active = False
+    #     self.parent().current_item = None
+    #     self.setGradientEnable(False)
+    #     updateStyleSheet(self)
+    #     return QLabel.mouseReleaseEvent(self, *args, **kwargs)
 
 
 def main():

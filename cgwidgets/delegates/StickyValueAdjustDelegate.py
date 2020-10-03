@@ -102,7 +102,7 @@ class iStickyValueAdjustDelegate(object):
         """
         new_value = self._num_ticks * self.valuePerTick()
         new_value += float(self.origValue())
-
+        print(self.widget, new_value)
         self.widget.setValue(new_value)
 
     def __updateFunction(self, original_value, slider_pos, num_ticks):
@@ -145,7 +145,9 @@ class iStickyValueAdjustDelegate(object):
 
             # toggle cursor display
             if self._dragging:
-                obj.setCursor(Qt.BlankCursor)
+                pass
+                # TODO blank cursor
+                #obj.setCursor(Qt.BlankCursor)
             else:
                 obj.unsetCursor()
 
@@ -275,12 +277,12 @@ from qtpy.QtWidgets import (
 QGraphicsEllipseItem
 )
 from qtpy.QtGui import QColor, QBrush
-from cgwidgets.utils import installStickyValueAdjustItemDelegate
+from cgwidgets.utils import installStickyValueAdjustItemDelegate, installStickyValueAdjustWidgetDelegate
 
 class TestWidget(QLabel):
     def __init__(self, parent=None):
         super(TestWidget, self).__init__(parent)
-
+        self.setText('0')
     def setValue(self, value):
         self.setText(str(value))
 
@@ -400,8 +402,17 @@ class LineItem(QGraphicsLineItem):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
 
-    w = TestWidgetItem()
-    ef = installStickyValueAdjustItemDelegate(w.circle_item)
+    # w = TestWidgetItem()
+    # ef = installStickyValueAdjustItemDelegate(w.circle_item)
+
+    def testUpdate(original_value, slider_pos, num_ticks):
+        print('original_value == %s'%original_value)
+        print('slider pos == %s'%slider_pos)
+        print('num_ticks == %s'%num_ticks)
+    w = TestWidget()
+
+    ef = installStickyValueAdjustWidgetDelegate(w)
+    ef.setUpdateFunction(testUpdate)
 
     # ef.setValuePerTick(.001)
     # ef.setPixelsPerTick(50)
