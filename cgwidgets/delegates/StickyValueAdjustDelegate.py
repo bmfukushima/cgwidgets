@@ -87,6 +87,7 @@ class iStickyValueAdjustDelegate(object):
                 orig_value = self.widget.getValue()
             except AttributeError:
                 orig_value = self.widget.text()
+        print('setting orig value to %s'%orig_value)
         self.setOrigValue(str(orig_value))
 
     def origValue(self):

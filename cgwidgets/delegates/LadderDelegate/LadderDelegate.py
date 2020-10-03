@@ -754,6 +754,8 @@ Args:
                 updateStyleSheet(item)
 
     def setValue(self, value):
+
+        value += self._orig_value
         self.parent().setValue(value)
         #print("value == %s"%value)
 
@@ -854,8 +856,15 @@ Args:
         getcontext().prec = sig_digits + int_len
 
     def mousePressEvent(self, event):
+        """
+        Need to set some attrs on click to be called by other parts
+        """
+        # set active flag
         is_active = self.parent().is_active
         self.parent().is_active = not is_active
+
+        # store original value
+        self._orig_value = self.parent().middle_item.getValue()
         return QLabel.mousePressEvent(self, event)
 
     # def __getMagnitude(self, start_pos, current_pos):
