@@ -24,19 +24,19 @@ import math
 
 from qtpy.QtWidgets import (
     QApplication, QLabel, QVBoxLayout,
-    QGraphicsView, QGraphicsScene, QGraphicsItemGroup, QGraphicsTextItem, QGraphicsItem,
+    QGraphicsView, QGraphicsScene, QGraphicsItemGroup, QGraphicsItem,
     QGraphicsEllipseItem,
-    QGraphicsLineItem, QWidget, QFrame, QHBoxLayout, QBoxLayout
+    QGraphicsLineItem, QWidget, QFrame, QBoxLayout
 )
 from qtpy.QtCore import (Qt, QPoint, QRectF)
 from qtpy.QtGui import (
-    QColor, QCursor, QPen, QLinearGradient, QBrush, QGradient
+    QColor, QCursor, QPen, QLinearGradient, QBrush
 )
 
 from cgwidgets.widgets import FloatInputWidget, AbstractInputGroup
 from cgwidgets.utils import (
     attrs, draw, getWidgetAncestor, getWidgetAncestorByName,
-    getFontSize, getMagnitude, installStickyValueAdjustItemDelegate
+    getFontSize, installStickyValueAdjustItemDelegate
 )
 from cgwidgets.settings.colors import iColor, getHSVRGBAFloatFromColor
 
@@ -326,8 +326,13 @@ class ClockDisplayWidget(QWidget):
 
 class ClockHeaderWidget(QFrame):
     """
-    This bar runs through the middle and holds all of the manually
-    user input fields.
+    This is a header that will contain the text values of each individual
+    color arg (HSV / RGBA).  This will automatically be displayed on the
+    top/bottom, left/right, or middle, based off of the size and dimensions
+    of the parent widget.
+
+    There should be one of these Header Widgets per color list, ie one
+    HeaderWidget for RGBA and one for HSV.
     """
     def __init__(self, parent=None):
         super(ClockHeaderWidget, self).__init__(parent)
@@ -345,6 +350,14 @@ class ClockHeaderWidget(QFrame):
         self.layout().setSpacing(0)
 
     def createHeaderItems(self, color_args_list):
+        """
+
+        color_args_list (list): of attrs.COLOR_ARG, which will have a header
+            item (ColorGradientHeaderWidgetItem) craeted for it and stored in
+            the dict color_header_items_dict as
+                color_arg : ColorGradientHeaderWidgetItem
+                attrs.HUE: ColorGradientHeaderWidgetItem
+        """
         self.color_header_items_dict = {}
 
         # create clock hands
@@ -356,32 +369,34 @@ class ClockHeaderWidget(QFrame):
             new_item.setFixedHeight(self.item_height)
             new_item.setMinimumWidth(self.item_width)
             new_item.value_widget.color_arg = color_arg
-            #new_item.value_widget.setUserFinishedEditingEvent(self.userInputEvent)
-            new_item.value_widget.setLiveInputEvent(self.userInputEvent)
+
+            # setup signals
+            new_item.value_widget.setLiveInputEvent(self.userLiveInputEvent)
+
+            # add to layout
             self.color_header_items_dict[color_arg] = new_item
             self.layout().addWidget(new_item)
-            #new_item.setStyleSheet("background-color: rgba(0,0,0,0); border: None")
 
     def updateUserInputs(self, color_args_dict):
         """
-        Updates the user inputs with the color args dict provided
+        Updates all of the header item user inputs from the dict
+        that is provided as the color_args_dict
+
+        color_args_dict (dict): of attrs.COLOR_ARG : ColorGradientHeaderWidgetItem
 
         """
         for color_arg in self.color_header_items_dict:
-            # get value widget
             try:
-                input_widget = self.color_header_items_dict[color_arg]
-                #hand_widget = self.scene.hands_items[color_arg]
+                # get header item
+                header_item = self.color_header_items_dict[color_arg]
 
                 # set new value
                 value = color_args_dict[color_arg]
-                input_widget.setValue(str(value))
+                header_item.setValue(str(value))
             except KeyError:
                 pass
-            #hand_widget.setValue(value)
 
-    def userInputEvent(self, widget, value):
-
+    def userLiveInputEvent(self, widget, value):
         """
         Updates the color based off of the specific input from the user
         widget (FloatInputWidget):
@@ -549,16 +564,16 @@ class ClockDisplayScene(QGraphicsScene):
         self.hands_items = {}
 
         for color_arg in attrs.RGBA_LIST + attrs.HSV_LIST:
-            new_item = ClockHandGroupItem(color_arg)
+            # create new item
+            hand_item = ClockHandGroupItem(color_arg)
 
-            from cgwidgets.utils import installStickyValueAdjustItemDelegate
             # create item
-            self.addItem(new_item)
-            self.hands_items[color_arg] = new_item
+            self.addItem(hand_item)
+            self.hands_items[color_arg] = hand_item
 
             # add filter
             installStickyValueAdjustItemDelegate(
-                new_item.hand_crosshair, pixels_per_tick=100, value_per_tick=0.01)
+                hand_item.hand_crosshair, pixels_per_tick=100, value_per_tick=0.01)
 
     def updateHands(self):
         """
@@ -569,63 +584,67 @@ class ClockDisplayScene(QGraphicsScene):
         Todo:
             figure out how to do the differential for the offset of the widgets
         """
-        # get attrs
-        rect = self.sceneRect()
-        width = rect.width()
-        height = rect.height()
+
+        self.__updateHandLength()
+        self.__updateHandRotation()
+
+    def __getHandLength(self):
+        """
+        Gets the length of the hand after all of the offsets have been applied
+        """
+        width = self.sceneRect().width()
+        height = self.sceneRect().height()
         length = min(width, height) * 0.5
-        orig_x = width / 2
-        orig_y = height / 2
         main_widget = getWidgetAncestor(self, ClockDisplayWidget)
         widget_size = main_widget.headerItemSize()
 
-        # setup offset for header items
-        test_offset = math.fabs(width-height)
-
-        widget_offset = widget_size * 2
-        if test_offset < widget_offset:
-            #length -= math.fabs(test_offset - 50)
+        # reduce hand length
+        # reduce for widgets
+        height_width_difference = math.fabs(width - height)
+        if height_width_difference < (widget_size * 2):
             length -= widget_size
+        # reduce for cross hair
+        length -= 10
+        length -= self.offset()
 
-        # update hsv list
+        return length
+
+    def __updateHandLength(self):
+        # get attrs
+        length = self.__getHandLength()
+
+        # update hand
+        for color_arg in attrs.HSV_LIST + attrs.RGBA_LIST:
+            # get hand
+            hand = self.hands_items[color_arg]
+
+            # resize hand length
+            hand.setLength(length)
+            hand.updateGradient()
+
+            # display hand
+            hand.show()
+            if length < 0:
+                hand.hide()
+
+    def __updateHandRotation(self):
+        """
+        Helper function that will rotate all of the hands to their
+        appropriate positions on the clock
+        """
+        x_orig = self.sceneRect().width() * 0.5
+        y_orig = self.sceneRect().height() * 0.5
+
+        # rotate hands to their positions
         for count, color_arg in enumerate(attrs.HSV_LIST):
             hand = self.hands_items[color_arg]
-            hand.show()
-
-            # resize hand length
-            _length = length - self.offset()
-            if length < 0:
-                hand.hide()
-            hand.setLength(_length)
-            hand.updateGradient()
-
-            # set crosshair pos
-            #hand.setValue(0.25)
-
-            # transform hand
-
             hand.setRotation(count * 60 + 30 + 270)
-            hand.setPos(orig_x, orig_y)
+            hand.setPos(x_orig, y_orig)
 
-        # update rgba list
         for count, color_arg in enumerate(attrs.RGBA_LIST):
             hand = self.hands_items[color_arg]
-            hand.show()
-
-            # resize hand length
-            _length = length - self.offset()
-            if length < 0:
-                hand.hide()
-            hand.setLength(_length)
-            hand.updateGradient()
-
-            # set crosshair pos
-            #hand.setValue(0.25)
-
-            # transform hand
-            #hand.setTransformOriginPoint(0, 10)
             hand.setRotation(count * 45 + 90 + 22.5)
-            hand.setPos(orig_x, orig_y)
+            hand.setPos(x_orig, y_orig)
 
     def offset(self):
         return self._offset
@@ -687,11 +706,12 @@ class ClockHandGroupItem(QGraphicsItemGroup):
 
 class ClockHandItem(QGraphicsItem):
     """
+    This is the long portion of the display. On a clock, it would be the long
+    hand, however, the long hand here points to
     Custom graphics item that has a gradient as a background.
 
     Items fill is determined by their paint method
     Args:
-
         gradient_type (attrs.COLOR): What type of gradient this is
             RED | GREEN | BLUE | ALPHA | HUE | SAT | VALUE
 
@@ -732,16 +752,14 @@ class ClockHandItem(QGraphicsItem):
         """
         Draws the gradient
         """
+        # if initializaing create a new gradient
         if not hasattr(self, '_gradient'):
             self._gradient = draw.drawColorTypeGradient(self.gradient_type, self.width(), self.length())
             self.setGradient(self._gradient)
 
+        # update gradient
         try:
-            # update gradient size
-            # todo
-            # this is
             self._gradient.setStart(QPoint(0, self.scene().offset() + 10))
-            #self._gradient.setFinalStop(QPoint(self.width(), self.length() + self.offset()))
             self._gradient.setFinalStop(QPoint(self.width(), self.length() + self.scene().offset() + 10))
         except AttributeError:
             # not yet initialized
@@ -789,6 +807,10 @@ class ClockHandItem(QGraphicsItem):
 
 
 class ClockHandCrosshairItem(QGraphicsLineItem):
+    """
+    The cross portion of the 't' that will show to the user where the current
+    value should sit on the display
+    """
     def __init__(self, parent=None):
         super(ClockHandCrosshairItem, self).__init__(parent)
         self.setSize(15, 6)
@@ -805,7 +827,6 @@ class ClockHandCrosshairItem(QGraphicsLineItem):
             (-width * 0.5) - (hand_width * 2), 0,
             width + hand_width, 0
         )
-        #self.setRotation(90)
         pen = QPen()
         pen.setWidth(height)
         self.setPen(pen)
