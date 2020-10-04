@@ -37,6 +37,9 @@ class iStickyValueAdjustDelegate(object):
 
     Notes:
         widget/item provided needs setValue method that will set the text/value
+        mousePressEvents on widget...
+            in order to do mouse press events on teh widget, you'll need to use the
+                mousePressEventOverride()
     """
     input_events = [
         QEvent.MouseButtonPress,
@@ -170,6 +173,9 @@ class iStickyValueAdjustDelegate(object):
             else:
                 obj.unsetCursor()
 
+            # Special processing for pen down events.
+            if hasattr(obj, 'mousePressEventOverride'):
+                obj.mousePressEventOverride(event, *args, **kwargs)
             # do not run any other cursor thingys
             return True
 

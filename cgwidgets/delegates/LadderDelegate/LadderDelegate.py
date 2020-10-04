@@ -644,13 +644,20 @@ Notes:
         return QWidget.showEvent(self, *args, **kwargs)
 
     def leaveEvent(self, event, *args, **kwargs):
-        if self.is_active is False:
-            self.hide()
+        for item in self.item_list:
+            if item != self.middle_item:
+                if item._dragging is True:
+                    return QWidget.leaveEvent(self, event, *args, **kwargs)
+
+        self.hide()
         return QWidget.leaveEvent(self, event, *args, **kwargs)
 
     def closeEvent(self, event, *args, **kwargs):
-        if self.is_active is True:
-            return
+        for item in self.item_list:
+            if item != self.middle_item:
+                if item._dragging is True:
+                    return
+
         return QWidget.closeEvent(self, event, *args, **kwargs)
 
     def keyPressEvent(self, event, *args, **kwargs):
@@ -698,11 +705,9 @@ Attributes:
             """.format(**iColor.style_sheet_args))
 
     def mousePressEvent(self, event):
-        self.parent().is_active = True
         return FloatInputWidget.mousePressEvent(self, event)
 
     def mouseReleaseEvent(self, event):
-        self.parent().is_active = False
         return FloatInputWidget.mouseReleaseEvent(self, event)
 
     def keyPressEvent(self, event):
@@ -738,7 +743,6 @@ Args:
         super(LadderItem, self).__init__(parent)
 
         # set default attrs
-        self.is_active = False
         self.slider_pos = 0
         self._value_mult = value_mult
         self.setText(str(value_mult))
@@ -755,7 +759,7 @@ Args:
                 updateStyleSheet(item)
 
     def setValue(self, value):
-        value += self._orig_value
+        value += self._middle_orig_value
         self.parent().setValue(value)
         #print("value == %s"%value)
 
@@ -855,16 +859,12 @@ Args:
         int_len = len(str_val)
         getcontext().prec = sig_digits + int_len
 
-    def mousePressEvent(self, event):
+    def mousePressEventOverride(self, event):
         """
         Need to set some attrs on click to be called by other parts
         """
-        # set active flag
-        is_active = self.parent().is_active
-        self.parent().is_active = not is_active
-
         # store original value
-        self._orig_value = self.parent().middle_item.getValue()
+        self._middle_orig_value = self.parent().middle_item.getValue()
         return QLabel.mousePressEvent(self, event)
 
     # def __getMagnitude(self, start_pos, current_pos):

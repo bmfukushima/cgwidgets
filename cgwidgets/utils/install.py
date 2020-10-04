@@ -166,6 +166,8 @@ def installStickyValueAdjustItemDelegate(
     view.installEventFilter(view_filter)
     view.setMouseTracking(True)
     view._dragging = False
+    view_filter.setPixelsPerTick(pixels_per_tick)
+    view_filter.setValuePerTick(value_per_tick)
 
     # install event filters
     event_filter = StickyValueAdjustItemDelegate(item)
