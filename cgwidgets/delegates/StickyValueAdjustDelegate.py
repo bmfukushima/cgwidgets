@@ -184,6 +184,9 @@ class iStickyValueAdjustDelegate(object):
             if obj._dragging:
                 self.__setValue(obj)
 
+            # Special processing for mouse move events
+            if hasattr(obj, 'mouseMoveEventOverride'):
+                obj.mouseMoveEventOverride(event, *args, **kwargs)
         # exit event
         if event.type() in iStickyValueAdjustDelegate.exit_events:
             # force this widget to never loser focus on drag

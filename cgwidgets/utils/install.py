@@ -132,6 +132,7 @@ def installStickyValueAdjustWidgetDelegate(
 
     widget.setMouseTracking(True)
     widget._dragging = False
+    widget._slider_pos = 0
     # install event filter
     event_filter = StickyValueAdjustWidgetDelegate(widget)
     event_filter.setPixelsPerTick(pixels_per_tick)
@@ -166,6 +167,7 @@ def installStickyValueAdjustItemDelegate(
     view.installEventFilter(view_filter)
     view.setMouseTracking(True)
     view._dragging = False
+    view._slider_pos = 0
     view_filter.setPixelsPerTick(pixels_per_tick)
     view_filter.setValuePerTick(value_per_tick)
 
