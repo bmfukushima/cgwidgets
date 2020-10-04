@@ -131,6 +131,8 @@ def installStickyValueAdjustWidgetDelegate(
     from cgwidgets.delegates import StickyValueAdjustWidgetDelegate
 
     widget.setMouseTracking(True)
+    widget._dragging = False
+    # install event filter
     event_filter = StickyValueAdjustWidgetDelegate(widget)
     event_filter.setPixelsPerTick(pixels_per_tick)
     event_filter.setValuePerTick(value_per_tick)
@@ -165,6 +167,7 @@ def installStickyValueAdjustItemDelegate(
     view.setMouseTracking(True)
     view._dragging = False
 
+    # install event filters
     event_filter = StickyValueAdjustItemDelegate(item)
     event_filter.setPixelsPerTick(pixels_per_tick)
     event_filter.setValuePerTick(value_per_tick)
