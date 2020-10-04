@@ -29,7 +29,7 @@ To Do...
 """
 import math
 
-from qtpy.QtWidgets import QDesktopWidget, QApplication, QWidget
+from qtpy.QtWidgets import QDesktopWidget, QApplication, QWidget, QFrame
 from qtpy.QtCore import Qt, QPoint, QEvent
 
 from cgwidgets.utils import setAsTool, getGlobalPos
@@ -342,7 +342,7 @@ Attributes:
             pass
 
 
-class SlideDelegate(QWidget):
+class SlideDelegate(QFrame):
     """
     Container that encapsulates the different types of SlideDisplays.
     This widget has two major components, the event filter, and
@@ -448,29 +448,34 @@ class SlideDelegate(QWidget):
     """ EVENTS """
     def eventFilter(self, obj, event, *args, **kwargs):
         if event.type() == QEvent.MouseButtonPress:
-            self.slidebar = self.getBreedWidget()
-            self.slidebar.setWidgetPosition(
-                self.getAlignment(), widget=self._display_widget
-            )
-            self.slidebar.show()
+            obj._dragging = not obj._dragging
+
+            if obj._dragging:
+                self.slidebar = self.getBreedWidget()
+                self.slidebar.setWidgetPosition(
+                    self.getAlignment(), widget=self._display_widget
+                )
+                self.slidebar.show()
+            else:
+                try:
+                    self.slidebar.close()
+                except AttributeError:
+                    pass
 
             return QWidget.eventFilter(self, obj, event, *args, **kwargs)
+
+        # mouse move
         elif event.type() == QEvent.MouseMove:
+            if not hasattr(self, 'sliderbar'): return QWidget.eventFilter(self, obj, event, *args, **kwargs)
+            self.slidebar.update(math.fabs(obj._slider_pos))
+            return QWidget.eventFilter(self, obj, event, *args, **kwargs)
+
+        elif event.type() == QEvent.Leave:
             try:
-                try:
-                    slider_pos = self.getSliderPos(event)
-                except TypeError:
-                    slider_pos = self.getSliderPos(obj, event)
-                self.slidebar.update(slider_pos)
+                self.slidebar.update(math.fabs(obj._slider_pos))
             except AttributeError:
                 pass
-            return QWidget.eventFilter(self, obj, event, *args, **kwargs)
-        elif event.type() == QEvent.MouseButtonRelease:
-            try:
-                self.slidebar.close()
-            except AttributeError:
-                pass
-            return QWidget.eventFilter(self, obj, event, *args, **kwargs)
+
         return QWidget.eventFilter(self, obj, event, *args, **kwargs)
 
 

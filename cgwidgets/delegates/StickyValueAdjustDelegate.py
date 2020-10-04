@@ -97,7 +97,7 @@ class iStickyValueAdjustDelegate(object):
         self._orig_value = orig_value
 
     """ VALUE UPDATERS / SETTERS"""
-    def __setValue(self):
+    def __setValue(self, obj):
         """
         This function is run to update the value on the parent widget.
         This will update the value on the widget, and then run
@@ -105,10 +105,13 @@ class iStickyValueAdjustDelegate(object):
         """
         current_pos = QCursor.pos()
         magnitude = getMagnitude(self._calc_pos, current_pos)
-        slider_pos, self._num_ticks = math.modf(magnitude / self.pixelsPerTick())
+        self._slider_pos, self._num_ticks = math.modf(magnitude / self.pixelsPerTick())
+
+        # set slider pos on object ( for other delegates )
+        obj._slider_pos = self._slider_pos
 
         # update values
-        self.userUpdateFunction(slider_pos, self._num_ticks)
+        self.userUpdateFunction(self._slider_pos, self._num_ticks)
         self.updateValue()
 
     def updateValue(self):
@@ -157,6 +160,8 @@ class iStickyValueAdjustDelegate(object):
             self._cursor_pos = QCursor.pos()
 
             self._dragging = not self._dragging
+            obj._dragging = self._dragging
+
             self._num_ticks = 0
             self.updateOrigValue()
 
@@ -170,7 +175,7 @@ class iStickyValueAdjustDelegate(object):
         # pen move
         if event.type() in iStickyValueAdjustDelegate.move_events:
             if self._dragging:
-                self.__setValue()
+                self.__setValue(obj)
 
         # exit event
         if event.type() in iStickyValueAdjustDelegate.exit_events:
@@ -182,7 +187,7 @@ class iStickyValueAdjustDelegate(object):
                 self._calc_pos = self._calc_pos - offset
 
                 # update value
-                self.__setValue()
+                self.__setValue(obj)
 
                 # reset cursor position back to initial click position
                 QCursor.setPos(self._cursor_pos)
@@ -222,6 +227,10 @@ class StickyValueAdjustItemDelegate(QGraphicsItem, iStickyValueAdjustDelegate):
         return None
 
     def sceneEventFilter(self, obj, event, *args, **kwargs):
+        """
+        TODO clean this up and pass back to main event filter?
+            Where am I storing meta data?
+        """
         item = obj
         obj = obj.scene().views()[0]
         # pen press
@@ -251,12 +260,13 @@ class StickyValueAdjustItemDelegate(QGraphicsItem, iStickyValueAdjustDelegate):
         # pen move
         if event.type() in iStickyValueAdjustDelegate.move_events:
             if obj._dragging:
+                #self.__setValue(obj)
                 current_pos = QCursor.pos()
                 magnitude = getMagnitude(obj._calc_pos, current_pos)
-                slider_pos, self._num_ticks = math.modf(magnitude / self.pixelsPerTick())
-
+                self._slider_pos, self._num_ticks = math.modf(magnitude / self.pixelsPerTick())
+                obj._slider_pos = self._slider_pos
                 # update values
-                self.userUpdateFunction(slider_pos, self._num_ticks)
+                self.userUpdateFunction(self._slider_pos, self._num_ticks)
                 self.updateValue()
 
         # exit event
@@ -268,6 +278,7 @@ class StickyValueAdjustItemDelegate(QGraphicsItem, iStickyValueAdjustDelegate):
                 offset = (current_pos - obj._cursor_pos)
                 obj._calc_pos = obj._calc_pos - offset
 
+                obj._slider_pos = self._slider_pos
                 # reset cursor position back to initial click position
                 QCursor.setPos(obj._cursor_pos)
 
@@ -319,10 +330,10 @@ class StickyValueAdjustViewDelegate(QWidget):
             if obj._dragging is True:
                 current_pos = QCursor.pos()
                 magnitude = getMagnitude(obj._calc_pos, current_pos)
-                slider_pos, obj._current_item.event_filter._num_ticks = math.modf(magnitude / obj._current_item.event_filter.pixelsPerTick())
+                obj._slider_pos, obj._current_item.event_filter._num_ticks = math.modf(magnitude / obj._current_item.event_filter.pixelsPerTick())
 
                 # update values
-                obj._current_item.event_filter.userUpdateFunction(slider_pos, obj._current_item.event_filter._num_ticks)
+                obj._current_item.event_filter.userUpdateFunction(obj._slider_pos, obj._current_item.event_filter._num_ticks)
                 obj._current_item.event_filter.updateValue()
 
         # mouse leave

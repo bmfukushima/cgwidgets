@@ -272,8 +272,9 @@ Notes:
         self.__setSlideBar(False)
 
         # set cursor drag mode
+        # TODO invisible stuff
         self.setInvisibleCursor(boolean)
-        self.setInvisibleWidget(boolean)
+        #self.setInvisibleWidget(boolean)
 
         # create new slide bar
         if not display_widget:

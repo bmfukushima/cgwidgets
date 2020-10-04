@@ -82,6 +82,8 @@ def installSlideDelegate(
         breed=breed,
         display_widget=display_widget
     )
+    widget._dragging = False
+    widget._slider_pos = 0.0
     widget.installEventFilter(slide_delegate)
     return slide_delegate
 
