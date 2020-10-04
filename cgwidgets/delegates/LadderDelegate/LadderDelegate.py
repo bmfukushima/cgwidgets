@@ -754,7 +754,6 @@ Args:
                 updateStyleSheet(item)
 
     def setValue(self, value):
-
         value += self._orig_value
         self.parent().setValue(value)
         #print("value == %s"%value)

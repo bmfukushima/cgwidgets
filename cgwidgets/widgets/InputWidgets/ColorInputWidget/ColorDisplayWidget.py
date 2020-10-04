@@ -434,9 +434,10 @@ class ColorGradientHeaderWidgetItem(AbstractInputGroup):
         # setup ladder
         self.value_widget.setUseLadder(True, value_list=[0.0001, 0.001, 0.01, 0.1])
         display_widget = getWidgetAncestor(self, ClockDisplayWidget)
-        self.value_widget.ladder.setDiscreteDrag(
-            True, alignment=Qt.AlignLeft, depth=10, display_widget=display_widget
-        )
+        # TODO Discrete Drag
+        # self.value_widget.ladder.setDiscreteDrag(
+        #     True, alignment=Qt.AlignLeft, depth=10, display_widget=display_widget
+        # )
         self.setRange(True, 0, 1)
         self.value_widget.setAlignment(Qt.AlignLeft)
         self.insertWidget(1, self.value_widget)
