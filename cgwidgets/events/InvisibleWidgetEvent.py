@@ -51,6 +51,7 @@ Args:
             # preflight
             # ensure this is only run once per click
             if self._updating is True: return False
+
             # ensure that the user clicked on the right widget
             if obj != activation_widget and hide_widget._hide_widget_filter_INVISIBLE is False: return False
 
@@ -80,57 +81,11 @@ Args:
         return QWidget.eventFilter(self, obj, event, *args, **kwargs)
 
 
-def installInvisibleWidgetEvent(hide_widget, activation_widget=None):
-    """
-    Installs an event filter on the widget that makes it so that when the
-    user click/drags, it will turn the cursor invisible, and all the cursor
-    to move an infinite distance.  On release, it will return the cursor
-    back to the starting position
-
-    Args:
-        activation_widget (QWidget): Widget when clicked to hide the hide_widget.
-            If none is provided, the parent widget will be used
-        hide_widget (QWidget): widget to be hidden, if none is provided,
-            the parent widget will be used
-        parent (QWidget): parent / widget to install the event filter on
-            when clicked will Show the hide_widget
-    Returns:
-    """
-    from cgwidgets.events import InvisibleWidgetEvent
-
-    # set up default widgets
-    parent = hide_widget.parent()
-
-    if activation_widget is None:
-        activation_widget = hide_widget
-
-    invisible_widget_data = {
-        'parent' : parent,
-        'hide_widget' : hide_widget,
-        'activation_widget' : activation_widget}
-
-    # create filter
-    invisible_widget_filter = InvisibleWidgetEvent(
-        parent=parent
-    )
-
-    # setup attrs / install event filter
-    hide_widget._hide_widget_filter_INVISIBLE = False
-    for key in invisible_widget_data:
-        widget = invisible_widget_data[key]
-        widget._invisible_widget_data = invisible_widget_data
-
-        # install event filter
-        widget.installEventFilter(invisible_widget_filter)
-
-    return invisible_widget_filter
-
-
 if __name__ == '__main__':
     from qtpy.QtGui import QCursor
     from qtpy.QtWidgets import QWidget, QVBoxLayout
     #
-    # from cgwidgets.utils import installInvisibleWidgetEvent
+    from cgwidgets.utils import installInvisibleWidgetEvent
 
     app = QApplication(sys.argv)
     mw = QWidget()
@@ -142,7 +97,8 @@ if __name__ == '__main__':
     l.addWidget(w)
     l.addWidget(w2)
 
-    installInvisibleWidgetEvent(w, activation_widget=w2)
+    #installInvisibleWidgetEvent(w, activation_widget=w2)
+    installInvisibleWidgetEvent(w)
     # ef = InvisibleWidgetEvent()
     # w.installEventFilter(ef)
     mw.show()

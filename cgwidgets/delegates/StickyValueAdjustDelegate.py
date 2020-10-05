@@ -61,6 +61,7 @@ class iStickyValueAdjustDelegate(object):
         #super(iStickyValueAdjustDelegate, self).__init__(parent)
         self._pixels_per_tick = 100
         self._value_per_tick = 0.1
+        self._updating = False
         self.widget = widget
 
     """ PROPERTIES """
@@ -149,6 +150,20 @@ class iStickyValueAdjustDelegate(object):
         """
         self.__userUpdateFunction = userUpdateFunction
 
+    def penDownEvent(self, obj):
+        obj._calc_pos = QCursor.pos()
+        obj._cursor_pos = QCursor.pos()
+        obj._drag_STICKY = not obj._drag_STICKY
+        obj._num_ticks = 0
+        obj._orig_value = self.getOrigValue()
+
+        # toggle cursor display
+        if obj._drag_STICKY:
+            # TODO blank cursor
+            obj.setCursor(Qt.BlankCursor)
+        else:
+            obj.unsetCursor()
+
     def stickyEventFilter(self, obj, event, *args, **kwargs):
         """
         _drag_STICKY (bool): Determines if a drag event is currently active
@@ -159,19 +174,7 @@ class iStickyValueAdjustDelegate(object):
         """
         # pen down
         if event.type() in iStickyValueAdjustDelegate.input_events:
-            # setup default attrs
-            obj._calc_pos = QCursor.pos()
-            obj._cursor_pos = QCursor.pos()
-            obj._drag_STICKY = not obj._drag_STICKY
-            obj._num_ticks = 0
-            obj._orig_value = self.getOrigValue()
-
-            # toggle cursor display
-            if obj._drag_STICKY:
-                # TODO blank cursor
-                obj.setCursor(Qt.BlankCursor)
-            else:
-                obj.unsetCursor()
+            self.penDownEvent(obj)
 
         # pen move
         if event.type() in iStickyValueAdjustDelegate.move_events:
@@ -199,7 +202,6 @@ class iStickyValueAdjustDelegate(object):
                 obj.unsetCursor()
                 obj._drag_STICKY = False
 
-
 class StickyValueAdjustWidgetDelegate(QWidget, iStickyValueAdjustDelegate):
     def __init__(self, parent=None, widget=None):
         super(StickyValueAdjustWidgetDelegate, self).__init__(parent)
@@ -209,9 +211,34 @@ class StickyValueAdjustWidgetDelegate(QWidget, iStickyValueAdjustDelegate):
         iStickyValueAdjustDelegate.__init__(self, widget=widget)
 
     def eventFilter(self, obj, event, *args, **kwargs):
-        self.stickyEventFilter(obj, event, *args, **kwargs)
+        # preflight
+        if event.type() == QEvent.MouseButtonPress:
+            if self._updating is True:
+                return False
+
+        # get widgets
+        drag_widget = obj._sticky_widget_data['drag_widget']
+        active_widget = obj._sticky_widget_data['active_widget']
+
+        if obj == active_widget:
+            # activated by clicking on the activation widget
+            if event.type() in iStickyValueAdjustDelegate.input_events:
+                self._updating = True
+                self.penDownEvent(drag_widget)
+                return False
+
+        if obj == drag_widget:
+            # stop activation from drag widget
+            if event.type() in iStickyValueAdjustDelegate.input_events:
+                if drag_widget._drag_STICKY is False:
+                    return False
+            # run event
+            self.stickyEventFilter(drag_widget, event, *args, **kwargs)
+
+        if event.type() == QEvent.MouseButtonRelease:
+            self._updating = False
+
         return False
-        #return QWidget.eventFilter(self, obj, event, *args, **kwargs)
 
 
 class StickyValueAdjustItemDelegate(QGraphicsItem, iStickyValueAdjustDelegate):
@@ -383,8 +410,8 @@ if __name__ == '__main__':
 
     logging.basicConfig(level=logging.DEBUG)
 
-    # w = TestWidgetItem()
-    # ef = installStickyValueAdjustItemDelegate(w.circle_item)
+    w = TestWidgetItem()
+    ef = installStickyValueAdjustItemDelegate(w.circle_item)
 
     def testUpdate(obj, original_value, slider_pos, num_ticks):
         print('obj == %s'%obj)
@@ -392,14 +419,15 @@ if __name__ == '__main__':
         print('slider pos == %s'%slider_pos)
         print('num_ticks == %s'%num_ticks)
 
-    w = QWidget()
-    l = QVBoxLayout(w)
-    w2 = TestWidget()
-    l.addWidget(w2)
-    l.addWidget(QLabel("test"))
+    # w = QWidget()
+    # l = QVBoxLayout(w)
+    # w2 = TestWidget()
+    # l.addWidget(w2)
+    # l.addWidget(QLabel("test"))
+    #
+    # installInvisibleWidgetEvent(w2)
+    # ef = installStickyValueAdjustWidgetDelegate(w2, drag_widget=w)
 
-    #installInvisibleWidgetEvent(w2)
-    ef = installStickyValueAdjustWidgetDelegate(w2)
     #ef.setUserUpdateFunction(testUpdate)
 
     # ef.setValuePerTick(.001)

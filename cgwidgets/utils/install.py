@@ -151,7 +151,7 @@ def installLadderDelegate(
 
 """ STICKY VALUE DRAG"""
 def installStickyValueAdjustWidgetDelegate(
-        sticky_widget, pixels_per_tick=100, value_per_tick=0.01, drag_widget=None
+        active_widget, pixels_per_tick=100, value_per_tick=0.01, drag_widget=None
     ):
     """
 
@@ -166,26 +166,34 @@ def installStickyValueAdjustWidgetDelegate(
     from cgwidgets.delegates import StickyValueAdjustWidgetDelegate
 
     if not drag_widget:
-        drag_widget = sticky_widget
+        drag_widget = active_widget
 
     sticky_widget_data = {
         'drag_widget': drag_widget,
-        'sticky_widget': sticky_widget
+        'active_widget': active_widget
     }
 
     # create filter
-    sticky_widget_filter = StickyValueAdjustWidgetDelegate(sticky_widget)
+    sticky_widget_filter = StickyValueAdjustWidgetDelegate(active_widget)
     sticky_widget_filter.setPixelsPerTick(pixels_per_tick)
     sticky_widget_filter.setValuePerTick(value_per_tick)
+    sticky_widget_filter._updating = False
 
+    # setup extra attrs on widgets
     for key in sticky_widget_data:
+        # get widget
         widget = sticky_widget_data[key]
 
+        # set attrs
+        widget._sticky_widget_data = sticky_widget_data
         widget.setMouseTracking(True)
         widget._drag_STICKY = False
-        widget._slider_pos = 0
-        widget.installEventFilter(sticky_widget_filter)
         widget._filter_STICKY = sticky_widget_filter
+        widget._slider_pos = 0
+
+        # install filter
+        widget.installEventFilter(sticky_widget_filter)
+
 
     return sticky_widget_filter
 
