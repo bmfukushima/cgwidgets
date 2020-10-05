@@ -262,6 +262,30 @@ def getBottomLeftPos(widget):
     return pos
 
 
+def getTopLeftPos(widget):
+    """
+    Returns the bottom left position of the specific widget.  This is mainly for
+    lining up any sort of popups and what not.
+
+    Args:
+        widget (QWidget): Widget whose position you want to return
+    Returns (QPoint): Point in world space of the bottom left coordinate
+        of the widget given
+    """
+
+    # get pos
+    if widget.parent():
+        pos = widget.parent().mapToGlobal(widget.geometry().topLeft())
+    else:
+        pos = widget.geometry().topLeft()
+
+    # back up clause
+    if not pos:
+        pos = QPoint(0, 0)
+
+    return pos
+
+
 def clearLayout(layout, start=None, end=None):
     """
     removes all widgets from the layout provided

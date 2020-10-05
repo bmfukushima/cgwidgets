@@ -2,7 +2,7 @@ from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 from qtpy.QtGui import *
 
-
+""" INVISIBLE CURSOR"""
 def installInvisibleCursorEvent(widget):
     """
     Installs an event filter on the widget that makes it so that when the
@@ -24,7 +24,8 @@ def installInvisibleCursorEvent(widget):
     return invis_drag_filter
 
 
-def installInvisibleWidgetEvent(widget, hide_widget=None):
+""" INVISIBLE WIDGET"""
+def installInvisibleWidgetEvent(hide_widget, activation_widget=None):
     """
     Installs an event filter on the widget that makes it so that when the
     user click/drags, it will turn the cursor invisible, and all the cursor
@@ -32,24 +33,46 @@ def installInvisibleWidgetEvent(widget, hide_widget=None):
     back to the starting position
 
     Args:
-
+        activation_widget (QWidget): Widget when clicked to hide the hide_widget.
+            If none is provided, the parent widget will be used
+        hide_widget (QWidget): widget to be hidden, if none is provided,
+            the parent widget will be used
     Returns:
     """
     from cgwidgets.events import InvisibleWidgetEvent
 
-    # ensure defaults for hide widget
-    if hide_widget is None:
-        hide_widget = widget
+    # set up default widgets
+    parent = hide_widget.parent()
+    if not parent:
+        parent = hide_widget
 
-    # install event filter
-    invis_cursor_filter = InvisibleWidgetEvent(
-        parent=widget, hide_widget=hide_widget
+    if activation_widget is None:
+        activation_widget = hide_widget
+
+    invisible_widget_data = {
+        'parent' : parent,
+        'hide_widget' : hide_widget,
+        'activation_widget' : activation_widget}
+
+    # create filter
+    invisible_widget_filter = InvisibleWidgetEvent(
+        parent=parent
     )
-    widget.installEventFilter(invis_cursor_filter)
 
-    return invis_cursor_filter
+    # setup attrs / install event filter
+    hide_widget._hide_widget_filter_INVISIBLE = False
+    for key in invisible_widget_data:
+        widget = invisible_widget_data[key]
+        print(widget)
+        widget._invisible_widget_data = invisible_widget_data
+
+        # install event filter
+        widget.installEventFilter(invisible_widget_filter)
+
+    return invisible_widget_filter
 
 
+""" SLIDE"""
 def installSlideDelegate(
         widget,
         sliderPosMethod,
@@ -92,6 +115,7 @@ def removeSlideDelegate(item, slide_delegate):
     item.removeEventFilter(slide_delegate)
 
 
+""" LADDER"""
 def installLadderDelegate(
     widget,
     user_input=QEvent.MouseButtonRelease,
@@ -123,23 +147,47 @@ def installLadderDelegate(
     )
     widget.installEventFilter(ladder)
     return ladder
-#
 
+
+""" STICKY VALUE DRAG"""
 def installStickyValueAdjustWidgetDelegate(
-        widget, pixels_per_tick=100, value_per_tick=0.01
+        sticky_widget, pixels_per_tick=100, value_per_tick=0.01, drag_widget=None
     ):
+    """
+
+    widget:
+    pixels_per_tick:
+    value_per_tick:
+    drag_widget (QWidget): Widget to use as the drag area.  By default
+        this will be the widget unless specified
+
+    """
+
     from cgwidgets.delegates import StickyValueAdjustWidgetDelegate
 
-    widget.setMouseTracking(True)
-    widget._dragging = False
-    widget._slider_pos = 0
-    # install event filter
-    event_filter = StickyValueAdjustWidgetDelegate(widget)
-    event_filter.setPixelsPerTick(pixels_per_tick)
-    event_filter.setValuePerTick(value_per_tick)
+    if not drag_widget:
+        drag_widget = sticky_widget
 
-    widget.installEventFilter(event_filter)
-    return event_filter
+    sticky_widget_data = {
+        'drag_widget': drag_widget,
+        'sticky_widget': sticky_widget
+    }
+
+    # create filter
+    sticky_widget_filter = StickyValueAdjustWidgetDelegate(sticky_widget)
+    sticky_widget_filter.setPixelsPerTick(pixels_per_tick)
+    sticky_widget_filter.setValuePerTick(value_per_tick)
+
+    for key in sticky_widget_data:
+        widget = sticky_widget_data[key]
+
+        widget.setMouseTracking(True)
+        widget._drag_STICKY = False
+        widget._slider_pos = 0
+        widget.installEventFilter(sticky_widget_filter)
+        widget._filter_STICKY = sticky_widget_filter
+
+    return sticky_widget_filter
 
 
 def installStickyValueAdjustItemDelegate(
@@ -162,28 +210,29 @@ def installStickyValueAdjustItemDelegate(
         StickyValueAdjustViewDelegate
     )
     # install view filter
+    # get view
     view = item.scene().views()[0]
+
+    # create/install view filter
     view_filter = StickyValueAdjustViewDelegate(view)
     view.installEventFilter(view_filter)
+
+    # setup extra attrs
     view.setMouseTracking(True)
-    view._dragging = False
+    view._drag_STICKY = False
     view._slider_pos = 0
     view_filter.setPixelsPerTick(pixels_per_tick)
     view_filter.setValuePerTick(value_per_tick)
 
-    # install event filters
+    # create/install item filter
     event_filter = StickyValueAdjustItemDelegate(item)
+    item.installSceneEventFilter(event_filter)
+
+    # setup extra attrs
     event_filter.setPixelsPerTick(pixels_per_tick)
     event_filter.setValuePerTick(value_per_tick)
+    item._filter_STICKY = event_filter
 
-    item.installSceneEventFilter(event_filter)
-    item.event_filter = event_filter
-
-
-    # view_filter = StickyValueAdjustViewDelegate()
-    # w.installEventFilter(view_filter)
-    # w.setMouseTracking(True)
-    # ef = installStickyValueAdjustItemDelegate(w.circle_item)
     return event_filter
 
 
