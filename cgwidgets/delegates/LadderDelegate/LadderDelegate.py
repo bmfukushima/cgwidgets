@@ -724,8 +724,6 @@ Args:
         return self.parent().getValue()
 
     def setValue(self, value):
-        #value += self.parent().middle_item.getValue()
-        #print(value)
         self.parent().setValue(value)
 
     """ UTILS """

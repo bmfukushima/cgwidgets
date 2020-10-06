@@ -151,11 +151,12 @@ def installLadderDelegate(
 
 """ STICKY VALUE DRAG"""
 def installStickyValueAdjustWidgetDelegate(
-        active_widget, pixels_per_tick=100, value_per_tick=0.01, drag_widget=None
+        active_widget, pixels_per_tick=200, value_per_tick=0.01, drag_widget=None, activation_widget=None
     ):
     """
 
-    widget:
+    active_widget (QWidget): widget to set the value on.
+    activation_widget (QWidget): widget when clicked on will start this delegate
     pixels_per_tick:
     value_per_tick:
     drag_widget (QWidget): Widget to use as the drag area.  By default
@@ -168,9 +169,13 @@ def installStickyValueAdjustWidgetDelegate(
     if not drag_widget:
         drag_widget = active_widget
 
+    if not activation_widget:
+        activation_widget = active_widget
+
     sticky_widget_data = {
         'drag_widget': drag_widget,
-        'active_widget': active_widget
+        'active_widget': active_widget,
+        'activation_widget': activation_widget
     }
 
     # create filter
@@ -198,7 +203,7 @@ def installStickyValueAdjustWidgetDelegate(
 
 
 def installStickyValueAdjustItemDelegate(
-        item, pixels_per_tick=200, value_per_tick=0.01
+        item, pixels_per_tick=200, value_per_tick=0.01, activation_item=None
     ):
     """
     Installs a delegate on the widget which makes it so when the user clicks.
@@ -208,7 +213,8 @@ def installStickyValueAdjustItemDelegate(
     Note:
         You MUST override the mouseMoveEvent() of the QGraphicsView and reject
         the event signal with event.reject()
-    item:
+    item (QGraphicsItem): Item to do adjustments on
+    activation_item (QGraphicsItem): item when clicked will activate the sticky drag
     pixels_per_tick:
     value_per_tick:
     """
@@ -216,9 +222,12 @@ def installStickyValueAdjustItemDelegate(
         StickyValueAdjustItemDelegate,
         StickyValueAdjustViewDelegate
     )
+    if not activation_item:
+        activation_item = item
+
     # install view filter
     # get view
-    view = item.scene().views()[0]
+    view = activation_item.scene().views()[0]
     view.setMouseTracking(True)
     view._drag_STICKY = False
     view._slider_pos = 0
@@ -231,13 +240,13 @@ def installStickyValueAdjustItemDelegate(
 
     # create/install item filter
     item_filter = StickyValueAdjustItemDelegate(item)
-    item.installSceneEventFilter(item_filter)
+    activation_item.installSceneEventFilter(item_filter)
 
     # setup extra attrs
     item_filter.setPixelsPerTick(pixels_per_tick)
     item_filter.setValuePerTick(value_per_tick)
-    item._filter_STICKY = item_filter
-
+    activation_item._filter_STICKY = item_filter
+    activation_item._filter_STICKY_item = item
     return view_filter, item_filter
 
 # def installStickyValueAdjustItemDelegate(

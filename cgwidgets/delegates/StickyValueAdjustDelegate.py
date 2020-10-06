@@ -165,8 +165,7 @@ class iStickyValueAdjustDelegate(object):
 
         # toggle cursor display
         if obj._drag_STICKY:
-            pass
-            #obj.setCursor(Qt.BlankCursor)
+            obj.setCursor(Qt.BlankCursor)
         else:
             obj.unsetCursor()
 
@@ -227,8 +226,9 @@ class StickyValueAdjustWidgetDelegate(QWidget, iStickyValueAdjustDelegate):
         # get widgets
         drag_widget = obj._sticky_widget_data['drag_widget']
         active_widget = obj._sticky_widget_data['active_widget']
+        activation_widget = obj._sticky_widget_data['activation_widget']
 
-        if obj == active_widget:
+        if obj == activation_widget:
             # activated by clicking on the activation widget
             if event.type() in iStickyValueAdjustDelegate.input_events:
                 self._updating = True
@@ -276,7 +276,7 @@ class StickyValueAdjustItemDelegate(QGraphicsItem, iStickyValueAdjustDelegate):
             if obj._drag_STICKY is False:
                 obj._drag_STICKY_updating = True
                 self.penDownEvent(obj)
-                obj._current_item = item
+                obj._current_item = item._filter_STICKY_item
 
         return False
 
@@ -304,6 +304,7 @@ class StickyValueAdjustViewDelegate(QWidget, iStickyValueAdjustDelegate):
                 obj._drag_STICKY = False
                 QCursor.setPos(obj._cursor_pos)
                 obj.unsetCursor()
+                delattr(obj, '_current_item')
                 return False
 
         # run event filter
@@ -348,7 +349,7 @@ class StickyValueAdjustViewDelegate(QWidget, iStickyValueAdjustDelegate):
 """ TESTING """
 from qtpy.QtWidgets import (
     QGraphicsView, QGraphicsScene, QGraphicsLineItem,
-QGraphicsEllipseItem
+QGraphicsEllipseItem, QGraphicsTextItem
 )
 from qtpy.QtGui import QColor, QBrush
 
@@ -375,6 +376,9 @@ class TestWidgetItem(QGraphicsView):
         self.circle_item = CenterManipulatorItem()
         self.circle_item.setRect(10, 10, 50, 50)
 
+        self.text_item = TextItem()
+
+        self.scene().addItem(self.text_item)
         self.scene().addItem(self.circle_item)
         self.scene().addItem(self.line_item)
 
@@ -421,13 +425,58 @@ class LineItem(QGraphicsLineItem):
         return self.value
 
 
+class TextItem(QGraphicsTextItem):
+    def __init__(self, parent=None):
+        super(TextItem, self).__init__(parent)
+        self.setValue("12.0")
+
+    def setValue(self, value):
+        self._value = float(value)
+        self.setPlainText(str(value))
+
+    def getValue(self):
+        return self._value
+
+def testWidget():
+   # double delegate use case
+
+    w = QWidget()
+    l = QVBoxLayout(w)
+    w2 = TestWidget()
+    w3 = QLabel('test')
+    l.addWidget(w2)
+    l.addWidget(w3)
+
+    # todo fix invisible widget not allowing clicking?
+    installInvisibleWidgetEvent(w2, activation_widget=w3)
+    ef = installStickyValueAdjustWidgetDelegate(w2, drag_widget=w3, activation_widget=w3)
+
+    # simple use case
+    ef = installStickyValueAdjustWidgetDelegate(w2)
+
+    #example user update functino
+    ef.setUserUpdateFunction(testUpdate)
+
+    ef.setValuePerTick(.001)
+    ef.setPixelsPerTick(50)
+
+    return w
+
+def testItem():
+    w = TestWidgetItem()
+    #ef = installStickyValueAdjustItemDelegate(w.text_item, activation_item=w.circle_item)
+    ef = installStickyValueAdjustItemDelegate(w.text_item)
+
+    return w
+
+
 if __name__ == '__main__':
     from qtpy.QtWidgets import QVBoxLayout
     from cgwidgets.utils import installInvisibleWidgetEvent
     from cgwidgets.utils import installStickyValueAdjustItemDelegate, installStickyValueAdjustWidgetDelegate
     app = QApplication(sys.argv)
-
     logging.basicConfig(level=logging.DEBUG)
+
 
     def testUpdate(obj, original_value, slider_pos, num_ticks):
         print('obj == %s'%obj)
@@ -435,24 +484,11 @@ if __name__ == '__main__':
         print('slider pos == %s'%slider_pos)
         print('num_ticks == %s'%num_ticks)
 
-    w = QWidget()
-    l = QVBoxLayout(w)
-    w2 = TestWidget()
-    l.addWidget(w2)
-    l.addWidget(QLabel("test"))
+    test_widget = testWidget()
+    test_view = testItem()
 
-    # todo fix invisible widget not allowing clicking?
-    #installInvisibleWidgetEvent(w2)
-    #ef = installStickyValueAdjustWidgetDelegate(w2, drag_widget=w)
-    ef = installStickyValueAdjustWidgetDelegate(w2)
-
-    #ef.setUserUpdateFunction(testUpdate)
-
-    # ef.setValuePerTick(.001)
-    # ef.setPixelsPerTick(50)
-
-    w.show()
-    w.move(QCursor.pos())
-    w.resize(100, 100)
+    test_view.show()
+    test_view.move(QCursor.pos())
+    test_view.resize(100, 100)
 
     sys.exit(app.exec_())
