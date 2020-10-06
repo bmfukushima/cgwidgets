@@ -151,6 +151,12 @@ class iStickyValueAdjustDelegate(object):
         self.__userUpdateFunction = userUpdateFunction
 
     def penDownEvent(self, obj):
+        """
+        This should be run every time the user clicks.
+
+        Args:
+            obj (QWidget / QItem): Object to install all of the extra attrs on
+        """
         obj._calc_pos = QCursor.pos()
         obj._cursor_pos = QCursor.pos()
         obj._drag_STICKY = not obj._drag_STICKY
@@ -202,6 +208,7 @@ class iStickyValueAdjustDelegate(object):
                 obj.unsetCursor()
                 obj._drag_STICKY = False
 
+
 class StickyValueAdjustWidgetDelegate(QWidget, iStickyValueAdjustDelegate):
     def __init__(self, parent=None, widget=None):
         super(StickyValueAdjustWidgetDelegate, self).__init__(parent)
@@ -212,7 +219,7 @@ class StickyValueAdjustWidgetDelegate(QWidget, iStickyValueAdjustDelegate):
 
     def eventFilter(self, obj, event, *args, **kwargs):
         # preflight
-        if event.type() == QEvent.MouseButtonPress:
+        if event.type() in self.input_events:
             if self._updating is True:
                 return False
 
@@ -232,6 +239,7 @@ class StickyValueAdjustWidgetDelegate(QWidget, iStickyValueAdjustDelegate):
             if event.type() in iStickyValueAdjustDelegate.input_events:
                 if drag_widget._drag_STICKY is False:
                     return False
+
             # run event
             self.stickyEventFilter(drag_widget, event, *args, **kwargs)
 
@@ -263,12 +271,13 @@ class StickyValueAdjustItemDelegate(QGraphicsItem, iStickyValueAdjustDelegate):
         # get event filter args
         item = obj
         obj = obj.scene().views()[0]
-        obj._current_item = item
+        if event.type() in self.input_events:
+            if obj._drag_STICKY is False:
+                obj._drag_STICKY_updating = True
+                self.penDownEvent(obj)
+                obj._current_item = item
 
-        # run event filter
-        self.stickyEventFilter(obj, event, *args, **kwargs)
-
-        return QGraphicsItem.sceneEventFilter(self, item, event, *args, **kwargs)
+        return False
 
 
 class StickyValueAdjustViewDelegate(QWidget, iStickyValueAdjustDelegate):
@@ -280,12 +289,22 @@ class StickyValueAdjustViewDelegate(QWidget, iStickyValueAdjustDelegate):
         self.setMouseTracking(True)
 
     def eventFilter(self, obj, event, *args, **kwargs):
+        # preflight
+        if not hasattr(obj, "_current_item"): return False
+
         # pen down
         if event.type() == QEvent.MouseButtonPress:
+            # Preflight
+            if obj._drag_STICKY_updating is True:
+                obj._drag_STICKY_updating = False
+                return False
+
+            # deactivate
             if obj._drag_STICKY is True:
                 obj._drag_STICKY = False
                 QCursor.setPos(obj._cursor_pos)
                 obj.unsetCursor()
+                delattr(obj, '_current_item')
                 return False
 
         # run event filter
@@ -410,8 +429,8 @@ if __name__ == '__main__':
 
     logging.basicConfig(level=logging.DEBUG)
 
-    w = TestWidgetItem()
-    ef = installStickyValueAdjustItemDelegate(w.circle_item)
+    # w = TestWidgetItem()
+    # ef = installStickyValueAdjustItemDelegate(w.circle_item)
 
     def testUpdate(obj, original_value, slider_pos, num_ticks):
         print('obj == %s'%obj)
@@ -419,14 +438,14 @@ if __name__ == '__main__':
         print('slider pos == %s'%slider_pos)
         print('num_ticks == %s'%num_ticks)
 
-    # w = QWidget()
-    # l = QVBoxLayout(w)
-    # w2 = TestWidget()
-    # l.addWidget(w2)
-    # l.addWidget(QLabel("test"))
-    #
-    # installInvisibleWidgetEvent(w2)
-    # ef = installStickyValueAdjustWidgetDelegate(w2, drag_widget=w)
+    w = QWidget()
+    l = QVBoxLayout(w)
+    w2 = TestWidget()
+    l.addWidget(w2)
+    l.addWidget(QLabel("test"))
+
+    installInvisibleWidgetEvent(w2)
+    ef = installStickyValueAdjustWidgetDelegate(w2, drag_widget=w)
 
     #ef.setUserUpdateFunction(testUpdate)
 

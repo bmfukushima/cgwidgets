@@ -318,14 +318,6 @@ Notes:
         elif boolean is False:
             self.removeEventFilter()
 
-        # for item in self.item_list:
-        #     if not isinstance(item, LadderMiddleItem):
-        #         if boolean is True:
-        #             #installInvisibleWidgetEvent(item, hide_widget=self)
-        #             installInvisibleWidgetEvent(self, activation_widget=item)
-        #         elif boolean is False:
-        #             item.removeEventFilter()
-
     """ COLORS """
     def updateStyleSheet(self):
         style_sheet_args = iColor.style_sheet_args
@@ -486,7 +478,7 @@ Notes:
 
             # install click/drag mechanism
             event_filter = installStickyValueAdjustWidgetDelegate(
-                widget, pixels_per_tick=self.getPixelsPerTick(), value_per_tick=value)
+                widget, pixels_per_tick=self.getPixelsPerTick(), value_per_tick=value, drag_widget=self.parent())
 
         self.__createMiddleItem()
 
