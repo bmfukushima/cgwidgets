@@ -198,7 +198,7 @@ def installStickyValueAdjustWidgetDelegate(
 
 
 def installStickyValueAdjustItemDelegate(
-        item, pixels_per_tick=100, value_per_tick=0.01
+        item, pixels_per_tick=200, value_per_tick=0.01
     ):
     """
     Installs a delegate on the widget which makes it so when the user clicks.

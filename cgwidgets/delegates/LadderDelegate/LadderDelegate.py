@@ -610,18 +610,18 @@ Notes:
         #         item.setGradientEnable(False)
         QFrame.enterEvent(self, event)
 
-    def leaveEvent(self, event, *args, **kwargs):
-        if self._drag_STICKY is True:
-            return QFrame.leaveEvent(self, event, *args, **kwargs)
+    # def leaveEvent(self, event, *args, **kwargs):
+    #     if self._drag_STICKY is True:
+    #         return QFrame.leaveEvent(self, event, *args, **kwargs)
+    #
+    #     self.hide()
+    #     return QFrame.leaveEvent(self, event, *args, **kwargs)
 
-        self.hide()
-        return QFrame.leaveEvent(self, event, *args, **kwargs)
-
-    def closeEvent(self, event, *args, **kwargs):
-        if self._drag_STICKY is True:
-            return
-
-        return QFrame.closeEvent(self, event, *args, **kwargs)
+    # def closeEvent(self, event, *args, **kwargs):
+    #     if self._drag_STICKY is True:
+    #         return
+    #
+    #     return QFrame.closeEvent(self, event, *args, **kwargs)
 
     def keyPressEvent(self, event, *args, **kwargs):
         if event.key() == Qt.Key_Escape:
@@ -720,8 +720,12 @@ Args:
                 item.setProperty('gradient_on', enable)
                 updateStyleSheet(item)
 
+    def getValue(self):
+        return self.parent().getValue()
+
     def setValue(self, value):
-        value += self.parent().middle_item.getValue()
+        #value += self.parent().middle_item.getValue()
+        #print(value)
         self.parent().setValue(value)
 
     """ UTILS """
@@ -731,32 +735,32 @@ Args:
         self.parent().updateStyleSheet()
 
     """ EVENTS """
-    def mousePressEvent(self, event):
-        """
-        Need to set some attrs on click to be called by other parts
-        """
-        # store original value
-        #elf._middle_orig_value =
-        self.parent()._drag_STICKY = self._drag_STICKY
-
-        # set up dragging property
-        self.setProperty('is_drag_STICKY', self._drag_STICKY)
-
-        # set up gradient drawing
-        if self._drag_STICKY is True:
-            self.setGradientEnable(True)
-        else:
-            self.setGradientEnable(False)
-
-        return QLabel.mousePressEvent(self, event)
-
-    def mouseMoveEvent(self, event):
-        self.__updateGradient()
-        return QLabel.mouseMoveEvent(self, event)
-
-    def leaveEvent(self, event):
-        self.__updateGradient()
-        return QLabel.leaveEvent(self, event)
+    # def mousePressEvent(self, event):
+    #     """
+    #     Need to set some attrs on click to be called by other parts
+    #     """
+    #     # store original value
+    #     #elf._middle_orig_value =
+    #     self.parent()._drag_STICKY = self._drag_STICKY
+    #
+    #     # set up dragging property
+    #     self.setProperty('is_drag_STICKY', self._drag_STICKY)
+    #
+    #     # set up gradient drawing
+    #     if self._drag_STICKY is True:
+    #         self.setGradientEnable(True)
+    #     else:
+    #         self.setGradientEnable(False)
+    #
+    #     return QLabel.mousePressEvent(self, event)
+    #
+    # def mouseMoveEvent(self, event):
+    #     self.__updateGradient()
+    #     return QLabel.mouseMoveEvent(self, event)
+    #
+    # def leaveEvent(self, event):
+    #     self.__updateGradient()
+    #     return QLabel.leaveEvent(self, event)
 
 
 def main():

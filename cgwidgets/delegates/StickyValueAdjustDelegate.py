@@ -59,7 +59,7 @@ class iStickyValueAdjustDelegate(object):
 
     def __init__(self, widget=None):
         #super(iStickyValueAdjustDelegate, self).__init__(parent)
-        self._pixels_per_tick = 100
+        self._pixels_per_tick = 200
         self._value_per_tick = 0.1
         self._updating = False
         self.widget = widget
@@ -125,7 +125,7 @@ class iStickyValueAdjustDelegate(object):
         """
         new_value = obj._num_ticks * self.valuePerTick()
         new_value += float(obj._orig_value)
-        logging.debug(new_value)
+        #logging.debug(new_value)
         self.widget.setValue(new_value)
 
     def __userUpdateFunction(self, obj, original_value, slider_pos, num_ticks):
@@ -165,8 +165,8 @@ class iStickyValueAdjustDelegate(object):
 
         # toggle cursor display
         if obj._drag_STICKY:
-            # TODO blank cursor
-            obj.setCursor(Qt.BlankCursor)
+            pass
+            #obj.setCursor(Qt.BlankCursor)
         else:
             obj.unsetCursor()
 
@@ -196,11 +196,11 @@ class iStickyValueAdjustDelegate(object):
                 offset = (current_pos - obj._cursor_pos)
                 obj._calc_pos = obj._calc_pos - offset
 
+                # reset cursor
+                QCursor.setPos(obj._cursor_pos)
+
                 # update value
                 self.__setValue(obj)
-
-                # reset cursor position back to initial click position
-                QCursor.setPos(obj._cursor_pos)
 
         # cancel event with escape key
         if event.type() == QEvent.KeyPress:
@@ -295,7 +295,6 @@ class StickyValueAdjustViewDelegate(QWidget, iStickyValueAdjustDelegate):
         # pen down
         if event.type() == QEvent.MouseButtonPress:
             # Preflight
-            # print(obj)
             if obj._drag_STICKY_updating is True:
                 obj._drag_STICKY_updating = False
                 return False
@@ -357,9 +356,10 @@ from qtpy.QtGui import QColor, QBrush
 class TestWidget(QLabel):
     def __init__(self, parent=None):
         super(TestWidget, self).__init__(parent)
-        self.setText('0')
+        self.setText('5')
 
     def setValue(self, value):
+        print(value)
         self.setText(str(value))
 
 
@@ -408,7 +408,7 @@ class CenterManipulatorItem(QGraphicsEllipseItem):
 class LineItem(QGraphicsLineItem):
     def __init__(self, parent=None):
         super(LineItem, self).__init__(parent)
-        self.setLine(0, 0, 25,25)
+        self.setLine(0, 0, 25, 25)
         self.value = 1
 
     def setColor(self, color=QColor(255, 0, 0)):
@@ -429,9 +429,6 @@ if __name__ == '__main__':
 
     logging.basicConfig(level=logging.DEBUG)
 
-    # w = TestWidgetItem()
-    # ef = installStickyValueAdjustItemDelegate(w.circle_item)
-
     def testUpdate(obj, original_value, slider_pos, num_ticks):
         print('obj == %s'%obj)
         print('original_value == %s'%original_value)
@@ -445,8 +442,9 @@ if __name__ == '__main__':
     l.addWidget(QLabel("test"))
 
     # todo fix invisible widget not allowing clicking?
-    installInvisibleWidgetEvent(w2)
-    ef = installStickyValueAdjustWidgetDelegate(w2, drag_widget=w)
+    #installInvisibleWidgetEvent(w2)
+    #ef = installStickyValueAdjustWidgetDelegate(w2, drag_widget=w)
+    ef = installStickyValueAdjustWidgetDelegate(w2)
 
     #ef.setUserUpdateFunction(testUpdate)
 
