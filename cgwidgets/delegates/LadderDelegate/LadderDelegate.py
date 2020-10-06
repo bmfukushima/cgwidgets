@@ -798,7 +798,7 @@ def main():
     ladder = installLadderDelegate(
         float_input
     )
-    #ladder.setInvisibleWidget(True)
+    ladder.setInvisibleWidget(True)
 
 
     #ladder.setDiscreteDrag(True, alignment=Qt.AlignLeft, depth=10, display_widget=w2)

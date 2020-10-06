@@ -211,8 +211,10 @@ def installStickyValueAdjustItemDelegate(
     adjust the value of this widget.
 
     Note:
-        You MUST override the mouseMoveEvent() of the QGraphicsView and reject
-        the event signal with event.reject()
+        You MUST override the mouseMoveEvent() and mouseReleaseEvent()
+        of the QGraphicsView and reject the event signal with event.reject().
+        Because for reasons, these signals do not get passed... and are blocked =\
+
     item (QGraphicsItem): Item to do adjustments on
     activation_item (QGraphicsItem): item when clicked will activate the sticky drag
     pixels_per_tick:
@@ -238,6 +240,7 @@ def installStickyValueAdjustItemDelegate(
     view_filter.setValuePerTick(value_per_tick)
     view.installEventFilter(view_filter)
 
+
     # create/install item filter
     item_filter = StickyValueAdjustItemDelegate(item)
     activation_item.installSceneEventFilter(item_filter)
@@ -245,54 +248,15 @@ def installStickyValueAdjustItemDelegate(
     # setup extra attrs
     item_filter.setPixelsPerTick(pixels_per_tick)
     item_filter.setValuePerTick(value_per_tick)
+
     activation_item._filter_STICKY = item_filter
     activation_item._filter_STICKY_item = item
-    return view_filter, item_filter
 
-# def installStickyValueAdjustItemDelegate(
-#         item, pixels_per_tick=100, value_per_tick=0.01
-#     ):
-#     """
-#     Installs a delegate on the widget which makes it so when the user clicks.
-#     It will hide the cursor and allow the user to move the mouse around to
-#     adjust the value of this widget.
-#
-#     Note:
-#         You MUST override the mouseMoveEvent() of the QGraphicsView and reject
-#         the event signal with event.reject()
-#     item:
-#     pixels_per_tick:
-#     value_per_tick:
-#     """
-#     from cgwidgets.delegates import (
-#         StickyValueAdjustItemDelegate,
-#         StickyValueAdjustViewDelegate
-#     )
-#     # install view filter
-#     # get view
-#     view = item.scene().views()[0]
-#
-#     # create/install view filter
-#     view_filter = StickyValueAdjustViewDelegate(view)
-#     view.installEventFilter(view_filter)
-#
-#     # setup extra attrs
-#     view.setMouseTracking(True)
-#     view._drag_STICKY = False
-#     view._slider_pos = 0
-#     view_filter.setPixelsPerTick(pixels_per_tick)
-#     view_filter.setValuePerTick(value_per_tick)
-#
-#     # create/install item filter
-#     event_filter = StickyValueAdjustItemDelegate(item)
-#     item.installSceneEventFilter(event_filter)
-#
-#     # setup extra attrs
-#     event_filter.setPixelsPerTick(pixels_per_tick)
-#     event_filter.setValuePerTick(value_per_tick)
-#     item._filter_STICKY = event_filter
-#
-#     return event_filter
+    if not hasattr(view, '_filter_STICKY_activation_list'):
+        view._filter_STICKY_activation_list = []
+    view._filter_STICKY_activation_list.append(activation_item)
+
+    return view_filter, item_filter
 
 
 if __name__ == '__main__':

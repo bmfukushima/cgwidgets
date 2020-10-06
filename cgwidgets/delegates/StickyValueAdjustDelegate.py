@@ -97,12 +97,6 @@ class iStickyValueAdjustDelegate(object):
                 orig_value = self.widget.text()
         return float(orig_value)
 
-    # def origValue(self):
-    #     return self._orig_value
-    #
-    # def setOrigValue(self, orig_value):
-    #     self._orig_value = orig_value
-
     """ VALUE UPDATERS / SETTERS"""
     def __setValue(self, obj):
         """
@@ -292,25 +286,27 @@ class StickyValueAdjustViewDelegate(QWidget, iStickyValueAdjustDelegate):
     def eventFilter(self, obj, event, *args, **kwargs):
         # preflight
         if not hasattr(obj, "_current_item"): return False
+
         # pen down
         if event.type() == QEvent.MouseButtonPress:
             # Preflight
-            if obj._drag_STICKY_updating is True:
-                obj._drag_STICKY_updating = False
-                return False
+            if obj._drag_STICKY_updating is True: return False
 
             # deactivate
             if obj._drag_STICKY is True:
+                if obj._drag_STICKY_updating is True: return False
                 obj._drag_STICKY = False
                 QCursor.setPos(obj._cursor_pos)
                 obj.unsetCursor()
                 delattr(obj, '_current_item')
                 return False
 
+        if event.type() == QEvent.MouseButtonRelease:
+            obj._drag_STICKY_updating = False
+
         # run event filter
         self.stickyEventFilter(obj, event, *args, **kwargs)
         return False
-        #return QWidget.eventFilter(self, obj, event, *args, **kwargs)
 
     """ OVERLOADED FUNCTIONS"""
     def getOrigValue(self):
@@ -351,7 +347,7 @@ from qtpy.QtWidgets import (
     QGraphicsView, QGraphicsScene, QGraphicsLineItem,
 QGraphicsEllipseItem, QGraphicsTextItem
 )
-from qtpy.QtGui import QColor, QBrush
+from qtpy.QtGui import QColor, QBrush, QPen
 
 
 class TestWidget(QLabel):
@@ -373,6 +369,9 @@ class TestWidgetItem(QGraphicsView):
         self.line_item = LineItem()
         self.line_item.setLine(0, 0, 10, 10)
 
+        self.line_item2 = LineItem()
+        self.line_item2.setLine(30, 30, 40, 40)
+
         self.circle_item = CenterManipulatorItem()
         self.circle_item.setRect(10, 10, 50, 50)
 
@@ -381,9 +380,14 @@ class TestWidgetItem(QGraphicsView):
         self.scene().addItem(self.text_item)
         self.scene().addItem(self.circle_item)
         self.scene().addItem(self.line_item)
+        self.scene().addItem(self.line_item2)
 
         self.scene().setSceneRect(0,0,100,100)
         self.setMouseTracking(True)
+
+    def mouseReleaseEvent(self, event):
+        event.ignore()
+        QGraphicsView.mouseReleaseEvent(self, event)
 
     def mouseMoveEvent(self, event):
         event.ignore()
@@ -414,6 +418,23 @@ class LineItem(QGraphicsLineItem):
         super(LineItem, self).__init__(parent)
         self.setLine(0, 0, 25, 25)
         self.value = 1
+        self.setSize(15, 15)
+
+    def setSize(self, width, height, hand_width=4):
+        """
+        width (int): this is how wide the slider is.  This is the length
+            parallel to the hand
+        height (int): how tall the slider is, this is the size going down
+            the same axis as the hand
+        """
+
+        self.setLine(
+            (-width * 0.5) - (hand_width * 2), 0,
+            width + hand_width, 0
+        )
+        pen = QPen()
+        pen.setWidth(height)
+        self.setPen(pen)
 
     def setColor(self, color=QColor(255, 0, 0)):
         self.setBrush(QBrush(color))
@@ -436,6 +457,7 @@ class TextItem(QGraphicsTextItem):
 
     def getValue(self):
         return self._value
+
 
 def testWidget():
    # double delegate use case
@@ -462,11 +484,12 @@ def testWidget():
 
     return w
 
+
 def testItem():
     w = TestWidgetItem()
     #ef = installStickyValueAdjustItemDelegate(w.text_item, activation_item=w.circle_item)
-    ef = installStickyValueAdjustItemDelegate(w.text_item)
-
+    ef = installStickyValueAdjustItemDelegate(w.line_item, pixels_per_tick=100, value_per_tick=0.01)
+    ef = installStickyValueAdjustItemDelegate(w.line_item2, pixels_per_tick=100, value_per_tick=0.01)
     return w
 
 
@@ -485,6 +508,10 @@ if __name__ == '__main__':
         print('num_ticks == %s'%num_ticks)
 
     test_widget = testWidget()
+    test_widget.show()
+    test_widget.move(QCursor.pos())
+    test_widget.resize(100, 100)
+
     test_view = testItem()
 
     test_view.show()

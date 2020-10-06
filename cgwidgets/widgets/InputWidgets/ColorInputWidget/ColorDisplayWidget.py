@@ -530,6 +530,10 @@ class ClockDisplayView(QGraphicsView):
 
         return QGraphicsView.resizeEvent(self, *args, **kwargs)
 
+    def mouseReleaseEvent(self, event):
+        event.ignore()
+        QGraphicsView.mouseReleaseEvent(self, event)
+
     def mouseMoveEvent(self, event):
         event.ignore()
         QGraphicsView.mouseMoveEvent(self, event)
