@@ -73,7 +73,7 @@ Args:
                     width = hide_widget.width()
                     height = hide_widget.height()
                     region = QRegion(0, 0, width, height)
-                    hide_widget.setMask(region)
+                    hide_widget.setMask(QRegion())
 
         if event.type() == QEvent.MouseButtonRelease:
             self._updating = False

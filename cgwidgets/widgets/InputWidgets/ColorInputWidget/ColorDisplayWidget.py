@@ -814,7 +814,7 @@ class ClockHandCrosshairItem(QGraphicsLineItem):
     """
     def __init__(self, parent=None):
         super(ClockHandCrosshairItem, self).__init__(parent)
-        self.setSize(15, 6)
+        self.setSize(15, 15)
 
     def setSize(self, width, height, hand_width=4):
         """
@@ -871,6 +871,8 @@ class CenterManipulatorItem(QGraphicsEllipseItem):
 
 
 if __name__ == '__main__':
+    import logging
+    logging.basicConfig(level=logging.DEBUG)
     app = QApplication(sys.argv)
     color_widget = ClockDisplayWidget()
     color_widget.setColor(QColor(255, 255, 128))

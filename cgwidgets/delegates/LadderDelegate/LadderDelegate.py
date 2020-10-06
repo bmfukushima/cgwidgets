@@ -477,9 +477,10 @@ Notes:
             self.item_list.append(widget)
 
             # install click/drag mechanism
+            # event_filter = installStickyValueAdjustWidgetDelegate(
+            #     widget, pixels_per_tick=self.getPixelsPerTick(), value_per_tick=value, drag_widget=self.parent())
             event_filter = installStickyValueAdjustWidgetDelegate(
-                widget, pixels_per_tick=self.getPixelsPerTick(), value_per_tick=value, drag_widget=self.parent())
-
+                widget, pixels_per_tick=self.getPixelsPerTick(), value_per_tick=value)
         self.__createMiddleItem()
 
     def __createMiddleItem(self):
@@ -720,7 +721,7 @@ Args:
                 updateStyleSheet(item)
 
     def setValue(self, value):
-        value += self._middle_orig_value
+        value += self.parent().middle_item.getValue()
         self.parent().setValue(value)
 
     """ UTILS """
@@ -735,7 +736,7 @@ Args:
         Need to set some attrs on click to be called by other parts
         """
         # store original value
-        self._middle_orig_value = self.parent().middle_item.getValue()
+        #elf._middle_orig_value =
         self.parent()._drag_STICKY = self._drag_STICKY
 
         # set up dragging property
@@ -795,7 +796,7 @@ def main():
     ladder = installLadderDelegate(
         float_input
     )
-    ladder.setInvisibleWidget(True)
+    #ladder.setInvisibleWidget(True)
 
 
     #ladder.setDiscreteDrag(True, alignment=Qt.AlignLeft, depth=10, display_widget=w2)

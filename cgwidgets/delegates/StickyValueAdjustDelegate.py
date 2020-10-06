@@ -223,6 +223,7 @@ class StickyValueAdjustWidgetDelegate(QWidget, iStickyValueAdjustDelegate):
             if self._updating is True:
                 return False
 
+        if not hasattr(obj, '_sticky_widget_data'): return False
         # get widgets
         drag_widget = obj._sticky_widget_data['drag_widget']
         active_widget = obj._sticky_widget_data['active_widget']
@@ -291,10 +292,10 @@ class StickyValueAdjustViewDelegate(QWidget, iStickyValueAdjustDelegate):
     def eventFilter(self, obj, event, *args, **kwargs):
         # preflight
         if not hasattr(obj, "_current_item"): return False
-
         # pen down
         if event.type() == QEvent.MouseButtonPress:
             # Preflight
+            # print(obj)
             if obj._drag_STICKY_updating is True:
                 obj._drag_STICKY_updating = False
                 return False
@@ -304,13 +305,12 @@ class StickyValueAdjustViewDelegate(QWidget, iStickyValueAdjustDelegate):
                 obj._drag_STICKY = False
                 QCursor.setPos(obj._cursor_pos)
                 obj.unsetCursor()
-                delattr(obj, '_current_item')
                 return False
 
         # run event filter
         self.stickyEventFilter(obj, event, *args, **kwargs)
-
-        return QWidget.eventFilter(self, obj, event, *args, **kwargs)
+        return False
+        #return QWidget.eventFilter(self, obj, event, *args, **kwargs)
 
     """ OVERLOADED FUNCTIONS"""
     def getOrigValue(self):
@@ -328,6 +328,7 @@ class StickyValueAdjustViewDelegate(QWidget, iStickyValueAdjustDelegate):
                     orig_value = self.widget._current_item.text()
                 except AttributeError:
                     logging.WARNING("cannot find a default value, returning 1.0")
+
                     orig_value = 1.0
         return float(orig_value)
 
@@ -357,6 +358,7 @@ class TestWidget(QLabel):
     def __init__(self, parent=None):
         super(TestWidget, self).__init__(parent)
         self.setText('0')
+
     def setValue(self, value):
         self.setText(str(value))
 
@@ -367,7 +369,7 @@ class TestWidgetItem(QGraphicsView):
         scene = QGraphicsScene()
         self.setScene(scene)
 
-        self.line_item = QGraphicsLineItem()
+        self.line_item = LineItem()
         self.line_item.setLine(0, 0, 10, 10)
 
         self.circle_item = CenterManipulatorItem()
@@ -377,8 +379,6 @@ class TestWidgetItem(QGraphicsView):
         self.scene().addItem(self.line_item)
 
         self.scene().setSceneRect(0,0,100,100)
-
-
         self.setMouseTracking(True)
 
     def mouseMoveEvent(self, event):
@@ -407,8 +407,8 @@ class CenterManipulatorItem(QGraphicsEllipseItem):
 
 class LineItem(QGraphicsLineItem):
     def __init__(self, parent=None):
-        super(CenterManipulatorItem, self).__init__(parent)
-        self.setLine(0,0, 25,25)
+        super(LineItem, self).__init__(parent)
+        self.setLine(0, 0, 25,25)
         self.value = 1
 
     def setColor(self, color=QColor(255, 0, 0)):
@@ -444,6 +444,7 @@ if __name__ == '__main__':
     l.addWidget(w2)
     l.addWidget(QLabel("test"))
 
+    # todo fix invisible widget not allowing clicking?
     installInvisibleWidgetEvent(w2)
     ef = installStickyValueAdjustWidgetDelegate(w2, drag_widget=w)
 
