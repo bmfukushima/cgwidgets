@@ -282,7 +282,7 @@ Notes:
 
         # create new slide bar
         if not display_widget:
-            display_widget = self.parent().parent()
+            self.display_widget = self.parent().parent()
 
         if boolean is True:
             self.__setSlideBar(
@@ -290,7 +290,7 @@ Notes:
                 depth=depth,
                 alignment=alignment,
                 breed=breed,
-                display_widget=display_widget
+                display_widget=self.display_widget
             )
 
     def setInvisibleCursor(self, boolean):
@@ -312,6 +312,7 @@ Notes:
         When the mouse is click/dragged in each individual
         item, ladder will dissapear from view.
         """
+
         if boolean is True:
             # installInvisibleWidgetEvent(item, hide_widget=self)
             installInvisibleWidgetEvent(self)
@@ -477,10 +478,10 @@ Notes:
             self.item_list.append(widget)
 
             # install click/drag mechanism
-            # event_filter = installStickyValueAdjustWidgetDelegate(
-            #     widget, pixels_per_tick=self.getPixelsPerTick(), value_per_tick=value, drag_widget=self.parent())
-            event_filter = installStickyValueAdjustWidgetDelegate(
-                widget, pixels_per_tick=self.getPixelsPerTick(), value_per_tick=value)
+            installStickyValueAdjustWidgetDelegate(
+                widget, pixels_per_tick=self.getPixelsPerTick(), value_per_tick=value, drag_widget=self.parent().parent()
+            )
+
         self.__createMiddleItem()
 
     def __createMiddleItem(self):
@@ -616,7 +617,7 @@ Notes:
     #
     #     self.hide()
     #     return QFrame.leaveEvent(self, event, *args, **kwargs)
-
+    #
     # def closeEvent(self, event, *args, **kwargs):
     #     if self._drag_STICKY is True:
     #         return
@@ -636,9 +637,11 @@ Notes:
         if self.getValue() is None:
             # print('This widgets like numbers. Not whatever you put in here.')
             return QWidget.eventFilter(self, obj, event, *args, **kwargs)
+
         if self.parent().selectionLength() == 0:
             if event.type() == self.getUserInputTrigger():
                 self.show()
+
         return QFrame.eventFilter(self, obj, event, *args, **kwargs)
 
 
@@ -731,34 +734,6 @@ Args:
         slider_pos = math.fabs(self._slider_pos)
         self.parent().slider_pos = slider_pos
         self.parent().updateStyleSheet()
-
-    """ EVENTS """
-    # def mousePressEvent(self, event):
-    #     """
-    #     Need to set some attrs on click to be called by other parts
-    #     """
-    #     # store original value
-    #     #elf._middle_orig_value =
-    #     self.parent()._drag_STICKY = self._drag_STICKY
-    #
-    #     # set up dragging property
-    #     self.setProperty('is_drag_STICKY', self._drag_STICKY)
-    #
-    #     # set up gradient drawing
-    #     if self._drag_STICKY is True:
-    #         self.setGradientEnable(True)
-    #     else:
-    #         self.setGradientEnable(False)
-    #
-    #     return QLabel.mousePressEvent(self, event)
-    #
-    # def mouseMoveEvent(self, event):
-    #     self.__updateGradient()
-    #     return QLabel.mouseMoveEvent(self, event)
-    #
-    # def leaveEvent(self, event):
-    #     self.__updateGradient()
-    #     return QLabel.leaveEvent(self, event)
 
 
 def main():

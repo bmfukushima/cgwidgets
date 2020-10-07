@@ -98,7 +98,7 @@ class DualColoredLineSegment(QGraphicsItemGroup):
         spacing (int): how much space in pixels are between each line segment
     """
 
-    def __init__(self, parent=None, width=1, color1=QColor(0, 0, 0), color2=QColor(1, 1, 1)):
+    def __init__(self, parent=None, width=1, color1=QColor(0, 0, 0), color2=QColor(255, 255, 255)):
         super(DualColoredLineSegment, self).__init__(parent)
 
         # create lines
@@ -111,7 +111,7 @@ class DualColoredLineSegment(QGraphicsItemGroup):
 
         # set pen
         self.setColor1(color1)
-        self.setColor1(color2)
+        self.setColor2(color2)
 
         # add lines to group
         self.addToGroup(self.line_1)
@@ -135,7 +135,7 @@ class DualColoredLineSegment(QGraphicsItemGroup):
         Args:
             color (QColor): color for the line to be set to
         """
-        pen = self.createPen(color)
+        pen = self.createPen(color, offset=True)
         self.line_2.setPen(pen)
 
     def updatePen(self):
@@ -146,18 +146,24 @@ class DualColoredLineSegment(QGraphicsItemGroup):
             pen.setWidth(self.width)
             line.setPen(pen)
 
-    def createPen(self, color):
+    def createPen(self, color, offset=None):
         """
         Creates a pen of the color specified
 
         Args:
             color (QColor): color for the line to be set to
+            offset (bool): if color should be offset or not.
+                Since this is only two colors, this can be a boolean, rather
+                than an index.
         """
         pen = QPen()
         pen.setColor(color)
         total_line_space = self.length() + (2 * self.spacing())
+        if offset:
+            pen.setDashOffset(self.length() + self.spacing())
         pen.setDashPattern([self.length(), total_line_space])
         pen.setWidth(self.width)
+
         return pen
 
     def setLine(self, x, y, width, height):
@@ -193,9 +199,16 @@ if __name__ == '__main__':
     s = QGraphicsScene()
     v.setSceneRect(0,0,200,200)
     v.setScene(s)
+    # GRADIENT
     g = drawColorTypeGradient(attrs.HUE, 100, 100)
     g.setFinalStop(0,300)
     s.setBackgroundBrush(QBrush(g))
+
+    #LINE
+    l = DualColoredLineSegment()
+    l.setLine(0,0,300,300)
+    s.addItem(l)
+
     v.show()
     v.move(QCursor.pos())
     sys.exit(app.exec_())

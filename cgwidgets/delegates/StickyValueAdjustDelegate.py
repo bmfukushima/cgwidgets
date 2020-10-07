@@ -14,7 +14,7 @@ from qtpy.QtWidgets import (
 )
 from qtpy.QtGui import QCursor
 
-from cgwidgets.utils import getMagnitude
+from cgwidgets.utils import getMagnitude, getTopLeftPos
 
 
 class iStickyValueAdjustDelegate(object):
@@ -151,8 +151,14 @@ class iStickyValueAdjustDelegate(object):
         Args:
             obj (QWidget / QItem): Object to install all of the extra attrs on
         """
-        obj._calc_pos = QCursor.pos()
         obj._cursor_pos = QCursor.pos()
+
+        top_left = getTopLeftPos(obj)
+        QCursor.setPos(top_left + QPoint(10,10))
+        obj.setFocus()
+
+        obj._calc_pos = QCursor.pos()
+        # obj._cursor_pos = QCursor.pos()
         obj._drag_STICKY = not obj._drag_STICKY
         obj._num_ticks = 0
         obj._orig_value = self.getOrigValue()
@@ -213,6 +219,7 @@ class StickyValueAdjustWidgetDelegate(QWidget, iStickyValueAdjustDelegate):
     def eventFilter(self, obj, event, *args, **kwargs):
         # preflight
         if event.type() in self.input_events:
+            print('input %s'%obj)
             if self._updating is True:
                 return False
 
@@ -222,6 +229,7 @@ class StickyValueAdjustWidgetDelegate(QWidget, iStickyValueAdjustDelegate):
         active_widget = obj._sticky_widget_data['active_widget']
         activation_widget = obj._sticky_widget_data['activation_widget']
 
+        # activate
         if obj == activation_widget:
             # activated by clicking on the activation widget
             if event.type() in iStickyValueAdjustDelegate.input_events:
@@ -356,7 +364,6 @@ class TestWidget(QLabel):
         self.setText('5')
 
     def setValue(self, value):
-        print(value)
         self.setText(str(value))
 
 
@@ -470,14 +477,17 @@ def testWidget():
     l.addWidget(w3)
 
     # todo fix invisible widget not allowing clicking?
-    installInvisibleWidgetEvent(w2, activation_widget=w3)
-    ef = installStickyValueAdjustWidgetDelegate(w2, drag_widget=w3, activation_widget=w3)
+    #installInvisibleWidgetEvent(w2, activation_widget=w3)
+    #ef = installStickyValueAdjustWidgetDelegate(w2, drag_widget=w3, activation_widget=w3)
 
     # simple use case
+
+
+    #installInvisibleWidgetEvent(w2)
     ef = installStickyValueAdjustWidgetDelegate(w2)
 
-    #example user update functino
-    ef.setUserUpdateFunction(testUpdate)
+    # #example user update functino
+    # ef.setUserUpdateFunction(testUpdate)
 
     ef.setValuePerTick(.001)
     ef.setPixelsPerTick(50)
@@ -512,10 +522,10 @@ if __name__ == '__main__':
     test_widget.move(QCursor.pos())
     test_widget.resize(100, 100)
 
-    test_view = testItem()
-
-    test_view.show()
-    test_view.move(QCursor.pos())
-    test_view.resize(100, 100)
+    # test_view = testItem()
+    #
+    # test_view.show()
+    # test_view.move(QCursor.pos())
+    # test_view.resize(100, 100)
 
     sys.exit(app.exec_())
