@@ -564,15 +564,9 @@ class ColorGraphicsScene(QGraphicsScene):
             _gradient.setFinalStop(QPoint(0, self.height()))
 
         if self.gradient_type == attrs.RGBA:
-            # TODO Update value of foreground gradient
             """
             for some reason the darker it gets the harder of a time the picker has
             and the steps become larger and larger =/
-    
-            something with update cross hair pos?
-    
-            141 setColor
-            self.setRGBACrosshairPositionFromColor(color)
             """
             # get value
             main_widget = getWidgetAncestorByName(self, "ColorInputWidget")

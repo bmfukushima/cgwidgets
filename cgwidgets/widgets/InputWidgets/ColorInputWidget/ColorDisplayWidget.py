@@ -317,7 +317,7 @@ class ClockDisplayWidget(QWidget):
         color_display_widget = getWidgetAncestorByName(self, "ColorInputWidget")
         if color_display_widget:
             color_display_widget.setCurrentIndex(1)
-        return QLabel.enterEvent(self, *args, **kwargs)
+        return QWidget.enterEvent(self, *args, **kwargs)
 
     def showEvent(self, event):
         self.updateDisplay()

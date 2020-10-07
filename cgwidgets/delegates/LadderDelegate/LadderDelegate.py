@@ -638,7 +638,14 @@ Notes:
             # print('This widgets like numbers. Not whatever you put in here.')
             return QWidget.eventFilter(self, obj, event, *args, **kwargs)
 
-        if self.parent().selectionLength() == 0:
+        # TODO: LEGACY PYQT
+        # will only need the else clause
+        # the rest of it is just a hack to make it work in katana =\
+        if hasattr(self.parent(), 'selectionLength'):
+            if self.parent().selectionLength() == 0:
+                if event.type() == self.getUserInputTrigger():
+                    self.show()
+        else:
             if event.type() == self.getUserInputTrigger():
                 self.show()
 

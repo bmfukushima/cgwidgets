@@ -79,16 +79,48 @@ class ColorInputWidget(QStackedWidget):
     def __name__(self):
         return "ColorInputWidget"
 
-    """ API """
-    def setRGBACrosshairPosition(self, pos):
+    """ VIRTUAL FUNCTION """
+    def setUserInput(self, function):
         """
-        Interface to set the cross hair position on the scene
+        Sets the function to be run everytime this widget updates:
 
         Args:
-            pos (QPoint):
+            function (function) that will be run every time that this input updates
+                the color.  This function should take two args
+                    QWidget, QColor
+                where the QWidget will be the QWidget that is defined in this input
+                as the current active widget
+
         """
-        scene = self.getScene()
-        scene.setRGBACrosshairPos(pos)
+        self.__user_input_function = function
+
+    def getUserInputFunction(self):
+        return self.__user_input_function
+
+    def __user_input_function(self, widget, color):
+        """
+        """
+        pass
+
+    """ API """
+    def setActiveWidget(self, widget):
+        """
+        Sets the current widget of this widget to the one provided.  This will
+        update the display border, as well as the crosshair position in the
+        gradient widget.
+
+        Args:
+            widget (QWidget): widget to be set to the constructor
+
+        TODO:
+            Add user trigger event here
+        """
+        self._widget = widget
+
+    def getActiveWidget(self):
+        if not hasattr(self, '_widget'):
+            self._widget = QColor()
+        return self._widget
 
     def setColor(self, color):
         """
@@ -117,6 +149,10 @@ class ColorInputWidget(QStackedWidget):
             # set new value
             value = new_color_args[color_arg]
             widget.setValue(value)
+
+        # update user set function
+        user_function = self.getUserInputFunction()
+        user_function(self, color)
 
     def getColor(self):
         if not hasattr(self, '_color'):
@@ -186,13 +222,28 @@ class ColorInputWidget(QStackedWidget):
 """ DISPLAY LABELS"""
 
 
+
 if __name__ == '__main__':
+    from qtpy.QtWidgets import QWidget, QVBoxLayout
+
     app = QApplication(sys.argv)
+    mw = QWidget()
+    l = QVBoxLayout(mw)
+    test_label = QLabel('lkjasdf')
+
+    def test(widget, color):
+        test_label.setText(repr(color.getRgb()))
+
     color_widget = ColorInputWidget()
+    color_widget.setUserInput(test)
     #color_widget.setLinearCrosshairDirection(Qt.Vertical)
     color_widget.setDisplayLocation(position=attrs.NORTH)
-    color_widget.show()
-    color_widget.move(QCursor.pos())
+
+    l.addWidget(test_label)
+    l.addWidget(color_widget)
+
+    mw.show()
+    mw.move(QCursor.pos())
     sys.exit(app.exec_())
 
 
