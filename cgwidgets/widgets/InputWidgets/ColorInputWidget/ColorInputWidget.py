@@ -75,6 +75,7 @@ class ColorInputWidget(QStackedWidget):
         default_color = QColor()
         default_color.setRgbF(0.5, 0.5, 1.0, 1.0)
         self.setColor(default_color)
+        self.setMinimumWidth(30)
 
     def __name__(self):
         return "ColorInputWidget"
@@ -217,9 +218,6 @@ class ColorInputWidget(QStackedWidget):
     @border_width.setter
     def border_width(self, border_width):
         self._border_width = border_width
-
-
-""" DISPLAY LABELS"""
 
 
 if __name__ == '__main__':

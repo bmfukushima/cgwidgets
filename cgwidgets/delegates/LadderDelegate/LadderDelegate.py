@@ -611,6 +611,10 @@ Notes:
         #         item.setGradientEnable(False)
         QFrame.enterEvent(self, event)
 
+    # TODO
+    # add this mechanism back in
+    # essentially the _drag_STICKY should be on the obj now?
+    # so how do I get it back here?
     # def leaveEvent(self, event, *args, **kwargs):
     #     if self._drag_STICKY is True:
     #         return QFrame.leaveEvent(self, event, *args, **kwargs)

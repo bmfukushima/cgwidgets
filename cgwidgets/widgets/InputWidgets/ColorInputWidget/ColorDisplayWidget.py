@@ -506,7 +506,8 @@ class ColorGradientHeaderWidgetItem(AbstractInputGroup):
 class ClockDisplayView(QGraphicsView):
     def __init__(self, parent=None):
         super(ClockDisplayView, self).__init__(parent)
-
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.scene().createHands()
 
     def resizeEvent(self, *args, **kwargs):
@@ -514,6 +515,7 @@ class ClockDisplayView(QGraphicsView):
         allow widget to resize with the rectangle...
         """
         # update scene rect
+        print('resizing?')
         rect = self.geometry()
         self.scene().setSceneRect(
             rect.topLeft().x(),
