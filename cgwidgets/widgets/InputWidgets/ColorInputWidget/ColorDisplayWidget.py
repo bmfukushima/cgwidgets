@@ -515,7 +515,6 @@ class ClockDisplayView(QGraphicsView):
         allow widget to resize with the rectangle...
         """
         # update scene rect
-        print('resizing?')
         rect = self.geometry()
         self.scene().setSceneRect(
             rect.topLeft().x(),
