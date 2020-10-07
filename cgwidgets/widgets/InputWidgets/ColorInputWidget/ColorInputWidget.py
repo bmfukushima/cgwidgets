@@ -222,7 +222,6 @@ class ColorInputWidget(QStackedWidget):
 """ DISPLAY LABELS"""
 
 
-
 if __name__ == '__main__':
     from qtpy.QtWidgets import QWidget, QVBoxLayout
 

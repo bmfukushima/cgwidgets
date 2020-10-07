@@ -195,13 +195,19 @@ class ColorGraphicsView(QGraphicsView):
             main_widget = getWidgetAncestorByName(self, "ColorInputWidget")
             color = main_widget.getColor()
             pos = QPoint(0, 0)
-            if modifiers == Qt.AltModifier:
+
+            # TODO Check hack after upgrading to 5.15
+            # katana is not registering the alt + mmb?
+            if modifiers in [Qt.AltModifier, Qt.ControlModifier]:
+                # RED
                 if button == Qt.LeftButton:
                     pos = QPoint(color.redF() * self.width(), color.redF() * self.height())
                     self.scene().gradient_type = attrs.RED
+                # GREEN
                 elif button == Qt.MiddleButton:
                     pos = QPoint(color.greenF() * self.width(), color.greenF() * self.height())
                     self.scene().gradient_type = attrs.GREEN
+                # BLUE
                 elif button == Qt.RightButton:
                     pos = QPoint(color.blueF() * self.width(), color.blueF() * self.height())
                     self.scene().gradient_type = attrs.BLUE
@@ -212,9 +218,11 @@ class ColorGraphicsView(QGraphicsView):
                     self.__hideRGBACrosshair(False)
                     self.__hideLinearCrosshair(True)
                     self.scene().gradient_type = attrs.RGBA
+                # VALUE
                 elif button == Qt.MiddleButton:
                     pos = QPoint(color.valueF() * self.width(), color.valueF() * self.height())
                     self.scene().gradient_type = attrs.VALUE
+                # SATURATION
                 elif button == Qt.RightButton:
                     pos = QPoint(color.saturationF() * self.width(), color.saturationF() * self.height())
                     self.scene().gradient_type = attrs.SATURATION
