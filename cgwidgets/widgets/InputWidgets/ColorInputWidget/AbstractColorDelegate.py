@@ -47,8 +47,7 @@ class AbstractColorDelegate(QWidget):
             color (QColor):
         """
         self._color = color
-        self.scene.center_manipulator_item.setColor(color)
-        self.scene.update()
+        # TODO will need this for the Clock Delegate
         self.updateDisplay()
 
     def setColorArgValue(self, arg, value):
@@ -93,3 +92,7 @@ class AbstractColorDelegate(QWidget):
 
         # set color from an arg value
         self.setColor(orig_color)
+
+    def updateDisplay(self):
+        """ This will need to be overwritten"""
+        pass

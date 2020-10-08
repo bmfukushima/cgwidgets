@@ -153,29 +153,6 @@ class ClockDisplayWidget(AbstractColorDelegate):
         # set color from an arg value
         self.setColor(orig_color)
 
-    def updateDisplay(self):
-        """
-        Updates the entire display based off of the current color.
-        This will update the
-            * hands
-            * header
-
-        color (QColor): color to update the display to
-        """
-        color_args_dict = getHSVRGBAFloatFromColor(self._color)
-        # update headers
-        self.rgba_header_widget.updateUserInputs(color_args_dict)
-        self.hsv_header_widget.updateUserInputs(color_args_dict)
-
-        # update hands
-        for color_arg in color_args_dict:
-            # get value widget
-            value = color_args_dict[color_arg]
-
-            # set hand widget
-            hand_widget = self.scene.hands_items[color_arg]
-            hand_widget.setValue(value)
-
     """ UTILS """
     def _createHeaderWidgetItems(self):
         self.rgba_header_widget = ClockHeaderWidget(self)
@@ -320,6 +297,31 @@ class ClockDisplayWidget(AbstractColorDelegate):
         self.updateDisplay()
         return QWidget.showEvent(self, event)
 
+    def updateDisplay(self):
+        """
+        Updates the entire display based off of the current color.
+        This will update the
+            * hands
+            * header
+
+        color (QColor): color to update the display to
+        """
+        self.scene.center_manipulator_item.setColor(self._color)
+        self.scene.update()
+
+        color_args_dict = getHSVRGBAFloatFromColor(self._color)
+        # update headers
+        self.rgba_header_widget.updateUserInputs(color_args_dict)
+        self.hsv_header_widget.updateUserInputs(color_args_dict)
+
+        # update hands
+        for color_arg in color_args_dict:
+            # get value widget
+            value = color_args_dict[color_arg]
+
+            # set hand widget
+            hand_widget = self.scene.hands_items[color_arg]
+            hand_widget.setValue(value)
 
 class ClockHeaderWidget(QFrame):
     """

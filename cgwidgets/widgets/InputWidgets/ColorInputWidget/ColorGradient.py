@@ -20,7 +20,7 @@ from cgwidgets.widgets.AbstractWidgets import AbstractInputGroup
 from cgwidgets.settings.colors import iColor
 
 from cgwidgets.widgets.InputWidgets.ColorInputWidget import (
-    ColorPickerItem1D, ColorHeaderWidgetItem, AbstractColorDelegate
+    ColorPickerItem1D, ColorGradientHeaderWidget, ColorHeaderWidgetItem, AbstractColorDelegate
 )
 
 
@@ -36,7 +36,7 @@ class ColorGradientMainWidget(AbstractColorDelegate):
 
         # create widgets
         self.color_gradient_view_widget = ColorGradientWidget(self)
-        self.color_gradient_header_widget = ColorGradientHeaderWidget(self)
+        self.color_gradient_header_widget = ColorGradientHeaderWidget(self, self)
 
         # add widgets to layout
         self.layout().addWidget(self.color_gradient_header_widget)
@@ -88,6 +88,10 @@ class ColorGradientMainWidget(AbstractColorDelegate):
             color_widget.setCurrentIndex(0)
         return QWidget.leaveEvent(self, *args, **kwargs)
 
+    def updateDisplay(self):
+        pass
+        # update rgba gradient
+        # update input widgets...
 
 class ColorGradientWidget(QWidget):
     """
@@ -103,7 +107,6 @@ class ColorGradientWidget(QWidget):
 
         self.scene = ColorGraphicsScene(self)
         self.view = ColorGraphicsView(self.scene)
-
         self.layout().addWidget(self.view)
 
         self.layout().setContentsMargins(0, 0, 0, 0)
@@ -195,8 +198,8 @@ class ColorGraphicsView(QGraphicsView):
             self.__hideLinearCrosshair(False)
 
             # RGB
-            main_widget = getWidgetAncestorByName(self, "ColorInputWidget")
-            color = main_widget.getColor()
+            main_widget = getWidgetAncestor(self, ColorGradientMainWidget)
+            color = main_widget.color()
             pos = QPoint(0, 0)
 
             # TODO Check hack after upgrading to 5.15
@@ -281,9 +284,9 @@ class ColorGraphicsView(QGraphicsView):
             color_arg_widgets_dict[color_arg].setSelected(False)
 
         # update RGBA cross hair pos
-        main_widget = getWidgetAncestorByName(self, "ColorInputWidget")
-        xpos = (main_widget.getColor().hueF() * self.width())
-        ypos = math.fabs((main_widget.getColor().saturationF() * self.height()) - self.height())
+        main_widget = getWidgetAncestor(self, ColorGradientMainWidget)
+        xpos = (main_widget.color().hueF() * self.width())
+        ypos = math.fabs((main_widget.color().saturationF() * self.height()) - self.height())
         pos = QPoint(xpos, ypos)
         self.scene().updateRGBACrosshair(pos)
 
@@ -377,14 +380,14 @@ class ColorGraphicsView(QGraphicsView):
 
         """
         # get attrs
-        color_display_widget = getWidgetAncestorByName(self, "ColorInputWidget")
+        delegate = getWidgetAncestor(self, ColorGradientMainWidget)
         selection_type = self.scene().gradient_type
 
         # 2D Gradient
         if selection_type == attrs.RGBA:
             # RGBA (HUE / SATURATION)
             color = self._getRGBAValue(event)
-            color_display_widget.setColor(color)
+            delegate.setColor(color)
             return
 
         # Linear Gradient
@@ -392,7 +395,7 @@ class ColorGraphicsView(QGraphicsView):
             self.scene().linear_crosshair_item.setCrosshairPos(event.pos())
 
             pos = event.globalPos()
-            orig_color = color_display_widget.getColor()
+            orig_color = delegate.color()
             new_color = self._pickColor(pos)
             # TODO DUPLICATE SET COLOR VALUE FROM ARG
             """ TODO UPDATE COLOR"""
@@ -423,7 +426,7 @@ class ColorGraphicsView(QGraphicsView):
                 blue = new_color.blueF()
                 orig_color.setBlueF(blue)
 
-            color_display_widget.setColor(orig_color)
+            delegate.setColor(orig_color)
             return
 
     def _getRGBAValue(self, event):
@@ -565,7 +568,6 @@ class ColorGraphicsScene(QGraphicsScene):
 
     """ DRAW GRADIENTS """
     def drawGradient(self, direction=Qt.Horizontal):
-
         _gradient = draw.drawColorTypeGradient(self.gradient_type, self.width(), self.height())
         self.rgba_foreground.hide()
         # update gradient size
@@ -580,8 +582,8 @@ class ColorGraphicsScene(QGraphicsScene):
             and the steps become larger and larger =/
             """
             # get value
-            main_widget = getWidgetAncestorByName(self, "ColorInputWidget")
-            value = main_widget.getColor().valueF()
+            main_widget = getWidgetAncestor(self.views()[0], ColorGradientMainWidget)
+            value = main_widget.color().valueF()
             self.rgba_foreground.updateSize(QRectF(0, 0, self.width(), self.height()))
             self.rgba_foreground.updateGradient(value, self.width(), self.height())
 
@@ -814,7 +816,7 @@ class RGBAForegroundGradient(QGraphicsItem):
         painter.fillRect(self._rectangle, self.getGradient())
 
 
-class ColorGradientHeaderWidget(QScrollArea):
+class ColorGradientHeaderWidget(ColorGradientHeaderWidget):
     """
     Widget that will contain all of the display values for the user.
 
@@ -835,98 +837,41 @@ class ColorGradientHeaderWidget(QScrollArea):
 
     """
 
-    def __init__(self, parent=None, direction=QBoxLayout.LeftToRight):
-        super(ColorGradientHeaderWidget, self).__init__(parent)
+    def __init__(self, delegate, parent=None):
+        super(ColorGradientHeaderWidget, self).__init__(delegate, parent)
+        # setup default attrs
         self._header_position = attrs.EAST
         self.setWidgetResizable(True)
+        self.createHeaderItems(attrs.HSV_LIST + attrs.RGBA_LIST)
 
-        # setup default attrs
-        #self._size = 25
-        self._widget_dict = {}
-
-        # create widgets
-        self.main_widget = QFrame(self)
-        self.main_layout = QBoxLayout(direction, self.main_widget)
-        self.setWidget(self.main_widget)
-        for title in ['hue', 'saturation', 'value']:
-            label = ColorGradientHeaderWidgetItem(self, title=title)
-            label.setRange(True, 0, 1)
-            self.main_layout.layout().addWidget(label)
-            self._widget_dict[title] = label
-
-            label.value_widget.color_arg = title
-            label.value_widget.setLiveInputEvent(self.userLiveInputEvent)
-
-        for title in ['red', 'green', 'blue']:
-            label = ColorGradientHeaderWidgetItem(self, title=title)
-            label.setAllowNegative(False)
-            self.main_layout.layout().addWidget(label)
-            self._widget_dict[title] = label
-
-            label.value_widget.color_arg = title
-            label.value_widget.setLiveInputEvent(self.userLiveInputEvent)
+        # set signals
+        self.setHeaderItemChanged(self.updateColorArg)
 
         # setup display
         self.updateStyleSheet()
 
     """ REFACTOR COPY/PASTE FROM Color Display Widget"""
-    def userLiveInputEvent(self, widget, value):
+    def updateColorArg(self, widget, value):
         """
         Updates the color based off of the specific input from the user
         widget (FloatInputWidget):
         value (str): string value set by the user
 
         """
+        # get attrs
         color_arg = widget.color_arg
-        main_widget = getWidgetAncestorByName(self, "ColorInputWidget")
+        orig_color = self.delegate().color()
         color = self.setColorArgValue(color_arg, float(value))
-        main_widget.setColor(color)
 
-    def setColorArgValue(self, arg, value):
-        """
+        # check if updating
+        _updating = True
+        for color_arg in zip(orig_color.getRgb(), color.getRgb()):
+            if color_arg[0] != color_arg[1]:
+                _updating = False
 
-        arg (attrs.COLOR_ARG):
-        value (float):
-        """
-        # orig_color = self.color()
-        main_widget = getWidgetAncestorByName(self, "ColorInputWidget")
-        orig_color = main_widget.getColor()
-        selection_type = arg
-        # saturation
-        if selection_type == attrs.SATURATION:
-            hue = orig_color.hueF()
-            sat = value
-            value = orig_color.valueF()
-            orig_color.setHsvF(hue, sat, value)
-        # hue
-        elif selection_type == attrs.HUE:
-            hue = value
-            sat = orig_color.saturationF()
-            value = orig_color.valueF()
-            orig_color.setHsvF(hue, sat, value)
-        # value
-        elif selection_type == attrs.VALUE:
-            # get HSV values
-            hue = orig_color.hueF()
-            sat = orig_color.saturationF()
-            value = value
-            orig_color.setHsvF(hue, sat, value)
-        # red
-        elif selection_type == attrs.RED:
-            red = value
-            orig_color.setRedF(red)
-        # green
-        elif selection_type == attrs.GREEN:
-            green = value
-            orig_color.setGreenF(green)
-        # blue
-        elif selection_type == attrs.BLUE:
-            blue = value
-            orig_color.setBlueF(blue)
-
-        # set color from an arg value
-        #self.setColor(orig_color)
-        return orig_color
+        # update
+        if _updating is False:
+            self.delegate().setColor(color)
 
     def wheelEvent(self, event):
         """
@@ -952,17 +897,6 @@ class ColorGradientHeaderWidget(QScrollArea):
         # EAST / WEST ( VERTICAL )
         elif self._header_position in [attrs.EAST, attrs.WEST]:
             return QScrollArea.wheelEvent(self, event)
-
-    """ SETUP DEFAULT SIZE"""
-
-    # def getSize(self):
-    #     return self._size
-    #
-    # def setSize(self, size):
-    #     self._size = size
-    #
-    # def sizeHint(self):
-    #     return QSize(self.getSize(), self.getSize())
 
     def setLayoutPosition(self, position):
         """
@@ -999,9 +933,6 @@ class ColorGradientHeaderWidget(QScrollArea):
             # scroll bar
             self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
             self.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-
-    def getWidgetDict(self):
-        return self._widget_dict
 
     def updateStyleSheet(self):
 
