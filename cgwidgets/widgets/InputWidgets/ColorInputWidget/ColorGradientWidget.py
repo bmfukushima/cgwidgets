@@ -63,32 +63,25 @@ class ColorGradientMainWidget(QWidget):
         # set attr
         self._header_position = position
 
+        # set layout direction
         if position == attrs.NORTH:
             self.layout().setDirection(QBoxLayout.TopToBottom)
-            # self.color_gradient_header_widget.main_layout.setDirection(QBoxLayout.LeftToRight)
-            # self.color_gradient_header_widget.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         elif position == attrs.SOUTH:
             self.layout().setDirection(QBoxLayout.BottomToTop)
-            # self.color_gradient_header_widget.main_layout.setDirection(QBoxLayout.LeftToRight)
-            # self.color_gradient_header_widget.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         elif position == attrs.EAST:
             self.layout().setDirection(QBoxLayout.LeftToRight)
-            # self.color_gradient_header_widget.main_layout.setDirection(QBoxLayout.TopToBottom)
-            # self.color_gradient_header_widget.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
         elif position == attrs.WEST:
             self.layout().setDirection(QBoxLayout.RightToLeft)
-            # self.color_gradient_header_widget.main_layout.setDirection(QBoxLayout.TopToBottom)
-            # self.color_gradient_header_widget.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
 
         # update header
         self.color_gradient_header_widget.setLayoutPosition(self._header_position)
-
 
     def leaveEvent(self, *args, **kwargs):
         # cursor_sector_dict = checkMousePos(QCursor.pos(), self)
         # if cursor_sector_dict["INSIDE"] is False:
         color_widget = getWidgetAncestorByName(self, "ColorInputWidget")
-        color_widget.setCurrentIndex(0)
+        if color_widget:
+            color_widget.setCurrentIndex(0)
         return QWidget.leaveEvent(self, *args, **kwargs)
 
 
@@ -841,9 +834,9 @@ class ColorGradientHeaderWidget(QScrollArea):
 
     def __init__(self, parent=None, direction=QBoxLayout.LeftToRight):
         super(ColorGradientHeaderWidget, self).__init__(parent)
-
+        self._header_position = attrs.EAST
         self.setWidgetResizable(True)
-        #self.setFixedHeight(125)
+
         # setup default attrs
         #self._size = 25
         self._widget_dict = {}
@@ -916,6 +909,9 @@ class ColorGradientHeaderWidget(QScrollArea):
 
         # NORTH / SOUTH ( HORIZONTAL )
         if position in [attrs.NORTH, attrs.SOUTH]:
+            # size
+            self.setMinimumHeight(100)
+
             # layout
             self.main_layout.setDirection(QBoxLayout.LeftToRight)
             self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
@@ -926,6 +922,8 @@ class ColorGradientHeaderWidget(QScrollArea):
 
         # EAST / WEST ( VERTICAL )
         elif position in [attrs.EAST, attrs.WEST]:
+            #
+            self.setMinimumWidth(125)
             # layout
             self.main_layout.setDirection(QBoxLayout.TopToBottom)
             self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
