@@ -4,7 +4,7 @@ import re
 
 from qtpy.QtWidgets import (
     QApplication,
-    QStackedWidget, QWidget, QVBoxLayout,
+    QStackedWidget, QWidget, QVBoxLayout, QScrollArea,
     QGraphicsView, QGraphicsScene, QGraphicsEllipseItem, QGraphicsItemGroup,
     QGraphicsLineItem, QLabel, QBoxLayout, QFrame, QGraphicsItem,
     QSizePolicy
@@ -59,24 +59,30 @@ class ColorGradientMainWidget(QWidget):
             NORTH | SOUTH | EAST | WEST
 
         """
+
+        # set attr
+        self._header_position = position
+
         if position == attrs.NORTH:
             self.layout().setDirection(QBoxLayout.TopToBottom)
-            self.color_gradient_header_widget.layout().setDirection(QBoxLayout.LeftToRight)
-            self.color_gradient_header_widget.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+            # self.color_gradient_header_widget.main_layout.setDirection(QBoxLayout.LeftToRight)
+            # self.color_gradient_header_widget.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         elif position == attrs.SOUTH:
             self.layout().setDirection(QBoxLayout.BottomToTop)
-            self.color_gradient_header_widget.layout().setDirection(QBoxLayout.LeftToRight)
-            self.color_gradient_header_widget.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+            # self.color_gradient_header_widget.main_layout.setDirection(QBoxLayout.LeftToRight)
+            # self.color_gradient_header_widget.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         elif position == attrs.EAST:
             self.layout().setDirection(QBoxLayout.LeftToRight)
-            self.color_gradient_header_widget.layout().setDirection(QBoxLayout.TopToBottom)
-            self.color_gradient_header_widget.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
+            # self.color_gradient_header_widget.main_layout.setDirection(QBoxLayout.TopToBottom)
+            # self.color_gradient_header_widget.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
         elif position == attrs.WEST:
             self.layout().setDirection(QBoxLayout.RightToLeft)
-            self.color_gradient_header_widget.layout().setDirection(QBoxLayout.TopToBottom)
-            self.color_gradient_header_widget.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
+            # self.color_gradient_header_widget.main_layout.setDirection(QBoxLayout.TopToBottom)
+            # self.color_gradient_header_widget.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
 
-        self._header_position = position
+        # update header
+        self.color_gradient_header_widget.setLayoutPosition(self._header_position)
+
 
     def leaveEvent(self, *args, **kwargs):
         # cursor_sector_dict = checkMousePos(QCursor.pos(), self)
@@ -812,7 +818,7 @@ class RGBAForegroundGradient(QGraphicsItem):
         painter.fillRect(self._rectangle, self.getGradient())
 
 
-class ColorGradientHeaderWidget(QFrame):
+class ColorGradientHeaderWidget(QScrollArea):
     """
     Widget that will contain all of the display values for the user.
 
@@ -826,7 +832,7 @@ class ColorGradientHeaderWidget(QFrame):
             ColorGraphicsScene.TYPE.  However, there will be no option
             for RGBA / rgba.  So don't use that...
         size (int): the default size of the header
-
+        direction(
     Widgets
         | -- QBoxLayout
                 | -* ColorGradientHeaderWidgetItem
@@ -835,40 +841,98 @@ class ColorGradientHeaderWidget(QFrame):
 
     def __init__(self, parent=None, direction=QBoxLayout.LeftToRight):
         super(ColorGradientHeaderWidget, self).__init__(parent)
+
+        self.setWidgetResizable(True)
+        #self.setFixedHeight(125)
         # setup default attrs
-        self._size = 25
+        #self._size = 25
         self._widget_dict = {}
 
         # create widgets
-        QBoxLayout(direction, self)
+        self.main_widget = QFrame(self)
+        self.main_layout = QBoxLayout(direction, self.main_widget)
+        self.setWidget(self.main_widget)
         for title in ['hue', 'saturation', 'value']:
             label = ColorGradientHeaderWidgetItem(self, title=title)
             label.setRange(True, 0, 1)
-            self.layout().addWidget(label)
+            self.main_layout.layout().addWidget(label)
             self._widget_dict[title] = label
 
         for title in ['red', 'green', 'blue']:
             label = ColorGradientHeaderWidgetItem(self, title=title)
             label.setAllowNegative(False)
-            self.layout().addWidget(label)
+            self.main_layout.layout().addWidget(label)
             self._widget_dict[title] = label
 
         # setup display
         self.updateStyleSheet()
 
+    def wheelEvent(self, event):
+        """
+        Switches the wheel event depending on the location of the header.
+        If the header is in the North/South position, then this will
+        make the wheel event scroll horizontally by default
+        """
+        # NORTH / SOUTH ( HORIZONAL )
+        if self._header_position in [attrs.NORTH, attrs.SOUTH]:
+            # get attrs
+            delta = event.angleDelta() / 120
+            scrollbar = self.horizontalScrollBar()
+
+            # do math
+            offset = delta.y() * 30
+            offset *= -1
+            current_value = scrollbar.sliderPosition()
+            new_value = current_value + offset
+
+            # set scroll bar
+            scrollbar.setValue(new_value)
+
+        # EAST / WEST ( VERTICAL )
+        elif self._header_position in [attrs.EAST, attrs.WEST]:
+            return QScrollArea.wheelEvent(self, event)
+
     """ SETUP DEFAULT SIZE"""
 
-    def getSize(self):
-        return self._size
+    # def getSize(self):
+    #     return self._size
+    #
+    # def setSize(self, size):
+    #     self._size = size
+    #
+    # def sizeHint(self):
+    #     return QSize(self.getSize(), self.getSize())
 
-    def setSize(self, size):
-        self._size = size
+    def setLayoutPosition(self, position):
+        """
+        Set the layouts position relative to the main color gradient.  This will
+        then update all of the extra display args necessary
+        Args:
+            position (attrs.POSITION): where the header should be located
 
-    def sizeHint(self):
-        return QSize(self.getSize(), self.getSize())
+        """
+        # setup attrs
+        self._header_position = position
 
-    def setLayoutDirection(self, direction):
-        self.layout().setDirection(direction)
+        # NORTH / SOUTH ( HORIZONTAL )
+        if position in [attrs.NORTH, attrs.SOUTH]:
+            # layout
+            self.main_layout.setDirection(QBoxLayout.LeftToRight)
+            self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+
+            # scroll bar
+            self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+            self.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+
+        # EAST / WEST ( VERTICAL )
+        elif position in [attrs.EAST, attrs.WEST]:
+            # layout
+            self.main_layout.setDirection(QBoxLayout.TopToBottom)
+            self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
+
+            # scroll bar
+            self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+            self.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
 
     def getWidgetDict(self):
         return self._widget_dict
