@@ -33,15 +33,17 @@ from qtpy.QtGui import (
     QColor, QCursor, QPen, QLinearGradient, QBrush
 )
 
-from cgwidgets.widgets import FloatInputWidget, AbstractInputGroup
 from cgwidgets.utils import (
     attrs, draw, getWidgetAncestor, getWidgetAncestorByName,
     getFontSize, installStickyValueAdjustItemDelegate
 )
 from cgwidgets.settings.colors import iColor, getHSVRGBAFloatFromColor
+from cgwidgets.widgets.InputWidgets.ColorInputWidget import (
+    ColorHeaderWidgetItem, AbstractColorDelegate
+)
 
 
-class ClockDisplayWidget(QWidget):
+class ClockDisplayWidget(AbstractColorDelegate):
     """
     This is the cover that goes over the gradient so that it doesn't spam color at
     the user and hurt their precious precious eyes
@@ -53,7 +55,6 @@ class ClockDisplayWidget(QWidget):
     def __init__(self, parent=None):
         super(ClockDisplayWidget, self).__init__(parent=parent)
         # create scene
-        QVBoxLayout(self)
         self._offset = 30
         self._header_item_size = 50
         self._color = QColor(128, 128, 255)
@@ -405,7 +406,7 @@ class ClockHeaderWidget(QFrame):
 
 
 """ TODO COPY PASTE FROM GRADIENT """
-class ColorGradientHeaderWidgetItem(AbstractInputGroup):
+class ColorGradientHeaderWidgetItem(ColorHeaderWidgetItem):
     """
     Attributes:
         name (str)
@@ -420,23 +421,6 @@ class ColorGradientHeaderWidgetItem(AbstractInputGroup):
     """
     def __init__(self, parent=None, title='None', value='None'):
         super(ColorGradientHeaderWidgetItem, self).__init__(parent, title)
-        # setup attrs
-        self._value = value
-        self._is_selected = False
-
-        # setup GUI
-        self.value_widget = FloatInputWidget()
-
-        # setup ladder
-        self.value_widget.setUseLadder(True, value_list=[0.0001, 0.001, 0.01, 0.1])
-        display_widget = getWidgetAncestor(self, ClockDisplayWidget)
-        # TODO Discrete Drag
-        # self.value_widget.ladder.setDiscreteDrag(
-        #     True, alignment=Qt.AlignLeft, depth=10, display_widget=display_widget
-        # )
-        self.setRange(True, 0, 1)
-        self.value_widget.setAlignment(Qt.AlignLeft)
-        self.insertWidget(1, self.value_widget)
 
         # update style sheets / margins
         self.setupDisplayProperties()
@@ -474,28 +458,6 @@ class ColorGradientHeaderWidgetItem(AbstractInputGroup):
             color: rgba{rgba_text};
             border: None
         """.format(**iColor.style_sheet_args))
-
-    """ PROPERTIES """
-    def setValue(self, value):
-        self._value = value
-        self.value_widget.setText(str(value))
-        self.value_widget.setCursorPosition(0)
-
-    def getValue(self):
-        return self._value
-
-    def setRange(self, enable, range_min, range_max):
-        """
-        Sets the range of the user input
-        """
-        self.value_widget.setRange(enable, range_min, range_max)
-
-    def setAllowNegative(self, enabled):
-        """
-        Determines if the input will be allowed to go into negative numbers or
-        not
-        """
-        self.value_widget.setAllowNegative(enabled)
 
 
 """ CLOCK GRAPHICS VIEW"""

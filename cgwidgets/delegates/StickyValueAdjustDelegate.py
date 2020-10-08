@@ -219,7 +219,6 @@ class StickyValueAdjustWidgetDelegate(QWidget, iStickyValueAdjustDelegate):
     def eventFilter(self, obj, event, *args, **kwargs):
         # preflight
         if event.type() in self.input_events:
-            print('input %s'%obj)
             if self._updating is True:
                 return False
 

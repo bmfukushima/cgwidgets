@@ -16,21 +16,21 @@ from qtpy.QtGui import (
 
 from cgwidgets.utils import attrs, draw, getWidgetAncestor, checkMousePos,  getWidgetAncestorByName
 from cgwidgets.utils.draw import DualColoredLineSegment
-from cgwidgets.widgets.InputWidgets import FloatInputWidget
 from cgwidgets.widgets.AbstractWidgets import AbstractInputGroup
 from cgwidgets.settings.colors import iColor
 
-from cgwidgets.widgets.InputWidgets.ColorInputWidget import ColorPickerItem1D
+from cgwidgets.widgets.InputWidgets.ColorInputWidget import (
+    ColorPickerItem1D, ColorHeaderWidgetItem, AbstractColorDelegate
+)
 
 
-class ColorGradientMainWidget(QWidget):
+class ColorGradientMainWidget(AbstractColorDelegate):
     def __init__(self, parent=None):
         super(ColorGradientMainWidget, self).__init__(parent)
         # set up attrs
         self._header_position = attrs.EAST
 
         # create layout
-        QBoxLayout(QBoxLayout.TopToBottom, self)
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.layout().setSpacing(0)
 
@@ -882,7 +882,6 @@ class ColorGradientHeaderWidget(QScrollArea):
         color = self.setColorArgValue(color_arg, float(value))
         main_widget.setColor(color)
 
-
     def setColorArgValue(self, arg, value):
         """
 
@@ -1012,7 +1011,7 @@ class ColorGradientHeaderWidget(QScrollArea):
         """.format(**iColor.style_sheet_args))
 
 
-class ColorGradientHeaderWidgetItem(AbstractInputGroup):
+class ColorGradientHeaderWidgetItem(ColorHeaderWidgetItem):
     """
     Attributes:
         name (str)
@@ -1028,45 +1027,10 @@ class ColorGradientHeaderWidgetItem(AbstractInputGroup):
 
     def __init__(self, parent=None, title='None', value='None'):
         super(ColorGradientHeaderWidgetItem, self).__init__(parent, title)
-        # setup attrs
-        self._value = value
-        self._is_selected = False
-        self._color_arg = title
-
-        # setup GUI
-        self.value_widget = FloatInputWidget()
-        self.value_widget.setUseLadder(True, value_list=[0.0001, 0.001, 0.01, 0.1])
-        self.value_widget.setAlignment(Qt.AlignLeft)
-        self.insertWidget(1, self.value_widget)
-
+        # setup display
         self.setStyleSheet("background-color: rgba{rgba_gray_1}".format(**iColor.style_sheet_args))
         self.setFixedWidth(125)
         self.setFixedHeight(100)
-
-    # def setValue(self, value):
-    #     self.setText(str(value))
-
-    """ PROPERTIES """
-    def setValue(self, value):
-        self._value = value
-        self.value_widget.setText(str(value))
-        self.value_widget.setCursorPosition(0)
-
-    def getValue(self):
-        return self._value
-
-    def setRange(self, enable, range_min, range_max):
-        """
-        Sets the range of the user input
-        """
-        self.value_widget.setRange(enable, range_min, range_max)
-
-    def setAllowNegative(self, enabled):
-        """
-        Determines if the input will be allowed to go into negative numbers or
-        not
-        """
-        self.value_widget.setAllowNegative(enabled)
 
 
 if __name__ == '__main__':

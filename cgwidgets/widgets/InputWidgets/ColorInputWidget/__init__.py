@@ -1,5 +1,7 @@
 from .ColorPickerItem import ColorPickerItem1D
-from .ColorGradientWidget import ColorGradientMainWidget as ColorGradientMainWidget
-from .ColorDisplayWidget import ClockDisplayWidget
+from .AbstractColorHeader import ColorHeaderWidgetItem
+from .AbstractColorDelegate import AbstractColorDelegate
+from .ColorGradient import ColorGradientMainWidget as ColorGradientMainWidget
+from .ColorClock import ClockDisplayWidget
 
 from .ColorInputWidget import ColorInputWidget as ColorInputWidget
