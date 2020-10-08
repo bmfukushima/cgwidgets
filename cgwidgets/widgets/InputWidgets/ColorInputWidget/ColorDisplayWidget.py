@@ -78,11 +78,6 @@ class ClockDisplayWidget(QWidget):
     def setOffset(self, offset):
         self.scene.setOffset(offset)
 
-        # # update all hands offsets...
-        # for color_arg in attrs.RGBA_LIST + attrs.HSV_LIST:
-        #     hand_widget = self.scene.hands_items[color_arg]
-        #     hand_widget.hand.updateOffset(offset)
-
         self.scene.center_manipulator_item.updateRadius(offset)
         # update display
         self.updateDisplay()
@@ -128,6 +123,7 @@ class ClockDisplayWidget(QWidget):
             sat = value
             value = orig_color.valueF()
             orig_color.setHsvF(hue, sat, value)
+        # hue
         elif selection_type == attrs.HUE:
             hue = value
             sat = orig_color.saturationF()

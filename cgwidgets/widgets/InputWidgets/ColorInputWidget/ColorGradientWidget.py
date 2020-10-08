@@ -45,6 +45,7 @@ class ColorGradientMainWidget(QWidget):
         # setup style
         self.setStyleSheet("border:None")
 
+    """ Overrides"""
     def setHeaderSize(self, size):
         self._header_size = size
         self.color_gradient_header_widget.setSize(size)
@@ -77,8 +78,11 @@ class ColorGradientMainWidget(QWidget):
         self.color_gradient_header_widget.setLayoutPosition(self._header_position)
 
     def leaveEvent(self, *args, **kwargs):
-        # cursor_sector_dict = checkMousePos(QCursor.pos(), self)
-        # if cursor_sector_dict["INSIDE"] is False:
+        """
+        On leaving the widget, the main display of the color input widget
+        will be set back to the clock
+        """
+
         color_widget = getWidgetAncestorByName(self, "ColorInputWidget")
         if color_widget:
             color_widget.setCurrentIndex(0)
