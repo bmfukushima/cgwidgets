@@ -671,7 +671,6 @@ class ColorGraphicsScene(QGraphicsScene):
     #     return self._linear_crosshair_direction
 
     """ RGBA """
-
     def drawRGBACrosshair(self):
         """
         rgba_topline_item
@@ -855,14 +854,80 @@ class ColorGradientHeaderWidget(QScrollArea):
             self.main_layout.layout().addWidget(label)
             self._widget_dict[title] = label
 
+            label.value_widget.color_arg = title
+            label.value_widget.setLiveInputEvent(self.userLiveInputEvent)
+
         for title in ['red', 'green', 'blue']:
             label = ColorGradientHeaderWidgetItem(self, title=title)
             label.setAllowNegative(False)
             self.main_layout.layout().addWidget(label)
             self._widget_dict[title] = label
 
+            label.value_widget.color_arg = title
+            label.value_widget.setLiveInputEvent(self.userLiveInputEvent)
+
         # setup display
         self.updateStyleSheet()
+
+    """ REFACTOR COPY/PASTE FROM Color Display Widget"""
+    def userLiveInputEvent(self, widget, value):
+        """
+        Updates the color based off of the specific input from the user
+        widget (FloatInputWidget):
+        value (str): string value set by the user
+
+        """
+        color_arg = widget.color_arg
+        main_widget = getWidgetAncestorByName(self, "ColorInputWidget")
+        color = self.setColorArgValue(color_arg, float(value))
+        main_widget.setColor(color)
+
+
+    def setColorArgValue(self, arg, value):
+        """
+
+        arg (attrs.COLOR_ARG):
+        value (float):
+        """
+        # orig_color = self.color()
+        main_widget = getWidgetAncestorByName(self, "ColorInputWidget")
+        orig_color = main_widget.getColor()
+        selection_type = arg
+        # saturation
+        if selection_type == attrs.SATURATION:
+            hue = orig_color.hueF()
+            sat = value
+            value = orig_color.valueF()
+            orig_color.setHsvF(hue, sat, value)
+        # hue
+        elif selection_type == attrs.HUE:
+            hue = value
+            sat = orig_color.saturationF()
+            value = orig_color.valueF()
+            orig_color.setHsvF(hue, sat, value)
+        # value
+        elif selection_type == attrs.VALUE:
+            # get HSV values
+            hue = orig_color.hueF()
+            sat = orig_color.saturationF()
+            value = value
+            orig_color.setHsvF(hue, sat, value)
+        # red
+        elif selection_type == attrs.RED:
+            red = value
+            orig_color.setRedF(red)
+        # green
+        elif selection_type == attrs.GREEN:
+            green = value
+            orig_color.setGreenF(green)
+        # blue
+        elif selection_type == attrs.BLUE:
+            blue = value
+            orig_color.setBlueF(blue)
+
+        # set color from an arg value
+        #self.setColor(orig_color)
+        return orig_color
 
     def wheelEvent(self, event):
         """
@@ -966,6 +1031,7 @@ class ColorGradientHeaderWidgetItem(AbstractInputGroup):
         # setup attrs
         self._value = value
         self._is_selected = False
+        self._color_arg = title
 
         # setup GUI
         self.value_widget = FloatInputWidget()
@@ -981,7 +1047,6 @@ class ColorGradientHeaderWidgetItem(AbstractInputGroup):
     #     self.setText(str(value))
 
     """ PROPERTIES """
-
     def setValue(self, value):
         self._value = value
         self.value_widget.setText(str(value))

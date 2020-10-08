@@ -40,7 +40,6 @@ from .InputWidgets.ColorInputWidget import ColorGradientMainWidget as ColorGradi
 from .InputWidgets.ColorInputWidget import ColorInputWidget as ColorInputWidget
 
 from .LibraryWidget import LibraryWidget as LibraryWidget
-from .ColorWidget import ColorWidget as ColorWidget
 from .LadderWidget import LadderWidget as LadderWidget
 
 
