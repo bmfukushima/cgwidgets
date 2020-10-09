@@ -95,12 +95,10 @@ class ColorInputWidget(QStackedWidget):
         """
         self.__user_input_function = function
 
-    def getUserInputFunction(self):
-        return self.__user_input_function
+    def userInputFunction(self, widget, color):
+        return self.__user_input_function(widget, color)
 
     def __user_input_function(self, widget, color):
-        """
-        """
         pass
 
     """ API """
@@ -138,22 +136,8 @@ class ColorInputWidget(QStackedWidget):
         self._color = color
         self.updateDisplayBorder()
 
-        # get data
-        widget_dict = self.color_picker_widget.color_gradient_header_widget.getWidgetDict()
-        new_color_args = getHSVRGBAFloatFromColor(color)
-
-        # update display args
-        for color_arg in widget_dict:
-            # get value widget
-            widget = widget_dict[color_arg]
-
-            # set new value
-            value = new_color_args[color_arg]
-            widget.setValue(value)
-
         # update user set function
-        user_function = self.getUserInputFunction()
-        user_function(self, color)
+        self.userInputFunction(self, color)
 
     def getColor(self):
         if not hasattr(self, '_color'):

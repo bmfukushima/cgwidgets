@@ -17,7 +17,7 @@ from qtpy.QtGui import (
 from cgwidgets.utils import attrs, draw, getWidgetAncestor, checkMousePos,  getWidgetAncestorByName
 from cgwidgets.utils.draw import DualColoredLineSegment
 from cgwidgets.widgets.AbstractWidgets import AbstractInputGroup
-from cgwidgets.settings.colors import iColor
+from cgwidgets.settings.colors import iColor, getHSVRGBAFloatFromColor
 
 from cgwidgets.widgets.InputWidgets.ColorInputWidget import (
     ColorPickerItem1D, ColorGradientHeaderWidget, ColorHeaderWidgetItem, AbstractColorDelegate
@@ -35,20 +35,21 @@ class ColorGradientMainWidget(AbstractColorDelegate):
         self.layout().setSpacing(0)
 
         # create widgets
-        self.color_gradient_view_widget = ColorGradientWidget(self)
-        self.color_gradient_header_widget = ColorGradientHeaderWidget(self, self)
+        self.view_widget = ColorGradientWidget(self)
+        self.header_widget = ColorGradientHeaderWidget(self, self)
 
         # add widgets to layout
-        self.layout().addWidget(self.color_gradient_header_widget)
-        self.layout().addWidget(self.color_gradient_view_widget)
+        self.layout().addWidget(self.header_widget)
+        self.layout().addWidget(self.view_widget)
 
         # setup style
         self.setStyleSheet("border:None")
+        self.updateDisplay()
 
     """ Overrides"""
     def setHeaderSize(self, size):
         self._header_size = size
-        self.color_gradient_header_widget.setSize(size)
+        self.header_widget.setSize(size)
 
     def headerPosition(self):
         return self._header_position
@@ -75,7 +76,7 @@ class ColorGradientMainWidget(AbstractColorDelegate):
             self.layout().setDirection(QBoxLayout.RightToLeft)
 
         # update header
-        self.color_gradient_header_widget.setLayoutPosition(self._header_position)
+        self.header_widget.setLayoutPosition(self._header_position)
 
     def leaveEvent(self, *args, **kwargs):
         """
@@ -89,8 +90,23 @@ class ColorGradientMainWidget(AbstractColorDelegate):
         return QWidget.leaveEvent(self, *args, **kwargs)
 
     def updateDisplay(self):
-        pass
-        # update rgba gradient
+
+        # update RGBA Gradient
+        self.view_widget.scene.updateRGBACrosshair()
+
+        # update input widgets
+        # updates the header values
+        widget_dict = self.header_widget.getWidgetDict()
+        new_color_args = getHSVRGBAFloatFromColor(self.color())
+
+        # update display args
+        for color_arg in widget_dict:
+            # get value widget
+            widget = widget_dict[color_arg]
+
+            # set new value
+            value = new_color_args[color_arg]
+            widget.setValue(value)
         # update input widgets...
 
 class ColorGradientWidget(QWidget):
@@ -171,7 +187,7 @@ class ColorGraphicsView(QGraphicsView):
         xpos = crosshair_xpos * self.geometry().width()
         ypos = crosshair_ypos * self.geometry().height()
         new_pos = QPoint(xpos, ypos)
-        self.scene().updateRGBACrosshair(new_pos)
+        self.scene().setRGBACrosshairPos(new_pos)
         #self.scene().linear_crosshair_item.setCrosshairPos(new_pos)
 
     """ EVENTS """
@@ -235,7 +251,7 @@ class ColorGraphicsView(QGraphicsView):
 
             # update display label to show selected value
             color_gradient_widget = getWidgetAncestor(self, ColorGradientMainWidget)
-            color_arg_widgets_dict = color_gradient_widget.color_gradient_header_widget.getWidgetDict()
+            color_arg_widgets_dict = color_gradient_widget.header_widget.getWidgetDict()
             if self.scene().gradient_type != attrs.RGBA:
                 color_arg_widgets_dict[self.scene().gradient_type].setSelected(True)
 
@@ -279,16 +295,12 @@ class ColorGraphicsView(QGraphicsView):
 
         # disable labels
         color_gradient_widget = getWidgetAncestor(self, ColorGradientMainWidget)
-        color_arg_widgets_dict = color_gradient_widget.color_gradient_header_widget.getWidgetDict()
+        color_arg_widgets_dict = color_gradient_widget.header_widget.getWidgetDict()
         for color_arg in color_arg_widgets_dict:
             color_arg_widgets_dict[color_arg].setSelected(False)
 
-        # update RGBA cross hair pos
-        main_widget = getWidgetAncestor(self, ColorGradientMainWidget)
-        xpos = (main_widget.color().hueF() * self.width())
-        ypos = math.fabs((main_widget.color().saturationF() * self.height()) - self.height())
-        pos = QPoint(xpos, ypos)
-        self.scene().updateRGBACrosshair(pos)
+        # update rgba crosshair pos
+        self.scene().updateRGBACrosshair()
 
         return QGraphicsView.mouseReleaseEvent(self, *args, **kwargs)
 
@@ -435,22 +447,10 @@ class ColorGraphicsView(QGraphicsView):
 
         Returns (QColor)
         """
-        # get color
-        # TODO check distance?
-
-        # todo flickers
-        """
-        This either flickers, or grabs the wrong value... its like picking the less bad
-        option =/
-
-        could make the cursor black/white... and ignore?
-
-        foreground alpha is messing up display
-        """
         scene = self.scene()
         pos = event.globalPos()
         # scene.rgba_crosshair_item.hide()
-        scene.updateRGBACrosshair(event.pos())
+        scene.setRGBACrosshairPos(event.pos())
         # QApplication.processEvents()
         color = self._pickColor(pos, constrain_to_picker=False)
 
@@ -719,14 +719,15 @@ class ColorGraphicsScene(QGraphicsScene):
         return self._rgba_crosshair_pos
 
     def setRGBACrosshairPos(self, pos):
-        """ This is in LOCAL space """
-        self._rgba_crosshair_pos = pos
-
-    def updateRGBACrosshair(self, pos):
         """
         Places the crosshair at a specific  location in the widget.  This is generally
         used when updating color values, and passing them back to the color widget.
+
+        Args:
+            pos (QPoint): in LOCAL space
         """
+
+
         crosshair_radius = self.CROSSHAIR_RADIUS * 0.5
         xpos = pos.x()
         ypos = pos.y()
@@ -738,6 +739,14 @@ class ColorGraphicsScene(QGraphicsScene):
         self.rgba_leftline_item.setLine(0, ypos, xpos - crosshair_radius, ypos)
         self.rgba_rightline_item.setLine(xpos + crosshair_radius, ypos, self.width(), ypos)
 
+        # set attr
+        self._rgba_crosshair_pos = pos
+
+    def updateRGBACrosshair(self):
+        main_widget = getWidgetAncestor(self, ColorGradientMainWidget)
+        xpos = (main_widget.color().hueF() * self.width())
+        ypos = math.fabs((main_widget.color().saturationF() * self.height()) - self.height())
+        pos = QPoint(xpos, ypos)
         self.setRGBACrosshairPos(pos)
 
     def _drawRGBAForegroundItem(self):
@@ -861,17 +870,17 @@ class ColorGradientHeaderWidget(ColorGradientHeaderWidget):
         # get attrs
         color_arg = widget.color_arg
         orig_color = self.delegate().color()
-        color = self.setColorArgValue(color_arg, float(value))
+        new_color = self.setColorArgValue(color_arg, float(value))
 
         # check if updating
         _updating = True
-        for color_arg in zip(orig_color.getRgb(), color.getRgb()):
+        for color_arg in zip(orig_color.getRgb(), new_color.getRgb()):
             if color_arg[0] != color_arg[1]:
                 _updating = False
 
         # update
         if _updating is False:
-            self.delegate().setColor(color)
+            self.delegate().setColor(new_color)
 
     def wheelEvent(self, event):
         """

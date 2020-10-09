@@ -122,48 +122,47 @@ class ColorGradientHeaderWidget(QScrollArea):
     """ UTILS """
     def setColorArgValue(self, arg, value):
         """
-
         arg (attrs.COLOR_ARG):
         value (float):
         """
 
-        orig_color = self.delegate().getColor()
+        orig_color = self.delegate().color()
+        new_color = QColor(*orig_color.getRgb())
         selection_type = arg
         # saturation
         if selection_type == attrs.SATURATION:
-            hue = orig_color.hueF()
+            hue = new_color.hueF()
             sat = value
-            value = orig_color.valueF()
-            orig_color.setHsvF(hue, sat, value)
+            value = new_color.valueF()
+            new_color.setHsvF(hue, sat, value)
         # hue
         elif selection_type == attrs.HUE:
             hue = value
-            sat = orig_color.saturationF()
-            value = orig_color.valueF()
-            orig_color.setHsvF(hue, sat, value)
+            sat = new_color.saturationF()
+            value = new_color.valueF()
+            new_color.setHsvF(hue, sat, value)
         # value
         elif selection_type == attrs.VALUE:
             # get HSV values
-            hue = orig_color.hueF()
-            sat = orig_color.saturationF()
+            hue = new_color.hueF()
+            sat = new_color.saturationF()
             value = value
-            orig_color.setHsvF(hue, sat, value)
+            new_color.setHsvF(hue, sat, value)
         # red
         elif selection_type == attrs.RED:
             red = value
-            orig_color.setRedF(red)
+            new_color.setRedF(red)
         # green
         elif selection_type == attrs.GREEN:
             green = value
-            orig_color.setGreenF(green)
+            new_color.setGreenF(green)
         # blue
         elif selection_type == attrs.BLUE:
             blue = value
-            orig_color.setBlueF(blue)
+            new_color.setBlueF(blue)
 
         # set color from an arg value
-        #self.setColor(orig_color)
-        return orig_color
+        return new_color
 
     """ PROPERTIES"""
     def getWidgetDict(self):
