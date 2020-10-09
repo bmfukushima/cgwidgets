@@ -13,7 +13,7 @@ TODO:
 """
 
 from qtpy.QtWidgets import (
-    QWidget, QListView, QAbstractItemView, QScrollArea, QTableView, QSizePolicy, QSplitter
+    QWidget, QListView, QAbstractItemView, QScrollArea, QSplitter
 )
 from qtpy.QtCore import Qt, QModelIndex
 from qtpy.QtGui import QCursor

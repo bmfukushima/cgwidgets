@@ -17,16 +17,17 @@ from qtpy.QtGui import (
 from cgwidgets.utils import attrs, draw, getWidgetAncestor, checkMousePos,  getWidgetAncestorByName
 from cgwidgets.utils.draw import DualColoredLineSegment
 from cgwidgets.widgets.AbstractWidgets import AbstractInputGroup
-from cgwidgets.settings.colors import iColor, getHSVRGBAFloatFromColor
+from cgwidgets.settings.colors import (
+    iColor, getHSVRGBAFloatFromColor, updateColorFromArgValue)
 
 from cgwidgets.widgets.InputWidgets.ColorInputWidget import (
     ColorPickerItem1D, ColorGradientHeaderWidget, ColorHeaderWidgetItem, AbstractColorDelegate
 )
 
 
-class ColorGradientMainWidget(AbstractColorDelegate):
+class ColorGradientDelegate(AbstractColorDelegate):
     def __init__(self, parent=None):
-        super(ColorGradientMainWidget, self).__init__(parent)
+        super(ColorGradientDelegate, self).__init__(parent)
         # set up attrs
         self._header_position = attrs.EAST
 
@@ -108,6 +109,7 @@ class ColorGradientMainWidget(AbstractColorDelegate):
             value = new_color_args[color_arg]
             widget.setValue(value)
         # update input widgets...
+
 
 class ColorGradientWidget(QWidget):
     """
@@ -214,7 +216,7 @@ class ColorGraphicsView(QGraphicsView):
             self.__hideLinearCrosshair(False)
 
             # RGB
-            main_widget = getWidgetAncestor(self, ColorGradientMainWidget)
+            main_widget = getWidgetAncestor(self, ColorGradientDelegate)
             color = main_widget.color()
             pos = QPoint(0, 0)
 
@@ -250,7 +252,7 @@ class ColorGraphicsView(QGraphicsView):
                     self.scene().gradient_type = attrs.SATURATION
 
             # update display label to show selected value
-            color_gradient_widget = getWidgetAncestor(self, ColorGradientMainWidget)
+            color_gradient_widget = getWidgetAncestor(self, ColorGradientDelegate)
             color_arg_widgets_dict = color_gradient_widget.header_widget.getWidgetDict()
             if self.scene().gradient_type != attrs.RGBA:
                 color_arg_widgets_dict[self.scene().gradient_type].setSelected(True)
@@ -294,7 +296,7 @@ class ColorGraphicsView(QGraphicsView):
         QCursor.setPos(self._orig_pos)
 
         # disable labels
-        color_gradient_widget = getWidgetAncestor(self, ColorGradientMainWidget)
+        color_gradient_widget = getWidgetAncestor(self, ColorGradientDelegate)
         color_arg_widgets_dict = color_gradient_widget.header_widget.getWidgetDict()
         for color_arg in color_arg_widgets_dict:
             color_arg_widgets_dict[color_arg].setSelected(False)
@@ -392,7 +394,7 @@ class ColorGraphicsView(QGraphicsView):
 
         """
         # get attrs
-        delegate = getWidgetAncestor(self, ColorGradientMainWidget)
+        delegate = getWidgetAncestor(self, ColorGradientDelegate)
         selection_type = self.scene().gradient_type
 
         # 2D Gradient
@@ -582,7 +584,7 @@ class ColorGraphicsScene(QGraphicsScene):
             and the steps become larger and larger =/
             """
             # get value
-            main_widget = getWidgetAncestor(self.views()[0], ColorGradientMainWidget)
+            main_widget = getWidgetAncestor(self.views()[0], ColorGradientDelegate)
             value = main_widget.color().valueF()
             self.rgba_foreground.updateSize(QRectF(0, 0, self.width(), self.height()))
             self.rgba_foreground.updateGradient(value, self.width(), self.height())
@@ -743,7 +745,7 @@ class ColorGraphicsScene(QGraphicsScene):
         self._rgba_crosshair_pos = pos
 
     def updateRGBACrosshair(self):
-        main_widget = getWidgetAncestor(self, ColorGradientMainWidget)
+        main_widget = getWidgetAncestor(self, ColorGradientDelegate)
         xpos = (main_widget.color().hueF() * self.width())
         ypos = math.fabs((main_widget.color().saturationF() * self.height()) - self.height())
         pos = QPoint(xpos, ypos)
@@ -870,7 +872,7 @@ class ColorGradientHeaderWidget(ColorGradientHeaderWidget):
         # get attrs
         color_arg = widget.color_arg
         orig_color = self.delegate().color()
-        new_color = self.setColorArgValue(color_arg, float(value))
+        new_color = updateColorFromArgValue(orig_color, color_arg, float(value))
 
         # check if updating
         _updating = True
@@ -975,7 +977,7 @@ class ColorGradientHeaderWidgetItem(ColorHeaderWidgetItem):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    color_widget = ColorGradientMainWidget()
+    color_widget = ColorGradientDelegate()
     #color_widget.setLinearCrosshairDirection(Qt.Vertical)
     #color_widget.setDisplayLocation(position=attrs.NORTH)
     color_widget.show()

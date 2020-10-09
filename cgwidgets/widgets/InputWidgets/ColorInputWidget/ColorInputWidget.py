@@ -24,8 +24,9 @@ from qtpy.QtGui import (
 )
 
 from cgwidgets.utils import getWidgetAncestor, attrs
-from cgwidgets.settings.colors import iColor, getHSVRGBAFloatFromColor
-from cgwidgets.widgets.InputWidgets.ColorInputWidget import ColorGradientMainWidget, ClockDisplayWidget
+from cgwidgets.widgets.InputWidgets.ColorInputWidget import (
+    ColorGradientDelegate, ColorClockView
+)
 
 
 class ColorInputWidget(QStackedWidget):
@@ -48,7 +49,7 @@ class ColorInputWidget(QStackedWidget):
                         | -- QWidget
                         |       | -- QGraphicsView
                         | -- QGraphicsLabel
-        | -- clock_display_widget (ClockDisplayWidget)
+        | -- clock_display_widget (ColorClockDelegate)
                 TODO:
                     Add the RGBA | HSV values to the label
                     Potentially make this into a Layout?
@@ -66,8 +67,8 @@ class ColorInputWidget(QStackedWidget):
         self._linear_crosshair_direction = Qt.Horizontal
 
         # create widgets
-        self.color_picker_widget = ColorGradientMainWidget()
-        self.clock_display_widget = ClockDisplayWidget()
+        self.color_picker_widget = ColorGradientDelegate()
+        self.clock_display_widget = ColorClockView()
 
         self.addWidget(self.clock_display_widget)
         self.addWidget(self.color_picker_widget)
@@ -134,8 +135,7 @@ class ColorInputWidget(QStackedWidget):
             Add user trigger event here
         """
         self._color = color
-        self.updateDisplayBorder()
-
+        self.updateDisplay()
         # update user set function
         self.userInputFunction(self, color)
 
@@ -169,7 +169,7 @@ class ColorInputWidget(QStackedWidget):
     def getScene(self):
         return self.color_picker_widget.color_gradient_view_widget.scene
 
-    def updateDisplayBorder(self, color=None):
+    def updateDisplay(self, color=None):
         """
         Updates the border color that is displayed to the user
         Args:
@@ -180,7 +180,7 @@ class ColorInputWidget(QStackedWidget):
         if not color:
             color = self.getColor()
 
-        # set up style sheet
+        # Border Color
         kwargs = {
             "color" : repr(color.getRgb()),
             "border_width" : self.border_width
@@ -192,6 +192,10 @@ class ColorInputWidget(QStackedWidget):
             }}
             """.format(**kwargs)
         )
+
+        # Update display
+        self.clock_display_widget.setColor(color)
+        self.clock_display_widget.updateDisplay()
 
     """ PROPERTIES"""
 

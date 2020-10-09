@@ -20,7 +20,7 @@ from cgwidgets.settings.colors import iColor, getHSVRGBAFloatFromColor
 from cgwidgets.widgets.InputWidgets.ColorInputWidget import ColorHeaderWidgetItem
 
 
-class AbstractColorDelegate(QWidget):
+class AbstractColorView(QWidget):
     """
     This is the cover that goes over the gradient so that it doesn't spam color at
     the user and hurt their precious precious eyes
@@ -30,7 +30,7 @@ class AbstractColorDelegate(QWidget):
             individual display values of each color arg
     """
     def __init__(self, parent=None):
-        super(AbstractColorDelegate, self).__init__(parent=parent)
+        super(AbstractColorView, self).__init__(parent=parent)
         # create scene
         QBoxLayout(QBoxLayout.TopToBottom, self)
         self._color = QColor(128, 128, 255)
@@ -46,10 +46,6 @@ class AbstractColorDelegate(QWidget):
         Args:
             color (QColor):
         """
+        print("view update")
         self._color = color
         self.updateDisplay()
-
-        # if parent... views need to inherit from something else?
-        if self.parent():
-            if self.parent().__name__() == "ColorInputWidget":
-                self.parent().setColor(color)

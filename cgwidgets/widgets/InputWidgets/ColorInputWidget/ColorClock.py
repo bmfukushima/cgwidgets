@@ -1,16 +1,7 @@
 """
 TODO:
     *   LadderDelegate | Live Sliding
-            - Install sticky drag on ladder
-            - Updates on parent widget only happen when the user
-                finishes editing.
-            - Add mode to allow for continuous updates of the parent widget
-            - Probably check leave/close events?
-                    self.scene.update()
-    *   Slide Bars | Add user interaction
-            - doesn't actually need to move the items...
-            - needs to calculate mouse distance moved, and updated color
-                based off of that
+            - RGB Header sliders Live Updates causing recursive error
 
 Notes:
     *   Border offset ( the area between the giant circle in the middle and
@@ -37,13 +28,14 @@ from cgwidgets.utils import (
     attrs, draw, getWidgetAncestor, getWidgetAncestorByName,
     getFontSize, installStickyValueAdjustItemDelegate
 )
-from cgwidgets.settings.colors import iColor, getHSVRGBAFloatFromColor
+from cgwidgets.settings.colors import (
+    iColor, getHSVRGBAFloatFromColor, updateColorFromArgValue)
 from cgwidgets.widgets.InputWidgets.ColorInputWidget import (
-    ColorHeaderWidgetItem, AbstractColorDelegate
+    ColorHeaderWidgetItem, AbstractColorDelegate, AbstractColorView
 )
 
 
-class ClockDisplayWidget(AbstractColorDelegate):
+class AbstractColorClock(QWidget):
     """
     This is the cover that goes over the gradient so that it doesn't spam color at
     the user and hurt their precious precious eyes
@@ -53,7 +45,7 @@ class ClockDisplayWidget(AbstractColorDelegate):
             individual display values of each color arg
     """
     def __init__(self, parent=None):
-        super(ClockDisplayWidget, self).__init__(parent=parent)
+        super(AbstractColorClock, self).__init__(parent=parent)
         # create scene
         self._offset = 30
         self._header_item_size = 50
@@ -93,10 +85,18 @@ class ClockDisplayWidget(AbstractColorDelegate):
         Args:
             color (QColor):
         """
-        self._color = color
+        print('abstract update')
         self.scene.center_manipulator_item.setColor(color)
         self.scene.update()
-        self.updateDisplay()
+
+    def updateColorFromArgValue(self, color_arg, value):
+        """
+        Updates the current color from the color_arg/value provided
+        color_arg (attrs.COLOR_ARG):
+        value (float)
+        """
+        new_color = updateColorFromArgValue(self.color(), color_arg, float(value))
+        self.setColor(new_color)
 
     def headerItemSize(self):
         return self._header_item_size
@@ -109,49 +109,6 @@ class ClockDisplayWidget(AbstractColorDelegate):
             header_item_size (QColor):
         """
         self._header_item_size = header_item_size
-
-    def setColorArgValue(self, arg, value):
-        """
-
-        arg (attrs.COLOR_ARG):
-        value (float):
-        """
-        orig_color = self.color()
-        selection_type = arg
-        # saturation
-        if selection_type == attrs.SATURATION:
-            hue = orig_color.hueF()
-            sat = value
-            value = orig_color.valueF()
-            orig_color.setHsvF(hue, sat, value)
-        # hue
-        elif selection_type == attrs.HUE:
-            hue = value
-            sat = orig_color.saturationF()
-            value = orig_color.valueF()
-            orig_color.setHsvF(hue, sat, value)
-        # value
-        elif selection_type == attrs.VALUE:
-            # get HSV values
-            hue = orig_color.hueF()
-            sat = orig_color.saturationF()
-            value = value
-            orig_color.setHsvF(hue, sat, value)
-        # red
-        elif selection_type == attrs.RED:
-            red = value
-            orig_color.setRedF(red)
-        # green
-        elif selection_type == attrs.GREEN:
-            green = value
-            orig_color.setGreenF(green)
-        # blue
-        elif selection_type == attrs.BLUE:
-            blue = value
-            orig_color.setBlueF(blue)
-
-        # set color from an arg value
-        self.setColor(orig_color)
 
     """ UTILS """
     def _createHeaderWidgetItems(self):
@@ -282,17 +239,6 @@ class ClockDisplayWidget(AbstractColorDelegate):
         self.updateDisplay()
         return QWidget.resizeEvent(self, event)
 
-    def enterEvent(self, *args, **kwargs):
-        """
-        This is for the actual top level display
-        TODO:
-            Not sure if I'm going to use this moving forward...
-        """
-        color_display_widget = getWidgetAncestorByName(self, "ColorInputWidget")
-        if color_display_widget:
-            color_display_widget.setCurrentIndex(1)
-        return QWidget.enterEvent(self, *args, **kwargs)
-
     def showEvent(self, event):
         self.updateDisplay()
         return QWidget.showEvent(self, event)
@@ -311,8 +257,9 @@ class ClockDisplayWidget(AbstractColorDelegate):
 
         color_args_dict = getHSVRGBAFloatFromColor(self._color)
         # update headers
-        self.rgba_header_widget.updateUserInputs(color_args_dict)
-        self.hsv_header_widget.updateUserInputs(color_args_dict)
+        # TODO This is causing the recursion issues...
+        # self.rgba_header_widget.updateUserInputs(color_args_dict)
+        # self.hsv_header_widget.updateUserInputs(color_args_dict)
 
         # update hands
         for color_arg in color_args_dict:
@@ -322,6 +269,52 @@ class ClockDisplayWidget(AbstractColorDelegate):
             # set hand widget
             hand_widget = self.scene.hands_items[color_arg]
             hand_widget.setValue(value)
+
+
+class ColorClockDelegate(AbstractColorClock, AbstractColorDelegate):
+    def __init__(self, parent=None):
+        super(ColorClockDelegate, self).__init__(parent)
+
+    def setColor(self, color):
+        """
+        Sets the color of this widget
+
+        Args:
+            color (QColor):
+        """
+        AbstractColorClock.setColor(self, color)
+        return AbstractColorDelegate.setColor(self, color)
+
+
+class ColorClockView(AbstractColorClock, AbstractColorView):
+    def __init__(self, parent=None):
+        super(ColorClockView, self).__init__(parent)
+
+    def setColor(self, color):
+        """
+        Sets the color of this widget
+
+        Args:
+            color (QColor):
+        """
+        #AbstractColorClock.setColor(self, color)
+        self._color = color
+        self.updateDisplay()
+        # self.scene.center_manipulator_item.setColor(color)
+        # self.scene.update()
+        #return AbstractColorView.setColor(self, color)
+
+    def enterEvent(self, *args, **kwargs):
+        """
+        This is for the actual top level display
+        TODO:
+            Not sure if I'm going to use this moving forward...
+        """
+        color_display_widget = getWidgetAncestorByName(self, "ColorInputWidget")
+        if color_display_widget:
+            color_display_widget.setCurrentIndex(1)
+        return QWidget.enterEvent(self, *args, **kwargs)
+
 
 class ClockHeaderWidget(QFrame):
     """
@@ -403,8 +396,8 @@ class ClockHeaderWidget(QFrame):
 
         """
         color_arg = widget.color_arg
-        main_widget = getWidgetAncestor(self, ClockDisplayWidget)
-        main_widget.setColorArgValue(color_arg, float(value))
+        main_widget = getWidgetAncestor(self, AbstractColorClock)
+        main_widget.updateColorFromArgValue(color_arg, float(value))
 
 
 """ TODO COPY PASTE FROM GRADIENT """
@@ -561,7 +554,7 @@ class ClockDisplayScene(QGraphicsScene):
         width = self.sceneRect().width()
         height = self.sceneRect().height()
         length = min(width, height) * 0.5
-        main_widget = getWidgetAncestor(self, ClockDisplayWidget)
+        main_widget = getWidgetAncestor(self, AbstractColorClock)
         widget_size = main_widget.headerItemSize()
 
         # reduce hand length
@@ -805,10 +798,10 @@ class ClockHandCrosshairItem(QGraphicsLineItem):
             value = 1
 
         # update color value
-        main_widget = getWidgetAncestor(self.scene().views()[0], ClockDisplayWidget)
+        main_widget = getWidgetAncestor(self.scene().views()[0], AbstractColorClock)
         # main widget
         color_arg = self.group().color_arg
-        main_widget.setColorArgValue(color_arg, value)
+        main_widget.updateColorFromArgValue(color_arg, value)
 
     def getValue(self):
         return self.group().getValue()
@@ -839,7 +832,7 @@ if __name__ == '__main__':
     import logging
     logging.basicConfig(level=logging.DEBUG)
     app = QApplication(sys.argv)
-    color_widget = ClockDisplayWidget()
+    color_widget = ColorClockDelegate()
     color_widget.setColor(QColor(255, 255, 128))
     color_widget.setOffset(40)
     # color_widget.setLinearCrosshairDirection(Qt.Vertical)

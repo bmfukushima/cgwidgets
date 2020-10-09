@@ -113,56 +113,10 @@ class ColorGradientHeaderWidget(QScrollArea):
 
     def __header_item_changed(self, widget, value):
         """
-        color_arg = widget.color_arg
-        main_widget = getWidgetAncestor(self, ClockDisplayWidget)
-        main_widget.setColorArgValue(color_arg, float(value))
+        widget
+        value
         """
         pass
-
-    """ UTILS """
-    def setColorArgValue(self, arg, value):
-        """
-        arg (attrs.COLOR_ARG):
-        value (float):
-        """
-
-        orig_color = self.delegate().color()
-        new_color = QColor(*orig_color.getRgb())
-        selection_type = arg
-        # saturation
-        if selection_type == attrs.SATURATION:
-            hue = new_color.hueF()
-            sat = value
-            value = new_color.valueF()
-            new_color.setHsvF(hue, sat, value)
-        # hue
-        elif selection_type == attrs.HUE:
-            hue = value
-            sat = new_color.saturationF()
-            value = new_color.valueF()
-            new_color.setHsvF(hue, sat, value)
-        # value
-        elif selection_type == attrs.VALUE:
-            # get HSV values
-            hue = new_color.hueF()
-            sat = new_color.saturationF()
-            value = value
-            new_color.setHsvF(hue, sat, value)
-        # red
-        elif selection_type == attrs.RED:
-            red = value
-            new_color.setRedF(red)
-        # green
-        elif selection_type == attrs.GREEN:
-            green = value
-            new_color.setGreenF(green)
-        # blue
-        elif selection_type == attrs.BLUE:
-            blue = value
-            new_color.setBlueF(blue)
-
-        # set color from an arg value
-        return new_color
 
     """ PROPERTIES"""
     def getWidgetDict(self):
