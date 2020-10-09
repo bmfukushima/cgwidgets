@@ -479,7 +479,7 @@ Notes:
 
             # install click/drag mechanism
             installStickyValueAdjustWidgetDelegate(
-                widget, pixels_per_tick=self.getPixelsPerTick(), value_per_tick=value, drag_widget=self.parent().parent()
+                widget, pixels_per_tick=self.getPixelsPerTick(), value_per_tick=value
             )
 
         self.__createMiddleItem()
@@ -750,7 +750,6 @@ Args:
         # TODO Setting _updating flag here...
         input_widget = self.parent().parent()
         input_widget._updating = not input_widget._updating
-        print()
         return QLabel.mousePressEvent(self, event)
 
 

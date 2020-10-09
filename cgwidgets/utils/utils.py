@@ -314,16 +314,29 @@ def setAsTool(widget):
     import platform
     if platform.system() == 'Windows':
         widget.setWindowFlags(
-            Qt.Tool
+            widget.windowFlags()
+            | Qt.Tool
             | Qt.NoDropShadowWindowHint
             | Qt.WindowStaysOnTopHint
             )
     elif platform.system() == 'Linux':
         widget.setWindowFlags(
-            Qt.Tool
+            widget.windowFlags()
+            | Qt.Tool
             | Qt.NoDropShadowWindowHint
             | Qt.FramelessWindowHint
             )
+
+
+def setAsTransparent(widget):
+    widget.setAttribute(Qt.WA_NoSystemBackground)
+    widget.setWindowFlags(
+        widget.windowFlags()
+        ^ Qt.FramelessWindowHint
+        | Qt.WindowStaysOnTopHint
+    )
+    widget.setAttribute(Qt.WA_TranslucentBackground)
+    widget.setStyleSheet("background-color: rgba(255,0,0,255)")
 
 
 def getGlobalPos(widget):
