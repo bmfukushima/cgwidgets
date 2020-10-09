@@ -46,6 +46,5 @@ class AbstractColorView(QWidget):
         Args:
             color (QColor):
         """
-        print("view update")
         self._color = color
         self.updateDisplay()

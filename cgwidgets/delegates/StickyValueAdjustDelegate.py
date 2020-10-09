@@ -153,8 +153,9 @@ class iStickyValueAdjustDelegate(object):
         """
         obj._cursor_pos = QCursor.pos()
 
+        # todo escape velocity issue?
         top_left = getTopLeftPos(obj)
-        QCursor.setPos(top_left + QPoint(10,10))
+        QCursor.setPos(top_left + QPoint(10, 10))
         obj.setFocus()
 
         obj._calc_pos = QCursor.pos()

@@ -674,7 +674,7 @@ Attributes:
     def __init__(self, parent=None, value=None):
         super(LadderMiddleItem, self).__init__(parent)
         self.setValue(value)
-        self.editingFinished.connect(self.tempSetValue)
+        self.editingFinished.connect(self.setMiddleValue)
         self.setStyleSheet(
             """
             background-color: rgba{rgba_blue_3};
@@ -692,7 +692,7 @@ Attributes:
             self.parent().hide()
         return FloatInputWidget.keyPressEvent(self, event)
 
-    def tempSetValue(self):
+    def setMiddleValue(self):
         self.parent().parent().setValue(str(self.text()))
 
     def setValue(self, value):
@@ -745,6 +745,13 @@ Args:
         slider_pos = math.fabs(self._slider_pos)
         self.parent().slider_pos = slider_pos
         self.parent().updateStyleSheet()
+
+    def mousePressEvent(self, event):
+        # TODO Setting _updating flag here...
+        input_widget = self.parent().parent()
+        input_widget._updating = not input_widget._updating
+        print()
+        return QLabel.mousePressEvent(self, event)
 
 
 def main():

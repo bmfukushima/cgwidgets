@@ -107,7 +107,7 @@ class ColorHeaderWidget(QScrollArea):
 
             # setup signals
             new_item.value_widget.setLiveInputEvent(self.headerItemChanged)
-
+            new_item.value_widget.setUserFinishedEditingEvent(self.headerItemChanged)
             # add to layout
             self._widget_dict[color_arg] = new_item
             self.main_widget.layout().addWidget(new_item)

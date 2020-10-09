@@ -88,7 +88,6 @@ class AbstractColorClock(QWidget):
         Args:
             color (QColor):
         """
-        print('abstract update')
         self._color = color
         # self.scene.center_manipulator_item.setColor(color)
         # self.scene.update()
@@ -257,9 +256,7 @@ class AbstractColorClock(QWidget):
 
         color (QColor): color to update the display to
         """
-        print('update display')
         if self._updating is False:
-            print(self._updating)
             self._updating = True
             self.scene.center_manipulator_item.setColor(self._color)
             self.scene.update()

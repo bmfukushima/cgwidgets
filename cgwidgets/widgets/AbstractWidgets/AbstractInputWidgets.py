@@ -43,7 +43,7 @@ class AbstractInputWidget(QLineEdit):
         orig_value (str): the previous value set by the user
         key_list (list): of Qt.Key_KEY.  List of keys that are currently
             valid for this widget.
-        live_input (bool): Flag to determine if this widget should be continously updating
+        updating (bool): Flag to determine if this widget should be continously updating
             or not.  Most noteably this flag will be toggled during sticky drag events.
         rgba_background (rgba): value of rgba_background transparency
         rgba_border (rgba): color of the border...
@@ -55,7 +55,7 @@ class AbstractInputWidget(QLineEdit):
         # setup default args
         self._key_list = []
         self._orig_value = None
-        self._live_input = False
+        self._updating = False
         # set up style
         self.rgba_border = iColor["rgba_outline"]
         self.rgba_background = iColor["rgba_gray_0"]
@@ -185,10 +185,9 @@ class AbstractInputWidget(QLineEdit):
             #TODO This doesn't exist in this ffunctino... moved to iGroupInput
             # or somewhere more logical...
             try:
-                #if self._live_input is True:
-                print('updating live input...')
-                self.setText(self.getInput())
-                self.liveInputEvent(self, self.getInput())
+                if self._updating is True:
+                    self.setText(self.getInput())
+                    self.liveInputEvent(self, self.getInput())
             except AttributeError:
                 pass
 
