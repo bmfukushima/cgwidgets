@@ -1,5 +1,5 @@
 from .ColorPickerItem import ColorPickerItem1D
-from .AbstractColorHeader import ColorGradientHeaderWidget, ColorHeaderWidgetItem
+from .AbstractColorHeader import ColorHeaderWidget, ColorHeaderWidgetItem
 from .AbstractColorDelegate import AbstractColorDelegate
 from .AbstractColorView import AbstractColorView
 

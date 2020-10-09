@@ -21,10 +21,10 @@ from cgwidgets.utils import (
 
 from cgwidgets.widgets.InputWidgets import FloatInputWidget
 from cgwidgets.widgets.AbstractWidgets import AbstractInputGroup
-from cgwidgets.settings.colors import iColor
+from cgwidgets.settings.colors import iColor, updateColorFromArgValue
 
 
-class ColorGradientHeaderWidget(QScrollArea):
+class ColorHeaderWidget(QScrollArea):
     """
     Widget that will contain all of the display values for the user.
 
@@ -49,20 +49,32 @@ class ColorGradientHeaderWidget(QScrollArea):
 
     """
 
-    def __init__(self, delegate, parent=None, direction=QBoxLayout.LeftToRight):
-        super(ColorGradientHeaderWidget, self).__init__(parent)
+    def __init__(self, parent=None, delegate=None, direction=QBoxLayout.LeftToRight):
+        super(ColorHeaderWidget, self).__init__(parent)
         self.setWidgetResizable(True)
 
         # setup default attrs
         self.item_height = getFontSize(QApplication) * 3 + 5
         self.item_width = 40
+        if not delegate:
+            delegate = parent
         self._delegate = delegate
+        self._header_item_type = ColorHeaderWidgetItem
 
         # setup GUI
         self._widget_dict = {}
         self.main_widget = QFrame(self)
         self.setWidget(self.main_widget)
         self.main_layout = QBoxLayout(direction, self.main_widget)
+
+        # set signals
+        self.setHeaderItemChanged(self.updateColorArg)
+
+    """ UTILS """
+    def createNewHeaderItem(self, title, value):
+        header_item_type = self.headerItemType()
+        new_item = header_item_type(self, title=title, value=value)
+        return new_item
 
     def createHeaderItems(self, color_args_list, abbreviated_title=False):
         """
@@ -84,7 +96,9 @@ class ColorGradientHeaderWidget(QScrollArea):
                 title = color_arg[0]
             else:
                 title = color_arg
-            new_item = ColorHeaderWidgetItem(self, title=title, value=0)
+
+            new_item = self.createNewHeaderItem(title, 0)
+            #new_item = ColorHeaderWidgetItem(self, title=title, value=0)
 
             # setup header attrs
             new_item.setMinimumHeight(self.item_height)
@@ -97,6 +111,29 @@ class ColorGradientHeaderWidget(QScrollArea):
             # add to layout
             self._widget_dict[color_arg] = new_item
             self.main_widget.layout().addWidget(new_item)
+            #self.layout().addWidget(new_item)
+
+    def updateColorArg(self, widget, value):
+        """
+        Updates the color based off of the specific input from the user
+        widget (FloatInputWidget):
+        value (str): string value set by the user
+
+        """
+        # get attrs
+        color_arg = widget.color_arg
+        orig_color = self.delegate().color()
+        new_color = updateColorFromArgValue(orig_color, color_arg, float(value))
+
+        # check if updating
+        _updating = True
+        for color_arg in zip(orig_color.getRgb(), new_color.getRgb()):
+            if color_arg[0] != color_arg[1]:
+                _updating = False
+
+        # update
+        if _updating is False:
+            self.delegate().setColor(new_color)
 
     """ INPUT EVENT """
     def headerItemChanged(self, widget, value):
@@ -119,6 +156,12 @@ class ColorGradientHeaderWidget(QScrollArea):
         pass
 
     """ PROPERTIES"""
+    def headerItemType(self):
+        return self._header_item_type
+
+    def setHeaderItemType(self, _header_item_type):
+        self._header_item_type = _header_item_type
+
     def getWidgetDict(self):
         return self._widget_dict
 

@@ -46,6 +46,7 @@ class AbstractColorDelegate(QWidget):
         Args:
             color (QColor):
         """
+        print('delegate update')
         self._color = color
         self.updateDisplay()
 

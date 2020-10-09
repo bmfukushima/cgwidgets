@@ -29,9 +29,11 @@ from cgwidgets.utils import (
     getFontSize, installStickyValueAdjustItemDelegate
 )
 from cgwidgets.settings.colors import (
-    iColor, getHSVRGBAFloatFromColor, updateColorFromArgValue)
+    iColor, getHSVRGBAFloatFromColor, updateColorFromArgValue,
+)
 from cgwidgets.widgets.InputWidgets.ColorInputWidget import (
-    ColorHeaderWidgetItem, AbstractColorDelegate, AbstractColorView
+    ColorHeaderWidgetItem, AbstractColorDelegate, AbstractColorView,
+    ColorHeaderWidget
 )
 
 
@@ -50,6 +52,7 @@ class AbstractColorClock(QWidget):
         self._offset = 30
         self._header_item_size = 50
         self._color = QColor(128, 128, 255)
+        self._updating = False
 
         self.scene = ClockDisplayScene(self)
         self.view = ClockDisplayView(self.scene)
@@ -86,8 +89,10 @@ class AbstractColorClock(QWidget):
             color (QColor):
         """
         print('abstract update')
-        self.scene.center_manipulator_item.setColor(color)
-        self.scene.update()
+        self._color = color
+        # self.scene.center_manipulator_item.setColor(color)
+        # self.scene.update()
+        self.updateDisplay()
 
     def updateColorFromArgValue(self, color_arg, value):
         """
@@ -113,12 +118,12 @@ class AbstractColorClock(QWidget):
     """ UTILS """
     def _createHeaderWidgetItems(self):
         self.rgba_header_widget = ClockHeaderWidget(self)
-        self.rgba_header_widget.layout().setAlignment(Qt.AlignRight | Qt.AlignTop)
-        self.rgba_header_widget.createHeaderItems(attrs.RGBA_LIST)
+        self.rgba_header_widget.main_layout.setAlignment(Qt.AlignRight | Qt.AlignTop)
+        self.rgba_header_widget.createHeaderItems(attrs.RGBA_LIST, abbreviated_title=True)
 
         self.hsv_header_widget = ClockHeaderWidget(self)
-        self.hsv_header_widget.layout().setAlignment(Qt.AlignLeft | Qt.AlignTop)
-        self.hsv_header_widget.createHeaderItems(attrs.HSV_LIST)
+        self.hsv_header_widget.main_layout.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        self.hsv_header_widget.createHeaderItems(attrs.HSV_LIST, abbreviated_title=True)
 
     """ PLACE HEADER"""
     def _updateHeaderWidgetPosition(self):
@@ -158,11 +163,11 @@ class AbstractColorClock(QWidget):
         """
         self.hsv_header_widget.move(0, self.height() - self.headerItemSize())
         self.hsv_header_widget.setFixedSize(self.width(), self.headerItemSize())
-        self.hsv_header_widget.layout().setDirection(QBoxLayout.LeftToRight)
+        self.hsv_header_widget.main_layout.setDirection(QBoxLayout.LeftToRight)
 
         self.rgba_header_widget.move(0, 0)
         self.rgba_header_widget.setFixedSize(self.width(), self.headerItemSize())
-        self.rgba_header_widget.layout().setDirection(QBoxLayout.LeftToRight)
+        self.rgba_header_widget.main_layout.setDirection(QBoxLayout.LeftToRight)
 
     def _placeHeaderHorizontal(self):
         """
@@ -176,13 +181,13 @@ class AbstractColorClock(QWidget):
         ypos = (self.height() * 0.5) - (1.5 * self.hsv_header_widget.item_height)
         self.hsv_header_widget.move(0, ypos)
         self.hsv_header_widget.setFixedSize(self.headerItemSize(), self.height())
-        self.hsv_header_widget.layout().setDirection(QBoxLayout.TopToBottom)
+        self.hsv_header_widget.main_layout.setDirection(QBoxLayout.TopToBottom)
 
         # set rgba header
         ypos = (self.height() * 0.5) - (2 * self.rgba_header_widget.item_height)
         self.rgba_header_widget.move(self.width() - self.headerItemSize(), ypos)
         self.rgba_header_widget.setFixedSize(self.headerItemSize(), self.height())
-        self.rgba_header_widget.layout().setDirection(QBoxLayout.TopToBottom)
+        self.rgba_header_widget.main_layout.setDirection(QBoxLayout.TopToBottom)
 
     def _placeHeaderCenter(self):
         """
@@ -196,42 +201,42 @@ class AbstractColorClock(QWidget):
         # set HSV header
         self.hsv_header_widget.move(0, orig_y - (self.rgba_header_widget.item_height * 0.5))
         self.hsv_header_widget.setFixedSize(orig_x - self.offset() - x_offset, self.rgba_header_widget.item_height)
-        self.hsv_header_widget.layout().setDirection(QBoxLayout.LeftToRight)
+        self.hsv_header_widget.main_layout.setDirection(QBoxLayout.LeftToRight)
 
         # set RGBA Header
         self.rgba_header_widget.move(orig_x + self.offset() + x_offset, orig_y - (self.rgba_header_widget.item_height * 0.5))
         self.rgba_header_widget.setFixedSize(orig_x - self.offset() - x_offset, self.hsv_header_widget.item_height)
-        self.rgba_header_widget.layout().setDirection(QBoxLayout.LeftToRight)
+        self.rgba_header_widget.main_layout.setDirection(QBoxLayout.LeftToRight)
 
-    """ NOT IN USE BUT I LIKE THIS CODE"""
-    def _placeLabelsFromListInCircle(self, color_args_list, offset=0):
-        """
-        Places labels in a circle around the origin based off of the length
-
-        color_args_list (list): list of color args to be placed
-        offset (float): how many rotational ticks to offset
-
-        Attrs:
-            orig_x (float): x origin
-            orig_y (float): y origin
-            length (float): how for to place the widget from origin
-            rotational_tick (radian): how many degrees one tick is in radians
-        """
-        orig_x = self.width() * 0.5
-        orig_y = self.height() * 0.5
-        length = min(orig_x, orig_y)
-        rotational_tick = 1 / ( len(color_args_list) * 2 )
-
-        for index, color_arg in enumerate(color_args_list):
-            widget = self.color_header_items_dict[color_arg]
-            rotation = (index + offset) * rotational_tick
-
-            x0 = (length * math.cos(2 * math.pi * rotation))
-            y0 = (length * math.sin(2 * math.pi * rotation))
-            x0 += orig_x
-            y0 *= 0.8
-            y0 += orig_y
-            widget.move(x0, y0)
+    # """ NOT IN USE BUT I LIKE THIS CODE"""
+    # def _placeLabelsFromListInCircle(self, color_args_list, offset=0):
+    #     """
+    #     Places labels in a circle around the origin based off of the length
+    #
+    #     color_args_list (list): list of color args to be placed
+    #     offset (float): how many rotational ticks to offset
+    #
+    #     Attrs:
+    #         orig_x (float): x origin
+    #         orig_y (float): y origin
+    #         length (float): how for to place the widget from origin
+    #         rotational_tick (radian): how many degrees one tick is in radians
+    #     """
+    #     orig_x = self.width() * 0.5
+    #     orig_y = self.height() * 0.5
+    #     length = min(orig_x, orig_y)
+    #     rotational_tick = 1 / ( len(color_args_list) * 2 )
+    #
+    #     for index, color_arg in enumerate(color_args_list):
+    #         widget = self.color_header_items_dict[color_arg]
+    #         rotation = (index + offset) * rotational_tick
+    #
+    #         x0 = (length * math.cos(2 * math.pi * rotation))
+    #         y0 = (length * math.sin(2 * math.pi * rotation))
+    #         x0 += orig_x
+    #         y0 *= 0.8
+    #         y0 += orig_y
+    #         widget.move(x0, y0)
 
     """ EVENTS """
     def resizeEvent(self, event):
@@ -252,38 +257,44 @@ class AbstractColorClock(QWidget):
 
         color (QColor): color to update the display to
         """
-        self.scene.center_manipulator_item.setColor(self._color)
-        self.scene.update()
+        print('update display')
+        if self._updating is False:
+            print(self._updating)
+            self._updating = True
+            self.scene.center_manipulator_item.setColor(self._color)
+            self.scene.update()
 
-        color_args_dict = getHSVRGBAFloatFromColor(self._color)
-        # update headers
-        # TODO This is causing the recursion issues...
-        # self.rgba_header_widget.updateUserInputs(color_args_dict)
-        # self.hsv_header_widget.updateUserInputs(color_args_dict)
+            color_args_dict = getHSVRGBAFloatFromColor(self._color)
+            # update headers
+            # TODO This is causing the recursion issues...
+            #self.rgba_header_widget.updateUserInputs(color_args_dict)
+            #self.hsv_header_widget.updateUserInputs(color_args_dict)
 
-        # update hands
-        for color_arg in color_args_dict:
-            # get value widget
-            value = color_args_dict[color_arg]
+            # update hands
+            for color_arg in color_args_dict:
+                # get value widget
+                value = color_args_dict[color_arg]
 
-            # set hand widget
-            hand_widget = self.scene.hands_items[color_arg]
-            hand_widget.setValue(value)
+                # set hand widget
+                hand_widget = self.scene.hands_items[color_arg]
+                hand_widget.setValue(value)
+
+        self._updating = False
 
 
 class ColorClockDelegate(AbstractColorClock, AbstractColorDelegate):
     def __init__(self, parent=None):
         super(ColorClockDelegate, self).__init__(parent)
 
-    def setColor(self, color):
-        """
-        Sets the color of this widget
-
-        Args:
-            color (QColor):
-        """
-        AbstractColorClock.setColor(self, color)
-        return AbstractColorDelegate.setColor(self, color)
+    # def setColor(self, color):
+    #     """
+    #     Sets the color of this widget
+    #
+    #     Args:
+    #         color (QColor):
+    #     """
+    #     AbstractColorClock.setColor(self, color)
+    #     return AbstractColorDelegate.setColor(self, color)
 
 
 class ColorClockView(AbstractColorClock, AbstractColorView):
@@ -316,7 +327,7 @@ class ColorClockView(AbstractColorClock, AbstractColorView):
         return QWidget.enterEvent(self, *args, **kwargs)
 
 
-class ClockHeaderWidget(QFrame):
+class ClockHeaderWidget(ColorHeaderWidget):
     """
     This is a header that will contain the text values of each individual
     color arg (HSV / RGBA).  This will automatically be displayed on the
@@ -328,77 +339,24 @@ class ClockHeaderWidget(QFrame):
     """
     def __init__(self, parent=None):
         super(ClockHeaderWidget, self).__init__(parent)
-        QBoxLayout(QBoxLayout.LeftToRight, self)
+        #QBoxLayout(QBoxLayout.LeftToRight, self)
 
         # set up attrs
-        self.item_height = getFontSize(QApplication) * 3 + 5
-        self.item_width = 40
-        self.color_header_items_dict = {}
+        self.setHeaderItemType(ColorGradientHeaderWidgetItem)
+        #self.color_header_items_dict = {}
+
+        # set signals
+        #self.setHeaderItemChanged(self.updateColorArg)
 
        # set up display
         self.setStyleSheet("background-color: rgba(0,0,0,0)")
-        self.layout().setAlignment(Qt.AlignTop)
-        self.layout().setContentsMargins(0, 0, 0, 0)
-        self.layout().setSpacing(0)
+        self.main_layout.setAlignment(Qt.AlignTop)
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
+        self.main_layout.setSpacing(0)
 
-    def createHeaderItems(self, color_args_list):
-        """
-
-        color_args_list (list): of attrs.COLOR_ARG, which will have a header
-            item (ColorGradientHeaderWidgetItem) craeted for it and stored in
-            the dict color_header_items_dict as
-                color_arg : ColorGradientHeaderWidgetItem
-                attrs.HUE: ColorGradientHeaderWidgetItem
-        """
-        self.color_header_items_dict = {}
-
-        # create clock hands
-        for index, color_arg in enumerate(color_args_list):
-            # create header
-            new_item = ColorGradientHeaderWidgetItem(self, title=color_arg[0], value=0)
-
-            # setup header attrs
-            new_item.setFixedHeight(self.item_height)
-            new_item.setMinimumWidth(self.item_width)
-            new_item.value_widget.color_arg = color_arg
-
-            # setup signals
-            new_item.value_widget.setLiveInputEvent(self.userLiveInputEvent)
-
-            # add to layout
-            self.color_header_items_dict[color_arg] = new_item
-            self.layout().addWidget(new_item)
-
-    def updateUserInputs(self, color_args_dict):
-        """
-        Updates all of the header item user inputs from the dict
-        that is provided as the color_args_dict
-
-        color_args_dict (dict): of attrs.COLOR_ARG : ColorGradientHeaderWidgetItem
-
-        """
-        for color_arg in self.color_header_items_dict:
-            try:
-                # get header item
-                header_item = self.color_header_items_dict[color_arg]
-
-                # set new value
-                value = color_args_dict[color_arg]
-                header_item.setValue(str(value))
-            except KeyError:
-                pass
-
-    def userLiveInputEvent(self, widget, value):
-        """
-        Updates the color based off of the specific input from the user
-        widget (FloatInputWidget):
-        value (str): string value set by the user
-
-        """
-        color_arg = widget.color_arg
-        main_widget = getWidgetAncestor(self, AbstractColorClock)
-        main_widget.updateColorFromArgValue(color_arg, float(value))
-
+        # disable scrollbars
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
 """ TODO COPY PASTE FROM GRADIENT """
 class ColorGradientHeaderWidgetItem(ColorHeaderWidgetItem):

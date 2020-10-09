@@ -21,7 +21,7 @@ from cgwidgets.settings.colors import (
     iColor, getHSVRGBAFloatFromColor, updateColorFromArgValue)
 
 from cgwidgets.widgets.InputWidgets.ColorInputWidget import (
-    ColorPickerItem1D, ColorGradientHeaderWidget, ColorHeaderWidgetItem, AbstractColorDelegate
+    ColorPickerItem1D, ColorHeaderWidget, ColorHeaderWidgetItem, AbstractColorDelegate
 )
 
 
@@ -37,7 +37,7 @@ class ColorGradientDelegate(AbstractColorDelegate):
 
         # create widgets
         self.view_widget = ColorGradientWidget(self)
-        self.header_widget = ColorGradientHeaderWidget(self, self)
+        self.header_widget = ColorGradientHeaderWidget(self)
 
         # add widgets to layout
         self.layout().addWidget(self.header_widget)
@@ -827,7 +827,7 @@ class RGBAForegroundGradient(QGraphicsItem):
         painter.fillRect(self._rectangle, self.getGradient())
 
 
-class ColorGradientHeaderWidget(ColorGradientHeaderWidget):
+class ColorGradientHeaderWidget(ColorHeaderWidget):
     """
     Widget that will contain all of the display values for the user.
 
@@ -848,41 +848,15 @@ class ColorGradientHeaderWidget(ColorGradientHeaderWidget):
 
     """
 
-    def __init__(self, delegate, parent=None):
-        super(ColorGradientHeaderWidget, self).__init__(delegate, parent)
+    def __init__(self, parent=None):
+        super(ColorGradientHeaderWidget, self).__init__(parent)
         # setup default attrs
         self._header_position = attrs.EAST
         self.setWidgetResizable(True)
         self.createHeaderItems(attrs.HSV_LIST + attrs.RGBA_LIST)
 
-        # set signals
-        self.setHeaderItemChanged(self.updateColorArg)
-
         # setup display
         self.updateStyleSheet()
-
-    """ REFACTOR COPY/PASTE FROM Color Display Widget"""
-    def updateColorArg(self, widget, value):
-        """
-        Updates the color based off of the specific input from the user
-        widget (FloatInputWidget):
-        value (str): string value set by the user
-
-        """
-        # get attrs
-        color_arg = widget.color_arg
-        orig_color = self.delegate().color()
-        new_color = updateColorFromArgValue(orig_color, color_arg, float(value))
-
-        # check if updating
-        _updating = True
-        for color_arg in zip(orig_color.getRgb(), new_color.getRgb()):
-            if color_arg[0] != color_arg[1]:
-                _updating = False
-
-        # update
-        if _updating is False:
-            self.delegate().setColor(new_color)
 
     def wheelEvent(self, event):
         """
