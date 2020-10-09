@@ -200,12 +200,12 @@ class AbstractColorClock(QWidget):
         x_offset = 10
         # set HSV header
         self.hsv_header_widget.move(0, orig_y - (self.rgba_header_widget.item_height * 0.5))
-        self.hsv_header_widget.setFixedSize(orig_x - self.offset() - x_offset, self.rgba_header_widget.item_height)
+        self.hsv_header_widget.setFixedSize(orig_x - self.offset() - x_offset, self.rgba_header_widget.item_height + 2)
         self.hsv_header_widget.main_layout.setDirection(QBoxLayout.LeftToRight)
 
         # set RGBA Header
         self.rgba_header_widget.move(orig_x + self.offset() + x_offset, orig_y - (self.rgba_header_widget.item_height * 0.5))
-        self.rgba_header_widget.setFixedSize(orig_x - self.offset() - x_offset, self.hsv_header_widget.item_height)
+        self.rgba_header_widget.setFixedSize(orig_x - self.offset() - x_offset, self.hsv_header_widget.item_height + 2)
         self.rgba_header_widget.main_layout.setDirection(QBoxLayout.LeftToRight)
 
     # """ NOT IN USE BUT I LIKE THIS CODE"""
@@ -267,8 +267,8 @@ class AbstractColorClock(QWidget):
             color_args_dict = getHSVRGBAFloatFromColor(self._color)
             # update headers
             # TODO This is causing the recursion issues...
-            #self.rgba_header_widget.updateUserInputs(color_args_dict)
-            #self.hsv_header_widget.updateUserInputs(color_args_dict)
+            self.rgba_header_widget.updateUserInputs(color_args_dict)
+            self.hsv_header_widget.updateUserInputs(color_args_dict)
 
             # update hands
             for color_arg in color_args_dict:
@@ -339,14 +339,9 @@ class ClockHeaderWidget(ColorHeaderWidget):
     """
     def __init__(self, parent=None):
         super(ClockHeaderWidget, self).__init__(parent)
-        #QBoxLayout(QBoxLayout.LeftToRight, self)
 
         # set up attrs
         self.setHeaderItemType(ColorGradientHeaderWidgetItem)
-        #self.color_header_items_dict = {}
-
-        # set signals
-        #self.setHeaderItemChanged(self.updateColorArg)
 
        # set up display
         self.setStyleSheet("background-color: rgba(0,0,0,0)")
@@ -358,7 +353,27 @@ class ClockHeaderWidget(ColorHeaderWidget):
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
-""" TODO COPY PASTE FROM GRADIENT """
+    def updateUserInputs(self, color_args_dict):
+        """
+        Updates all of the header item user inputs from the dict
+        that is provided as the color_args_dict
+
+        color_args_dict (dict): of attrs.COLOR_ARG : ColorGradientHeaderWidgetItem
+
+        """
+
+        for color_arg in self.getWidgetDict():
+            try:
+                # get header item
+                header_item = self.getWidgetDict()[color_arg]
+
+                # set new value
+                value = color_args_dict[color_arg]
+                header_item.setValue(str(value))
+            except KeyError:
+                pass
+
+
 class ColorGradientHeaderWidgetItem(ColorHeaderWidgetItem):
     """
     Attributes:

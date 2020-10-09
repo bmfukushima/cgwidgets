@@ -185,10 +185,10 @@ class AbstractInputWidget(QLineEdit):
             #TODO This doesn't exist in this ffunctino... moved to iGroupInput
             # or somewhere more logical...
             try:
-                if self._live_input is True:
-                    print('updating live input...')
-                    self.setText(self.getInput())
-                    self.liveInputEvent(self, self.getInput())
+                #if self._live_input is True:
+                print('updating live input...')
+                self.setText(self.getInput())
+                self.liveInputEvent(self, self.getInput())
             except AttributeError:
                 pass
 
