@@ -42,8 +42,6 @@ from cgwidgets.utils import (
     checkNegative,
     checkIfValueInRange,
     getGlobalPos,
-    getMagnitude,
-    guessBackgroundColor,
     installInvisibleCursorEvent,
     installInvisibleWidgetEvent,
     installStickyAdjustDelegate,
@@ -129,6 +127,7 @@ Notes:
 
         # default attrs
         self._slider_pos = 0
+        self._updating = False
         self.setUserInputTrigger(user_input)
         self.setMiddleItemBorderColor((18, 18, 18))
         self.setMiddleItemBorderWidth(5)
@@ -150,10 +149,11 @@ Notes:
         # set up style
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
+
         self.setWindowFlags(
             self.windowFlags()
             | Qt.FramelessWindowHint
-            | Qt.Popup
+            | Qt.Tool
         )
         self.updateStyleSheet()
 
@@ -278,7 +278,7 @@ Notes:
         # set cursor drag mode
         # TODO invisible stuff
         #self.setInvisibleCursor(boolean)
-        self.setInvisibleWidget(boolean)
+        #self.setInvisibleWidget(boolean)
 
         # create new slide bar
         if not display_widget:
@@ -468,6 +468,7 @@ Notes:
             value_list (list): of floats that will determine the slide
                 options available to the user.
         """
+
         # create widgets
         for value in value_list:
             widget = LadderItem(
@@ -478,8 +479,15 @@ Notes:
             self.item_list.append(widget)
 
             # install click/drag mechanism
+            # installStickyAdjustDelegate(
+            #     widget, pixels_per_tick=self.getPixelsPerTick(), value_per_tick=value
+            # )
             installStickyAdjustDelegate(
-                widget, pixels_per_tick=self.getPixelsPerTick(), value_per_tick=value
+                widget,
+                pixels_per_tick=self.getPixelsPerTick(),
+                value_per_tick=value,
+                activation_event=widget.activationEvent,
+                deactivation_event=widget.deactivationEvent
             )
 
         self.__createMiddleItem()
@@ -580,10 +588,24 @@ Notes:
                         pass
 
     """ EVENTS """
-    def hideEvent(self, *args, **kwargs):
-        self.is_active = False
+    def leaveEvent(self, event, *args, **kwargs):
+        """
+        When the cursor leaves the widget, this will hide the ladder if the
+        user is not manipulating the object.
+        """
+        if self._updating is True:
+            return
+        self.hide()
+        return QFrame.leaveEvent(self, event, *args, **kwargs)
+
+    def hideEvent(self, event, *args, **kwargs):
+        """
+        Resets the cursor on the input widget to 0, so that
+        it won't do the awesome wonky alignment
+        """
+        self.parent()._updating = False
         self.parent().setCursorPosition(0)
-        return QWidget.hideEvent(self, *args, **kwargs)
+        return QWidget.hideEvent(self, event, *args, **kwargs)
 
     def showEvent(self, *args, **kwargs):
         self.middle_item.setValue(self.getValue())
@@ -610,23 +632,6 @@ Notes:
         #         item.setProperty('is_drag_STICKY', self._drag_STICKY)
         #         item.setGradientEnable(False)
         QFrame.enterEvent(self, event)
-
-    # TODO
-    # add this mechanism back in
-    # essentially the _drag_STICKY should be on the obj now?
-    # so how do I get it back here?
-    # def leaveEvent(self, event, *args, **kwargs):
-    #     if self._drag_STICKY is True:
-    #         return QFrame.leaveEvent(self, event, *args, **kwargs)
-    #
-    #     self.hide()
-    #     return QFrame.leaveEvent(self, event, *args, **kwargs)
-    #
-    # def closeEvent(self, event, *args, **kwargs):
-    #     if self._drag_STICKY is True:
-    #         return
-    #
-    #     return QFrame.closeEvent(self, event, *args, **kwargs)
 
     def keyPressEvent(self, event, *args, **kwargs):
         if event.key() == Qt.Key_Escape:
@@ -746,11 +751,17 @@ Args:
         self.parent().slider_pos = slider_pos
         self.parent().updateStyleSheet()
 
-    def mousePressEvent(self, event):
-        # TODO Setting _updating flag here...
+    def activationEvent(self, *args):
         input_widget = self.parent().parent()
-        input_widget._updating = not input_widget._updating
-        return QLabel.mousePressEvent(self, event)
+        input_widget._updating = True
+        self.parent()._updating = True
+        self.parent().hide()
+
+    def deactivationEvent(self, *args):
+        input_widget = self.parent().parent()
+        input_widget._updating = False
+        self.parent()._updating = False
+        self.parent().show()
 
 
 def main():
@@ -790,7 +801,8 @@ def main():
     ladder = installLadderDelegate(
         float_input
     )
-    ladder.setInvisibleWidget(True)
+
+    #ladder.setInvisibleWidget(True)
 
 
     #ladder.setDiscreteDrag(True, alignment=Qt.AlignLeft, depth=10, display_widget=w2)

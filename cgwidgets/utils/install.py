@@ -169,7 +169,7 @@ def installStickyAdjustDelegate(
         activation_event (function): run every time the activation object is clicked
             active_object, drag_widget, event
         deactivation_event (function): run when the sticky adjust is deactivated
-            active_object, drag_widget, event
+            active_object, activation_widget, event
         value_update_event (function): runs every time the sticky value sends a
             obj, original_value, slider_pos, num_ticks
     todo:

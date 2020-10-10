@@ -126,7 +126,7 @@ class iStickyActivationDelegate(object):
         """
         self.__valueUpdateEvent = valueUpdateEvent
 
-    def __deactivationEvent(self, active_object, drag_widget, event):
+    def __deactivationEvent(self, active_object, activation_widget, event):
         """
         obj (QWidget): the widget that should have its values manipulated
         original_value (float)
@@ -159,8 +159,8 @@ class iStickyActivationDelegate(object):
         active_object = activation_obj._sticky_widget_data['active_object']
 
         # setup drag attrs
-        drag_widget.setActiveWidget(active_object)
-        drag_widget.setActivationWidget(activation_obj)
+        drag_widget.setActiveObject(active_object)
+        drag_widget.setActivationObject(activation_obj)
 
         # activate sticky drag
         self.__activateStickyDrag(drag_widget)
@@ -252,16 +252,16 @@ class StickyDragWindowWidget(QFrame, iStickyValueAdjustDelegate):
         setAsTransparent(self)
 
     """ PROPERTIES """
-    def activeWidget(self):
+    def activeObject(self):
         return self._active_object
 
-    def setActiveWidget(self, _active_object):
+    def setActiveObject(self, _active_object):
         self._active_object = _active_object
 
-    def activationWidget(self):
+    def activationObject(self):
         return self._activation_object
 
-    def setActivationWidget(self, _activation_object):
+    def setActivationObject(self, _activation_object):
         self._activation_object = _activation_object
 
     def origValue(self):
@@ -273,12 +273,12 @@ class StickyDragWindowWidget(QFrame, iStickyValueAdjustDelegate):
         click drag event is started
         """
         try:
-            orig_value = self.activeWidget().getInput()
+            orig_value = self.activeObject().getInput()
         except AttributeError:
             try:
-                orig_value = self.activeWidget().getValue()
+                orig_value = self.activeObject().getValue()
             except AttributeError:
-                orig_value = self.activeWidget().text()
+                orig_value = self.activeObject().text()
 
         self._orig_value = float(orig_value)
     """ UTILS """
@@ -310,7 +310,7 @@ class StickyDragWindowWidget(QFrame, iStickyValueAdjustDelegate):
         new_value = self._num_ticks * self.valuePerTick()
         new_value += float(self._orig_value)
         logging.debug(new_value)
-        self.activeWidget().setValue(new_value)
+        self.activeObject().setValue(new_value)
 
     """ VIRTUAL FUNCTIONSs"""
     def __valueUpdateEvent(self, obj, original_value, slider_pos, num_ticks):
@@ -323,7 +323,7 @@ class StickyDragWindowWidget(QFrame, iStickyValueAdjustDelegate):
         pass
 
     def valueUpdateEvent(self):
-        obj = self.activeWidget()
+        obj = self.activeObject()
         return self.__valueUpdateEvent(obj, self._orig_value, self._slider_pos, self._num_ticks)
 
     def setValueUpdateEvent(self, valueUpdateEvent):
@@ -336,7 +336,7 @@ class StickyDragWindowWidget(QFrame, iStickyValueAdjustDelegate):
         """
         self.__valueUpdateEvent = valueUpdateEvent
 
-    def __deactivationEvent(self, active_object, drag_widget, event):
+    def __deactivationEvent(self, active_object, activation_widget, event):
         """
         obj (QWidget): the widget that should have its values manipulated
         original_value (float)
@@ -345,8 +345,8 @@ class StickyDragWindowWidget(QFrame, iStickyValueAdjustDelegate):
         """
         pass
 
-    def deactivationEvent(self, active_object, drag_widget, event):
-        return self.__deactivationEvent(active_object, drag_widget, event)
+    def deactivationEvent(self, active_object, activation_widget, event):
+        return self.__deactivationEvent(active_object, activation_widget, event)
 
     def setDeactivationEvent(self, deactivationEvent):
         """
@@ -377,6 +377,7 @@ class StickyDragWindowWidget(QFrame, iStickyValueAdjustDelegate):
 
     def mousePressEvent(self, event):
         self.__deactivateStickyDrag()
+        self.deactivationEvent(self.activeObject(), self.activationObject(), event)
         return QFrame.mousePressEvent(self, event)
 
     def showEvent(self, event):
