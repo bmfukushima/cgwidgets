@@ -46,7 +46,7 @@ from cgwidgets.utils import (
     guessBackgroundColor,
     installInvisibleCursorEvent,
     installInvisibleWidgetEvent,
-    installStickyValueAdjustWidgetDelegate,
+    installStickyAdjustDelegate,
     installSlideDelegate,
     removeSlideDelegate,
     updateStyleSheet
@@ -478,7 +478,7 @@ Notes:
             self.item_list.append(widget)
 
             # install click/drag mechanism
-            installStickyValueAdjustWidgetDelegate(
+            installStickyAdjustDelegate(
                 widget, pixels_per_tick=self.getPixelsPerTick(), value_per_tick=value
             )
 

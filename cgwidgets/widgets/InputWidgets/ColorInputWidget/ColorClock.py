@@ -26,7 +26,7 @@ from qtpy.QtGui import (
 
 from cgwidgets.utils import (
     attrs, draw, getWidgetAncestor, getWidgetAncestorByName,
-    getFontSize, installStickyValueAdjustItemDelegate
+    getFontSize, installStickyAdjustDelegate
 )
 from cgwidgets.settings.colors import (
     iColor, getHSVRGBAFloatFromColor, updateColorFromArgValue,
@@ -501,7 +501,7 @@ class ClockDisplayScene(QGraphicsScene):
             self.hands_items[color_arg] = hand_item
 
             # add filter
-            installStickyValueAdjustItemDelegate(
+            installStickyAdjustDelegate(
                 hand_item.hand_crosshair, pixels_per_tick=100, value_per_tick=0.01)
 
     def updateHands(self):

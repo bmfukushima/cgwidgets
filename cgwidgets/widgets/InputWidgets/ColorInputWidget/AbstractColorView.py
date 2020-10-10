@@ -14,7 +14,7 @@ from qtpy.QtGui import (
 
 from cgwidgets.utils import (
     attrs, draw, getWidgetAncestor, getWidgetAncestorByName,
-    getFontSize, installStickyValueAdjustItemDelegate
+    getFontSize, installStickyAdjustDelegate
 )
 from cgwidgets.settings.colors import iColor, getHSVRGBAFloatFromColor
 from cgwidgets.widgets.InputWidgets.ColorInputWidget import ColorHeaderWidgetItem

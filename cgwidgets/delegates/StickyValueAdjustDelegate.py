@@ -74,12 +74,33 @@ class iStickyValueAdjustDelegate(object):
         self._pixels_per_tick = _pixels_per_tick
 
 
-class StickyValueAdjustWidgetDelegate(QWidget, iStickyValueAdjustDelegate):
-    def __init__(self, parent=None):
-        super(StickyValueAdjustWidgetDelegate, self).__init__(parent)
-        iStickyValueAdjustDelegate.__init__(self)
+class iStickyActivationDelegate(object):
+    """
+    Interface for the activation objects
+    """
+    def penDownEvent(self, activation_obj):
+        """
+        Event to be run when the user clicks on the activation widget.
+        This will enable the activation of the sticky drag.
 
-    def activateStickyDrag(self, obj):
+        Args:
+            obj (QWidget): Activation Widget
+        """
+        # get widgets
+        drag_widget = activation_obj._sticky_widget_data['drag_widget']
+        active_widget = activation_obj._sticky_widget_data['active_widget']
+
+        # setup drag attrs
+        drag_widget.setActiveWidget(active_widget)
+        drag_widget.setActivationWidget(activation_obj)
+
+        # activate sticky drag
+        self.__activateStickyDrag(drag_widget)
+
+        # show invisible widget ( yeah I know how it sounds )
+        drag_widget.show()
+
+    def __activateStickyDrag(self, obj):
         """
         This should be run every time the user clicks.
 
@@ -93,7 +114,6 @@ class StickyValueAdjustWidgetDelegate(QWidget, iStickyValueAdjustDelegate):
         QCursor.setPos(top_left + QPoint(10, 10))
         obj.setFocus()
         obj.updateOrigValue()
-
         obj._calc_pos = QCursor.pos()
         obj._drag_STICKY = not obj._drag_STICKY
         obj._num_ticks = 0
@@ -104,31 +124,22 @@ class StickyValueAdjustWidgetDelegate(QWidget, iStickyValueAdjustDelegate):
         if obj._drag_STICKY:
             obj.setCursor(Qt.BlankCursor)
 
-    def eventFilter(self, obj, event, *args, **kwargs):
-        # get widgets
-        drag_widget = obj._sticky_widget_data['drag_widget']
-        active_widget = obj._sticky_widget_data['active_widget']
-        activation_widget = obj._sticky_widget_data['activation_widget']
 
+class StickyValueAdjustWidgetDelegate(QWidget, iStickyActivationDelegate, iStickyValueAdjustDelegate):
+    def __init__(self, parent=None):
+        super(StickyValueAdjustWidgetDelegate, self).__init__(parent)
+        iStickyValueAdjustDelegate.__init__(self)
+
+    def eventFilter(self, activation_obj, event, *args, **kwargs):
         # activate
-        if obj == activation_widget:
-            # activated by clicking on the activation widget
-            if event.type() in iStickyValueAdjustDelegate.input_events:
-                # setup drag attrs
-                drag_widget.setActiveWidget(active_widget)
-                drag_widget.setActivationWidget(activation_widget)
-
-                # activate sticky drag
-                self.activateStickyDrag(drag_widget)
-
-                # show invisible widget ( yeah I know how it sounds )
-                drag_widget.show()
-                return False
+        if event.type() in iStickyValueAdjustDelegate.input_events:
+            self.penDownEvent(activation_obj)
+            return False
 
         return False
 
 
-class StickyValueAdjustItemDelegate(QGraphicsItem, iStickyValueAdjustDelegate):
+class StickyValueAdjustItemDelegate(QGraphicsItem, iStickyActivationDelegate, iStickyValueAdjustDelegate):
     def __init__(self, parent=None):
         super(StickyValueAdjustItemDelegate, self).__init__(parent)
         iStickyValueAdjustDelegate.__init__(self)
@@ -139,22 +150,11 @@ class StickyValueAdjustItemDelegate(QGraphicsItem, iStickyValueAdjustDelegate):
     def paint(self, *args, **kwargs):
         return None
 
-    def sceneEventFilter(self, obj, event, *args, **kwargs):
+    def sceneEventFilter(self, activation_obj, event, *args, **kwargs):
         # get widgets
-        drag_widget = obj._sticky_widget_data['drag_widget']
-        active_widget = obj._sticky_widget_data['active_widget']
-        activation_widget = obj._sticky_widget_data['activation_widget']
-
-        # activate
-        if obj == activation_widget:
-            # activated by clicking on the activation widget
-            if event.type() in iStickyValueAdjustDelegate.input_events:
-                self.toggleStickyDrag(drag_widget)
-
-                drag_widget = obj._sticky_widget_data['drag_widget']
-                drag_widget.setActiveWidget(active_widget)
-                drag_widget.show()
-                return False
+        if event.type() in iStickyValueAdjustDelegate.input_events:
+            self.penDownEvent(activation_obj)
+            return False
 
         return False
 
@@ -166,13 +166,17 @@ class StickyDragWindowWidget(QFrame, iStickyValueAdjustDelegate):
     """
     def __init__(self, parent=None):
         super(StickyDragWindowWidget, self).__init__(parent)
+        # setup default attrs
         self._orig_value = 0
-        self.hide()
-        self.setMouseTracking(True)
         self._updating = False
         self._drag_STICKY = False
+        self.setMouseTracking(True)
+
+        # setup display attrs
+        self.hide()
         setAsTool(self)
         setAsTransparent(self)
+
 
     """ PROPERTIES """
     def activeWidget(self):
@@ -420,13 +424,14 @@ def testWidget():
 
     # todo fix invisible widget not allowing clicking?
     #installInvisibleWidgetEvent(w2, activation_widget=w3)
-    #ef = installStickyValueAdjustWidgetDelegate(w2, drag_widget=w3, activation_widget=w3)
+    #ef = installStickyAdjustDelegate(w2, drag_widget=w3, activation_widget=w3)
 
     # simple use case
 
 
     #installInvisibleWidgetEvent(w2)
-    ef = installStickyValueAdjustWidgetDelegate(w2, value_per_tick=.01, activation_widget=w3)
+    from cgwidgets.utils import installStickyAdjustDelegate
+    ef = installStickyAdjustDelegate(w2, value_per_tick=.01, activation_widget=w3)
 
     # #example user update functino
     # ef.setUserUpdateFunction(testUpdate)
@@ -439,18 +444,18 @@ def testWidget():
 
 def testItem():
     w = TestWidgetItem()
-    #ef = installStickyValueAdjustItemDelegate(w.text_item, activation_item=w.circle_item)
-    ef = installStickyValueAdjustItemDelegate(w.line_item, pixels_per_tick=100, value_per_tick=0.01)
-    ef = installStickyValueAdjustItemDelegate(w.line_item2, pixels_per_tick=100, value_per_tick=0.01)
+
+    ef = installStickyAdjustDelegate(w.line_item, pixels_per_tick=100, value_per_tick=0.01)
+    ef = installStickyAdjustDelegate(w.line_item2, pixels_per_tick=100, value_per_tick=0.01)
     return w
 
 
 if __name__ == '__main__':
     from qtpy.QtWidgets import QVBoxLayout
     from cgwidgets.utils import installInvisibleWidgetEvent
-    from cgwidgets.utils import installStickyValueAdjustItemDelegate, installStickyValueAdjustWidgetDelegate
+    from cgwidgets.utils import installStickyAdjustDelegate
     app = QApplication(sys.argv)
-    #logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.DEBUG)
 
 
     def testUpdate(obj, original_value, slider_pos, num_ticks):
@@ -459,17 +464,15 @@ if __name__ == '__main__':
         print('slider pos == %s'%slider_pos)
         print('num_ticks == %s'%num_ticks)
 
-    test_widget = testWidget()
-    test_widget.show()
-    test_widget.move(QCursor.pos())
-    test_widget.resize(100, 100)
-    #
-    # a = StickyDragWindowWidget()
-    # a.show()
-    # test_view = testItem()
-    #
-    # test_view.show()
-    # test_view.move(QCursor.pos())
-    # test_view.resize(100, 100)
+    # test_widget = testWidget()
+    # test_widget.show()
+    # test_widget.move(QCursor.pos())
+    # test_widget.resize(100, 100)
+
+    test_view = testItem()
+
+    test_view.show()
+    test_view.move(QCursor.pos())
+    test_view.resize(100, 100)
 
     sys.exit(app.exec_())
