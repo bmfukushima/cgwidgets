@@ -10,7 +10,7 @@ import logging
 
 from qtpy.QtCore import QEvent, Qt, QPoint, QRectF
 from qtpy.QtWidgets import (
-    QWidget, QApplication, QLabel, QDesktopWidget, QGraphicsItem
+    QWidget, QApplication, QLabel, QDesktopWidget, QGraphicsItem, QFrame
 )
 from qtpy.QtGui import QCursor
 
@@ -20,13 +20,11 @@ from cgwidgets.settings.colors import iColor
 
 class iStickyValueAdjustDelegate(object):
     """
-    Registers a click/drag even for the user.  By default this will
+    The interface for all of the sticky drag delegates, by default they will
+    registers a click/drag event for the user and will
     automatically update the widget provided.  However custom functionality
     can be added by using the "setUserUpdateFunction" which will install a function
     to run during each mouse move event.
-
-    By default this is setup to work with sticky drag.  Also there is no other option
-    so... get used to it.  You're welcome.
 
     Attributes:
         pixels_per_tick (int): number of pixels the cursor must travel to register 1 tick
@@ -37,10 +35,9 @@ class iStickyValueAdjustDelegate(object):
         widget (QWidget): Widget to adjust.
 
     Notes:
-        widget/item provided needs setValue method that will set the text/value
-        mousePressEvents on widget...
-            in order to do mouse press events on teh widget, you'll need to use the
-                mousePressEventOverride()
+        - widget/item provided needs setValue method that will set the text/value
+        - if you want the live update to work on InputWidgets, you'll need to toggle the
+            _updating attr on the input widget.
     """
     input_events = [
         QEvent.MouseButtonPress,
@@ -58,20 +55,12 @@ class iStickyValueAdjustDelegate(object):
         QEvent.DragLeave
     ]
 
-    def __init__(self, widget=None):
-        #super(iStickyValueAdjustDelegate, self).__init__(parent)
+    def __init__(self):
         self._pixels_per_tick = 200
         self._value_per_tick = 0.1
         self._updating = False
-        self.widget = widget
 
     """ PROPERTIES """
-    def widget(self):
-        return self._widget
-
-    def setWidget(self, widget):
-        self._widget = widget
-
     def valuePerTick(self):
         return self._value_per_tick
 
@@ -84,72 +73,13 @@ class iStickyValueAdjustDelegate(object):
     def setPixelsPerTick(self, _pixels_per_tick):
         self._pixels_per_tick = _pixels_per_tick
 
-    def getOrigValue(self):
-        """
-        Returns the current value as a string.  This should be run when a
-        click drag event is started
-        """
-        try:
-            orig_value = self.widget.getInput()
-        except AttributeError:
-            try:
-                orig_value = self.widget.getValue()
-            except AttributeError:
-                orig_value = self.widget.text()
-        return float(orig_value)
 
-    """ VALUE UPDATERS / SETTERS"""
-    def __setValue(self, obj):
-        """
-        This function is run to update the value on the parent widget.
-        This will update the value on the widget, and then run
-        the userUpdateFunction
-        """
-        drag_widget = obj._sticky_widget_data['drag_widget']
-        current_pos = QCursor.pos()
-        magnitude = getMagnitude(drag_widget._calc_pos, current_pos)
-        drag_widget._slider_pos, drag_widget._num_ticks = math.modf(magnitude / self.pixelsPerTick())
+class StickyValueAdjustWidgetDelegate(QWidget, iStickyValueAdjustDelegate):
+    def __init__(self, parent=None):
+        super(StickyValueAdjustWidgetDelegate, self).__init__(parent)
+        iStickyValueAdjustDelegate.__init__(self)
 
-        # update values
-        self.userUpdateFunction(obj)
-        self.updateValue(obj)
-
-    def updateValue(self, obj):
-        """
-        Sets the current value on the widget/item provided
-        to the new value based off of how far the cursor has moved
-        """
-
-        drag_widget = obj._sticky_widget_data['drag_widget']
-        new_value = drag_widget._num_ticks * drag_widget.valuePerTick()
-        new_value += float(drag_widget._orig_value)
-        logging.debug(new_value)
-        drag_widget.activeWidget().setValue(new_value)
-
-    def __userUpdateFunction(self, obj, original_value, slider_pos, num_ticks):
-        """
-        original_value (float)
-        slider_pos (float)
-        num_ticks (int)
-        """
-        pass
-        #self.widget.setText(str(num_ticks))
-
-    def userUpdateFunction(self, obj):
-        drag_widget = obj._sticky_widget_data['drag_widget']
-        return self.__userUpdateFunction(obj, drag_widget._orig_value, drag_widget._slider_pos, drag_widget._num_ticks)
-
-    def setUserUpdateFunction(self, userUpdateFunction):
-        """
-        This takes one function which should be run when ever the value
-        is changed during a slide event.
-
-        This function will be required to take 3 args
-            original_value, slider_pos, num_ticks
-        """
-        self.__userUpdateFunction = userUpdateFunction
-
-    def penDownEvent(self, obj):
+    def activateStickyDrag(self, obj):
         """
         This should be run every time the user clicks.
 
@@ -162,73 +92,17 @@ class iStickyValueAdjustDelegate(object):
         top_left = getTopLeftPos(obj)
         QCursor.setPos(top_left + QPoint(10, 10))
         obj.setFocus()
+        obj.updateOrigValue()
 
         obj._calc_pos = QCursor.pos()
-        # obj._cursor_pos = QCursor.pos()
         obj._drag_STICKY = not obj._drag_STICKY
         obj._num_ticks = 0
-        obj._orig_value = self.getOrigValue()
+
         obj._value_per_tick = self.valuePerTick()
 
         # toggle cursor display
         if obj._drag_STICKY:
             obj.setCursor(Qt.BlankCursor)
-        else:
-            obj.unsetCursor()
-
-    def stickyEventFilter(self, obj, event, *args, **kwargs):
-        """
-        _drag_STICKY (bool): Determines if a drag event is currently active
-        _calc_pos (QPoint): Position to calculate magnitude from
-        _cursor_pos (QPoint): Original cursor click point
-        _num_ticks (int): the number of ticks
-            value_mult * _num_ticks = value_offset
-        """
-        # pen down
-        if event.type() in iStickyValueAdjustDelegate.input_events:
-            self.penDownEvent(obj)
-
-        # pen move
-        if event.type() in iStickyValueAdjustDelegate.move_events:
-            #if obj._drag_STICKY:
-            self.__setValue(obj)
-
-        # exit event
-        # this should only be happening in the drag widget
-        if event.type() in iStickyValueAdjustDelegate.exit_events:
-            print('exit?')
-            # force this widget to never loser focus on drag
-            #if obj._drag_STICKY:
-            # update maths
-            current_pos = QCursor.pos()
-            offset = (current_pos - obj._cursor_pos)
-            obj._calc_pos = obj._calc_pos - offset
-
-            # reset cursor
-            QCursor.setPos(obj._cursor_pos)
-
-            # update value
-            self.__setValue(obj.activeWidget())
-
-        # cancel event with escape key
-        if event.type() == QEvent.KeyPress:
-            if event.key() == Qt.Key_Escape:
-                obj.unsetCursor()
-                obj._drag_STICKY = False
-
-
-class StickyValueAdjustWidgetDelegate(QWidget, iStickyValueAdjustDelegate):
-    def __init__(self, parent=None, widget=None):
-        super(StickyValueAdjustWidgetDelegate, self).__init__(parent)
-        if not widget:
-            widget = parent
-
-        self._drag_STICKY = True
-
-        self.setMouseTracking(True)
-        setAsTool(self)
-
-        iStickyValueAdjustDelegate.__init__(self, widget=widget)
 
     def eventFilter(self, obj, event, *args, **kwargs):
         # get widgets
@@ -240,11 +114,14 @@ class StickyValueAdjustWidgetDelegate(QWidget, iStickyValueAdjustDelegate):
         if obj == activation_widget:
             # activated by clicking on the activation widget
             if event.type() in iStickyValueAdjustDelegate.input_events:
-                self._updating = True
-                self.penDownEvent(drag_widget)
-
-                drag_widget = obj._sticky_widget_data['drag_widget']
+                # setup drag attrs
                 drag_widget.setActiveWidget(active_widget)
+                drag_widget.setActivationWidget(activation_widget)
+
+                # activate sticky drag
+                self.activateStickyDrag(drag_widget)
+
+                # show invisible widget ( yeah I know how it sounds )
                 drag_widget.show()
                 return False
 
@@ -252,12 +129,9 @@ class StickyValueAdjustWidgetDelegate(QWidget, iStickyValueAdjustDelegate):
 
 
 class StickyValueAdjustItemDelegate(QGraphicsItem, iStickyValueAdjustDelegate):
-    def __init__(self, parent=None, widget=None):
+    def __init__(self, parent=None):
         super(StickyValueAdjustItemDelegate, self).__init__(parent)
-        if not widget:
-            widget = parent
-
-        iStickyValueAdjustDelegate.__init__(self, widget=widget)
+        iStickyValueAdjustDelegate.__init__(self)
 
     def boundingRect(self):
         return QRectF(0, 0, 0, 0)
@@ -275,7 +149,7 @@ class StickyValueAdjustItemDelegate(QGraphicsItem, iStickyValueAdjustDelegate):
         if obj == activation_widget:
             # activated by clicking on the activation widget
             if event.type() in iStickyValueAdjustDelegate.input_events:
-                self.penDownEvent(drag_widget)
+                self.toggleStickyDrag(drag_widget)
 
                 drag_widget = obj._sticky_widget_data['drag_widget']
                 drag_widget.setActiveWidget(active_widget)
@@ -285,74 +159,6 @@ class StickyValueAdjustItemDelegate(QGraphicsItem, iStickyValueAdjustDelegate):
         return False
 
 
-class StickyValueAdjustViewDelegate(QWidget, iStickyValueAdjustDelegate):
-    def __init__(self, parent=None, widget=None):
-        super(StickyValueAdjustViewDelegate, self).__init__(parent)
-        if not widget:
-            widget = parent
-        iStickyValueAdjustDelegate.__init__(self, widget=widget)
-        self.setMouseTracking(True)
-
-    def eventFilter(self, obj, event, *args, **kwargs):
-        # preflight
-        if not hasattr(obj, "_current_item"): return False
-
-        # pen down
-        if event.type() == QEvent.MouseButtonPress:
-            # Preflight
-            if obj._drag_STICKY_updating is True: return False
-
-            # deactivate
-            if obj._drag_STICKY is True:
-                if obj._drag_STICKY_updating is True: return False
-                obj._drag_STICKY = False
-                QCursor.setPos(obj._cursor_pos)
-                obj.unsetCursor()
-                delattr(obj, '_current_item')
-                return False
-
-        if event.type() == QEvent.MouseButtonRelease:
-            obj._drag_STICKY_updating = False
-
-        # run event filter
-        self.stickyEventFilter(obj, event, *args, **kwargs)
-        return False
-
-    """ OVERLOADED FUNCTIONS"""
-    def getOrigValue(self):
-        """
-        Returns the current value as a string.  This should be run when a
-        click drag event is started
-        """
-        try:
-            orig_value = self.widget._current_item.getInput()
-        except AttributeError:
-            try:
-                orig_value = self.widget._current_item.getValue()
-            except AttributeError:
-                try:
-                    orig_value = self.widget._current_item.text()
-                except AttributeError:
-                    logging.WARNING("cannot find a default value, returning 1.0")
-
-                    orig_value = 1.0
-        return float(orig_value)
-
-    def updateValue(self, obj):
-        """
-        Sets the current value on the widget/item provided
-        to the new value based off of how far the cursor has moved
-
-        Note:
-            This overloads the default behavior from the interface
-        """
-        new_value = obj._num_ticks * self.valuePerTick()
-        new_value += float(obj._orig_value)
-        logging.debug(new_value)
-        self.widget._current_item.setValue(new_value)
-
-
-from qtpy.QtWidgets import QFrame
 class StickyDragWindowWidget(QFrame, iStickyValueAdjustDelegate):
     """
     Main window that is shown when the user enters a sticky drag event...
@@ -360,6 +166,7 @@ class StickyDragWindowWidget(QFrame, iStickyValueAdjustDelegate):
     """
     def __init__(self, parent=None):
         super(StickyDragWindowWidget, self).__init__(parent)
+        self._orig_value = 0
         self.hide()
         self.setMouseTracking(True)
         self._updating = False
@@ -367,23 +174,109 @@ class StickyDragWindowWidget(QFrame, iStickyValueAdjustDelegate):
         setAsTool(self)
         setAsTransparent(self)
 
+    """ PROPERTIES """
     def activeWidget(self):
         return self._active_widget
 
     def setActiveWidget(self, _active_widget):
         self._active_widget = _active_widget
 
+    def activationWidget(self):
+        return self._activation_widget
+
+    def setActivationWidget(self, _activation_widget):
+        self._activation_widget = _activation_widget
+
+    def origValue(self):
+        return self._orig_value
+
+    def updateOrigValue(self):
+        """
+        Returns the current value as a string.  This should be run when a
+        click drag event is started
+        """
+        try:
+            orig_value = self.activeWidget().getInput()
+        except AttributeError:
+            try:
+                orig_value = self.activeWidget().getValue()
+            except AttributeError:
+                orig_value = self.activeWidget().text()
+
+        self._orig_value = float(orig_value)
+    """ UTILS """
+    def __deactivateStickyDrag(self):
+        self._drag_STICKY = False
+        self.unsetCursor()
+        self.hide()
+
+    """ VALUE UPDATERS / SETTERS"""
+    def __setValue(self):
+        """
+        This function is run to update the value on the parent widget.
+        This will update the value on the widget, and then run
+        the userUpdateFunction
+        """
+        current_pos = QCursor.pos()
+        magnitude = getMagnitude(self._calc_pos, current_pos)
+        self._slider_pos, self._num_ticks = math.modf(magnitude / self.pixelsPerTick())
+
+        # update values
+        self.userUpdateFunction()
+        self.__updateValue()
+
+    def __updateValue(self):
+        """
+        Sets the current value on the widget/item provided
+        to the new value based off of how far the cursor has moved
+        """
+        new_value = self._num_ticks * self.valuePerTick()
+        new_value += float(self._orig_value)
+        logging.debug(new_value)
+        self.activeWidget().setValue(new_value)
+
+    def __userUpdateFunction(self, obj, original_value, slider_pos, num_ticks):
+        """
+        obj (QWidget): the widget that should have its values manipulated
+        original_value (float)
+        slider_pos (float)
+        num_ticks (int)
+        """
+        pass
+
+    def userUpdateFunction(self):
+        obj = self.activeWidget()
+        return self.__userUpdateFunction(obj, self._orig_value, self._slider_pos, self._num_ticks)
+
+    def setUserUpdateFunction(self, userUpdateFunction):
+        """
+        This takes one function which should be run when ever the value
+        is changed during a slide event.
+
+        This function will be required to take 3 args
+            original_value, slider_pos, num_ticks
+        """
+        self.__userUpdateFunction = userUpdateFunction
+
+    """ EVENTS """
     def leaveEvent(self, event, *args, **kwargs):
-        self.stickyEventFilter(self, event, *args, **kwargs)
+        current_pos = QCursor.pos()
+        offset = (current_pos - self._cursor_pos)
+        self._calc_pos = self._calc_pos - offset
+
+        # reset cursor
+        QCursor.setPos(self._cursor_pos)
+
+        # update value
+        self.__setValue()
         return QFrame.leaveEvent(self, event, *args, **kwargs)
 
     def mouseMoveEvent(self, event, *args, **kwargs):
-        self.stickyEventFilter(self.activeWidget(), event, *args, **kwargs)
+        self.__setValue()
         QFrame.mouseMoveEvent(self, event, *args, **kwargs)
 
     def mousePressEvent(self, event):
-        self.unsetCursor()
-        self.hide()
+        self.__deactivateStickyDrag()
         return QFrame.mousePressEvent(self, event)
 
     def showEvent(self, event):
@@ -393,6 +286,10 @@ class StickyDragWindowWidget(QFrame, iStickyValueAdjustDelegate):
         self.setFixedSize(width, height)
         self.move(offset, offset)
         return QFrame.showEvent(self, event)
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Escape:
+            self.__deactivateStickyDrag()
 
 
 """ TESTING """
@@ -529,7 +426,7 @@ def testWidget():
 
 
     #installInvisibleWidgetEvent(w2)
-    ef = installStickyValueAdjustWidgetDelegate(w2, value_per_tick=.01)
+    ef = installStickyValueAdjustWidgetDelegate(w2, value_per_tick=.01, activation_widget=w3)
 
     # #example user update functino
     # ef.setUserUpdateFunction(testUpdate)
@@ -562,17 +459,17 @@ if __name__ == '__main__':
         print('slider pos == %s'%slider_pos)
         print('num_ticks == %s'%num_ticks)
 
-    # test_widget = testWidget()
-    # test_widget.show()
-    # test_widget.move(QCursor.pos())
-    # test_widget.resize(100, 100)
+    test_widget = testWidget()
+    test_widget.show()
+    test_widget.move(QCursor.pos())
+    test_widget.resize(100, 100)
     #
     # a = StickyDragWindowWidget()
     # a.show()
-    test_view = testItem()
-
-    test_view.show()
-    test_view.move(QCursor.pos())
-    test_view.resize(100, 100)
+    # test_view = testItem()
+    #
+    # test_view.show()
+    # test_view.move(QCursor.pos())
+    # test_view.resize(100, 100)
 
     sys.exit(app.exec_())

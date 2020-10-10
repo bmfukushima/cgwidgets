@@ -150,11 +150,69 @@ def installLadderDelegate(
 
 
 """ STICKY VALUE DRAG"""
+def installStickyValueAdjustDelegate(
+        active_widget, pixels_per_tick=200, value_per_tick=0.01, activation_widget=None
+    ):
+    """
+    active_widget (QWidget): widget to set the value on.
+    activation_widget (QWidget): widget when clicked on will start this delegate
+    pixels_per_tick:
+    value_per_tick:
+    drag_widget (QWidget): Widget to use as the drag area.  By default
+        this will be the widget unless specified
+    """
+
+    from cgwidgets.delegates import (
+        StickyValueAdjustWidgetDelegate,
+        StickyValueAdjustItemDelegate,
+        StickyDragWindowWidget
+    )
+
+    # Create drag window
+    main_application_widget = active_widget.window()
+    if not hasattr(main_application_widget, '_sticky_drag_window_widget'):
+        main_application_widget._sticky_drag_window_widget = StickyDragWindowWidget(main_application_widget)
+    drag_widget = main_application_widget._sticky_drag_window_widget
+
+    # check activation widget
+    if not activation_widget:
+        activation_widget = active_widget
+
+    # setup widget dict
+    sticky_widget_data = {
+        'drag_widget': drag_widget,
+        'active_widget': active_widget,
+        'activation_widget': activation_widget
+    }
+
+    # create filter
+    sticky_widget_filter = StickyValueAdjustWidgetDelegate(active_widget)
+    sticky_widget_filter.setPixelsPerTick(pixels_per_tick)
+    sticky_widget_filter.setValuePerTick(value_per_tick)
+    sticky_widget_filter._updating = False
+
+    # setup extra attrs on widgets
+    for key in sticky_widget_data:
+        # get widget
+        if key != 'drag_widget':
+            widget = sticky_widget_data[key]
+
+            # set attrs
+            widget._sticky_widget_data = sticky_widget_data
+            #widget.setMouseTracking(True)
+            widget._drag_STICKY = False
+            widget._filter_STICKY = sticky_widget_filter
+            widget._slider_pos = 0
+
+            # install filter
+            widget.installEventFilter(sticky_widget_filter)
+
+    return sticky_widget_filter
+
 def installStickyValueAdjustWidgetDelegate(
         active_widget, pixels_per_tick=200, value_per_tick=0.01, activation_widget=None
     ):
     """
-
     active_widget (QWidget): widget to set the value on.
     activation_widget (QWidget): widget when clicked on will start this delegate
     pixels_per_tick:
@@ -223,11 +281,10 @@ def installStickyValueAdjustItemDelegate(
 
     from cgwidgets.delegates import StickyValueAdjustItemDelegate, StickyDragWindowWidget
     # get the drag widget
-    #view = active_widget.scene().views()[0]
+
     main_application_widget = active_widget.scene().views()[0].window()
     if not hasattr(main_application_widget, '_sticky_drag_window_widget'):
         main_application_widget._sticky_drag_window_widget = StickyDragWindowWidget(main_application_widget)
-
     drag_widget = main_application_widget._sticky_drag_window_widget
 
     # check activation widget

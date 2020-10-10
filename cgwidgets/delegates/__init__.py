@@ -2,7 +2,7 @@
 from .SlideDelegate import SlideDelegate as SlideDelegate
 from .StickyValueAdjustDelegate import StickyValueAdjustWidgetDelegate as StickyValueAdjustWidgetDelegate
 from .StickyValueAdjustDelegate import StickyValueAdjustItemDelegate as StickyValueAdjustItemDelegate
-from .StickyValueAdjustDelegate import StickyValueAdjustViewDelegate as StickyValueAdjustViewDelegate
+#from .StickyValueAdjustDelegate import StickyValueAdjustViewDelegate as StickyValueAdjustViewDelegate
 from .StickyValueAdjustDelegate import StickyDragWindowWidget as StickyDragWindowWidget
 
 # stand alone delegates
