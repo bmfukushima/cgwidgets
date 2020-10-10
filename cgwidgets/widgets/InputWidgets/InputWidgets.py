@@ -134,7 +134,7 @@ class iGroupInput(object):
     def __init__(self):
         self.setUserFinishedEditingEvent(self.updateUserInputItem)
 
-    """ TRIGGER """
+    """ VIRTUAL EVENTS """
     def __user_finished_editing_event(self, *args, **kwargs):
         pass
 

@@ -43,7 +43,7 @@ class AbstractInputWidget(QLineEdit):
         orig_value (str): the previous value set by the user
         key_list (list): of Qt.Key_KEY.  List of keys that are currently
             valid for this widget.
-        updating (bool): Flag to determine if this widget should be continously updating
+        updating (bool): Flag to determine if this widget should be Continuously updating
             or not.  Most noteably this flag will be toggled during sticky drag events.
         rgba_background (rgba): value of rgba_background transparency
         rgba_border (rgba): color of the border...
@@ -65,7 +65,7 @@ class AbstractInputWidget(QLineEdit):
 
         # set up signals
         self.editingFinished.connect(self.userFinishedEditing)
-        self.textChanged.connect(self.userContinouslyEditing)
+        self.textChanged.connect(self.userContinuousEditing)
 
     def updateStyleSheet(self):
         #style_sheet = getTopBorderStyleSheet(self._rgba_border, 2)
@@ -81,51 +81,6 @@ class AbstractInputWidget(QLineEdit):
             color: rgba{rgba_text}
         """.format(**style_sheet_args)
         self.setStyleSheet(style_sheet)
-
-    """ PROPERTIES """
-    def appendKey(self, key):
-        self.getKeyList().append(key)
-
-    def removeKey(self, key):
-        self.getKeyList().remove(key)
-
-    def getKeyList(self):
-        return self._key_list
-
-    def setKeyList(self, _key_list):
-        self._key_list = _key_list
-
-    def setOrigValue(self, _orig_value):
-        self._orig_value = _orig_value
-
-    def getOrigValue(self):
-        return self._orig_value
-
-    @property
-    def rgba_border(self):
-        return self._rgba_border
-
-    @rgba_border.setter
-    def rgba_border(self, _rgba_border):
-        self._rgba_border = _rgba_border
-
-    @property
-    def rgba_background(self):
-        return self._rgba_background
-
-    @rgba_background.setter
-    def rgba_background(self, _rgba_background):
-        self._rgba_background = _rgba_background
-        #self.updateStyleSheet()
-
-    @property
-    def rgba_text(self):
-        return self._rgba_text
-
-    @rgba_text.setter
-    def rgba_text(self, _rgba_text):
-        self._rgba_text = _rgba_text
-        #self.updateStyleSheet()
 
     """ UTILS """
     def setValidateInputFunction(self, function):
@@ -175,39 +130,73 @@ class AbstractInputWidget(QLineEdit):
         else:
             self.setText(self.getOrigValue())
 
-    def userContinouslyEditing(self):
+    def userContinuousEditing(self):
         """
-        This will run when the value is changed.  This is to do continous manipulations
+        This will run when the value is changed.  This is to do Continuous manipulations
         """
         is_valid = self.checkInput()
+        if self._updating is True:
+            if is_valid:
+                #TODO This doesn't exist in this ffunctino... moved to iGroupInput
+                # or somewhere more logical...
+                try:
+                        self.setText(self.getInput())
+                        self.liveInputEvent(self, self.getInput())
+                except AttributeError:
+                    pass
 
-        if is_valid:
-            #TODO This doesn't exist in this ffunctino... moved to iGroupInput
-            # or somewhere more logical...
-            try:
-                if self._updating is True:
-                    self.setText(self.getInput())
-                    self.liveInputEvent(self, self.getInput())
-            except AttributeError:
-                pass
-
-        else:
-            self.setText(self.getOrigValue())
+            else:
+                self.setText(self.getOrigValue())
 
     def mousePressEvent(self, event, *args, **kwargs):
         if event.button() == Qt.MiddleButton:
             return
         return QLineEdit.mousePressEvent(self, event, *args, **kwargs)
 
+    """ PROPERTIES """
+    def appendKey(self, key):
+        self.getKeyList().append(key)
 
-    # def leaveEvent(self, event):
-    #     self.setCursorPosition(0)
-    #     return QLineEdit.leaveEvent(self, event)
+    def removeKey(self, key):
+        self.getKeyList().remove(key)
 
-    # def focusOutEvent(self, event):
-    #     self.setCursorPosition(0)
-    #     print('focus out')
-    #     return QLineEdit.focusOutEvent(self, event)
+    def getKeyList(self):
+        return self._key_list
+
+    def setKeyList(self, _key_list):
+        self._key_list = _key_list
+
+    def setOrigValue(self, _orig_value):
+        self._orig_value = _orig_value
+
+    def getOrigValue(self):
+        return self._orig_value
+
+    @property
+    def rgba_border(self):
+        return self._rgba_border
+
+    @rgba_border.setter
+    def rgba_border(self, _rgba_border):
+        self._rgba_border = _rgba_border
+
+    @property
+    def rgba_background(self):
+        return self._rgba_background
+
+    @rgba_background.setter
+    def rgba_background(self, _rgba_background):
+        self._rgba_background = _rgba_background
+        #self.updateStyleSheet()
+
+    @property
+    def rgba_text(self):
+        return self._rgba_text
+
+    @rgba_text.setter
+    def rgba_text(self, _rgba_text):
+        self._rgba_text = _rgba_text
+        #self.updateStyleSheet()
 
 
 class AbstractNumberInputWidget(AbstractInputWidget):

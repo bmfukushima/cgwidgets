@@ -781,7 +781,6 @@ def main():
                 user_input=QEvent.MouseButtonRelease,
                 value_list=value_list
             )
-
             #ladder.setDiscreteDrag(True, alignment=Qt.AlignLeft, depth=10)
 
 
@@ -802,6 +801,7 @@ def main():
         float_input
     )
 
+    float_input.setText('12')
     #ladder.setInvisibleWidget(True)
 
 
