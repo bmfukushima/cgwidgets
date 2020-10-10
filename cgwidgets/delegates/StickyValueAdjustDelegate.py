@@ -88,10 +88,10 @@ class iStickyActivationDelegate(object):
         """
         # get widgets
         drag_widget = activation_obj._sticky_widget_data['drag_widget']
-        active_widget = activation_obj._sticky_widget_data['active_widget']
+        active_object = activation_obj._sticky_widget_data['active_object']
 
         # setup drag attrs
-        drag_widget.setActiveWidget(active_widget)
+        drag_widget.setActiveWidget(active_object)
         drag_widget.setActivationWidget(activation_obj)
 
         # activate sticky drag
@@ -108,11 +108,11 @@ class iStickyActivationDelegate(object):
             obj (QWidget / QItem --> DragWidget): Object to install all of the extra attrs on
         """
         obj._cursor_pos = QCursor.pos()
-
-        # todo escape velocity issue?
         top_left = getTopLeftPos(obj)
         QCursor.setPos(top_left + QPoint(10, 10))
         obj.setFocus()
+
+        # set up drag time attrs
         obj.updateOrigValue()
         obj._calc_pos = QCursor.pos()
         obj._drag_STICKY = not obj._drag_STICKY
@@ -177,19 +177,18 @@ class StickyDragWindowWidget(QFrame, iStickyValueAdjustDelegate):
         setAsTool(self)
         setAsTransparent(self)
 
-
     """ PROPERTIES """
     def activeWidget(self):
-        return self._active_widget
+        return self._active_object
 
-    def setActiveWidget(self, _active_widget):
-        self._active_widget = _active_widget
+    def setActiveWidget(self, _active_object):
+        self._active_object = _active_object
 
     def activationWidget(self):
-        return self._activation_widget
+        return self._activation_object
 
-    def setActivationWidget(self, _activation_widget):
-        self._activation_widget = _activation_widget
+    def setActivationWidget(self, _activation_object):
+        self._activation_object = _activation_object
 
     def origValue(self):
         return self._orig_value
@@ -423,15 +422,15 @@ def testWidget():
     l.addWidget(w3)
 
     # todo fix invisible widget not allowing clicking?
-    #installInvisibleWidgetEvent(w2, activation_widget=w3)
-    #ef = installStickyAdjustDelegate(w2, drag_widget=w3, activation_widget=w3)
+    #installInvisibleWidgetEvent(w2, activation_object=w3)
+    #ef = installStickyAdjustDelegate(w2, drag_widget=w3, activation_object=w3)
 
     # simple use case
 
 
     #installInvisibleWidgetEvent(w2)
     from cgwidgets.utils import installStickyAdjustDelegate
-    ef = installStickyAdjustDelegate(w2, value_per_tick=.01, activation_widget=w3)
+    ef = installStickyAdjustDelegate(w2, value_per_tick=.01, activation_object=w3)
 
     # #example user update functino
     # ef.setUserUpdateFunction(testUpdate)

@@ -57,7 +57,8 @@ Args:
 
             # toggle display flag
             hide_widget._hide_widget_filter_INVISIBLE = not hide_widget._hide_widget_filter_INVISIBLE
-            print("toggly joe? %s"%obj)
+            # todo something here?
+            # print("toggly joe? %s"%obj)
             # hide
             if hide_widget._hide_widget_filter_INVISIBLE is True:
                 if self._updating is False:

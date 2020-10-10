@@ -332,7 +332,7 @@ def setAsTransparent(widget):
     widget.setAttribute(Qt.WA_NoSystemBackground)
     widget.setWindowFlags(
         widget.windowFlags()
-        ^ Qt.FramelessWindowHint
+        | Qt.FramelessWindowHint
         | Qt.WindowStaysOnTopHint
     )
     widget.setAttribute(Qt.WA_TranslucentBackground)

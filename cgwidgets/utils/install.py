@@ -151,11 +151,11 @@ def installLadderDelegate(
 
 """ STICKY VALUE DRAG"""
 def installStickyAdjustDelegate(
-        active_widget, pixels_per_tick=200, value_per_tick=0.01, activation_widget=None
+        active_object, pixels_per_tick=200, value_per_tick=0.01, activation_object=None
     ):
     """
-    active_widget (QWidget): widget to set the value on.
-    activation_widget (QWidget): widget when clicked on will start this delegate
+    active_object (QWidget): widget to set the value on.
+    activation_object (QWidget): widget when clicked on will start this delegate
     pixels_per_tick:
     value_per_tick:
     drag_widget (QWidget): Widget to use as the drag area.  By default
@@ -175,16 +175,16 @@ def installStickyAdjustDelegate(
 
     # get object type
     object_type = 'widget'
-    for c in type(active_widget).__mro__:
+    for c in type(active_object).__mro__:
         if c == QGraphicsItem:
             object_type = 'item'
 
     # SET UP // Drag Widget
     # get the drag widget
     if object_type == 'widget':
-        main_application_widget = active_widget.window()
+        main_application_widget = active_object.window()
     elif object_type == 'item':
-        main_application_widget = active_widget.scene().views()[0].window()
+        main_application_widget = active_object.scene().views()[0].window()
 
     if not hasattr(main_application_widget, '_sticky_drag_window_widget'):
         main_application_widget._sticky_drag_window_widget = StickyDragWindowWidget(main_application_widget)
@@ -192,15 +192,15 @@ def installStickyAdjustDelegate(
     drag_widget = main_application_widget._sticky_drag_window_widget
 
     # check activation widget
-    if not activation_widget:
-        activation_widget = active_widget
+    if not activation_object:
+        activation_object = active_object
 
     # SET UP // Activation Widget
     # create filter
     if object_type == 'widget':
-        sticky_widget_filter = StickyValueAdjustWidgetDelegate(active_widget)
+        sticky_widget_filter = StickyValueAdjustWidgetDelegate(active_object)
     elif object_type == 'item':
-        sticky_widget_filter = StickyValueAdjustItemDelegate(active_widget)
+        sticky_widget_filter = StickyValueAdjustItemDelegate(active_object)
 
     sticky_widget_filter.setPixelsPerTick(pixels_per_tick)
     sticky_widget_filter.setValuePerTick(value_per_tick)
@@ -208,16 +208,16 @@ def installStickyAdjustDelegate(
     # set attrs
     sticky_widget_data = {
         'drag_widget': drag_widget,
-        'active_widget': active_widget,
-        'activation_widget': activation_widget
+        'active_object': active_object,
+        'activation_object': activation_object
     }
-    activation_widget._sticky_widget_data = sticky_widget_data
+    activation_object._sticky_widget_data = sticky_widget_data
 
     # install filter
     if object_type == 'widget':
-        activation_widget.installEventFilter(sticky_widget_filter)
+        activation_object.installEventFilter(sticky_widget_filter)
     elif object_type == 'item':
-        activation_widget.installSceneEventFilter(sticky_widget_filter)
+        activation_object.installSceneEventFilter(sticky_widget_filter)
 
     drag_widget.hide()
     return sticky_widget_filter
