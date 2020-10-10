@@ -23,7 +23,7 @@ class iStickyValueAdjustDelegate(object):
     The interface for all of the sticky drag delegates, by default they will
     registers a click/drag event for the user and will
     automatically update the widget provided.  However custom functionality
-    can be added by using the "setUserUpdateFunction" which will install a function
+    can be added by using the "setValueUpdateEvent" which will install a function
     to run during each mouse move event.
 
     Attributes:
@@ -77,8 +77,76 @@ class iStickyValueAdjustDelegate(object):
 class iStickyActivationDelegate(object):
     """
     Interface for the activation objects
+
+    Virtual Functions:
+        activationEvent ( active_object, drag_widget, event ): will run every time
+            the activation object is clicked on
+
     """
-    def penDownEvent(self, activation_obj):
+    """ VIRTUAL EVENTS """
+    def __activationEvent(self, active_object, drag_widget, event):
+        """
+        obj (QWidget): the widget that should have its values manipulated
+        original_value (float)
+        slider_pos (float)
+        num_ticks (int)
+        """
+        pass
+
+    def activationEvent(self, active_object, drag_widget, event):
+        return self.__activationEvent(active_object, drag_widget, event)
+
+    def setActivationEvent(self, activationEvent):
+        """
+        This takes one function which should be run when ever the value
+        is changed during a slide event.
+
+        This function will be required to take 3 args
+            original_value, slider_pos, num_ticks
+        """
+        self.__activationEvent = activationEvent
+
+    """ VIRTUAL EVENTS >> DRAG WIDGET """
+    def __valueUpdateEvent(self, obj, original_value, slider_pos, num_ticks):
+        """
+        obj (QWidget): the widget that should have its values manipulated
+        original_value (float)
+        slider_pos (float)
+        num_ticks (int)
+        """
+        pass
+
+    def setValueUpdateEvent(self, valueUpdateEvent):
+        """
+        This takes one function which should be run when ever the value
+        is changed during a slide event.
+
+        This function will be required to take 3 args
+            original_value, slider_pos, num_ticks
+        """
+        self.__valueUpdateEvent = valueUpdateEvent
+
+    def __deactivationEvent(self, active_object, drag_widget, event):
+        """
+        obj (QWidget): the widget that should have its values manipulated
+        original_value (float)
+        slider_pos (float)
+        num_ticks (int)
+        """
+        pass
+
+    def setDeactivationEvent(self, deactivationEvent):
+        """
+        This takes one function which should be run when ever the value
+        is changed during a slide event.
+
+        This function will be required to take 3 args
+            original_value, slider_pos, num_ticks
+        """
+        self.__deactivationEvent = deactivationEvent
+
+    """ EVENTS """
+    def penDownEvent(self, activation_obj, event):
         """
         Event to be run when the user clicks on the activation widget.
         This will enable the activation of the sticky drag.
@@ -99,6 +167,12 @@ class iStickyActivationDelegate(object):
 
         # show invisible widget ( yeah I know how it sounds )
         drag_widget.show()
+
+        # user activation event
+        # todo set deactivation function on drag widget
+        drag_widget.setValueUpdateEvent(self.__valueUpdateEvent)
+        drag_widget.setDeactivationEvent(self.__deactivationEvent)
+        self.activationEvent(active_object, drag_widget, event)
 
     def __activateStickyDrag(self, obj):
         """
@@ -133,7 +207,7 @@ class StickyValueAdjustWidgetDelegate(QWidget, iStickyActivationDelegate, iStick
     def eventFilter(self, activation_obj, event, *args, **kwargs):
         # activate
         if event.type() in iStickyValueAdjustDelegate.input_events:
-            self.penDownEvent(activation_obj)
+            self.penDownEvent(activation_obj, event)
             return False
 
         return False
@@ -153,7 +227,7 @@ class StickyValueAdjustItemDelegate(QGraphicsItem, iStickyActivationDelegate, iS
     def sceneEventFilter(self, activation_obj, event, *args, **kwargs):
         # get widgets
         if event.type() in iStickyValueAdjustDelegate.input_events:
-            self.penDownEvent(activation_obj)
+            self.penDownEvent(activation_obj, event)
             return False
 
         return False
@@ -218,14 +292,14 @@ class StickyDragWindowWidget(QFrame, iStickyValueAdjustDelegate):
         """
         This function is run to update the value on the parent widget.
         This will update the value on the widget, and then run
-        the userUpdateFunction
+        the valueUpdateEvent
         """
         current_pos = QCursor.pos()
         magnitude = getMagnitude(self._calc_pos, current_pos)
         self._slider_pos, self._num_ticks = math.modf(magnitude / self.pixelsPerTick())
 
         # update values
-        self.userUpdateFunction()
+        self.valueUpdateEvent()
         self.__updateValue()
 
     def __updateValue(self):
@@ -238,7 +312,8 @@ class StickyDragWindowWidget(QFrame, iStickyValueAdjustDelegate):
         logging.debug(new_value)
         self.activeWidget().setValue(new_value)
 
-    def __userUpdateFunction(self, obj, original_value, slider_pos, num_ticks):
+    """ VIRTUAL FUNCTIONSs"""
+    def __valueUpdateEvent(self, obj, original_value, slider_pos, num_ticks):
         """
         obj (QWidget): the widget that should have its values manipulated
         original_value (float)
@@ -247,11 +322,11 @@ class StickyDragWindowWidget(QFrame, iStickyValueAdjustDelegate):
         """
         pass
 
-    def userUpdateFunction(self):
+    def valueUpdateEvent(self):
         obj = self.activeWidget()
-        return self.__userUpdateFunction(obj, self._orig_value, self._slider_pos, self._num_ticks)
+        return self.__valueUpdateEvent(obj, self._orig_value, self._slider_pos, self._num_ticks)
 
-    def setUserUpdateFunction(self, userUpdateFunction):
+    def setValueUpdateEvent(self, valueUpdateEvent):
         """
         This takes one function which should be run when ever the value
         is changed during a slide event.
@@ -259,7 +334,29 @@ class StickyDragWindowWidget(QFrame, iStickyValueAdjustDelegate):
         This function will be required to take 3 args
             original_value, slider_pos, num_ticks
         """
-        self.__userUpdateFunction = userUpdateFunction
+        self.__valueUpdateEvent = valueUpdateEvent
+
+    def __deactivationEvent(self, active_object, drag_widget, event):
+        """
+        obj (QWidget): the widget that should have its values manipulated
+        original_value (float)
+        slider_pos (float)
+        num_ticks (int)
+        """
+        pass
+
+    def deactivationEvent(self, active_object, drag_widget, event):
+        return self.__deactivationEvent(active_object, drag_widget, event)
+
+    def setDeactivationEvent(self, deactivationEvent):
+        """
+        This takes one function which should be run when ever the value
+        is changed during a slide event.
+
+        This function will be required to take 3 args
+            original_value, slider_pos, num_ticks
+        """
+        self.__deactivationEvent = deactivationEvent
 
     """ EVENTS """
     def leaveEvent(self, event, *args, **kwargs):
@@ -429,11 +526,34 @@ def testWidget():
 
 
     #installInvisibleWidgetEvent(w2)
+
+    # virtual events test
+    def testActivate(*args):
+        print(*args)
+        pass
+
+    def testDeactivate(*args):
+        print(args)
+
+
+    def testValueUpdate(obj, original_value, slider_pos, num_ticks):
+        print('obj == %s' % obj)
+        print('original_value == %s' % original_value)
+        print('slider pos == %s' % slider_pos)
+        print('num_ticks == %s' % num_ticks)
+
     from cgwidgets.utils import installStickyAdjustDelegate
-    ef = installStickyAdjustDelegate(w2, value_per_tick=.01, activation_object=w3)
+    ef = installStickyAdjustDelegate(
+        w2,
+        value_per_tick=.01,
+        activation_object=w3,
+        activation_event=testActivate,
+        deactivation_event=testDeactivate,
+        value_update_event=testValueUpdate
+    )
 
     # #example user update functino
-    # ef.setUserUpdateFunction(testUpdate)
+    # ef.setValueUpdateEvent(testUpdate)
 
     # ef.setValuePerTick(.001)
     # ef.setPixelsPerTick(50)
@@ -457,21 +577,15 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
 
 
-    def testUpdate(obj, original_value, slider_pos, num_ticks):
-        print('obj == %s'%obj)
-        print('original_value == %s'%original_value)
-        print('slider pos == %s'%slider_pos)
-        print('num_ticks == %s'%num_ticks)
+    test_widget = testWidget()
+    test_widget.show()
+    test_widget.move(QCursor.pos())
+    test_widget.resize(100, 100)
 
-    # test_widget = testWidget()
-    # test_widget.show()
-    # test_widget.move(QCursor.pos())
-    # test_widget.resize(100, 100)
-
-    test_view = testItem()
-
-    test_view.show()
-    test_view.move(QCursor.pos())
-    test_view.resize(100, 100)
+    # test_view = testItem()
+    #
+    # test_view.show()
+    # test_view.move(QCursor.pos())
+    # test_view.resize(100, 100)
 
     sys.exit(app.exec_())

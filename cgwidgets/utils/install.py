@@ -63,7 +63,6 @@ def installInvisibleWidgetEvent(hide_widget, activation_widget=None):
     hide_widget._hide_widget_filter_INVISIBLE = False
     for key in invisible_widget_data:
         widget = invisible_widget_data[key]
-        print(widget)
         widget._invisible_widget_data = invisible_widget_data
 
         # install event filter
@@ -119,7 +118,7 @@ def removeSlideDelegate(item, slide_delegate):
 def installLadderDelegate(
     widget,
     user_input=QEvent.MouseButtonRelease,
-    value_list=[0.001, 0.01, 0.1, 1, 10, 100, 1000]
+        value_list=None
 ):
     """
     Args:
@@ -139,6 +138,8 @@ def installLadderDelegate(
     Returns:
         LadderDelegate
     """
+    if value_list is None:
+        value_list = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
     from cgwidgets.delegates import LadderDelegate
     ladder = LadderDelegate(
         parent=widget,
@@ -151,16 +152,26 @@ def installLadderDelegate(
 
 """ STICKY VALUE DRAG"""
 def installStickyAdjustDelegate(
-        active_object, pixels_per_tick=200, value_per_tick=0.01, activation_object=None
+        active_object,
+        pixels_per_tick=200,
+        value_per_tick=0.01,
+        activation_object=None,
+        activation_event=None,
+        deactivation_event=None,
+        value_update_event=None
     ):
     """
-    active_object (QWidget): widget to set the value on.
-    activation_object (QWidget): widget when clicked on will start this delegate
-    pixels_per_tick:
-    value_per_tick:
-    drag_widget (QWidget): Widget to use as the drag area.  By default
-        this will be the widget unless specified
-
+    Args:
+        active_object (QWidget | QGraphicsItem): widget to set the value on.
+        activation_object (QWidget | QGraphicsItem): widget when clicked on will start this delegate
+        pixels_per_tick (int):
+        value_per_tick (float):
+        activation_event (function): run every time the activation object is clicked
+            active_object, drag_widget, event
+        deactivation_event (function): run when the sticky adjust is deactivated
+            active_object, drag_widget, event
+        value_update_event (function): runs every time the sticky value sends a
+            obj, original_value, slider_pos, num_ticks
     todo:
         widget --> object
             this file...
@@ -219,6 +230,15 @@ def installStickyAdjustDelegate(
     elif object_type == 'item':
         activation_object.installSceneEventFilter(sticky_widget_filter)
 
+    # install custom events
+    if activation_event:
+        sticky_widget_filter.setActivationEvent(activation_event)
+    if deactivation_event:
+        sticky_widget_filter.setDeactivationEvent(deactivation_event)
+    if value_update_event:
+        sticky_widget_filter.setValueUpdateEvent(value_update_event)
+
+    # return
     drag_widget.hide()
     return sticky_widget_filter
 
