@@ -1,9 +1,9 @@
-from .iDynamicWidget import iDynamicWidget as iDynamicWidget
+from .iTansuDynamicWidget import iTansuDynamicWidget as iTansuDynamicWidget
 
 from .TansuModelItem import TansuModelItem as TansuModelItem
 from .TansuModel import TansuModel as TansuModel
 
-from .BaseTansuWidget import BaseTansuWidget as BaseTansuWidget
+from .TansuBaseWidget import TansuBaseWidget as TansuBaseWidget
 from .TansuModelViewWidget import TansuModelViewWidget as TansuModelViewWidget
-from .TansuModelViewWidget import TansuListView as TansuListView
+from .TansuModelViewWidget import TansuHeaderView as TansuHeaderView
 from .TansuModelViewWidget import TansuModelDelegateWidget as TansuModelDelegateWidget

@@ -1,4 +1,4 @@
-class iDynamicWidget(object):
+class iTansuDynamicWidget(object):
     def setUserInputFunction(self, function):
         self.userInputFunction = function
 

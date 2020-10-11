@@ -1,17 +1,3 @@
-"""
-TODO:
-    - Escape
-        Return to correct widget display mode in the Tansu Widget
-    - Dynamic will need updates since
-         - insertViewItem modified to put the tab name at the top when solo'ing
-    - DelegateWidget needs to sync up with ~/esc for the Tansu Widget
-        *   If none selected, show ALL
-    - setCurrentIndex?
-    - currentIndex?
-
-    Horizontal/vertical tree widgets... makes a case to pull out the double tree widget...
-"""
-
 from qtpy.QtWidgets import (
     QWidget, QListView, QAbstractItemView, QScrollArea, QSplitter
 )
@@ -23,11 +9,11 @@ from cgwidgets.settings.colors import iColor
 
 from cgwidgets.widgets import AbstractInputGroup
 from cgwidgets.widgets.TansuWidget import (
-    BaseTansuWidget, TansuModel, iDynamicWidget
+    TansuBaseWidget, TansuModel, iTansuDynamicWidget
 )
 
 
-class TansuModelViewWidget(QSplitter, iDynamicWidget):
+class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
     """
     This is the designing portion of this editor.  This is where the TD
     will design a custom UI/hooks/handlers for the tool for the end user,
@@ -36,16 +22,18 @@ class TansuModelViewWidget(QSplitter, iDynamicWidget):
     Args:
         direction (TansuModelViewWidget.DIRECTION): Determines where the tab
             bar should be placed.  The default value is NORTH
-        type (TansuModelViewWidget.TYPE): What type of tab widget this should be,
-            options are STACKED | DYNAMIC | MULTI
-            see class attrs for more info...
-        selected_labels_list (list): list of labels that are currently selected by the user
 
     Attributes:
-        view_height (int): the default height of the tab label in pixels
+        delegate_type (TansuModelViewWidget.TYPE): What type of tab widget this should be,
+            options are STACKED | DYNAMIC
+            see class attrs for more info...
+        selected_labels_list (list): list of labels that are currently selected by the user
+        header_position (int): the default height of the tab label in pixels
             only works when the mode is set to view the labels on the north/south
-        view_width (int): the default width of the tab label in pixels
+        header_width (int): the default width of the tab label in pixels
             only works when the mode is set to view the labels on the east/west
+        header_position(attrs.DIRECTION): Where the header should be placed
+
     Class Attrs:
         TYPE
             STACKED: Will operate like a normal tab, where widgets
@@ -62,10 +50,10 @@ class TansuModelViewWidget(QSplitter, iDynamicWidget):
 
     Widgets:
         |-- QBoxLayout
-                |-- ViewWidget (TansuListView)
-                        ( TansuListView | TansuTableView | TansuTreeView )
+                |-- ViewWidget (TansuHeaderView)
+                        ( TansuHeaderView | TansuTableView | TansuTreeView )
                 | -- Scroll Area
-                    |-- DelegateWidget (TansuMainDelegateWidget --> BaseTansuWidget)
+                    |-- DelegateWidget (TansuMainDelegateWidget --> TansuBaseWidget)
                             | -- _temp_proxy_widget (QWidget)
                             | -* TansuModelDelegateWidget (AbstractGroupBox)
                                     | -- Stacked/Dynamic Widget (main_widget)
@@ -82,13 +70,13 @@ class TansuModelViewWidget(QSplitter, iDynamicWidget):
         # etc attrs
         self.setHandleWidth(0)
         self._direction = direction #just a temp set... for things
-        self._view_height = 50
-        self._view_width = 100
+        self._header_position = 50
+        self._header_width = 100
 
         # setup model / view
         self._model = TansuModel()
-        self._view_widget = TansuListView(self)
-        self._view_widget.setModel(self._model)
+        self._header_widget = TansuHeaderView(self)
+        self._header_widget.setModel(self._model)
 
         # setup delegate
         delegate_widget = TansuMainDelegateWidget()
@@ -110,18 +98,19 @@ class TansuModelViewWidget(QSplitter, iDynamicWidget):
         self.addWidget(scroll_area)
         # TEMP
         scroll_area.setStyleSheet("QScrollArea{border:None}")
-        self.addWidget(self._view_widget)
+        self.addWidget(self._header_widget)
 
         # set default attrs
         self.setDelegateType(TansuModelViewWidget.TYPE)
-        self.setViewPosition(direction)
+        self.setHeaderPosition(direction)
         self.setMultiSelect(TansuModelViewWidget.MULTI)
 
-        self.setViewWidgetToDefaultSize()
+        self.setHeaderWidgetToDefaultSize()
 
         self.updateStyleSheet()
 
-    def insertViewItem(self, row, name, parent=None, widget=None):
+    """ API """
+    def insertTansuWidget(self, row, name, parent=None, widget=None):
         """
         Creates a new tab at  the specified index
 
@@ -166,60 +155,60 @@ class TansuModelViewWidget(QSplitter, iDynamicWidget):
         return self._model
 
     def setModel(self, model):
-        self._view_widget.setModel(model)
+        self._header_widget.setModel(model)
         self._model = model
 
     """ VIEW """
-    def viewWidget(self):
-        return self._view_widget
+    def headerWidget(self):
+        return self._header_widget
 
-    def setViewWidget(self, view_widget):
-        # remove all view widget
-        if hasattr(self, '_view_widget'):
-            self._view_widget.setParent(None)
+    def setHeaderWidget(self, _header_widget):
+        # remove all header widget
+        if hasattr(self, '_header_widget'):
+            self._header_widget.setParent(None)
 
-        # set new view widget
-        self._view_widget = view_widget
-        view_widget.setModel(self.model())
-        self.setViewPosition(self.getViewPosition())
+        # set new header widget
+        self._header_widget = _header_widget
+        _header_widget.setModel(self.model())
+        self.setHeaderPosition(self.getHeaderPosition())
 
-    def getViewPosition(self):
+    def getHeaderPosition(self):
         return self._direction
 
-    def setViewPosition(self, direction):
+    def setHeaderPosition(self, direction):
         """
         Sets the current direction this widget.  This is the orientation of
         where the tab labels will be vs where the main widget will be, where
         the tab labels bar will always be the first widget.
         """
         self._direction = direction
-        self.viewWidget().setParent(None)
+        self.headerWidget().setParent(None)
 
         if direction == attrs.WEST:
             self.setOrientation(Qt.Horizontal)
-            self.viewWidget().setOrientation(Qt.Horizontal)
-            self.insertWidget(0, self.viewWidget())
+            self.headerWidget().setOrientation(Qt.Horizontal)
+            self.insertWidget(0, self.headerWidget())
             self.setStretchFactor(0, 0)
             self.setStretchFactor(1, 1)
 
         elif direction == attrs.EAST:
             self.setOrientation(Qt.Horizontal)
-            self.viewWidget().setOrientation(Qt.Horizontal)
-            self.insertWidget(1, self.viewWidget())
+            self.headerWidget().setOrientation(Qt.Horizontal)
+            self.insertWidget(1, self.headerWidget())
             self.setStretchFactor(1, 0)
             self.setStretchFactor(0, 1)
 
         elif direction == attrs.NORTH:
             self.setOrientation(Qt.Vertical)
-            self.viewWidget().setOrientation(Qt.Vertical)
-            self.insertWidget(0, self.viewWidget())
+            self.headerWidget().setOrientation(Qt.Vertical)
+            self.insertWidget(0, self.headerWidget())
             self.setStretchFactor(0, 0)
             self.setStretchFactor(1, 1)
 
         elif direction == attrs.SOUTH:
             self.setOrientation(Qt.Vertical)
-            self.viewWidget().setOrientation(Qt.Vertical)
-            self.insertWidget(1, self.viewWidget())
+            self.headerWidget().setOrientation(Qt.Vertical)
+            self.insertWidget(1, self.headerWidget())
             self.setStretchFactor(1, 0)
             self.setStretchFactor(0, 1)
 
@@ -228,18 +217,18 @@ class TansuModelViewWidget(QSplitter, iDynamicWidget):
         self.setCollapsible(1, False)
         self.updateStyleSheet()
 
-    def setViewWidgetToDefaultSize(self):
+    def setHeaderWidgetToDefaultSize(self):
         """
         Moves the main slider to make the tab label bar the default startup size
         """
-        if self.getViewPosition() == attrs.NORTH:
-            self.moveSplitter(self.view_height, 1)
-        elif self.getViewPosition() == attrs.SOUTH:
-            self.moveSplitter(self.height() - self.view_height, 1)
-        elif self.getViewPosition() == attrs.WEST:
-            self.moveSplitter(self.view_width, 1)
-        elif self.getViewPosition() == attrs.EAST:
-            self.moveSplitter(self.width() - self.view_width, 1)
+        if self.getHeaderPosition() == attrs.NORTH:
+            self.moveSplitter(self.header_position, 1)
+        elif self.getHeaderPosition() == attrs.SOUTH:
+            self.moveSplitter(self.height() - self.header_position, 1)
+        elif self.getHeaderPosition() == attrs.WEST:
+            self.moveSplitter(self.header_width, 1)
+        elif self.getHeaderPosition() == attrs.EAST:
+            self.moveSplitter(self.width() - self.header_width, 1)
 
     def createTansuModelDelegateWidget(self, item, widget):
         """
@@ -265,11 +254,11 @@ class TansuModelViewWidget(QSplitter, iDynamicWidget):
         """
         Determines if the spacer proxy widget should be hidden/shown in
         the delegate.  This is widget is only there to retain the spacing
-        of the view/delegate positions
+        of the header/delegate positions
         """
         # hide/show proxy widget
         if hasattr(self, "_temp_proxy_widget"):
-            selection_model = self.viewWidget().selectionModel()
+            selection_model = self.headerWidget().selectionModel()
             if len(selection_model.selectedIndexes()) == 0:
                 self._temp_proxy_widget.show()
             else:
@@ -285,7 +274,7 @@ class TansuModelViewWidget(QSplitter, iDynamicWidget):
         """
         if self.getDelegateType() == TansuModelViewWidget.STACKED:
             self.toggleDelegateSpacerWidget()
-            selection_model = self.viewWidget().selectionModel()
+            selection_model = self.headerWidget().selectionModel()
             widget_list = []
             for index in selection_model.selectedIndexes():
                 item = index.internalPointer()
@@ -316,7 +305,7 @@ class TansuModelViewWidget(QSplitter, iDynamicWidget):
 
         # update delegate background
         if hasattr(self, '_delegate_widget'):
-            selection = self.viewWidget().selectionModel().selectedIndexes()
+            selection = self.headerWidget().selectionModel().selectedIndexes()
             if len(selection) == 0:
                 self.delegateWidget().rgba_background = iColor['rgba_gray_0']
             else:
@@ -399,7 +388,7 @@ class TansuModelViewWidget(QSplitter, iDynamicWidget):
 
     """ EVENTS """
     def showEvent(self, event):
-        self.setViewWidgetToDefaultSize()
+        self.setHeaderWidgetToDefaultSize()
         self.updateStyleSheet()
         return QSplitter.showEvent(self, event)
 
@@ -408,7 +397,7 @@ class TansuModelViewWidget(QSplitter, iDynamicWidget):
         num_items = model.getRootItem().childCount()
         if 0 < num_items:
             # update width
-            if self.getViewPosition() in [
+            if self.getHeaderPosition() in [
                 attrs.NORTH,
                 attrs.SOUTH
             ]:
@@ -417,7 +406,6 @@ class TansuModelViewWidget(QSplitter, iDynamicWidget):
                     model.item_width = width
                     self.updateStyleSheet()
         return QSplitter.resizeEvent(self, event)
-
 
     def keyPressEvent(self, event):
         """
@@ -431,7 +419,7 @@ class TansuModelViewWidget(QSplitter, iDynamicWidget):
     """ selection """
     def setMultiSelect(self, enabled):
         self._multi_select = enabled
-        self.viewWidget().setMultiSelect(enabled)
+        self.headerWidget().setMultiSelect(enabled)
 
     def getMultiSelect(self):
         return self._multi_select
@@ -464,7 +452,6 @@ class TansuModelViewWidget(QSplitter, iDynamicWidget):
         if value == TansuModelViewWidget.STACKED:
             pass
         elif value == TansuModelViewWidget.DYNAMIC:
-
             self.setDynamicWidgetBaseClass(dynamic_widget)
             self.setDynamicUpdateFunction(dynamic_function)
 
@@ -474,11 +461,11 @@ class TansuModelViewWidget(QSplitter, iDynamicWidget):
     def getDelegateType(self):
         return self._delegate_type
 
-    def getViewInstanceType(self):
-        return self._view_item_type
-
-    def setViewInstanceType(self, view_item_type):
-        self._view_item_type = view_item_type
+    # def getViewInstanceType(self):
+    #     return self._view_item_type
+    #
+    # def setViewInstanceType(self, view_item_type):
+    #     self._view_item_type = view_item_type
 
     """ LAYOUT """
     def updateStyleSheet(self):
@@ -494,7 +481,7 @@ class TansuModelViewWidget(QSplitter, iDynamicWidget):
             background-color: rgba{rgba_gray_0}
         }}
             """.format(
-            type=type(self.viewWidget()).__name__,
+            type=type(self.headerWidget()).__name__,
             rgba_gray_0=iColor['rgba_gray_0']
         )
 
@@ -505,16 +492,16 @@ class TansuModelViewWidget(QSplitter, iDynamicWidget):
             }}
         """
 
-        view_position = self.getViewPosition()
+        header_position = self.getHeaderPosition()
         style_sheet_args = iColor.style_sheet_args
         style_sheet_args.update({
             'outline_width': TansuModelViewWidget.OUTLINE_WIDTH,
-            'type': type(self.viewWidget()).__name__,
+            'type': type(self.headerWidget()).__name__,
             'splitter_style_sheet': splitter_style_sheet,
             'view_style_sheet': view_style_sheet,
         })
 
-        if view_position == attrs.NORTH:
+        if header_position == attrs.NORTH:
             style_sheet = """
             {view_style_sheet}
             {type}::item:hover{{color: rgba{rgba_hover}}}
@@ -534,7 +521,7 @@ class TansuModelViewWidget(QSplitter, iDynamicWidget):
             }}
             {splitter_style_sheet}
             """.format(**style_sheet_args)
-        elif view_position == attrs.SOUTH:
+        elif header_position == attrs.SOUTH:
             style_sheet = """
             {view_style_sheet}
             {type}::item:hover{{color: rgba{rgba_hover}}}
@@ -554,7 +541,7 @@ class TansuModelViewWidget(QSplitter, iDynamicWidget):
             }}
             {splitter_style_sheet}
             """.format(**style_sheet_args)
-        elif view_position == attrs.EAST:
+        elif header_position == attrs.EAST:
             style_sheet = """
             {view_style_sheet}
             {type}::item:hover{{color: rgba{rgba_hover}}}
@@ -574,7 +561,7 @@ class TansuModelViewWidget(QSplitter, iDynamicWidget):
             }}
             {splitter_style_sheet}
             """.format(**style_sheet_args)
-        elif view_position == attrs.WEST:
+        elif header_position == attrs.WEST:
             style_sheet = """
             {view_style_sheet}
             {type}::item:hover{{color: rgba{rgba_hover}}}
@@ -599,23 +586,23 @@ class TansuModelViewWidget(QSplitter, iDynamicWidget):
 
     """ default view size"""
     @property
-    def view_width(self):
-        return self._view_width
+    def header_width(self):
+        return self._header_width
 
-    @view_width.setter
-    def view_width(self, view_width):
-        self._view_width = view_width
+    @header_width.setter
+    def header_width(self, header_width):
+        self._header_width = header_width
 
     @property
-    def view_height(self):
-        return self._view_height
+    def header_position(self):
+        return self._header_position
 
-    @view_height.setter
-    def view_height(self, view_height):
-        self._view_height = view_height
+    @header_position.setter
+    def header_position(self, header_position):
+        self._header_position = header_position
 
 
-class TansuMainDelegateWidget(BaseTansuWidget):
+class TansuMainDelegateWidget(TansuBaseWidget):
     """
     The main delegate view that will show all of the items widgets that
      the user currently has selected
@@ -630,7 +617,7 @@ class TansuMainDelegateWidget(BaseTansuWidget):
             tab_tansu_widget.updateDelegateDisplay()
 
     def keyPressEvent(self, event):
-        BaseTansuWidget.keyPressEvent(self, event)
+        TansuBaseWidget.keyPressEvent(self, event)
         if event.key() == Qt.Key_Escape:
             tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
             if tab_tansu_widget:
@@ -676,11 +663,9 @@ class TansuModelDelegateWidget(AbstractInputGroup):
 # need to do a QAbstractItemView injection here...
 
 
-class TansuListView(QListView):
+class TansuHeaderView(QListView):
     def __init__(self, parent=None):
-        super(TansuListView, self).__init__(parent)
-        #style_sheet = iColor.createDefaultStyleSheet(self, updated_args=self.styleSheet())
-        #self.setStyleSheet(style_sheet)
+        super(TansuHeaderView, self).__init__(parent)
 
         self.setEditTriggers(QAbstractItemView.DoubleClicked)
 
@@ -698,16 +683,6 @@ class TansuListView(QListView):
         tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
         if tab_tansu_widget:
             tab_tansu_widget.updateDelegateDisplay()
-            # if tab_tansu_widget.getDelegateType() == TansuModelViewWidget.STACKED:
-            #     tab_tansu_widget.toggleDelegateSpacerWidget()
-            #     selection_model = self.selectionModel()
-            #     widget_list = []
-            #     for index in selection_model.selectedIndexes():
-            #         item = index.internalPointer()
-            #         widget = item.delegateWidget()
-            #         widget_list.append(widget)
-            #
-            #     tab_tansu_widget.delegateWidget().isolateWidgets(widget_list)
         QListView.showEvent(self, event)
 
     def setOrientation(self, orientation):
@@ -726,8 +701,6 @@ class TansuListView(QListView):
         top_level_widget = getWidgetAncestor(self, TansuModelViewWidget)
         if top_level_widget:
             top_level_widget.updateDelegateDisplayFromSelection(selected, deselected)
-        # for index in selected.indexes():
-        #     item = index.internalPointer()
 
 
 class TabTansuDynamicWidgetExample(QWidget):
@@ -754,12 +727,12 @@ class TabTansuDynamicWidgetExample(QWidget):
 
 if __name__ == "__main__":
     import sys
-    from PyQt5.QtWidgets import QApplication, QLabel, QVBoxLayout
-    from PyQt5.QtGui import QCursor
+    from qtpy.QtWidgets import QApplication, QLabel, QVBoxLayout
+    from qtpy.QtGui import QCursor
     app = QApplication(sys.argv)
 
 
-    class test(BaseTansuWidget):
+    class test(TansuBaseWidget):
         def __init__(self, parent=None):
             super(test, self).__init__(parent)
             self.addWidget(QLabel('a'))
@@ -767,16 +740,15 @@ if __name__ == "__main__":
             self.addWidget(QLabel('c'))
 
     w = TansuModelViewWidget()
-    w.setViewPosition(attrs.NORTH)
-
+    w.setHeaderPosition(attrs.NORTH)
     w.setMultiSelect(True)
     w.setMultiSelectDirection(Qt.Vertical)
     #
-    # new_view = TansuListView()
+    # new_view = TansuHeaderView()
     # print()
     # new_view.show()
-    # w.setViewWidget(new_view)
-    # w.setViewPosition(TansuModelViewWidget.NORTH)
+    # w.setHeaderWidget(new_view)
+    # w.setHeaderPosition(TansuModelViewWidget.NORTH)
 
     dw = TabTansuDynamicWidgetExample
     # w.setDelegateType(
@@ -785,18 +757,18 @@ if __name__ == "__main__":
     #     dynamic_function=TabTansuDynamicWidgetExample.updateGUI
     # )
     asdf = test(w)
-    main_splitter = BaseTansuWidget()
+    main_splitter = TansuBaseWidget()
     main_splitter.handle_length = 100
     main_splitter.setObjectName("main")
     main_splitter.addWidget(QLabel('a'))
     main_splitter.addWidget(QLabel('b'))
     main_splitter.addWidget(QLabel('c'))
-    w.insertViewItem(0, 'tansu', widget=main_splitter)
-    w.insertViewItem(0, 'subclass', widget=asdf)
+    w.insertTansuWidget(0, 'tansu', widget=main_splitter)
+    w.insertTansuWidget(0, 'subclass', widget=asdf)
 
     for x in range(3):
         widget = QLabel(str(x))
-        w.insertViewItem(x, str(x), widget=widget)
+        w.insertTansuWidget(x, str(x), widget=widget)
 
 
     w.resize(500, 500)
@@ -811,7 +783,7 @@ if __name__ == "__main__":
     # item.setName("klajfjklasjfkla")
     #
     # w.show()
-    #w.setViewWidgetToDefaultSize()
+    #w.setHeaderWidgetToDefaultSize()
 
     # q = QTableView()
     # q.show()

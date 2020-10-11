@@ -23,9 +23,9 @@ from .AbstractWidgets import AbstractListInputWidget as AbstractListInputWidget
 from .TansuWidget import TansuModelItem as TansuModelItem
 from .TansuWidget import TansuModel as TansuModel
 
-from .TansuWidget import BaseTansuWidget as BaseTansuWidget
+from .TansuWidget import TansuBaseWidget as TansuBaseWidget
 from .TansuWidget import TansuModelViewWidget as TansuModelViewWidget
-from .TansuWidget import TansuListView as TansuListView
+from .TansuWidget import TansuHeaderView as TansuHeaderView
 from .TansuWidget import TansuModelDelegateWidget as TansuModelDelegateWidget
 
 """ INPUT WIDGETS """

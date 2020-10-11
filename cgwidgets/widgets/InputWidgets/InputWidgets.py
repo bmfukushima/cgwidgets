@@ -98,7 +98,7 @@ class GroupInputWidget(AbstractInputGroup):
         name = "{name}  |  {type}".format(name=name, type=widget.TYPE)
         data['value'] = ''
         # create item
-        user_input_item = self.group_box.main_widget.insertViewItem(index, name)
+        user_input_item = self.group_box.main_widget.insertTansuWidget(index, name)
 
         # setup new item
         user_input_item.setArgs(data)

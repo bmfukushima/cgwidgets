@@ -530,7 +530,7 @@ def testWidget():
 
     # virtual events test
     def testActivate(*args):
-        print(*args)
+        print(args)
         pass
 
     def testDeactivate(*args):

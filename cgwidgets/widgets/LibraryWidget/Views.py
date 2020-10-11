@@ -489,7 +489,7 @@ class ThumbnailViewItem(QWidget):
 
 class DetailedViewWidget(QWidget):
     """
-    @header_height < int > height of the horizontal header
+    @header_position < int > height of the horizontal header
         spacer | hheader
     @column_spacing < int > white space between columns
         hheader.splitter | <DetailedViewItem>
@@ -520,7 +520,7 @@ class DetailedViewWidget(QWidget):
         self._row_height = 100
         self._column_width = 100
         self._column_spacing = 5
-        self._header_height = 40
+        self._header_position = 40
 
         # main layout
         self.main_layout = QHBoxLayout()
@@ -603,16 +603,16 @@ class DetailedViewWidget(QWidget):
     """  PROPERTIES """
 
     @property
-    def header_height(self):
-        return self._header_height
+    def header_position(self):
+        return self._header_position
 
-    @header_height.setter
-    def header_height(self, header_height):
-        self._header_height = header_height
+    @header_position.setter
+    def header_position(self, header_position):
+        self._header_position = header_position
 
         # update widgets
-        self.vheader.spacer.setFixedHeight(header_height)
-        self.hheader.setFixedHeight(header_height)
+        self.vheader.spacer.setFixedHeight(header_position)
+        self.hheader.setFixedHeight(header_position)
 
     @property
     def column_spacing(self):
@@ -741,7 +741,7 @@ class DetailedViewVerticalHeader(QWidget):
         self.setLayout(proxy_layout)
         self.spacer = QLabel()
         self.spacer.setFixedHeight(
-            self.parent().header_height
+            self.parent().header_position
             + self.parent().row_spacing
             - (iUtils.getSetting('IMAGE_SELECTED_BORDER_WIDTH') * 2)
         )
@@ -843,8 +843,8 @@ class DetailedViewHorizontalHeader(QScrollArea):
         self.splitter.setStretchFactor(len(self.parent().key_map) - 1, 100000)
 
         # set size
-        self.splitter.setFixedHeight(self.parent().header_height)
-        self.setFixedHeight(self.parent().header_height)
+        self.splitter.setFixedHeight(self.parent().header_position)
+        self.setFixedHeight(self.parent().header_position)
 
     def resetHeaderItems(self):
         self._header_items = OrderedDict()

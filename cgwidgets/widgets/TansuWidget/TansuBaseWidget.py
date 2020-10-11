@@ -17,7 +17,7 @@ from cgwidgets.settings.colors import(
 from cgwidgets.utils import updateStyleSheet
 
 
-class BaseTansuWidget(QSplitter):
+class TansuBaseWidget(QSplitter):
     """
     Splitter widget that has advanced functionality.  This serves as a base
     class for everything that will be used through this library.
@@ -45,12 +45,12 @@ class BaseTansuWidget(QSplitter):
     FLAG_COLOR = iColor["rgba_tansu_flag"]
 
     def __init__(self, parent=None, orientation=Qt.Vertical):
-        super(BaseTansuWidget, self).__init__(parent)
+        super(TansuBaseWidget, self).__init__(parent)
         # set default attrs
         self._current_index = None
         self._current_widget = None
         self._is_solo_view = False
-        self._solo_view_hotkey = BaseTansuWidget.FULLSCREEN_HOTKEY
+        self._solo_view_hotkey = TansuBaseWidget.FULLSCREEN_HOTKEY
 
         # set colors
         self._rgba_handle = iColor["rgba_outline"]
@@ -60,7 +60,7 @@ class BaseTansuWidget(QSplitter):
         self.setOrientation(orientation)
 
         # set up handle defaults
-        self.setHandleWidth(BaseTansuWidget.HANDLE_WIDTH)
+        self.setHandleWidth(TansuBaseWidget.HANDLE_WIDTH)
         self._handle_length = -1
 
     """ UTILS """
@@ -107,10 +107,10 @@ class BaseTansuWidget(QSplitter):
             if returns None, then bypass everything.
         """
         if widget.parent():
-            if isinstance(widget.parent(), BaseTansuWidget):
+            if isinstance(widget.parent(), TansuBaseWidget):
                 return widget.parent().indexOf(widget), widget
             else:
-                return BaseTansuWidget.getIndexOfWidget(widget.parent())
+                return TansuBaseWidget.getIndexOfWidget(widget.parent())
         else:
             return None, None
 
@@ -188,14 +188,14 @@ class BaseTansuWidget(QSplitter):
                 if current_widget1:
                     parent_splitter = current_widget.parent()
                     parent_splitter.toggleIsSoloView(True, current_splitter)
-                    BaseTansuWidget.setIsSoloView(parent_splitter, True)
+                    TansuBaseWidget.setIsSoloView(parent_splitter, True)
                     parent_splitter.setFocus()
 
             # adjust current widget
             elif current_splitter.isSoloView() is False:
                 current_splitter.displayAllWidgets(False)
                 current_widget.show()
-                BaseTansuWidget.setIsSoloView(current_splitter, True)
+                TansuBaseWidget.setIsSoloView(current_splitter, True)
                 current_widget.setFocus()
                 #return
         # exit full screen
@@ -203,7 +203,7 @@ class BaseTansuWidget(QSplitter):
             # adjust current widget
             if current_splitter.isSoloView() is True:
                 current_splitter.displayAllWidgets(True)
-                BaseTansuWidget.setIsSoloView(current_splitter, False)
+                TansuBaseWidget.setIsSoloView(current_splitter, False)
                 current_widget.setFocus()
                 #return
             # adjust parent widget
@@ -213,7 +213,7 @@ class BaseTansuWidget(QSplitter):
                     parent_splitter = current_widget.parent()
                     parent_splitter.toggleIsSoloView(False, current_splitter)
 
-                    BaseTansuWidget.setIsSoloView(parent_splitter, False)
+                    TansuBaseWidget.setIsSoloView(parent_splitter, False)
                     parent_splitter.setFocus()
                     current_widget1.setFocus()
 
@@ -303,11 +303,12 @@ class BaseTansuWidget(QSplitter):
             'handle_length_margin': self.getHandleLengthMargin()
         })
         style_sheet = """
-            BaseTansuWidget{{
+            TansuBaseWidget{{
                 background-color: rgba{rgba_background};
                 border: 3px solid rgba{rgba_invisible};
+                color: rgba{rgba_text};
             }}
-            BaseTansuWidget[is_solo_view=true]{{
+            TansuBaseWidget[is_solo_view=true]{{
                 border: 3px solid rgba{rgba_flag}; 
             }}
             QSplitter::handle {{
@@ -360,24 +361,20 @@ class BaseTansuWidget(QSplitter):
         self.updateStyleSheet()
 
 
-
-
 if __name__ == "__main__":
     import sys
-    from PyQt5.QtWidgets import QApplication, QLabel
-    from PyQt5.QtGui import QCursor
+    from qtpy.QtWidgets import QApplication, QLabel
+    from qtpy.QtGui import QCursor
     app = QApplication(sys.argv)
 
-
-    main_splitter = BaseTansuWidget()
+    main_splitter = TansuBaseWidget()
     main_splitter.handle_length = 100
     main_splitter.setObjectName("main")
     main_splitter.addWidget(QLabel('a'))
     main_splitter.addWidget(QLabel('b'))
     main_splitter.addWidget(QLabel('c'))
 
-
-    splitter1 = BaseTansuWidget(orientation=Qt.Horizontal)
+    splitter1 = TansuBaseWidget(orientation=Qt.Horizontal)
     splitter1.setObjectName("embed")
     for x in range(3):
         l = QLabel(str(x))

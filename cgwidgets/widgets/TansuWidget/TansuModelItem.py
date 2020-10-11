@@ -1,10 +1,10 @@
 # https://doc.qt.io/qt-5/model-view-programming.html#model-view-classes
 from cgwidgets.widgets.TansuWidget import (
-    iDynamicWidget
+    iTansuDynamicWidget
 )
 
 
-class TansuModelItem(iDynamicWidget):
+class TansuModelItem(iTansuDynamicWidget):
     """
 
     Attributes:

@@ -93,15 +93,6 @@ class AbstractColorClock(QWidget):
         # self.scene.update()
         self.updateDisplay()
 
-    def updateColorFromArgValue(self, color_arg, value):
-        """
-        Updates the current color from the color_arg/value provided
-        color_arg (attrs.COLOR_ARG):
-        value (float)
-        """
-        new_color = updateColorFromArgValue(self.color(), color_arg, float(value))
-        self.setColor(new_color)
-
     def headerItemSize(self):
         return self._header_item_size
 
@@ -123,6 +114,15 @@ class AbstractColorClock(QWidget):
         self.hsv_header_widget = ClockHeaderWidget(self)
         self.hsv_header_widget.main_layout.setAlignment(Qt.AlignLeft | Qt.AlignTop)
         self.hsv_header_widget.createHeaderItems(attrs.HSV_LIST, abbreviated_title=True)
+
+    def updateColorFromArgValue(self, color_arg, value):
+        """
+        Updates the current color from the color_arg/value provided
+        color_arg (attrs.COLOR_ARG):
+        value (float)
+        """
+        new_color = updateColorFromArgValue(self.color(), color_arg, float(value))
+        self.setColor(new_color)
 
     """ PLACE HEADER"""
     def _updateHeaderWidgetPosition(self):
