@@ -30,7 +30,6 @@ class ColorGradientDelegate(AbstractColorDelegate):
         super(ColorGradientDelegate, self).__init__(parent)
         # set up attrs
         self._header_position = attrs.EAST
-
         # create layout
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.layout().setSpacing(0)
@@ -38,6 +37,7 @@ class ColorGradientDelegate(AbstractColorDelegate):
         # create widgets
         self.view_widget = ColorGradientWidget(self)
         self.header_widget = ColorGradientHeaderWidget(self)
+        self.setLinearCrosshairDirection(Qt.Horizontal)
 
         # add widgets to layout
         self.layout().addWidget(self.header_widget)
@@ -48,6 +48,9 @@ class ColorGradientDelegate(AbstractColorDelegate):
         self.updateDisplay()
 
     """ Overrides"""
+    def setLinearCrosshairDirection(self, direction):
+        self.view_widget.scene.setLinearCrosshairDirection(direction)
+
     def setHeaderSize(self, size):
         self._header_size = size
         self.header_widget.setSize(size)
@@ -569,15 +572,16 @@ class ColorGraphicsScene(QGraphicsScene):
         self._drawRGBAForegroundItem()
 
     """ DRAW GRADIENTS """
-    def drawGradient(self, direction=Qt.Horizontal):
-        _gradient = draw.drawColorTypeGradient(self.gradient_type, self.width(), self.height())
-        self.rgba_foreground.hide()
-        # update gradient size
-        if direction == Qt.Horizontal:
-            _gradient.setFinalStop(QPoint(self.width(), 0))
-        elif direction == Qt.Vertical:
-            _gradient.setFinalStop(QPoint(0, self.height()))
+    def drawGradient(self):
+        """
+        Draws the gradient that will be displayed to the user
+        """
 
+        _gradient = draw.drawColorTypeGradient(self.gradient_type, self.width(), self.height())
+        direction = self.linearCrosshairDirection()
+        self.rgba_foreground.hide()
+
+        # show gradient for RGBA gradient
         if self.gradient_type == attrs.RGBA:
             """
             for some reason the darker it gets the harder of a time the picker has
@@ -591,6 +595,15 @@ class ColorGraphicsScene(QGraphicsScene):
 
             self.rgba_foreground.show()
 
+        # update linear gradient
+        else:
+            if direction == Qt.Horizontal:
+                _gradient.setFinalStop(QPoint(self.width(), 0))
+            elif direction == Qt.Vertical:
+                # TODO Move this to draw utils (gradient inversion)
+                _gradient.setStart(QPoint(0, self.height()))
+                _gradient.setFinalStop(QPoint(0, 0))
+
         self.setBackgroundBrush(QBrush(_gradient))
 
     """ PROPERTIES """
@@ -603,7 +616,6 @@ class ColorGraphicsScene(QGraphicsScene):
         self._gradient_type = gradient_type
 
     """ CROSSHAIR"""
-
     def drawLinearCrosshair(self):
         """
         Creates the initial linear crosshair.  Note that this is hard coded to setup
@@ -622,57 +634,21 @@ class ColorGraphicsScene(QGraphicsScene):
         # hide by default
         self.linear_crosshair_item.hide()
 
-    # def getLinearCrosshairPos(self):
-    #     return self._linear_crosshair_pos
+    def setLinearCrosshairDirection(self, direction):
+        """
+        Sets the direction of travel of the linear crosshair.  This will also update
+        the display of the crosshair
 
-    # def setLinearCrosshairPos(self, pos):
-    #     """
-    #     Places the crosshair at a specific  location in the widget.  This is generally
-    #     used when updating color values, and passing them back to the color widget.
-    #
-    #     This is in LOCAL space
-    #     """
-    #     # get crosshair direction
-    #     main_widget = getWidgetAncestorByName(self, "ColorInputWidget")
-    #     direction = main_widget.getLinearCrosshairDirection()
-    #
-    #     # set cross hair pos
-    #     if direction == Qt.Horizontal:
-    #         pos = QPoint(pos.x(), 0)
-    #         self.linear_crosshair_item.setPos(pos.x(), 0)
-    #     elif direction == Qt.Vertical:
-    #         pos = QPoint(0, pos.y())
-    #         self.linear_crosshair_item.setPos(0, pos.y())
-    #
-    #     # update pos attr
-    #     self._linear_crosshair_pos = pos
+        Args:
+            direction (Qt.Vertical | Qt. Horizontal): what direction this gradient will be
+                displayed as.
+        """
+        # set direction
+        self._linear_crosshair_direction = direction
+        self.linear_crosshair_item.setDirection(direction)
 
-    # def setLinearCrosshairDirection(self, direction):
-    #     """
-    #     Sets the direction of travel of the linear crosshair.  This will also update
-    #     the display of the crosshair
-    #     """
-    #     # set direction
-    #     self._linear_crosshair_direction = direction
-    #     # self._linear_crosshair_size
-    #
-    #     # update display
-    #     if direction == Qt.Horizontal:
-    #         self.linear_topline_item.setLine(-5, 0, 5, 0)
-    #         self.linear_botline_item.setLine(-5, self.height(), 5, self.height())
-    #
-    #         self.linear_leftline_item.setLine(-5, 0, -5, self.height())
-    #         self.linear_rightline_item.setLine(5, 0, 5, self.height())
-    #
-    #     elif direction == Qt.Vertical:
-    #         self.linear_topline_item.setLine(0, -5, self.width(), -5)
-    #         self.linear_botline_item.setLine(0, 5, self.width(), 5)
-    #
-    #         self.linear_leftline_item.setLine(0, -5, 0, 5)
-    #         self.linear_rightline_item.setLine(self.width(), -5, self.width(), 5)
-
-    # def getLinearCrosshairDirection(self):
-    #     return self._linear_crosshair_direction
+    def linearCrosshairDirection(self):
+        return self._linear_crosshair_direction
 
     """ RGBA """
     def drawRGBACrosshair(self):
@@ -946,14 +922,15 @@ class ColorGradientHeaderWidgetItem(ColorHeaderWidgetItem):
         # setup display
         self.setStyleSheet("background-color: rgba{rgba_gray_1}".format(**iColor.style_sheet_args))
         self.setFixedWidth(125)
-        self.setFixedHeight(100)
+        self.setFixedHeight(125)
+        #self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     color_widget = ColorGradientDelegate()
-    #color_widget.setLinearCrosshairDirection(Qt.Vertical)
-    #color_widget.setDisplayLocation(position=attrs.NORTH)
+    color_widget.setLinearCrosshairDirection(Qt.Vertical)
+    color_widget.setHeaderPosition(position=attrs.EAST)
     color_widget.show()
     color_widget.move(QCursor.pos())
     sys.exit(app.exec_())

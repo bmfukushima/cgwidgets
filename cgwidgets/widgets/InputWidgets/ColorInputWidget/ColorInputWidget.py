@@ -167,7 +167,7 @@ class ColorInputWidget(QStackedWidget):
 
     """ UTILS """
     def getScene(self):
-        return self.color_picker_widget.color_gradient_view_widget.scene
+        return self.color_picker_widget.color_picker_widget.scene
 
     def updateDisplay(self, color=None):
         """
@@ -221,7 +221,7 @@ if __name__ == '__main__':
 
     color_widget = ColorInputWidget()
     color_widget.setUserInput(test)
-    #color_widget.setLinearCrosshairDirection(Qt.Vertical)
+    color_widget.setLinearCrosshairDirection(Qt.Vertical)
     color_widget.setDisplayLocation(position=attrs.NORTH)
 
     l.addWidget(test_label)

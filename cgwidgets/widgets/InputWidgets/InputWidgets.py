@@ -115,7 +115,7 @@ class GroupInputTansuWidget(TansuModelViewWidget):
         super(GroupInputTansuWidget, self).__init__(parent)
         self.model().setItemType(UserInputItem)
         self.setDelegateType(TansuModelViewWidget.DYNAMIC)
-        self.setViewPosition(attrs.WEST)
+        self.setHeaderPosition(attrs.WEST)
         self.setMultiSelect(True)
         self.setMultiSelectDirection(Qt.Vertical)
 

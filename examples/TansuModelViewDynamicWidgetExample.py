@@ -14,11 +14,15 @@ from qtpy.QtGui import QCursor
 
 app = QApplication(sys.argv)
 
-""" Dynamic Display Widget"""
+"""
+Dynamic widget to be used for the Tansu.  This widget will be shown
+everytime an item is selected in the Tansu, and the updateGUI function
+will be run, every time an item is selected.
+"""
 class TabTansuDynamicWidgetExample(QWidget):
     """
-    TODO:
-        turn this into an interface for creating dynamic tab widgets
+    Simple example of overloaded class to be used as a dynamic widget for
+    the TansuModelViewWidget.
     """
     def __init__(self, parent=None):
         super(TabTansuDynamicWidgetExample, self).__init__(parent)
@@ -36,20 +40,10 @@ class TabTansuDynamicWidgetExample(QWidget):
             widget.setTitle(item.name())
             widget.getMainWidget().label.setText(item.name())
 
-# create tansu widget
-tansu_widget = TansuModelViewWidget()
-
-# set dynamic
-tansu_widget.setDelegateType(
-    TansuModelViewWidget.DYNAMIC,
-    dynamic_widget=TabTansuDynamicWidgetExample,
-    dynamic_function=TabTansuDynamicWidgetExample.updateGUI
-)
-
-for x in range(3):
-    tansu_widget.insertTansuWidget(x, '<title {}>'.format(str(x)))
-
-# custom item
+"""
+Custom widget which has overloaded functions/widget to be
+displayed in the Tansu
+"""
 class CustomDynamicWidget(FloatInputWidget):
     def __init__(self, parent=None):
         super(CustomDynamicWidget, self).__init__(parent)
@@ -65,6 +59,21 @@ class CustomDynamicWidget(FloatInputWidget):
         print(widget, item)
         this = widget.getMainWidget()
         this.setText('whatup')
+
+# create tansu widget
+tansu_widget = TansuModelViewWidget()
+
+# set dynamic
+tansu_widget.setDelegateType(
+    TansuModelViewWidget.DYNAMIC,
+    dynamic_widget=TabTansuDynamicWidgetExample,
+    dynamic_function=TabTansuDynamicWidgetExample.updateGUI
+)
+
+for x in range(3):
+    tansu_widget.insertTansuWidget(x, '<title {}>'.format(str(x)))
+
+# custom item
 
 
 custom_item = tansu_widget.insertTansuWidget(0, 'Custom Handlers')

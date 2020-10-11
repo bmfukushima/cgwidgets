@@ -35,6 +35,8 @@ from .InputWidgets import StringInputWidget as StringInputWidget
 from .InputWidgets import BooleanInputWidget as BooleanInputWidget
 from .InputWidgets import GroupInputWidget as GroupInputWidget
 from .InputWidgets import ListInputWidget as ListInputWidget
+from .InputWidgets import UserInputWidget as UserInputWidget
+
 # color widget
 from .InputWidgets.ColorInputWidget import ColorGradientDelegate as ColorGradientDelegate
 from .InputWidgets.ColorInputWidget import ColorInputWidget as ColorInputWidget
