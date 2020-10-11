@@ -1,16 +1,8 @@
 import sys
 import math
 
-from qtpy.QtWidgets import (
-    QApplication, QLabel, QVBoxLayout,
-    QGraphicsView, QGraphicsScene, QGraphicsItemGroup, QGraphicsItem,
-    QGraphicsEllipseItem,
-    QGraphicsLineItem, QWidget, QFrame, QBoxLayout
-)
-from qtpy.QtCore import (Qt, QPoint, QRectF)
-from qtpy.QtGui import (
-    QColor, QCursor, QPen, QLinearGradient, QBrush
-)
+from qtpy.QtWidgets import (QWidget, QBoxLayout)
+from qtpy.QtGui import QColor
 
 from cgwidgets.utils import (
     attrs, draw, getWidgetAncestor, getWidgetAncestorByName,
@@ -49,7 +41,36 @@ class AbstractColorDelegate(QWidget):
         self._color = color
         self.updateDisplay()
 
-        # if parent... views need to inherit from something else?
-        if self.parent():
-            if self.parent().__name__() == "ColorInputWidget":
-                self.parent().setColor(color)
+        # if delegate, update main widget
+        color_input_widget = getWidgetAncestorByName(self, "ColorInputWidget")
+        if color_input_widget:
+            self.parent().setColor(color)
+
+        # set user input
+        self.userInputFunction(self, color)
+
+
+    """ VIRTUAL FUNCTION """
+    def setUserInput(self, function):
+        """
+        Sets the function to be run everytime this widget updates:
+
+        Args:
+            function (function) that will be run every time that this input updates
+                the color.  This function should take two args
+                    QWidget, QColor
+                where the QWidget will be the QWidget that is defined in this input
+                as the current active widget
+
+                NOTE:
+                    widget isn't set up right now... but in theory is a place holder to return
+                    the active widget.
+
+        """
+        self.__user_input_function = function
+
+    def userInputFunction(self, widget, color):
+        return self.__user_input_function(widget, color)
+
+    def __user_input_function(self, widget, color):
+        pass

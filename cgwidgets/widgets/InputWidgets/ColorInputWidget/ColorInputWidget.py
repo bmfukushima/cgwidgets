@@ -2,15 +2,11 @@
 TODO:
     Hue adjust -->
         Shift + LMB?
-    Display Value Labels
-        *   Make this adjustable with the INPUT WIDGETS
-                - Connect to gradients
-                    will need a flag to stop recursion...
     CLOCK ( Display Label )
-        * Show current values
         * background
                 - semi transparent?
                 - middle gray?
+        * idea of placing over image to select colors?
 """
 
 import sys
@@ -18,12 +14,12 @@ import sys
 from qtpy.QtWidgets import (
     QApplication, QStackedWidget, QLabel,
 )
-from qtpy.QtCore import (Qt, QPoint)
+from qtpy.QtCore import (Qt)
 from qtpy.QtGui import (
     QColor, QCursor
 )
 
-from cgwidgets.utils import getWidgetAncestor, attrs
+from cgwidgets.utils import  attrs
 from cgwidgets.widgets.InputWidgets.ColorInputWidget import (
     ColorGradientDelegate, ColorClockView
 )
@@ -94,13 +90,10 @@ class ColorInputWidget(QStackedWidget):
                 as the current active widget
 
         """
-        self.__user_input_function = function
+        self.color_picker_widget.setUserInput(function)
 
     def userInputFunction(self, widget, color):
-        return self.__user_input_function(widget, color)
-
-    def __user_input_function(self, widget, color):
-        pass
+        return self.color_picker_widget.userInputFunction(widget, color)
 
     """ API """
     def setActiveWidget(self, widget):
@@ -145,10 +138,10 @@ class ColorInputWidget(QStackedWidget):
         return self._color
 
     def setLinearCrosshairDirection(self, direction=Qt.Horizontal):
-        self.getScene().linear_crosshair_item.setDirection(direction)
+        self.getScene().setLinearCrosshairDirection(direction)
 
     def getLinearCrosshairDirection(self):
-        return self.getScene().linear_crosshair_item.getDirection()
+        return self.getScene().linearCrosshairDirection()
 
     def setHeaderPosition(self, position=attrs.SOUTH):
         """
@@ -217,6 +210,7 @@ if __name__ == '__main__':
     test_label = QLabel('lkjasdf')
 
     def test(widget, color):
+        print(widget)
         test_label.setText(repr(color.getRgb()))
 
     color_widget = ColorInputWidget()

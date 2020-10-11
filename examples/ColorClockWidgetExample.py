@@ -18,7 +18,7 @@ from qtpy.QtCore import Qt
 from qtpy.QtGui import QCursor
 
 from cgwidgets.utils import attrs
-from cgwidgets.widgets.InputWidgets.ColorInputWidget import ColorInputWidget
+from cgwidgets.widgets.InputWidgets.ColorInputWidget import ColorClockDelegate
 
 # set up main widget
 app = QApplication(sys.argv)
@@ -31,16 +31,13 @@ def userInputEvent(widget, color):
     test_label.setText(repr(color.getRgb()))
 
 # create widget
-color_widget = ColorInputWidget()
+color_widget = ColorClockDelegate()
 
 # set up custom user event
 color_widget.setUserInput(userInputEvent)
 
-# set position of header
-color_widget.setHeaderPosition(position=attrs.NORTH)
-
-# set direction of gradient slider
-color_widget.setLinearCrosshairDirection(Qt.Vertical)
+# center of the circle
+color_widget.setOffset(50)
 
 # add widgets to main widget
 l.addWidget(test_label)

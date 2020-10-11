@@ -1,24 +1,21 @@
 import sys
 import math
-import re
 
 from qtpy.QtWidgets import (
-    QApplication,
-    QStackedWidget, QWidget, QVBoxLayout, QScrollArea,
+    QApplication, QWidget, QVBoxLayout, QScrollArea,
     QGraphicsView, QGraphicsScene, QGraphicsEllipseItem, QGraphicsItemGroup,
-    QGraphicsLineItem, QLabel, QBoxLayout, QFrame, QGraphicsItem,
+    QBoxLayout, QGraphicsItem,
     QSizePolicy
 )
-from qtpy.QtCore import (Qt, QPoint, QEvent, QSize, QRectF)
+from qtpy.QtCore import (Qt, QPoint, QRectF)
 from qtpy.QtGui import (
-    QColor, QLinearGradient, QGradient, QBrush, QCursor, QPen
+    QColor, QBrush, QCursor
 )
 
 from cgwidgets.utils import attrs, draw, getWidgetAncestor, checkMousePos,  getWidgetAncestorByName
 from cgwidgets.utils.draw import DualColoredLineSegment
-from cgwidgets.widgets.AbstractWidgets import AbstractInputGroup
 from cgwidgets.settings.colors import (
-    iColor, getHSVRGBAFloatFromColor, updateColorFromArgValue)
+    iColor, getHSVRGBAFloatFromColor)
 
 from cgwidgets.widgets.InputWidgets.ColorInputWidget import (
     ColorPickerItem1D, ColorHeaderWidget, ColorHeaderWidgetItem, AbstractColorDelegate
@@ -51,12 +48,11 @@ class ColorGradientDelegate(AbstractColorDelegate):
         self.setHeaderPosition(self._header_position)
 
     """ Overrides """
+    def linearCrosshairDirection(self):
+        return self.view_widget.scene.linearCrosshairDirection()
+
     def setLinearCrosshairDirection(self, direction):
         self.view_widget.scene.setLinearCrosshairDirection(direction)
-
-    def setHeaderSize(self, size):
-        self._header_size = size
-        self.header_widget.setSize(size)
 
     def headerPosition(self):
         return self._header_position
@@ -832,6 +828,7 @@ class ColorGradientHeaderWidget(ColorHeaderWidget):
         self._display_size = 125
         self._header_position = attrs.EAST
         #self.setWidgetResizable(True)
+        self.setHeaderItemType(ColorGradientHeaderWidgetItem)
         self.createHeaderItems(attrs.HSV_LIST + attrs.RGBA_LIST)
 
         # setup display
@@ -880,7 +877,7 @@ class ColorGradientHeaderWidget(ColorHeaderWidget):
 
             # layout
             self.main_layout.setDirection(QBoxLayout.LeftToRight)
-            self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+            self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
 
             # scroll bar
             self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -913,6 +910,7 @@ class ColorGradientHeaderWidget(ColorHeaderWidget):
     def display_size(self, _display_size):
         self._display_size = _display_size
 
+
 class ColorGradientHeaderWidgetItem(ColorHeaderWidgetItem):
     """
     Attributes:
@@ -930,16 +928,16 @@ class ColorGradientHeaderWidgetItem(ColorHeaderWidgetItem):
     def __init__(self, parent=None, title='None', value='None'):
         super(ColorGradientHeaderWidgetItem, self).__init__(parent, title)
         # setup display
-        self.setStyleSheet("background-color: rgba{rgba_gray_1}".format(**iColor.style_sheet_args))
-        self.setFixedWidth(25)
-        self.setFixedHeight(125)
+        #self.setStyleSheet("background-color: rgba{rgba_gray_1}".format(**iColor.style_sheet_args))
+        self.setMinimumWidth(75)
+        self.setMinimumHeight(100)
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     color_widget = ColorGradientDelegate()
     color_widget.setLinearCrosshairDirection(Qt.Vertical)
-    color_widget.setHeaderPosition(position=attrs.SOUTH)
-    #print(color_widget.header_widget.setFixedHeight(400))
+    color_widget.setHeaderPosition(attrs.EAST)
     color_widget.show()
     color_widget.move(QCursor.pos())
     sys.exit(app.exec_())

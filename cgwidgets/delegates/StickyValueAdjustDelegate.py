@@ -191,7 +191,7 @@ class iStickyActivationDelegate(object):
         obj._calc_pos = QCursor.pos()
         obj._drag_STICKY = not obj._drag_STICKY
         obj._num_ticks = 0
-
+        obj._pixels_per_tick = self.pixelsPerTick()
         obj._value_per_tick = self.valuePerTick()
 
         # toggle cursor display
@@ -546,6 +546,7 @@ def testWidget():
     from cgwidgets.utils import installStickyAdjustDelegate
     ef = installStickyAdjustDelegate(
         w2,
+        pixels_per_tick=500,
         value_per_tick=.01,
         activation_object=w3,
         activation_event=testActivate,

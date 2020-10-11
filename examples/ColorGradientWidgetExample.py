@@ -18,7 +18,7 @@ from qtpy.QtCore import Qt
 from qtpy.QtGui import QCursor
 
 from cgwidgets.utils import attrs
-from cgwidgets.widgets.InputWidgets.ColorInputWidget import ColorInputWidget
+from cgwidgets.widgets.InputWidgets.ColorInputWidget import ColorGradientDelegate
 
 # set up main widget
 app = QApplication(sys.argv)
@@ -31,7 +31,7 @@ def userInputEvent(widget, color):
     test_label.setText(repr(color.getRgb()))
 
 # create widget
-color_widget = ColorInputWidget()
+color_widget = ColorGradientDelegate()
 
 # set up custom user event
 color_widget.setUserInput(userInputEvent)
