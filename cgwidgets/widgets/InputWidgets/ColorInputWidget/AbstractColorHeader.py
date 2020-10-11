@@ -54,8 +54,6 @@ class ColorHeaderWidget(QScrollArea):
         self.setWidgetResizable(True)
 
         # setup default attrs
-        self.item_height = getFontSize(QApplication) * 3 + 5
-        self.item_width = 40
         if not delegate:
             delegate = parent
         self._delegate = delegate
@@ -101,8 +99,6 @@ class ColorHeaderWidget(QScrollArea):
             #new_item = ColorHeaderWidgetItem(self, title=title, value=0)
 
             # setup header attrs
-            new_item.setMinimumHeight(self.item_height)
-            new_item.setMinimumWidth(self.item_width)
             new_item.value_widget.color_arg = color_arg
 
             # setup signals

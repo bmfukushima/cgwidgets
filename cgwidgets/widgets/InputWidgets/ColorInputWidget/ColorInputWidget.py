@@ -150,7 +150,7 @@ class ColorInputWidget(QStackedWidget):
     def getLinearCrosshairDirection(self):
         return self.getScene().linear_crosshair_item.getDirection()
 
-    def setDisplayLocation(self, position=attrs.SOUTH):
+    def setHeaderPosition(self, position=attrs.SOUTH):
         """
         When manipulating in the color picker, this will set the position
         of the display labels for the user.
@@ -167,7 +167,7 @@ class ColorInputWidget(QStackedWidget):
 
     """ UTILS """
     def getScene(self):
-        return self.color_picker_widget.color_picker_widget.scene
+        return self.color_picker_widget.view_widget.scene
 
     def updateDisplay(self, color=None):
         """
@@ -222,7 +222,7 @@ if __name__ == '__main__':
     color_widget = ColorInputWidget()
     color_widget.setUserInput(test)
     color_widget.setLinearCrosshairDirection(Qt.Vertical)
-    color_widget.setDisplayLocation(position=attrs.NORTH)
+    color_widget.setHeaderPosition(position=attrs.NORTH)
 
     l.addWidget(test_label)
     l.addWidget(color_widget)

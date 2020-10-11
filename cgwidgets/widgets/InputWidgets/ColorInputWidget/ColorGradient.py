@@ -37,6 +37,7 @@ class ColorGradientDelegate(AbstractColorDelegate):
         # create widgets
         self.view_widget = ColorGradientWidget(self)
         self.header_widget = ColorGradientHeaderWidget(self)
+
         self.setLinearCrosshairDirection(Qt.Horizontal)
 
         # add widgets to layout
@@ -47,7 +48,9 @@ class ColorGradientDelegate(AbstractColorDelegate):
         self.setStyleSheet("border:None")
         self.updateDisplay()
 
-    """ Overrides"""
+        self.setHeaderPosition(self._header_position)
+
+    """ Overrides """
     def setLinearCrosshairDirection(self, direction):
         self.view_widget.scene.setLinearCrosshairDirection(direction)
 
@@ -94,7 +97,6 @@ class ColorGradientDelegate(AbstractColorDelegate):
         return QWidget.leaveEvent(self, *args, **kwargs)
 
     def updateDisplay(self):
-
         # update RGBA Gradient
         self.view_widget.scene.updateRGBACrosshair()
 
@@ -827,8 +829,9 @@ class ColorGradientHeaderWidget(ColorHeaderWidget):
     def __init__(self, parent=None):
         super(ColorGradientHeaderWidget, self).__init__(parent)
         # setup default attrs
+        self._display_size = 125
         self._header_position = attrs.EAST
-        self.setWidgetResizable(True)
+        #self.setWidgetResizable(True)
         self.createHeaderItems(attrs.HSV_LIST + attrs.RGBA_LIST)
 
         # setup display
@@ -873,7 +876,7 @@ class ColorGradientHeaderWidget(ColorHeaderWidget):
         # NORTH / SOUTH ( HORIZONTAL )
         if position in [attrs.NORTH, attrs.SOUTH]:
             # size
-            self.setMinimumHeight(100)
+            self.setMinimumHeight(125)
 
             # layout
             self.main_layout.setDirection(QBoxLayout.LeftToRight)
@@ -887,6 +890,7 @@ class ColorGradientHeaderWidget(ColorHeaderWidget):
         elif position in [attrs.EAST, attrs.WEST]:
             #
             self.setMinimumWidth(125)
+
             # layout
             self.main_layout.setDirection(QBoxLayout.TopToBottom)
             self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
@@ -896,12 +900,18 @@ class ColorGradientHeaderWidget(ColorHeaderWidget):
             self.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
 
     def updateStyleSheet(self):
-
         self.setStyleSheet("""
         background-color: rgba{rgba_gray_1}
 
         """.format(**iColor.style_sheet_args))
 
+    @property
+    def display_size(self):
+        return self._display_size
+
+    @display_size.setter
+    def display_size(self, _display_size):
+        self._display_size = _display_size
 
 class ColorGradientHeaderWidgetItem(ColorHeaderWidgetItem):
     """
@@ -921,16 +931,15 @@ class ColorGradientHeaderWidgetItem(ColorHeaderWidgetItem):
         super(ColorGradientHeaderWidgetItem, self).__init__(parent, title)
         # setup display
         self.setStyleSheet("background-color: rgba{rgba_gray_1}".format(**iColor.style_sheet_args))
-        self.setFixedWidth(125)
+        self.setFixedWidth(25)
         self.setFixedHeight(125)
-        #self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     color_widget = ColorGradientDelegate()
     color_widget.setLinearCrosshairDirection(Qt.Vertical)
-    color_widget.setHeaderPosition(position=attrs.EAST)
+    color_widget.setHeaderPosition(position=attrs.SOUTH)
+    #print(color_widget.header_widget.setFixedHeight(400))
     color_widget.show()
     color_widget.move(QCursor.pos())
     sys.exit(app.exec_())

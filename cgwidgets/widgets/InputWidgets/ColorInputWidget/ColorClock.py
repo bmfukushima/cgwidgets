@@ -115,6 +115,18 @@ class AbstractColorClock(QWidget):
         self.hsv_header_widget.main_layout.setAlignment(Qt.AlignLeft | Qt.AlignTop)
         self.hsv_header_widget.createHeaderItems(attrs.HSV_LIST, abbreviated_title=True)
 
+        self.header_item_height = getFontSize(QApplication) * 3 + 5
+        self.header_item_width = 40
+        header_widgets = {
+            **self.hsv_header_widget.getWidgetDict(),
+            **self.rgba_header_widget.getWidgetDict()
+        }
+        for color_arg in header_widgets:
+            header_item = header_widgets[color_arg]
+
+            header_item.setMinimumHeight(self.header_item_height)
+            header_item.setMinimumWidth(self.header_item_width)
+
     def updateColorFromArgValue(self, color_arg, value):
         """
         Updates the current color from the color_arg/value provided
@@ -177,13 +189,13 @@ class AbstractColorClock(QWidget):
             item_width (int): this will determine how wide each item is
         """
         # set hsv header
-        ypos = (self.height() * 0.5) - (1.5 * self.hsv_header_widget.item_height)
+        ypos = (self.height() * 0.5) - (1.5 * self.header_item_height)
         self.hsv_header_widget.move(0, ypos)
         self.hsv_header_widget.setFixedSize(self.headerItemSize(), self.height())
         self.hsv_header_widget.main_layout.setDirection(QBoxLayout.TopToBottom)
 
         # set rgba header
-        ypos = (self.height() * 0.5) - (2 * self.rgba_header_widget.item_height)
+        ypos = (self.height() * 0.5) - (2 * self.header_item_height)
         self.rgba_header_widget.move(self.width() - self.headerItemSize(), ypos)
         self.rgba_header_widget.setFixedSize(self.headerItemSize(), self.height())
         self.rgba_header_widget.main_layout.setDirection(QBoxLayout.TopToBottom)
@@ -198,13 +210,13 @@ class AbstractColorClock(QWidget):
         orig_y = self.height() * 0.5
         x_offset = 10
         # set HSV header
-        self.hsv_header_widget.move(0, orig_y - (self.rgba_header_widget.item_height * 0.5))
-        self.hsv_header_widget.setFixedSize(orig_x - self.offset() - x_offset, self.rgba_header_widget.item_height + 2)
+        self.hsv_header_widget.move(0, orig_y - (self.header_item_height * 0.5))
+        self.hsv_header_widget.setFixedSize(orig_x - self.offset() - x_offset, self.header_item_height + 2)
         self.hsv_header_widget.main_layout.setDirection(QBoxLayout.LeftToRight)
 
         # set RGBA Header
-        self.rgba_header_widget.move(orig_x + self.offset() + x_offset, orig_y - (self.rgba_header_widget.item_height * 0.5))
-        self.rgba_header_widget.setFixedSize(orig_x - self.offset() - x_offset, self.hsv_header_widget.item_height + 2)
+        self.rgba_header_widget.move(orig_x + self.offset() + x_offset, orig_y - (self.header_item_height * 0.5))
+        self.rgba_header_widget.setFixedSize(orig_x - self.offset() - x_offset, self.header_item_height + 2)
         self.rgba_header_widget.main_layout.setDirection(QBoxLayout.LeftToRight)
 
     # """ NOT IN USE BUT I LIKE THIS CODE"""

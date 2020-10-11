@@ -42,7 +42,7 @@ if __name__ == '__main__':
 
     color_widget = ColorInputWidget()
     color_widget.setUserInput(userInputEvent)
-    color_widget.setDisplayLocation(position=attrs.NORTH)
+    color_widget.setHeaderPosition(position=attrs.NORTH)
 
     l.addWidget(test_label)
     l.addWidget(color_widget)
