@@ -46,7 +46,7 @@ if __name__ == "__main__":
     gw.insertInputWidget(0, IntInputWidget, 'Int', test)
     gw.insertInputWidget(0, BooleanInputWidget, 'Boolean', test)
     gw.insertInputWidget(0, StringInputWidget, 'String', test)
-    gw.insertInputWidget(0, ListInputWidget, 'List', test, data={'items_list':['a','b','c','d']})
+    #gw.insertInputWidget(0, ListInputWidget, 'List', test, data={'items_list':['a','b','c','d']})
 
     gw.display_background = False
     l.addWidget(gw)
@@ -57,38 +57,38 @@ if __name__ == "__main__":
     int_input_widget = IntInputWidget()
     boolean_input_widget = BooleanInputWidget()
     string_input_widget = StringInputWidget()
-    list_input_widget = ListInputWidget()
+    #list_input_widget = ListInputWidget()
 
     l.addWidget(float_input_widget)
     l.addWidget(int_input_widget)
     l.addWidget(boolean_input_widget)
     l.addWidget(string_input_widget)
-    l.addWidget(list_input_widget)
+    #l.addWidget(list_input_widget)
 
     float_input_widget.setUserFinishedEditingEvent(test)
     int_input_widget.setUserFinishedEditingEvent(test)
     boolean_input_widget.setUserFinishedEditingEvent(test)
     string_input_widget.setUserFinishedEditingEvent(test)
-    list_input_widget.setUserFinishedEditingEvent(test)
+    #list_input_widget.setUserFinishedEditingEvent(test)
 
     """ Label widgets """
     u_float_input_widget = UserInputWidget(name="float", widget_type=FloatInputWidget)
     u_int_input_widget = UserInputWidget(name="int", widget_type=IntInputWidget)
     u_boolean_input_widget = UserInputWidget(name="bool", widget_type=BooleanInputWidget)
     u_string_input_widget = UserInputWidget(name='str', widget_type=StringInputWidget)
-    u_list_input_widget = UserInputWidget(name='list', widget_type=ListInputWidget)
+    #u_list_input_widget = UserInputWidget(name='list', widget_type=ListInputWidget)
 
     l.addWidget(u_float_input_widget)
     l.addWidget(u_int_input_widget)
     l.addWidget(u_boolean_input_widget)
     l.addWidget(u_string_input_widget)
-    l.addWidget(u_list_input_widget)
+    #l.addWidget(u_list_input_widget)
 
     u_float_input_widget.setUserFinishedEditingEvent(test)
     u_int_input_widget.setUserFinishedEditingEvent(test)
     u_boolean_input_widget.setUserFinishedEditingEvent(test)
     u_string_input_widget.setUserFinishedEditingEvent(test)
-    u_list_input_widget.setUserFinishedEditingEvent(test)
+    #u_list_input_widget.setUserFinishedEditingEvent(test)
     # w = ListInputWidget()
     # w.populate(['a','b','c','d'])
     #w.setInputBaseClass(ListInputWidget)
