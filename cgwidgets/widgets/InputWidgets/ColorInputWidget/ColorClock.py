@@ -514,7 +514,7 @@ class ClockDisplayScene(QGraphicsScene):
 
             # add filter
             installStickyAdjustDelegate(
-                hand_item.hand_crosshair, pixels_per_tick=25, value_per_tick=0.01)
+                hand_item.hand_crosshair, pixels_per_tick=35, value_per_tick=0.01)
 
     def updateHands(self):
         """

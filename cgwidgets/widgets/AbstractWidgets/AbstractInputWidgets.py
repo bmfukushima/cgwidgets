@@ -142,6 +142,7 @@ class AbstractInputWidget(QLineEdit):
                 try:
                         self.setText(self.getInput())
                         self.liveInputEvent(self, self.getInput())
+                        #self.setCursorPosition(0)
                 except AttributeError:
                     pass
 

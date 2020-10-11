@@ -1,7 +1,9 @@
 """
-Function to run?
-Get original value...
-set value...
+TODO:
+    IDEA
+        Return cursor to center of ACTIVE widget...
+            - This will make it so that after the cursor disappears it is shown where
+            the user is already looking
 """
 
 import math
@@ -14,7 +16,9 @@ from qtpy.QtWidgets import (
 )
 from qtpy.QtGui import QCursor
 
-from cgwidgets.utils import getMagnitude, getTopLeftPos, setAsTransparent, setAsTool
+from cgwidgets.utils import (
+    getMagnitude, getTopLeftPos, setAsTransparent, setAsTool, getGlobalPos
+)
 from cgwidgets.settings.colors import iColor
 
 
@@ -287,6 +291,23 @@ class StickyDragWindowWidget(QFrame, iStickyValueAdjustDelegate):
         self.unsetCursor()
         self.hide()
 
+        # gets overwritten because of the leave event...
+        self.__placeCursorAtActiveItem()
+
+    def __placeCursorAtActiveItem(self):
+        """
+        Gets the current active items position in world space
+        and places the cursor in the center of that.
+        """
+        try:
+            cursor_display_pos = getGlobalPos(self.activeObject())
+        except AttributeError:
+            view = self.activeObject().scene().views()[0]
+            view_pos = view.mapFromScene(self.activeObject().scenePos())
+            cursor_display_pos = view.viewport().mapToGlobal(view_pos)
+
+        QCursor.setPos(cursor_display_pos)
+
     """ VALUE UPDATERS / SETTERS"""
     def __setValue(self):
         """
@@ -360,6 +381,13 @@ class StickyDragWindowWidget(QFrame, iStickyValueAdjustDelegate):
 
     """ EVENTS """
     def leaveEvent(self, event, *args, **kwargs):
+        """
+        When the cursor leaves the invisible display area,
+        this will return it back to the original point that it
+        was set at.  It will then update the positions to accomdate this
+        so that one drag seems seemless.
+        """
+        if not self._drag_STICKY: return
         current_pos = QCursor.pos()
         offset = (current_pos - self._cursor_pos)
         self._calc_pos = self._calc_pos - offset

@@ -14,6 +14,7 @@ def checkNegative(enabled, value):
     Checks to determine if this value should be allowed to be negative or not
 
     Args:
+        enabled (bool)
         value (float)
     """
     if enabled is False:
@@ -133,7 +134,6 @@ def getWidgetUnderCursor():
     pos = QCursor.pos()
     widget = qApp.widgetAt(pos)
     return widget
-# this needs to die
 
 
 def getMagnitude(start_pos, current_pos, multiplier=1):
@@ -286,6 +286,52 @@ def getTopLeftPos(widget):
     return pos
 
 
+# TODO Combine these into an uber function
+def getGlobalPos(widget):
+    """
+    returns the global position of the widget provided, because Qt
+    does such a lovely job of doing this out of box and making it
+    so simple
+
+    No idea why this doesnt get the actual title bar height?
+    args:
+        widget: <QWidget>
+            widget to return screen space position of
+
+    returns: <QPoint>
+    """
+    parent = widget.parentWidget()
+    if parent is None:
+        #top_level_widget = widget.window()
+        top_level_widget = widget
+        title_bar_height = top_level_widget.style().pixelMetric(QStyle.PM_TitleBarHeight)
+        pos = QPoint(
+            top_level_widget.pos().x(),
+            top_level_widget.pos().y() + title_bar_height + top_level_widget.PdmDepth + (top_level_widget.PdmHeight * .5)
+        )
+
+    else:
+        pos = parent.mapToGlobal(widget.pos())
+
+    return pos
+
+
+def getGlobalItemPos(item):
+    """
+    Returns the screen coordinates of an item
+
+    Args:
+        item (QGraphicsItem): item whose coordinates will be returned in screen space
+
+    Returns (QPoint)
+    """
+    view = item.scene().views()[0]
+    view_pos = view.mapFromScene(item.activeObject().scenePos())
+    pos = view.viewport().mapToGlobal(view_pos)
+
+    return pos
+
+
 def clearLayout(layout, start=None, end=None):
     """
     removes all widgets from the layout provided
@@ -339,33 +385,6 @@ def setAsTransparent(widget):
     widget.setStyleSheet("background-color: rgba(255,0,0,255)")
 
 
-def getGlobalPos(widget):
-    """
-    returns the global position of the widget provided, because Qt
-    does such a lovely job of doing this out of box and making it
-    so simple
-
-    No idea why this doesnt get the actual title bar height?
-    args:
-        widget: <QWidget>
-            widget to return screen space position of
-
-    returns: <QPoint>
-    """
-    parent = widget.parentWidget()
-    if parent is None:
-        #top_level_widget = widget.window()
-        top_level_widget = widget
-        title_bar_height = top_level_widget.style().pixelMetric(QStyle.PM_TitleBarHeight)
-        pos = QPoint(
-            top_level_widget.pos().x(),
-            top_level_widget.pos().y() + title_bar_height + top_level_widget.PdmDepth + (top_level_widget.PdmHeight * .5)
-        )
-
-    else:
-        pos = parent.mapToGlobal(widget.pos())
-
-    return pos
 
 
 def updateStyleSheet(widget):
