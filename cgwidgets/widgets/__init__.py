@@ -26,6 +26,7 @@ from .TansuWidget import TansuModel as TansuModel
 from .TansuWidget import TansuBaseWidget as TansuBaseWidget
 from .TansuWidget import TansuModelViewWidget as TansuModelViewWidget
 from .TansuWidget import TansuHeaderListView as TansuHeaderListView
+from .TansuWidget import TansuHeaderTreeView as TansuHeaderTreeView
 from .TansuWidget import TansuModelDelegateWidget as TansuModelDelegateWidget
 
 """ INPUT WIDGETS """

@@ -467,12 +467,10 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
     def updateStyleSheet(self):
         """
         Sets the style sheet for the outline based off of the direction of the parent.
-
         """
-
         self.setHandleWidth(0)
-        #
-        header_position = self.getHeaderPosition()
+
+        # setup args
         style_sheet_args = iColor.style_sheet_args
         style_sheet_args.update({
             'outline_width': TansuModelViewWidget.OUTLINE_WIDTH,
@@ -480,7 +478,16 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         })
         style_sheet_args.update(icons)
 
-        view_style_sheet = """
+        # splitter
+        splitter_style_sheet = """
+            QSplitter::handle {{
+                border: None;
+                color: rgba(255,0,0,255);
+            }}
+        """
+
+        # header
+        base_header_style_sheet = """
         QHeaderView::section {{
             background-color: rgba{rgba_gray_0};
             color: rgba{rgba_text};
@@ -491,112 +498,36 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
             background-color: rgba{rgba_gray_0};
             selection-background-color: rgba{rgba_invisible};
         }}
-        {type}::branch:open:has-children {{
-            image: url({path_branch_open})
-        }}  
-        {type}::branch:closed:has-children {{
-            image: url({path_branch_closed})
-        }}  
             """.format(**style_sheet_args)
-        #     .format(
-        #     type=type(self.headerWidget()).__name__,
-        #     rgba_gray_0=iColor['rgba_gray_0'],
-        #     rgba_invisible=iColor['rgba_invisible'],
-        #     open_file_path=icons['branch-open'],
-        #     closed_file_path=icons['branch-closed']
-        # )
 
-        splitter_style_sheet = """
-            QSplitter::handle {{
-                border: None;
-                color: rgba(255,0,0,255);
-            }}
-        """
+        # item style snippets ( so it can be combined later...)
+        style_sheet_args['item_snippet'] = """
+            border: {outline_width}px solid rgba{rgba_outline};
+            background-color: rgba{rgba_gray_0};
+            color: rgba{rgba_text};
+        """.format(**style_sheet_args)
+        style_sheet_args['item_selected_snippet'] = """
+            border: {outline_width}px solid rgba{rgba_outline};
+            background-color: rgba{rgba_gray_1};
+            color: rgba{rgba_selected};
+        """.format(**style_sheet_args)
+
+        # create style sheet
+        header_style_sheet = self.headerWidget().createStyleSheet(self.getHeaderPosition(), style_sheet_args)
 
         # combine style sheets
         style_sheet_args['splitter_style_sheet'] = splitter_style_sheet
-        style_sheet_args['view_style_sheet'] = view_style_sheet
+        style_sheet_args['header_style_sheet'] = header_style_sheet
+        style_sheet_args['base_header_style_sheet'] = base_header_style_sheet
 
-        if header_position == attrs.NORTH:
-            style_sheet = """
-            {view_style_sheet}
-            {type}::item:hover{{color: rgba{rgba_hover}}}
-            {type}::item{{
-                border: {outline_width}px solid rgba{rgba_outline} ;
-                border-right: None;
-                border-top: None;
-                background-color: rgba{rgba_gray_0};
-                color: rgba{rgba_text};
-            }}
-            {type}::item:selected{{
-                border: {outline_width}px solid rgba{rgba_outline} ;
-                border-right: None;
-                border-bottom: None;
-                background-color: rgba{rgba_gray_1};
-                color: rgba{rgba_selected};
-            }}
-            {splitter_style_sheet}
-            """.format(**style_sheet_args)
-        elif header_position == attrs.SOUTH:
-            style_sheet = """
-            {view_style_sheet}
-            {type}::item:hover{{color: rgba{rgba_hover}}}
-            {type}::item{{
-                border: {outline_width}px solid rgba{rgba_outline};
-                border-right: None;
-                border-bottom: None;
-                background-color: rgba{rgba_gray_0};
-                color: rgba{rgba_text};
-            }}
-            {type}::item:selected{{
-                border: {outline_width}px solid rgba{rgba_outline} ;
-                border-right: None;
-                border-top: None;
-                background-color: rgba{rgba_gray_1};
-                color: rgba{rgba_selected};
-            }}
-            {splitter_style_sheet}
-            """.format(**style_sheet_args)
-        elif header_position == attrs.EAST:
-            style_sheet = """
-            {view_style_sheet}
-            {type}::item:hover{{color: rgba{rgba_hover}}}
-            {type}::item{{
-                border: {outline_width}px solid rgba{rgba_outline};
-                border-top: None;
-                border-right: None;
-                background-color: rgba{rgba_gray_0};
-                color: rgba{rgba_text}
-            }}
-            {type}::item:selected{{
-                border: {outline_width}px solid rgba{rgba_outline} ;
-                border-top: None;
-                border-left: None;
-                background-color: rgba{rgba_gray_1};
-                color: rgba{rgba_selected};
-            }}
-            {splitter_style_sheet}
-            """.format(**style_sheet_args)
-        elif header_position == attrs.WEST:
-            style_sheet = """
-            {view_style_sheet}
-            {type}::item:hover{{color: rgba{rgba_hover}}}
-            {type}::item{{
-                border: {outline_width}px solid rgba{rgba_outline};
-                border-top: None;
-                border-left: None;
-                background-color: rgba{rgba_gray_0};
-                color: rgba{rgba_text}
-            }}
-            {type}::item:selected{{
-                border: {outline_width}px solid rgba{rgba_outline} ;
-                border-top: None;
-                border-right: None;
-                background-color: rgba{rgba_gray_1};
-                color: rgba{rgba_selected};
-            }}
-            {splitter_style_sheet}
-            """.format(**style_sheet_args)
+        # TODO why does border not update in the list view?
+        style_sheet = """
+        {base_header_style_sheet}
+        {header_style_sheet}
+        {type}::item:hover{{color: rgba{rgba_hover}}}
+        {splitter_style_sheet}
+        
+        """.format(**style_sheet_args)
 
         self.setStyleSheet(style_sheet)
 
@@ -679,6 +610,10 @@ class TansuModelDelegateWidget(AbstractInputGroup):
 
 class TansuHeaderAbstractView(object):
     """ ABSTRACT ITEM VIEW STUFFF"""
+
+    def createStyleSheet(self, header_position, style_sheet_args):
+        pass
+
     def getIndexUnderCursor(self):
         """
         Returns the QModelIndex underneath the cursor
@@ -717,43 +652,72 @@ class TansuHeaderListView(QListView, TansuHeaderAbstractView):
 
         self.setEditTriggers(QAbstractItemView.DoubleClicked)
 
-    # """ ABSTRACT ITEM VIEW STUFFF"""
-    # def getIndexUnderCursor(self):
-    #     """
-    #     Returns the QModelIndex underneath the cursor
-    #     """
-    #     pos = self.mapFromGlobal(QCursor.pos())
-    #     index = self.indexAt(pos)
-    #     return index
-    #
-    # def showEvent(self, event):
-    #     tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
-    #     if tab_tansu_widget:
-    #         tab_tansu_widget.updateDelegateDisplay()
-    #     QListView.showEvent(self, event)
-    #
-    # def setOrientation(self, orientation):
-    #     if orientation == Qt.Horizontal:
-    #         self.setFlow(QListView.TopToBottom)
-    #     else:
-    #         self.setFlow(QListView.LeftToRight)
-    #
-    # def setMultiSelect(self, multi_select):
-    #     if multi_select is True:
-    #         self.setSelectionMode(QAbstractItemView.MultiSelection)
-    #     else:
-    #         self.setSelectionMode(QAbstractItemView.SingleSelection)
-    #
-    # def selectionChanged(self, selected, deselected):
-    #     top_level_widget = getWidgetAncestor(self, TansuModelViewWidget)
-    #     if top_level_widget:
-    #         top_level_widget.updateDelegateDisplayFromSelection(selected, deselected)
+    def createStyleSheet(self, header_position, style_sheet_args):
+        """
+        Args:
+            header_position (attrs.POSITION): the current position of the header
+            style_sheet_args (dict): current dictionary of stylesheet args
+        Returns (dict): style sheet
+        """
+        if header_position == attrs.NORTH:
+            style_sheet = """
+            {type}::item{{
+                {item_snippet}
+                border-right: None;
+                border-top: None;
+            }}
+            {type}::item:selected{{
+                {item_selected_snippet}
+                border-right: None;
+                border-bottom: None;
+            }}
+            """.format(**style_sheet_args)
+        elif header_position == attrs.SOUTH:
+            style_sheet = """
+            {type}::item{{
+                {item_snippet}
+                border-right: None;
+                border-bottom: None;
+            }}
+            {type}::item:selected{{
+                {item_selected_snippet}
+                border-right: None;
+                border-top: None;
+            }}
+            """.format(**style_sheet_args)
+        elif header_position == attrs.EAST:
+            style_sheet = """
+            {type}::item{{
+                {item_snippet}
+                border-top: None;
+                border-right: None;
+            }}
+            {type}::item:selected{{
+                {item_selected_snippet}
+                border-top: None;
+                border-left: None;
+            }}
+            """.format(**style_sheet_args)
+        elif header_position == attrs.WEST:
+            style_sheet = """
+            {type}::item{{
+                {item_snippet}
+                border-top: None;
+                border-left: None;
+            }}
+            {type}::item:selected{{
+                {item_selected_snippet}
+                border-top: None;
+                border-right: None;
+            }}
+            """.format(**style_sheet_args)
+
+        return style_sheet
 
 
 class TansuHeaderTreeView(QTreeView, TansuHeaderAbstractView):
     def __init__(self, parent=None):
         super(TansuHeaderTreeView, self).__init__(parent)
-
 
     """ """
     def setHeaderData(self, _header_data):
@@ -767,6 +731,36 @@ class TansuHeaderTreeView(QTreeView, TansuHeaderAbstractView):
         self.model().setHeaderData(_header_data)
 
     """ Overload """
+    def createStyleSheet(self, header_position, style_sheet_args):
+        """
+        Args:
+            header_position (attrs.POSITION): the current position of the header
+            style_sheet_args (dict): current dictionary of stylesheet args
+        Returns (dict): style sheet
+        """
+
+        style_sheet = """
+        QHeaderView::section {{
+            background-color: rgba{rgba_gray_0};
+            color: rgba{rgba_text};
+            border: {outline_width}px solid rgba{rgba_outline};
+        }}
+        {type}::item{{
+            {item_snippet}
+        }}
+        {type}::item:selected{{
+            {item_selected_snippet}
+        }}
+        {type}::branch:open:has-children {{
+            image: url({path_branch_open})
+        }}  
+        {type}::branch:closed:has-children {{
+            image: url({path_branch_closed})
+        }}  
+            """.format(**style_sheet_args)
+
+        return style_sheet
+
     def setFlow(self, _):
         pass
 
