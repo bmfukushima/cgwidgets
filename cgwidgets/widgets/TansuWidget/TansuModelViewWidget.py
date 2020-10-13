@@ -1,5 +1,5 @@
 from qtpy.QtWidgets import (
-    QWidget, QListView, QAbstractItemView, QScrollArea, QSplitter
+    QWidget, QListView, QAbstractItemView, QScrollArea, QSplitter, QTreeView
 )
 from qtpy.QtCore import Qt, QModelIndex
 from qtpy.QtGui import QCursor
@@ -50,8 +50,8 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
 
     Widgets:
         |-- QBoxLayout
-                |-- ViewWidget (TansuHeaderView)
-                        ( TansuHeaderView | TansuTableView | TansuTreeView )
+                |-- ViewWidget (TansuHeaderListView)
+                        ( TansuHeaderListView | TansuTableView | TansuTreeView )
                 | -- Scroll Area
                     |-- DelegateWidget (TansuMainDelegateWidget --> TansuBaseWidget)
                             | -- _temp_proxy_widget (QWidget)
@@ -75,7 +75,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
 
         # setup model / view
         self._model = TansuModel()
-        self._header_widget = TansuHeaderView(self)
+        self._header_widget = TansuHeaderListView(self)
         self._header_widget.setModel(self._model)
 
         # setup delegate
@@ -148,7 +148,8 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
             self.delegateWidget().insertWidget(row, view_delegate_widget)
             view_delegate_widget.hide()
 
-        return view_item
+        return new_index
+        #return view_item
 
     """ MODEL """
     def model(self):
@@ -461,12 +462,6 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
     def getDelegateType(self):
         return self._delegate_type
 
-    # def getViewInstanceType(self):
-    #     return self._view_item_type
-    #
-    # def setViewInstanceType(self, view_item_type):
-    #     self._view_item_type = view_item_type
-
     """ LAYOUT """
     def updateStyleSheet(self):
         """
@@ -476,6 +471,14 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         self.setHandleWidth(0)
 
         view_style_sheet = """
+        QHeaderView::section {{
+            background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                              stop:0 #616161, stop: 0.5 #505050,
+                                              stop: 0.6 #434343, stop:1 #656565);
+            color: white;
+            padding-left: 4px;
+            border: 1px solid #6c6c6c;
+        }}
         {type}{{
             border:None;
             background-color: rgba{rgba_gray_0}
@@ -660,15 +663,8 @@ class TansuModelDelegateWidget(AbstractInputGroup):
     def item(self):
         return self._item
 
-# need to do a QAbstractItemView injection here...
 
-
-class TansuHeaderView(QListView):
-    def __init__(self, parent=None):
-        super(TansuHeaderView, self).__init__(parent)
-
-        self.setEditTriggers(QAbstractItemView.DoubleClicked)
-
+class TansuHeaderAbstractView(object):
     """ ABSTRACT ITEM VIEW STUFFF"""
     def getIndexUnderCursor(self):
         """
@@ -676,7 +672,6 @@ class TansuHeaderView(QListView):
         """
         pos = self.mapFromGlobal(QCursor.pos())
         index = self.indexAt(pos)
-        #item = index.internalPointer()
         return index
 
     def showEvent(self, event):
@@ -701,6 +696,66 @@ class TansuHeaderView(QListView):
         top_level_widget = getWidgetAncestor(self, TansuModelViewWidget)
         if top_level_widget:
             top_level_widget.updateDelegateDisplayFromSelection(selected, deselected)
+
+
+class TansuHeaderListView(QListView, TansuHeaderAbstractView):
+    def __init__(self, parent=None):
+        super(TansuHeaderListView, self).__init__(parent)
+
+        self.setEditTriggers(QAbstractItemView.DoubleClicked)
+
+    # """ ABSTRACT ITEM VIEW STUFFF"""
+    # def getIndexUnderCursor(self):
+    #     """
+    #     Returns the QModelIndex underneath the cursor
+    #     """
+    #     pos = self.mapFromGlobal(QCursor.pos())
+    #     index = self.indexAt(pos)
+    #     return index
+    #
+    # def showEvent(self, event):
+    #     tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
+    #     if tab_tansu_widget:
+    #         tab_tansu_widget.updateDelegateDisplay()
+    #     QListView.showEvent(self, event)
+    #
+    # def setOrientation(self, orientation):
+    #     if orientation == Qt.Horizontal:
+    #         self.setFlow(QListView.TopToBottom)
+    #     else:
+    #         self.setFlow(QListView.LeftToRight)
+    #
+    # def setMultiSelect(self, multi_select):
+    #     if multi_select is True:
+    #         self.setSelectionMode(QAbstractItemView.MultiSelection)
+    #     else:
+    #         self.setSelectionMode(QAbstractItemView.SingleSelection)
+    #
+    # def selectionChanged(self, selected, deselected):
+    #     top_level_widget = getWidgetAncestor(self, TansuModelViewWidget)
+    #     if top_level_widget:
+    #         top_level_widget.updateDelegateDisplayFromSelection(selected, deselected)
+
+
+class TansuHeaderTreeView(QTreeView, TansuHeaderAbstractView):
+    def __init__(self, parent=None):
+        super(TansuHeaderTreeView, self).__init__(parent)
+
+
+    """ """
+    def setHeaderData(self, _header_data):
+        """
+        Sets the header display data.
+
+        Args:
+            header_data (list): of strings that will be displayed as the header
+                data.  This will also set the number of columns in the view aswell.
+        """
+        self.model().setHeaderData(_header_data)
+
+    """ Overload """
+    def setFlow(self, _):
+        pass
 
 
 class TabTansuDynamicWidgetExample(QWidget):
@@ -740,58 +795,41 @@ if __name__ == "__main__":
             self.addWidget(QLabel('c'))
 
     w = TansuModelViewWidget()
+    view = TansuHeaderTreeView()
+
+    w.setHeaderWidget(view)
     w.setHeaderPosition(attrs.NORTH)
     w.setMultiSelect(True)
     w.setMultiSelectDirection(Qt.Vertical)
+
+    view.setHeaderData(['one', 'two'])
+
     #
-    # new_view = TansuHeaderView()
+    # new_view = TansuHeaderListView()
     # print()
     # new_view.show()
     # w.setHeaderWidget(new_view)
     # w.setHeaderPosition(TansuModelViewWidget.NORTH)
 
     dw = TabTansuDynamicWidgetExample
-    # w.setDelegateType(
-    #     TansuModelViewWidget.DYNAMIC,
-    #     dynamic_widget=TabTansuDynamicWidgetExample,
-    #     dynamic_function=TabTansuDynamicWidgetExample.updateGUI
-    # )
-    asdf = test(w)
-    main_splitter = TansuBaseWidget()
-    main_splitter.handle_length = 100
-    main_splitter.setObjectName("main")
-    main_splitter.addWidget(QLabel('a'))
-    main_splitter.addWidget(QLabel('b'))
-    main_splitter.addWidget(QLabel('c'))
-    w.insertTansuWidget(0, 'tansu', widget=main_splitter)
-    w.insertTansuWidget(0, 'subclass', widget=asdf)
+
+    # asdf = test(w)
+    # main_splitter = TansuBaseWidget()
+    # main_splitter.handle_length = 100
+
+    #w.insertTansuWidget(0, 'tansu', widget=main_splitter)
+    #w.insertTansuWidget(0, 'subclass', widget=asdf)
 
     for x in range(3):
         widget = QLabel(str(x))
-        w.insertTansuWidget(x, str(x), widget=widget)
+        parent_item = w.insertTansuWidget(x, str(x), widget=widget)
 
+    for y in range(0, 2):
+        w.insertTansuWidget(y, str(y), widget=widget, parent=parent_item)
 
     w.resize(500, 500)
     w.delegateWidget().handle_length = 100
-    #w.setStyleSheet(iColor.default_style_sheet)
-    # new_index = self.model().index(index, 1, parent)
-    # view_item = new_index.internalPointer()
-    # view_item.setName(name)
-    #
-    # index = w.model().index(0, 3, QModelIndex())
-    # item = w.model().getItem(index)
-    # item.setName("klajfjklasjfkla")
-    #
-    # w.show()
-    #w.setHeaderWidgetToDefaultSize()
 
-    # q = QTableView()
-    # q.show()
-    #
-    # q.setModel(w.model())
-    # widget = QLabel("test")
-    # display_widget = TansuModelDelegateWidget('alskdjf')
-    # display_widget.setMainWidget(widget)
     w.show()
 
     w.move(QCursor.pos())

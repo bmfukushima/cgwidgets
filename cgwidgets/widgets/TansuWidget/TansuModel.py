@@ -42,10 +42,14 @@ class TansuModel(QAbstractItemModel):
         self._item_type = TansuModelItem
         self._item_height = TansuModel.ITEM_HEIGHT
         self._item_width = TansuModel.ITEM_WIDTH
+
         # set up root item
         if not root_item:
             root_item = TansuModelItem('root_item')
         self._root_item = root_item
+
+        # setup default attrs
+        self._header_data = ['Hello']
 
     """ UTILS """
     def rowCount(self, parent):
@@ -65,7 +69,7 @@ class TansuModel(QAbstractItemModel):
         INPUTS: QModelIndex
        OUTPUT: int
        """
-        return 2
+        return len(self._header_data)
 
     def data(self, index, role):
         """
@@ -114,10 +118,14 @@ class TansuModel(QAbstractItemModel):
         OUTPUT: QVariant, strings are cast to QString which is a QVariant
         """
         if role == Qt.DisplayRole:
-            if column == 0:
-                return "Scenegraph"
-            else:
-                return "Typeinfo"
+            return self._header_data[column]
+            # if column == 0:
+            #     return "Scenegraph"
+            # else:
+            #     return "Typeinfo"
+
+    def setHeaderData(self, _header_data):
+        self._header_data = _header_data
 
     def flags(self, index):
         """
@@ -195,14 +203,14 @@ class TansuModel(QAbstractItemModel):
         return new_index
 
     """ INSERT INDEXES """
-    def insertRows(self, position, rows, parent=QModelIndex()):
+    def insertRows(self, position, num_rows, parent=QModelIndex()):
         """
         INPUTS: int, int, QModelIndex
         """
         parent_item = self.getItem(parent)
-        self.beginInsertRows(parent, position, position + rows - 1)
+        self.beginInsertRows(parent, position, position + num_rows - 1)
 
-        for row in range(rows):
+        for row in range(num_rows):
             childCount = parent_item.childCount()
             childNode = self.createNewItem(str(childCount))
             success = parent_item.insertChild(position, childNode)
@@ -211,12 +219,12 @@ class TansuModel(QAbstractItemModel):
 
         return success
 
-    def removeRows(self, position, rows, parent=QModelIndex()):
+    def removeRows(self, position, num_rows, parent=QModelIndex()):
         """INPUTS: int, int, QModelIndex"""
         parent_item = self.getItem(parent)
-        self.beginRemoveRows(parent, position, position + rows - 1)
+        self.beginRemoveRows(parent, position, position + num_rows - 1)
 
-        for row in range(rows):
+        for row in range(num_rows):
             success = parent_item.removeChild(position)
 
         self.endRemoveRows()
