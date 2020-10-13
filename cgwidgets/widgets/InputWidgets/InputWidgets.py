@@ -9,7 +9,8 @@ from qtpy.QtCore import (
     QEvent, Qt, QSortFilterProxyModel
 )
 
-from qtpy.QtWidgets import QSplitter, QLabel, QFrame, QBoxLayout, QLineEdit
+from qtpy.QtWidgets import (
+    QSplitter, QLabel, QFrame, QBoxLayout, QLineEdit, QWidget)
 from qtpy.QtCore import Qt
 
 from cgwidgets.widgets import (
@@ -19,6 +20,7 @@ from cgwidgets.widgets import (
     AbstractStringInputWidget,
     AbstractBooleanInputWidget,
     AbstractVLine,
+    AbstractHLine,
     AbstractListInputWidget
 )
 
@@ -245,14 +247,14 @@ class BooleanInputWidget(AbstractBooleanInputWidget, iGroupInput):
 
 
 class ListInputWidget(AbstractListInputWidget, iGroupInput):
-    TYPE = "List"
+    TYPE = "list"
     def __init__(self, parent=None):
         super(ListInputWidget, self).__init__(parent)
         self.setUserFinishedEditingEvent(self.updateUserInputItem)
-        self.line_edit.editingFinished.connect(self.userFinishedEditing)
+        #self.editingFinished.connect(self.userFinishedEditing)
 
     def userFinishedEditing(self):
-        self.userFinishedEditingEvent(self, self.currentText())
+        #self.userFinishedEditingEvent(self, self.currentText())
         return AbstractListInputWidget.userFinishedEditing(self)
 
     def updateUserInputItem(self, *args):
@@ -274,7 +276,11 @@ class ListInputWidget(AbstractListInputWidget, iGroupInput):
         # print(widget, item)
 
 
-class UserInputWidget(QFrame):
+# TODO move these under one architecture...
+# abstract input group
+# AbstractInputGroupBox
+
+class FrameInputWidget(QFrame):
     """
     name (str): the name displayed to the user
     input_widget (InputWidgetInstance): The instance of the input widget type
@@ -288,8 +294,15 @@ class UserInputWidget(QFrame):
                 FloatInputWidget
                 ListInputWidget
     """
-    def __init__(self, parent=None, name="None", note="None", widget_type=StringInputWidget):
-        super(UserInputWidget, self).__init__(parent)
+    def __init__(
+        self,
+        parent=None,
+        name="None",
+        note="None",
+        widget_type=StringInputWidget,
+        direction=Qt.Horizontal
+    ):
+        super(FrameInputWidget, self).__init__(parent)
         QBoxLayout(QBoxLayout.LeftToRight, self)
 
         # set up attrs
@@ -298,23 +311,26 @@ class UserInputWidget(QFrame):
         # setup layout
         self._label = QLabel(name)
         self._separator = AbstractVLine()
-        self._input_widget = widget_type()
+        self._input_widget = widget_type(self)
+        self._input_widget.setSizePolicy(
+            QSizePolicy.MinimumExpanding, QSizePolicy.Preferred
+        )
 
         self.layout().addWidget(self._label)
         self.layout().addWidget(self._separator)
         self.layout().addWidget(self._input_widget)
 
         # set up display
-        self._label.setToolTip(note)
-        self.setLabelWidth(100)
-        self.layout().setSpacing(50)
+        self.setToolTip(note)
+        self.setLabelWidth(50)
         self.setupStyleSheet()
+        self.setDirection(direction)
 
     def setupStyleSheet(self):
         style_sheet_args = iColor.style_sheet_args
         style_sheet = """
         QLabel{{color: rgba{rgba_text}}}
-        UserInputWidget{{background-color: rgba{rgba_gray_1}}}
+        FrameInputWidget{{background-color: rgba{rgba_gray_1}}}
         """.format(
             **style_sheet_args
         )
@@ -326,6 +342,63 @@ class UserInputWidget(QFrame):
     def setToolTip(self, tool_tip):
         self._label.setToolTip(tool_tip)
 
+    """ Set Direction of input"""
+    def setDirection(self, direction):
+        """
+        Sets the direction this input will be displayed as.
+
+        Args:
+            direction (Qt.DIRECTION)
+        """
+        # preflight
+        if direction not in [Qt.Horizontal, Qt.Vertical]: return
+
+        # set direction
+        self._direction = direction
+
+        # update separator
+        if direction == Qt.Vertical:
+            # direction
+            self.layout().setDirection(QBoxLayout.TopToBottom)
+
+            # separator
+            self.__updateSeparator(direction)
+
+            # update alignment
+            self._label.setAlignment(Qt.AlignCenter)
+            self.layout().setAlignment(Qt.AlignCenter)
+            self.layout().setSpacing(5)
+
+            # update label
+            self._label.setSizePolicy(
+                QSizePolicy.MinimumExpanding, QSizePolicy.Preferred
+            )
+
+        elif direction == Qt.Horizontal:
+            # set layout direction
+            self.layout().setDirection(QBoxLayout.LeftToRight)
+
+            # update separator
+            self.__updateSeparator(direction)
+
+            # alignment
+            self.layout().setAlignment(Qt.AlignLeft)
+            self.layout().setSpacing(50)
+
+            # update label
+            self._label.setSizePolicy(
+                QSizePolicy.Fixed, QSizePolicy.Preferred
+            )
+
+    def __updateSeparator(self, direction):
+        self._separator.setParent(None)
+        if direction == Qt.Vertical:
+            self._separator = AbstractHLine()
+        elif direction == Qt.Horizontal:
+            self._separator = AbstractVLine()
+        self._separator.setLineWidth(5)
+        self.layout().insertWidget(1, self._separator)
+
     """ PROPERTIES """
     def setName(self, name):
         self._label.setText(name)
@@ -334,7 +407,15 @@ class UserInputWidget(QFrame):
         return self._label.text()
 
     def setInputWidget(self, _input_widget):
+        # remove previous input widget
+        if self.getInputWidget():
+            self.getInputWidget().setParent(None)
+
+        # create new input widget
         self._input_widget = _input_widget
+        self._input_widget.setSizePolicy(
+            QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding
+        )
 
     def getInputWidget(self):
         return self._input_widget
@@ -350,14 +431,11 @@ class UserInputWidget(QFrame):
 
     def setLabelWidth(self, width):
         self._label_width = width
-        self._label.setFixedWidth(width)
+        self._label.setMinimumWidth(width)
 
     """ EVENTS """
     def setUserFinishedEditingEvent(self, function):
         self._input_widget.setUserFinishedEditingEvent(function)
-
-    # def setUserInputEvent(self, function):
-    #     self._input_widget.setUserInputEvent(function)
 
 
 if __name__ == "__main__":
@@ -409,11 +487,11 @@ if __name__ == "__main__":
     list_input_widget.setUserFinishedEditingEvent(test)
 
     """ Label widgets """
-    u_float_input_widget = UserInputWidget(name="float", widget_type=FloatInputWidget)
-    u_int_input_widget = UserInputWidget(name="int", widget_type=IntInputWidget)
-    u_boolean_input_widget = UserInputWidget(name="bool", widget_type=BooleanInputWidget)
-    u_string_input_widget = UserInputWidget(name='str', widget_type=StringInputWidget)
-    u_list_input_widget = UserInputWidget(name='list', widget_type=ListInputWidget)
+    u_float_input_widget = FrameInputWidget(name="float", widget_type=FloatInputWidget)
+    u_int_input_widget = FrameInputWidget(name="int", widget_type=IntInputWidget)
+    u_boolean_input_widget = FrameInputWidget(name="bool", widget_type=BooleanInputWidget)
+    u_string_input_widget = FrameInputWidget(name='str', widget_type=StringInputWidget)
+    u_list_input_widget = FrameInputWidget(name='list', widget_type=ListInputWidget)
 
     l.addWidget(u_float_input_widget)
     l.addWidget(u_int_input_widget)
@@ -426,6 +504,17 @@ if __name__ == "__main__":
     u_boolean_input_widget.setUserFinishedEditingEvent(test)
     u_string_input_widget.setUserFinishedEditingEvent(test)
     u_list_input_widget.setUserFinishedEditingEvent(test)
+
+    q = FrameInputWidget(name="bool", widget_type=FloatInputWidget)
+    q.setDirection(Qt.Vertical)
+    e = FrameInputWidget(name="bool", widget_type=ListInputWidget)
+    e.getInputWidget().populate(['a','b','c','d'])
+    e.setDirection(Qt.Vertical)
+    t = FrameInputWidget(name="bool", widget_type=BooleanInputWidget)
+    t.setDirection(Qt.Vertical)
+    l.addWidget(q)
+    l.addWidget(t)
+    l.addWidget(e)
     # w = ListInputWidget()
     # w.populate(['a','b','c','d'])
     #w.setInputBaseClass(ListInputWidget)

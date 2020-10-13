@@ -46,7 +46,7 @@ class AbstractInputGroup(QFrame):
                                     |-* AbstractUserInputContainer
                                             | -- QBoxLayout
                                                 | -- QLabel
-                                                | -- UserInputWidget
+                                                | -- FrameInputWidget
     """
     def __init__(self, parent=None, title='None'):
         super(AbstractInputGroup, self).__init__(parent)

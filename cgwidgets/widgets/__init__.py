@@ -35,7 +35,7 @@ from .InputWidgets import StringInputWidget as StringInputWidget
 from .InputWidgets import BooleanInputWidget as BooleanInputWidget
 from .InputWidgets import GroupInputWidget as GroupInputWidget
 from .InputWidgets import ListInputWidget as ListInputWidget
-from .InputWidgets import UserInputWidget as UserInputWidget
+from .InputWidgets import FrameInputWidget as FrameInputWidget
 
 # color widget
 from .InputWidgets.ColorInputWidget import ColorGradientDelegate as ColorGradientDelegate
@@ -43,8 +43,5 @@ from .InputWidgets.ColorInputWidget import ColorInputWidget as ColorInputWidget
 
 from .LibraryWidget import LibraryWidget as LibraryWidget
 from .LadderWidget import LadderWidget as LadderWidget
-
-
-
 
 from .__utils__ import *

@@ -117,13 +117,17 @@ class AbstractColorClock(QWidget):
 
         self.header_item_height = getFontSize(QApplication) * 3 + 5
         self.header_item_width = 40
-        header_widgets = {
-            **self.hsv_header_widget.getWidgetDict(),
-            **self.rgba_header_widget.getWidgetDict()
-        }
+
+        # header_widgets = {
+        #     **self.hsv_header_widget.getWidgetDict(),
+        #     **self.rgba_header_widget.getWidgetDict()
+        # }
+        header_widgets = {}
+        header_widgets.update(self.hsv_header_widget.getWidgetDict())
+        header_widgets.update(self.rgba_header_widget.getWidgetDict())
+
         for color_arg in header_widgets:
             header_item = header_widgets[color_arg]
-
             header_item.setMinimumHeight(self.header_item_height)
             header_item.setMinimumWidth(self.header_item_width)
 
