@@ -6,6 +6,7 @@ from qtpy.QtGui import QCursor
 
 from cgwidgets.utils import getWidgetAncestor, attrs
 from cgwidgets.settings.colors import iColor
+from cgwidgets.settings.icons import icons
 
 from cgwidgets.widgets import AbstractInputGroup
 from cgwidgets.widgets.TansuWidget import (
@@ -468,25 +469,42 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         Sets the style sheet for the outline based off of the direction of the parent.
 
         """
+
         self.setHandleWidth(0)
+        #
+        header_position = self.getHeaderPosition()
+        style_sheet_args = iColor.style_sheet_args
+        style_sheet_args.update({
+            'outline_width': TansuModelViewWidget.OUTLINE_WIDTH,
+            'type': type(self.headerWidget()).__name__
+        })
+        style_sheet_args.update(icons)
 
         view_style_sheet = """
         QHeaderView::section {{
-            background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                              stop:0 #616161, stop: 0.5 #505050,
-                                              stop: 0.6 #434343, stop:1 #656565);
-            color: white;
-            padding-left: 4px;
-            border: 1px solid #6c6c6c;
+            background-color: rgba{rgba_gray_0};
+            color: rgba{rgba_text};
+            border: {outline_width}px solid rgba{rgba_outline};
         }}
         {type}{{
             border:None;
-            background-color: rgba{rgba_gray_0}
+            background-color: rgba{rgba_gray_0};
+            selection-background-color: rgba{rgba_invisible};
         }}
-            """.format(
-            type=type(self.headerWidget()).__name__,
-            rgba_gray_0=iColor['rgba_gray_0']
-        )
+        {type}::branch:open:has-children {{
+            image: url({path_branch_open})
+        }}  
+        {type}::branch:closed:has-children {{
+            image: url({path_branch_closed})
+        }}  
+            """.format(**style_sheet_args)
+        #     .format(
+        #     type=type(self.headerWidget()).__name__,
+        #     rgba_gray_0=iColor['rgba_gray_0'],
+        #     rgba_invisible=iColor['rgba_invisible'],
+        #     open_file_path=icons['branch-open'],
+        #     closed_file_path=icons['branch-closed']
+        # )
 
         splitter_style_sheet = """
             QSplitter::handle {{
@@ -495,14 +513,9 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
             }}
         """
 
-        header_position = self.getHeaderPosition()
-        style_sheet_args = iColor.style_sheet_args
-        style_sheet_args.update({
-            'outline_width': TansuModelViewWidget.OUTLINE_WIDTH,
-            'type': type(self.headerWidget()).__name__,
-            'splitter_style_sheet': splitter_style_sheet,
-            'view_style_sheet': view_style_sheet,
-        })
+        # combine style sheets
+        style_sheet_args['splitter_style_sheet'] = splitter_style_sheet
+        style_sheet_args['view_style_sheet'] = view_style_sheet
 
         if header_position == attrs.NORTH:
             style_sheet = """
@@ -798,7 +811,7 @@ if __name__ == "__main__":
     view = TansuHeaderTreeView()
 
     w.setHeaderWidget(view)
-    w.setHeaderPosition(attrs.NORTH)
+    w.setHeaderPosition(attrs.WEST)
     w.setMultiSelect(True)
     w.setMultiSelectDirection(Qt.Vertical)
 

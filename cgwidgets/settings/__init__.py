@@ -1,1 +1,1 @@
-from . import colors
+from . import colors, icons
