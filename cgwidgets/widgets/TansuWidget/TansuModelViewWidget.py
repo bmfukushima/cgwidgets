@@ -1,8 +1,3 @@
-"""
-TODO
-    TILDA OVER SLIDER BUGGG
-"""
-
 from qtpy.QtWidgets import (
     QWidget, QListView, QAbstractItemView, QScrollArea, QSplitter, QTreeView
 )
@@ -39,7 +34,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
             only works when the mode is set to view the labels on the north/south
         header_width (int): the default width of the tab label in pixels
             only works when the mode is set to view the labels on the east/west
-        headerPosition(attrs.DIRECTION): Where the header should be placed
+        header_position (attrs.DIRECTION): Where the header should be placed
 
     Class Attrs:
         TYPE
@@ -47,18 +42,18 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
                 will be stacked on top of each other)
             DYNAMIC: There will be one widget that is dynamically
                 updated based off of the labels args
-            MULTI: Similair to stacked, but instead of having one
+            MULTI: Similar  to stacked, but instead of having one
                 display at a time, multi tabs can be displayed next
                 to each other.
     Essentially this is a custom tab widget.  Where the name
-        label: refers to the small part at the top for selecting selctions
-        bar: refers to the bar at the top containing all of the afformentioned tabs
+        label: refers to the small part at the top for selecting selections
+        bar: refers to the bar at the top containing all of the aforementioned tabs
         widget: refers to the area that displays the GUI for each tab
 
     Widgets:
         |-- QBoxLayout
                 |-- ViewWidget (TansuHeaderListView)
-                        ( TansuHeaderListView | TansuTableView | TansuTreeView )
+                        ( TansuHeaderListView | TansuHeaderTableView | TansuHeaderTreeView )
                 | -- Scroll Area
                     |-- DelegateWidget (TansuMainDelegateWidget --> TansuBaseWidget)
                             | -- _temp_proxy_widget (QWidget)
@@ -122,13 +117,17 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         Creates a new tab at  the specified index
 
         Args:
-            row (int): index to insert widget at
-            widget (QWidget): widget to be displayed at that index
+            column_data (dict): for each item in this dict, there should
+                be a corresponding header_item with the same string text.
+                The key from this will be mapped to the header to get the
+                correct values for column data.
             name (str): name of widget
             parent (QModelIndex): Parent index to create this new
                 tab under neath
+            row (int): index to insert widget at
+            widget (QWidget): widget to be displayed at that index
 
-        Returns (Tab Label)
+        Returns (QModelIndex)
         """
         # create new model index
         if not parent:
@@ -157,7 +156,6 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
             view_delegate_widget.hide()
 
         return new_index
-        #return view_item
 
     """ MODEL """
     def model(self):
