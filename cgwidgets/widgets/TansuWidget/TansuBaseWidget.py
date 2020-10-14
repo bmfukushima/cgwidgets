@@ -6,7 +6,7 @@ TODO:
 
 """
 
-from qtpy.QtWidgets import QSplitter, qApp
+from qtpy.QtWidgets import QSplitter, QSplitterHandle, qApp
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QCursor
 
@@ -127,6 +127,13 @@ class TansuBaseWidget(QSplitter):
 
     def keyPressEvent(self, event):
         if event.key() == self.soloViewHotkey():
+            # preflight
+            pos = QCursor.pos()
+            widget = qApp.widgetAt(pos)
+            if isinstance(widget, QSplitterHandle):
+                return
+
+            # toggle solo view
             self.toggleIsSoloView(True)
             return
         elif event.key() == Qt.Key_Escape:
