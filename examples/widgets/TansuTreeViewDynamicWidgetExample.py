@@ -5,7 +5,7 @@ instead of the primary ones if you want to do a per item override.
 """
 from qtpy.QtCore import Qt
 
-from cgwidgets.widgets import TansuModelViewWidget, FloatInputWidget
+from cgwidgets.widgets import TansuModelViewWidget, FloatInputWidget, TansuHeaderTreeView
 from cgwidgets.utils import attrs
 
 import sys
@@ -66,6 +66,11 @@ class CustomDynamicWidget(FloatInputWidget):
 
 # create tansu widget
 tansu_widget = TansuModelViewWidget()
+view = TansuHeaderTreeView()
+
+# setup custottrs
+tansu_widget.setHeaderWidget(view)
+tansu_widget.setHeaderPosition(attrs.WEST)
 
 # set dynamic
 tansu_widget.setDelegateType(

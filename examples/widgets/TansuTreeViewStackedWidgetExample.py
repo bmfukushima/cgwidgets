@@ -28,11 +28,11 @@ view.setHeaderData(['name', 'one', 'two'])
 # insert widgets
 for x in range(3):
     widget = QLabel(str(x))
-    parent_item = w.insertTansuWidget(x, data={'name': str(x)}, widget=widget)
+    parent_item = w.insertTansuWidget(x, column_data={'name': str(x)}, widget=widget)
 
 # insert child widgets
 for y in range(0, 2):
-    w.insertTansuWidget(y, data={'name': str(y)}, widget=widget, parent=parent_item)
+    w.insertTansuWidget(y, column_data={'name': str(y)}, widget=widget, parent=parent_item)
 
 w.resize(500, 500)
 

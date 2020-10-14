@@ -59,11 +59,11 @@ class TansuModelItem(iTansuDynamicWidget):
 
         return True
 
-    def data(self):
-        return self._data
+    def columnData(self):
+        return self._column_data
 
-    def setData(self, data):
-        self._data = data
+    def setColumnData(self, _column_data):
+        self._column_data = _column_data
 
     def child(self, row):
         return self._children[row]

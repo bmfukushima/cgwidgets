@@ -117,7 +117,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         self.updateStyleSheet()
 
     """ API """
-    def insertTansuWidget(self, row, data={}, parent=None, widget=None):
+    def insertTansuWidget(self, row, column_data={}, parent=None, widget=None):
         """
         Creates a new tab at  the specified index
 
@@ -137,14 +137,14 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
 
         # setup custom object
         item_type = self.model().itemType()
-        view_item = item_type(data)
+        view_item = item_type(column_data)
         self.model().createIndex(row, 1, view_item)
 
         # get new index/item created
         new_index = self.model().index(row, 1, parent)
         view_item = new_index.internalPointer()
 
-        view_item.setData(data)
+        view_item.setColumnData(column_data)
 
         # add to layout if stacked
         if self.getDelegateType() == TansuModelViewWidget.STACKED:
@@ -845,10 +845,10 @@ if __name__ == "__main__":
 
     for x in range(3):
         widget = QLabel(str(x))
-        parent_item = w.insertTansuWidget(x, data={'name':str(x)}, widget=widget)
+        parent_item = w.insertTansuWidget(x, column_data={'name':str(x)}, widget=widget)
 
     for y in range(0, 2):
-        w.insertTansuWidget(y, data={'name':str(y)}, widget=widget, parent=parent_item)
+        w.insertTansuWidget(y, column_data={'name':str(y)}, widget=widget, parent=parent_item)
 
     w.resize(500, 500)
     w.delegateWidget().handle_length = 100
