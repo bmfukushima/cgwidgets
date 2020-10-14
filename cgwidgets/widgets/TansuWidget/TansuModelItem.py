@@ -66,8 +66,6 @@ class TansuModelItem(iTansuDynamicWidget):
         self._data = data
 
     def child(self, row):
-        # print('name == %s'%self.name())
-        # print('row == %s'%row)
         return self._children[row]
 
     def childCount(self):

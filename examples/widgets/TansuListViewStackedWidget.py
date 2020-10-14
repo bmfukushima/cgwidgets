@@ -10,6 +10,7 @@ from qtpy.QtGui import QCursor
 app = QApplication(sys.argv)
 
 w = TansuModelViewWidget()
+w.setHeaderData(['example'])
 tab_1 = QLabel('hello')
 tab_2 = QLabel('world')
 tab_3 = TansuBaseWidget()
@@ -24,9 +25,9 @@ w.setMultiSelect(True)
 w.setMultiSelectDirection(Qt.Vertical)
 
 # insert tabs
-w.insertTansuWidget(0, '<title> hello', widget=tab_1)
-w.insertTansuWidget(0, '<title> world', widget=tab_2)
-w.insertTansuWidget(0, '<title> tansu', widget=tab_3)
+w.insertTansuWidget(0, data={'example' : '<title> hello'}, widget=tab_1)
+w.insertTansuWidget(0, data={'example' : '<title> world'}, widget=tab_2)
+w.insertTansuWidget(0, data={'example' : '<title> tansu'}, widget=tab_3)
 
 w.resize(500, 500)
 w.delegateWidget().handle_length = 100

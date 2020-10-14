@@ -31,14 +31,17 @@ class TabTansuDynamicWidgetExample(QWidget):
         self.layout().addWidget(self.label)
 
     @staticmethod
-    def updateGUI(widget, item):
+    def updateGUI(parent, widget, item):
         """
         widget (TansuModelDelegateWidget)
         item (TansuModelItem)
         """
         if item:
-            widget.setTitle(item.name())
-            widget.getMainWidget().label.setText(item.name())
+            print ('----------------------------')
+            print(parent, widget, item)
+            name = parent.model().getItemName(item)
+            widget.setTitle(name)
+            widget.getMainWidget().label.setText(name)
 
 """
 Custom widget which has overloaded functions/widget to be
@@ -49,14 +52,15 @@ class CustomDynamicWidget(FloatInputWidget):
         super(CustomDynamicWidget, self).__init__(parent)
 
     @staticmethod
-    def updateGUI(widget, item):
+    def updateGUI(parent, widget, item):
         """
+        parent (TansuModelViewWidget)
         widget (TansuModelDelegateWidget)
         item (TansuModelItem)
         self --> widget.getMainWidget()
         """
         print('custom event')
-        print(widget, item)
+        print(parent, widget, item)
         this = widget.getMainWidget()
         this.setText('whatup')
 
@@ -71,20 +75,18 @@ tansu_widget.setDelegateType(
 )
 
 for x in range(3):
-    tansu_widget.insertTansuWidget(x, '<title {}>'.format(str(x)))
+    name = '<title {}>'.format(str(x))
+    tansu_widget.insertTansuWidget(x, data={'name':name})
 
 # custom item
-
-
-custom_item = tansu_widget.insertTansuWidget(0, 'Custom Handlers')
-custom_item.setDynamicWidgetBaseClass(CustomDynamicWidget)
-custom_item.setDynamicUpdateFunction(CustomDynamicWidget.updateGUI)
+custom_index = tansu_widget.insertTansuWidget(0, data={'name': 'Custom Handlers'})
+custom_index.internalPointer().setDynamicWidgetBaseClass(CustomDynamicWidget)
+custom_index.internalPointer().setDynamicUpdateFunction(CustomDynamicWidget.updateGUI)
 
 # set attrs
 tansu_widget.setHeaderPosition(attrs.NORTH)
 tansu_widget.setMultiSelect(True)
 tansu_widget.setMultiSelectDirection(Qt.Vertical)
-
 
 tansu_widget.resize(500, 500)
 tansu_widget.delegateWidget().handle_length = 100

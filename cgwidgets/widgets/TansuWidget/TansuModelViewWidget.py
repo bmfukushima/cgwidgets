@@ -1,3 +1,8 @@
+"""
+TODO
+    TILDA OVER SLIDER BUGGG
+"""
+
 from qtpy.QtWidgets import (
     QWidget, QListView, QAbstractItemView, QScrollArea, QSplitter, QTreeView
 )
@@ -29,11 +34,12 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
             options are STACKED | DYNAMIC
             see class attrs for more info...
         selected_labels_list (list): list of labels that are currently selected by the user
-        header_position (int): the default height of the tab label in pixels
+        header_data (list): of strings that will be displayed as the headers header
+        header_height (int): the default height of the tab label in pixels
             only works when the mode is set to view the labels on the north/south
         header_width (int): the default width of the tab label in pixels
             only works when the mode is set to view the labels on the east/west
-        header_position(attrs.DIRECTION): Where the header should be placed
+        headerPosition(attrs.DIRECTION): Where the header should be placed
 
     Class Attrs:
         TYPE
@@ -70,8 +76,8 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         super(TansuModelViewWidget, self).__init__(parent)
         # etc attrs
         self.setHandleWidth(0)
-        self._direction = direction #just a temp set... for things
-        self._header_position = 50
+        self._header_direction = direction #just a temp set... for things
+        self._header_height = 50
         self._header_width = 100
 
         # setup model / view
@@ -137,7 +143,6 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         # get new index/item created
         new_index = self.model().index(row, 1, parent)
         view_item = new_index.internalPointer()
-        #view_item.setName(name)
 
         view_item.setData(data)
 
@@ -174,42 +179,42 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         # set new header widget
         self._header_widget = _header_widget
         _header_widget.setModel(self.model())
-        self.setHeaderPosition(self.getHeaderPosition())
+        self.setHeaderPosition(self.headerPosition())
 
-    def getHeaderPosition(self):
-        return self._direction
+    def headerPosition(self):
+        return self._header_direction
 
-    def setHeaderPosition(self, direction):
+    def setHeaderPosition(self, _header_direction):
         """
         Sets the current direction this widget.  This is the orientation of
         where the tab labels will be vs where the main widget will be, where
         the tab labels bar will always be the first widget.
         """
-        self._direction = direction
+        self._header_direction = _header_direction
         self.headerWidget().setParent(None)
 
-        if direction == attrs.WEST:
+        if _header_direction == attrs.WEST:
             self.setOrientation(Qt.Horizontal)
             self.headerWidget().setOrientation(Qt.Horizontal)
             self.insertWidget(0, self.headerWidget())
             self.setStretchFactor(0, 0)
             self.setStretchFactor(1, 1)
 
-        elif direction == attrs.EAST:
+        elif _header_direction == attrs.EAST:
             self.setOrientation(Qt.Horizontal)
             self.headerWidget().setOrientation(Qt.Horizontal)
             self.insertWidget(1, self.headerWidget())
             self.setStretchFactor(1, 0)
             self.setStretchFactor(0, 1)
 
-        elif direction == attrs.NORTH:
+        elif _header_direction == attrs.NORTH:
             self.setOrientation(Qt.Vertical)
             self.headerWidget().setOrientation(Qt.Vertical)
             self.insertWidget(0, self.headerWidget())
             self.setStretchFactor(0, 0)
             self.setStretchFactor(1, 1)
 
-        elif direction == attrs.SOUTH:
+        elif _header_direction == attrs.SOUTH:
             self.setOrientation(Qt.Vertical)
             self.headerWidget().setOrientation(Qt.Vertical)
             self.insertWidget(1, self.headerWidget())
@@ -221,17 +226,23 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         self.setCollapsible(1, False)
         self.updateStyleSheet()
 
+    def headerData(self):
+        return self.model()._header_data
+
+    def setHeaderData(self, _header_data):
+        self.model()._header_data = _header_data
+
     def setHeaderWidgetToDefaultSize(self):
         """
         Moves the main slider to make the tab label bar the default startup size
         """
-        if self.getHeaderPosition() == attrs.NORTH:
-            self.moveSplitter(self.header_position, 1)
-        elif self.getHeaderPosition() == attrs.SOUTH:
-            self.moveSplitter(self.height() - self.header_position, 1)
-        elif self.getHeaderPosition() == attrs.WEST:
+        if self.headerPosition() == attrs.NORTH:
+            self.moveSplitter(self.header_height, 1)
+        elif self.headerPosition() == attrs.SOUTH:
+            self.moveSplitter(self.height() - self.header_height, 1)
+        elif self.headerPosition() == attrs.WEST:
             self.moveSplitter(self.header_width, 1)
-        elif self.getHeaderPosition() == attrs.EAST:
+        elif self.headerPosition() == attrs.EAST:
             self.moveSplitter(self.width() - self.header_width, 1)
 
     def createTansuModelDelegateWidget(self, item, widget):
@@ -240,7 +251,8 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         TODO:
             Move to base tansu?
         """
-        name = item.data()[self.model()._header_data[0]]
+        #name = item.data()[self.model()._header_data[0]]
+        name = self.model().getItemName(item)
         display_widget = TansuModelDelegateWidget(self, name)
         display_widget.setMainWidget(widget)
         display_widget.setItem(item)
@@ -353,7 +365,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
             dynamic_widget = self.createNewDynamicWidget(item)
             self.delegateWidget().addWidget(dynamic_widget)
             item.setDelegateWidget(dynamic_widget)
-            self.updateDynamicWidget(dynamic_widget, item)
+            self.updateDynamicWidget(self, dynamic_widget, item)
         else:
             # destroy widget
             try:
@@ -363,7 +375,6 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
 
     """ DYNAMIC WIDGET """
     def createNewDynamicWidget(self, item):
-        name = item.name()
         # check item for dynamic base class if it has that, use that
         if item.getDynamicWidgetBaseClass():
             dynamic_widget_class = item.getDynamicWidgetBaseClass()
@@ -374,7 +385,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         new_widget = self.createTansuModelDelegateWidget(item, new_dynamic_widget)
         return new_widget
 
-    def updateDynamicWidget(self, widget, item, *args, **kwargs):
+    def updateDynamicWidget(self, parent, widget, item, *args, **kwargs):
         """
         Updates the dynamic widget
 
@@ -388,7 +399,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         else:
             dynamic_update_function = self.getDynamicUpdateFunction()
 
-        dynamic_update_function(widget, item, *args, **kwargs)
+        dynamic_update_function(parent, widget, item, *args, **kwargs)
 
     """ EVENTS """
     def showEvent(self, event):
@@ -401,7 +412,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         num_items = model.getRootItem().childCount()
         if 0 < num_items:
             # update width
-            if self.getHeaderPosition() in [
+            if self.headerPosition() in [
                 attrs.NORTH,
                 attrs.SOUTH
             ]:
@@ -515,7 +526,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         """.format(**style_sheet_args)
 
         # create style sheet
-        header_style_sheet = self.headerWidget().createStyleSheet(self.getHeaderPosition(), style_sheet_args)
+        header_style_sheet = self.headerWidget().createStyleSheet(self.headerPosition(), style_sheet_args)
 
         # combine style sheets
         style_sheet_args['splitter_style_sheet'] = splitter_style_sheet
@@ -543,12 +554,12 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         self._header_width = header_width
 
     @property
-    def header_position(self):
-        return self._header_position
+    def header_height(self):
+        return self._header_height
 
-    @header_position.setter
-    def header_position(self, header_position):
-        self._header_position = header_position
+    @header_height.setter
+    def header_height(self, _header_height):
+        self._header_height = _header_height
 
 
 class TansuMainDelegateWidget(TansuBaseWidget):
@@ -779,12 +790,13 @@ class TabTansuDynamicWidgetExample(QWidget):
         self.layout().addWidget(self.label)
 
     @staticmethod
-    def updateGUI(widget, item):
+    def updateGUI(parent, widget, item):
         """
         widget (TansuModelDelegateWidget)
         item (TansuModelItem)
         """
         if item:
+            #name = self.model().getItemName(item)
             widget.setTitle(item.name())
             widget.getMainWidget().label.setText(item.name())
 
@@ -804,6 +816,7 @@ if __name__ == "__main__":
             self.addWidget(QLabel('c'))
 
     w = TansuModelViewWidget()
+    w.setHeaderData(['name', 'two', 'test'])
     view = TansuHeaderTreeView()
     #w.model().setHeaderData(['one', 'two', 'three'])
     w.setHeaderWidget(view)
@@ -811,7 +824,7 @@ if __name__ == "__main__":
     w.setMultiSelect(True)
     w.setMultiSelectDirection(Qt.Vertical)
 
-    view.setHeaderData(['name', 'two', 'test'])
+    #view.setHeaderData(['name', 'two', 'test'])
     #view.setHeaderData(['one', 'two'])
 
     #

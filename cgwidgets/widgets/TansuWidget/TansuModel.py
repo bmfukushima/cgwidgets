@@ -88,8 +88,6 @@ class TansuModel(QAbstractItemModel):
         if role == Qt.DisplayRole or role == Qt.EditRole:
             for i in range(self.columnCount(item)):
                 if index.column() == i:
-                    print(item.data())
-                    print(self._header_data[i])
                     try:
                         return_val = item.data()[self._header_data[i]]
                     except KeyError:
@@ -189,6 +187,10 @@ class TansuModel(QAbstractItemModel):
 
         return self._root_item
 
+    def getItemName(self, item):
+        name = item.data()[self._header_data[0]]
+        return name
+
     """ Create index/items"""
     def setItemType(self, item_type):
         self._item_type = item_type
@@ -273,7 +275,6 @@ if __name__ == '__main__':
     model.insertRows(0, 3, QModelIndex())
     index = model.index(0, 1, QModelIndex())
     item = model.getItem(index)
-    print(item)
     item.setName("klajfjklasjfkla")
 
     parent_index = model.index(0,1, QModelIndex())
