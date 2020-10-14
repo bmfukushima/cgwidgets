@@ -49,7 +49,7 @@ class TansuModel(QAbstractItemModel):
         self._root_item = root_item
 
         # setup default attrs
-        self._header_data = ['Hello']
+        self._header_data = ['name']
 
     """ UTILS """
     def rowCount(self, parent):
@@ -86,8 +86,15 @@ class TansuModel(QAbstractItemModel):
         item = index.internalPointer()
 
         if role == Qt.DisplayRole or role == Qt.EditRole:
-            if index.column() == 0:
-                return item.name()
+            for i in range(self.columnCount(item)):
+                if index.column() == i:
+                    print(item.data())
+                    print(self._header_data[i])
+                    try:
+                        return_val = item.data()[self._header_data[i]]
+                    except KeyError:
+                        return_val = None
+                    return return_val
 
         if role == Qt.SizeHintRole:
             return QSize(self.item_width, self.item_height)
@@ -107,7 +114,9 @@ class TansuModel(QAbstractItemModel):
         if index.isValid():
             if role == Qt.EditRole:
                 item = index.internalPointer()
-                item.setName(value)
+                arg = self._header_data[index.column()]
+                item.data()[arg] = value
+                #item.setName(value)
                 return True
         return False
 

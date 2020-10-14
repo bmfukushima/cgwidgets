@@ -13,8 +13,8 @@ class TansuModelItem(iTansuDynamicWidget):
         dynamic_widget_base_class (QWidget): Widget to be shown when this item is
             selected if the Tansu is in DYNAMIC mode.
     """
-    def __init__(self, name, parent=None):
-        self._name = name
+    def __init__(self, data, parent=None):
+        self._data = data
         self._children = []
         self._parent = parent
         self._delegate_widget = None
@@ -59,11 +59,11 @@ class TansuModelItem(iTansuDynamicWidget):
 
         return True
 
-    def name(self):
-        return self._name
+    def data(self):
+        return self._data
 
-    def setName(self, name):
-        self._name = name
+    def setData(self, data):
+        self._data = data
 
     def child(self, row):
         # print('name == %s'%self.name())

@@ -111,7 +111,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         self.updateStyleSheet()
 
     """ API """
-    def insertTansuWidget(self, row, name, parent=None, widget=None):
+    def insertTansuWidget(self, row, data={}, parent=None, widget=None):
         """
         Creates a new tab at  the specified index
 
@@ -131,13 +131,15 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
 
         # setup custom object
         item_type = self.model().itemType()
-        view_item = item_type(name)
+        view_item = item_type(data)
         self.model().createIndex(row, 1, view_item)
 
         # get new index/item created
         new_index = self.model().index(row, 1, parent)
         view_item = new_index.internalPointer()
-        view_item.setName(name)
+        #view_item.setName(name)
+
+        view_item.setData(data)
 
         # add to layout if stacked
         if self.getDelegateType() == TansuModelViewWidget.STACKED:
@@ -238,7 +240,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         TODO:
             Move to base tansu?
         """
-        name = item.name()
+        name = item.data()[self.model()._header_data[0]]
         display_widget = TansuModelDelegateWidget(self, name)
         display_widget.setMainWidget(widget)
         display_widget.setItem(item)
@@ -803,13 +805,14 @@ if __name__ == "__main__":
 
     w = TansuModelViewWidget()
     view = TansuHeaderTreeView()
-
+    #w.model().setHeaderData(['one', 'two', 'three'])
     w.setHeaderWidget(view)
     w.setHeaderPosition(attrs.WEST)
     w.setMultiSelect(True)
     w.setMultiSelectDirection(Qt.Vertical)
 
-    view.setHeaderData(['one', 'two'])
+    view.setHeaderData(['name', 'two', 'test'])
+    #view.setHeaderData(['one', 'two'])
 
     #
     # new_view = TansuHeaderListView()
@@ -829,10 +832,10 @@ if __name__ == "__main__":
 
     for x in range(3):
         widget = QLabel(str(x))
-        parent_item = w.insertTansuWidget(x, str(x), widget=widget)
+        parent_item = w.insertTansuWidget(x, data={'name':str(x)}, widget=widget)
 
     for y in range(0, 2):
-        w.insertTansuWidget(y, str(y), widget=widget, parent=parent_item)
+        w.insertTansuWidget(y, data={'name':str(y)}, widget=widget, parent=parent_item)
 
     w.resize(500, 500)
     w.delegateWidget().handle_length = 100
