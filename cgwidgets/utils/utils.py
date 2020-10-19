@@ -385,8 +385,6 @@ def setAsTransparent(widget):
     widget.setStyleSheet("background-color: rgba(255,0,0,255)")
 
 
-
-
 def updateStyleSheet(widget):
     """
     Updates the stylesheet for the specified widget for dynamic
