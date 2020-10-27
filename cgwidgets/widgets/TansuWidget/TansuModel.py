@@ -10,7 +10,7 @@ TODO:
 """
 
 from qtpy.QtCore import (
-    Qt, QModelIndex, QAbstractItemModel, QSize)
+    Qt, QModelIndex, QAbstractItemModel, QSize, QMimeData, QByteArray)
 from qtpy.QtGui import (
     QBrush, QColor
 )
@@ -45,7 +45,8 @@ class TansuModel(QAbstractItemModel):
 
         # set up root item
         if not root_item:
-            root_item = TansuModelItem('root_item')
+            root_item = TansuModelItem()
+            root_item.setColumnData({"name":"root"})
         self._root_item = root_item
 
         # setup default attrs
@@ -133,12 +134,12 @@ class TansuModel(QAbstractItemModel):
     def setHeaderData(self, _header_data):
         self._header_data = _header_data
 
-    def flags(self, index):
-        """
-        INPUTS: QModelIndex
-        OUTPUT: int (flag)
-        """
-        return Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsEditable
+    # def flags(self, index):
+    #     """
+    #     INPUTS: QModelIndex
+    #     OUTPUT: int (flag)
+    #     """
+    #     return Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsEditable
 
     def parent(self, index):
         """
@@ -209,7 +210,9 @@ class TansuModel(QAbstractItemModel):
     def insertNewIndex(self, row, name="None", parent=QModelIndex()):
         self.insertRow(row, parent)
         new_index = self.index(row, 0, parent)
-        new_index.internalPointer().setName(name)
+        item = new_index.internalPointer()
+        item.setColumnData({self._header_data[0]:name})
+
         return new_index
 
     """ INSERT INDEXES """
@@ -222,7 +225,7 @@ class TansuModel(QAbstractItemModel):
 
         for row in range(num_rows):
             childCount = parent_item.childCount()
-            childNode = self.createNewItem(str(childCount))
+            childNode = self.createNewItem()
             success = parent_item.insertChild(position, childNode)
 
         self.endInsertRows()
@@ -264,35 +267,97 @@ class TansuModel(QAbstractItemModel):
     def item_width(self, _item_width):
         self._item_width = _item_width
 
+    """ DRAG / DROP"""
+    def getParentIndexFromItem(self, item):
+        parent_item = item.parent()
+        if parent_item == self.getRootItem():
+            parent_index = QModelIndex()
+        elif not parent_item:
+            parent_index = QModelIndex()
+        else:
+            parent_index = self.createIndex(parent_item.row(), 0, parent_item)
+        return parent_index
+
+    def supportedDropActions(self):
+        return Qt.MoveAction
+
+    def flags(self, index):
+        # if not index.isValid():
+        #     return Qt.ItemIsEnabled
+        return Qt.ItemIsEnabled | Qt.ItemIsSelectable | \
+               Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled
+
+    def mimeTypes(self):
+        return ['application/x-qabstractitemmodeldatalist']
+
+    def mimeData(self, indexes):
+        self.indexes = [index.internalPointer() for index in indexes]
+
+        mimedata = QMimeData()
+        mimedata.setData('application/x-qabstractitemmodeldatalist', QByteArray())
+        return mimedata
+
+    def dropMimeData(self, data, action, row, column, parent):
+
+        # get parent item
+        parent_item = parent.internalPointer()
+        if not parent_item:
+            parent_item = self.getRootItem()
+
+        print("parent item == %s"%parent_item.columnData()['name'])
+        indexes = self.indexes
+        for item in indexes:
+            print(item.columnData()['name'])
+            old_parent_item = item.parent()
+            old_parent_index = self.getParentIndexFromItem(item)
+
+            self.beginRemoveRows(old_parent_index, item.row(), item.row()+1)
+            old_parent_item.children().remove(item)
+            #old_parent_item.removeChild(item.row())
+            self.endRemoveRows()
+
+            # insert item
+            self.beginInsertRows(parent, 0, 1)
+            parent_item.insertChild(0, item)
+            self.endInsertRows()
+        return True
+
 
 if __name__ == '__main__':
     from qtpy.QtWidgets import (
-        QApplication, QTreeView, QListView, QTableView)
+        QApplication, QTreeView, QListView, QTableView, QAbstractItemView)
+    from qtpy.QtGui import QCursor
     app = QApplication(sys.argv)
 
+    #QTreeView()
+
     model = TansuModel()
-    model.insertRows(0, 3, QModelIndex())
-    index = model.index(0, 1, QModelIndex())
-    item = model.getItem(index)
+    for x in range(0,4):
+        model.insertNewIndex(x, str('node%s'%x))
+    #model.insertRows(0, 3, QModelIndex())
+    #index = model.index(0, 1, QModelIndex())
+    #item = model.getItem(index)
 
-    parent_index = model.index(0,1, QModelIndex())
-    parent_item = parent_index.internalPointer()
-    TansuModelItem("child", parent_item)
-
-    model.insertNewIndex(2, name="hello")
-
+    #parent_index = model.index(0, 1, QModelIndex())
+    #parent_item = parent_index.internalPointer()
+    #TansuModelItem("child", parent_item)
 
     tree_view = QTreeView()
+    tree_view.setDragDropOverwriteMode(True)
     tree_view.show()
+    tree_view.move(QCursor.pos())
+    tree_view.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
 
-    list_view = QListView()
-    list_view.show()
 
-    table_view = QTableView()
-    table_view.show()
+
+    # list_view = QListView()
+    # list_view.show()
+
+    # table_view = QTableView()
+    # table_view.show()
 
     tree_view.setModel(model)
-    list_view.setModel(model)
-    table_view.setModel(model)
+    # list_view.setModel(model)
+    # table_view.setModel(model)
 
     sys.exit(app.exec_())

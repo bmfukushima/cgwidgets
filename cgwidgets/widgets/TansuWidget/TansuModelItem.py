@@ -13,8 +13,9 @@ class TansuModelItem(iTansuDynamicWidget):
         dynamic_widget_base_class (QWidget): Widget to be shown when this item is
             selected if the Tansu is in DYNAMIC mode.
     """
-    def __init__(self, data, parent=None):
-        self._data = data
+    def __init__(self, parent=None):
+        #self._data = data
+        self._column_data = {}
         self._children = []
         self._parent = parent
         self._delegate_widget = None
@@ -65,11 +66,17 @@ class TansuModelItem(iTansuDynamicWidget):
     def setColumnData(self, _column_data):
         self._column_data = _column_data
 
-    def child(self, row):
-        return self._children[row]
-
     def childCount(self):
         return len(self._children)
+
+    def children(self):
+        return self._children
+
+    def child(self, row):
+        try:
+            return self._children[row]
+        except:
+            return None
 
     def parent(self):
         return self._parent
