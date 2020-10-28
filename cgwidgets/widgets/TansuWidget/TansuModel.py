@@ -305,37 +305,8 @@ class TansuModel(QAbstractItemModel):
         mimedata.setData('application/x-qabstractitemmodeldatalist', QByteArray())
         return mimedata
 
-    def __dropMimeDataOnIndex(self, parent, parent_item, item):
-        """
-        When an item is dropped an another item, this is what happens
-
-        Args:
-            parent (item): Item that was dropped on
-            item (item): current item being dropped
-        """
-        # get old parents
-        old_parent_item = item.parent()
-        old_parent_index = self.getParentIndexFromItem(item)
-
-        # remove item
-        self.beginRemoveRows(old_parent_index, item.row(), item.row() + 1)
-        old_parent_item.children().remove(item)
-        self.endRemoveRows()
-
-        # insert item
-        self.beginInsertRows(parent, 0, 1)
-        parent_item.insertChild(0, item)
-        self.endInsertRows()
-
-    def __dropMimeDataBetweenItems(self):
-        """
-        TODO:
-            write drop between handler here...
-        :return:
-        """
-        pass
-
     def dropMimeData(self, data, action, row, column, parent):
+        # bypass remove rows
         self._dropping = True
 
         # get parent item
@@ -348,10 +319,28 @@ class TansuModel(QAbstractItemModel):
         for item in indexes:
             # drop on item
             if row < 0:
-                self.__dropMimeDataOnIndex(parent, parent_item, item)
+                row = 0
+
             # drop between items
             else:
-                self.__dropMimeDataBetweenItems()
+                # apply offset if dropping below the current location (due to deletion)
+                if row > item.row():
+                    row -= 1
+
+            # get old parents
+            old_parent_item = item.parent()
+            old_parent_index = self.getParentIndexFromItem(item)
+
+            # remove item
+            self.beginRemoveRows(old_parent_index, item.row(), item.row() + 1)
+            old_parent_item.children().remove(item)
+            self.endRemoveRows()
+
+            # insert item
+            self.beginInsertRows(parent, row, row + 1)
+            parent_item.insertChild(row, item)
+            self.endInsertRows()
+
         return True
 
 
