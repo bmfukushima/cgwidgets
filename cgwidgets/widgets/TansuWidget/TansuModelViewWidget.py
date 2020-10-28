@@ -136,7 +136,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
 
         # setup custom object
         item_type = self.model().itemType()
-        view_item = item_type(column_data)
+        view_item = item_type()
         self.model().createIndex(row, 1, view_item)
 
         # get new index/item created

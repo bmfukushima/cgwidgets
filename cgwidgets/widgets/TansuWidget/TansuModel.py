@@ -10,7 +10,8 @@ TODO:
 """
 
 from qtpy.QtCore import (
-    Qt, QModelIndex, QAbstractItemModel, QSize, QMimeData, QByteArray)
+    Qt, QModelIndex, QAbstractItemModel, QSize, QMimeData, QByteArray,
+    QDataStream, QIODevice)
 from qtpy.QtGui import (
     QBrush, QColor
 )
@@ -51,6 +52,9 @@ class TansuModel(QAbstractItemModel):
 
         # setup default attrs
         self._header_data = ['name']
+
+        #
+        self._dropping = False
 
     """ UTILS """
     def rowCount(self, parent):
@@ -126,20 +130,9 @@ class TansuModel(QAbstractItemModel):
         """
         if role == Qt.DisplayRole:
             return self._header_data[column]
-            # if column == 0:
-            #     return "Scenegraph"
-            # else:
-            #     return "Typeinfo"
 
     def setHeaderData(self, _header_data):
         self._header_data = _header_data
-
-    # def flags(self, index):
-    #     """
-    #     INPUTS: QModelIndex
-    #     OUTPUT: int (flag)
-    #     """
-    #     return Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsEditable
 
     def parent(self, index):
         """
@@ -150,6 +143,9 @@ class TansuModel(QAbstractItemModel):
         parent_item = item.parent()
 
         if parent_item == self._root_item:
+            return QModelIndex()
+
+        if parent_item == None:
             return QModelIndex()
 
         return self.createIndex(parent_item.row(), 0, parent_item)
@@ -234,12 +230,18 @@ class TansuModel(QAbstractItemModel):
 
     def removeRows(self, position, num_rows, parent=QModelIndex()):
         """INPUTS: int, int, QModelIndex"""
-        parent_item = self.getItem(parent)
-        self.beginRemoveRows(parent, position, position + num_rows - 1)
+        # pre flight
+        if self._dropping is True:
+            self._dropping = False
+            return True
 
+        # get parent
+        parent_item = self.getItem(parent)
+
+        # remove rows
+        self.beginRemoveRows(parent, position, position + num_rows - 1)
         for row in range(num_rows):
             success = parent_item.removeChild(position)
-
         self.endRemoveRows()
 
         return success
@@ -269,6 +271,15 @@ class TansuModel(QAbstractItemModel):
 
     """ DRAG / DROP"""
     def getParentIndexFromItem(self, item):
+        """
+        Returns the parent index of an item.  This is especially
+        useful when doing drag/drop operations
+
+        Args:
+            item (item): item whose parent a QModelIndex should be returned for
+
+        Returns (QModelIndex)
+        """
         parent_item = item.parent()
         if parent_item == self.getRootItem():
             parent_index = QModelIndex()
@@ -282,8 +293,6 @@ class TansuModel(QAbstractItemModel):
         return Qt.MoveAction
 
     def flags(self, index):
-        # if not index.isValid():
-        #     return Qt.ItemIsEnabled
         return Qt.ItemIsEnabled | Qt.ItemIsSelectable | \
                Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled
 
@@ -292,34 +301,57 @@ class TansuModel(QAbstractItemModel):
 
     def mimeData(self, indexes):
         self.indexes = [index.internalPointer() for index in indexes]
-
         mimedata = QMimeData()
         mimedata.setData('application/x-qabstractitemmodeldatalist', QByteArray())
         return mimedata
 
+    def __dropMimeDataOnIndex(self, parent, parent_item, item):
+        """
+        When an item is dropped an another item, this is what happens
+
+        Args:
+            parent (item): Item that was dropped on
+            item (item): current item being dropped
+        """
+        # get old parents
+        old_parent_item = item.parent()
+        old_parent_index = self.getParentIndexFromItem(item)
+
+        # remove item
+        self.beginRemoveRows(old_parent_index, item.row(), item.row() + 1)
+        old_parent_item.children().remove(item)
+        self.endRemoveRows()
+
+        # insert item
+        self.beginInsertRows(parent, 0, 1)
+        parent_item.insertChild(0, item)
+        self.endInsertRows()
+
+    def __dropMimeDataBetweenItems(self):
+        """
+        TODO:
+            write drop between handler here...
+        :return:
+        """
+        pass
+
     def dropMimeData(self, data, action, row, column, parent):
+        self._dropping = True
 
         # get parent item
         parent_item = parent.internalPointer()
         if not parent_item:
             parent_item = self.getRootItem()
 
-        print("parent item == %s"%parent_item.columnData()['name'])
+        # iterate through index list
         indexes = self.indexes
         for item in indexes:
-            print(item.columnData()['name'])
-            old_parent_item = item.parent()
-            old_parent_index = self.getParentIndexFromItem(item)
-
-            self.beginRemoveRows(old_parent_index, item.row(), item.row()+1)
-            old_parent_item.children().remove(item)
-            #old_parent_item.removeChild(item.row())
-            self.endRemoveRows()
-
-            # insert item
-            self.beginInsertRows(parent, 0, 1)
-            parent_item.insertChild(0, item)
-            self.endInsertRows()
+            # drop on item
+            if row < 0:
+                self.__dropMimeDataOnIndex(parent, parent_item, item)
+            # drop between items
+            else:
+                self.__dropMimeDataBetweenItems()
         return True
 
 
@@ -332,7 +364,7 @@ if __name__ == '__main__':
     #QTreeView()
 
     model = TansuModel()
-    for x in range(0,4):
+    for x in range(0, 4):
         model.insertNewIndex(x, str('node%s'%x))
     #model.insertRows(0, 3, QModelIndex())
     #index = model.index(0, 1, QModelIndex())
@@ -343,21 +375,31 @@ if __name__ == '__main__':
     #TansuModelItem("child", parent_item)
 
     tree_view = QTreeView()
-    tree_view.setDragDropOverwriteMode(True)
-    tree_view.show()
+
     tree_view.move(QCursor.pos())
+    tree_view.setDragEnabled(True)
+    tree_view.setDragDropOverwriteMode(False)
+    tree_view.setSelectionMode(QAbstractItemView.MultiSelection)
+    # tree_view.viewport().setAcceptDrops(True)
+    # tree_view.setDropIndicatorShown(True)
+
     tree_view.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
+    tree_view.setModel(model)
 
 
 
-    # list_view = QListView()
-    # list_view.show()
+    list_view = QListView()
+
+    list_view.move(QCursor.pos())
+    list_view.setDragDropOverwriteMode(False)
+    list_view.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
+    list_view.setDropIndicatorShown(True)
+    list_view.setModel(model)
 
     # table_view = QTableView()
     # table_view.show()
-
-    tree_view.setModel(model)
-    # list_view.setModel(model)
+    tree_view.show()
+    #list_view.show()
     # table_view.setModel(model)
 
     sys.exit(app.exec_())

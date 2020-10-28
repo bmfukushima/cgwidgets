@@ -3,14 +3,15 @@ You can also set the dynamic functions on the item.  Which will be called
 instead of the primary ones if you want to do a per item override.
 
 """
+
+import sys
+
+from qtpy.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget, QAbstractItemView
 from qtpy.QtCore import Qt
+from qtpy.QtGui import QCursor
 
 from cgwidgets.widgets import TansuModelViewWidget, FloatInputWidget, TansuHeaderTreeView
 from cgwidgets.utils import attrs
-
-import sys
-from qtpy.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget
-from qtpy.QtGui import QCursor
 
 app = QApplication(sys.argv)
 
@@ -68,7 +69,7 @@ class CustomDynamicWidget(FloatInputWidget):
 tansu_widget = TansuModelViewWidget()
 view = TansuHeaderTreeView()
 
-# setup custottrs
+# setup header
 tansu_widget.setHeaderWidget(view)
 tansu_widget.setHeaderPosition(attrs.WEST)
 
@@ -93,6 +94,11 @@ tansu_widget.setHeaderPosition(attrs.NORTH)
 tansu_widget.setMultiSelect(True)
 tansu_widget.setMultiSelectDirection(Qt.Vertical)
 
+# enable drag/drop
+view.setDragDropOverwriteMode(True)
+view.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
+
+# show view
 tansu_widget.resize(500, 500)
 tansu_widget.delegateWidget().handle_length = 100
 
