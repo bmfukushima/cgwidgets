@@ -17,13 +17,20 @@ view = TansuHeaderTreeView()
 
 # setup header
 tansu_widget.setHeaderWidget(view)
+
+# set header names
+tansu_widget.setHeaderData(['name', 'one', 'two'])
+
+# header position
 tansu_widget.setHeaderPosition(attrs.WEST)
+
+# setup multi selection
 tansu_widget.setMultiSelect(True)
 tansu_widget.setMultiSelectDirection(Qt.Vertical)
+
+# set handle width
 tansu_widget.delegateWidget().handle_length = 100
 
-# set header data
-view.setHeaderData(['name', 'one', 'two'])
 
 # insert widgets
 for x in range(5):

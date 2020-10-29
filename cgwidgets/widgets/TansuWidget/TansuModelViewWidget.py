@@ -135,15 +135,13 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         # setup custom object
         item_type = self.model().itemType()
         view_item = item_type()
-        view_item.setColumnData(column_data)
-        #print(view_item)
+        #view_item.setColumnData(column_data)
+
         self.model().createIndex(row, 1, view_item)
 
         # get new index/item created
         new_index = self.model().index(row, 1, parent)
         view_item = new_index.internalPointer()
-        #print(view_item)
-
         view_item.setColumnData(column_data)
 
         # add to layout if stacked
@@ -883,7 +881,8 @@ class TansuHeaderTreeView(QTreeView, TansuHeaderAbstractView):
         # }
 
     def dropEvent(self, event):
-        print('dropping???')
+        #print('dropping???')
+        return QTreeView.dropEvent(self, event)
 
 class TabTansuDynamicWidgetExample(QWidget):
     """
@@ -924,7 +923,7 @@ if __name__ == "__main__":
 
     w = TansuModelViewWidget()
 
-    w.setHeaderData(['name', 'two', 'test'])
+    #w.setHeaderData(['name', 'two', 'test'])
     view = TansuHeaderTreeView()
 
     #w.model().setHeaderData(['one', 'two', 'three'])
@@ -944,7 +943,7 @@ if __name__ == "__main__":
     # w.setHeaderPosition(TansuModelViewWidget.NORTH)
 
     dw = TabTansuDynamicWidgetExample
-
+    view.setHeaderData(['name', 'one', 'two'])
     # asdf = test(w)
     # main_splitter = TansuBaseWidget()
     # main_splitter.handle_length = 100
@@ -954,7 +953,7 @@ if __name__ == "__main__":
 
     for x in range(3):
         widget = QLabel(str(x))
-        parent_item = w.insertTansuWidget(x, column_data={'name':str(x)}, widget=widget)
+        parent_item = w.insertTansuWidget(x, column_data={'name':str(x), 'one':'test'}, widget=widget)
 
     for y in range(0, 2):
         w.insertTansuWidget(y, column_data={'name':str(y)}, widget=widget, parent=parent_item)

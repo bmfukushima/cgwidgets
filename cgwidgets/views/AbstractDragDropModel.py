@@ -171,11 +171,7 @@ class AbstractDragDropModel(QAbstractItemModel):
                     try:
                         return_val = item.columnData()[self._header_data[i]]
                     except KeyError:
-                        print('===========')
-                        print(self._header_data)
-                        print(item.columnData())
-                        print(self._header_data[i])
-                        return_val = 'None'
+                        return_val = None
                     return return_val
 
         if role == Qt.SizeHintRole:

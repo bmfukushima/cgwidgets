@@ -44,6 +44,7 @@ class TabTansuDynamicWidgetExample(QWidget):
             widget.setTitle(name)
             widget.getMainWidget().label.setText(name)
 
+
 """
 Custom widget which has overloaded functions/widget to be
 displayed in the Tansu
@@ -64,6 +65,7 @@ class CustomDynamicWidget(FloatInputWidget):
         print(parent, widget, item)
         this = widget.getMainWidget()
         this.setText('whatup')
+
 
 # create tansu widget
 tansu_widget = TansuModelViewWidget()
