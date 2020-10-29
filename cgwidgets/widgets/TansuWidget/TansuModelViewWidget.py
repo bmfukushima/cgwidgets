@@ -80,6 +80,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         self._model = TansuModel()
         self._header_widget = TansuHeaderListView(self)
         self._header_widget.setModel(self._model)
+        self._model.header_type = str(type(self._header_widget))
 
         # setup delegate
         delegate_widget = TansuMainDelegateWidget()
@@ -185,6 +186,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         self._header_widget = _header_widget
         _header_widget.setModel(self.model())
         self.setHeaderPosition(self.headerPosition())
+        self.model().header_type = str(type(self.headerWidget()))
 
     def headerPosition(self):
         return self._header_direction
@@ -839,6 +841,7 @@ class TansuHeaderTreeView(QTreeView, TansuHeaderAbstractView):
         pass
 
     def startDrag(self, event):
+        # todo setup drag/drop icon transparency
         return QTreeView.startDrag(self, event)
         # OptionList::startDrag(Qt::DropActions
         # supportedActions){

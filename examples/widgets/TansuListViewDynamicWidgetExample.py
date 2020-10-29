@@ -90,7 +90,7 @@ tansu_widget.setMultiSelectDirection(Qt.Vertical)
 
 # enable drag/drop
 tansu_widget.setHeaderDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
-
+tansu_widget.headerWidget().setDragDropOverwriteMode(False)
 tansu_widget.resize(500, 500)
 tansu_widget.delegateWidget().handle_length = 100
 

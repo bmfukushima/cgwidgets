@@ -1,2 +1,2 @@
-from .AbstractTreeView import AbstractTreeModelItem
-from .AbstractTreeView import AbstractTreeModel
+from .AbstractDragDropModel import AbstractDragDropModelItem
+from .AbstractDragDropModel import AbstractDragDropModel

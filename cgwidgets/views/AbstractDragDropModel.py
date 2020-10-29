@@ -5,8 +5,8 @@ from qtpy.QtCore import (
     Qt, QModelIndex, QAbstractItemModel, QSize, QMimeData, QByteArray)
 
 
-#from cgwidgets.widgets.TansuWidget import AbstractTreeModelItem
-class AbstractTreeModelItem(object):
+#from cgwidgets.widgets.TansuWidget import AbstractDragDropModelItem
+class AbstractDragDropModelItem(object):
     """
 
     Attributes:
@@ -98,7 +98,7 @@ class AbstractTreeModelItem(object):
         return output
 
 
-class AbstractTreeModel(QAbstractItemModel):
+class AbstractDragDropModel(QAbstractItemModel):
     """
     Abstract model that is used for the Tansu.  This supports tables, lists, and
     trees.  However not yet...
@@ -108,21 +108,21 @@ class AbstractTreeModel(QAbstractItemModel):
 
     Attributes:
         item_type (Item): Data item to be stored on each index.  By default this
-            set to the AbstractTreeModelItem
+            set to the AbstractDragDropModelItem
     """
     ITEM_HEIGHT = 35
     ITEM_WIDTH = 100
 
     def __init__(self, parent=None, root_item=None):
-        super(AbstractTreeModel, self).__init__(parent)
+        super(AbstractDragDropModel, self).__init__(parent)
         # set up default item type
-        self._item_type = AbstractTreeModelItem
-        self._item_height = AbstractTreeModel.ITEM_HEIGHT
-        self._item_width = AbstractTreeModel.ITEM_WIDTH
+        self._item_type = AbstractDragDropModelItem
+        self._item_height = AbstractDragDropModel.ITEM_HEIGHT
+        self._item_width = AbstractDragDropModel.ITEM_WIDTH
 
         # set up root item
         if not root_item:
-            root_item = AbstractTreeModelItem()
+            root_item = AbstractDragDropModelItem()
             root_item.setColumnData({"name":"root"})
         self._root_item = root_item
 
@@ -250,7 +250,7 @@ class AbstractTreeModel(QAbstractItemModel):
         Returns the item held by the index provided
         Args:
             index (QModelIndex)
-        Returns (AbstractTreeModelItem)
+        Returns (AbstractDragDropModelItem)
         """
         if index.isValid():
             item = index.internalPointer()
@@ -463,7 +463,7 @@ class TreeViewDropIndicator(QProxyStyle):
 
             # draw dot to the left
             # drop between
-            if(option.rect.height() == 0):
+            if option.rect.height() == 0:
                 painter.drawEllipse(option.rect.topLeft(), 6, 6)
                 #painter.drawLine(QPoint(option.rect.topLeft().x()+6, option.rect.topLeft().y()), option.rect.topRight())
             # drop on
@@ -480,7 +480,7 @@ if __name__ == '__main__':
     from qtpy.QtGui import QCursor
     app = QApplication(sys.argv)
 
-    model = AbstractTreeModel()
+    model = AbstractDragDropModel()
     for x in range(0, 4):
         model.insertNewIndex(x, str('node%s'%x))
 
