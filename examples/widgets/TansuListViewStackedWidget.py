@@ -4,13 +4,13 @@ from cgwidgets.widgets import TansuModelViewWidget, TansuBaseWidget
 from cgwidgets.utils import attrs
 
 import sys
-from qtpy.QtWidgets import QApplication, QLabel, QVBoxLayout
+from qtpy.QtWidgets import QApplication, QLabel, QAbstractItemView
 from qtpy.QtGui import QCursor
 
 app = QApplication(sys.argv)
 
-w = TansuModelViewWidget()
-w.setHeaderData(['example'])
+tansu_widget = TansuModelViewWidget()
+tansu_widget.setHeaderData(['example'])
 tab_1 = QLabel('hello')
 tab_2 = QLabel('world')
 tab_3 = TansuBaseWidget()
@@ -20,19 +20,24 @@ tab_3.addWidget(QLabel('b'))
 tab_3.addWidget(QLabel('c'))
 
 # set attrs
-w.setHeaderPosition(attrs.NORTH)
-w.setMultiSelect(True)
-w.setMultiSelectDirection(Qt.Vertical)
+tansu_widget.setHeaderPosition(attrs.NORTH)
+tansu_widget.setMultiSelect(True)
+tansu_widget.setMultiSelectDirection(Qt.Vertical)
 
 # insert tabs
-w.insertTansuWidget(0, column_data={'example' : '<title> hello'}, widget=tab_1)
-w.insertTansuWidget(0, column_data={'example' : '<title> world'}, widget=tab_2)
-w.insertTansuWidget(0, column_data={'example' : '<title> tansu'}, widget=tab_3)
+tansu_widget.insertTansuWidget(0, column_data={'example' : '<title> hello'}, widget=tab_1)
+tansu_widget.insertTansuWidget(0, column_data={'example' : '<title> world'}, widget=tab_2)
+tansu_widget.insertTansuWidget(0, column_data={'example' : '<title> tansu'}, widget=tab_3)
 
-w.resize(500, 500)
-w.delegateWidget().handle_length = 100
+# enable drag/drop
+tansu_widget.setHeaderDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
 
-w.show()
+tansu_widget.resize(500, 500)
+tansu_widget.delegateWidget().handle_length = 100
 
-w.move(QCursor.pos())
+
+
+tansu_widget.show()
+
+tansu_widget.move(QCursor.pos())
 sys.exit(app.exec_())

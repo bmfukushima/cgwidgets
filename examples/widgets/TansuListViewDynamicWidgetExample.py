@@ -9,7 +9,7 @@ from cgwidgets.widgets import TansuModelViewWidget, FloatInputWidget
 from cgwidgets.utils import attrs
 
 import sys
-from qtpy.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget
+from qtpy.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget, QAbstractItemView
 from qtpy.QtGui import QCursor
 
 app = QApplication(sys.argv)
@@ -87,6 +87,9 @@ custom_index.internalPointer().setDynamicUpdateFunction(CustomDynamicWidget.upda
 tansu_widget.setHeaderPosition(attrs.NORTH)
 tansu_widget.setMultiSelect(True)
 tansu_widget.setMultiSelectDirection(Qt.Vertical)
+
+# enable drag/drop
+tansu_widget.setHeaderDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
 
 tansu_widget.resize(500, 500)
 tansu_widget.delegateWidget().handle_length = 100

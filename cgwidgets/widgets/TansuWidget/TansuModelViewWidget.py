@@ -154,6 +154,16 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
 
         return new_index
 
+    def setHeaderDragDropMode(self, drag_drop_mode):
+        """
+        Sets the drag/drop mode of the header.
+
+        Args:
+            drag_drop_mode (QAbstractItemModel.MODE): drag drop mode
+                to be implemented on the header
+        """
+        self.headerWidget().setDragDropMode(drag_drop_mode)
+
     """ MODEL """
     def model(self):
         return self._model
@@ -828,6 +838,30 @@ class TansuHeaderTreeView(QTreeView, TansuHeaderAbstractView):
     def setFlow(self, _):
         pass
 
+    def startDrag(self, event):
+        return QTreeView.startDrag(self, event)
+        # OptionList::startDrag(Qt::DropActions
+        # supportedActions){
+        # if (supportedActions & Qt::CopyAction)
+        # {
+        #     QList < QListWidgetItem * > m_items = selectedItems();
+        # if (m_items.isEmpty())
+        #     return;
+        # QMimeData * data = mimeData(m_items);
+        # QDrag * drag = new
+        # QDrag(this);
+        # QPixmap
+        # pixmap(":/images/MyIcon_icon.png");
+        # drag->setPixmap(pixmap);
+        # drag->setMimeData(data);
+        # drag->setHotSpot(pixmap.rect().center());
+        # drag->exec(Qt::CopyAction);
+        # }
+        # else
+        # QListWidget::startDrag(supportedActions);
+        #
+        # }
+
 
 class TabTansuDynamicWidgetExample(QWidget):
     """
@@ -867,14 +901,16 @@ if __name__ == "__main__":
             self.addWidget(QLabel('c'))
 
     w = TansuModelViewWidget()
+
     w.setHeaderData(['name', 'two', 'test'])
     view = TansuHeaderTreeView()
+
     #w.model().setHeaderData(['one', 'two', 'three'])
     w.setHeaderWidget(view)
     w.setHeaderPosition(attrs.WEST)
     w.setMultiSelect(True)
     w.setMultiSelectDirection(Qt.Vertical)
-
+    w.setHeaderDragDropMode(QAbstractItemView.InternalMove)
     #view.setHeaderData(['name', 'two', 'test'])
     #view.setHeaderData(['one', 'two'])
 
