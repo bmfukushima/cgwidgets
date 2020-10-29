@@ -3,7 +3,7 @@ from qtpy.QtWidgets import (
     QProxyStyle
 )
 from qtpy.QtCore import Qt, QModelIndex
-from qtpy.QtGui import QPainter, QColor, QPen, QBrush
+from qtpy.QtGui import QPainter, QColor, QPen, QBrush, QCursor
 
 from cgwidgets.utils import getWidgetAncestor, attrs
 from cgwidgets.settings.colors import iColor
