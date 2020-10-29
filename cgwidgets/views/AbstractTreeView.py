@@ -1,52 +1,44 @@
-"""
-#https://github.com/d1vanov/PyQt5-reorderable-list-model
-#https://doc.qt.io/qt-5.12/model-view-programming.html#using-drag-and-drop-with-item-views
-#https://doc.qt.io/qt-5.12/model-view-programming.html#model-subclassing-reference
+# https://doc.qt.io/qt-5/model-view-programming.html#model-view-classes
 
-Notes:
-    *   internalPointer is defined during the createIndex call.  Where you have
-            the args (row, column, ptr)
 
-"""
-
-import sys
-import pickle
-
-from qtpy.QtWidgets import QApplication, QListView, QTreeView, QAbstractItemView
 from qtpy.QtCore import (
-    QAbstractItemModel, QModelIndex,
-    Qt, QDataStream, QIODevice, QByteArray, QMimeData, QVariant
-)
-from qtpy.QtGui import QCursor, QColor
+    Qt, QModelIndex, QAbstractItemModel, QSize, QMimeData, QByteArray)
 
-class AbstractTreeItem(object):
-    def __init__(self, name, parent=None):
-        self.name = name
-        self._parent = parent
+
+#from cgwidgets.widgets.TansuWidget import AbstractTreeModelItem
+class AbstractTreeModelItem(object):
+    """
+
+    Attributes:
+        delegate_widget (QWidget): Widget to be shown when this item is
+            selected
+        dynamic_widget_base_class (QWidget): Widget to be shown when this item is
+            selected if the Tansu is in DYNAMIC mode.
+    """
+    def __init__(self, parent=None):
+        #self._data = data
+        self._column_data = {}
         self._children = []
+        self._parent = parent
+        self._delegate_widget = None
+        self._dynamicWidgetFunction = None
 
-        if parent:
+        self._is_selected = False
+
+        if parent is not None:
             parent.addChild(self)
 
-    def child(self, index):
-        try:
-            return self.children()[index]
-        except:
-            return None
+    def isSelected(self):
+        return self._is_selected
 
-    def childByName(self, name):
-        for child in self.children():
-            if child.name == name:
-                return child
-        return None
+    def setSelected(self, selected):
+        self._is_selected = selected
 
-    def childCount(self):
-        return len(self.children())
-
-    def children(self):
-        return self._children
+    def addChild(self, child):
+        self._children.append(child)
 
     def insertChild(self, position, child):
+
         if position < 0 or position > len(self._children):
             return False
 
@@ -54,72 +46,197 @@ class AbstractTreeItem(object):
         child._parent = self
         return True
 
-    def addChild(self, child):
-        self.children().append(child)
+    def removeChild(self, position):
+
+        if position < 0 or position > len(self._children):
+            return False
+
+        child = self._children.pop(position)
+        child._parent = None
+
+        return True
+
+    def columnData(self):
+        return self._column_data
+
+    def setColumnData(self, _column_data):
+        self._column_data = _column_data
+
+    def childCount(self):
+        return len(self._children)
+
+    def children(self):
+        return self._children
+
+    def child(self, row):
+        try:
+            return self._children[row]
+        except:
+            return None
 
     def parent(self):
         return self._parent
 
-    def setParent(self, _parent):
-        self._parent = _parent
-
     def row(self):
-        if self.parent() is not None:
-            return self.parent().children().index(self)
+        if self._parent is not None:
+            return self._parent._children.index(self)
+
+    def log(self, tabLevel=-1):
+        output = ""
+        tabLevel += 1
+
+        for i in range(tabLevel):
+            output += "\t"
+        output += "|------" + self._name + "\n"
+
+        for child in self._children:
+            output += child.log(tabLevel)
+
+        tabLevel -= 1
+        output += "\n"
+
+        return output
+
 
 class AbstractTreeModel(QAbstractItemModel):
-    def __init__(self, parent=None):
-        super(AbstractTreeModel, self).__init__(parent)
-        self.root_item = AbstractTreeItem('root')
-        #self.item_list = []
-        for x in range(0, 5):
-            item = AbstractTreeItem('item_{x}'.format(x=str(x)), parent=self.root_item)
-            #self.item_list.append(item)
-            for char in 'abc':
-                child_item = AbstractTreeItem('item_{index}_{char}'.format(index=x,char=char), parent=item)
+    """
+    Abstract model that is used for the Tansu.  This supports tables, lists, and
+    trees.  However not yet...
+    TODO:
+        - Drag/drop support
+        - multi column support
 
+    Attributes:
+        item_type (Item): Data item to be stored on each index.  By default this
+            set to the AbstractTreeModelItem
+    """
+    ITEM_HEIGHT = 35
+    ITEM_WIDTH = 100
+
+    def __init__(self, parent=None, root_item=None):
+        super(AbstractTreeModel, self).__init__(parent)
+        # set up default item type
+        self._item_type = AbstractTreeModelItem
+        self._item_height = AbstractTreeModel.ITEM_HEIGHT
+        self._item_width = AbstractTreeModel.ITEM_WIDTH
+
+        # set up root item
+        if not root_item:
+            root_item = AbstractTreeModelItem()
+            root_item.setColumnData({"name":"root"})
+        self._root_item = root_item
+
+        # setup default attrs
+        self._header_data = ['name']
+
+        #
+        self._dropping = False
+
+    """ UTILS """
     def rowCount(self, parent):
         """
-        Returns the number of rows under the given parent. When the parent is
-        valid it means that rowCount is returning the number of children of parent.
-
-        Args:
-            parent (QModelIndex):  The current model index that is being evaluated
+        INPUTS: QModelIndex
+        OUTPUT: int
         """
-
         if not parent.isValid():
-            parent_item = self.root_item
+            parent_item = self._root_item
         else:
             parent_item = parent.internalPointer()
+
         return parent_item.childCount()
 
     def columnCount(self, parent):
-        return 1
+        """
+        INPUTS: QModelIndex
+       OUTPUT: int
+       """
+        return len(self._header_data)
+
+    def data(self, index, role):
+        """
+        This is the main display class for the model.  Setting different
+        display roles inside of this class will determine how the views
+        will handle the model data
+
+        INPUTS: QModelIndex, int
+        OUTPUT: QVariant, strings are cast to QString which is a QVariant
+        """
+        if not index.isValid():
+            return None
+
+        item = index.internalPointer()
+
+        if role == Qt.DisplayRole or role == Qt.EditRole:
+            for i in range(self.columnCount(item)):
+                if index.column() == i:
+                    try:
+                        return_val = item.columnData()[self._header_data[i]]
+                    except KeyError:
+                        return_val = None
+                    return return_val
+
+        if role == Qt.SizeHintRole:
+            return QSize(self.item_width, self.item_height)
+
+        if role == Qt.BackgroundRole:
+            return None
+        # if role == Qt.BackgroundRole:
+        #     if item.isSelected():
+        #         return QBrush(QColor(*iColor.rgba_gray_selected))
+        #     else:
+        #         return QBrush(QColor(*iColor.rgba_background))
+
+    def setData(self, index, value, role=Qt.EditRole):
+        """
+        INPUTS: QModelIndex, QVariant, int (flag)
+        """
+        if index.isValid():
+            if role == Qt.EditRole:
+                item = index.internalPointer()
+                arg = self._header_data[index.column()]
+                item.columnData()[arg] = value
+                return True
+        return False
+
+    def headerData(self, column, orientation, role):
+        """
+        Sets the header data for each column
+        INPUTS: int, Qt::Orientation, int
+        OUTPUT: QVariant, strings are cast to QString which is a QVariant
+        """
+        if role == Qt.DisplayRole:
+            return self._header_data[column]
+
+    def setHeaderData(self, _header_data):
+        self._header_data = _header_data
 
     def parent(self, index):
         """
-        Provides a model index corresponding to the parent of any given child item.
-        If the model index specified corresponds to a top-level item in the model,
-        or if there is no valid parent item in the model, the function must return an
-        invalid model index, created with the empty QModelIndex() constructor.
-        """
+        INPUTS: QModelIndex
+        OUTPUT: QModelIndex
+        Should return the parent of the item with the given QModelIndex"""
         item = self.getItem(index)
         parent_item = item.parent()
-        if parent_item == self.root_item:
+
+        if parent_item == self._root_item:
             return QModelIndex()
-        if not parent_item:
+
+        if parent_item == None:
             return QModelIndex()
+
         return self.createIndex(parent_item.row(), 0, parent_item)
 
     def index(self, row, column, parent):
         """
-        Given a model index for a parent item, this function allows views and
-        delegates to access children of that item. If no valid child item -
-        corresponding to the specified row, column, and parent model index,
-        can be found, the function must return QModelIndex(), which is an
-        invalid model index.
-        """
+        Returns the QModelIndex associated with a row/column/parent provided
 
+        Args:
+                row (int)
+                column (int)
+                parent (QModelIndex)
+
+        Returns (QModelIndex)
+        """
         parent_item = self.getItem(parent)
         child_item = parent_item.child(row)
 
@@ -133,46 +250,44 @@ class AbstractTreeModel(QAbstractItemModel):
         Returns the item held by the index provided
         Args:
             index (QModelIndex)
-        Returns (TansuModelItem)
+        Returns (AbstractTreeModelItem)
         """
         if index.isValid():
             item = index.internalPointer()
             if item:
                 return item
 
-        return self.root_item
+        return self._root_item
 
-    def getParentIndexFromItem(self, item):
-        parent_item = item.parent()
-        if parent_item == self.root_item:
-            parent_index = QModelIndex()
-        elif not parent_item:
-            parent_index = QModelIndex()
-        else:
-            parent_index = self.createIndex(parent_item.row(), 0, parent_item)
-        return parent_index
+    def getItemName(self, item):
+        name = item.columnData()[self._header_data[0]]
+        return name
 
-    def data(self, index, role):
+    """ Create index/items"""
+    def setItemType(self, item_type):
+        self._item_type = item_type
+
+    def itemType(self):
+        return self._item_type
+
+    def createNewItem(self, *args, **kwargs):
         """
-        https://doc.qt.io/qt-5.12/qt.html#ItemDataRole-enum
-        :param index:
-        :param role:
-        :return:
+        Creates a new item of the specified type
         """
-        if role == Qt.DisplayRole:
-            item = index.internalPointer()
-            return item.name
+        item_type = self.itemType()
+        new_item = item_type(*args, **kwargs)
 
-    """ DRAG / DROP"""
-    def supportedDropActions(self):
-        return Qt.MoveAction
+        return new_item
 
-    def flags(self, index):
-        # if not index.isValid():
-        #     return Qt.ItemIsEnabled
-        return Qt.ItemIsEnabled | Qt.ItemIsSelectable | \
-               Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled
+    def insertNewIndex(self, row, name="None", parent=QModelIndex()):
+        self.insertRow(row, parent)
+        new_index = self.index(row, 0, parent)
+        item = new_index.internalPointer()
+        item.setColumnData({self._header_data[0]:name})
 
+        return new_index
+
+    """ INSERT INDEXES """
     def insertRows(self, position, num_rows, parent=QModelIndex()):
         """
         INPUTS: int, int, QModelIndex
@@ -180,111 +295,219 @@ class AbstractTreeModel(QAbstractItemModel):
         parent_item = self.getItem(parent)
         self.beginInsertRows(parent, position, position + num_rows - 1)
 
-        indexes = self.indexes
-        for index in indexes:
-            item = index.internalPointer()
-            parent_item.insertChild(position, item)
+        for row in range(num_rows):
+            childCount = parent_item.childCount()
+            childNode = self.createNewItem()
+            success = parent_item.insertChild(position, childNode)
+
         self.endInsertRows()
-        return True
+
+        return success
 
     def removeRows(self, position, num_rows, parent=QModelIndex()):
         """INPUTS: int, int, QModelIndex"""
-        print('remove ')
-        parent_item = self.getItem(parent)
-        self.beginRemoveRows(parent, position, position + num_rows - 1)
+        # pre flight
+        if self._dropping is True:
+            self._dropping = False
+            return True
 
+        # get parent
+        parent_item = self.getItem(parent)
+
+        # remove rows
+        self.beginRemoveRows(parent, position, position + num_rows - 1)
         for row in range(num_rows):
             success = parent_item.removeChild(position)
-
         self.endRemoveRows()
 
         return success
+
+    def getRootItem(self):
+        return self._root_item
+
+    def setRootItem(self, root_item):
+        self._root_item = root_item
+
+    """ PROPERTIES """
+    @property
+    def item_height(self):
+        return self._item_height
+
+    @item_height.setter
+    def item_height(self, _item_height):
+        self._item_height = _item_height
+
+    @property
+    def item_width(self):
+        return self._item_width
+
+    @item_width.setter
+    def item_width(self, _item_width):
+        self._item_width = _item_width
+
+    """ DRAG / DROP"""
+    def getParentIndexFromItem(self, item):
+        """
+        Returns the parent index of an item.  This is especially
+        useful when doing drag/drop operations
+
+        Args:
+            item (item): item whose parent a QModelIndex should be returned for
+
+        Returns (QModelIndex)
+        """
+        parent_item = item.parent()
+        if parent_item == self.getRootItem():
+            parent_index = QModelIndex()
+        elif not parent_item:
+            parent_index = QModelIndex()
+        else:
+            parent_index = self.createIndex(parent_item.row(), 0, parent_item)
+        return parent_index
+
+    def supportedDropActions(self):
+        return Qt.MoveAction
+
+    def flags(self, index):
+        return Qt.ItemIsEnabled | Qt.ItemIsSelectable | \
+               Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled
 
     def mimeTypes(self):
         return ['application/x-qabstractitemmodeldatalist']
 
     def mimeData(self, indexes):
         self.indexes = [index.internalPointer() for index in indexes]
-        with open('data.bin', 'wb') as f:
-            pickle.dump(self.indexes, f, pickle.HIGHEST_PROTOCOL)
         mimedata = QMimeData()
         mimedata.setData('application/x-qabstractitemmodeldatalist', QByteArray())
         return mimedata
 
     def dropMimeData(self, data, action, row, column, parent):
-        # f = data.data("application/x-test-data-type")
-        # print('=== %s'%f)
-        # f.
-        # mimedata = data.data('application/x-qabstractitemmodeldatalist')
-        # print(type(mimedata), mimedata)
-        #
-        # stream = QDataStream(mimedata, QIODevice.ReadOnly)
-        #
-        # data_items = self.decode_data(mimedata)
-        # print(data_items)
-        # for item in data_items:
-        #     for key in item:
-        #         print(key)
-        #         variant = item[key]
-        #
-        #         print(variant)
-        #         #print(variant.toModelIndex())
-        #
-        # #QVariant().ModelIndex()
-        # #print (data_items)
-        #
-        # # QByteArray
-        # # encoded = qMimeData->data("application/x-qabstractitemmodeldatalist");
-        # # QDataStream
-        # # stream( & encoded, QIODevice::ReadOnly);
-        # #
-        # # while (!stream.atEnd())
-        # # {
-        # #     int
-        # # row, col;
-        # # QMap < int, QVariant > roleDataMap;
-        # # stream >> row >> col >> roleDataMap;
-        # #
-        # # / *do
-        # # something
-        # # with the data * /
-        # # }
-        #
-        # return True
-
-        with open('data.bin', 'rb') as f:
-            data = pickle.load(f)
+        # bypass remove rows
+        self._dropping = True
 
         # get parent item
         parent_item = parent.internalPointer()
         if not parent_item:
-            parent_item = self.root_item
+            parent_item = self.getRootItem()
 
+        # iterate through index list
         indexes = self.indexes
         for item in indexes:
+            # drop on item
+            if row < 0:
+                row = 0
+
+            # drop between items
+            else:
+                # apply offset if dropping below the current location (due to deletion)
+                if row > item.row():
+                    row -= 1
+
+            # get old parents
             old_parent_item = item.parent()
             old_parent_index = self.getParentIndexFromItem(item)
 
-            self.beginRemoveRows(old_parent_index, item.row(), item.row()+1)
+            # remove item
+            self.beginRemoveRows(old_parent_index, item.row(), item.row() + 1)
             old_parent_item.children().remove(item)
             self.endRemoveRows()
 
             # insert item
-            self.beginInsertRows(parent, 0, 1)
-            parent_item.insertChild(0, item)
+            self.beginInsertRows(parent, row, row + 1)
+            parent_item.insertChild(row, item)
             self.endInsertRows()
+
         return True
 
 
-if __name__ == "__main__":
+# example drop indicator
+from qtpy.QtWidgets import QTreeView, QProxyStyle, QStyleOption
+class TreeView(QTreeView):
+    def __init__(self, parent=None):
+        super(TreeView, self).__init__(parent)
+
+class TreeViewDropIndicator(QProxyStyle):
+    def drawPrimitive(self, element, option, painter, widget=None):
+        """
+        https://www.qtcentre.org/threads/35443-Customize-drop-indicator-in-QTreeView
+
+        Draw a line across the entire row rather than just the column
+        we're hovering over.  This may not always work depending on global
+        style - for instance I think it won't work on OSX.
+
+        Still draws the original line - not really sure why
+            - clearing the painter will clear the entire view
+        """
+        from qtpy.QtWidgets import QStyle
+        from qtpy.QtGui import QPainter, QPalette, QColor, QPen, QBrush
+        from qtpy.QtCore import QPoint
+
+        if element == self.PE_IndicatorItemViewItemDrop:
+            # palette = QPalette()
+            # highlighted_color = palette.highlightedText().color()
+
+            painter.setRenderHint(QPainter.Antialiasing)
+            # border
+            border_color = QColor(255, 0, 255, 255)
+            pen = QPen()
+            pen.setWidth(5)
+            pen.setColor(border_color)
+
+            # background
+            background_color = QColor(255, 0, 0, 64)
+            brush = QBrush(background_color)
+
+            # set painter
+            painter.setPen(pen)
+            painter.setBrush(brush)
+
+            # draw dot to the left
+            # drop between
+            if(option.rect.height() == 0):
+                painter.drawEllipse(option.rect.topLeft(), 6, 6)
+                #painter.drawLine(QPoint(option.rect.topLeft().x()+6, option.rect.topLeft().y()), option.rect.topRight())
+            # drop on
+            else:
+                painter.drawRoundedRect(option.rect, 25, 25)
+        else:
+            super().drawPrimitive(element, option, painter, widget)
+
+
+if __name__ == '__main__':
+    import sys
+    from qtpy.QtWidgets import (
+        QApplication, QTreeView, QListView, QAbstractItemView)
+    from qtpy.QtGui import QCursor
     app = QApplication(sys.argv)
-    main_widget = QTreeView()
-    main_widget.setSelectionMode(QAbstractItemView.MultiSelection)
-    main_widget.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
-    main_widget.setDragDropOverwriteMode(True)
+
     model = AbstractTreeModel()
-    main_widget.setModel(model)
-    main_widget.show()
-    main_widget.move(QCursor.pos())
+    for x in range(0, 4):
+        model.insertNewIndex(x, str('node%s'%x))
+
+
+    tree_view = QTreeView()
+    tree_view.setStyle(TreeViewDropIndicator())
+
+    tree_view.move(QCursor.pos())
+    tree_view.setDragEnabled(True)
+    tree_view.setDragDropOverwriteMode(False)
+    tree_view.setSelectionMode(QAbstractItemView.MultiSelection)
+
+    tree_view.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
+    tree_view.setModel(model)
+
+    list_view = QListView()
+
+    list_view.move(QCursor.pos())
+    list_view.setDragDropOverwriteMode(False)
+    list_view.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
+    list_view.setDropIndicatorShown(True)
+    list_view.setModel(model)
+
+    # table_view = QTableView()
+    # table_view.show()
+    tree_view.show()
+    #list_view.show()
+    # table_view.setModel(model)
 
     sys.exit(app.exec_())

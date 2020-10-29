@@ -36,9 +36,9 @@ for y in range(0, 2):
 
 # enable drag/drop
 
-view.setDragDropOverwriteMode(False)
+#view.setDragDropOverwriteMode(False)
 view.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
-view.setDropIndicatorShown(True)
+#view.setDropIndicatorShown(True)
 
 # show view
 w.resize(500, 500)

@@ -1,8 +1,9 @@
 from qtpy.QtWidgets import (
-    QWidget, QListView, QAbstractItemView, QScrollArea, QSplitter, QTreeView
+    QWidget, QListView, QAbstractItemView, QScrollArea, QSplitter, QTreeView,
+    QProxyStyle
 )
 from qtpy.QtCore import Qt, QModelIndex
-from qtpy.QtGui import QCursor
+from qtpy.QtGui import QPainter, QColor, QPen, QBrush
 
 from cgwidgets.utils import getWidgetAncestor, attrs
 from cgwidgets.settings.colors import iColor
@@ -85,10 +86,6 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         self.setDelegateWidget(delegate_widget)
         self._temp_proxy_widget = QWidget()
         self._temp_proxy_widget.setObjectName("proxy_widget")
-        # self._temp_proxy_widget.setStyleSheet("""
-        #     QWidget#proxy_widget{{background-color:rgba{rgba_gray_0}}}
-        #     """.format(**iColor.style_sheet_args)
-        # )
 
         self.delegateWidget().addWidget(self._temp_proxy_widget)
 
@@ -657,10 +654,66 @@ class TansuHeaderAbstractView(object):
             top_level_widget.updateDelegateDisplayFromSelection(selected, deselected)
 
 
+class TansuHeaderViewDropIndicatorStyle(QProxyStyle):
+    def drawPrimitive(self, element, option, painter, widget=None):
+        """
+        https://www.qtcentre.org/threads/35443-Customize-drop-indicator-in-QTreeView
+
+        Draw a line across the entire row rather than just the column
+        we're hovering over.  This may not always work depending on global
+        style - for instance I think it won't work on OSX.
+
+        Still draws the original line - not really sure why
+            - clearing the painter will clear the entire view
+        """
+        if element == self.PE_IndicatorItemViewItemDrop:
+            # palette = QPalette()
+            # highlighted_color = palette.highlightedText().color()
+
+            #painter.setRenderHint(QPainter.Antialiasing)
+
+            # border
+            border_color = QColor(*iColor["rgba_selected"])
+            pen = QPen()
+            pen.setWidth(4)
+            pen.setColor(border_color)
+
+            # background
+            background_color = QColor(*iColor["rgba_selected"])
+            background_color.setAlpha(64)
+            brush = QBrush(background_color)
+
+            # set painter
+            painter.setPen(pen)
+            painter.setBrush(brush)
+
+            # draw dot to the left
+            # drop between
+            from qtpy.QtCore import QPoint
+            from qtpy.QtGui import QPolygon
+            if option.rect.height() == 0:
+                triangle_point_list = [
+                    [0, 0],
+                    [-10, 10],
+                    [-10, -10],
+                    [0, 0]
+                ]
+                triangle = QPolygon(map(lambda p: QPoint(*p), triangle_point_list))
+                triangle.translate(option.rect.topLeft())
+
+                painter.drawPolygon(triangle)
+                painter.drawLine(QPoint(option.rect.topLeft().x(), option.rect.topLeft().y()), option.rect.topRight())
+            # drop on
+            else:
+                painter.drawRoundedRect(option.rect, 1, 1)
+        else:
+            super().drawPrimitive(element, option, painter, widget)
+
+
 class TansuHeaderListView(QListView, TansuHeaderAbstractView):
     def __init__(self, parent=None):
         super(TansuHeaderListView, self).__init__(parent)
-
+        self.setStyle(TansuHeaderViewDropIndicatorStyle())
         self.setEditTriggers(QAbstractItemView.DoubleClicked)
 
     def createStyleSheet(self, header_position, style_sheet_args):
@@ -729,7 +782,7 @@ class TansuHeaderListView(QListView, TansuHeaderAbstractView):
 class TansuHeaderTreeView(QTreeView, TansuHeaderAbstractView):
     def __init__(self, parent=None):
         super(TansuHeaderTreeView, self).__init__(parent)
-
+        self.setStyle(TansuHeaderViewDropIndicatorStyle())
     """ """
     def setHeaderData(self, _header_data):
         """
