@@ -135,11 +135,14 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         # setup custom object
         item_type = self.model().itemType()
         view_item = item_type()
+        view_item.setColumnData(column_data)
+        #print(view_item)
         self.model().createIndex(row, 1, view_item)
 
         # get new index/item created
         new_index = self.model().index(row, 1, parent)
         view_item = new_index.internalPointer()
+        #print(view_item)
 
         view_item.setColumnData(column_data)
 
@@ -164,6 +167,20 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
                 to be implemented on the header
         """
         self.headerWidget().setDragDropMode(drag_drop_mode)
+
+    def setHeaderDragStartEvent(self, function):
+        """
+        Sets the function to be run after the drag has been initiated
+        """
+        self.model().setDragStartEvent(function)
+
+    def setHeaderDropEvent(self, function):
+        """
+        Sets the function to be run after the drop event has happened.
+        This function should take one arg which is a list of items that
+        have been dropped
+        """
+        self.model().setDropEvent(function)
 
     """ MODEL """
     def model(self):
@@ -865,6 +882,8 @@ class TansuHeaderTreeView(QTreeView, TansuHeaderAbstractView):
         #
         # }
 
+    def dropEvent(self, event):
+        print('dropping???')
 
 class TabTansuDynamicWidgetExample(QWidget):
     """

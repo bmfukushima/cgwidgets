@@ -40,15 +40,19 @@ class TansuModel(AbstractDragDropModel):
         self.setItemType(TansuModelItem)
 
     def flags(self, index):
+        # List view handlers
         if 'List' in self.header_type:
             if not index.isValid():
                 return Qt.ItemIsDropEnabled
             return Qt.ItemIsEnabled | Qt.ItemIsSelectable | \
                    Qt.ItemIsDragEnabled
+
+        # Tree view handlers
         elif 'Tree' in self.header_type:
             return Qt.ItemIsEnabled | Qt.ItemIsSelectable | \
                    Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled
 
+        # I failed at something handlers
         return Qt.ItemIsEnabled | Qt.ItemIsSelectable | \
                Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled
 

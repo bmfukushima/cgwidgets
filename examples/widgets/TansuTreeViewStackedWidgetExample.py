@@ -32,7 +32,7 @@ for x in range(5):
 
 # insert child widgets
 for y in range(0, 2):
-    tansu_widget.insertTansuWidget(y, column_data={'name': str(y)}, widget=widget, parent=parent_item)
+    tansu_widget.insertTansuWidget(y, column_data={'name': str(y), 'one': 'datttaaa'}, widget=widget, parent=parent_item)
 
 # enable drag/drop
 tansu_widget.setHeaderDragDropMode(QAbstractItemView.DragDropMode.InternalMove)

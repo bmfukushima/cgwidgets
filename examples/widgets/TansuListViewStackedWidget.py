@@ -35,8 +35,6 @@ tansu_widget.setHeaderDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
 tansu_widget.resize(500, 500)
 tansu_widget.delegateWidget().handle_length = 100
 
-
-
 tansu_widget.show()
 
 tansu_widget.move(QCursor.pos())

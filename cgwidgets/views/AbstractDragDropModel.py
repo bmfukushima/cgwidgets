@@ -103,7 +103,6 @@ class AbstractDragDropModel(QAbstractItemModel):
     Abstract model that is used for the Tansu.  This supports tables, lists, and
     trees.  However not yet...
     TODO:
-        - Drag/drop support
         - multi column support
 
     Attributes:
@@ -127,7 +126,7 @@ class AbstractDragDropModel(QAbstractItemModel):
         self._root_item = root_item
 
         # setup default attrs
-        self._header_data = ['name']
+        self._header_data = ['name', 'one']
 
         #
         self._dropping = False
@@ -172,7 +171,11 @@ class AbstractDragDropModel(QAbstractItemModel):
                     try:
                         return_val = item.columnData()[self._header_data[i]]
                     except KeyError:
-                        return_val = None
+                        print('===========')
+                        print(self._header_data)
+                        print(item.columnData())
+                        print(self._header_data[i])
+                        return_val = 'None'
                     return return_val
 
         if role == Qt.SizeHintRole:
@@ -180,11 +183,6 @@ class AbstractDragDropModel(QAbstractItemModel):
 
         if role == Qt.BackgroundRole:
             return None
-        # if role == Qt.BackgroundRole:
-        #     if item.isSelected():
-        #         return QBrush(QColor(*iColor.rgba_gray_selected))
-        #     else:
-        #         return QBrush(QColor(*iColor.rgba_background))
 
     def setData(self, index, value, role=Qt.EditRole):
         """
@@ -379,6 +377,9 @@ class AbstractDragDropModel(QAbstractItemModel):
         self.indexes = [index.internalPointer() for index in indexes]
         mimedata = QMimeData()
         mimedata.setData('application/x-qabstractitemmodeldatalist', QByteArray())
+
+        # run virtual function
+        self.dragStartEvent()
         return mimedata
 
     def dropMimeData(self, data, action, row, column, parent):
@@ -417,8 +418,34 @@ class AbstractDragDropModel(QAbstractItemModel):
             parent_item.insertChild(row, item)
             self.endInsertRows()
 
+        # run virtual function
+        self.dropEvent(indexes)
         return True
 
+    """ VIRTUAL FUNCTIONS """
+    def setDragStartEvent(self, function):
+        self.__startDragEvent = function
+
+    def dragStartEvent(self):
+        self.__startDragEvent()
+
+    def __startDragEvent(self):
+        pass
+
+    def setDropEvent(self, function):
+        self.__dropEvent = function
+
+    def dropEvent(self, indexes):
+        """
+        Virtual function that is run after the mime data has been dropped.
+
+        Args:
+            indexes (list): of AbstractModelItems
+        """
+        self.__dropEvent(indexes)
+
+    def __dropEvent(self, indexes):
+        pass
 
 # example drop indicator
 from qtpy.QtWidgets import QTreeView, QProxyStyle, QStyleOption
