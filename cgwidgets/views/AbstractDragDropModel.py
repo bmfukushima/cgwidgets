@@ -443,6 +443,7 @@ class AbstractDragDropModel(QAbstractItemModel):
     def __dropEvent(self, indexes):
         pass
 
+
 # example drop indicator
 from qtpy.QtWidgets import QTreeView, QProxyStyle, QStyleOption
 class TreeView(QTreeView):
@@ -487,7 +488,9 @@ class TreeViewDropIndicator(QProxyStyle):
             # draw dot to the left
             # drop between
             if option.rect.height() == 0:
-                painter.drawEllipse(option.rect.topLeft(), 6, 6)
+                #painter.drawEllipse(option.rect.topLeft(), 6, 6)
+                top_left = QPoint(0, option.rect.topLeft().y())
+                painter.drawEllipse(top_left, 6,6)
                 #painter.drawLine(QPoint(option.rect.topLeft().x()+6, option.rect.topLeft().y()), option.rect.topRight())
             # drop on
             else:

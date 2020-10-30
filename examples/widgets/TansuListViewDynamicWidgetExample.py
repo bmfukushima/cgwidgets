@@ -78,10 +78,10 @@ for x in range(3):
     name = '<title {}>'.format(str(x))
     tansu_widget.insertTansuWidget(x, column_data={'name':name})
 
-# custom item
-custom_index = tansu_widget.insertTansuWidget(0, column_data={'name': 'Custom Handlers'})
-custom_index.internalPointer().setDynamicWidgetBaseClass(CustomDynamicWidget)
-custom_index.internalPointer().setDynamicUpdateFunction(CustomDynamicWidget.updateGUI)
+# # custom item
+# custom_index = tansu_widget.insertTansuWidget(0, column_data={'name': 'Custom Handlers'})
+# custom_index.internalPointer().setDynamicWidgetBaseClass(CustomDynamicWidget)
+# custom_index.internalPointer().setDynamicUpdateFunction(CustomDynamicWidget.updateGUI)
 
 # set attrs
 tansu_widget.setHeaderPosition(attrs.NORTH)

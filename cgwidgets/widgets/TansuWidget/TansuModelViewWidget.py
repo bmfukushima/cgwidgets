@@ -2,8 +2,8 @@ from qtpy.QtWidgets import (
     QWidget, QListView, QAbstractItemView, QScrollArea, QSplitter, QTreeView,
     QProxyStyle
 )
-from qtpy.QtCore import Qt, QModelIndex
-from qtpy.QtGui import QPainter, QColor, QPen, QBrush, QCursor
+from qtpy.QtCore import Qt, QModelIndex, QPoint, QRect
+from qtpy.QtGui import QPainter, QColor, QPen, QBrush, QCursor, QPolygonF, QPainterPath
 
 from cgwidgets.utils import getWidgetAncestor, attrs
 from cgwidgets.settings.colors import iColor
@@ -555,13 +555,11 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         style_sheet_args['header_style_sheet'] = header_style_sheet
         style_sheet_args['base_header_style_sheet'] = base_header_style_sheet
 
-        # TODO why does border not update in the list view?
         style_sheet = """
         {base_header_style_sheet}
         {header_style_sheet}
         {type}::item:hover{{color: rgba{rgba_hover}}}
         {splitter_style_sheet}
-        
         """.format(**style_sheet_args)
 
         self.setStyleSheet(style_sheet)
@@ -682,6 +680,8 @@ class TansuHeaderAbstractView(object):
 
 
 class TansuHeaderViewDropIndicatorStyle(QProxyStyle):
+    INDICATOR_WIDTH = 2
+    INDICATOR_SIZE = 10
     def drawPrimitive(self, element, option, painter, widget=None):
         """
         https://www.qtcentre.org/threads/35443-Customize-drop-indicator-in-QTreeView
@@ -700,9 +700,15 @@ class TansuHeaderViewDropIndicatorStyle(QProxyStyle):
             #painter.setRenderHint(QPainter.Antialiasing)
 
             # border
+            # get attrs
+            y_pos = option.rect.topLeft().y()
+            size = TansuHeaderViewDropIndicatorStyle.INDICATOR_SIZE
+            width = TansuHeaderViewDropIndicatorStyle.INDICATOR_WIDTH
+
+            # border color
             border_color = QColor(*iColor["rgba_selected"])
             pen = QPen()
-            pen.setWidth(4)
+            pen.setWidth(TansuHeaderViewDropIndicatorStyle.INDICATOR_WIDTH)
             pen.setColor(border_color)
 
             # background
@@ -714,27 +720,79 @@ class TansuHeaderViewDropIndicatorStyle(QProxyStyle):
             painter.setPen(pen)
             painter.setBrush(brush)
 
-            # draw dot to the left
             # drop between
-            from qtpy.QtCore import QPoint
-            from qtpy.QtGui import QPolygon
             if option.rect.height() == 0:
-                triangle_point_list = [
-                    [0, 0],
-                    [-10, 10],
-                    [-10, -10],
-                    [0, 0]
-                ]
-                triangle = QPolygon(map(lambda p: QPoint(*p), triangle_point_list))
-                triangle.translate(option.rect.topLeft())
 
-                painter.drawPolygon(triangle)
-                painter.drawLine(QPoint(option.rect.topLeft().x(), option.rect.topLeft().y()), option.rect.topRight())
+                # create indicators
+                l_indicator = self.createTriangle(size, attrs.EAST)
+                l_indicator.translate(QPoint(size + (width / 2), y_pos))
+
+                r_indicator = self.createTriangle(size, attrs.WEST)
+                r_indicator.translate(QPoint(
+                    widget.width() - size - (width / 2), y_pos)
+                )
+
+                # draw
+                painter.drawPolygon(l_indicator)
+                painter.drawPolygon(r_indicator)
+                painter.drawLine(
+                    QPoint((size) + (width / 2), y_pos),
+                    QPoint(widget.width() - size - (width / 2), y_pos)
+                )
+
+                # set fill color
+                background_color = QColor(*iColor["rgba_gray_1"])
+                brush = QBrush(background_color)
+                path = QPainterPath()
+                path.addPolygon(l_indicator)
+                path.addPolygon(r_indicator)
+                painter.fillPath(path, brush)
+
             # drop on
             else:
-                painter.drawRoundedRect(option.rect, 1, 1)
+                indicator_rect = QRect((width / 2), y_pos, widget.width() - (width / 2), option.rect.height())
+                painter.drawRoundedRect(indicator_rect, 1, 1)
         else:
             super().drawPrimitive(element, option, painter, widget)
+
+    def createTriangle(self, size, direction=attrs.EAST):
+        """
+        Creates a triangle to be displayed by the painter.
+
+        Args:
+            size (int): the size of the triangle to draw
+            direction (attrs.DIRECTION): which way the triangle should point
+        """
+        if direction == attrs.EAST:
+            triangle_point_list = [
+                [0, 0],
+                [-size, size],
+                [-size, -size],
+                [0, 0]
+            ]
+        if direction == attrs.WEST:
+            triangle_point_list = [
+                [0, 0],
+                [size, size],
+                [size, -size],
+                [0, 0]
+            ]
+        if direction == attrs.NORTH:
+            triangle_point_list = [
+                [0, 0],
+                [size, -size],
+                [-size, -size],
+                [0, 0]
+            ]
+        if direction == attrs.SOUTH:
+            triangle_point_list = [
+                [0, 0],
+                [size, size],
+                [-size, size],
+                [0, 0]
+            ]
+        triangle = QPolygonF(map(lambda p: QPoint(*p), triangle_point_list))
+        return triangle
 
 
 class TansuHeaderListView(QListView, TansuHeaderAbstractView):
@@ -883,6 +941,7 @@ class TansuHeaderTreeView(QTreeView, TansuHeaderAbstractView):
     def dropEvent(self, event):
         #print('dropping???')
         return QTreeView.dropEvent(self, event)
+
 
 class TabTansuDynamicWidgetExample(QWidget):
     """

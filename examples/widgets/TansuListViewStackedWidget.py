@@ -20,7 +20,7 @@ tab_3.addWidget(QLabel('b'))
 tab_3.addWidget(QLabel('c'))
 
 # set attrs
-tansu_widget.setHeaderPosition(attrs.NORTH)
+tansu_widget.setHeaderPosition(attrs.WEST)
 tansu_widget.setMultiSelect(True)
 tansu_widget.setMultiSelectDirection(Qt.Vertical)
 

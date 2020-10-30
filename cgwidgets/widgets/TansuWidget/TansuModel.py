@@ -45,16 +45,16 @@ class TansuModel(AbstractDragDropModel):
             if not index.isValid():
                 return Qt.ItemIsDropEnabled
             return Qt.ItemIsEnabled | Qt.ItemIsSelectable | \
-                   Qt.ItemIsDragEnabled
+                Qt.ItemIsDragEnabled
 
         # Tree view handlers
         elif 'Tree' in self.header_type:
             return Qt.ItemIsEnabled | Qt.ItemIsSelectable | \
-                   Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled
+                Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled
 
         # I failed at something handlers
         return Qt.ItemIsEnabled | Qt.ItemIsSelectable | \
-               Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled
+            Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled
 
     @property
     def header_type(self):
