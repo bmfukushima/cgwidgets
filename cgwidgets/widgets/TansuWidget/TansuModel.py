@@ -18,8 +18,42 @@ from qtpy.QtGui import (
 
 import sys
 
-from cgwidgets.widgets.TansuWidget import TansuModelItem
 from cgwidgets.views import AbstractDragDropModel
+
+# https://doc.qt.io/qt-5/model-view-programming.html#model-view-classes
+from cgwidgets.widgets.TansuWidget import (
+    iTansuDynamicWidget
+)
+
+from cgwidgets.views import AbstractDragDropModelItem
+
+
+class TansuModelItem(AbstractDragDropModelItem, iTansuDynamicWidget):
+    """
+    Attributes:
+        delegate_widget (QWidget): Widget to be shown when this item is
+            selected
+        dynamic_widget_base_class (QWidget): Widget to be shown when this item is
+            selected if the Tansu is in DYNAMIC mode.
+    """
+    def __init__(self, parent=None):
+        #self._data = data
+        self._column_data = {}
+        self._children = []
+        self._parent = parent
+        self._delegate_widget = None
+        self._dynamicWidgetFunction = None
+
+        self._is_selected = False
+
+        if parent is not None:
+            parent.addChild(self)
+
+    def delegateWidget(self):
+        return self._delegate_widget
+
+    def setDelegateWidget(self, _delegate_widget):
+        self._delegate_widget = _delegate_widget
 
 
 class TansuModel(AbstractDragDropModel):

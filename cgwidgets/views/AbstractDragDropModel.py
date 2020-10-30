@@ -5,7 +5,6 @@ from qtpy.QtCore import (
     Qt, QModelIndex, QAbstractItemModel, QSize, QMimeData, QByteArray)
 
 
-#from cgwidgets.widgets.TansuWidget import AbstractDragDropModelItem
 class AbstractDragDropModelItem(object):
     """
 

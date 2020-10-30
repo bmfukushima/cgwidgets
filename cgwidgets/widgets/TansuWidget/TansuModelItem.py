@@ -3,6 +3,8 @@ from cgwidgets.widgets.TansuWidget import (
     iTansuDynamicWidget
 )
 
+from cgwidgets.views import AbstractDragDropModelItem
+
 
 class TansuModelItem(iTansuDynamicWidget):
     """

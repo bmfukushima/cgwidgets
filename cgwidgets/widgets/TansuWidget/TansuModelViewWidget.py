@@ -682,6 +682,7 @@ class TansuHeaderAbstractView(object):
 class TansuHeaderViewDropIndicatorStyle(QProxyStyle):
     INDICATOR_WIDTH = 2
     INDICATOR_SIZE = 10
+
     def drawPrimitive(self, element, option, painter, widget=None):
         """
         https://www.qtcentre.org/threads/35443-Customize-drop-indicator-in-QTreeView
@@ -736,7 +737,7 @@ class TansuHeaderViewDropIndicatorStyle(QProxyStyle):
                 painter.drawPolygon(l_indicator)
                 painter.drawPolygon(r_indicator)
                 painter.drawLine(
-                    QPoint((size) + (width / 2), y_pos),
+                    QPoint(size + (width / 2), y_pos),
                     QPoint(widget.width() - size - (width / 2), y_pos)
                 )
 

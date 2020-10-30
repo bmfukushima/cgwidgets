@@ -1,6 +1,6 @@
 from .iTansuDynamicWidget import iTansuDynamicWidget as iTansuDynamicWidget
 
-from .TansuModelItem import TansuModelItem as TansuModelItem
+from .TansuModel import TansuModelItem as TansuModelItem
 from .TansuModel import TansuModel as TansuModel
 
 from .TansuBaseWidget import TansuBaseWidget as TansuBaseWidget
