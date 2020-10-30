@@ -1,2 +1,3 @@
 from .AbstractDragDropModel import AbstractDragDropModelItem
 from .AbstractDragDropModel import AbstractDragDropModel
+from .CompleterView import CompleterPopup

@@ -2,6 +2,24 @@ from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 from qtpy.QtGui import *
 
+""" COMPLETER POPUP """
+def installCompleterPopup(completer):
+    """
+    Adds the custom style completer popup (QListView) to the
+    completer provided
+
+    Args:
+        completer (QCompleter): Completer to have the custom styled
+            popup installed on
+    Returns (QListView): of the pop
+    """
+    from cgwidgets.views import CompleterPopup
+    popup = CompleterPopup()
+    completer.setPopup(popup)
+    delegate = QStyledItemDelegate()
+    completer.popup().setItemDelegate(delegate)
+    return popup
+
 """ INVISIBLE CURSOR"""
 def installInvisibleCursorEvent(widget):
     """

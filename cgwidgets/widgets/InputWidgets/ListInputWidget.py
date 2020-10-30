@@ -281,7 +281,7 @@ from qtpy.QtWidgets import QLineEdit, QCompleter, QListView
 from qtpy.QtGui import QStandardItem, QStandardItemModel
 
 from cgwidgets.settings.colors import iColor
-from cgwidgets.utils import getBottomLeftPos
+from cgwidgets.utils import getBottomLeftPos, installCompleterPopup
 
 
 class LineEdit(QLineEdit):
@@ -351,6 +351,7 @@ class LineEdit(QLineEdit):
         completer.popup().setItemDelegate(delegate)
 
         # set completer
+        installCompleterPopup(completer)
         self.setCompleter(completer)
 
     def filterCompletionResults(self):
@@ -374,45 +375,45 @@ class LineEdit(QLineEdit):
         pos = getBottomLeftPos(self)
         view.move(pos)
 
-        delegate = QStyledItemDelegate()
-        #delegate.setStyleSheet('background-color:rgb(255,0,255)')
-        view.setItemDelegate(delegate)
+        #delegate = QStyledItemDelegate()
+        #view.setItemDelegate(delegate)
         # return
         return QLineEdit.mouseReleaseEvent(self, event)
 
 
-class CompleterPopup(QListView):
-    def __init__(self, parent=None):
-        super(CompleterPopup, self).__init__(parent)
-        style_sheet_args = iColor.style_sheet_args
-
-        style_sheet = """
-        CompleterPopup{{
-            border: 1px solid rgba{rgba_outline};
-            background-color: rgba{rgba_gray_0};
-            color: rgba{rgba_text};
-        }}
-        CompleterPopup::item:selected{{
-            color: rgba{rgba_hover};
-            background-color: rgba{rgba_gray_2};
-        }}
-        CompleterPopup::item:hover{{color: rgba{rgba_hover}}}
-        CompleterPopup::item{{
-            border: None ;
-            background-color: rgba{rgba_gray_0};
-            color: rgba{rgba_text};
-        }}
-
-        """.format(**style_sheet_args)
-
-        self.setStyleSheet(style_sheet)
+# class CompleterPopup(QListView):
+#     def __init__(self, parent=None):
+#         super(CompleterPopup, self).__init__(parent)
+#         style_sheet_args = iColor.style_sheet_args
+#
+#         style_sheet = """
+#         CompleterPopup{{
+#             border: 1px solid rgba{rgba_outline};
+#             background-color: rgba{rgba_gray_0};
+#             color: rgba{rgba_text};
+#         }}
+#         CompleterPopup::item:selected{{
+#             color: rgba{rgba_hover};
+#             background-color: rgba{rgba_gray_2};
+#         }}
+#         CompleterPopup::item:hover{{color: rgba{rgba_hover}}}
+#         CompleterPopup::item{{
+#             border: None ;
+#             background-color: rgba{rgba_gray_0};
+#             color: rgba{rgba_text};
+#         }}
+#
+#         """.format(**style_sheet_args)
+#
+#         self.setStyleSheet(style_sheet)
 
 
 class CustomModelCompleter(QCompleter):
     def __init__(self, parent=None):
         super(CustomModelCompleter, self).__init__(parent)
-        popup = CompleterPopup()
-        self.setPopup(popup)
+
+        #popup = CompleterPopup()
+        #self.setPopup(popup)
 
 
 class CustomModel(QAbstractListModel):
@@ -450,10 +451,10 @@ if __name__ == "__main__":
     w = QWidget()
     l = QVBoxLayout(w)
     r = LineEdit(item_list=['a', 'b', 'c', 'aa', 'bb', 'cc'])
-    e = CompleterPopup()
+    #e = CompleterPopup()
     l.addWidget(r)
-    l.addWidget(e)
-    e.setModel(r.proxy_model)
+    #l.addWidget(e)
+    #e.setModel(r.proxy_model)
 
     # item_list = ['a', 'b', 'c', 'aa', 'bb', 'cc']
     # w=QListView()
