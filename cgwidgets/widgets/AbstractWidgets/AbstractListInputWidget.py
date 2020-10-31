@@ -8,7 +8,7 @@ from qtpy.QtWidgets import (
 )
 
 from qtpy.QtGui import(
-    QStandardItem, QStandardItemModel
+    QStandardItem, QStandardItemModel, QPixmap, QIcon, QColor
 )
 from qtpy.QtCore import (
     QEvent, Qt, QSortFilterProxyModel
@@ -18,14 +18,15 @@ from qtpy.QtCore import (
 from qtpy.QtCore import (
     QAbstractListModel, Qt, QRegExp, QSortFilterProxyModel)
 from qtpy.QtWidgets import (
-    QLineEdit, QCompleter, QListView, QStyledItemDelegate)
+    QLineEdit, QCompleter, QListView, QStyledItemDelegate, QApplication)
 
 from cgwidgets.widgets.AbstractWidgets import AbstractStringInputWidget
-from cgwidgets.utils import getBottomLeftPos
+from cgwidgets.utils import getBottomLeftPos, getFontSize
 from cgwidgets.settings.colors import iColor
+from cgwidgets.views import CompleterPopup
 
 
-class AbstractListInputWidget(QComboBox):
+class AbstractComboListInputWidget(QComboBox):
     """
     A custom QComboBox with a completer / model.  This is
     designed to be an abstract class that will be inherited by the
@@ -45,14 +46,14 @@ class AbstractListInputWidget(QComboBox):
     """
     TYPE = 'list'
     def __init__(self, parent=None):
-        super(AbstractListInputWidget, self).__init__(parent)
+        super(AbstractComboListInputWidget, self).__init__(parent)
         self.main_widget = self.parent()
         self.previous_text = ''
         self.setExistsFlag(True)
 
         # setup line edit
         #self.line_edit = QLineEdit("Select & Focus", self)
-        self.line_edit = AbstractListInputWidgetLineEdit(self)
+        self.line_edit = QLineEdit(self)
         self.line_edit.editingFinished.connect(self.userFinishedEditing)
         self.setLineEdit(self.line_edit)
 
@@ -331,217 +332,285 @@ class AbstractListInputWidget(QComboBox):
         self._previous_text = previous_text
 
 
-class AbstractListInputWidgetLineEdit(QLineEdit):
+class AbstractListInputWidget(AbstractStringInputWidget):
+    """
+    TODO:
+        *   as soon as you type it breaks?
+    Signals:
+    QLineEdit
+        QCompleter
+            | -- QSortFilterProxyModel --> QAbstractListModel (Custom Model)
+            | -- Popup
+                    | -- QListView (CompleterPopup)
+    Attributes:
+        dynamic_update (bool): Determines if the model should be repopulated
+            every time the user requests the popup to be displayed
+        filter_results (bool): Determines if the returned results in the popup
+            should be filtered based off of the current input.
+        display_item_colors (bool): Determines if the item colors should be displayed
+            or not.  By default this is set to off.  Item colors will need to be put as the
+            second index for each item in the model provided to the list.
+        item_list (list): string list of all of the items in the list.  Updating this
+            will auto update the default settings for blank setups
+        previous_text (str): the previous items text.  This is stored for cancel events
+            and allowing the user to return to the previous item after cancelling.
+        cleanItems (virtual function): returns a list of items to populate the
+            model with.  Not sure if I still need this...
+    """
+    TYPE = 'list'
+    def __init__(self, parent=None, item_list=[]):
+        super(AbstractListInputWidget, self).__init__(parent)
+        # setup default attrs
+        self._item_list = []
+        self._previous_text = ''
+        self._dynamic_update = False
+        self._filter_results = True
+        self._display_item_colors = False
+
+        # setup custom completer
+        self.setupCustomModelCompleter(item_list)
+
+        # setup style
+        self.updateStyleSheet()
+
+        # setup signals
+        self.textChanged.connect(self.filterCompletionResults)
+
+    def populate(self, item_list):
+        """
+        Creates all of the items from the item list and
+        appends them to the model.
+
+        item_list (list): list of strings to be displayed to the user
+            this should be set with the setCleanItemsFunction.
+        """
+        self.setItemList(item_list)
+        self.setupCustomModelCompleter(item_list)
+
+    def __getCleanItems(self):
+        return []
+
+    def setCleanItemsFunction(self, function):
+        """
+        Sets the function to get the list of strings to populate the model
+
+        function (function): function to return a list of strings to be shown
+            to the user
+        """
+        self.__getCleanItems = function
+
+    def getCleanItems(self):
+        """
+        Returns a list of strings based off of the function set with
+        setCleanItemsFunction
+        """
+        return self.__getCleanItems()
+
+    """ Style Sheet"""
+    def updateStyleSheet(self):
+        style_sheet_args = iColor.style_sheet_args
+        style_sheet_args.update({
+            'type': type(self).__name__
+        })
+
+        style_sheet = """
+        {type}{{
+            border:None;
+            background-color: rgba{rgba_gray_0};
+            selection-background-color: rgba{rgba_selected};
+            color: rgba{rgba_text}
+        }}
+
+        """.format(**style_sheet_args)
+
+        self.setStyleSheet(style_sheet)
+
+    """ COMPLETER """
+    def _updateModel(self, item_list=None):
+        # get item list
+        if not item_list:
+            item_list = self.getCleanItems()
+
+        # update model items
+        self._model = CustomModel(item_list=item_list)
+        self._model.display_item_colors = self.display_item_colors
+
+        self.proxy_model = QSortFilterProxyModel()
+        self.proxy_model.setSourceModel(self._model)
+        # set models
+        self.completer().setModel(self.proxy_model)
+        self.completer().popup().setModel(self.proxy_model)
+
+    def setupCustomModelCompleter(self, item_list):
+        """
+        Creates a new completely custom completer
+
+        Args:
+            item_list (list): of strings to be the list of things
+                that is displayed to the user
+        """
+        # create completer/models
+        completer = CustomModelCompleter()
+        self._model = CustomModel(item_list=item_list)
+        self.proxy_model = QSortFilterProxyModel()
+        self.proxy_model.setSourceModel(self._model)
+
+        # set models
+        completer.setModel(self.proxy_model)
+        completer.popup().setModel(self.proxy_model)
+
+        # set item for popup
+        # this makes it so that the stylesheet can be attached...
+        # https://forum.qt.io/topic/26703/solved-stylize-using-css-and-editable-qcombobox-s-completions-list-view/7
+        delegate = QStyledItemDelegate()
+        completer.popup().setItemDelegate(delegate)
+
+        # set completer
+        self.setCompleter(completer)
+
+    def filterCompletionResults(self):
+        """
+        Filter the current proxy model based off of the text in the input string
+        """
+        # preflight
+        if self.filter_results: return
+
+        # filter results
+        pattern = QRegExp(
+            str(self.text()),
+            Qt.CaseInsensitive,
+            QRegExp.FixedString
+        )
+        self.proxy_model.setFilterRegExp(pattern)
+
+    """ EVENTS """
+    def mouseReleaseEvent(self, event):
+        # update model (if enabled)
+        if self.dynamic_update:
+            self._updateModel()
+
+        # update the current proxy model based off the current text
+        self.filterCompletionResults()
+
+        # show the pop completer
+        view = self.completer().popup()
+        view.setMinimumWidth(self.width())
+        view.show()
+        pos = getBottomLeftPos(self)
+        view.move(pos)
+
+        delegate = QStyledItemDelegate()
+        view.setItemDelegate(delegate)
+        return QLineEdit.mouseReleaseEvent(self, event)
+
+    """ PROPERTIES """
+    @property
+    def dynamic_update(self):
+        return self._dynamic_update
+
+    @dynamic_update.setter
+    def dynamic_update(self, dynamic_update):
+        self._dynamic_update = dynamic_update
+
+    @property
+    def filter_results(self):
+        return self._filter_results
+
+    @filter_results.setter
+    def filter_results(self, filter_results):
+        self._filter_results = filter_results
+
+    @property
+    def display_item_colors(self):
+        return self._display_item_colors
+
+    @display_item_colors.setter
+    def display_item_colors(self, display_item_colors):
+        self._display_item_colors = display_item_colors
+        self.model().display_item_colors = display_item_colors
+
+    def getItemList(self):
+        return self._item_list
+
+    def setItemList(self, item_list):
+        if self.previous_text == '':
+            item_list.insert(0, '')
+        self._item_list = item_list
+
+    @property
+    def previous_text(self):
+        return self._previous_text
+
+    @previous_text.setter
+    def previous_text(self, previous_text):
+        self._previous_text = previous_text
+
+    def model(self):
+        return self._model
+
+    def setModel(self, _model):
+        self._model = _model
+
+
+class CustomModelCompleter(QCompleter):
     def __init__(self, parent=None):
-        super(AbstractListInputWidgetLineEdit, self).__init__(parent)
-
-    def mousePressEvent(self, event):
-        #self.parent().completer.popup()
-        #self.parent().completer.popup().show()
-        return QLineEdit.mousePressEvent(self, event)
+        super(CustomModelCompleter, self).__init__(parent)
+        popup = CompleterPopup()
+        self.setPopup(popup)
 
 
-# class AbstractListInputWidget(AbstractStringInputWidget):
-#     """
-#     Signals:
-#     QLineEdit
-#         QCompleter
-#             | -- QSortFilterProxyModel --> QAbstractListModel (Custom Model)
-#             | -- Popup
-#                     | -- QListView (CompleterPopup)
-#     Attributes:
-#         item_list (list): string list of all of the items in the list.  Updating this
-#             will auto update the default settings for blank setups
-#         previous_text (str): the previous items text.  This is stored for cancel events
-#             and allowing the user to return to the previous item after cancelling.
-#     """
-#     def __init__(self, parent=None, item_list=[]):
-#         super(AbstractListInputWidget, self).__init__(parent)
-#         # setup default attrs
-#         self._item_list = []
-#         self._previous_text = ''
-#
-#         # setup custom completer
-#         self.setupCustomModelCompleter(item_list)
-#
-#         # setup style
-#         self.updateStyleSheet()
-#
-#         # setup signals
-#         self.textChanged.connect(self.filterCompletionResults)
-#         #self.editingFinished(self.currentIndexChangedEvent)
-#
-#     def populate(self, item_list):
-#         """
-#         Creates all of the items from the item list and
-#         appends them to the model.
-#
-#         item_list (list): list of strings to be displayed to the user
-#             this should be set with the setCleanItemsFunction.
-#         """
-#         self.setItemList(item_list)
-#         self.setupCustomModelCompleter(item_list)
-#
-#     """ Style Sheet"""
-#     def updateStyleSheet(self):
-#         style_sheet_args = iColor.style_sheet_args
-#         style_sheet_args.update({
-#             'type': type(self).__name__
-#         })
-#
-#         style_sheet = """
-#         {type}{{
-#             border:None;
-#             background-color: rgba{rgba_gray_0};
-#             selection-background-color: rgba{rgba_selected};
-#             color: rgba{rgba_text}
-#         }}
-#
-#         """.format(**style_sheet_args)
-#
-#         self.setStyleSheet(style_sheet)
-#
-#     """ COMPLETER """
-#     def setupCustomModelCompleter(self, item_list):
-#         """
-#         Creates a new completely custom completer
-#
-#         Args:
-#             item_list (list): of strings to be the list of things
-#                 that is displayed to the user
-#         """
-#         # create completer/models
-#         completer = CustomModelCompleter()
-#         self.source_model = CustomModel(item_list=item_list)
-#         self.proxy_model = QSortFilterProxyModel()
-#         self.proxy_model.setSourceModel(self.source_model)
-#
-#         # set models
-#         completer.setModel(self.proxy_model)
-#         completer.popup().setModel(self.proxy_model)
-#
-#         # set item for popup
-#         # this makes it so that the stylesheet can be attached...
-#         # https://forum.qt.io/topic/26703/solved-stylize-using-css-and-editable-qcombobox-s-completions-list-view/7
-#         delegate = QStyledItemDelegate()
-#         completer.popup().setItemDelegate(delegate)
-#
-#         # set completer
-#         self.setCompleter(completer)
-#
-#     def filterCompletionResults(self):
-#         """
-#         Filter the current proxy model based off of the text in the input string
-#         """
-#         pattern = QRegExp(
-#             str(self.text()),
-#             Qt.CaseInsensitive,
-#             QRegExp.FixedString
-#         )
-#         self.proxy_model.setFilterRegExp(pattern)
-#
-#     def mouseReleaseEvent(self, event):
-#         # update the current proxy model based off the current text
-#         self.filterCompletionResults()
-#
-#         # show the pop completer
-#         view = self.completer().popup()
-#         view.show()
-#         pos = getBottomLeftPos(self)
-#         view.move(pos)
-#
-#         delegate = QStyledItemDelegate()
-#         view.setItemDelegate(delegate)
-#
-#         return QLineEdit.mouseReleaseEvent(self, event)
-#
-#     """ INDEX """
-#     def currentIndex(self):
-#         return self._current_index
-#
-#     def setCurrentIndex(self, _current_index):
-#         self._current_index = _current_index
-#
-#     def currentIndexChanged(self):
-#         self._current_index
-#
-#     """ PROPERTIES """
-#     def getItemList(self):
-#         return self._item_list
-#
-#     def setItemList(self, item_list):
-#         if self.previous_text == '':
-#             item_list.insert(0, '')
-#         self._item_list = item_list
-#
-#     @property
-#     def previous_text(self):
-#         return self._previous_text
-#
-#     @previous_text.setter
-#     def previous_text(self, previous_text):
-#         self._previous_text = previous_text
-#
-#
-# class CompleterPopup(QListView):
-#     def __init__(self, parent=None):
-#         super(CompleterPopup, self).__init__(parent)
-#         style_sheet_args = iColor.style_sheet_args
-#
-#         style_sheet = """
-#         CompleterPopup{{
-#             border: 1px solid rgba{rgba_outline};
-#             background-color: rgba{rgba_gray_0};
-#             color: rgba{rgba_text};
-#         }}
-#         CompleterPopup::item:selected{{
-#             color: rgba{rgba_hover};
-#             background-color: rgba{rgba_gray_2};
-#         }}
-#         CompleterPopup::item:hover{{color: rgba{rgba_hover}}}
-#         CompleterPopup::item{{
-#             border: None ;
-#             background-color: rgba{rgba_gray_0};
-#             color: rgba{rgba_text};
-#         }}
-#
-#         """.format(**style_sheet_args)
-#
-#         self.setStyleSheet(style_sheet)
-#
-#
-# class CustomModelCompleter(QCompleter):
-#     def __init__(self, parent=None):
-#         super(CustomModelCompleter, self).__init__(parent)
-#         popup = CompleterPopup()
-#         self.setPopup(popup)
-#
-#
-# class CustomModel(QAbstractListModel):
-#     def __init__(self, parent=None, item_list=[]):
-#         super(CustomModel, self).__init__(parent)
-#
-#         self.item_list = item_list
-#
-#     def rowCount(self, parent):
-#         return len(self.item_list)
-#
-#     def data(self, index, role):
-#         if role == Qt.DisplayRole:
-#             # displays this when the custom view is shown
-#             return self.item_list[index.row()]
-#         elif role == Qt.EditRole:
-#             # returns this when an item is selected
-#             return self.item_list[index.row()]
-#
-#     @property
-#     def item_list(self):
-#         return self._item_list
-#
-#     @item_list.setter
-#     def item_list(self, item_list):
-#         self._item_list = item_list
+class CustomModel(QAbstractListModel):
+    """
+    The main item list expects two indexes
+        0: Display/Edit Role
+        1: Decoration Role (R, G, B, A)
+    """
+    def __init__(self, parent=None, item_list=[['Display Role', (64, 64, 128, 255)]]):
+        super(CustomModel, self).__init__(parent)
+        self._display_item_colors = False
+        self.item_list = item_list
 
+    def rowCount(self, parent):
+        return len(self.item_list)
+
+    def data(self, index, role):
+        if role in (Qt.DisplayRole, Qt.EditRole):
+            try:
+                return self.item_list[index.row()][0]
+            except IndexError:
+                return None
+
+        elif role == Qt.DecorationRole:
+            # preflight
+            if not self.display_item_colors: return
+
+            # get display color
+            try:
+                color = QColor(*self.item_list[index.row()][1])
+            except IndexError:
+                color = QColor(*iColor["rgba_gray_0"])
+
+            # create pixmap/icon
+            pixmap = QPixmap(getFontSize(QApplication) * 2, getFontSize(QApplication) * 0.5)
+            pixmap.fill(color)
+            icon = QIcon(pixmap)
+            return icon
+
+    @property
+    def item_list(self):
+        return self._item_list
+
+    @item_list.setter
+    def item_list(self, item_list):
+        self._item_list = sorted(item_list)
+
+    @property
+    def display_item_colors(self):
+        return self._display_item_colors
+
+    @display_item_colors.setter
+    def display_item_colors(self, display_item_colors):
+        self._display_item_colors = display_item_colors
 
 if __name__ == "__main__":
     import sys
@@ -551,7 +620,8 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     w = QWidget()
     l = QVBoxLayout(w)
-    r = AbstractListInputWidget(item_list=['a', 'b', 'c', 'aa', 'bb', 'cc'])
+    r = AbstractListInputWidget(item_list=[['a', (255,0,0, 255)], ['b'], ['c'], ['aa'], ['bb'], ['cc']])
+    r.display_item_colors = True
     e = CompleterPopup()
     l.addWidget(r)
     l.addWidget(e)

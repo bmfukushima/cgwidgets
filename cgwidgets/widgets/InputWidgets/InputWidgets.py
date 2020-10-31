@@ -21,6 +21,7 @@ from cgwidgets.widgets import (
     AbstractBooleanInputWidget,
     AbstractVLine,
     AbstractHLine,
+    AbstractComboListInputWidget,
     AbstractListInputWidget
 )
 
@@ -246,10 +247,10 @@ class BooleanInputWidget(AbstractBooleanInputWidget, iGroupInput):
         updateStyleSheet(widget.getMainWidget())
 
 
-class ListInputWidget(AbstractListInputWidget, iGroupInput):
+class ComboListInputWidget(AbstractComboListInputWidget, iGroupInput):
     TYPE = "list"
     def __init__(self, parent=None):
-        super(ListInputWidget, self).__init__(parent)
+        super(ComboListInputWidget, self).__init__(parent)
         self.setUserFinishedEditingEvent(self.updateUserInputItem)
         #self.editingFinished.connect(self.userFinishedEditing)
 
@@ -275,6 +276,10 @@ class ListInputWidget(AbstractListInputWidget, iGroupInput):
         widget.getMainWidget().populate(item_list)
         # print(widget, item)
 
+
+class ListInputWidget(AbstractListInputWidget, iGroupInput):
+    def __init__(self, parent=None):
+        super(ListInputWidget, self).__init__(parent)
 
 # TODO move these under one architecture...
 # abstract input group

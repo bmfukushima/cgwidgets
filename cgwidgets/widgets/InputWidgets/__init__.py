@@ -6,5 +6,6 @@ from .InputWidgets import GroupInputWidget as GroupInputWidget
 from .InputWidgets import FrameInputWidget
 
 from .InputWidgets import ListInputWidget as ListInputWidget
+from .InputWidgets import ComboListInputWidget as ComboListInputWidget
 # from .ColorInputWidget import ColorGradientMainWidget as ColorGradientMainWidget
 # from .ColorInputWidget import ColorInputWidget as ColorInputWidget
