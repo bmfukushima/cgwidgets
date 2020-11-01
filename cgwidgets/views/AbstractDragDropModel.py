@@ -125,7 +125,7 @@ class AbstractDragDropModel(QAbstractItemModel):
         self._root_item = root_item
 
         # setup default attrs
-        self._header_data = ['name', 'one']
+        self._header_data = ['name']
 
         #
         self._dropping = False

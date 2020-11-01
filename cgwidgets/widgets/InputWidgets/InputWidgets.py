@@ -1,3 +1,5 @@
+import os
+
 from qtpy.QtWidgets import (
     QComboBox, QLineEdit, QCompleter, QSizePolicy
 )
@@ -6,11 +8,11 @@ from qtpy.QtGui import(
     QStandardItem, QStandardItemModel
 )
 from qtpy.QtCore import (
-    QEvent, Qt, QSortFilterProxyModel
+    QEvent, Qt, QSortFilterProxyModel, Qt, QEvent, QDir
 )
 
 from qtpy.QtWidgets import (
-    QSplitter, QLabel, QFrame, QBoxLayout, QLineEdit, QWidget)
+    QSplitter, QLabel, QFrame, QBoxLayout, QLineEdit, QWidget, QLineEdit, QFileSystemModel, QApplication, QCompleter, QListView, QStyledItemDelegate)
 from qtpy.QtCore import Qt
 
 from cgwidgets.widgets import (
@@ -26,9 +28,7 @@ from cgwidgets.widgets import (
 )
 
 from cgwidgets.widgets import TansuModelViewWidget, TansuModelDelegateWidget, TansuModelItem
-
-from cgwidgets.utils import getWidgetAncestor, updateStyleSheet, attrs
-
+from cgwidgets.utils import getWidgetAncestor, updateStyleSheet, attrs, installCompleterPopup
 from cgwidgets.settings.colors import iColor
 
 
@@ -101,7 +101,8 @@ class GroupInputWidget(AbstractInputGroup):
         name = "{name}  |  {type}".format(name=name, type=widget.TYPE)
         data['value'] = ''
         # create item
-        user_input_item = self.group_box.main_widget.insertTansuWidget(index, name)
+        user_input_index = self.group_box.main_widget.insertTansuWidget(index, name)
+        user_input_item = user_input_index.internalPointer()
 
         # setup new item
         user_input_item.setArgs(data)
@@ -281,6 +282,40 @@ class ListInputWidget(AbstractListInputWidget, iGroupInput):
     def __init__(self, parent=None):
         super(ListInputWidget, self).__init__(parent)
 
+
+class FileBrowserInputWidget(AbstractListInputWidget, iGroupInput):
+    def __init__(self, parent=None):
+        super(FileBrowserInputWidget, self).__init__(parent=parent)
+
+        # setup model
+        self.model = QFileSystemModel()
+        self.model.setRootPath('/home/')
+        filters = self.model.filter()
+        self.model.setFilter(filters | QDir.Hidden)
+
+        # setup completer
+        completer = QCompleter(self.model, self)
+        self.setCompleter(completer)
+        installCompleterPopup(completer)
+
+        self.setCompleter(completer)
+        completer.setCaseSensitivity(Qt.CaseInsensitive)
+
+        self.autoCompleteList = []
+
+    def checkDirectory(self):
+        directory = str(self.text())
+        if os.path.isdir(directory):
+            self.model.setRootPath(str(self.text()))
+
+    def event(self, event, *args, **kwargs):
+        # I think this is the / key... lol
+        if (event.type() == QEvent.KeyRelease) and event.key() == 47:
+            self.checkDirectory()
+            #self.completer().popup().show()
+            self.completer().complete()
+
+        return AbstractListInputWidget.event(self, event, *args, **kwargs)
 # TODO move these under one architecture...
 # abstract input group
 # AbstractInputGroupBox

@@ -431,15 +431,22 @@ class AbstractListInputWidget(AbstractStringInputWidget):
         if not item_list:
             item_list = self.getCleanItems()
 
+        # completer = CustomModelCompleter()
+        # self.setCompleter(completer)
         # update model items
         self._model = CustomModel(item_list=item_list)
         self._model.display_item_colors = self.display_item_colors
-
         self.proxy_model = QSortFilterProxyModel()
         self.proxy_model.setSourceModel(self._model)
+
         # set models
         self.completer().setModel(self.proxy_model)
-        self.completer().popup().setModel(self.proxy_model)
+
+        # set item for popup
+        # this makes it so that the stylesheet can be attached...
+        # https://forum.qt.io/topic/26703/solved-stylize-using-css-and-editable-qcombobox-s-completions-list-view/7
+        delegate = QStyledItemDelegate()
+        self.completer().popup().setItemDelegate(delegate)
 
     def setupCustomModelCompleter(self, item_list):
         """
@@ -451,40 +458,26 @@ class AbstractListInputWidget(AbstractStringInputWidget):
         """
         # create completer/models
         completer = CustomModelCompleter()
-        self._model = CustomModel(item_list=item_list)
-        self.proxy_model = QSortFilterProxyModel()
-        self.proxy_model.setSourceModel(self._model)
-
-        # set models
-        completer.setModel(self.proxy_model)
-        completer.popup().setModel(self.proxy_model)
-
-        # set item for popup
-        # this makes it so that the stylesheet can be attached...
-        # https://forum.qt.io/topic/26703/solved-stylize-using-css-and-editable-qcombobox-s-completions-list-view/7
-        delegate = QStyledItemDelegate()
-        completer.popup().setItemDelegate(delegate)
-
-        # set completer
         self.setCompleter(completer)
+        self.proxy_model = QSortFilterProxyModel()
+        self._updateModel(item_list)
 
     def filterCompletionResults(self):
         """
         Filter the current proxy model based off of the text in the input string
         """
         # preflight
-        if self.filter_results: return
+        if not self.filter_results: return
 
         # filter results
-        pattern = QRegExp(
-            str(self.text()),
-            Qt.CaseInsensitive,
-            QRegExp.FixedString
-        )
-        self.proxy_model.setFilterRegExp(pattern)
+        if self.text() != '':
+            self.completer().setCompletionMode(QCompleter.PopupCompletion)
+
+        else:
+            self.completer().setCompletionMode(QCompleter.UnfilteredPopupCompletion)
 
     """ EVENTS """
-    def mouseReleaseEvent(self, event):
+    def mouseReleaseEvent(self, event, *args, **kwargs):
         # update model (if enabled)
         if self.dynamic_update:
             self._updateModel()
@@ -492,16 +485,53 @@ class AbstractListInputWidget(AbstractStringInputWidget):
         # update the current proxy model based off the current text
         self.filterCompletionResults()
 
-        # show the pop completer
-        view = self.completer().popup()
-        view.setMinimumWidth(self.width())
-        view.show()
-        pos = getBottomLeftPos(self)
-        view.move(pos)
+        # show completer
+        self.completer().complete()
 
-        delegate = QStyledItemDelegate()
-        view.setItemDelegate(delegate)
-        return QLineEdit.mouseReleaseEvent(self, event)
+        return QLineEdit.mouseReleaseEvent(self, event, *args, **kwargs)
+
+    """ UTILS """
+    def next_completion(self):
+        row = self.completer().currentRow()
+
+        # if does not exist reset
+        if not self.completer().setCurrentRow(row + 1):
+            self.completer().setCurrentRow(0)
+
+        # if initializing
+        if self.completer().popup().currentIndex().row() == -1:
+            self.completer().setCurrentRow(0)
+
+        index = self.completer().currentIndex()
+        self.completer().popup().setCurrentIndex(index)
+
+    def previous_completion(self):
+        row = self.completer().currentRow()
+        numRows = self.completer().completionCount()
+
+        # if wrapping
+        if not self.completer().setCurrentRow(row - 1):
+            self.completer().setCurrentRow(numRows - 1)
+        # if initializing
+        if self.completer().popup().currentIndex().row() == -1:
+            self.completer().setCurrentRow(numRows - 1)
+
+        index = self.completer().currentIndex()
+        self.completer().popup().setCurrentIndex(index)
+
+    def event(self, event, *args, **kwargs):
+        if (event.type() == QEvent.KeyPress) and (event.key() == Qt.Key_Tab):
+            if self.text() == '':
+                self.completer().complete()
+            else:
+                self.next_completion()
+            return True
+
+        if (event.type() == QEvent.KeyPress) and (event.key() == 16777218):
+            self.previous_completion()
+            return True
+
+        return AbstractStringInputWidget.event(self, event, *args, **kwargs)
 
     """ PROPERTIES """
     @property
@@ -558,6 +588,14 @@ class CustomModelCompleter(QCompleter):
         popup = CompleterPopup()
         self.setPopup(popup)
 
+    # def activated(self, text):
+    #     print("activated === ", text)
+    #     return QCompleter.activated(self, text)
+    #
+    # def splitPath(self, path):
+    #     print("splitPath === ", path)
+    #     return QCompleter.splitPath(self, 'yolo')
+
 
 class CustomModel(QAbstractListModel):
     """
@@ -611,6 +649,7 @@ class CustomModel(QAbstractListModel):
     @display_item_colors.setter
     def display_item_colors(self, display_item_colors):
         self._display_item_colors = display_item_colors
+
 
 if __name__ == "__main__":
     import sys

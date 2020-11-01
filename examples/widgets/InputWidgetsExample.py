@@ -42,10 +42,10 @@ if __name__ == "__main__":
     gw = GroupInputWidget(parent=None, title='cool stuff')
 
     # add user inputs
-    gw.insertInputWidget(0, FloatInputWidget, 'Float', test)
-    gw.insertInputWidget(0, IntInputWidget, 'Int', test)
-    gw.insertInputWidget(0, BooleanInputWidget, 'Boolean', test)
-    gw.insertInputWidget(0, StringInputWidget, 'String', test)
+    gw.insertInputWidget(0, FloatInputWidget, 'Float', test, data={'name':'Float'})
+    gw.insertInputWidget(0, IntInputWidget, 'Int', test, data={'name':'Int'})
+    gw.insertInputWidget(0, BooleanInputWidget, 'Boolean', test, data={'name':'Boolean'})
+    gw.insertInputWidget(0, StringInputWidget, 'String', test, data={'name':'String'})
     gw.insertInputWidget(0, ListInputWidget, 'List', test, data={'items_list':['a','b','c','d']})
 
     gw.display_background = False

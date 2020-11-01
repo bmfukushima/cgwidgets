@@ -916,14 +916,14 @@ class TansuHeaderTreeView(QTreeView, TansuHeaderAbstractView):
 
     def startDrag(self, event):
         # todo setup drag/drop icon transparency
-        print(event)
-        from qtpy.QtCore import QMimeData
-        from  qtpy.QtGui import QDrag
-        mimeData = QMimeData()
-
-        drag = QDrag(self)
-        drag.setMimeData(mimeData)
-        drag.setHotSpot(event.pos() - self.rect().topLeft())
+        # print(event)
+        # from qtpy.QtCore import QMimeData
+        # from  qtpy.QtGui import QDrag
+        # mimeData = QMimeData()
+        #
+        # drag = QDrag(self)
+        # drag.setMimeData(mimeData)
+        # drag.setHotSpot(event.pos() - self.rect().topLeft())
 
         #dropAction = drag.exec_(Qt.MoveAction)
         return QTreeView.startDrag(self, event)
