@@ -89,9 +89,6 @@ if __name__ == "__main__":
     u_boolean_input_widget.setUserFinishedEditingEvent(test)
     u_string_input_widget.setUserFinishedEditingEvent(test)
     u_list_input_widget.setUserFinishedEditingEvent(test)
-    # w = ListInputWidget()
-    # w.populate(['a','b','c','d'])
-    #w.setInputBaseClass(ListInputWidget)
 
     w.resize(500, 500)
     w.show()

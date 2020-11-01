@@ -101,7 +101,7 @@ class GroupInputWidget(AbstractInputGroup):
         name = "{name}  |  {type}".format(name=name, type=widget.TYPE)
         data['value'] = ''
         # create item
-        user_input_index = self.group_box.main_widget.insertTansuWidget(index, name)
+        user_input_index = self.group_box.main_widget.insertTansuWidget(index, column_data={'name': name})
         user_input_item = user_input_index.internalPointer()
 
         # setup new item
@@ -183,7 +183,7 @@ class iGroupInput(object):
         # add user input event
 
     @staticmethod
-    def updateDynamicWidget(widget, item):
+    def updateDynamicWidget(parent, widget, item):
         """
         When the dynamic widget is created.  This will set
         the display text to the user
@@ -229,7 +229,7 @@ class BooleanInputWidget(AbstractBooleanInputWidget, iGroupInput):
             pass
 
     @staticmethod
-    def updateDynamicWidget(widget, item):
+    def updateDynamicWidget(parent, widget, item):
         """
         When the dynamic widget is created.  This will set
         the display text to the user
