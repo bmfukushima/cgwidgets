@@ -13,6 +13,11 @@ class AbstractDragDropModelItem(object):
             selected
         dynamic_widget_base_class (QWidget): Widget to be shown when this item is
             selected if the Tansu is in DYNAMIC mode.
+        column_data (dict): Dictionary of key pair values relating to the column name,
+            and the value for the item in that column.  Special column names are
+                name
+                value
+                items_list
     """
     def __init__(self, parent=None):
         #self._data = data

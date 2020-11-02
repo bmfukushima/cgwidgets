@@ -49,21 +49,21 @@ class UserInputItem(TansuModelItem):
     def userInputEvent(self, value):
         self.__userInputEvent(self, value)
 
-    """ args """
-    def setArgs(self, args):
-        self._args = args
-
-    def getArgs(self):
-        return self._args
-
-    def getArg(self, arg):
-        return self.getArgs()[arg]
-
-    def addArg(self, arg, value):
-        self.getArgs()[arg] = value
-
-    def removeArg(self, arg):
-        del self.getArgs()[arg]
+    # """ args """
+    # def setArgs(self, args):
+    #     self._args = args
+    #
+    # def getArgs(self):
+    #     return self._args
+    #
+    # def getArg(self, arg):
+    #     return self.getArgs()[arg]
+    #
+    # def addArg(self, arg, value):
+    #     self.getArgs()[arg] = value
+    #
+    # def removeArg(self, arg):
+    #     del self.getArgs()[arg]
 
 
 class GroupInputWidget(AbstractInputGroup):
@@ -85,7 +85,7 @@ class GroupInputWidget(AbstractInputGroup):
         self.group_box.main_widget = GroupInputTansuWidget(self)
         self.group_box.layout().addWidget(self.group_box.main_widget)
 
-    def insertInputWidget(self, index, widget, name, userInputEvent, data={}):
+    def insertInputWidget(self, index, widget, name, userInputEvent, data=None):
         """
         Inserts a widget into the Main Widget
 
@@ -98,14 +98,19 @@ class GroupInputWidget(AbstractInputGroup):
             have this automatically overwritten to false in their constructor
         """
         # setup attrs
+        if not data:
+            data = {}
         name = "{name}  |  {type}".format(name=name, type=widget.TYPE)
-        data['value'] = ''
+        if not 'name' in data:
+            data['name'] = name
+        if not 'value' in data:
+            data['value'] = ''
+
         # create item
-        user_input_index = self.group_box.main_widget.insertTansuWidget(index, column_data={'name': name})
+        user_input_index = self.group_box.main_widget.insertTansuWidget(index, column_data=data)
         user_input_item = user_input_index.internalPointer()
 
         # setup new item
-        user_input_item.setArgs(data)
         user_input_item.setDynamicWidgetBaseClass(widget)
         user_input_item.setDynamicUpdateFunction(widget.updateDynamicWidget)
         user_input_item.setUserInputEvent(userInputEvent)
@@ -175,7 +180,7 @@ class iGroupInput(object):
         """
         try:
             widget = getWidgetAncestor(self, TansuModelDelegateWidget)
-            widget.item().setValue(self.getInput())
+            widget.item().columnData()['value'] = self.getInput()
             widget.item().userInputEvent(self.getInput())
         except AttributeError:
             pass
@@ -188,7 +193,8 @@ class iGroupInput(object):
         When the dynamic widget is created.  This will set
         the display text to the user
         """
-        value = item.getArg('value')
+        #value = item.getArg('value')
+        value = item.columnData()['value']
         widget.getMainWidget().setText(str(value))
 
 
@@ -220,7 +226,7 @@ class BooleanInputWidget(AbstractBooleanInputWidget, iGroupInput):
         """
         try:
             widget = getWidgetAncestor(self, TansuModelDelegateWidget)
-            widget.item().setValue(self.is_clicked)
+            widget.item().columnData()['value'] = self.is_clicked
             self.is_clicked = self.is_clicked
 
             # add user input event
@@ -239,7 +245,7 @@ class BooleanInputWidget(AbstractBooleanInputWidget, iGroupInput):
         """
         # get value
         try:
-            value = item.getArg['value']
+            value = item.columnData()['value']
         except:
             value = False
 
@@ -292,20 +298,22 @@ class ListInputWidget(AbstractListInputWidget, iGroupInput):
     def updateUserInputItem(self, *args):
         try:
             widget = getWidgetAncestor(self, TansuModelDelegateWidget)
-            widget.item().setValue(self.currentText())
+            widget.item().columnData()['value'] = self.text()
 
             # add user input event
-            widget.item().userInputEvent(self.currentText())
+            widget.item().userInputEvent(self.text())
 
         except AttributeError:
-
             pass
 
     @staticmethod
     def updateDynamicWidget(parent, widget, item):
-        item_list = item.getArg('items_list')
+        item_list = item.columnData()['items_list']
+        value = item.columnData()['value']
         widget.getMainWidget().populate(item_list)
+        widget.getMainWidget().setText(value)
         # print(widget, item)
+
 
 class FileBrowserInputWidget(AbstractListInputWidget, iGroupInput):
     def __init__(self, parent=None):
@@ -517,9 +525,10 @@ if __name__ == "__main__":
         ['aa', (255, 0, 0, 255)], ['bb', (0, 255, 0, 255)], ['cc', (0, 0, 255, 255)], ['dd'], ['ee'],
         ['aba'], ['bcb'], ['cdc'], ['ded'], ['efe']
     ]
-    l2 = [['a', (255,0,0, 255)], ['b'], ['c'], ['aa'], ['bb'], ['cc']]
+    l2 = [['a', (255, 0, 0, 255)], ['b'], ['c'], ['aa'], ['bb'], ['cc']]
 
     def test(widget, value):
+        print('setting value to... ', value)
         print(widget, value)
         #widget.setText(str(value))
 
@@ -545,6 +554,7 @@ if __name__ == "__main__":
     float_input_widget = FloatInputWidget()
     float_input_widget.setUseLadder(True)
     int_input_widget = IntInputWidget()
+    int_input_widget.setUseLadder(True, value_list=[1, 2, 3, 4, 5])
     boolean_input_widget = BooleanInputWidget()
     string_input_widget = StringInputWidget()
     list_input_widget = ListInputWidget(item_list=list_of_crap)
@@ -561,10 +571,34 @@ if __name__ == "__main__":
     string_input_widget.setUserFinishedEditingEvent(test)
     list_input_widget.setUserFinishedEditingEvent(test)
 
-
     """ Label widgets """
+    horizontal_label_widget = QGroupBox()
+    horizontal_label_widget.setTitle("Frame Widgets (Horizontal)")
+    horizontal_label_widget_layout = QVBoxLayout(horizontal_label_widget)
+
+    u_float_input_widget = FrameInputWidget(name="float", widget_type=FloatInputWidget)
+    u_int_input_widget = FrameInputWidget(name="int", widget_type=IntInputWidget)
+    u_boolean_input_widget = FrameInputWidget(name="bool", widget_type=BooleanInputWidget)
+    u_string_input_widget = FrameInputWidget(name='str', widget_type=StringInputWidget)
+    u_list_input_widget = FrameInputWidget(name='list', widget_type=ListInputWidget)
+    u_list_input_widget.getInputWidget().populate(list_of_crap)
+    u_list_input_widget.getInputWidget().display_item_colors = True
+
+    horizontal_label_widget_layout.addWidget(u_float_input_widget)
+    horizontal_label_widget_layout.addWidget(u_int_input_widget)
+    horizontal_label_widget_layout.addWidget(u_boolean_input_widget)
+    horizontal_label_widget_layout.addWidget(u_string_input_widget)
+    horizontal_label_widget_layout.addWidget(u_list_input_widget)
+
+    u_float_input_widget.setUserFinishedEditingEvent(test)
+    u_int_input_widget.setUserFinishedEditingEvent(test)
+    u_boolean_input_widget.setUserFinishedEditingEvent(test)
+    u_string_input_widget.setUserFinishedEditingEvent(test)
+    u_list_input_widget.setUserFinishedEditingEvent(test)
+
+    """ Label widgets ( Vertical )"""
     vertical_label_widget = QGroupBox()
-    vertical_label_widget.setTitle("Frame Widgets (Horizontal)")
+    vertical_label_widget.setTitle("Frame Widgets ( Vertical )")
     vertical_label_widget_layout = QVBoxLayout(vertical_label_widget)
 
     u_float_input_widget = FrameInputWidget(name="float", widget_type=FloatInputWidget)
@@ -574,6 +608,12 @@ if __name__ == "__main__":
     u_list_input_widget = FrameInputWidget(name='list', widget_type=ListInputWidget)
     u_list_input_widget.getInputWidget().populate(list_of_crap)
     u_list_input_widget.getInputWidget().display_item_colors = True
+
+    u_float_input_widget.setDirection(Qt.Vertical)
+    u_int_input_widget.setDirection(Qt.Vertical)
+    u_boolean_input_widget.setDirection(Qt.Vertical)
+    u_string_input_widget.setDirection(Qt.Vertical)
+    u_list_input_widget.setDirection(Qt.Vertical)
 
     vertical_label_widget_layout.addWidget(u_float_input_widget)
     vertical_label_widget_layout.addWidget(u_int_input_widget)
@@ -587,14 +627,6 @@ if __name__ == "__main__":
     u_string_input_widget.setUserFinishedEditingEvent(test)
     u_list_input_widget.setUserFinishedEditingEvent(test)
 
-    """ FRAME INPUT WIDGETS"""
-    q = FrameInputWidget(name="Float", widget_type=FloatInputWidget)
-    q.setDirection(Qt.Vertical)
-    e = FrameInputWidget(name="List", widget_type=ListInputWidget)
-    e.getInputWidget().populate(list_of_crap)
-    e.setDirection(Qt.Vertical)
-    t = FrameInputWidget(name="Bool", widget_type=BooleanInputWidget)
-    t.setDirection(Qt.Vertical)
     # l.addWidget(q)
     # l.addWidget(t)
     # l.addWidget(e)
@@ -607,7 +639,8 @@ if __name__ == "__main__":
     main_layout = QHBoxLayout(main_widget)
     main_layout.addLayout(group_widget_layout)
     main_layout.addWidget(normal_widget)
-    main_layout.addWidget(label_widget)
+    main_layout.addWidget(vertical_label_widget)
+    main_layout.addWidget(horizontal_label_widget)
 
     main_widget.resize(500, 500)
     main_widget.show()
