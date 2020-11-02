@@ -1,15 +1,7 @@
+import sys
 from qtpy.QtWidgets import (
-    QComboBox, QLineEdit, QCompleter, QSizePolicy
-)
-
-from qtpy.QtGui import(
-    QStandardItem, QStandardItemModel
-)
-from qtpy.QtCore import (
-    QEvent, Qt, QSortFilterProxyModel
-)
-
-from qtpy.QtWidgets import QSplitter, QLabel, QFrame, QBoxLayout, QLineEdit
+    QApplication, QWidget, QVBoxLayout, QHBoxLayout, QGroupBox)
+from qtpy.QtGui import QCursor
 from qtpy.QtCore import Qt
 
 from cgwidgets.widgets import (
@@ -22,116 +14,124 @@ from cgwidgets.widgets import (
     FrameInputWidget
 )
 
+app = QApplication(sys.argv)
 
-if __name__ == "__main__":
-    import sys
-    from qtpy.QtWidgets import (
-        QApplication, QWidget, QVBoxLayout, QHBoxLayout, QGroupBox)
-    from qtpy.QtGui import QCursor
-    app = QApplication(sys.argv)
+list_of_crap = [
+    ['a', (0, 0, 0, 255)], ['b', (0, 0, 0, 255)], ['c', (0, 0, 0, 255)], ['d', (0, 0, 0, 255)], ['e', (0, 0, 0, 255)],
+    ['aa', (255, 0, 0, 255)], ['bb', (0, 255, 0, 255)], ['cc', (0, 0, 255, 255)], ['dd'], ['ee'],
+    ['aba'], ['bcb'], ['cdc'], ['ded'], ['efe']
+]
+l2 = [['a', (255, 0, 0, 255)], ['b'], ['c'], ['aa'], ['bb'], ['cc']]
 
-    # testwidget = QLabel()
-    # testwidget.setText('init')
-    # l.addWidget(testwidget)
-    list_of_crap = [
-        ['a', (0, 0, 0, 255)], ['b', (0, 0, 0, 255)], ['c', (0, 0, 0, 255)], ['d', (0, 0, 0, 255)], ['e', (0, 0, 0, 255)],
-        ['aa', (255, 0, 0, 255)], ['bb', (0, 255, 0, 255)], ['cc', (0, 0, 255, 255)], ['dd'], ['ee'],
-        ['aba'], ['bcb'], ['cdc'], ['ded'], ['efe']
-    ]
-    l2 = [['a', (255, 0, 0, 255)], ['b'], ['c'], ['aa'], ['bb'], ['cc']]
+def createGroupBox(title):
+    group_box = QGroupBox()
+    group_box.setTitle(title)
+    group_box_layout = QVBoxLayout(group_box)
+    return group_box
 
-    def test(widget, value):
-        print(widget, value)
-        #widget.setText(str(value))
+def test(widget, value):
+    print('setting value to... ', value)
+    print(widget, value)
+    #widget.setText(str(value))
 
-    """ group insert """
-    group_widget_layout = QVBoxLayout()
-    gw = GroupInputWidget(parent=None, title='cool stuff')
+""" group insert """
+group_widget_layout = QVBoxLayout()
+gw = GroupInputWidget(parent=None, title='cool stuff')
 
-    # add user inputs
-    gw.insertInputWidget(0, FloatInputWidget, 'Float', test)
-    gw.insertInputWidget(0, IntInputWidget, 'Int', test)
-    gw.insertInputWidget(0, BooleanInputWidget, 'Boolean', test)
-    gw.insertInputWidget(0, StringInputWidget, 'String', test)
-    gw.insertInputWidget(0, ListInputWidget, 'List', test, data={'items_list':list_of_crap})
+# add user inputs
+gw.insertInputWidget(0, FloatInputWidget, 'Float', test)
+gw.insertInputWidget(0, IntInputWidget, 'Int', test)
+gw.insertInputWidget(0, BooleanInputWidget, 'Boolean', test)
+gw.insertInputWidget(0, StringInputWidget, 'String', test)
+gw.insertInputWidget(0, ListInputWidget, 'List', test, data={'items_list':list_of_crap})
 
-    gw.display_background = False
-    group_widget_layout.addWidget(gw)
+gw.display_background = False
+group_widget_layout.addWidget(gw)
 
-    """ normal widgets """
-    normal_widget = QGroupBox()
-    normal_widget.setTitle("Normal Widgets")
-    normal_widget_layout = QVBoxLayout(normal_widget)
+""" normal widgets """
+normal_widget = createGroupBox("Normal Widgets")
 
-    float_input_widget = FloatInputWidget()
-    float_input_widget.setUseLadder(True)
-    int_input_widget = IntInputWidget()
-    boolean_input_widget = BooleanInputWidget()
-    string_input_widget = StringInputWidget()
-    list_input_widget = ListInputWidget(item_list=list_of_crap)
+float_input_widget = FloatInputWidget()
+float_input_widget.setUseLadder(True)
+int_input_widget = IntInputWidget()
+int_input_widget.setUseLadder(True, value_list=[1, 2, 3, 4, 5])
+boolean_input_widget = BooleanInputWidget()
+string_input_widget = StringInputWidget()
+list_input_widget = ListInputWidget(item_list=list_of_crap)
 
-    normal_widget_layout.addWidget(float_input_widget)
-    normal_widget_layout.addWidget(int_input_widget)
-    normal_widget_layout.addWidget(boolean_input_widget)
-    normal_widget_layout.addWidget(string_input_widget)
-    normal_widget_layout.addWidget(list_input_widget)
+normal_widget.layout().addWidget(float_input_widget)
+normal_widget.layout().addWidget(int_input_widget)
+normal_widget.layout().addWidget(boolean_input_widget)
+normal_widget.layout().addWidget(string_input_widget)
+normal_widget.layout().addWidget(list_input_widget)
 
-    float_input_widget.setUserFinishedEditingEvent(test)
-    int_input_widget.setUserFinishedEditingEvent(test)
-    boolean_input_widget.setUserFinishedEditingEvent(test)
-    string_input_widget.setUserFinishedEditingEvent(test)
-    list_input_widget.setUserFinishedEditingEvent(test)
+float_input_widget.setUserFinishedEditingEvent(test)
+int_input_widget.setUserFinishedEditingEvent(test)
+boolean_input_widget.setUserFinishedEditingEvent(test)
+string_input_widget.setUserFinishedEditingEvent(test)
+list_input_widget.setUserFinishedEditingEvent(test)
 
-    """ Label widgets """
-    horizontal_label_widget = QGroupBox()
-    horizontal_label_widget.setTitle("Frame Widgets (Horizontal)")
-    horizontal_label_widget_layout = QVBoxLayout(horizontal_label_widget)
+""" Labeled Widgets """
+def createLabeledWidgets(title, direction=Qt.Horizontal):
+    """
+    Creates a GroupBox with label widgets inside of it
 
-    u_float_input_widget = FrameInputWidget(name="float", widget_type=FloatInputWidget)
-    u_int_input_widget = FrameInputWidget(name="int", widget_type=IntInputWidget)
-    u_boolean_input_widget = FrameInputWidget(name="bool", widget_type=BooleanInputWidget)
-    u_string_input_widget = FrameInputWidget(name='str', widget_type=StringInputWidget)
-    u_list_input_widget = FrameInputWidget(name='list', widget_type=ListInputWidget)
-    u_list_input_widget.getInputWidget().populate(list_of_crap)
-    u_list_input_widget.getInputWidget().display_item_colors = True
+    Args:
+        direction (Qt.DIRECTION): what direction the input widgets should be
+            laid out in
 
-    horizontal_label_widget_layout.addWidget(u_float_input_widget)
-    horizontal_label_widget_layout.addWidget(u_int_input_widget)
-    horizontal_label_widget_layout.addWidget(u_boolean_input_widget)
-    horizontal_label_widget_layout.addWidget(u_string_input_widget)
-    horizontal_label_widget_layout.addWidget(u_list_input_widget)
+    Returns (QGroupBox)
 
-    u_float_input_widget.setUserFinishedEditingEvent(test)
-    u_int_input_widget.setUserFinishedEditingEvent(test)
-    u_boolean_input_widget.setUserFinishedEditingEvent(test)
-    u_string_input_widget.setUserFinishedEditingEvent(test)
-    u_list_input_widget.setUserFinishedEditingEvent(test)
+    Widgets:
+        GroupBox
+            | -- VBox
+                    | -* FrameInputWidget
+    """
+    label_widgets = {
+        "float": FloatInputWidget,
+        "int": IntInputWidget,
+        "bool": BooleanInputWidget,
+        "str": StringInputWidget,
+        "list": ListInputWidget
+    }
 
-    """ FRAME INPUT WIDGETS"""
-    q = FrameInputWidget(name="Float", widget_type=FloatInputWidget)
-    q.setDirection(Qt.Vertical)
-    e = FrameInputWidget(name="List", widget_type=ListInputWidget)
-    e.getInputWidget().populate(list_of_crap)
-    e.setDirection(Qt.Vertical)
-    t = FrameInputWidget(name="Bool", widget_type=BooleanInputWidget)
-    t.setDirection(Qt.Vertical)
-    # l.addWidget(q)
-    # l.addWidget(t)
-    # l.addWidget(e)
-    # main_widget = ListInputWidget()
-    # main_widget.populate(['a','b','c','d'])
-    #main_widget.setInputBaseClass(ListInputWidget)
+    """ Label widgets"""
+    group_label_widget = createGroupBox(title)
 
-    """ Main Widget"""
-    main_widget = QWidget()
-    main_layout = QHBoxLayout(main_widget)
-    main_layout.addLayout(group_widget_layout)
-    main_layout.addWidget(normal_widget)
-    main_layout.addWidget(horizontal_label_widget)
+    for arg in label_widgets:
+        # create widget
+        widget_type = label_widgets[arg]
+        input_widget = FrameInputWidget(name=arg, widget_type=widget_type)
 
-    main_widget.resize(500, 500)
-    main_widget.show()
-    main_widget.move(QCursor.pos())
+        # set widget orientation
+        input_widget.setDirection(direction)
 
-    sys.exit(app.exec_())
+        # add to group layout
+        group_label_widget.layout().addWidget(input_widget)
 
+        # connect user input
+        input_widget.setUserFinishedEditingEvent(test)
+
+        # list override
+        if arg == "list":
+            input_widget.getInputWidget().populate(list_of_crap)
+            input_widget.getInputWidget().display_item_colors = True
+
+    return group_label_widget
+
+horizontal_label_widget = createLabeledWidgets("Frame Widgets ( Horizontal )", Qt.Horizontal)
+vertical_label_widget = createLabeledWidgets("Frame Widgets ( Vertical )", Qt.Vertical)
+
+""" Main Widget"""
+main_widget = QWidget()
+main_layout = QHBoxLayout(main_widget)
+main_layout.addLayout(group_widget_layout)
+main_layout.addWidget(normal_widget)
+main_layout.addWidget(vertical_label_widget)
+main_layout.addWidget(horizontal_label_widget)
+
+main_widget.resize(500, 500)
+main_widget.show()
+main_widget.move(QCursor.pos())
+
+sys.exit(app.exec_())

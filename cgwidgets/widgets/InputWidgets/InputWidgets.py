@@ -627,13 +627,6 @@ if __name__ == "__main__":
     u_string_input_widget.setUserFinishedEditingEvent(test)
     u_list_input_widget.setUserFinishedEditingEvent(test)
 
-    # l.addWidget(q)
-    # l.addWidget(t)
-    # l.addWidget(e)
-    # main_widget = ListInputWidget()
-    # main_widget.populate(['a','b','c','d'])
-    #main_widget.setInputBaseClass(ListInputWidget)
-
     """ Main Widget"""
     main_widget = QWidget()
     main_layout = QHBoxLayout(main_widget)
