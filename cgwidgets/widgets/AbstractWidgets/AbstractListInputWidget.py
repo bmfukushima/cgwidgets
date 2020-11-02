@@ -358,6 +358,7 @@ class AbstractListInputWidget(AbstractStringInputWidget):
             model with.  Not sure if I still need this...
     """
     TYPE = 'list'
+
     def __init__(self, parent=None, item_list=[]):
         super(AbstractListInputWidget, self).__init__(parent)
         # setup default attrs
@@ -563,8 +564,8 @@ class AbstractListInputWidget(AbstractStringInputWidget):
         return self._item_list
 
     def setItemList(self, item_list):
-        if self.previous_text == '':
-            item_list.insert(0, '')
+        # if self.previous_text == '':
+        #     item_list.insert(0, '')
         self._item_list = item_list
 
     @property
@@ -640,7 +641,7 @@ class CustomModel(QAbstractListModel):
 
     @item_list.setter
     def item_list(self, item_list):
-        self._item_list = sorted(item_list)
+        self._item_list = item_list
 
     @property
     def display_item_colors(self):
