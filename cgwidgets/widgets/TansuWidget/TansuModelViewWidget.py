@@ -13,6 +13,7 @@ from cgwidgets.widgets import AbstractInputGroup
 from cgwidgets.widgets.TansuWidget import (
     TansuBaseWidget, TansuModel, iTansuDynamicWidget
 )
+from cgwidgets.views import AbstractDragDropModel, AbstractDragDropModelDelegate
 
 
 class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
@@ -644,6 +645,10 @@ class TansuModelDelegateWidget(AbstractInputGroup):
 class TansuHeaderAbstractView(object):
     """ ABSTRACT ITEM VIEW STUFFF"""
 
+    def setupCustomDelegate(self):
+        delegate = AbstractDragDropModelDelegate(self)
+        self.setItemDelegate(delegate)
+
     def createStyleSheet(self, header_position, style_sheet_args):
         pass
 
@@ -800,6 +805,7 @@ class TansuHeaderListView(QListView, TansuHeaderAbstractView):
     def __init__(self, parent=None):
         super(TansuHeaderListView, self).__init__(parent)
         self.setStyle(TansuHeaderViewDropIndicatorStyle())
+        self.setupCustomDelegate()
         self.setEditTriggers(QAbstractItemView.DoubleClicked)
 
     def createStyleSheet(self, header_position, style_sheet_args):
@@ -869,6 +875,8 @@ class TansuHeaderTreeView(QTreeView, TansuHeaderAbstractView):
     def __init__(self, parent=None):
         super(TansuHeaderTreeView, self).__init__(parent)
         self.setStyle(TansuHeaderViewDropIndicatorStyle())
+        self.setupCustomDelegate()
+
     """ """
     def setHeaderData(self, _header_data):
         """
@@ -996,13 +1004,13 @@ if __name__ == "__main__":
     #w.setHeaderData(['name', 'two', 'test'])
     view = TansuHeaderTreeView()
 
-    #w.model().setHeaderData(['one', 'two', 'three'])
+
     w.setHeaderWidget(view)
     w.setHeaderPosition(attrs.WEST)
     w.setMultiSelect(True)
     w.setMultiSelectDirection(Qt.Vertical)
     w.setHeaderDragDropMode(QAbstractItemView.InternalMove)
-    #view.setHeaderData(['name', 'two', 'test'])
+    view.setHeaderData(['name', 'two', 'test'])
     #view.setHeaderData(['one', 'two'])
 
     #
@@ -1013,7 +1021,7 @@ if __name__ == "__main__":
     # w.setHeaderPosition(TansuModelViewWidget.NORTH)
 
     dw = TabTansuDynamicWidgetExample
-    view.setHeaderData(['name', 'one', 'two'])
+    #view.setHeaderData(['name', 'one', 'two'])
     # asdf = test(w)
     # main_splitter = TansuBaseWidget()
     # main_splitter.handle_length = 100

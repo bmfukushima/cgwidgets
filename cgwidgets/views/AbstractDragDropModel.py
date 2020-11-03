@@ -2,7 +2,10 @@
 
 
 from qtpy.QtCore import (
-    Qt, QModelIndex, QAbstractItemModel, QSize, QMimeData, QByteArray)
+    Qt, QModelIndex, QAbstractItemModel, QSize, QMimeData, QByteArray, QVariant)
+from qtpy.QtWidgets import QItemDelegate, QLineEdit, QStyledItemDelegate
+
+from cgwidgets.widgets.AbstractWidgets import AbstractStringInputWidget
 
 
 class AbstractDragDropModelItem(object):
@@ -214,8 +217,8 @@ class AbstractDragDropModel(QAbstractItemModel):
         if role == Qt.SizeHintRole:
             return QSize(self.item_width, self.item_height)
 
-        if role == Qt.BackgroundRole:
-            return None
+        # if role == Qt.BackgroundRole:
+        #     return None
 
     def setData(self, index, value, role=Qt.EditRole):
         """
@@ -498,11 +501,76 @@ class AbstractDragDropModel(QAbstractItemModel):
         pass
 
 
+class AbstractDragDropModelDelegate(QStyledItemDelegate):
+    def __init__(self, parent=None):
+        super(AbstractDragDropModelDelegate, self).__init__(parent)
+
+    def sizeHint(self, *args, **kwargs):
+        return QStyledItemDelegate.sizeHint(self, *args, **kwargs)
+
+    def updateEditorGeometry(self, editor, option, index):
+        """
+        updates the delegates geometry with the options rect
+        for some reason this wont work if you manually do a
+        setGeometry(0,0,100,100), but it works when plugging in
+        a rect /shrug
+        """
+        rect = option.rect
+        width = self.parent().geometry().width()
+        rect.setWidth(width)
+        rect.setX(0)
+        editor.setGeometry(option.rect)
+
+    def createEditor(self, parent, option, index):
+        delegate_widget = AbstractStringInputWidget(parent)
+        # delegate_widget.setStyleSheet("background-color: rgba(255,0,255,255)")
+        return delegate_widget
+
+        # if index.column() == 0:
+        #     delegate_widget = AbstractStringInputWidget(parent)
+        #
+        #     #delegate_widget.setStyleSheet("background-color: rgba(255,0,255,255)")
+        #     return delegate_widget
+        # else:
+        #     return QItemDelegate.createEditor(self, parent, option, index)
+
+    def setEditorData(self, editor, index):
+        text = index.model().data(index, Qt.DisplayRole)
+        #editor.setText(text)
+        return QStyledItemDelegate.setEditorData(self, editor, index)
+
+    def setModelData(self, editor, model, index):
+        '''
+        # swap out 'v' for current value
+        '''
+        # =======================================================================
+        # get data
+        # =======================================================================
+        new_value = editor.text()
+        if new_value == '':
+            return
+        item = index.internalPointer()
+        arg = model._header_data[index.column()]
+        item.columnData()[arg] = editor.text()
+        #model.setData(index, QVariant(new_value))
+        #model.aov_list[index.row()] = new_value
+        '''
+        data_type = self.getDataType(index)
+        main_table = self.parent()
+        old_value = main_table.getCurrentValue()
+        value = main_table.evaluateCell(old_value, new_value, data_type=data_type)
+        model.setData(index, QtCore.QVariant(value))
+        '''
+
+
 # example drop indicator
 from qtpy.QtWidgets import QTreeView, QProxyStyle, QStyleOption
 class TreeView(QTreeView):
     def __init__(self, parent=None):
         super(TreeView, self).__init__(parent)
+        delegate = AbstractDragDropModelDelegate(self)
+        self.setItemDelegate(delegate)
+        self.setStyleSheet('QTreeView::item{background-color: rgba(0,255,0,255)}')
 
 class TreeViewDropIndicator(QProxyStyle):
     def drawPrimitive(self, element, option, painter, widget=None):
@@ -565,10 +633,11 @@ if __name__ == '__main__':
         model.insertNewIndex(x, str('node%s'%x))
 
     model.setIsRootDropEnabled(False)
-    tree_view = QTreeView()
+    tree_view = TreeView()
     tree_view.setStyle(TreeViewDropIndicator())
 
     tree_view.move(QCursor.pos())
+    #tree_view.setStyleSheet()
     tree_view.setDragEnabled(True)
     tree_view.setDragDropOverwriteMode(False)
     tree_view.setSelectionMode(QAbstractItemView.MultiSelection)
@@ -586,7 +655,9 @@ if __name__ == '__main__':
 
     # table_view = QTableView()
     # table_view.show()
+
     tree_view.show()
+
     #list_view.show()
     # table_view.setModel(model)
 
