@@ -160,6 +160,7 @@ class AbstractDragDropModel(QAbstractItemModel):
             root_item = AbstractDragDropModelItem()
             root_item.setColumnData({"name":"root"})
         self._root_item = root_item
+        self._root_drop_enabled = True
 
         # setup default attrs
         self._header_data = ['name']
@@ -375,6 +376,12 @@ class AbstractDragDropModel(QAbstractItemModel):
     def item_width(self, _item_width):
         self._item_width = _item_width
 
+    def isRootDropEnabled(self):
+        return self._root_drop_enabled
+
+    def setIsRootDropEnabled(self, _root_drop_enabled):
+        self._root_drop_enabled = _root_drop_enabled
+
     """ DRAG / DROP"""
     def getParentIndexFromItem(self, item):
         """
@@ -410,7 +417,8 @@ class AbstractDragDropModel(QAbstractItemModel):
                 | item.isEditable()
             )
 
-        return Qt.ItemIsEnabled | Qt.ItemIsDropEnabled
+        if self.isRootDropEnabled(): return Qt.ItemIsEnabled | Qt.ItemIsDropEnabled
+        else: return Qt.ItemIsEnabled
 
     def mimeTypes(self):
         return ['application/x-qabstractitemmodeldatalist']
@@ -556,7 +564,7 @@ if __name__ == '__main__':
     for x in range(0, 4):
         model.insertNewIndex(x, str('node%s'%x))
 
-
+    model.setIsRootDropEnabled(False)
     tree_view = QTreeView()
     tree_view.setStyle(TreeViewDropIndicator())
 

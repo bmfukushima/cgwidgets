@@ -76,8 +76,7 @@ class TansuModel(AbstractDragDropModel):
     def flags(self, index):
         # List view handlers
         if 'List' in self.header_type:
-            if not index.isValid():
-                return Qt.ItemIsDropEnabled
+
             return Qt.ItemIsEnabled | Qt.ItemIsSelectable | \
                 Qt.ItemIsDragEnabled | Qt.ItemIsEditable
 
@@ -86,9 +85,11 @@ class TansuModel(AbstractDragDropModel):
             return Qt.ItemIsEnabled | Qt.ItemIsSelectable | \
                 Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled | Qt.ItemIsEditable
 
+        if not index.isValid():
+            return Qt.ItemIsEnabled | Qt.ItemIsDropEnabled
         # I failed at something handlers
-        return Qt.ItemIsEnabled | Qt.ItemIsSelectable | \
-            Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled | Qt.ItemIsEditable
+        # return Qt.ItemIsEnabled | Qt.ItemIsSelectable | \
+        #     Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled | Qt.ItemIsEditable
 
     @property
     def header_type(self):
