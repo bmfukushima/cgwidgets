@@ -119,6 +119,7 @@ def createLabeledWidgets(title, direction=Qt.Horizontal):
 
     return group_label_widget
 
+
 horizontal_label_widget = createLabeledWidgets("Frame Widgets ( Horizontal )", Qt.Horizontal)
 vertical_label_widget = createLabeledWidgets("Frame Widgets ( Vertical )", Qt.Vertical)
 

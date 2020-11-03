@@ -10,6 +10,8 @@ from qtpy.QtGui import QCursor
 app = QApplication(sys.argv)
 
 tansu_widget = TansuModelViewWidget()
+tansu_widget.headerWidget().setDragEnabled(False)
+tansu_widget.headerWidget().setAcceptDrops(False)
 tansu_widget.setHeaderData(['example'])
 tab_1 = QLabel('hello')
 tab_2 = QLabel('world')

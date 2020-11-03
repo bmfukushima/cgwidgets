@@ -8,9 +8,9 @@ from qtpy.QtCore import Qt, QEvent, QDir
 from cgwidgets.widgets import AbstractListInputWidget
 from cgwidgets.utils import installCompleterPopup
 
-class AbstractFileBrowser(AbstractListInputWidget):
+class FileBrowserInputWidget(AbstractListInputWidget):
     def __init__(self, parent=None):
-        super(AbstractFileBrowser, self).__init__(parent=parent)
+        super(FileBrowserInputWidget, self).__init__(parent=parent)
 
         # setup model
         self.model = QFileSystemModel()
@@ -46,7 +46,7 @@ class AbstractFileBrowser(AbstractListInputWidget):
 if __name__ == '__main__':
     from qtpy.QtGui import QCursor
     app = QApplication(sys.argv)
-    widget = AbstractFileBrowser()
+    widget = FileBrowserInputWidget()
     widget.show()
     widget.move(QCursor.pos())
     sys.exit(app.exec_())

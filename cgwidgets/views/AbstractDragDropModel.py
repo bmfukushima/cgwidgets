@@ -28,7 +28,10 @@ class AbstractDragDropModelItem(object):
         self._dynamicWidgetFunction = None
 
         self._is_selected = False
-
+        self._isSelectable = True
+        self._isDragEnabled = True
+        self._isDropEnabled = True
+        self._isEditable = True
         if parent is not None:
             parent.addChild(self)
 
@@ -100,6 +103,35 @@ class AbstractDragDropModelItem(object):
         output += "\n"
 
         return output
+
+    """ DRAG / DROP PROPERTIES """
+    def isSelectable(self):
+        if self._isSelectable: return Qt.ItemIsSelectable
+        else: return 0
+
+    def setIsSelectable(self, _isSelectable):
+        self._isSelectable = _isSelectable
+
+    def isDragEnabled(self):
+        if self._isDragEnabled: return Qt.ItemIsDragEnabled
+        else: return 0
+
+    def setIsDragEnabled(self, _isDragEnabled):
+        self._isDragEnabled = _isDragEnabled
+
+    def isDropEnabled(self):
+        if self._isDropEnabled: return Qt.ItemIsDropEnabled
+        else: return 0
+
+    def setIsDropEnabled(self, _isDropEnabled):
+        self._isDropEnabled = _isDropEnabled
+
+    def isEditable(self):
+        if self._isEditable: return Qt.ItemIsEditable
+        else: return 0
+
+    def setIsEditable(self, _isEditable):
+        self._isEditable = _isEditable
 
 
 class AbstractDragDropModel(QAbstractItemModel):
@@ -367,8 +399,18 @@ class AbstractDragDropModel(QAbstractItemModel):
         return Qt.MoveAction
 
     def flags(self, index):
-        return Qt.ItemIsEnabled | Qt.ItemIsSelectable | \
-               Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled
+        #https://doc.qt.io/qt-5/qt.html#ItemFlag-enum
+        # should flags go on the model, the item, or the view?
+        item = index.internalPointer()
+
+        if item:
+            return (
+                Qt.ItemIsEnabled | item.isSelectable()
+                | item.isDragEnabled() | item.isDropEnabled()
+                | item.isEditable()
+            )
+
+        return Qt.ItemIsEnabled | Qt.ItemIsDropEnabled
 
     def mimeTypes(self):
         return ['application/x-qabstractitemmodeldatalist']

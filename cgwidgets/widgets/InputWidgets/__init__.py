@@ -7,5 +7,6 @@ from .InputWidgets import FrameInputWidget
 
 from .InputWidgets import ListInputWidget as ListInputWidget
 from .InputWidgets import ComboListInputWidget as ComboListInputWidget
+from .FileBrowserInputWidget import FileBrowserInputWidget as FileBrowserInputWidget
 # from .ColorInputWidget import ColorGradientMainWidget as ColorGradientMainWidget
 # from .ColorInputWidget import ColorInputWidget as ColorInputWidget
