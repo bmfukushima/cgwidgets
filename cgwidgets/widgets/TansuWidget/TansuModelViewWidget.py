@@ -643,8 +643,18 @@ class TansuModelDelegateWidget(AbstractInputGroup):
 
 
 class TansuHeaderAbstractView(object):
-    """ ABSTRACT ITEM VIEW STUFFF"""
+    def __init__(self):
+        # setup style
+        self.setStyle(TansuHeaderViewDropIndicatorStyle())
+        self.setupCustomDelegate()
 
+        # setup flags
+        self._isDropEnabled = True
+        self._isDragEnabled = True
+        self._isEditable = True
+        self._isSelectable = True
+
+    """ ABSTRACT ITEM VIEW STUFFF"""
     def setupCustomDelegate(self):
         delegate = AbstractDragDropModelDelegate(self)
         self.setItemDelegate(delegate)
@@ -683,6 +693,42 @@ class TansuHeaderAbstractView(object):
         if top_level_widget:
             top_level_widget.updateDelegateDisplayFromSelection(selected, deselected)
 
+    """ DRAG / DROP PROPERTIES """
+    def isSelectable(self):
+        if self._isSelectable:
+            return Qt.ItemIsSelectable
+        else:
+            return 0
+
+    def setIsSelectable(self, _isSelectable):
+        self._isSelectable = _isSelectable
+
+    def isDragEnabled(self):
+        if self._isDragEnabled:
+            return Qt.ItemIsDragEnabled
+        else:
+            return 0
+
+    def setIsDragEnabled(self, _isDragEnabled):
+        self._isDragEnabled = _isDragEnabled
+
+    def isDropEnabled(self):
+        if self._isDropEnabled:
+            return Qt.ItemIsDropEnabled
+        else:
+            return 0
+
+    def setIsDropEnabled(self, _isDropEnabled):
+        self._isDropEnabled = _isDropEnabled
+
+    def isEditable(self):
+        if self._isEditable:
+            return Qt.ItemIsEditable
+        else:
+            return 0
+
+    def setIsEditable(self, _isEditable):
+        self._isEditable = _isEditable
 
 class TansuHeaderViewDropIndicatorStyle(QProxyStyle):
     INDICATOR_WIDTH = 2
@@ -804,8 +850,6 @@ class TansuHeaderViewDropIndicatorStyle(QProxyStyle):
 class TansuHeaderListView(QListView, TansuHeaderAbstractView):
     def __init__(self, parent=None):
         super(TansuHeaderListView, self).__init__(parent)
-        self.setStyle(TansuHeaderViewDropIndicatorStyle())
-        self.setupCustomDelegate()
         self.setEditTriggers(QAbstractItemView.DoubleClicked)
 
     def createStyleSheet(self, header_position, style_sheet_args):
@@ -874,8 +918,6 @@ class TansuHeaderListView(QListView, TansuHeaderAbstractView):
 class TansuHeaderTreeView(QTreeView, TansuHeaderAbstractView):
     def __init__(self, parent=None):
         super(TansuHeaderTreeView, self).__init__(parent)
-        self.setStyle(TansuHeaderViewDropIndicatorStyle())
-        self.setupCustomDelegate()
 
     """ """
     def setHeaderData(self, _header_data):

@@ -2,8 +2,8 @@
 
 
 from qtpy.QtCore import (
-    Qt, QModelIndex, QAbstractItemModel, QSize, QMimeData, QByteArray, QVariant)
-from qtpy.QtWidgets import QItemDelegate, QLineEdit, QStyledItemDelegate
+    Qt, QModelIndex, QAbstractItemModel, QSize, QMimeData, QByteArray)
+from qtpy.QtWidgets import QStyledItemDelegate
 
 from cgwidgets.widgets.AbstractWidgets import AbstractStringInputWidget
 
@@ -30,11 +30,15 @@ class AbstractDragDropModelItem(object):
         self._delegate_widget = None
         self._dynamicWidgetFunction = None
 
+
+        # flags
         self._is_selected = False
         self._isSelectable = True
         self._isDragEnabled = True
         self._isDropEnabled = True
         self._isEditable = True
+
+        # default parent
         if parent is not None:
             parent.addChild(self)
 
@@ -167,6 +171,12 @@ class AbstractDragDropModel(QAbstractItemModel):
 
         # setup default attrs
         self._header_data = ['name']
+
+        # flags
+        self._isSelectable = True
+        self._isDragEnabled = True
+        self._isDropEnabled = True
+        self._isEditable = True
 
         #
         self._dropping = False
@@ -385,6 +395,43 @@ class AbstractDragDropModel(QAbstractItemModel):
     def setIsRootDropEnabled(self, _root_drop_enabled):
         self._root_drop_enabled = _root_drop_enabled
 
+    """ DRAG / DROP PROPERTIES """
+    def isSelectable(self):
+        if self._isSelectable:
+            return Qt.ItemIsSelectable
+        else:
+            return 0
+
+    def setIsSelectable(self, _isSelectable):
+        self._isSelectable = _isSelectable
+
+    def isDragEnabled(self):
+        if self._isDragEnabled:
+            return Qt.ItemIsDragEnabled
+        else:
+            return 0
+
+    def setIsDragEnabled(self, _isDragEnabled):
+        self._isDragEnabled = _isDragEnabled
+
+    def isDropEnabled(self):
+        if self._isDropEnabled:
+            return Qt.ItemIsDropEnabled
+        else:
+            return 0
+
+    def setIsDropEnabled(self, _isDropEnabled):
+        self._isDropEnabled = _isDropEnabled
+
+    def isEditable(self):
+        if self._isEditable:
+            return Qt.ItemIsEditable
+        else:
+            return 0
+
+    def setIsEditable(self, _isEditable):
+        self._isEditable = _isEditable
+
     """ DRAG / DROP"""
     def getParentIndexFromItem(self, item):
         """
@@ -410,16 +457,32 @@ class AbstractDragDropModel(QAbstractItemModel):
 
     def flags(self, index):
         #https://doc.qt.io/qt-5/qt.html#ItemFlag-enum
-        # should flags go on the model, the item, or the view?
         item = index.internalPointer()
 
         if item:
+            # determine flag values
+            if self.isSelectable(): selectable = item.isSelectable()
+            else: selectable = 0
+
+            if self.isDropEnabled(): drop_enabled = item.isDropEnabled()
+            else: drop_enabled = 0
+
+            if self.isDragEnabled(): drag_enabled = item.isDragEnabled()
+            else: drag_enabled = 0
+
+            if self.isEditable(): editable = item.isEditable()
+            else: editable = 0
+
+            # return flag values
             return (
-                Qt.ItemIsEnabled | item.isSelectable()
-                | item.isDragEnabled() | item.isDropEnabled()
-                | item.isEditable()
+                Qt.ItemIsEnabled
+                | selectable
+                | drag_enabled
+                | drop_enabled
+                | editable
             )
 
+        # set up drag/drop on root node
         if self.isRootDropEnabled(): return Qt.ItemIsEnabled | Qt.ItemIsDropEnabled
         else: return Qt.ItemIsEnabled
 
@@ -564,13 +627,14 @@ class AbstractDragDropModelDelegate(QStyledItemDelegate):
 
 
 # example drop indicator
-from qtpy.QtWidgets import QTreeView, QProxyStyle, QStyleOption
+from qtpy.QtWidgets import QTreeView, QProxyStyle
 class TreeView(QTreeView):
     def __init__(self, parent=None):
         super(TreeView, self).__init__(parent)
         delegate = AbstractDragDropModelDelegate(self)
         self.setItemDelegate(delegate)
         self.setStyleSheet('QTreeView::item{background-color: rgba(0,255,0,255)}')
+
 
 class TreeViewDropIndicator(QProxyStyle):
     def drawPrimitive(self, element, option, painter, widget=None):
@@ -629,6 +693,7 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
 
     model = AbstractDragDropModel()
+    model.setIsDropEnabled(True)
     for x in range(0, 4):
         model.insertNewIndex(x, str('node%s'%x))
 
