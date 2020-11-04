@@ -495,7 +495,7 @@ class AbstractDragDropModel(QAbstractItemModel):
         mimedata.setData('application/x-qabstractitemmodeldatalist', QByteArray())
 
         # run virtual function
-        self.dragStartEvent()
+        self.dragStartEvent(self.indexes)
         return mimedata
 
     def dropMimeData(self, data, action, row, column, parent):
@@ -535,32 +535,51 @@ class AbstractDragDropModel(QAbstractItemModel):
             self.endInsertRows()
 
         # run virtual function
-        self.dropEvent(indexes)
+        self.dropEvent(indexes, parent_item)
         return True
 
     """ VIRTUAL FUNCTIONS """
     def setDragStartEvent(self, function):
         self.__startDragEvent = function
 
-    def dragStartEvent(self):
-        self.__startDragEvent()
+    def dragStartEvent(self, indexes):
+        self.__startDragEvent(indexes)
 
-    def __startDragEvent(self):
+    def __startDragEvent(self, indexes):
         pass
 
     def setDropEvent(self, function):
         self.__dropEvent = function
 
-    def dropEvent(self, indexes):
+    def dropEvent(self, indexes, parent):
         """
         Virtual function that is run after the mime data has been dropped.
 
         Args:
-            indexes (list): of AbstractModelItems
+            indexes (list): of AbstractDragDropModelItems
+            parent (AbstractDragDropModelItem): item that was dropped on
         """
-        self.__dropEvent(indexes)
+        self.__dropEvent(indexes, parent)
 
-    def __dropEvent(self, indexes):
+    def __dropEvent(self, indexes, parent):
+        pass
+
+    def setTextChangedEvent(self, function):
+        self.__textChangedEvent = function
+
+    def textChangedEvent(self, item, old_value, new_value):
+        """
+        Virtual function that is run after the mime data has been dropped.
+
+        Args:
+            item (AbstractDragDropModelItem): item that has been manipulated
+            old_value (str):
+            new_value (str):
+        """
+        self.__textChangedEvent(item, old_value, new_value)
+
+    def __textChangedEvent(self, item, old_value, new_value):
+        print(item, item)
         pass
 
 
@@ -614,7 +633,15 @@ class AbstractDragDropModelDelegate(QStyledItemDelegate):
             return
         item = index.internalPointer()
         arg = model._header_data[index.column()]
-        item.columnData()[arg] = editor.text()
+        old_value = item.columnData()[arg]
+        new_value = editor.text()
+
+        # emit text changed event
+        model.textChangedEvent(item, old_value, new_value)
+
+        # set model data
+        item.columnData()[arg] = new_value
+
         #model.setData(index, QVariant(new_value))
         #model.aov_list[index.row()] = new_value
         '''
@@ -692,17 +719,32 @@ if __name__ == '__main__':
     from qtpy.QtGui import QCursor
     app = QApplication(sys.argv)
 
+    def testDrag(indexes):
+        print(indexes)
+
+    def testDrop(indexes, parent):
+        print(indexes, parent)
+
+    def testEdit(item, old_value, new_value):
+        print(item, old_value, new_value)
+
+
     model = AbstractDragDropModel()
-    model.setIsDropEnabled(True)
+
     for x in range(0, 4):
         model.insertNewIndex(x, str('node%s'%x))
 
     model.setIsRootDropEnabled(False)
+
+    # set model event
+    model.setDragStartEvent(testDrag)
+    model.setDropEvent(testDrop)
+    model.setTextChangedEvent(testEdit)
+
     tree_view = TreeView()
     tree_view.setStyle(TreeViewDropIndicator())
 
     tree_view.move(QCursor.pos())
-    #tree_view.setStyleSheet()
     tree_view.setDragEnabled(True)
     tree_view.setDragDropOverwriteMode(False)
     tree_view.setSelectionMode(QAbstractItemView.MultiSelection)

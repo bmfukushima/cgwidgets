@@ -181,6 +181,9 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         """
         self.model().setDropEvent(function)
 
+    def setHeaderTextChangedEvent(self, function):
+        self.model().setTextChangedEvent(function)
+
     """ MODEL """
     def model(self):
         return self._model
@@ -729,6 +732,7 @@ class TansuHeaderAbstractView(object):
 
     def setIsEditable(self, _isEditable):
         self._isEditable = _isEditable
+
 
 class TansuHeaderViewDropIndicatorStyle(QProxyStyle):
     INDICATOR_WIDTH = 2
