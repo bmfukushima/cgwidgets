@@ -95,15 +95,14 @@ custom_index.internalPointer().setDynamicUpdateFunction(CustomDynamicWidget.upda
 tansu_widget.setHeaderPosition(attrs.NORTH)
 tansu_widget.setMultiSelect(True)
 tansu_widget.setMultiSelectDirection(Qt.Vertical)
+tansu_widget.delegateWidget().handle_length = 100
 
 # enable drag/drop
-tansu_widget.setHeaderDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
+tansu_widget.setHeaderIsDropEnabled(False)
+tansu_widget.setHeaderIsDragEnabled(False)
 
 # show view
 tansu_widget.resize(500, 500)
-tansu_widget.delegateWidget().handle_length = 100
-
 tansu_widget.show()
-
 tansu_widget.move(QCursor.pos())
 sys.exit(app.exec_())
