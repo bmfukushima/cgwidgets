@@ -712,7 +712,7 @@ class TansuHeaderAbstractView(object):
         self.setupCustomDelegate()
 
         # setup flags
-        self.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
+        self.setDragDropMode(QAbstractItemView.InternalMove)
         self._isDropEnabled = True
         self._isDragEnabled = False
         self._isEditable = True
@@ -754,10 +754,15 @@ class TansuHeaderAbstractView(object):
             direction = Qt.Horizontal
 
         # update drag/drop style
-        if isinstance(self, TansuHeaderListView):
-            self.style().setOrientation(direction)
-        else:
-            self.style().setOrientation(Qt.Vertical)
+        # todo fix this...
+        try:
+            if isinstance(self, TansuHeaderListView):
+                self.style().setOrientation(direction)
+            else:
+                self.style().setOrientation(Qt.Vertical)
+        except AttributeError:
+            # for some reason katana doesnt like this...
+            pass
 
     def setMultiSelect(self, multi_select):
         if multi_select is True:
