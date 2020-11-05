@@ -45,7 +45,10 @@ class TansuModelItem(AbstractDragDropModelItem, iTansuDynamicWidget):
         self._dynamicWidgetFunction = None
 
         self._is_selected = False
-
+        self._isSelectable = True
+        self._isDragEnabled = True
+        self._isDropEnabled = True
+        self._isEditable = True
         if parent is not None:
             parent.addChild(self)
 
@@ -64,6 +67,9 @@ class TansuModel(AbstractDragDropModel):
     Attributes:
         item_type (Item): Data item to be stored on each index.  By default this
             set to the TansuModelItem
+
+    TODO:
+        *   I dont think I need <header_type> anymore...
     """
     ITEM_HEIGHT = 35
     ITEM_WIDTH = 100
@@ -73,23 +79,23 @@ class TansuModel(AbstractDragDropModel):
         self._header_type = ''
         self.setItemType(TansuModelItem)
 
-    def flags(self, index):
-        # List view handlers
-        if 'List' in self.header_type:
-
-            return Qt.ItemIsEnabled | Qt.ItemIsSelectable | \
-                Qt.ItemIsDragEnabled | Qt.ItemIsEditable
-
-        # Tree view handlers
-        elif 'Tree' in self.header_type:
-            return Qt.ItemIsEnabled | Qt.ItemIsSelectable | \
-                Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled | Qt.ItemIsEditable
-
-        if not index.isValid():
-            return Qt.ItemIsEnabled | Qt.ItemIsDropEnabled
-        # I failed at something handlers
-        # return Qt.ItemIsEnabled | Qt.ItemIsSelectable | \
-        #     Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled | Qt.ItemIsEditable
+    # def flags(self, index):
+    #     # List view handlers
+    #     if 'List' in self.header_type:
+    #
+    #         return Qt.ItemIsEnabled | Qt.ItemIsSelectable | \
+    #             Qt.ItemIsDragEnabled | Qt.ItemIsEditable
+    #
+    #     # Tree view handlers
+    #     elif 'Tree' in self.header_type:
+    #         return Qt.ItemIsEnabled | Qt.ItemIsSelectable | \
+    #             Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled | Qt.ItemIsEditable
+    #
+    #     if not index.isValid():
+    #         return Qt.ItemIsEnabled | Qt.ItemIsDropEnabled
+    #     # I failed at something handlers
+    #     # return Qt.ItemIsEnabled | Qt.ItemIsSelectable | \
+    #     #     Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled | Qt.ItemIsEditable
 
     @property
     def header_type(self):

@@ -73,7 +73,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         super(TansuModelViewWidget, self).__init__(parent)
         # etc attrs
         self.setHandleWidth(0)
-        self._header_direction = direction #just a temp set... for things
+        self._header_position = direction #just a temp set... for things
         self._header_height = 50
         self._header_width = 100
 
@@ -81,7 +81,12 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         self._model = TansuModel()
         self._header_widget = TansuHeaderListView(self)
         self._header_widget.setModel(self._model)
-        self._model.header_type = str(type(self._header_widget))
+        #self._model.header_type = str(type(self._header_widget))
+
+        # # setup drag/drop
+        # self._isSelectable = False
+        # self.setIsDragDropEnabled(False)
+        # self._isEditable = False
 
         # setup delegate
         delegate_widget = TansuMainDelegateWidget()
@@ -95,8 +100,8 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         scroll_area = QScrollArea()
         scroll_area.setWidget(delegate_widget)
         scroll_area.setWidgetResizable(True)
-
         self.addWidget(scroll_area)
+
         # TEMP
         scroll_area.setStyleSheet("QScrollArea{border:None}")
         self.addWidget(self._header_widget)
@@ -184,6 +189,60 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
     def setHeaderTextChangedEvent(self, function):
         self.model().setTextChangedEvent(function)
 
+    def setHeaderIsDragEnabled(self, enabled):
+        self.headerWidget().setIsDragEnabled(enabled)
+
+    def setHeaderIsDropEnabled(self, enabled):
+        self.headerWidget().setIsDropEnabled(enabled)
+
+    def setHeaderIsEditable(self, enabled):
+        self.headerWidget().setIsEditable(enabled)
+
+    def setHeaderIsSelectable(self, enabled):
+        self.headerWidget().setIsSelectable(enabled)
+    # """ DRAG / DROP PROPERTIES """
+    # def isSelectable(self):
+    #     if self._isSelectable:
+    #         return Qt.ItemIsSelectable
+    #     else:
+    #         return 0
+    #
+    # def setIsSelectable(self, _isSelectable):
+    #     self._isSelectable = _isSelectable
+    #     self.model().setIsSelectable(_isSelectable)
+    #
+    # def isDragDropEnabled(self):
+    #     if self._isDragEnabled:
+    #         return Qt.ItemIsDragEnabled
+    #     else:
+    #         return 0
+    #
+    # def setIsDragDropEnabled(self, _isDragDropEnabled):
+    #     self._isDragDropEnabled = _isDragDropEnabled
+    #     # self.model().setIsDragEnabled(_isDragDropEnabled)
+    #     # self.model().setIsDropEnabled(_isDragDropEnabled)
+    #     # print(self.model())
+    #     # if _isDragDropEnabled:
+    #     #     self.headerWidget().setDragDropOverwriteMode(True)
+    #     # else:
+    #     #     self.headerWidget().setDragDropOverwriteMode(False)
+    #
+    # def isRootDropEnabled(self):
+    #     return self._root_drop_enabled
+    #
+    # def setIsRootDropEnabled(self, _root_drop_enabled):
+    #     self._root_drop_enabled = _root_drop_enabled
+    #
+    # def isEditable(self):
+    #     if self._isEditable:
+    #         return Qt.ItemIsEditable
+    #     else:
+    #         return 0
+    #
+    # def setIsEditable(self, _isEditable):
+    #     self._isEditable = _isEditable
+    #     self.model().setIsEditable(_isEditable)
+
     """ MODEL """
     def model(self):
         return self._model
@@ -205,42 +264,42 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         self._header_widget = _header_widget
         _header_widget.setModel(self.model())
         self.setHeaderPosition(self.headerPosition())
-        self.model().header_type = str(type(self.headerWidget()))
+        #self.model().header_type = str(type(self.headerWidget()))
 
     def headerPosition(self):
-        return self._header_direction
+        return self._header_position
 
-    def setHeaderPosition(self, _header_direction):
+    def setHeaderPosition(self, _header_position):
         """
         Sets the current direction this widget.  This is the orientation of
         where the tab labels will be vs where the main widget will be, where
         the tab labels bar will always be the first widget.
         """
-        self._header_direction = _header_direction
+        self._header_position = _header_position
         self.headerWidget().setParent(None)
 
-        if _header_direction == attrs.WEST:
+        if _header_position == attrs.WEST:
             self.setOrientation(Qt.Horizontal)
             self.headerWidget().setOrientation(Qt.Horizontal)
             self.insertWidget(0, self.headerWidget())
             self.setStretchFactor(0, 0)
             self.setStretchFactor(1, 1)
 
-        elif _header_direction == attrs.EAST:
+        elif _header_position == attrs.EAST:
             self.setOrientation(Qt.Horizontal)
             self.headerWidget().setOrientation(Qt.Horizontal)
             self.insertWidget(1, self.headerWidget())
             self.setStretchFactor(1, 0)
             self.setStretchFactor(0, 1)
 
-        elif _header_direction == attrs.NORTH:
+        elif _header_position == attrs.NORTH:
             self.setOrientation(Qt.Vertical)
             self.headerWidget().setOrientation(Qt.Vertical)
             self.insertWidget(0, self.headerWidget())
             self.setStretchFactor(0, 0)
             self.setStretchFactor(1, 1)
 
-        elif _header_direction == attrs.SOUTH:
+        elif _header_position == attrs.SOUTH:
             self.setOrientation(Qt.Vertical)
             self.headerWidget().setOrientation(Qt.Vertical)
             self.insertWidget(1, self.headerWidget())
@@ -649,11 +708,13 @@ class TansuHeaderAbstractView(object):
     def __init__(self):
         # setup style
         self.setStyle(TansuHeaderViewDropIndicatorStyle())
+        #print(self.style())
         self.setupCustomDelegate()
 
         # setup flags
+        self.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
         self._isDropEnabled = True
-        self._isDragEnabled = True
+        self._isDragEnabled = False
         self._isEditable = True
         self._isSelectable = True
 
@@ -680,10 +741,23 @@ class TansuHeaderAbstractView(object):
         QListView.showEvent(self, event)
 
     def setOrientation(self, orientation):
+        """
+        This is inverted...
+        :param orientation:
+        :return:
+        """
         if orientation == Qt.Horizontal:
             self.setFlow(QListView.TopToBottom)
+            direction = Qt.Vertical
         else:
             self.setFlow(QListView.LeftToRight)
+            direction = Qt.Horizontal
+
+        # update drag/drop style
+        if isinstance(self, TansuHeaderListView):
+            self.style().setOrientation(direction)
+        else:
+            self.style().setOrientation(Qt.Vertical)
 
     def setMultiSelect(self, multi_select):
         if multi_select is True:
@@ -697,46 +771,108 @@ class TansuHeaderAbstractView(object):
             top_level_widget.updateDelegateDisplayFromSelection(selected, deselected)
 
     """ DRAG / DROP PROPERTIES """
-    def isSelectable(self):
-        if self._isSelectable:
-            return Qt.ItemIsSelectable
-        else:
-            return 0
-
     def setIsSelectable(self, _isSelectable):
         self._isSelectable = _isSelectable
-
-    def isDragEnabled(self):
-        if self._isDragEnabled:
-            return Qt.ItemIsDragEnabled
-        else:
-            return 0
+        self.model().setIsSelectable(_isSelectable)
 
     def setIsDragEnabled(self, _isDragEnabled):
         self._isDragEnabled = _isDragEnabled
-
-    def isDropEnabled(self):
-        if self._isDropEnabled:
-            return Qt.ItemIsDropEnabled
-        else:
-            return 0
+        self.model().setIsDragEnabled(_isDragEnabled)
 
     def setIsDropEnabled(self, _isDropEnabled):
         self._isDropEnabled = _isDropEnabled
-
-    def isEditable(self):
-        if self._isEditable:
-            return Qt.ItemIsEditable
-        else:
-            return 0
+        self.model().setIsDropEnabled(_isDropEnabled)
 
     def setIsEditable(self, _isEditable):
         self._isEditable = _isEditable
+        self.model().setIsEditable(_isEditable)
 
 
 class TansuHeaderViewDropIndicatorStyle(QProxyStyle):
+    """
+    Drag / drop style.
+
+    Args:
+        direction (Qt.DIRECTION): What direction the current flow of
+            the widget is
+    """
     INDICATOR_WIDTH = 2
     INDICATOR_SIZE = 10
+
+    def __init__(self, parent=None):
+        super(TansuHeaderViewDropIndicatorStyle, self).__init__(parent)
+        self._orientation = Qt.Vertical
+
+    def orientation(self):
+        return self._orientation
+
+    def setOrientation(self, orientation):
+        self._orientation = orientation
+
+    def __drawVertical(self, widget, option, painter, size, width):
+        # drop between
+        y_pos = option.rect.topLeft().y()
+        if option.rect.height() == 0:
+            # create indicators
+            l_indicator = self.createTriangle(size, attrs.EAST)
+            l_indicator.translate(QPoint(size + (width / 2), y_pos))
+
+            r_indicator = self.createTriangle(size, attrs.WEST)
+            r_indicator.translate(QPoint(
+                widget.width() - size - (width / 2), y_pos)
+            )
+
+            # draw
+            painter.drawPolygon(l_indicator)
+            painter.drawPolygon(r_indicator)
+            painter.drawLine(
+                QPoint(size + (width / 2), y_pos),
+                QPoint(widget.width() - size - (width / 2), y_pos)
+            )
+
+            # set fill color
+            background_color = QColor(*iColor["rgba_gray_1"])
+            brush = QBrush(background_color)
+            path = QPainterPath()
+            path.addPolygon(l_indicator)
+            path.addPolygon(r_indicator)
+            painter.fillPath(path, brush)
+
+        # drop on
+        else:
+            indicator_rect = QRect((width / 2), y_pos, widget.width() - (width / 2), option.rect.height())
+            painter.drawRoundedRect(indicator_rect, 1, 1)
+
+    def __drawHorizontal(self, widget, option, painter, size, width):
+        x_pos = option.rect.topLeft().x()
+        if option.rect.width() == 0:
+            # create indicators
+            top_indicator = self.createTriangle(size, attrs.NORTH)
+            top_indicator.translate(QPoint(x_pos, size + (width / 2)))
+
+            bot_indicator = self.createTriangle(size, attrs.SOUTH)
+            bot_indicator.translate(QPoint(x_pos, option.rect.height() - size - (width / 2)))
+
+            # draw
+            painter.drawPolygon(top_indicator)
+            painter.drawPolygon(bot_indicator)
+            painter.drawLine(
+                QPoint(x_pos, size + (width / 2)),
+                QPoint(x_pos, option.rect.height() - size + (width / 2))
+            )
+
+            # set fill color
+            background_color = QColor(*iColor["rgba_gray_1"])
+            brush = QBrush(background_color)
+            path = QPainterPath()
+            path.addPolygon(top_indicator)
+            path.addPolygon(bot_indicator)
+
+            painter.fillPath(path, brush)
+
+        # drop on
+        else:
+            painter.drawRoundedRect(option.rect, 1, 1)
 
     def drawPrimitive(self, element, option, painter, widget=None):
         """
@@ -750,14 +886,8 @@ class TansuHeaderViewDropIndicatorStyle(QProxyStyle):
             - clearing the painter will clear the entire view
         """
         if element == self.PE_IndicatorItemViewItemDrop:
-            # palette = QPalette()
-            # highlighted_color = palette.highlightedText().color()
-
-            #painter.setRenderHint(QPainter.Antialiasing)
-
             # border
             # get attrs
-            y_pos = option.rect.topLeft().y()
             size = TansuHeaderViewDropIndicatorStyle.INDICATOR_SIZE
             width = TansuHeaderViewDropIndicatorStyle.INDICATOR_WIDTH
 
@@ -776,38 +906,62 @@ class TansuHeaderViewDropIndicatorStyle(QProxyStyle):
             painter.setPen(pen)
             painter.setBrush(brush)
 
-            # drop between
-            if option.rect.height() == 0:
-
-                # create indicators
-                l_indicator = self.createTriangle(size, attrs.EAST)
-                l_indicator.translate(QPoint(size + (width / 2), y_pos))
-
-                r_indicator = self.createTriangle(size, attrs.WEST)
-                r_indicator.translate(QPoint(
-                    widget.width() - size - (width / 2), y_pos)
-                )
-
-                # draw
-                painter.drawPolygon(l_indicator)
-                painter.drawPolygon(r_indicator)
-                painter.drawLine(
-                    QPoint(size + (width / 2), y_pos),
-                    QPoint(widget.width() - size - (width / 2), y_pos)
-                )
-
-                # set fill color
-                background_color = QColor(*iColor["rgba_gray_1"])
-                brush = QBrush(background_color)
-                path = QPainterPath()
-                path.addPolygon(l_indicator)
-                path.addPolygon(r_indicator)
-                painter.fillPath(path, brush)
-
-            # drop on
-            else:
-                indicator_rect = QRect((width / 2), y_pos, widget.width() - (width / 2), option.rect.height())
-                painter.drawRoundedRect(indicator_rect, 1, 1)
+            if self.orientation() == Qt.Vertical:
+                self.__drawVertical(widget, option, painter, size, width)
+                # # border
+                # # get attrs
+                # y_pos = option.rect.topLeft().y()
+                # size = TansuHeaderViewDropIndicatorStyle.INDICATOR_SIZE
+                # width = TansuHeaderViewDropIndicatorStyle.INDICATOR_WIDTH
+                #
+                # # border color
+                # border_color = QColor(*iColor["rgba_selected"])
+                # pen = QPen()
+                # pen.setWidth(TansuHeaderViewDropIndicatorStyle.INDICATOR_WIDTH)
+                # pen.setColor(border_color)
+                #
+                # # background
+                # background_color = QColor(*iColor["rgba_selected"])
+                # background_color.setAlpha(64)
+                # brush = QBrush(background_color)
+                #
+                # # set painter
+                # painter.setPen(pen)
+                # painter.setBrush(brush)
+                #
+                # # drop between
+                # if option.rect.height() == 0:
+                #     # create indicators
+                #     l_indicator = self.createTriangle(size, attrs.EAST)
+                #     l_indicator.translate(QPoint(size + (width / 2), y_pos))
+                #
+                #     r_indicator = self.createTriangle(size, attrs.WEST)
+                #     r_indicator.translate(QPoint(
+                #         widget.width() - size - (width / 2), y_pos)
+                #     )
+                #
+                #     # draw
+                #     painter.drawPolygon(l_indicator)
+                #     painter.drawPolygon(r_indicator)
+                #     painter.drawLine(
+                #         QPoint(size + (width / 2), y_pos),
+                #         QPoint(widget.width() - size - (width / 2), y_pos)
+                #     )
+                #
+                #     # set fill color
+                #     background_color = QColor(*iColor["rgba_gray_1"])
+                #     brush = QBrush(background_color)
+                #     path = QPainterPath()
+                #     path.addPolygon(l_indicator)
+                #     path.addPolygon(r_indicator)
+                #     painter.fillPath(path, brush)
+                #
+                # # drop on
+                # else:
+                #     indicator_rect = QRect((width / 2), y_pos, widget.width() - (width / 2), option.rect.height())
+                #     painter.drawRoundedRect(indicator_rect, 1, 1)
+            elif self.orientation() == Qt.Horizontal:
+                self.__drawHorizontal(widget, option, painter, size, width)
         else:
             super().drawPrimitive(element, option, painter, widget)
 
@@ -1050,9 +1204,8 @@ if __name__ == "__main__":
     #w.setHeaderData(['name', 'two', 'test'])
     view = TansuHeaderTreeView()
 
-
     w.setHeaderWidget(view)
-    w.setHeaderPosition(attrs.WEST)
+    w.setHeaderPosition(attrs.NORTH)
     w.setMultiSelect(True)
     w.setMultiSelectDirection(Qt.Vertical)
     w.setHeaderDragDropMode(QAbstractItemView.InternalMove)
@@ -1086,6 +1239,9 @@ if __name__ == "__main__":
     w.delegateWidget().handle_length = 100
 
     w.show()
+    #w.headerWidget().model().setIsDragEnabled(False)
+    w.setHeaderIsDropEnabled(True)
+    w.setHeaderIsDragEnabled(True)
 
     w.move(QCursor.pos())
     sys.exit(app.exec_())

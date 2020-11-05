@@ -30,7 +30,6 @@ class AbstractDragDropModelItem(object):
         self._delegate_widget = None
         self._dynamicWidgetFunction = None
 
-
         # flags
         self._is_selected = False
         self._isSelectable = True
@@ -389,12 +388,6 @@ class AbstractDragDropModel(QAbstractItemModel):
     def item_width(self, _item_width):
         self._item_width = _item_width
 
-    def isRootDropEnabled(self):
-        return self._root_drop_enabled
-
-    def setIsRootDropEnabled(self, _root_drop_enabled):
-        self._root_drop_enabled = _root_drop_enabled
-
     """ DRAG / DROP PROPERTIES """
     def isSelectable(self):
         if self._isSelectable:
@@ -422,6 +415,12 @@ class AbstractDragDropModel(QAbstractItemModel):
 
     def setIsDropEnabled(self, _isDropEnabled):
         self._isDropEnabled = _isDropEnabled
+
+    def isRootDropEnabled(self):
+        return self._root_drop_enabled
+
+    def setIsRootDropEnabled(self, _root_drop_enabled):
+        self._root_drop_enabled = _root_drop_enabled
 
     def isEditable(self):
         if self._isEditable:
@@ -735,7 +734,7 @@ if __name__ == '__main__':
         model.insertNewIndex(x, str('node%s'%x))
 
     model.setIsRootDropEnabled(False)
-
+    #model.setIsDragEnabled(False)
     # set model event
     model.setDragStartEvent(testDrag)
     model.setDropEvent(testDrop)
@@ -745,12 +744,17 @@ if __name__ == '__main__':
     tree_view.setStyle(TreeViewDropIndicator())
 
     tree_view.move(QCursor.pos())
-    tree_view.setDragEnabled(True)
-    tree_view.setDragDropOverwriteMode(False)
+    #tree_view.setDragEnabled(True)
+    #tree_view.setDragDropOverwriteMode(False)
     tree_view.setSelectionMode(QAbstractItemView.MultiSelection)
 
     tree_view.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
     tree_view.setModel(model)
+    model.setIsDragEnabled(True)
+
+
+
+
 
     list_view = QListView()
 

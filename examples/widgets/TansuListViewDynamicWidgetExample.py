@@ -37,7 +37,7 @@ class TabTansuDynamicWidgetExample(QWidget):
         item (TansuModelItem)
         """
         if item:
-            print ('----------------------------')
+            print ('------------- SHOW EVENT ---------------')
             print(parent, widget, item)
             name = parent.model().getItemName(item)
             widget.setTitle(name)
@@ -64,6 +64,15 @@ class CustomDynamicWidget(FloatInputWidget):
         this = widget.getMainWidget()
         this.setText('whatup')
 
+def testDrag(indexes):
+    print(indexes)
+
+def testDrop(indexes, parent):
+    print(indexes, parent)
+
+def testEdit(item, old_value, new_value):
+    print(item, old_value, new_value)
+
 # create tansu widget
 tansu_widget = TansuModelViewWidget()
 
@@ -87,12 +96,25 @@ for x in range(3):
 tansu_widget.setHeaderPosition(attrs.NORTH)
 tansu_widget.setMultiSelect(True)
 tansu_widget.setMultiSelectDirection(Qt.Vertical)
+tansu_widget.delegateWidget().handle_length = 100
 
 # enable drag/drop
-tansu_widget.setHeaderDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
-tansu_widget.headerWidget().setDragDropOverwriteMode(False)
+#tansu_widget.setHeaderDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
+#tansu_widget.headerWidget().setDragDropOverwriteMode(False)
+
+# setup drag/drop events
+tansu_widget.setHeaderDragStartEvent(testDrag)
+tansu_widget.setHeaderDropEvent(testDrop)
+tansu_widget.setHeaderTextChangedEvent(testEdit)
+
+# setup drag/drop flags
+tansu_widget.setHeaderIsDropEnabled(False)
+tansu_widget.setHeaderIsDragEnabled(True)
+#tansu_widget.setIsDragDropEnabled(False)
+
+
+# set size / show
 tansu_widget.resize(500, 500)
-tansu_widget.delegateWidget().handle_length = 100
 
 tansu_widget.show()
 
