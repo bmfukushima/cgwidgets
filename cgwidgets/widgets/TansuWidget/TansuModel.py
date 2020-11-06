@@ -53,6 +53,7 @@ class TansuModelItem(AbstractDragDropModelItem, iTansuDynamicWidget):
         self._isEditable = True
         if parent is not None:
             parent.addChild(self)
+
     @property
     def test(self):
         return self._test

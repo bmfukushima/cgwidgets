@@ -2,9 +2,10 @@
 from qtpy.QtWidgets import QStyledItemDelegate, QApplication
 from qtpy.QtCore import (
     Qt, QModelIndex, QAbstractItemModel, QSize, QMimeData, QByteArray)
+from qtpy.QtGui import QColor
 
 from cgwidgets.widgets.AbstractWidgets import AbstractStringInputWidget
-
+from cgwidgets.settings.colors import iColor
 
 class AbstractDragDropModelItem(object):
     """
@@ -187,6 +188,10 @@ class AbstractDragDropModel(QAbstractItemModel):
         self._dropping = False
 
     """ UTILS """
+    def setItemEnabled(self, item, enabled):
+        item.setIsEnabled(enabled)
+        self.itemEnabledEvent(item, enabled)
+
     def rowCount(self, parent):
         """
         INPUTS: QModelIndex
@@ -227,8 +232,9 @@ class AbstractDragDropModel(QAbstractItemModel):
                         return_val = item.columnData()[self._header_data[i]]
                     except KeyError:
                         return_val = None
-
                     return return_val
+
+        # change style for disabled items
         if role == Qt.FontRole:
             #font = self.font()
             font = QApplication.font()
@@ -236,6 +242,15 @@ class AbstractDragDropModel(QAbstractItemModel):
             self.layoutChanged.emit()
             return font
             #self.setFont(0, font)
+        # todo disabled item color
+        if role == Qt.ForegroundRole:
+            if item.isEnabled():
+                color = QColor(*iColor["rgba_text"])
+            else:
+                color = QColor(*iColor["rgba_text_disabled"])
+            return color
+
+            #print('disabled...')
 
         if role == Qt.SizeHintRole:
             return QSize(self.item_width, self.item_height)
@@ -595,6 +610,23 @@ class AbstractDragDropModel(QAbstractItemModel):
         print(item, item)
         pass
 
+    def setItemEnabledEvent(self, function):
+        self.__itemEnabledEvent = function
+
+    def itemEnabledEvent(self, item, enabled):
+        """
+        Virtual function that is run after the mime data has been dropped.
+
+        Args:
+            item (AbstractDragDropModelItem): item that has been manipulated
+            old_value (str):
+            new_value (str):
+        """
+        self.__itemEnabledEvent(item, enabled)
+
+    def __itemEnabledEvent(self, item, enabled):
+        #print(item.columnData()['name'], enabled)
+        pass
 
 class AbstractDragDropModelDelegate(QStyledItemDelegate):
     """
@@ -623,7 +655,7 @@ class AbstractDragDropModelDelegate(QStyledItemDelegate):
     def createEditor(self, parent, option, index):
         #delegate_widget = AbstractStringInputWidget(parent)
         delegate_widget = self.delegateWidget(parent)
-        print('class = %s'%self)
+
         # delegate_widget.setStyleSheet("background-color: rgba(255,0,255,255)")
         return delegate_widget
 
@@ -769,6 +801,7 @@ if __name__ == '__main__':
 
     tree_view = TreeView()
     tree_view.setStyle(TreeViewDropIndicator())
+    tree_view.setStyleSheet("""QTreeView::item[test=true]{color:rgba(0,255,0,255)}""")
 
     tree_view.move(QCursor.pos())
     #tree_view.setDragEnabled(True)

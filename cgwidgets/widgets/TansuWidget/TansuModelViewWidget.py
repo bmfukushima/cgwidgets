@@ -611,14 +611,17 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         style_sheet_args['item_snippet'] = """
             border: {outline_width}px solid rgba{rgba_outline};
             background-color: rgba{rgba_gray_0};
-            color: rgba{rgba_text};
         """.format(**style_sheet_args)
+
+        # todo disabled item style...
+        # not formatting? or getting disabled?
         style_sheet_args['item_selected_snippet'] = """
             border: {outline_width}px solid rgba{rgba_outline};
             background-color: rgba{rgba_gray_1};
             color: rgba{rgba_selected};
         """.format(**style_sheet_args)
 
+        #             color: rgba{rgba_selected};
         # create style sheet
         header_style_sheet = self.headerWidget().createStyleSheet(self.headerPosition(), style_sheet_args)
 
@@ -1069,9 +1072,6 @@ class TansuHeaderTreeView(QTreeView, TansuHeaderAbstractView):
         {type}::item{{
             {item_snippet}
         }}
-        {type}::item[test=true]{{
-            background-color: rgba(255,0,0,255);
-        }}
         {type}::item:selected{{
             {item_selected_snippet}
         }}
@@ -1137,11 +1137,9 @@ class TansuHeaderTreeView(QTreeView, TansuHeaderAbstractView):
                 if index.column() == 0:
                     item = index.internalPointer()
                     enabled = False if item.isEnabled() else True
-                    item.setIsEnabled(enabled)
+                    self.model().setItemEnabled(item, enabled)
+                    #item.setIsEnabled(enabled)
 
-                    print(index.internalPointer())
-                    print(index.column(), index.row())
-            print('d')
         return QTreeView.keyPressEvent(self, event)
 
 
