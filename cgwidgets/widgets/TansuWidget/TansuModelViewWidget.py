@@ -404,12 +404,12 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         self._selection_item = selected
         for index in selected.indexes():
             item = index.internalPointer()
-            item.setSelected(True)
+            #item.setSelected(True)
             self.__updateDelegateItem(item, True)
 
         for index in deselected.indexes():
             item = index.internalPointer()
-            item.setSelected(False)
+            #item.setSelected(False)
             self.__updateDelegateItem(item, False)
 
         # update delegate background
@@ -521,6 +521,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
             stop this event from happening?
             Only want the child tansu to register... not this one...
         """
+
         return self.delegateWidget().keyPressEvent(event)
 
     """ PROPERTIES """
@@ -1068,6 +1069,9 @@ class TansuHeaderTreeView(QTreeView, TansuHeaderAbstractView):
         {type}::item{{
             {item_snippet}
         }}
+        {type}::item[test=true]{{
+            background-color: rgba(255,0,0,255);
+        }}
         {type}::item:selected{{
             {item_selected_snippet}
         }}
@@ -1122,6 +1126,23 @@ class TansuHeaderTreeView(QTreeView, TansuHeaderAbstractView):
     def dropEvent(self, event):
         #print('dropping???')
         return QTreeView.dropEvent(self, event)
+
+    def keyPressEvent(self, event):
+        # todo disable stuff?
+        # how to set up style change?
+        # ... do this in model derp
+        if event.key() == Qt.Key_D:
+            indexes = self.selectionModel().selectedIndexes()
+            for index in indexes:
+                if index.column() == 0:
+                    item = index.internalPointer()
+                    enabled = False if item.isEnabled() else True
+                    item.setIsEnabled(enabled)
+
+                    print(index.internalPointer())
+                    print(index.column(), index.row())
+            print('d')
+        return QTreeView.keyPressEvent(self, event)
 
 
 class TabTansuDynamicWidgetExample(QWidget):

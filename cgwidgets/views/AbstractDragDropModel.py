@@ -1,9 +1,7 @@
 # https://doc.qt.io/qt-5/model-view-programming.html#model-view-classes
-
-
+from qtpy.QtWidgets import QStyledItemDelegate, QApplication
 from qtpy.QtCore import (
     Qt, QModelIndex, QAbstractItemModel, QSize, QMimeData, QByteArray)
-from qtpy.QtWidgets import QStyledItemDelegate
 
 from cgwidgets.widgets.AbstractWidgets import AbstractStringInputWidget
 
@@ -31,7 +29,9 @@ class AbstractDragDropModelItem(object):
         self._dynamicWidgetFunction = None
 
         # flags
-        self._is_selected = False
+
+        #self._is_selected = False
+        self._is_enabled = True
         self._isSelectable = True
         self._isDragEnabled = True
         self._isDropEnabled = True
@@ -41,11 +41,11 @@ class AbstractDragDropModelItem(object):
         if parent is not None:
             parent.addChild(self)
 
-    def isSelected(self):
-        return self._is_selected
-
-    def setSelected(self, selected):
-        self._is_selected = selected
+    # def isSelected(self):
+    #     return self._is_selected
+    #
+    # def setSelected(self, selected):
+    #     self._is_selected = selected
 
     def addChild(self, child):
         self._children.append(child)
@@ -111,6 +111,12 @@ class AbstractDragDropModelItem(object):
         return output
 
     """ DRAG / DROP PROPERTIES """
+    def isEnabled(self):
+        return self._is_enabled
+
+    def setIsEnabled(self, enable):
+        self._is_enabled = enable
+
     def isSelectable(self):
         if self._isSelectable: return Qt.ItemIsSelectable
         else: return 0
@@ -221,7 +227,15 @@ class AbstractDragDropModel(QAbstractItemModel):
                         return_val = item.columnData()[self._header_data[i]]
                     except KeyError:
                         return_val = None
+
                     return return_val
+        if role == Qt.FontRole:
+            #font = self.font()
+            font = QApplication.font()
+            font.setStrikeOut(not item.isEnabled())
+            self.layoutChanged.emit()
+            return font
+            #self.setFont(0, font)
 
         if role == Qt.SizeHintRole:
             return QSize(self.item_width, self.item_height)

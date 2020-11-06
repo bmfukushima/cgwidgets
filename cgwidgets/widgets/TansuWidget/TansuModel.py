@@ -44,13 +44,22 @@ class TansuModelItem(AbstractDragDropModelItem, iTansuDynamicWidget):
         self._delegate_widget = None
         self._dynamicWidgetFunction = None
 
-        self._is_selected = False
+        self._test = True
+        #self._is_selected = False
+        self._is_enabled = True
         self._isSelectable = True
         self._isDragEnabled = True
         self._isDropEnabled = True
         self._isEditable = True
         if parent is not None:
             parent.addChild(self)
+    @property
+    def test(self):
+        return self._test
+
+    @test.setter
+    def test(self, test):
+        self._test = test
 
     def delegateWidget(self):
         return self._delegate_widget
