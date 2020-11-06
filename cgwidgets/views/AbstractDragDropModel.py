@@ -583,8 +583,12 @@ class AbstractDragDropModel(QAbstractItemModel):
 
 
 class AbstractDragDropModelDelegate(QStyledItemDelegate):
+    """
+
+    """
     def __init__(self, parent=None):
         super(AbstractDragDropModelDelegate, self).__init__(parent)
+        self._delegate_widget = AbstractStringInputWidget
 
     def sizeHint(self, *args, **kwargs):
         return QStyledItemDelegate.sizeHint(self, *args, **kwargs)
@@ -603,7 +607,9 @@ class AbstractDragDropModelDelegate(QStyledItemDelegate):
         editor.setGeometry(option.rect)
 
     def createEditor(self, parent, option, index):
-        delegate_widget = AbstractStringInputWidget(parent)
+        #delegate_widget = AbstractStringInputWidget(parent)
+        delegate_widget = self.delegateWidget(parent)
+        print('class = %s'%self)
         # delegate_widget.setStyleSheet("background-color: rgba(255,0,255,255)")
         return delegate_widget
 
@@ -635,11 +641,11 @@ class AbstractDragDropModelDelegate(QStyledItemDelegate):
         old_value = item.columnData()[arg]
         new_value = editor.text()
 
-        # emit text changed event
-        model.textChangedEvent(item, old_value, new_value)
-
         # set model data
         item.columnData()[arg] = new_value
+
+        # emit text changed event
+        model.textChangedEvent(item, old_value, new_value)
 
         #model.setData(index, QVariant(new_value))
         #model.aov_list[index.row()] = new_value
@@ -651,6 +657,13 @@ class AbstractDragDropModelDelegate(QStyledItemDelegate):
         model.setData(index, QtCore.QVariant(value))
         '''
 
+    def setDelegateWidget(self, delegate_widget):
+        self._delegate_widget = delegate_widget
+
+    def delegateWidget(self, parent):
+        constructor = self._delegate_widget
+        widget = constructor(parent)
+        return widget
 
 # example drop indicator
 from qtpy.QtWidgets import QTreeView, QProxyStyle

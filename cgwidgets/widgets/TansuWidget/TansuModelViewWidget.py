@@ -383,6 +383,14 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
                 widget_list.append(widget)
 
             self.delegateWidget().isolateWidgets(widget_list)
+        # TODO updated for dynamic...
+        elif self.getDelegateType() == TansuModelViewWidget.DYNAMIC:
+            selection_model = self.headerWidget().selectionModel()
+            for index in selection_model.selectedIndexes():
+                item = index.internalPointer()
+                self.__updateDelegateItem(item, False)
+                self.__updateDelegateItem(item, True)
+            #self.updateDynamicWidget()
 
     def updateDelegateDisplayFromSelection(self, selected, deselected):
         """
@@ -911,64 +919,13 @@ class TansuHeaderViewDropIndicatorStyle(QProxyStyle):
             painter.setPen(pen)
             painter.setBrush(brush)
 
+            # draw
             if self.orientation() == Qt.Vertical:
                 self.__drawVertical(widget, option, painter, size, width)
-                # # border
-                # # get attrs
-                # y_pos = option.rect.topLeft().y()
-                # size = TansuHeaderViewDropIndicatorStyle.INDICATOR_SIZE
-                # width = TansuHeaderViewDropIndicatorStyle.INDICATOR_WIDTH
-                #
-                # # border color
-                # border_color = QColor(*iColor["rgba_selected"])
-                # pen = QPen()
-                # pen.setWidth(TansuHeaderViewDropIndicatorStyle.INDICATOR_WIDTH)
-                # pen.setColor(border_color)
-                #
-                # # background
-                # background_color = QColor(*iColor["rgba_selected"])
-                # background_color.setAlpha(64)
-                # brush = QBrush(background_color)
-                #
-                # # set painter
-                # painter.setPen(pen)
-                # painter.setBrush(brush)
-                #
-                # # drop between
-                # if option.rect.height() == 0:
-                #     # create indicators
-                #     l_indicator = self.createTriangle(size, attrs.EAST)
-                #     l_indicator.translate(QPoint(size + (width / 2), y_pos))
-                #
-                #     r_indicator = self.createTriangle(size, attrs.WEST)
-                #     r_indicator.translate(QPoint(
-                #         widget.width() - size - (width / 2), y_pos)
-                #     )
-                #
-                #     # draw
-                #     painter.drawPolygon(l_indicator)
-                #     painter.drawPolygon(r_indicator)
-                #     painter.drawLine(
-                #         QPoint(size + (width / 2), y_pos),
-                #         QPoint(widget.width() - size - (width / 2), y_pos)
-                #     )
-                #
-                #     # set fill color
-                #     background_color = QColor(*iColor["rgba_gray_1"])
-                #     brush = QBrush(background_color)
-                #     path = QPainterPath()
-                #     path.addPolygon(l_indicator)
-                #     path.addPolygon(r_indicator)
-                #     painter.fillPath(path, brush)
-                #
-                # # drop on
-                # else:
-                #     indicator_rect = QRect((width / 2), y_pos, widget.width() - (width / 2), option.rect.height())
-                #     painter.drawRoundedRect(indicator_rect, 1, 1)
             elif self.orientation() == Qt.Horizontal:
                 self.__drawHorizontal(widget, option, painter, size, width)
         else:
-            super().drawPrimitive(element, option, painter, widget)
+            super(TansuHeaderViewDropIndicatorStyle, self).drawPrimitive(element, option, painter, widget)
 
     def createTriangle(self, size, direction=attrs.EAST):
         """
