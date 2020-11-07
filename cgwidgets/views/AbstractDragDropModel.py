@@ -1,11 +1,13 @@
 # https://doc.qt.io/qt-5/model-view-programming.html#model-view-classes
-from qtpy.QtWidgets import QStyledItemDelegate, QApplication
+from qtpy.QtWidgets import QStyledItemDelegate, QApplication, QWidget, QStyle, QStyleOptionViewItem
 from qtpy.QtCore import (
-    Qt, QModelIndex, QAbstractItemModel, QSize, QMimeData, QByteArray)
-from qtpy.QtGui import QColor
+    Qt, QModelIndex, QAbstractItemModel, QSize, QMimeData, QByteArray,
+    QPoint, QRect )
+from qtpy.QtGui import QPainter, QColor, QPen, QBrush, QCursor, QPolygonF, QPainterPath
 
 from cgwidgets.widgets.AbstractWidgets import AbstractStringInputWidget
 from cgwidgets.settings.colors import iColor
+from cgwidgets.utils import attrs
 
 class AbstractDragDropModelItem(object):
     """
@@ -628,6 +630,7 @@ class AbstractDragDropModel(QAbstractItemModel):
         #print(item.columnData()['name'], enabled)
         pass
 
+
 class AbstractDragDropModelDelegate(QStyledItemDelegate):
     """
 
@@ -711,17 +714,134 @@ class AbstractDragDropModelDelegate(QStyledItemDelegate):
         widget = constructor(parent)
         return widget
 
+    def paint(self, painter, option, index):
+        """
+        Overrides the selection highlight color.
+
+        https://www.qtcentre.org/threads/41299-How-to-Change-QTreeView-highlight-color
+        Note: this can actually do alot more than that with the QPalette...
+            which is something I should learn how to use apparently...
+
+        """
+        from qtpy.QtGui import QPalette
+        item = index.internalPointer()
+        new_option = QStyleOptionViewItem(option)
+        brush = QBrush()
+        if item.isEnabled():
+            color = QColor(*iColor["rgba_text"])
+        else:
+            color = QColor(*iColor["rgba_text_disabled"])
+        brush.setColor(color)
+        new_option.palette.setBrush(QPalette.Normal, QPalette.HighlightedText, brush)
+        QStyledItemDelegate.paint(self, painter, new_option, index)
+        return
+
 # example drop indicator
 from qtpy.QtWidgets import QTreeView, QProxyStyle
-class TreeView(QTreeView):
+class AbstractDragDropTreeView(QTreeView):
     def __init__(self, parent=None):
-        super(TreeView, self).__init__(parent)
+        super(AbstractDragDropTreeView, self).__init__(parent)
         delegate = AbstractDragDropModelDelegate(self)
         self.setItemDelegate(delegate)
-        self.setStyleSheet('QTreeView::item{background-color: rgba(0,255,0,255)}')
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_D:
+            indexes = self.selectionModel().selectedIndexes()
+            for index in indexes:
+                if index.column() == 0:
+                    item = index.internalPointer()
+                    enabled = False if item.isEnabled() else True
+                    self.model().setItemEnabled(item, enabled)
+
+        return QTreeView.keyPressEvent(self, event)
 
 
-class TreeViewDropIndicator(QProxyStyle):
+class AbstractDragDropIndicator(QProxyStyle):
+    """
+    Drag / drop style.
+
+    Args:
+        direction (Qt.DIRECTION): What direction the current flow of
+            the widget is
+    """
+    INDICATOR_WIDTH = 2
+    INDICATOR_SIZE = 10
+
+    def __init__(self, parent=None):
+        super(AbstractDragDropIndicator, self).__init__(parent)
+        self._orientation = Qt.Vertical
+
+    def orientation(self):
+        return self._orientation
+
+    def setOrientation(self, orientation):
+        self._orientation = orientation
+
+    def __drawVertical(self, widget, option, painter, size, width):
+        # drop between
+        y_pos = option.rect.topLeft().y()
+        if option.rect.height() == 0:
+            # create indicators
+            l_indicator = self.createTriangle(size, attrs.EAST)
+            l_indicator.translate(QPoint(size + (width / 2), y_pos))
+
+            r_indicator = self.createTriangle(size, attrs.WEST)
+            r_indicator.translate(QPoint(
+                widget.width() - size - (width / 2), y_pos)
+            )
+
+            # draw
+            painter.drawPolygon(l_indicator)
+            painter.drawPolygon(r_indicator)
+            painter.drawLine(
+                QPoint(size + (width / 2), y_pos),
+                QPoint(widget.width() - size - (width / 2), y_pos)
+            )
+
+            # set fill color
+            background_color = QColor(*iColor["rgba_gray_1"])
+            brush = QBrush(background_color)
+            path = QPainterPath()
+            path.addPolygon(l_indicator)
+            path.addPolygon(r_indicator)
+            painter.fillPath(path, brush)
+
+        # drop on
+        else:
+            indicator_rect = QRect((width / 2), y_pos, widget.width() - (width / 2), option.rect.height())
+            painter.drawRoundedRect(indicator_rect, 1, 1)
+
+    def __drawHorizontal(self, widget, option, painter, size, width):
+        x_pos = option.rect.topLeft().x()
+        if option.rect.width() == 0:
+            # create indicators
+            top_indicator = self.createTriangle(size, attrs.NORTH)
+            top_indicator.translate(QPoint(x_pos, size + (width / 2)))
+
+            bot_indicator = self.createTriangle(size, attrs.SOUTH)
+            bot_indicator.translate(QPoint(x_pos, option.rect.height() - size - (width / 2)))
+
+            # draw
+            painter.drawPolygon(top_indicator)
+            painter.drawPolygon(bot_indicator)
+            painter.drawLine(
+                QPoint(x_pos, size + (width / 2)),
+                QPoint(x_pos, option.rect.height() - size + (width / 2))
+            )
+
+            # set fill color
+            background_color = QColor(*iColor["rgba_gray_1"])
+            brush = QBrush(background_color)
+            path = QPainterPath()
+            path.addPolygon(top_indicator)
+            path.addPolygon(bot_indicator)
+
+            painter.fillPath(path, brush)
+
+        # drop on
+        else:
+            painter.drawRoundedRect(option.rect, 1, 1)
+
     def drawPrimitive(self, element, option, painter, widget=None):
         """
         https://www.qtcentre.org/threads/35443-Customize-drop-indicator-in-QTreeView
@@ -733,41 +853,73 @@ class TreeViewDropIndicator(QProxyStyle):
         Still draws the original line - not really sure why
             - clearing the painter will clear the entire view
         """
-        from qtpy.QtWidgets import QStyle
-        from qtpy.QtGui import QPainter, QPalette, QColor, QPen, QBrush
-        from qtpy.QtCore import QPoint
-
         if element == self.PE_IndicatorItemViewItemDrop:
-            # palette = QPalette()
-            # highlighted_color = palette.highlightedText().color()
-
-            painter.setRenderHint(QPainter.Antialiasing)
             # border
-            border_color = QColor(255, 0, 255, 255)
+            # get attrs
+            size = AbstractDragDropIndicator.INDICATOR_SIZE
+            width = AbstractDragDropIndicator.INDICATOR_WIDTH
+
+            # border color
+            border_color = QColor(*iColor["rgba_selected"])
             pen = QPen()
-            pen.setWidth(5)
+            pen.setWidth(AbstractDragDropIndicator.INDICATOR_WIDTH)
             pen.setColor(border_color)
 
             # background
-            background_color = QColor(255, 0, 0, 64)
+            background_color = QColor(*iColor["rgba_selected"])
+            background_color.setAlpha(64)
             brush = QBrush(background_color)
 
             # set painter
             painter.setPen(pen)
             painter.setBrush(brush)
 
-            # draw dot to the left
-            # drop between
-            if option.rect.height() == 0:
-                #painter.drawEllipse(option.rect.topLeft(), 6, 6)
-                top_left = QPoint(0, option.rect.topLeft().y())
-                painter.drawEllipse(top_left, 6,6)
-                #painter.drawLine(QPoint(option.rect.topLeft().x()+6, option.rect.topLeft().y()), option.rect.topRight())
-            # drop on
-            else:
-                painter.drawRoundedRect(option.rect, 25, 25)
+            # draw
+            if self.orientation() == Qt.Vertical:
+                self.__drawVertical(widget, option, painter, size, width)
+            elif self.orientation() == Qt.Horizontal:
+                self.__drawHorizontal(widget, option, painter, size, width)
         else:
-            super().drawPrimitive(element, option, painter, widget)
+            super(AbstractDragDropIndicator, self).drawPrimitive(element, option, painter, widget)
+
+    def createTriangle(self, size, direction=attrs.EAST):
+        """
+        Creates a triangle to be displayed by the painter.
+
+        Args:
+            size (int): the size of the triangle to draw
+            direction (attrs.DIRECTION): which way the triangle should point
+        """
+        if direction == attrs.EAST:
+            triangle_point_list = [
+                [0, 0],
+                [-size, size],
+                [-size, -size],
+                [0, 0]
+            ]
+        if direction == attrs.WEST:
+            triangle_point_list = [
+                [0, 0],
+                [size, size],
+                [size, -size],
+                [0, 0]
+            ]
+        if direction == attrs.NORTH:
+            triangle_point_list = [
+                [0, 0],
+                [size, -size],
+                [-size, -size],
+                [0, 0]
+            ]
+        if direction == attrs.SOUTH:
+            triangle_point_list = [
+                [0, 0],
+                [size, size],
+                [-size, size],
+                [0, 0]
+            ]
+        triangle = QPolygonF(map(lambda p: QPoint(*p), triangle_point_list))
+        return triangle
 
 
 if __name__ == '__main__':
@@ -792,15 +944,15 @@ if __name__ == '__main__':
     for x in range(0, 4):
         model.insertNewIndex(x, str('node%s'%x))
 
-    model.setIsRootDropEnabled(False)
+    #model.setIsRootDropEnabled(False)
     #model.setIsDragEnabled(False)
     # set model event
     model.setDragStartEvent(testDrag)
     model.setDropEvent(testDrop)
     model.setTextChangedEvent(testEdit)
 
-    tree_view = TreeView()
-    tree_view.setStyle(TreeViewDropIndicator())
+    tree_view = AbstractDragDropTreeView()
+    tree_view.setStyle(AbstractDragDropIndicator())
     tree_view.setStyleSheet("""QTreeView::item[test=true]{color:rgba(0,255,0,255)}""")
 
     tree_view.move(QCursor.pos())
@@ -812,16 +964,12 @@ if __name__ == '__main__':
     tree_view.setModel(model)
     model.setIsDragEnabled(True)
 
-
-
-
-
     list_view = QListView()
 
     list_view.move(QCursor.pos())
-    list_view.setDragDropOverwriteMode(False)
+    #list_view.setDragDropOverwriteMode(False)
     list_view.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
-    list_view.setDropIndicatorShown(True)
+    #list_view.setDropIndicatorShown(True)
     list_view.setModel(model)
 
     # table_view = QTableView()

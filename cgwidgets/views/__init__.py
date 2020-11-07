@@ -1,4 +1,5 @@
 from .AbstractDragDropModel import AbstractDragDropModelItem
 from .AbstractDragDropModel import AbstractDragDropModel
 from .AbstractDragDropModel import AbstractDragDropModelDelegate
+from .AbstractDragDropModel import AbstractDragDropIndicator
 from .CompleterView import CompleterPopup

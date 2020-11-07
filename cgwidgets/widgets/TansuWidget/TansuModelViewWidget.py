@@ -13,7 +13,7 @@ from cgwidgets.widgets import AbstractInputGroup
 from cgwidgets.widgets.TansuWidget import (
     TansuBaseWidget, TansuModel, iTansuDynamicWidget
 )
-from cgwidgets.views import AbstractDragDropModel, AbstractDragDropModelDelegate
+from cgwidgets.views import AbstractDragDropModel, AbstractDragDropModelDelegate, AbstractDragDropIndicator
 
 
 class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
@@ -615,10 +615,10 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
 
         # todo disabled item style...
         # not formatting? or getting disabled?
+        # color: rgba{rgba_selected};
         style_sheet_args['item_selected_snippet'] = """
             border: {outline_width}px solid rgba{rgba_outline};
             background-color: rgba{rgba_gray_1};
-            color: rgba{rgba_selected};
         """.format(**style_sheet_args)
 
         #             color: rgba{rgba_selected};
@@ -719,7 +719,7 @@ class TansuModelDelegateWidget(AbstractInputGroup):
 class TansuHeaderAbstractView(object):
     def __init__(self):
         # setup style
-        self.setStyle(TansuHeaderViewDropIndicatorStyle())
+        self.setStyle(AbstractDragDropIndicator())
         #print(self.style())
         self.setupCustomDelegate()
 
@@ -803,172 +803,6 @@ class TansuHeaderAbstractView(object):
     def setIsEditable(self, _isEditable):
         self._isEditable = _isEditable
         self.model().setIsEditable(_isEditable)
-
-
-class TansuHeaderViewDropIndicatorStyle(QProxyStyle):
-    """
-    Drag / drop style.
-
-    Args:
-        direction (Qt.DIRECTION): What direction the current flow of
-            the widget is
-    """
-    INDICATOR_WIDTH = 2
-    INDICATOR_SIZE = 10
-
-    def __init__(self, parent=None):
-        super(TansuHeaderViewDropIndicatorStyle, self).__init__(parent)
-        self._orientation = Qt.Vertical
-
-    def orientation(self):
-        return self._orientation
-
-    def setOrientation(self, orientation):
-        self._orientation = orientation
-
-    def __drawVertical(self, widget, option, painter, size, width):
-        # drop between
-        y_pos = option.rect.topLeft().y()
-        if option.rect.height() == 0:
-            # create indicators
-            l_indicator = self.createTriangle(size, attrs.EAST)
-            l_indicator.translate(QPoint(size + (width / 2), y_pos))
-
-            r_indicator = self.createTriangle(size, attrs.WEST)
-            r_indicator.translate(QPoint(
-                widget.width() - size - (width / 2), y_pos)
-            )
-
-            # draw
-            painter.drawPolygon(l_indicator)
-            painter.drawPolygon(r_indicator)
-            painter.drawLine(
-                QPoint(size + (width / 2), y_pos),
-                QPoint(widget.width() - size - (width / 2), y_pos)
-            )
-
-            # set fill color
-            background_color = QColor(*iColor["rgba_gray_1"])
-            brush = QBrush(background_color)
-            path = QPainterPath()
-            path.addPolygon(l_indicator)
-            path.addPolygon(r_indicator)
-            painter.fillPath(path, brush)
-
-        # drop on
-        else:
-            indicator_rect = QRect((width / 2), y_pos, widget.width() - (width / 2), option.rect.height())
-            painter.drawRoundedRect(indicator_rect, 1, 1)
-
-    def __drawHorizontal(self, widget, option, painter, size, width):
-        x_pos = option.rect.topLeft().x()
-        if option.rect.width() == 0:
-            # create indicators
-            top_indicator = self.createTriangle(size, attrs.NORTH)
-            top_indicator.translate(QPoint(x_pos, size + (width / 2)))
-
-            bot_indicator = self.createTriangle(size, attrs.SOUTH)
-            bot_indicator.translate(QPoint(x_pos, option.rect.height() - size - (width / 2)))
-
-            # draw
-            painter.drawPolygon(top_indicator)
-            painter.drawPolygon(bot_indicator)
-            painter.drawLine(
-                QPoint(x_pos, size + (width / 2)),
-                QPoint(x_pos, option.rect.height() - size + (width / 2))
-            )
-
-            # set fill color
-            background_color = QColor(*iColor["rgba_gray_1"])
-            brush = QBrush(background_color)
-            path = QPainterPath()
-            path.addPolygon(top_indicator)
-            path.addPolygon(bot_indicator)
-
-            painter.fillPath(path, brush)
-
-        # drop on
-        else:
-            painter.drawRoundedRect(option.rect, 1, 1)
-
-    def drawPrimitive(self, element, option, painter, widget=None):
-        """
-        https://www.qtcentre.org/threads/35443-Customize-drop-indicator-in-QTreeView
-
-        Draw a line across the entire row rather than just the column
-        we're hovering over.  This may not always work depending on global
-        style - for instance I think it won't work on OSX.
-
-        Still draws the original line - not really sure why
-            - clearing the painter will clear the entire view
-        """
-        if element == self.PE_IndicatorItemViewItemDrop:
-            # border
-            # get attrs
-            size = TansuHeaderViewDropIndicatorStyle.INDICATOR_SIZE
-            width = TansuHeaderViewDropIndicatorStyle.INDICATOR_WIDTH
-
-            # border color
-            border_color = QColor(*iColor["rgba_selected"])
-            pen = QPen()
-            pen.setWidth(TansuHeaderViewDropIndicatorStyle.INDICATOR_WIDTH)
-            pen.setColor(border_color)
-
-            # background
-            background_color = QColor(*iColor["rgba_selected"])
-            background_color.setAlpha(64)
-            brush = QBrush(background_color)
-
-            # set painter
-            painter.setPen(pen)
-            painter.setBrush(brush)
-
-            # draw
-            if self.orientation() == Qt.Vertical:
-                self.__drawVertical(widget, option, painter, size, width)
-            elif self.orientation() == Qt.Horizontal:
-                self.__drawHorizontal(widget, option, painter, size, width)
-        else:
-            super(TansuHeaderViewDropIndicatorStyle, self).drawPrimitive(element, option, painter, widget)
-
-    def createTriangle(self, size, direction=attrs.EAST):
-        """
-        Creates a triangle to be displayed by the painter.
-
-        Args:
-            size (int): the size of the triangle to draw
-            direction (attrs.DIRECTION): which way the triangle should point
-        """
-        if direction == attrs.EAST:
-            triangle_point_list = [
-                [0, 0],
-                [-size, size],
-                [-size, -size],
-                [0, 0]
-            ]
-        if direction == attrs.WEST:
-            triangle_point_list = [
-                [0, 0],
-                [size, size],
-                [size, -size],
-                [0, 0]
-            ]
-        if direction == attrs.NORTH:
-            triangle_point_list = [
-                [0, 0],
-                [size, -size],
-                [-size, -size],
-                [0, 0]
-            ]
-        if direction == attrs.SOUTH:
-            triangle_point_list = [
-                [0, 0],
-                [size, size],
-                [-size, size],
-                [0, 0]
-            ]
-        triangle = QPolygonF(map(lambda p: QPoint(*p), triangle_point_list))
-        return triangle
 
 
 class TansuHeaderListView(QListView, TansuHeaderAbstractView):
@@ -1128,7 +962,8 @@ class TansuHeaderTreeView(QTreeView, TansuHeaderAbstractView):
         return QTreeView.dropEvent(self, event)
 
     def keyPressEvent(self, event):
-        # todo disable stuff?
+        # todo disable - move to abstractmodel
+        #
         # how to set up style change?
         # ... do this in model derp
         if event.key() == Qt.Key_D:
@@ -1138,7 +973,6 @@ class TansuHeaderTreeView(QTreeView, TansuHeaderAbstractView):
                     item = index.internalPointer()
                     enabled = False if item.isEnabled() else True
                     self.model().setItemEnabled(item, enabled)
-                    #item.setIsEnabled(enabled)
 
         return QTreeView.keyPressEvent(self, event)
 
