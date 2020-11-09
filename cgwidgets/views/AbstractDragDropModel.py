@@ -186,6 +186,7 @@ class AbstractDragDropModel(QAbstractItemModel):
         self._isDragEnabled = True
         self._isDropEnabled = True
         self._isEditable = True
+        self._isDeleteEnabled = True
 
         #
         self._dropping = False
@@ -194,6 +195,22 @@ class AbstractDragDropModel(QAbstractItemModel):
     def setItemEnabled(self, item, enabled):
         item.setIsEnabled(enabled)
         self.itemEnabledEvent(item, enabled)
+
+    def deleteItem(self, item, event_update=False):
+        # run deletion event
+        if event_update:
+            self.itemDeleteEvent(item)
+
+        # get old parents
+        old_parent_item = item.parent()
+        old_parent_index = self.getParentIndexFromItem(item)
+
+        # remove item
+        self.beginRemoveRows(old_parent_index, item.row(), item.row() + 1)
+        old_parent_item.children().remove(item)
+        self.endRemoveRows()
+
+        # TODO remove item
 
     def rowCount(self, parent):
         """
@@ -431,11 +448,11 @@ class AbstractDragDropModel(QAbstractItemModel):
     def setIsSelectable(self, _isSelectable):
         self._isSelectable = _isSelectable
 
-    def isEnableable(self):
-        return self._isEnableable
+    def isDeleteEnabled(self):
+        return self._isDeleteEnabled
 
-    def setIsEnableable(self, _isEnableable):
-        self._isEnableable = _isEnableable
+    def setIsDeleteEnabled(self, _isDeleteEnabled):
+        self._isDeleteEnabled = _isDeleteEnabled
 
     def isDragEnabled(self):
         if self._isDragEnabled:
@@ -454,6 +471,12 @@ class AbstractDragDropModel(QAbstractItemModel):
 
     def setIsDropEnabled(self, _isDropEnabled):
         self._isDropEnabled = _isDropEnabled
+
+    def isEnableable(self):
+        return self._isEnableable
+
+    def setIsEnableable(self, _isEnableable):
+        self._isEnableable = _isEnableable
 
     def isRootDropEnabled(self):
         return self._root_drop_enabled
@@ -558,14 +581,15 @@ class AbstractDragDropModel(QAbstractItemModel):
                 if row > item.row():
                     row -= 1
 
-            # get old parents
-            old_parent_item = item.parent()
-            old_parent_index = self.getParentIndexFromItem(item)
-
-            # remove item
-            self.beginRemoveRows(old_parent_index, item.row(), item.row() + 1)
-            old_parent_item.children().remove(item)
-            self.endRemoveRows()
+            self.deleteItem(item, event_update=False)
+            # # get old parents
+            # old_parent_item = item.parent()
+            # old_parent_index = self.getParentIndexFromItem(item)
+            #
+            # # remove item
+            # self.beginRemoveRows(old_parent_index, item.row(), item.row() + 1)
+            # old_parent_item.children().remove(item)
+            # self.endRemoveRows()
 
             # insert item
             self.beginInsertRows(parent, row, row + 1)
@@ -577,6 +601,15 @@ class AbstractDragDropModel(QAbstractItemModel):
         return True
 
     """ VIRTUAL FUNCTIONS """
+    def setItemDeleteEvent(self, function):
+        self.__itemDeleteEvent = function
+
+    def itemDeleteEvent(self, item):
+        self.__itemDeleteEvent(item)
+
+    def __itemDeleteEvent(self, item):
+        pass
+
     def setDragStartEvent(self, function):
         self.__startDragEvent = function
 
@@ -602,24 +635,6 @@ class AbstractDragDropModel(QAbstractItemModel):
     def __dropEvent(self, indexes, parent):
         pass
 
-    def setTextChangedEvent(self, function):
-        self.__textChangedEvent = function
-
-    def textChangedEvent(self, item, old_value, new_value):
-        """
-        Virtual function that is run after the mime data has been dropped.
-
-        Args:
-            item (AbstractDragDropModelItem): item that has been manipulated
-            old_value (str):
-            new_value (str):
-        """
-        self.__textChangedEvent(item, old_value, new_value)
-
-    def __textChangedEvent(self, item, old_value, new_value):
-        print(item, item)
-        pass
-
     def setItemEnabledEvent(self, function):
         self.__itemEnabledEvent = function
 
@@ -641,3 +656,22 @@ class AbstractDragDropModel(QAbstractItemModel):
     def __itemEnabledEvent(self, item, enabled):
         # print(item.columnData()['name'], enabled)
         pass
+
+    def setTextChangedEvent(self, function):
+        self.__textChangedEvent = function
+
+    def textChangedEvent(self, item, old_value, new_value):
+        """
+        Virtual function that is run after the mime data has been dropped.
+
+        Args:
+            item (AbstractDragDropModelItem): item that has been manipulated
+            old_value (str):
+            new_value (str):
+        """
+        self.__textChangedEvent(item, old_value, new_value)
+
+    def __textChangedEvent(self, item, old_value, new_value):
+        print(item, item)
+        pass
+

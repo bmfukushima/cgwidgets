@@ -155,6 +155,10 @@ class AbstractDragDropAbstractView(object):
         self._isEnableable = _isEnableable
         self.model().setIsEnableable(_isEnableable)
 
+    def setIsDeleteEnabled(self, _isDeleteEnabled):
+        self._isDeleteEnabled = _isDeleteEnabled
+        self.model().setIsDeleteEnabled(_isDeleteEnabled)
+
     """ EVENTS """
     def startDrag(self, event):
         """
@@ -168,6 +172,17 @@ class AbstractDragDropAbstractView(object):
         return QAbstractItemView.startDrag(self, event)
 
     def keyPressEvent(self, event):
+        # Delete Item
+        if self.model().isDeleteEnabled():
+            if event.key() in [Qt.Key_Delete, Qt.Key_Backspace]:
+                indexes = self.selectionModel().selectedIndexes()
+                for index in indexes:
+                    if index.column() == 0:
+                        item = index.internalPointer()
+                        self.model().deleteItem(item, event_update=True)
+                        # todo DELETE ITEM
+
+        # Disable Item
         if self.model().isEnableable():
             if event.key() == Qt.Key_D:
                 indexes = self.selectionModel().selectedIndexes()
@@ -612,6 +627,9 @@ if __name__ == '__main__':
     def testEnable(item, enabled):
         print(item.columnData()['name'], enabled)
 
+    def testDelete(item):
+        print(item.columnData()['name'])
+
     model = AbstractDragDropModel()
 
     for x in range(0, 4):
@@ -624,6 +642,7 @@ if __name__ == '__main__':
     model.setDropEvent(testDrop)
     model.setTextChangedEvent(testEdit)
     model.setItemEnabledEvent(testEnable)
+    model.setItemDeleteEvent(testDelete)
 
     tree_view = AbstractDragDropListView()
     tree_view.setStyle(AbstractDragDropIndicator())
