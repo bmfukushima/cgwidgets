@@ -86,34 +86,16 @@ class TansuModel(AbstractDragDropModel):
 
     def __init__(self, parent=None, root_item=None):
         super(TansuModel, self).__init__(parent, root_item=root_item)
-        self._header_type = ''
+        #self._header_type = ''
         self.setItemType(TansuModelItem)
 
-    # def flags(self, index):
-    #     # List view handlers
-    #     if 'List' in self.header_type:
+    # @property
+    # def header_type(self):
+    #     return self._header_type
     #
-    #         return Qt.ItemIsEnabled | Qt.ItemIsSelectable | \
-    #             Qt.ItemIsDragEnabled | Qt.ItemIsEditable
-    #
-    #     # Tree view handlers
-    #     elif 'Tree' in self.header_type:
-    #         return Qt.ItemIsEnabled | Qt.ItemIsSelectable | \
-    #             Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled | Qt.ItemIsEditable
-    #
-    #     if not index.isValid():
-    #         return Qt.ItemIsEnabled | Qt.ItemIsDropEnabled
-    #     # I failed at something handlers
-    #     # return Qt.ItemIsEnabled | Qt.ItemIsSelectable | \
-    #     #     Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled | Qt.ItemIsEditable
-
-    @property
-    def header_type(self):
-        return self._header_type
-
-    @header_type.setter
-    def header_type(self, _header_type):
-        self._header_type = _header_type
+    # @header_type.setter
+    # def header_type(self, _header_type):
+    #     self._header_type = _header_type
 
 
 if __name__ == '__main__':

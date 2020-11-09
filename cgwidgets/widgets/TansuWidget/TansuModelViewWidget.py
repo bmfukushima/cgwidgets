@@ -592,6 +592,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         # create style sheet
         style_sheet_args = iColor.style_sheet_args
         style_sheet_args = AbstractDragDropAbstractView.createAbstractStyleSheet(
+            self.headerWidget(),
             style_sheet_args,
             header_position=self.headerPosition(),
             outline_width=TansuModelViewWidget.OUTLINE_WIDTH
@@ -683,6 +684,9 @@ class TansuModelDelegateWidget(AbstractInputGroup):
 
 
 class TansuHeaderAbstractView(AbstractDragDropAbstractView):
+    def __init__(self, parent=None):
+        super(TansuHeaderAbstractView, self).__init__()
+
     def showEvent(self, event):
         tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
         if tab_tansu_widget:

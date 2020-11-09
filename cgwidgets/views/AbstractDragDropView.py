@@ -13,10 +13,10 @@ from cgwidgets.views.AbstractDragDropModel import AbstractDragDropModel
 
 """ VIEWS """
 class AbstractDragDropAbstractView(object):
-
     def __init__(self):
         # setup style
-        self.setStyle(AbstractDragDropIndicator())
+        self.style = AbstractDragDropIndicator()
+        self.setStyle(self.style)
         self.setupCustomDelegate()
 
         # setup flags
@@ -106,9 +106,13 @@ class AbstractDragDropAbstractView(object):
 
     def setOrientation(self, orientation):
         """
-        This is inverted...
-        :param orientation:
-        :return:
+        Set the orientation/direction of the view.  This will determine
+        the flow of the items, from LeftToRight, or TopToBottom, depending
+        on the orientation.
+
+        Args:
+            orientation (Qt.Orientation): Can either be
+                Qt.Horizonal | Qt.Vertical
         """
         if orientation == Qt.Horizontal:
             self.setFlow(QListView.TopToBottom)
@@ -116,14 +120,13 @@ class AbstractDragDropAbstractView(object):
         else:
             self.setFlow(QListView.LeftToRight)
             direction = Qt.Horizontal
-
         # update drag/drop style
-        # todo fix this...
+        # todo WARNING: HARDCODED HERE
         try:
-            if isinstance(self, AbstractDragDropListView):
-                self.style().setOrientation(direction)
+            if "ListView" in str(type(self)):
+                self.style.setOrientation(direction)
             else:
-                self.style().setOrientation(Qt.Vertical)
+                self.style.setOrientation(Qt.Vertical)
         except AttributeError:
             # for some reason katana doesnt like this...
             pass
@@ -137,9 +140,9 @@ class AbstractDragDropAbstractView(object):
     """ DRAG / DROP PROPERTIES """
     # is this even in use?
     # shouldn't this be enabled?
-    def setIsSelectable(self, _isSelectable):
-        self._isSelectable = _isSelectable
-        self.model().setIsSelectable(_isSelectable)
+    # def setIsSelectable(self, _isSelectable):
+    #     self._isSelectable = _isSelectable
+    #     self.model().setIsSelectable(_isSelectable)
 
     def setIsDragEnabled(self, _isDragEnabled):
         self._isDragEnabled = _isDragEnabled
@@ -159,8 +162,6 @@ class AbstractDragDropAbstractView(object):
         Overrides certain handlers on the tree view
 
         https://bugreports.qt.io/browse/QTBUG-72234
-        :param event:
-        :return:
         """
         index_clicked = self.getIndexUnderCursor()
         self.selectionModel().select(index_clicked, QItemSelectionModel.Select)
@@ -308,6 +309,7 @@ class AbstractDragDropTreeView(QTreeView, AbstractDragDropAbstractView):
     def dropEvent(self, event):
         return QTreeView.dropEvent(self, event)
 
+
 """ STYLES """
 class AbstractDragDropModelDelegate(QStyledItemDelegate):
     """
@@ -410,6 +412,7 @@ class AbstractDragDropModelDelegate(QStyledItemDelegate):
         else:
             color = QColor(*iColor["rgba_text_disabled"])
         # TODO highlight selection color???
+        # why did I move this here?
         brush.setColor(color)
 
         brush2 = QBrush(QColor(0, 255, 0, 128))
