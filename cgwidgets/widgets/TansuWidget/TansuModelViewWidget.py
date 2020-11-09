@@ -13,7 +13,14 @@ from cgwidgets.widgets import AbstractInputGroup
 from cgwidgets.widgets.TansuWidget import (
     TansuBaseWidget, TansuModel, iTansuDynamicWidget
 )
-from cgwidgets.views import AbstractDragDropModel, AbstractDragDropModelDelegate, AbstractDragDropIndicator
+from cgwidgets.views import (
+    AbstractDragDropModel,
+    AbstractDragDropModelDelegate,
+    AbstractDragDropIndicator,
+    AbstractDragDropTreeView,
+    AbstractDragDropListView,
+    AbstractDragDropAbstractView
+)
 
 
 class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
@@ -369,9 +376,6 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         """
         Updates which widgets should be shown/hidden based off of
         the current models selection list
-
-        TODO:
-            update for dynamic?
         """
         if self.getDelegateType() == TansuModelViewWidget.STACKED:
             self.toggleDelegateSpacerWidget()
@@ -383,7 +387,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
                 widget_list.append(widget)
 
             self.delegateWidget().isolateWidgets(widget_list)
-        # TODO updated for dynamic...
+        # TODO updated for dynamic... I've never used this...
         elif self.getDelegateType() == TansuModelViewWidget.DYNAMIC:
             selection_model = self.headerWidget().selectionModel()
             for index in selection_model.selectedIndexes():
@@ -577,14 +581,6 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         """
         self.setHandleWidth(0)
 
-        # setup args
-        style_sheet_args = iColor.style_sheet_args
-        style_sheet_args.update({
-            'outline_width': TansuModelViewWidget.OUTLINE_WIDTH,
-            'type': type(self.headerWidget()).__name__
-        })
-        style_sheet_args.update(icons)
-
         # splitter
         splitter_style_sheet = """
             QSplitter::handle {{
@@ -593,50 +589,20 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
             }}
         """
 
-        # header
-        base_header_style_sheet = """
-        QHeaderView::section {{
-            background-color: rgba{rgba_gray_0};
-            color: rgba{rgba_text};
-            border: {outline_width}px solid rgba{rgba_outline};
-        }}
-        {type}{{
-            border:None;
-            background-color: rgba{rgba_gray_0};
-            selection-background-color: rgba{rgba_invisible};
-        }}
-            """.format(**style_sheet_args)
-
-        # item style snippets ( so it can be combined later...)
-        style_sheet_args['item_snippet'] = """
-            border: {outline_width}px solid rgba{rgba_outline};
-            background-color: rgba{rgba_gray_0};
-        """.format(**style_sheet_args)
-
-        # todo disabled item style...
-        # not formatting? or getting disabled?
-        # color: rgba{rgba_selected};
-        style_sheet_args['item_selected_snippet'] = """
-            border: {outline_width}px solid rgba{rgba_outline};
-            background-color: rgba{rgba_gray_1};
-        """.format(**style_sheet_args)
-
-        #             color: rgba{rgba_selected};
         # create style sheet
-        header_style_sheet = self.headerWidget().createStyleSheet(self.headerPosition(), style_sheet_args)
-
-        # combine style sheets
+        style_sheet_args = iColor.style_sheet_args
+        style_sheet_args = AbstractDragDropAbstractView.createAbstractStyleSheet(
+            style_sheet_args,
+            header_position=self.headerPosition(),
+            outline_width=TansuModelViewWidget.OUTLINE_WIDTH
+        )
         style_sheet_args['splitter_style_sheet'] = splitter_style_sheet
-        style_sheet_args['header_style_sheet'] = header_style_sheet
-        style_sheet_args['base_header_style_sheet'] = base_header_style_sheet
 
+        # apply style
         style_sheet = """
-        {base_header_style_sheet}
         {header_style_sheet}
-        {type}::item:hover{{color: rgba{rgba_hover}}}
         {splitter_style_sheet}
         """.format(**style_sheet_args)
-
         self.setStyleSheet(style_sheet)
 
     """ default view size"""
@@ -716,265 +682,28 @@ class TansuModelDelegateWidget(AbstractInputGroup):
         return self._item
 
 
-class TansuHeaderAbstractView(object):
-    def __init__(self):
-        # setup style
-        self.setStyle(AbstractDragDropIndicator())
-        #print(self.style())
-        self.setupCustomDelegate()
-
-        # setup flags
-        self.setDragDropMode(QAbstractItemView.InternalMove)
-        self._isDropEnabled = True
-        self._isDragEnabled = False
-        self._isEditable = True
-        self._isSelectable = True
-
-    """ ABSTRACT ITEM VIEW STUFFF"""
-    def setupCustomDelegate(self):
-        delegate = AbstractDragDropModelDelegate(self)
-        self.setItemDelegate(delegate)
-
-    def createStyleSheet(self, header_position, style_sheet_args):
-        pass
-
-    def getIndexUnderCursor(self):
-        """
-        Returns the QModelIndex underneath the cursor
-        """
-        pos = self.mapFromGlobal(QCursor.pos())
-        index = self.indexAt(pos)
-        return index
-
+class TansuHeaderAbstractView(AbstractDragDropAbstractView):
     def showEvent(self, event):
         tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
         if tab_tansu_widget:
             tab_tansu_widget.updateDelegateDisplay()
         QListView.showEvent(self, event)
 
-    def setOrientation(self, orientation):
-        """
-        This is inverted...
-        :param orientation:
-        :return:
-        """
-        if orientation == Qt.Horizontal:
-            self.setFlow(QListView.TopToBottom)
-            direction = Qt.Vertical
-        else:
-            self.setFlow(QListView.LeftToRight)
-            direction = Qt.Horizontal
-
-        # update drag/drop style
-        # todo fix this...
-        try:
-            if isinstance(self, TansuHeaderListView):
-                self.style().setOrientation(direction)
-            else:
-                self.style().setOrientation(Qt.Vertical)
-        except AttributeError:
-            # for some reason katana doesnt like this...
-            pass
-
-    def setMultiSelect(self, multi_select):
-        if multi_select is True:
-            self.setSelectionMode(QAbstractItemView.MultiSelection)
-        else:
-            self.setSelectionMode(QAbstractItemView.SingleSelection)
-
     def selectionChanged(self, selected, deselected):
         top_level_widget = getWidgetAncestor(self, TansuModelViewWidget)
         if top_level_widget:
             top_level_widget.updateDelegateDisplayFromSelection(selected, deselected)
 
-    """ DRAG / DROP PROPERTIES """
-    def setIsSelectable(self, _isSelectable):
-        self._isSelectable = _isSelectable
-        self.model().setIsSelectable(_isSelectable)
 
-    def setIsDragEnabled(self, _isDragEnabled):
-        self._isDragEnabled = _isDragEnabled
-        self.model().setIsDragEnabled(_isDragEnabled)
-
-    def setIsDropEnabled(self, _isDropEnabled):
-        self._isDropEnabled = _isDropEnabled
-        self.model().setIsDropEnabled(_isDropEnabled)
-
-    def setIsEditable(self, _isEditable):
-        self._isEditable = _isEditable
-        self.model().setIsEditable(_isEditable)
-
-
-class TansuHeaderListView(QListView, TansuHeaderAbstractView):
+class TansuHeaderListView(AbstractDragDropListView, TansuHeaderAbstractView):
     def __init__(self, parent=None):
         super(TansuHeaderListView, self).__init__(parent)
         self.setEditTriggers(QAbstractItemView.DoubleClicked)
 
-    def createStyleSheet(self, header_position, style_sheet_args):
-        """
-        Args:
-            header_position (attrs.POSITION): the current position of the header
-            style_sheet_args (dict): current dictionary of stylesheet args
-        Returns (dict): style sheet
-        """
-        if header_position == attrs.NORTH:
-            style_sheet = """
-            {type}::item{{
-                {item_snippet}
-                border-right: None;
-                border-top: None;
-            }}
-            {type}::item:selected{{
-                {item_selected_snippet}
-                border-right: None;
-                border-bottom: None;
-            }}
-            """.format(**style_sheet_args)
-        elif header_position == attrs.SOUTH:
-            style_sheet = """
-            {type}::item{{
-                {item_snippet}
-                border-right: None;
-                border-bottom: None;
-            }}
-            {type}::item:selected{{
-                {item_selected_snippet}
-                border-right: None;
-                border-top: None;
-            }}
-            """.format(**style_sheet_args)
-        elif header_position == attrs.EAST:
-            style_sheet = """
-            {type}::item{{
-                {item_snippet}
-                border-top: None;
-                border-right: None;
-            }}
-            {type}::item:selected{{
-                {item_selected_snippet}
-                border-top: None;
-                border-left: None;
-            }}
-            """.format(**style_sheet_args)
-        elif header_position == attrs.WEST:
-            style_sheet = """
-            {type}::item{{
-                {item_snippet}
-                border-top: None;
-                border-left: None;
-            }}
-            {type}::item:selected{{
-                {item_selected_snippet}
-                border-top: None;
-                border-right: None;
-            }}
-            """.format(**style_sheet_args)
 
-        return style_sheet
-
-
-class TansuHeaderTreeView(QTreeView, TansuHeaderAbstractView):
+class TansuHeaderTreeView(AbstractDragDropTreeView, AbstractDragDropAbstractView):
     def __init__(self, parent=None):
         super(TansuHeaderTreeView, self).__init__(parent)
-
-    """ """
-    def setHeaderData(self, _header_data):
-        """
-        Sets the header display data.
-
-        Args:
-            header_data (list): of strings that will be displayed as the header
-                data.  This will also set the number of columns in the view aswell.
-        """
-        self.model().setHeaderData(_header_data)
-
-    """ Overload """
-    def createStyleSheet(self, header_position, style_sheet_args):
-        """
-        Args:
-            header_position (attrs.POSITION): the current position of the header
-            style_sheet_args (dict): current dictionary of stylesheet args
-        Returns (dict): style sheet
-        """
-
-        style_sheet = """
-        QHeaderView::section {{
-            background-color: rgba{rgba_gray_0};
-            color: rgba{rgba_text};
-            border: {outline_width}px solid rgba{rgba_outline};
-        }}
-        {type}::item{{
-            {item_snippet}
-        }}
-        {type}::item:selected{{
-            {item_selected_snippet}
-        }}
-        {type}::branch:open:has-children {{
-            image: url({path_branch_open})
-        }}  
-        {type}::branch:closed:has-children {{
-            image: url({path_branch_closed})
-        }}  
-            """.format(**style_sheet_args)
-
-        return style_sheet
-
-    def setFlow(self, _):
-        pass
-
-    def startDrag(self, event):
-        # todo setup drag/drop icon transparency
-        # print(event)
-        # from qtpy.QtCore import QMimeData
-        # from  qtpy.QtGui import QDrag
-        # mimeData = QMimeData()
-        #
-        # drag = QDrag(self)
-        # drag.setMimeData(mimeData)
-        # drag.setHotSpot(event.pos() - self.rect().topLeft())
-
-        #dropAction = drag.exec_(Qt.MoveAction)
-        return QTreeView.startDrag(self, event)
-        # OptionList::startDrag(Qt::DropActions
-        # supportedActions){
-        # if (supportedActions & Qt::CopyAction)
-        # {
-        #     QList < QListWidgetItem * > m_items = selectedItems();
-        # if (m_items.isEmpty())
-        #     return;
-        # QMimeData * data = mimeData(m_items);
-        # QDrag * drag = new
-        # QDrag(this);
-        # QPixmap
-        # pixmap(":/images/MyIcon_icon.png");
-        # drag->setPixmap(pixmap);
-        # drag->setMimeData(data);
-        # drag->setHotSpot(pixmap.rect().center());
-        # drag->exec(Qt::CopyAction);
-        # }
-        # else
-        # QListWidget::startDrag(supportedActions);
-        #
-        # }
-
-    def dropEvent(self, event):
-        #print('dropping???')
-        return QTreeView.dropEvent(self, event)
-
-    def keyPressEvent(self, event):
-        # todo disable - move to abstractmodel
-        #
-        # how to set up style change?
-        # ... do this in model derp
-        if event.key() == Qt.Key_D:
-            indexes = self.selectionModel().selectedIndexes()
-            for index in indexes:
-                if index.column() == 0:
-                    item = index.internalPointer()
-                    enabled = False if item.isEnabled() else True
-                    self.model().setItemEnabled(item, enabled)
-
-        return QTreeView.keyPressEvent(self, event)
 
 
 class TabTansuDynamicWidgetExample(QWidget):
@@ -995,7 +724,6 @@ class TabTansuDynamicWidgetExample(QWidget):
         item (TansuModelItem)
         """
         if item:
-            #name = self.model().getItemName(item)
             widget.setTitle(item.name())
             widget.getMainWidget().label.setText(item.name())
 
