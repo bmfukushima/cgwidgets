@@ -92,6 +92,9 @@ def testEdit(item, old_value, new_value):
     print("---- EDIT EVENT ----")
     print(item, old_value, new_value)
 
+def testEnable(item, enabled):
+    print(item.columnData()['name'], enabled)
+
 # create tansu widget
 tansu_widget = TansuModelViewWidget()
 
@@ -125,6 +128,7 @@ tansu_widget.setHeaderIsDragEnabled(True)
 tansu_widget.setHeaderDragStartEvent(testDrag)
 tansu_widget.setHeaderDropEvent(testDrop)
 tansu_widget.setHeaderTextChangedEvent(testEdit)
+tansu_widget.setHeaderItemEnabledEvent(testEnable)
 
 # set size / show
 tansu_widget.resize(500, 500)

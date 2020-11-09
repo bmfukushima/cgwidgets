@@ -21,10 +21,11 @@ class AbstractDragDropAbstractView(object):
 
         # setup flags
         self.setDragDropMode(QAbstractItemView.InternalMove)
-        self._isDropEnabled = True
+        self._isDropEnabled = False
         self._isDragEnabled = False
-        self._isEditable = True
-        self._isSelectable = True
+        self._isEditable = False
+        self._isEnableable = False
+        #self._isSelectable = True
 
         style_sheet_args = iColor.style_sheet_args
         self.createAbstractStyleSheet(style_sheet_args)
@@ -138,12 +139,6 @@ class AbstractDragDropAbstractView(object):
             self.setSelectionMode(QAbstractItemView.SingleSelection)
 
     """ DRAG / DROP PROPERTIES """
-    # is this even in use?
-    # shouldn't this be enabled?
-    # def setIsSelectable(self, _isSelectable):
-    #     self._isSelectable = _isSelectable
-    #     self.model().setIsSelectable(_isSelectable)
-
     def setIsDragEnabled(self, _isDragEnabled):
         self._isDragEnabled = _isDragEnabled
         self.model().setIsDragEnabled(_isDragEnabled)
@@ -155,6 +150,10 @@ class AbstractDragDropAbstractView(object):
     def setIsEditable(self, _isEditable):
         self._isEditable = _isEditable
         self.model().setIsEditable(_isEditable)
+
+    def setIsEnableable(self, _isEnableable):
+        self._isEnableable = _isEnableable
+        self.model().setIsEnableable(_isEnableable)
 
     """ EVENTS """
     def startDrag(self, event):
@@ -169,13 +168,14 @@ class AbstractDragDropAbstractView(object):
         return QAbstractItemView.startDrag(self, event)
 
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key_D:
-            indexes = self.selectionModel().selectedIndexes()
-            for index in indexes:
-                if index.column() == 0:
-                    item = index.internalPointer()
-                    enabled = False if item.isEnabled() else True
-                    self.model().setItemEnabled(item, enabled)
+        if self.model().isEnableable():
+            if event.key() == Qt.Key_D:
+                indexes = self.selectionModel().selectedIndexes()
+                for index in indexes:
+                    if index.column() == 0:
+                        item = index.internalPointer()
+                        enabled = False if item.isEnabled() else True
+                        self.model().setItemEnabled(item, enabled)
 
         return QAbstractItemView.keyPressEvent(self, event)
 
@@ -642,6 +642,7 @@ if __name__ == '__main__':
     #list_view.setDropIndicatorShown(True)
     list_view.setModel(model)
     list_view.setIsDropEnabled(False)
+    list_view.setIsEnableable(False)
     # table_view = QTableView()
     # table_view.show()
 

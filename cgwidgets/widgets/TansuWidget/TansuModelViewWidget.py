@@ -196,6 +196,9 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
     def setHeaderTextChangedEvent(self, function):
         self.model().setTextChangedEvent(function)
 
+    def setHeaderItemEnabledEvent(self, function):
+        self.model().setItemEnabledEvent(function)
+
     def setHeaderIsDragEnabled(self, enabled):
         self.headerWidget().setIsDragEnabled(enabled)
 

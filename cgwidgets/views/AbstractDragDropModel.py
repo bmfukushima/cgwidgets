@@ -182,6 +182,7 @@ class AbstractDragDropModel(QAbstractItemModel):
 
         # flags
         self._isSelectable = True
+        self._isEnableable = True
         self._isDragEnabled = True
         self._isDropEnabled = True
         self._isEditable = True
@@ -429,6 +430,12 @@ class AbstractDragDropModel(QAbstractItemModel):
 
     def setIsSelectable(self, _isSelectable):
         self._isSelectable = _isSelectable
+
+    def isEnableable(self):
+        return self._isEnableable
+
+    def setIsEnableable(self, _isEnableable):
+        self._isEnableable = _isEnableable
 
     def isDragEnabled(self):
         if self._isDragEnabled:
