@@ -8,8 +8,7 @@ from qtpy.QtGui import QColor, QPen, QBrush, QCursor, QPolygonF, QPainterPath
 from cgwidgets.utils import attrs
 from cgwidgets.settings.colors import iColor
 from cgwidgets.settings.icons import icons
-from cgwidgets.widgets.AbstractWidgets import AbstractStringInputWidget
-from cgwidgets.views.AbstractDragDropModel import AbstractDragDropModel
+
 
 """ VIEWS """
 class AbstractDragDropAbstractView(object):
@@ -139,25 +138,29 @@ class AbstractDragDropAbstractView(object):
             self.setSelectionMode(QAbstractItemView.SingleSelection)
 
     """ DRAG / DROP PROPERTIES """
-    def setIsDragEnabled(self, _isDragEnabled):
-        self._isDragEnabled = _isDragEnabled
-        self.model().setIsDragEnabled(_isDragEnabled)
+    def setIsDragEnabled(self, enabled):
+        self._isDragEnabled = enabled
+        self.model().setIsDragEnabled(enabled)
 
-    def setIsDropEnabled(self, _isDropEnabled):
-        self._isDropEnabled = _isDropEnabled
-        self.model().setIsDropEnabled(_isDropEnabled)
+    def setIsDropEnabled(self, enabled):
+        self._isDropEnabled = enabled
+        self.model().setIsDropEnabled(enabled)
 
-    def setIsEditable(self, _isEditable):
-        self._isEditable = _isEditable
-        self.model().setIsEditable(_isEditable)
+    def setIsRootDropEnabled(self, enabled):
+        self._isRootDropEnabled = enabled
+        self.model().setIsRootDropEnabled(enabled)
 
-    def setIsEnableable(self, _isEnableable):
-        self._isEnableable = _isEnableable
-        self.model().setIsEnableable(_isEnableable)
+    def setIsEditable(self, enabled):
+        self._isEditable = enabled
+        self.model().setIsEditable(enabled)
 
-    def setIsDeleteEnabled(self, _isDeleteEnabled):
-        self._isDeleteEnabled = _isDeleteEnabled
-        self.model().setIsDeleteEnabled(_isDeleteEnabled)
+    def setIsEnableable(self, enabled):
+        self._isEnableable = enabled
+        self.model().setIsEnableable(enabled)
+
+    def setIsDeleteEnabled(self, enabled):
+        self._isDeleteEnabled = enabled
+        self.model().setIsDeleteEnabled(enabled)
 
     """ EVENTS """
     def startDrag(self, event):
@@ -180,7 +183,6 @@ class AbstractDragDropAbstractView(object):
                     if index.column() == 0:
                         item = index.internalPointer()
                         self.model().deleteItem(item, event_update=True)
-                        # todo DELETE ITEM
 
         # Disable Item
         if self.model().isEnableable():
@@ -328,10 +330,13 @@ class AbstractDragDropTreeView(QTreeView, AbstractDragDropAbstractView):
 """ STYLES """
 class AbstractDragDropModelDelegate(QStyledItemDelegate):
     """
-
+    Default item delegate that is used in the custom Drag/Drop model
     """
     def __init__(self, parent=None):
         super(AbstractDragDropModelDelegate, self).__init__(parent)
+        # importing the default delegate here
+        # as it will run into import errors if imported at top most lvl
+        from cgwidgets.widgets.AbstractWidgets import AbstractStringInputWidget
         self._delegate_widget = AbstractStringInputWidget
 
     def sizeHint(self, *args, **kwargs):
@@ -351,19 +356,9 @@ class AbstractDragDropModelDelegate(QStyledItemDelegate):
         editor.setGeometry(option.rect)
 
     def createEditor(self, parent, option, index):
-        #delegate_widget = AbstractStringInputWidget(parent)
         delegate_widget = self.delegateWidget(parent)
 
-        # delegate_widget.setStyleSheet("background-color: rgba(255,0,255,255)")
         return delegate_widget
-
-        # if index.column() == 0:
-        #     delegate_widget = AbstractStringInputWidget(parent)
-        #
-        #     #delegate_widget.setStyleSheet("background-color: rgba(255,0,255,255)")
-        #     return delegate_widget
-        # else:
-        #     return QItemDelegate.createEditor(self, parent, option, index)
 
     def setEditorData(self, editor, index):
         text = index.model().data(index, Qt.DisplayRole)
@@ -430,14 +425,14 @@ class AbstractDragDropModelDelegate(QStyledItemDelegate):
         # why did I move this here?
         brush.setColor(color)
 
-        brush2 = QBrush(QColor(0, 255, 0, 128))
+        # brush2 = QBrush(QColor(0, 255, 0, 128))
         new_option.palette.setBrush(QPalette.Normal, QPalette.HighlightedText, brush)
-        #new_option.palette.setBrush(QPalette.Normal, QPalette.Highlight, brush2)
+        # new_option.palette.setBrush(QPalette.Normal, QPalette.Highlight, brush2)
 
         QStyledItemDelegate.paint(self, painter, new_option, index)
 
-        if option.state == QStyle.State_Selected:
-            brush2 = QBrush(QColor(0, 255, 255, 128))
+        # if option.state == QStyle.State_Selected:
+        #     brush2 = QBrush(QColor(0, 255, 255, 128))
         return
 
 
@@ -613,6 +608,8 @@ if __name__ == '__main__':
     from qtpy.QtWidgets import (
         QApplication, QTreeView, QListView, QAbstractItemView)
     from qtpy.QtGui import QCursor
+
+    from cgwidgets.views import AbstractDragDropModel
     app = QApplication(sys.argv)
 
     def testDrag(indexes):

@@ -23,7 +23,7 @@ from qtpy.QtWidgets import (
 from cgwidgets.widgets.AbstractWidgets import AbstractStringInputWidget
 from cgwidgets.utils import getBottomLeftPos, getFontSize
 from cgwidgets.settings.colors import iColor
-from cgwidgets.views import CompleterPopup
+from cgwidgets.views.CompleterView import CompleterPopup
 
 
 class AbstractComboListInputWidget(QComboBox):

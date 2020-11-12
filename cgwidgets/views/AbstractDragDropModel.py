@@ -1,10 +1,10 @@
 # https://doc.qt.io/qt-5/model-view-programming.html#model-view-classes
-from qtpy.QtWidgets import QStyledItemDelegate, QApplication, QWidget, QStyle, QStyleOptionViewItem
+from qtpy.QtWidgets import (
+    QStyledItemDelegate, QApplication, QWidget, QStyle, QStyleOptionViewItem)
 from qtpy.QtCore import (
     Qt, QModelIndex, QAbstractItemModel, QItemSelectionModel,
     QSize, QMimeData, QByteArray, QPoint, QRect)
 from qtpy.QtGui import QPainter, QColor, QPen, QBrush, QCursor, QPolygonF, QPainterPath
-
 
 from cgwidgets.settings.colors import iColor
 from cgwidgets.utils import attrs
@@ -581,15 +581,8 @@ class AbstractDragDropModel(QAbstractItemModel):
                 if row > item.row():
                     row -= 1
 
+            # remove item
             self.deleteItem(item, event_update=False)
-            # # get old parents
-            # old_parent_item = item.parent()
-            # old_parent_index = self.getParentIndexFromItem(item)
-            #
-            # # remove item
-            # self.beginRemoveRows(old_parent_index, item.row(), item.row() + 1)
-            # old_parent_item.children().remove(item)
-            # self.endRemoveRows()
 
             # insert item
             self.beginInsertRows(parent, row, row + 1)

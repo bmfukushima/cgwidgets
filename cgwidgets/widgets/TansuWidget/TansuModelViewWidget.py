@@ -1,22 +1,14 @@
 from qtpy.QtWidgets import (
-    QWidget, QListView, QAbstractItemView, QScrollArea, QSplitter, QTreeView,
-    QProxyStyle
-)
-from qtpy.QtCore import Qt, QModelIndex, QPoint, QRect
-from qtpy.QtGui import QPainter, QColor, QPen, QBrush, QCursor, QPolygonF, QPainterPath
+    QWidget, QListView, QAbstractItemView, QScrollArea, QSplitter)
+from qtpy.QtCore import Qt, QModelIndex
 
 from cgwidgets.utils import getWidgetAncestor, attrs
 from cgwidgets.settings.colors import iColor
-from cgwidgets.settings.icons import icons
-
 from cgwidgets.widgets import AbstractInputGroup
 from cgwidgets.widgets.TansuWidget import (
     TansuBaseWidget, TansuModel, iTansuDynamicWidget
 )
 from cgwidgets.views import (
-    AbstractDragDropModel,
-    AbstractDragDropModelDelegate,
-    AbstractDragDropIndicator,
     AbstractDragDropTreeView,
     AbstractDragDropListView,
     AbstractDragDropAbstractView
@@ -199,6 +191,9 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
     def setHeaderItemEnabledEvent(self, function):
         self.model().setItemEnabledEvent(function)
 
+    def setHeaderItemDeleteEvent(self, function):
+        self.model().setItemDeleteEvent(function)
+
     def setHeaderIsDragEnabled(self, enabled):
         self.headerWidget().setIsDragEnabled(enabled)
 
@@ -210,6 +205,12 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
 
     def setHeaderIsSelectable(self, enabled):
         self.headerWidget().setIsSelectable(enabled)
+
+    def setHeaderItemIsEnableable(self, enabled):
+        self.headerWidget().setIsEnableable(enabled)
+
+    def setHeaderItemIsDeleteEnabled(self, enabled):
+        self.headerWidget().setIsDeleteEnabled(enabled)
     # """ DRAG / DROP PROPERTIES """
     # def isSelectable(self):
     #     if self._isSelectable:
@@ -686,7 +687,7 @@ class TansuModelDelegateWidget(AbstractInputGroup):
         return self._item
 
 
-class TansuHeaderAbstractView(AbstractDragDropAbstractView):
+class TansuHeaderAbstractView(object):
     def __init__(self, parent=None):
         super(TansuHeaderAbstractView, self).__init__()
 
@@ -708,7 +709,7 @@ class TansuHeaderListView(AbstractDragDropListView, TansuHeaderAbstractView):
         self.setEditTriggers(QAbstractItemView.DoubleClicked)
 
 
-class TansuHeaderTreeView(AbstractDragDropTreeView, AbstractDragDropAbstractView):
+class TansuHeaderTreeView(AbstractDragDropTreeView, TansuHeaderAbstractView):
     def __init__(self, parent=None):
         super(TansuHeaderTreeView, self).__init__(parent)
 
@@ -792,6 +793,7 @@ if __name__ == "__main__":
     #w.headerWidget().model().setIsDragEnabled(False)
     w.setHeaderIsDropEnabled(True)
     w.setHeaderIsDragEnabled(True)
-
+    w.setHeaderItemIsEnableable(True)
+    w.setHeaderItemIsDeleteEnabled(False)
     w.move(QCursor.pos())
     sys.exit(app.exec_())
