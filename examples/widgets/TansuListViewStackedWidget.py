@@ -18,7 +18,7 @@ def testDrag(indexes):
     print("---- DRAG EVENT ----")
     print(indexes)
 
-def testDrop(indexes, parent):
+def testDrop(row, indexes, parent):
     """
     Run when the user does a drop.  This is triggered on the dropMimeData funciton
     in the model.
@@ -29,7 +29,7 @@ def testDrop(indexes, parent):
 
     """
     print("---- DROP EVENT ----")
-    print(indexes, parent)
+    print(row, indexes, parent)
 
 def testEdit(item, old_value, new_value):
     print("---- EDIT EVENT ----")
@@ -49,7 +49,7 @@ tab_3.addWidget(QLabel('c'))
 
 # set attrs
 tansu_widget.setHeaderPosition(attrs.WEST)
-tansu_widget.setMultiSelect(True)
+#tansu_widget.setMultiSelect(True)
 tansu_widget.setMultiSelectDirection(Qt.Vertical)
 tansu_widget.delegateWidget().handle_length = 100
 
@@ -59,13 +59,13 @@ tansu_widget.insertTansuWidget(0, column_data={'example' : '<title> world'}, wid
 tansu_widget.insertTansuWidget(0, column_data={'example' : '<title> tansu'}, widget=tab_3)
 
 # enable drag/drop
-tansu_widget.setHeaderIsDropEnabled(False)
-tansu_widget.setHeaderIsDragEnabled(True)
+tansu_widget.setHeaderItemIsDropEnabled(False)
+tansu_widget.setHeaderItemIsDragEnabled(True)
 
 # setup drag/drop events
-tansu_widget.setHeaderDragStartEvent(testDrag)
-tansu_widget.setHeaderDropEvent(testDrop)
-tansu_widget.setHeaderTextChangedEvent(testEdit)
+tansu_widget.setHeaderItemDragStartEvent(testDrag)
+tansu_widget.setHeaderItemDropEvent(testDrop)
+tansu_widget.setHeaderItemTextChangedEvent(testEdit)
 
 # display widget
 tansu_widget.resize(500, 500)

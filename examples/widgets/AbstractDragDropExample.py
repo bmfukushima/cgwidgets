@@ -18,8 +18,8 @@ app = QApplication(sys.argv)
 def testDrag(indexes):
     print(indexes)
 
-def testDrop(indexes, parent):
-    print(indexes, parent)
+def testDrop(row, indexes, parent):
+    print(row, indexes, parent)
 
 def testEdit(item, old_value, new_value):
     print(item, old_value, new_value)

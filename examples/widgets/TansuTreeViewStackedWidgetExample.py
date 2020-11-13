@@ -42,9 +42,9 @@ for y in range(0, 2):
     tansu_widget.insertTansuWidget(y, column_data={'name': str(y), 'one': 'datttaaa'}, widget=widget, parent=parent_item)
 
 # enable drag/drop
-tansu_widget.setHeaderIsDragEnabled(True)
-tansu_widget.setHeaderIsDropEnabled(True)
-tansu_widget.setHeaderIsEditable(False)
+tansu_widget.setHeaderItemIsDragEnabled(True)
+tansu_widget.setHeaderItemIsDropEnabled(True)
+tansu_widget.setHeaderItemIsEditable(False)
 
 # show view
 tansu_widget.resize(500, 500)

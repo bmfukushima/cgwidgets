@@ -163,16 +163,16 @@ class AbstractDragDropAbstractView(object):
         self.model().setIsDeleteEnabled(enabled)
 
     """ EVENTS """
-    def startDrag(self, event):
-        """
-        Overrides certain handlers on the tree view
-
-        https://bugreports.qt.io/browse/QTBUG-72234
-        """
-        index_clicked = self.getIndexUnderCursor()
-        self.selectionModel().select(index_clicked, QItemSelectionModel.Select)
-
-        return QAbstractItemView.startDrag(self, event)
+    # def startDrag(self, event):
+    #     """
+    #     Overrides certain handlers on the tree view
+    #
+    #     https://bugreports.qt.io/browse/QTBUG-72234
+    #     """
+    #     index_clicked = self.getIndexUnderCursor()
+    #     self.selectionModel().select(index_clicked, QItemSelectionModel.Select)
+    #
+    #     return QAbstractItemView.startDrag(self, event)
 
     def keyPressEvent(self, event):
         # Delete Item

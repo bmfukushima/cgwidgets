@@ -115,6 +115,8 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         self.updateStyleSheet()
 
     """ API """
+    # TODO move all of these to HeaderItem...
+
     def insertTansuWidget(self, row, column_data={}, parent=None, widget=None):
         """
         Creates a new tab at  the specified index
@@ -161,7 +163,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
 
         return new_index
 
-    def setHeaderDragDropMode(self, drag_drop_mode):
+    def setHeaderItemDragDropMode(self, drag_drop_mode):
         """
         Sets the drag/drop mode of the header.
 
@@ -171,13 +173,13 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         """
         self.headerWidget().setDragDropMode(drag_drop_mode)
 
-    def setHeaderDragStartEvent(self, function):
+    def setHeaderItemDragStartEvent(self, function):
         """
         Sets the function to be run after the drag has been initiated
         """
         self.model().setDragStartEvent(function)
 
-    def setHeaderDropEvent(self, function):
+    def setHeaderItemDropEvent(self, function):
         """
         Sets the function to be run after the drop event has happened.
         This function should take one arg which is a list of items that
@@ -185,7 +187,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         """
         self.model().setDropEvent(function)
 
-    def setHeaderTextChangedEvent(self, function):
+    def setHeaderItemTextChangedEvent(self, function):
         self.model().setTextChangedEvent(function)
 
     def setHeaderItemEnabledEvent(self, function):
@@ -194,18 +196,19 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
     def setHeaderItemDeleteEvent(self, function):
         self.model().setItemDeleteEvent(function)
 
-    def setHeaderIsDragEnabled(self, enabled):
+    def setHeaderItemIsDragEnabled(self, enabled):
         self.headerWidget().setIsDragEnabled(enabled)
 
-    def setHeaderIsDropEnabled(self, enabled):
+    def setHeaderItemIsDropEnabled(self, enabled):
         self.headerWidget().setIsDropEnabled(enabled)
-    def setHeaderIsRootDropEnabled(self, enabled):
+
+    def setHeaderItemIsRootDropEnabled(self, enabled):
         self.headerWidget().setIsRootDropEnabled(enabled)
 
-    def setHeaderIsEditable(self, enabled):
+    def setHeaderItemIsEditable(self, enabled):
         self.headerWidget().setIsEditable(enabled)
 
-    def setHeaderIsSelectable(self, enabled):
+    def setHeaderItemIsSelectable(self, enabled):
         self.headerWidget().setIsSelectable(enabled)
 
     def setHeaderItemIsEnableable(self, enabled):
@@ -750,7 +753,7 @@ if __name__ == "__main__":
     w.setHeaderPosition(attrs.NORTH)
     w.setMultiSelect(True)
     w.setMultiSelectDirection(Qt.Vertical)
-    w.setHeaderDragDropMode(QAbstractItemView.InternalMove)
+    w.setHeaderItemDragDropMode(QAbstractItemView.InternalMove)
     view.setHeaderData(['name', 'two', 'test'])
     #view.setHeaderData(['one', 'two'])
 
@@ -782,8 +785,8 @@ if __name__ == "__main__":
 
     w.show()
     #w.headerWidget().model().setIsDragEnabled(False)
-    w.setHeaderIsDropEnabled(True)
-    w.setHeaderIsDragEnabled(True)
+    w.setHeaderItemIsDropEnabled(True)
+    w.setHeaderItemIsDragEnabled(True)
     w.setHeaderItemIsEnableable(True)
     w.setHeaderItemIsDeleteEnabled(False)
     w.move(QCursor.pos())

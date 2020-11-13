@@ -590,7 +590,7 @@ class AbstractDragDropModel(QAbstractItemModel):
             self.endInsertRows()
 
         # run virtual function
-        self.dropEvent(indexes, parent_item)
+        self.dropEvent(row, indexes, parent_item)
 
         return False
 
@@ -616,7 +616,7 @@ class AbstractDragDropModel(QAbstractItemModel):
     def setDropEvent(self, function):
         self.__dropEvent = function
 
-    def dropEvent(self, indexes, parent):
+    def dropEvent(self, row, indexes, parent):
         """
         Virtual function that is run after the mime data has been dropped.
 
@@ -624,9 +624,9 @@ class AbstractDragDropModel(QAbstractItemModel):
             indexes (list): of AbstractDragDropModelItems
             parent (AbstractDragDropModelItem): item that was dropped on
         """
-        self.__dropEvent(indexes, parent)
+        self.__dropEvent(row, indexes, parent)
 
-    def __dropEvent(self, indexes, parent):
+    def __dropEvent(self, row, indexes, parent):
         pass
 
     def setItemEnabledEvent(self, function):
