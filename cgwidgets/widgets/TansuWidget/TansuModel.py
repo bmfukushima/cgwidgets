@@ -89,6 +89,10 @@ class TansuModel(AbstractDragDropModel):
         #self._header_type = ''
         self.setItemType(TansuModelItem)
 
+    # def dropMimeData(self, data, action, row, column, parent):
+    #     return_val = super(TansuModel, self).dropMimeData(data, action, row, column, parent)
+    #     self.selectionModel().clearSelection()
+    #     return return_val
     # @property
     # def header_type(self):
     #     return self._header_type

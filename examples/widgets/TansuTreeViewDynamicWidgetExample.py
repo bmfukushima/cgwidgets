@@ -93,7 +93,7 @@ custom_index.internalPointer().setDynamicWidgetBaseClass(CustomDynamicWidget)
 custom_index.internalPointer().setDynamicUpdateFunction(CustomDynamicWidget.updateGUI)
 
 # set attrs
-tansu_widget.setHeaderPosition(attrs.NORTH)
+tansu_widget.setHeaderPosition(attrs.WEST)
 tansu_widget.setMultiSelect(True)
 tansu_widget.setMultiSelectDirection(Qt.Vertical)
 tansu_widget.delegateWidget().handle_length = 100

@@ -323,8 +323,8 @@ class AbstractDragDropTreeView(QTreeView, AbstractDragDropAbstractView):
     def setFlow(self, _):
         pass
 
-    def dropEvent(self, event):
-        return QTreeView.dropEvent(self, event)
+    # def dropEvent(self, event):
+    #     return QTreeView.dropEvent(self, event)
 
 
 """ STYLES """

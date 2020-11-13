@@ -591,7 +591,8 @@ class AbstractDragDropModel(QAbstractItemModel):
 
         # run virtual function
         self.dropEvent(indexes, parent_item)
-        return True
+
+        return False
 
     """ VIRTUAL FUNCTIONS """
     def setItemDeleteEvent(self, function):

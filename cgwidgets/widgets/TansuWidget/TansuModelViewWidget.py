@@ -389,9 +389,8 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
                 item = index.internalPointer()
                 widget = item.delegateWidget()
                 widget_list.append(widget)
-
             self.delegateWidget().isolateWidgets(widget_list)
-        # # TODO updated for dynamic... I've never used this...
+        # TODO updated for dynamic... I've never used this...
         # elif self.getDelegateType() == TansuModelViewWidget.DYNAMIC:
         #     selection_model = self.headerWidget().selectionModel()
         #     for index in selection_model.selectedIndexes():
@@ -699,10 +698,26 @@ class TansuHeaderAbstractView(object):
         QAbstractItemView.showEvent(self, event)
 
     def selectionChanged(self, selected, deselected):
+        # print('selection changed...')
         top_level_widget = getWidgetAncestor(self, TansuModelViewWidget)
         if top_level_widget:
+            # for index in selected.indexes():
+            #     if index.column() == 0:
+            #         print(index.internalPointer().columnData()['name'])
             top_level_widget.updateDelegateDisplayFromSelection(selected, deselected)
 
+    def dropEvent(self, event):
+        # resolve drop event
+        return_val = super(self.__class__, self).dropEvent(event)
+
+        # get main widget
+        main_widget = getWidgetAncestor(self, TansuModelViewWidget)
+
+        # clear selection
+        main_widget.delegateWidget().displayAllWidgets(False)
+        self.selectionModel().clearSelection()
+
+        return return_val
 
 class TansuHeaderListView(AbstractDragDropListView, TansuHeaderAbstractView):
     def __init__(self, parent=None):
@@ -713,6 +728,20 @@ class TansuHeaderListView(AbstractDragDropListView, TansuHeaderAbstractView):
 class TansuHeaderTreeView(AbstractDragDropTreeView, TansuHeaderAbstractView):
     def __init__(self, parent=None):
         super(TansuHeaderTreeView, self).__init__(parent)
+
+    # def dropEvent(self, event):
+    #     # resolve drop event
+    #     return_val = super(TansuHeaderTreeView, self).dropEvent(event)
+    #
+    #     # get main widget
+    #     main_widget = getWidgetAncestor(self, TansuModelViewWidget)
+    #
+    #     # clear selection
+    #     main_widget.delegateWidget().displayAllWidgets(False)
+    #     main_widget.delegateWidget().clear()
+    #     self.selectionModel().clearSelection()
+    #
+    #     return return_val
 
 
 class TabTansuDynamicWidgetExample(QWidget):
