@@ -199,6 +199,8 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
 
     def setHeaderIsDropEnabled(self, enabled):
         self.headerWidget().setIsDropEnabled(enabled)
+    def setHeaderIsRootDropEnabled(self, enabled):
+        self.headerWidget().setIsRootDropEnabled(enabled)
 
     def setHeaderIsEditable(self, enabled):
         self.headerWidget().setIsEditable(enabled)
@@ -211,48 +213,6 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
 
     def setHeaderItemIsDeleteEnabled(self, enabled):
         self.headerWidget().setIsDeleteEnabled(enabled)
-    # """ DRAG / DROP PROPERTIES """
-    # def isSelectable(self):
-    #     if self._isSelectable:
-    #         return Qt.ItemIsSelectable
-    #     else:
-    #         return 0
-    #
-    # def setIsSelectable(self, _isSelectable):
-    #     self._isSelectable = _isSelectable
-    #     self.model().setIsSelectable(_isSelectable)
-    #
-    # def isDragDropEnabled(self):
-    #     if self._isDragEnabled:
-    #         return Qt.ItemIsDragEnabled
-    #     else:
-    #         return 0
-    #
-    # def setIsDragDropEnabled(self, _isDragDropEnabled):
-    #     self._isDragDropEnabled = _isDragDropEnabled
-    #     # self.model().setIsDragEnabled(_isDragDropEnabled)
-    #     # self.model().setIsDropEnabled(_isDragDropEnabled)
-    #     # print(self.model())
-    #     # if _isDragDropEnabled:
-    #     #     self.headerWidget().setDragDropOverwriteMode(True)
-    #     # else:
-    #     #     self.headerWidget().setDragDropOverwriteMode(False)
-    #
-    # def isRootDropEnabled(self):
-    #     return self._root_drop_enabled
-    #
-    # def setIsRootDropEnabled(self, _root_drop_enabled):
-    #     self._root_drop_enabled = _root_drop_enabled
-    #
-    # def isEditable(self):
-    #     if self._isEditable:
-    #         return Qt.ItemIsEditable
-    #     else:
-    #         return 0
-    #
-    # def setIsEditable(self, _isEditable):
-    #     self._isEditable = _isEditable
-    #     self.model().setIsEditable(_isEditable)
 
     """ MODEL """
     def model(self):
@@ -718,6 +678,7 @@ class TansuHeaderAbstractView(object):
         self.selectionModel().clearSelection()
 
         return return_val
+
 
 class TansuHeaderListView(AbstractDragDropListView, TansuHeaderAbstractView):
     def __init__(self, parent=None):
