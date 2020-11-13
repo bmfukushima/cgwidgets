@@ -391,13 +391,14 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
                 widget_list.append(widget)
 
             self.delegateWidget().isolateWidgets(widget_list)
-        # TODO updated for dynamic... I've never used this...
-        elif self.getDelegateType() == TansuModelViewWidget.DYNAMIC:
-            selection_model = self.headerWidget().selectionModel()
-            for index in selection_model.selectedIndexes():
-                item = index.internalPointer()
-                self.__updateDelegateItem(item, False)
-                self.__updateDelegateItem(item, True)
+        # # TODO updated for dynamic... I've never used this...
+        # elif self.getDelegateType() == TansuModelViewWidget.DYNAMIC:
+        #     selection_model = self.headerWidget().selectionModel()
+        #     for index in selection_model.selectedIndexes():
+        #         item = index.internalPointer()
+        #         if item.column() == 0:
+        #             self.__updateDelegateItem(item, False)
+        #             self.__updateDelegateItem(item, True)
             #self.updateDynamicWidget()
 
     def updateDelegateDisplayFromSelection(self, selected, deselected):
@@ -411,9 +412,9 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         # update display
         self._selection_item = selected
         for index in selected.indexes():
-            item = index.internalPointer()
-            #item.setSelected(True)
-            self.__updateDelegateItem(item, True)
+            if index.column() == 0:
+                item = index.internalPointer()
+                self.__updateDelegateItem(item, True)
 
         for index in deselected.indexes():
             item = index.internalPointer()
@@ -695,7 +696,7 @@ class TansuHeaderAbstractView(object):
         tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
         if tab_tansu_widget:
             tab_tansu_widget.updateDelegateDisplay()
-        QListView.showEvent(self, event)
+        QAbstractItemView.showEvent(self, event)
 
     def selectionChanged(self, selected, deselected):
         top_level_widget = getWidgetAncestor(self, TansuModelViewWidget)

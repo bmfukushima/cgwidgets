@@ -74,6 +74,7 @@ view = TansuHeaderTreeView()
 # setup header
 tansu_widget.setHeaderWidget(view)
 tansu_widget.setHeaderPosition(attrs.WEST)
+tansu_widget.setHeaderData(['name', 'test', 'three'])
 
 # set dynamic
 tansu_widget.setDelegateType(
@@ -87,7 +88,7 @@ for x in range(3):
     tansu_widget.insertTansuWidget(x, column_data={'name':name})
 
 # custom item
-custom_index = tansu_widget.insertTansuWidget(0, column_data={'name': 'Custom Handlers'})
+custom_index = tansu_widget.insertTansuWidget(0, column_data={'name': 'Custom Handlers', 'test':'test'})
 custom_index.internalPointer().setDynamicWidgetBaseClass(CustomDynamicWidget)
 custom_index.internalPointer().setDynamicUpdateFunction(CustomDynamicWidget.updateGUI)
 
