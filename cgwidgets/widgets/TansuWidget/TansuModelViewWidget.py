@@ -354,13 +354,13 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
                 widget_list.append(widget)
             self.delegateWidget().isolateWidgets(widget_list)
         # TODO updated for dynamic... I've never used this...
-        # elif self.getDelegateType() == TansuModelViewWidget.DYNAMIC:
-        #     selection_model = self.headerWidget().selectionModel()
-        #     for index in selection_model.selectedIndexes():
-        #         item = index.internalPointer()
-        #         if item.column() == 0:
-        #             self.__updateDelegateItem(item, False)
-        #             self.__updateDelegateItem(item, True)
+        elif self.getDelegateType() == TansuModelViewWidget.DYNAMIC:
+            selection_model = self.headerWidget().selectionModel()
+            for index in selection_model.selectedIndexes():
+                item = index.internalPointer()
+                if index.column() == 0:
+                    self.__updateDelegateItem(item, False)
+                    self.__updateDelegateItem(item, True)
             #self.updateDynamicWidget()
 
     def updateDelegateDisplayFromSelection(self, selected, deselected):
