@@ -351,8 +351,10 @@ class FileBrowserInputWidget(AbstractListInputWidget, iGroupInput):
 # TODO move these under one architecture...
 # abstract input group
 # AbstractInputGroupBox
+# TODO Move to one architecture
 
-class FrameInputWidget(QFrame):
+
+class AbstractFrameInputWidget(QFrame):
     """
     name (str): the name displayed to the user
     input_widget (InputWidgetInstance): The instance of the input widget type
@@ -371,26 +373,17 @@ class FrameInputWidget(QFrame):
         parent=None,
         name="None",
         note="None",
-        widget_type=StringInputWidget,
         direction=Qt.Horizontal
     ):
-        super(FrameInputWidget, self).__init__(parent)
+        super(AbstractFrameInputWidget, self).__init__(parent)
         QBoxLayout(QBoxLayout.LeftToRight, self)
-
-        # set up attrs
-        self.setInputBaseClass(widget_type)
 
         # setup layout
         self._label = QLabel(name)
         self._separator = AbstractVLine()
-        self._input_widget = widget_type(self)
-        self._input_widget.setSizePolicy(
-            QSizePolicy.MinimumExpanding, QSizePolicy.Preferred
-        )
 
         self.layout().addWidget(self._label)
         self.layout().addWidget(self._separator)
-        self.layout().addWidget(self._input_widget)
 
         # set up display
         self.setToolTip(note)
@@ -478,6 +471,35 @@ class FrameInputWidget(QFrame):
     def getName(self):
         return self._label.text()
 
+    def labelWidth(self):
+        return self._label_width
+
+    def setLabelWidth(self, width):
+        self._label_width = width
+        self._label.setMinimumWidth(width)
+
+
+class FrameInputWidget(AbstractFrameInputWidget):
+    def __init__(
+        self,
+        parent=None,
+        name="None",
+        note="None",
+        direction=Qt.Horizontal,
+        widget_type=StringInputWidget
+    ):
+        super(FrameInputWidget, self).__init__(parent, name, note, direction)
+
+        # set up attrs
+        self.setInputBaseClass(widget_type)
+
+        # create base widget
+        self._input_widget = widget_type(self)
+        self._input_widget.setSizePolicy(
+            QSizePolicy.MinimumExpanding, QSizePolicy.Preferred
+        )
+        self.layout().addWidget(self._input_widget)
+
     def setInputWidget(self, _input_widget):
         # remove previous input widget
         if self.getInputWidget():
@@ -498,16 +520,33 @@ class FrameInputWidget(QFrame):
     def getInputBaseClass(self):
         return self._input_widget_base_class
 
-    def labelWidth(self):
-        return self._label_width
-
-    def setLabelWidth(self, width):
-        self._label_width = width
-        self._label.setMinimumWidth(width)
-
     """ EVENTS """
     def setUserFinishedEditingEvent(self, function):
         self._input_widget.setUserFinishedEditingEvent(function)
+
+
+class FrameGroupInputWidget(AbstractFrameInputWidget):
+    def __init__(
+        self,
+        parent=None,
+        name="None",
+        note="None",
+        direction=Qt.Horizontal
+    ):
+        super(FrameGroupInputWidget, self).__init__(parent, name, note, direction)
+
+    def addInputWidget(self, widget, finished_editing_function=None):
+        if finished_editing_function:
+            widget.setUserFinishedEditingEvent(finished_editing_function)
+        self.layout().addWidget(widget)
+
+    def getInputWidgets(self):
+        input_widgets = []
+        for index in self.layout().count()[2:]:
+            widget = self.layout().itemAt(index).widget()
+            input_widgets.append(widget)
+
+        return input_widgets
 
 
 if __name__ == "__main__":
@@ -626,6 +665,8 @@ if __name__ == "__main__":
     u_boolean_input_widget.setUserFinishedEditingEvent(test)
     u_string_input_widget.setUserFinishedEditingEvent(test)
     u_list_input_widget.setUserFinishedEditingEvent(test)
+
+    """ FRAME GROUP """
 
     """ Main Widget"""
     main_widget = QWidget()

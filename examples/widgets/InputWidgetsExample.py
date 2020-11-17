@@ -11,7 +11,8 @@ from cgwidgets.widgets import (
     BooleanInputWidget,
     GroupInputWidget,
     ListInputWidget,
-    FrameInputWidget
+    FrameInputWidget,
+    FrameGroupInputWidget
 )
 
 app = QApplication(sys.argv)
@@ -123,6 +124,33 @@ def createLabeledWidgets(title, direction=Qt.Horizontal):
 horizontal_label_widget = createLabeledWidgets("Frame Widgets ( Horizontal )", Qt.Horizontal)
 vertical_label_widget = createLabeledWidgets("Frame Widgets ( Vertical )", Qt.Vertical)
 
+""" Group Widget"""
+frame_group_input_widget = FrameGroupInputWidget(name='Frame Input Widgets', direction=Qt.Vertical)
+label_widgets = {
+        "float": FloatInputWidget,
+        "int": IntInputWidget,
+        "bool": BooleanInputWidget,
+        "str": StringInputWidget,
+        "list": ListInputWidget
+    }
+
+for arg in label_widgets:
+    # create widget
+    widget_type = label_widgets[arg]
+    input_widget = FrameInputWidget(name=arg, widget_type=widget_type)
+
+    # set widget orientation
+    input_widget.setDirection(Qt.Horizontal)
+
+    # add to group layout
+    frame_group_input_widget.addInputWidget(input_widget, finished_editing_function=test)
+
+    # list override
+    if arg == "list":
+        input_widget.getInputWidget().populate(list_of_crap)
+        input_widget.getInputWidget().display_item_colors = True
+
+
 """ Main Widget"""
 main_widget = QWidget()
 main_layout = QHBoxLayout(main_widget)
@@ -130,6 +158,7 @@ main_layout.addLayout(group_widget_layout)
 main_layout.addWidget(normal_widget)
 main_layout.addWidget(vertical_label_widget)
 main_layout.addWidget(horizontal_label_widget)
+main_layout.addWidget(frame_group_input_widget)
 
 main_widget.resize(500, 500)
 main_widget.show()
