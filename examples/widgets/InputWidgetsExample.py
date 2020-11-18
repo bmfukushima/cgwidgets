@@ -107,6 +107,10 @@ def createLabeledWidgets(title, direction=Qt.Horizontal):
         # set widget orientation
         input_widget.setDirection(direction)
 
+        # set separator
+        input_widget.setSeparatorLength(100)
+        input_widget.setSeparatorWidth(3)
+
         # add to group layout
         group_label_widget.layout().addWidget(input_widget)
 

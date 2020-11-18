@@ -14,9 +14,41 @@ from cgwidgets.utils import (
 class AbstractLine(QFrame):
     def __init__(self, parent=None):
         super(AbstractLine, self).__init__(parent)
+        self._length = -1
+
+    def getMargin(self):
+        if self.parent():
+            if self.length() == -1:
+                return 0
+            parent_length = self.parent().width()
+            margin = (parent_length - self.length()) * 0.5
+        else:
+            margin = 0
+        return margin
+
+    def setLength(self, length):
+        """
+        Sets the length of the line.  Note that width is already used
+        """
+        self._length = length
+        self.update()
+
+    def length(self):
+        return self._length
+
+    def update(self):
+        margin = self.getMargin()
         self.setStyleSheet("""
-            margin: 30px;
-        """)
+            margin: {margin}px;
+        """.format(margin=margin))
+
+    def showEvent(self, event):
+        self.update()
+        return QFrame.showEvent(self, event)
+
+    def resizeEvent(self, event):
+        self.update()
+        return QFrame.resizeEvent(self, event)
 
 
 class AbstractHLine(AbstractLine):

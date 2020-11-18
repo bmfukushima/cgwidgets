@@ -378,9 +378,13 @@ class AbstractFrameInputWidget(QFrame):
         super(AbstractFrameInputWidget, self).__init__(parent)
         QBoxLayout(QBoxLayout.LeftToRight, self)
 
+        # default attrs
+        self._separator_length = -1
+        self._separator_width = 3
+
         # setup layout
         self._label = QLabel(name)
-        self._separator = AbstractVLine()
+        self._separator = AbstractVLine(self)
 
         self.layout().addWidget(self._label)
         self.layout().addWidget(self._separator)
@@ -461,8 +465,17 @@ class AbstractFrameInputWidget(QFrame):
             self._separator = AbstractHLine()
         elif direction == Qt.Horizontal:
             self._separator = AbstractVLine()
-        self._separator.setLineWidth(5)
+        self.setSeparatorWidth(self._separator_width)
+        self.setSeparatorLength(self._separator_length)
         self.layout().insertWidget(1, self._separator)
+
+    def setSeparatorLength(self, length):
+        self._separator.setLength(length)
+        self._separator_length = length
+
+    def setSeparatorWidth(self, width):
+        self._separator.setLineWidth(width)
+        self._separator_width = width
 
     """ PROPERTIES """
     def setName(self, name):
@@ -610,61 +623,66 @@ if __name__ == "__main__":
     string_input_widget.setUserFinishedEditingEvent(test)
     list_input_widget.setUserFinishedEditingEvent(test)
 
-    """ Label widgets """
-    horizontal_label_widget = QGroupBox()
-    horizontal_label_widget.setTitle("Frame Widgets (Horizontal)")
-    horizontal_label_widget_layout = QVBoxLayout(horizontal_label_widget)
-
-    u_float_input_widget = FrameInputWidget(name="float", widget_type=FloatInputWidget)
-    u_int_input_widget = FrameInputWidget(name="int", widget_type=IntInputWidget)
-    u_boolean_input_widget = FrameInputWidget(name="bool", widget_type=BooleanInputWidget)
-    u_string_input_widget = FrameInputWidget(name='str', widget_type=StringInputWidget)
-    u_list_input_widget = FrameInputWidget(name='list', widget_type=ListInputWidget)
-    u_list_input_widget.getInputWidget().populate(list_of_crap)
-    u_list_input_widget.getInputWidget().display_item_colors = True
-
-    horizontal_label_widget_layout.addWidget(u_float_input_widget)
-    horizontal_label_widget_layout.addWidget(u_int_input_widget)
-    horizontal_label_widget_layout.addWidget(u_boolean_input_widget)
-    horizontal_label_widget_layout.addWidget(u_string_input_widget)
-    horizontal_label_widget_layout.addWidget(u_list_input_widget)
-
-    u_float_input_widget.setUserFinishedEditingEvent(test)
-    u_int_input_widget.setUserFinishedEditingEvent(test)
-    u_boolean_input_widget.setUserFinishedEditingEvent(test)
-    u_string_input_widget.setUserFinishedEditingEvent(test)
-    u_list_input_widget.setUserFinishedEditingEvent(test)
+    # """ Label widgets """
+    # horizontal_label_widget = QGroupBox()
+    # horizontal_label_widget.setTitle("Frame Widgets (Horizontal)")
+    # horizontal_label_widget_layout = QVBoxLayout(horizontal_label_widget)
+    #
+    # u_float_input_widget = FrameInputWidget(name="float", widget_type=FloatInputWidget)
+    # u_int_input_widget = FrameInputWidget(name="int", widget_type=IntInputWidget)
+    # u_boolean_input_widget = FrameInputWidget(name="bool", widget_type=BooleanInputWidget)
+    # u_string_input_widget = FrameInputWidget(name='str', widget_type=StringInputWidget)
+    # u_list_input_widget = FrameInputWidget(name='list', widget_type=ListInputWidget)
+    # u_list_input_widget.getInputWidget().populate(list_of_crap)
+    # u_list_input_widget.getInputWidget().display_item_colors = True
+    #
+    # horizontal_label_widget_layout.addWidget(u_float_input_widget)
+    # horizontal_label_widget_layout.addWidget(u_int_input_widget)
+    # horizontal_label_widget_layout.addWidget(u_boolean_input_widget)
+    # horizontal_label_widget_layout.addWidget(u_string_input_widget)
+    # horizontal_label_widget_layout.addWidget(u_list_input_widget)
+    #
+    # u_float_input_widget.setUserFinishedEditingEvent(test)
+    # u_int_input_widget.setUserFinishedEditingEvent(test)
+    # u_boolean_input_widget.setUserFinishedEditingEvent(test)
+    # u_string_input_widget.setUserFinishedEditingEvent(test)
+    # u_list_input_widget.setUserFinishedEditingEvent(test)
 
     """ Label widgets ( Vertical )"""
     vertical_label_widget = QGroupBox()
     vertical_label_widget.setTitle("Frame Widgets ( Vertical )")
     vertical_label_widget_layout = QVBoxLayout(vertical_label_widget)
 
+    print('0')
     u_float_input_widget = FrameInputWidget(name="float", widget_type=FloatInputWidget)
-    u_int_input_widget = FrameInputWidget(name="int", widget_type=IntInputWidget)
-    u_boolean_input_widget = FrameInputWidget(name="bool", widget_type=BooleanInputWidget)
-    u_string_input_widget = FrameInputWidget(name='str', widget_type=StringInputWidget)
-    u_list_input_widget = FrameInputWidget(name='list', widget_type=ListInputWidget)
-    u_list_input_widget.getInputWidget().populate(list_of_crap)
-    u_list_input_widget.getInputWidget().display_item_colors = True
-
+    print('1')
+    u_float_input_widget.setSeparatorLength(100)
+    u_float_input_widget.setSeparatorWidth(3)
+    print('2')
+    # u_int_input_widget = FrameInputWidget(name="int", widget_type=IntInputWidget)
+    # u_boolean_input_widget = FrameInputWidget(name="bool", widget_type=BooleanInputWidget)
+    # u_string_input_widget = FrameInputWidget(name='str', widget_type=StringInputWidget)
+    # u_list_input_widget = FrameInputWidget(name='list', widget_type=ListInputWidget)
+    # u_list_input_widget.getInputWidget().populate(list_of_crap)
+    # u_list_input_widget.getInputWidget().display_item_colors = True
+    #
     u_float_input_widget.setDirection(Qt.Vertical)
-    u_int_input_widget.setDirection(Qt.Vertical)
-    u_boolean_input_widget.setDirection(Qt.Vertical)
-    u_string_input_widget.setDirection(Qt.Vertical)
-    u_list_input_widget.setDirection(Qt.Vertical)
-
+    # u_int_input_widget.setDirection(Qt.Vertical)
+    # u_boolean_input_widget.setDirection(Qt.Vertical)
+    # u_string_input_widget.setDirection(Qt.Vertical)
+    # u_list_input_widget.setDirection(Qt.Vertical)
+    #
     vertical_label_widget_layout.addWidget(u_float_input_widget)
-    vertical_label_widget_layout.addWidget(u_int_input_widget)
-    vertical_label_widget_layout.addWidget(u_boolean_input_widget)
-    vertical_label_widget_layout.addWidget(u_string_input_widget)
-    vertical_label_widget_layout.addWidget(u_list_input_widget)
-
-    u_float_input_widget.setUserFinishedEditingEvent(test)
-    u_int_input_widget.setUserFinishedEditingEvent(test)
-    u_boolean_input_widget.setUserFinishedEditingEvent(test)
-    u_string_input_widget.setUserFinishedEditingEvent(test)
-    u_list_input_widget.setUserFinishedEditingEvent(test)
+    # vertical_label_widget_layout.addWidget(u_int_input_widget)
+    # vertical_label_widget_layout.addWidget(u_boolean_input_widget)
+    # vertical_label_widget_layout.addWidget(u_string_input_widget)
+    # vertical_label_widget_layout.addWidget(u_list_input_widget)
+    #
+    # u_float_input_widget.setUserFinishedEditingEvent(test)
+    # u_int_input_widget.setUserFinishedEditingEvent(test)
+    # u_boolean_input_widget.setUserFinishedEditingEvent(test)
+    # u_string_input_widget.setUserFinishedEditingEvent(test)
+    # u_list_input_widget.setUserFinishedEditingEvent(test)
 
     """ FRAME GROUP """
 
@@ -674,7 +692,7 @@ if __name__ == "__main__":
     main_layout.addLayout(group_widget_layout)
     main_layout.addWidget(normal_widget)
     main_layout.addWidget(vertical_label_widget)
-    main_layout.addWidget(horizontal_label_widget)
+    #main_layout.addWidget(horizontal_label_widget)
 
     main_widget.resize(500, 500)
     main_widget.show()
