@@ -12,7 +12,8 @@ from cgwidgets.widgets import (
     GroupInputWidget,
     ListInputWidget,
     FrameInputWidget,
-    FrameGroupInputWidget
+    FrameGroupInputWidget,
+    PlainTextInputWidget
 )
 
 app = QApplication(sys.argv)
@@ -31,6 +32,7 @@ def createGroupBox(title):
     return group_box
 
 def test(widget, value):
+    print("---- user input function ----")
     print('setting value to... ', value)
     print(widget, value)
     #widget.setText(str(value))
@@ -45,6 +47,7 @@ gw.insertInputWidget(0, IntInputWidget, 'Int', test)
 gw.insertInputWidget(0, BooleanInputWidget, 'Boolean', test)
 gw.insertInputWidget(0, StringInputWidget, 'String', test)
 gw.insertInputWidget(0, ListInputWidget, 'List', test, data={'items_list':list_of_crap})
+gw.insertInputWidget(0, PlainTextInputWidget, 'Text', test)
 
 gw.display_background = False
 group_widget_layout.addWidget(gw)
@@ -59,18 +62,21 @@ int_input_widget.setUseLadder(True, value_list=[1, 2, 3, 4, 5])
 boolean_input_widget = BooleanInputWidget()
 string_input_widget = StringInputWidget()
 list_input_widget = ListInputWidget(item_list=list_of_crap)
+plain_text_input_widget = PlainTextInputWidget()
 
 normal_widget.layout().addWidget(float_input_widget)
 normal_widget.layout().addWidget(int_input_widget)
 normal_widget.layout().addWidget(boolean_input_widget)
 normal_widget.layout().addWidget(string_input_widget)
 normal_widget.layout().addWidget(list_input_widget)
+normal_widget.layout().addWidget(plain_text_input_widget)
 
 float_input_widget.setUserFinishedEditingEvent(test)
 int_input_widget.setUserFinishedEditingEvent(test)
 boolean_input_widget.setUserFinishedEditingEvent(test)
 string_input_widget.setUserFinishedEditingEvent(test)
 list_input_widget.setUserFinishedEditingEvent(test)
+plain_text_input_widget.setUserFinishedEditingEvent(test)
 
 """ Labeled Widgets """
 def createLabeledWidgets(title, direction=Qt.Horizontal):
@@ -93,7 +99,8 @@ def createLabeledWidgets(title, direction=Qt.Horizontal):
         "int": IntInputWidget,
         "bool": BooleanInputWidget,
         "str": StringInputWidget,
-        "list": ListInputWidget
+        "list": ListInputWidget,
+        "text": PlainTextInputWidget
     }
 
     """ Label widgets"""
@@ -135,7 +142,8 @@ label_widgets = {
         "int": IntInputWidget,
         "bool": BooleanInputWidget,
         "str": StringInputWidget,
-        "list": ListInputWidget
+        "list": ListInputWidget,
+        "text": PlainTextInputWidget
     }
 
 for arg in label_widgets:

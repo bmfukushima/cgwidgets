@@ -5,6 +5,7 @@ from .InputWidgets import BooleanInputWidget as BooleanInputWidget
 from .InputWidgets import GroupInputWidget as GroupInputWidget
 from .InputWidgets import FrameInputWidget
 from .InputWidgets import FrameGroupInputWidget
+from .InputWidgets import PlainTextInputWidget
 
 from .InputWidgets import ListInputWidget as ListInputWidget
 from .InputWidgets import ComboListInputWidget as ComboListInputWidget

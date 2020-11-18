@@ -24,7 +24,8 @@ from cgwidgets.widgets import (
     AbstractVLine,
     AbstractHLine,
     AbstractComboListInputWidget,
-    AbstractListInputWidget
+    AbstractListInputWidget,
+    AbstractInputPlainText
 )
 
 from cgwidgets.widgets import TansuModelViewWidget, TansuModelDelegateWidget, TansuModelItem
@@ -212,6 +213,11 @@ class IntInputWidget(AbstractIntInputWidget, iGroupInput):
 class StringInputWidget(AbstractStringInputWidget, iGroupInput):
     def __init__(self, parent=None):
         super(StringInputWidget, self).__init__(parent)
+
+
+class PlainTextInputWidget(AbstractInputPlainText, iGroupInput):
+    def __init__(self, parent=None):
+        super(PlainTextInputWidget, self).__init__(parent)
 
 
 class BooleanInputWidget(AbstractBooleanInputWidget, iGroupInput):
@@ -580,8 +586,9 @@ if __name__ == "__main__":
     l2 = [['a', (255, 0, 0, 255)], ['b'], ['c'], ['aa'], ['bb'], ['cc']]
 
     def test(widget, value):
-        print('setting value to... ', value)
-        print(widget, value)
+        #print('setting value to... ', value)
+        #print(widget, value)
+        pass
         #widget.setText(str(value))
 
     """ group insert """
@@ -594,6 +601,7 @@ if __name__ == "__main__":
     gw.insertInputWidget(0, BooleanInputWidget, 'Boolean', test)
     gw.insertInputWidget(0, StringInputWidget, 'String', test)
     gw.insertInputWidget(0, ListInputWidget, 'List', test, data={'items_list':list_of_crap})
+    gw.insertInputWidget(0, PlainTextInputWidget, 'Plain Text', test, data={'items_list':list_of_crap})
 
     gw.display_background = False
     group_widget_layout.addWidget(gw)
@@ -653,12 +661,11 @@ if __name__ == "__main__":
     vertical_label_widget.setTitle("Frame Widgets ( Vertical )")
     vertical_label_widget_layout = QVBoxLayout(vertical_label_widget)
 
-    print('0')
-    u_float_input_widget = FrameInputWidget(name="float", widget_type=FloatInputWidget)
-    print('1')
+    u_float_input_widget = FrameInputWidget(name="float", widget_type=PlainTextInputWidget)
+
     u_float_input_widget.setSeparatorLength(100)
     u_float_input_widget.setSeparatorWidth(3)
-    print('2')
+
     # u_int_input_widget = FrameInputWidget(name="int", widget_type=IntInputWidget)
     # u_boolean_input_widget = FrameInputWidget(name="bool", widget_type=BooleanInputWidget)
     # u_string_input_widget = FrameInputWidget(name='str', widget_type=StringInputWidget)

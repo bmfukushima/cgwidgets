@@ -22,7 +22,7 @@ Input Widgets
 """
 
 from qtpy.QtWidgets import (
-    QLineEdit, QLabel, QApplication
+    QLineEdit, QLabel, QApplication, QPlainTextEdit
 )
 from qtpy.QtCore import Qt, QEvent
 
@@ -35,7 +35,7 @@ from cgwidgets.settings.colors import iColor
 from cgwidgets.widgets.AbstractWidgets import AbstractInputGroupBox, AbstractInputGroup
 
 
-class AbstractInputWidget(QLineEdit):
+class AbstractInputWidget(object):
     """
     Base class for users to input data into.
 
@@ -50,8 +50,8 @@ class AbstractInputWidget(QLineEdit):
         rgba_text (rgba): color of text
     """
 
-    def __init__(self, parent=None):
-        super(AbstractInputWidget, self).__init__(parent)
+    def __init__(self):
+        super(AbstractInputWidget, self).__init__()
         # setup default args
         self._key_list = []
         self._orig_value = None
@@ -62,10 +62,6 @@ class AbstractInputWidget(QLineEdit):
         self.rgba_text = iColor["rgba_text"]
 
         self.updateStyleSheet()
-
-        # set up signals
-        self.editingFinished.connect(self.userFinishedEditing)
-        self.textChanged.connect(self.userContinuousEditing)
 
     def updateStyleSheet(self):
         #style_sheet = getTopBorderStyleSheet(self._rgba_border, 2)
@@ -93,9 +89,13 @@ class AbstractInputWidget(QLineEdit):
 
     def checkInput(self):
         """
-        Determines if the users input is valid
+        Determines if the users input is valid.  If no validation function is provided,
+        then this will return true
         """
-        validation = self._validate_user_input()
+        try:
+            validation = self._validate_user_input()
+        except AttributeError:
+            validation = True
         return validation
 
     def getInput(self):
@@ -106,10 +106,6 @@ class AbstractInputWidget(QLineEdit):
         return self.text()
 
     """ SIGNALS / EVENTS """
-    def focusInEvent(self, *args, **kwargs):
-        self.setOrigValue(self.text())
-        return QLineEdit.focusInEvent(self, *args, **kwargs)
-
     def userFinishedEditing(self):
         """
         When the user has finished editing.  This will do a check to see
@@ -148,11 +144,6 @@ class AbstractInputWidget(QLineEdit):
 
             else:
                 self.setText(self.getOrigValue())
-
-    def mousePressEvent(self, event, *args, **kwargs):
-        if event.button() == Qt.MiddleButton:
-            return
-        return QLineEdit.mousePressEvent(self, event, *args, **kwargs)
 
     """ PROPERTIES """
     def appendKey(self, key):
@@ -200,7 +191,53 @@ class AbstractInputWidget(QLineEdit):
         #self.updateStyleSheet()
 
 
-class AbstractNumberInputWidget(AbstractInputWidget):
+class AbstractInputLineEdit(QLineEdit, AbstractInputWidget):
+    def __init__(self, parent=None):
+        super(AbstractInputLineEdit, self).__init__()
+
+        # set up signals
+        self.editingFinished.connect(self.userFinishedEditing)
+        self.textChanged.connect(self.userContinuousEditing)
+
+    def focusInEvent(self, *args, **kwargs):
+        """
+        Sets the initial value on re-enter event.  This is mainly valid for
+        ladder widgets?
+        """
+        self.setOrigValue(self.text())
+        return QLineEdit.focusInEvent(self, *args, **kwargs)
+
+    def mousePressEvent(self, event, *args, **kwargs):
+        """
+        Blocks the middle mouse button from pasting in Linux
+        """
+        if event.button() == Qt.MiddleButton:
+            return
+        return QLineEdit.mousePressEvent(self, event, *args, **kwargs)
+
+
+class AbstractInputPlainText(QPlainTextEdit, AbstractInputWidget):
+    TYPE = "text"
+    def __init__(self, parent=None):
+        super(AbstractInputPlainText, self).__init__()
+
+    def text(self):
+        return self.toPlainText()
+
+    def setText(self, text):
+        self.setPlainText(text)
+
+    def focusInEvent(self, event):
+        self.setOrigValue(self.text())
+        return QPlainTextEdit.focusInEvent(self, event)
+
+    def focusOutEvent(self, event):
+        # set up signals
+        self.userFinishedEditing()
+        return QPlainTextEdit.focusOutEvent(self, event)
+
+
+class AbstractNumberInputWidget(AbstractInputLineEdit):
     """
     Base class for number based widgets.  The float
     and int input widgets will both inherit from this.
@@ -450,7 +487,7 @@ class AbstractIntInputWidget(AbstractNumberInputWidget):
         return str(int(value))
 
 
-class AbstractStringInputWidget(AbstractInputWidget):
+class AbstractStringInputWidget(AbstractInputLineEdit):
     TYPE = 'string'
     def __init__(self, parent=None):
         super(AbstractStringInputWidget, self).__init__(parent)
@@ -481,27 +518,6 @@ class AbstractBooleanInputWidget(QLabel):
             **style_sheet_args
         )
         self.setStyleSheet(style_sheet)
-
-    # """ TRIGGER """
-    # """
-    # Im being lazy, this is a copy and paste from the AbstractInputWidget
-    # """
-    # def __user_finished_editing_event(self, *args, **kwargs):
-    #     pass
-    #
-    # def setUserFinishedEditingEvent(self, function):
-    #     """
-    #     Sets the function that should be triggered everytime
-    #     the user finishes editing this widget
-    #     """
-    #     self.__user_finished_editing_event = function
-    #
-    # def userFinishedEditingEvent(self, *args, **kwargs):
-    #     """
-    #     Internal event to run everytime the user triggers an update.  This
-    #     will need to be called on every type of widget.
-    #     """
-    #     self.__user_finished_editing_event(*args, **kwargs)
 
     """ EVENTS """
     def mouseReleaseEvent(self, event):

@@ -12,5 +12,5 @@ from .AbstractInputWidgets import AbstractStringInputWidget as AbstractStringInp
 from .AbstractInputWidgets import AbstractBooleanInputWidget as AbstractBooleanInputWidget
 from .AbstractListInputWidget import AbstractComboListInputWidget as AbstractComboListInputWidget
 from .AbstractListInputWidget import AbstractListInputWidget as AbstractListInputWidget
-
+from .AbstractInputWidgets import AbstractInputPlainText as AbstractInputPlainText
 
