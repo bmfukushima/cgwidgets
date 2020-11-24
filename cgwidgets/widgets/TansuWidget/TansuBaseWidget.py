@@ -57,6 +57,8 @@ class TansuBaseWidget(QSplitter):
         self._rgba_handle_hover = iColor["rgba_outline_hover"]
         self._rgba_flag = iColor["rgba_hover"]
         self._rgba_background = iColor["rgba_invisible"]
+        self._rgba_text = iColor["rgba_text"]
+
         self.setOrientation(orientation)
 
         # set up handle defaults
@@ -307,6 +309,7 @@ class TansuBaseWidget(QSplitter):
             'rgba_handle': repr(self.rgba_handle),
             'rgba_handle_hover': repr(self.rgba_handle_hover),
             'rgba_background': repr(self.rgba_background),
+            'rgba_text': repr(self.rgba_text),
             'handle_length_margin': self.getHandleLengthMargin()
         })
         style_sheet = """
@@ -367,6 +370,15 @@ class TansuBaseWidget(QSplitter):
         self._rgba_background = _rgba_background
         self.updateStyleSheet()
 
+    @property
+    def rgba_text(self):
+        return self._rgba_text
+
+    @rgba_text.setter
+    def rgba_text(self, _rgba_text):
+        self._rgba_text = _rgba_text
+        self.updateStyleSheet()
+
 
 if __name__ == "__main__":
     import sys
@@ -377,14 +389,16 @@ if __name__ == "__main__":
     main_splitter = TansuBaseWidget()
     main_splitter.handle_length = 100
     main_splitter.setObjectName("main")
-    main_splitter.addWidget(QLabel('a'))
+    label = QLabel('a')
+    main_splitter.addWidget(label)
     main_splitter.addWidget(QLabel('b'))
     main_splitter.addWidget(QLabel('c'))
-
+    label.setStyleSheet("color: rgba(255,0,0,255)")
     splitter1 = TansuBaseWidget(orientation=Qt.Horizontal)
     splitter1.setObjectName("embed")
     for x in range(3):
         l = QLabel(str(x))
+        l.setStyleSheet("color: rgba(255,0,0,255)")
         splitter1.addWidget(l)
 
     main_splitter.addWidget(splitter1)

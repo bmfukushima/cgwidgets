@@ -28,7 +28,12 @@ from cgwidgets.widgets import (
     AbstractInputPlainText
 )
 
-from cgwidgets.widgets import TansuModelViewWidget, TansuModelDelegateWidget, TansuModelItem
+from cgwidgets.widgets import (
+    TansuModelViewWidget,
+    TansuModelDelegateWidget,
+    TansuModelItem,
+    TansuBaseWidget
+)
 from cgwidgets.utils import getWidgetAncestor, updateStyleSheet, attrs, installCompleterPopup
 from cgwidgets.settings.colors import iColor
 
@@ -68,8 +73,7 @@ class UserInputItem(TansuModelItem):
 
 
 class GroupInputWidget(AbstractInputGroup):
-    def __init__(self, parent=None, title=None):
-        """
+    """
     A container for holding user parameters.  The default main
     widget is a TansuWidget which can have the individual widgets
     added to it
@@ -80,6 +84,8 @@ class GroupInputWidget(AbstractInputGroup):
                     | -- model
                     | -* (UserInputItem)
     """
+    def __init__(self, parent=None, title=None):
+
         super(GroupInputWidget, self).__init__(parent, title)
 
         # setup main widget
@@ -390,22 +396,21 @@ class AbstractFrameInputWidget(QFrame):
 
         # setup layout
         self._label = QLabel(name)
-        self._separator = AbstractVLine(self)
-
-        self.layout().addWidget(self._label)
-        self.layout().addWidget(self._separator)
-
+        self._label.setStyleSheet("color: rgba{rgba_text}".format(**iColor))
         # set up display
         self.setToolTip(note)
-        self.setLabelWidth(50)
+        #self.setLabelWidth(50)
         self.setupStyleSheet()
         self.setDirection(direction)
+
+        #self._label.setSizeHint(500,100)
 
     def setupStyleSheet(self):
         style_sheet_args = iColor.style_sheet_args
         style_sheet = """
         QLabel{{color: rgba{rgba_text}}}
         FrameInputWidget{{background-color: rgba{rgba_gray_1}}}
+        AbstractFrameInputWidget{{background-color: rgba{rgba_gray_2}}}
         """.format(
             **style_sheet_args
         )
@@ -419,30 +424,9 @@ class AbstractFrameInputWidget(QFrame):
 
     """ Set Direction of input"""
     def setDirection(self, direction):
-        """
-        Sets the direction this input will be displayed as.
-
-        Args:
-            direction (Qt.DIRECTION)
-        """
-        # preflight
-        if direction not in [Qt.Horizontal, Qt.Vertical]: return
-
-        # set direction
-        self._direction = direction
-
-        # update separator
         if direction == Qt.Vertical:
-            # direction
-            self.layout().setDirection(QBoxLayout.TopToBottom)
-
-            # separator
-            self.__updateSeparator(direction)
-
             # update alignment
             self._label.setAlignment(Qt.AlignCenter)
-            self.layout().setAlignment(Qt.AlignCenter)
-            self.layout().setSpacing(5)
 
             # update label
             self._label.setSizePolicy(
@@ -450,30 +434,10 @@ class AbstractFrameInputWidget(QFrame):
             )
 
         elif direction == Qt.Horizontal:
-            # set layout direction
-            self.layout().setDirection(QBoxLayout.LeftToRight)
-
-            # update separator
-            self.__updateSeparator(direction)
-
-            # alignment
-            self.layout().setAlignment(Qt.AlignLeft)
-            self.layout().setSpacing(50)
-
             # update label
             self._label.setSizePolicy(
                 QSizePolicy.Fixed, QSizePolicy.Preferred
             )
-
-    def __updateSeparator(self, direction):
-        self._separator.setParent(None)
-        if direction == Qt.Vertical:
-            self._separator = AbstractHLine()
-        elif direction == Qt.Horizontal:
-            self._separator = AbstractVLine()
-        self.setSeparatorWidth(self._separator_width)
-        self.setSeparatorLength(self._separator_length)
-        self.layout().insertWidget(1, self._separator)
 
     def setSeparatorLength(self, length):
         self._separator.setLength(length)
@@ -497,8 +461,22 @@ class AbstractFrameInputWidget(QFrame):
         self._label_width = width
         self._label.setMinimumWidth(width)
 
+# TODO Finish moving this to a QSplitter
+"""
+    For some reason there's another widget at the end?
+    Abstract / Group
+        Abstract --> object
+        Group --> QFrame
+            
+"""
+class FrameInputWidget(TansuBaseWidget, AbstractFrameInputWidget):
+    """
+    A single input widget.  This inherits from the TansuBaseWidget,
+    to provide a slider for the user to expand/contract the editable area
+    vs the view label.
 
-class FrameInputWidget(AbstractFrameInputWidget):
+
+    """
     def __init__(
         self,
         parent=None,
@@ -507,9 +485,11 @@ class FrameInputWidget(AbstractFrameInputWidget):
         direction=Qt.Horizontal,
         widget_type=StringInputWidget
     ):
-        super(FrameInputWidget, self).__init__(parent, name, note, direction)
+        super(FrameInputWidget, self).__init__(parent, direction)
+        AbstractFrameInputWidget.__init__(self, parent, name, note, direction)
 
         # set up attrs
+        self._default_label_length = 50
         self.setInputBaseClass(widget_type)
 
         # create base widget
@@ -517,7 +497,14 @@ class FrameInputWidget(AbstractFrameInputWidget):
         self._input_widget.setSizePolicy(
             QSizePolicy.MinimumExpanding, QSizePolicy.Preferred
         )
-        self.layout().addWidget(self._input_widget)
+        self.addWidget(self._label)
+        self.addWidget(self._input_widget)
+
+        #
+        self.setStretchFactor(0, 0)
+        self.setStretchFactor(1, 1)
+
+        self.rgba_background = iColor['rgba_gray_1']
 
     def setInputWidget(self, _input_widget):
         # remove previous input widget
@@ -539,12 +526,44 @@ class FrameInputWidget(AbstractFrameInputWidget):
     def getInputBaseClass(self):
         return self._input_widget_base_class
 
+    def setSeparatorLength(self, length):
+        self.handle_length = length
+        self._separator_length = length
+
+    def setSeparatorWidth(self, width):
+        self.setHandleWidth(width)
+        self._separator_width = width
+
+    def setDirection(self, direction):
+        # preflight
+        if direction not in [Qt.Horizontal, Qt.Vertical]: return
+
+        # set direction
+        self.setOrientation(direction)
+
+        # update label
+        return AbstractFrameInputWidget.setDirection(self, direction)
+
+    def defaultLabelLength(self):
+        return self._default_label_length
+
+    def setDefaultLabelLength(self, length):
+        self._default_label_length = length
+
     """ EVENTS """
     def setUserFinishedEditingEvent(self, function):
         self._input_widget.setUserFinishedEditingEvent(function)
+    #
+    def showEvent(self, event):
+        self.moveSplitter(self.defaultLabelLength(), 1)
+        return TansuBaseWidget.showEvent(self, event)
 
 
 class FrameGroupInputWidget(AbstractFrameInputWidget):
+    """
+    Stylized input group.  This has a base of a TansuBaseWidget,
+    I'm not really sure why this is different than the InputGroupWidget...
+    """
     def __init__(
         self,
         parent=None,
@@ -552,7 +571,88 @@ class FrameGroupInputWidget(AbstractFrameInputWidget):
         note="None",
         direction=Qt.Horizontal
     ):
+        # inherit
         super(FrameGroupInputWidget, self).__init__(parent, name, note, direction)
+
+        # create separator
+        self._separator = AbstractVLine(self)
+
+        # add widgets to main layout
+        self.layout().addWidget(self._label)
+        self.layout().addWidget(self._separator)
+
+    def setSeparatorLength(self, length):
+        self._separator.setLength(length)
+        self._separator_length = length
+
+    def setSeparatorWidth(self, width):
+        self._separator.setLineWidth(width)
+        self._separator_width = width
+
+    def setDirection(self, direction):
+        """
+        Sets the direction this input will be displayed as.
+
+        Args:
+            direction (Qt.DIRECTION)
+        """
+        # preflight
+        if direction not in [Qt.Horizontal, Qt.Vertical]: return
+
+        # set direction
+        self._direction = direction
+
+        # update separator
+        if direction == Qt.Vertical:
+            # direction
+            self.layout().setDirection(QBoxLayout.TopToBottom)
+
+            # separator
+            self.updateSeparator(direction)
+
+            # update alignment
+            self._label.setAlignment(Qt.AlignCenter)
+            self.layout().setAlignment(Qt.AlignCenter)
+            self.layout().setSpacing(5)
+
+            # update label
+            self._label.setSizePolicy(
+                QSizePolicy.MinimumExpanding, QSizePolicy.Preferred
+            )
+
+        elif direction == Qt.Horizontal:
+            # set layout direction
+            self.layout().setDirection(QBoxLayout.LeftToRight)
+
+            # update separator
+            self.updateSeparator(direction)
+
+            # alignment
+            self.layout().setAlignment(Qt.AlignLeft)
+            self.layout().setSpacing(50)
+
+            # update label
+            self._label.setSizePolicy(
+                QSizePolicy.Fixed, QSizePolicy.Preferred
+            )
+
+        return AbstractFrameInputWidget.setDirection(self, direction)
+
+    def updateSeparator(self, direction):
+        # remove existing separator
+        if hasattr(self, '_separator'):
+            self._separator.setParent(None)
+
+        # create new separator
+        if direction == Qt.Vertical:
+            self._separator = AbstractHLine()
+        elif direction == Qt.Horizontal:
+            self._separator = AbstractVLine()
+
+        # update separator
+        self.setSeparatorWidth(self._separator_width)
+        self.setSeparatorLength(self._separator_length)
+        self.layout().insertWidget(1, self._separator)
 
     def addInputWidget(self, widget, finished_editing_function=None):
         if finished_editing_function:
@@ -661,35 +761,35 @@ if __name__ == "__main__":
     vertical_label_widget.setTitle("Frame Widgets ( Vertical )")
     vertical_label_widget_layout = QVBoxLayout(vertical_label_widget)
 
-    u_float_input_widget = FrameInputWidget(name="float", widget_type=PlainTextInputWidget)
+    u_text_input_widget = FrameInputWidget(name="text", widget_type=PlainTextInputWidget)
 
-    u_float_input_widget.setSeparatorLength(100)
-    u_float_input_widget.setSeparatorWidth(3)
+    #u_float_input_widget.setSeparatorLength(100)
+    #u_float_input_widget.setSeparatorWidth(3)
+    u_int_input_widget = FrameInputWidget(name="float", widget_type=FloatInputWidget)
+    u_int_input_widget = FrameInputWidget(name="int", widget_type=IntInputWidget)
+    u_boolean_input_widget = FrameInputWidget(name="bool", widget_type=BooleanInputWidget)
+    u_string_input_widget = FrameInputWidget(name='str', widget_type=StringInputWidget)
+    u_list_input_widget = FrameInputWidget(name='list', widget_type=ListInputWidget)
+    u_list_input_widget.getInputWidget().populate(list_of_crap)
+    u_list_input_widget.getInputWidget().display_item_colors = True
+    #
+    #u_float_input_widget.setDirection(Qt.Vertical)
+    u_int_input_widget.setDirection(Qt.Vertical)
+    u_boolean_input_widget.setDirection(Qt.Vertical)
+    u_string_input_widget.setDirection(Qt.Vertical)
+    u_list_input_widget.setDirection(Qt.Vertical)
+    #
+    vertical_label_widget_layout.addWidget(u_text_input_widget)
+    vertical_label_widget_layout.addWidget(u_int_input_widget)
+    vertical_label_widget_layout.addWidget(u_boolean_input_widget)
+    vertical_label_widget_layout.addWidget(u_string_input_widget)
+    vertical_label_widget_layout.addWidget(u_list_input_widget)
 
-    # u_int_input_widget = FrameInputWidget(name="int", widget_type=IntInputWidget)
-    # u_boolean_input_widget = FrameInputWidget(name="bool", widget_type=BooleanInputWidget)
-    # u_string_input_widget = FrameInputWidget(name='str', widget_type=StringInputWidget)
-    # u_list_input_widget = FrameInputWidget(name='list', widget_type=ListInputWidget)
-    # u_list_input_widget.getInputWidget().populate(list_of_crap)
-    # u_list_input_widget.getInputWidget().display_item_colors = True
-    #
-    u_float_input_widget.setDirection(Qt.Vertical)
-    # u_int_input_widget.setDirection(Qt.Vertical)
-    # u_boolean_input_widget.setDirection(Qt.Vertical)
-    # u_string_input_widget.setDirection(Qt.Vertical)
-    # u_list_input_widget.setDirection(Qt.Vertical)
-    #
-    vertical_label_widget_layout.addWidget(u_float_input_widget)
-    # vertical_label_widget_layout.addWidget(u_int_input_widget)
-    # vertical_label_widget_layout.addWidget(u_boolean_input_widget)
-    # vertical_label_widget_layout.addWidget(u_string_input_widget)
-    # vertical_label_widget_layout.addWidget(u_list_input_widget)
-    #
-    # u_float_input_widget.setUserFinishedEditingEvent(test)
-    # u_int_input_widget.setUserFinishedEditingEvent(test)
-    # u_boolean_input_widget.setUserFinishedEditingEvent(test)
-    # u_string_input_widget.setUserFinishedEditingEvent(test)
-    # u_list_input_widget.setUserFinishedEditingEvent(test)
+    #u_float_input_widget.setUserFinishedEditingEvent(test)
+    u_int_input_widget.setUserFinishedEditingEvent(test)
+    u_boolean_input_widget.setUserFinishedEditingEvent(test)
+    u_string_input_widget.setUserFinishedEditingEvent(test)
+    u_list_input_widget.setUserFinishedEditingEvent(test)
 
     """ FRAME GROUP """
 

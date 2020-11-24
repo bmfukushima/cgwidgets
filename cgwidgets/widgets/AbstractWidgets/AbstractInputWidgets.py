@@ -220,6 +220,7 @@ class AbstractInputPlainText(QPlainTextEdit, AbstractInputWidget):
     TYPE = "text"
     def __init__(self, parent=None):
         super(AbstractInputPlainText, self).__init__()
+        self.setMinimumSize(10, 10)
 
     def text(self):
         return self.toPlainText()
