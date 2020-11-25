@@ -361,7 +361,7 @@ class AbstractDragDropModelDelegate(QStyledItemDelegate):
 
     def createEditor(self, parent, option, index):
         """
-         
+
         """
         delegate_widget = self.delegateWidget(parent)
         return delegate_widget

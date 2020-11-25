@@ -472,8 +472,8 @@ class AbstractListInputWidget(AbstractStringInputWidget):
 
         # filter results
         if self.text() != '':
+            self.completer().setCaseSensitivity(False)
             self.completer().setCompletionMode(QCompleter.PopupCompletion)
-
         else:
             self.completer().setCompletionMode(QCompleter.UnfilteredPopupCompletion)
 
