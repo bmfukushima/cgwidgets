@@ -578,7 +578,7 @@ class FrameGroupInputWidget(AbstractFrameInputWidget):
         self._separator = AbstractVLine(self)
 
         # add widgets to main layout
-        self.layout().addWidget(self._label)
+        self.layout().insertWidget(0, self._label)
         self.layout().addWidget(self._separator)
 
     def setSeparatorLength(self, length):

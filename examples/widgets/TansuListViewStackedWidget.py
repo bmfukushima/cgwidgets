@@ -61,11 +61,12 @@ tansu_widget.insertTansuWidget(0, column_data={'example' : '<title> tansu'}, wid
 # enable drag/drop
 tansu_widget.setHeaderItemIsDropEnabled(False)
 tansu_widget.setHeaderItemIsDragEnabled(True)
-
+tansu_widget.setHeaderItemIsEditable(True)
 # setup drag/drop events
 tansu_widget.setHeaderItemDragStartEvent(testDrag)
 tansu_widget.setHeaderItemDropEvent(testDrop)
 tansu_widget.setHeaderItemTextChangedEvent(testEdit)
+
 
 # display widget
 tansu_widget.resize(500, 500)

@@ -193,7 +193,7 @@ class AbstractInputWidget(object):
 
 class AbstractInputLineEdit(QLineEdit, AbstractInputWidget):
     def __init__(self, parent=None):
-        super(AbstractInputLineEdit, self).__init__()
+        super(AbstractInputLineEdit, self).__init__(parent)
 
         # set up signals
         self.editingFinished.connect(self.userFinishedEditing)

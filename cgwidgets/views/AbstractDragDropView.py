@@ -338,13 +338,17 @@ class AbstractDragDropModelDelegate(QStyledItemDelegate):
         # as it will run into import errors if imported at top most lvl
         from cgwidgets.widgets.AbstractWidgets import AbstractStringInputWidget
         self._delegate_widget = AbstractStringInputWidget
+        # from qtpy.QtWidgets import QLineEdit
+        # self._delegate_widget = QLineEdit
 
     def sizeHint(self, *args, **kwargs):
         return QStyledItemDelegate.sizeHint(self, *args, **kwargs)
 
     def updateEditorGeometry(self, editor, option, index):
         """
-        updates the delegates geometry with the options rect
+        Updates the editor geometry to will up the entire row
+
+        Updates the delegates geometry with the options rect
         for some reason this wont work if you manually do a
         setGeometry(0,0,100,100), but it works when plugging in
         a rect /shrug
@@ -356,8 +360,10 @@ class AbstractDragDropModelDelegate(QStyledItemDelegate):
         editor.setGeometry(option.rect)
 
     def createEditor(self, parent, option, index):
+        """
+         
+        """
         delegate_widget = self.delegateWidget(parent)
-
         return delegate_widget
 
     def setEditorData(self, editor, index):
