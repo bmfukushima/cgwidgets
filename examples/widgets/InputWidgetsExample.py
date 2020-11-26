@@ -115,6 +115,8 @@ def createLabeledWidgets(title, direction=Qt.Horizontal):
         input_widget.setDirection(direction)
 
         # set separator
+        if direction == Qt.Horizontal:
+            input_widget.setDefaultLabelLength(125)
         input_widget.setSeparatorLength(100)
         input_widget.setSeparatorWidth(3)
 

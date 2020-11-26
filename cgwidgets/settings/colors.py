@@ -1,3 +1,18 @@
+"""
+TODO
+    Color Pallette...
+        Green ( GO )
+        Yellow ( SLOW )
+        Red ( STOP )
+        blue
+        normals blue
+    Gray's
+        UI dark theme
+    rgba_outline / tansu
+        These will need to be updated
+
+"""
+
 from qtpy.QtGui import QColor
 
 from cgwidgets.utils import attrs

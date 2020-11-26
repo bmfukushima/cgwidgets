@@ -1,3 +1,9 @@
+"""
+TODO
+    AbstractInputGroup / GroupInputWidget / FrameInputWidget...
+        Why do I have like 90 versions of this...
+"""
+
 import os
 
 from qtpy.QtWidgets import (
@@ -17,6 +23,7 @@ from qtpy.QtCore import Qt
 
 from cgwidgets.widgets import (
     AbstractInputGroup,
+    AbstractInputGroupFrame,
     AbstractFloatInputWidget,
     AbstractIntInputWidget,
     AbstractStringInputWidget,
@@ -366,110 +373,7 @@ class FileBrowserInputWidget(AbstractListInputWidget, iGroupInput):
 # TODO Move to one architecture
 
 
-class AbstractFrameInputWidget(QFrame):
-    """
-    name (str): the name displayed to the user
-    input_widget (InputWidgetInstance): The instance of the input widget type
-        that is displayed to the user for manipulation
-    input_widget_base_class (InputWidgetClass): The type of input widget that this is
-        displaying to the user
-            Options are:
-                BooleanInputWidget
-                StringInputWidget
-                IntInputWidget
-                FloatInputWidget
-                ListInputWidget
-    """
-    def __init__(
-        self,
-        parent=None,
-        name="None",
-        note="None",
-        direction=Qt.Horizontal
-    ):
-        super(AbstractFrameInputWidget, self).__init__(parent)
-        QBoxLayout(QBoxLayout.LeftToRight, self)
-
-        # default attrs
-        self._separator_length = -1
-        self._separator_width = 3
-
-        # setup layout
-        self._label = QLabel(name)
-        self._label.setStyleSheet("color: rgba{rgba_text}".format(**iColor))
-        # set up display
-        self.setToolTip(note)
-        #self.setLabelWidth(50)
-        self.setupStyleSheet()
-        self.setDirection(direction)
-
-        #self._label.setSizeHint(500,100)
-
-    def setupStyleSheet(self):
-        style_sheet_args = iColor.style_sheet_args
-        style_sheet = """
-        QLabel{{color: rgba{rgba_text}}}
-        FrameInputWidget{{background-color: rgba{rgba_gray_1}}}
-        AbstractFrameInputWidget{{background-color: rgba{rgba_gray_2}}}
-        """.format(
-            **style_sheet_args
-        )
-        self.setStyleSheet(style_sheet)
-        # self._label.setStyleSheet(
-        #     self._label.styleSheet() + 'color: rgba{rgba_text}'.format(
-        #         rgba_text=iColor.rgba_text))
-
-    def setToolTip(self, tool_tip):
-        self._label.setToolTip(tool_tip)
-
-    """ Set Direction of input"""
-    def setDirection(self, direction):
-        if direction == Qt.Vertical:
-            # update alignment
-            self._label.setAlignment(Qt.AlignCenter)
-
-            # update label
-            self._label.setSizePolicy(
-                QSizePolicy.MinimumExpanding, QSizePolicy.Preferred
-            )
-
-        elif direction == Qt.Horizontal:
-            # update label
-            self._label.setSizePolicy(
-                QSizePolicy.Fixed, QSizePolicy.Preferred
-            )
-
-    def setSeparatorLength(self, length):
-        self._separator.setLength(length)
-        self._separator_length = length
-
-    def setSeparatorWidth(self, width):
-        self._separator.setLineWidth(width)
-        self._separator_width = width
-
-    """ PROPERTIES """
-    def setName(self, name):
-        self._label.setText(name)
-
-    def getName(self):
-        return self._label.text()
-
-    def labelWidth(self):
-        return self._label_width
-
-    def setLabelWidth(self, width):
-        self._label_width = width
-        self._label.setMinimumWidth(width)
-
-# TODO Finish moving this to a QSplitter
-"""
-    For some reason there's another widget at the end?
-    Abstract / Group
-        Abstract --> object
-        Group --> QFrame
-            
-"""
-class FrameInputWidget(TansuBaseWidget, AbstractFrameInputWidget):
+class FrameInputWidget(TansuBaseWidget, AbstractInputGroupFrame):
     """
     A single input widget.  This inherits from the TansuBaseWidget,
     to provide a slider for the user to expand/contract the editable area
@@ -486,7 +390,7 @@ class FrameInputWidget(TansuBaseWidget, AbstractFrameInputWidget):
         widget_type=StringInputWidget
     ):
         super(FrameInputWidget, self).__init__(parent, direction)
-        AbstractFrameInputWidget.__init__(self, parent, name, note, direction)
+        AbstractInputGroupFrame.__init__(self, parent, name, note, direction)
 
         # set up attrs
         self._default_label_length = 50
@@ -542,7 +446,7 @@ class FrameInputWidget(TansuBaseWidget, AbstractFrameInputWidget):
         self.setOrientation(direction)
 
         # update label
-        return AbstractFrameInputWidget.setDirection(self, direction)
+        return AbstractInputGroupFrame.setDirection(self, direction)
 
     def defaultLabelLength(self):
         return self._default_label_length
@@ -559,7 +463,7 @@ class FrameInputWidget(TansuBaseWidget, AbstractFrameInputWidget):
         return TansuBaseWidget.showEvent(self, event)
 
 
-class FrameGroupInputWidget(AbstractFrameInputWidget):
+class FrameGroupInputWidget(AbstractInputGroupFrame):
     """
     Stylized input group.  This has a base of a TansuBaseWidget,
     I'm not really sure why this is different than the InputGroupWidget...
@@ -636,7 +540,7 @@ class FrameGroupInputWidget(AbstractFrameInputWidget):
                 QSizePolicy.Fixed, QSizePolicy.Preferred
             )
 
-        return AbstractFrameInputWidget.setDirection(self, direction)
+        return AbstractInputGroupFrame.setDirection(self, direction)
 
     def updateSeparator(self, direction):
         # remove existing separator

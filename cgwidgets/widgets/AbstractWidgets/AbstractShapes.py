@@ -10,6 +10,8 @@ from cgwidgets.utils import (
     updateStyleSheet, getFontSize
 )
 
+#
+
 
 class AbstractLine(QFrame):
     def __init__(self, parent=None):
@@ -273,6 +275,116 @@ class AbstractInputGroupBox(QGroupBox):
 
         self.updateStyleSheet()
         self.user_input_widget.updateStyleSheet()
+
+
+class AbstractInputGroupFrame(QFrame):
+    """
+    name (str): the name displayed to the user
+    input_widget (InputWidgetInstance): The instance of the input widget type
+        that is displayed to the user for manipulation
+    input_widget_base_class (InputWidgetClass): The type of input widget that this is
+        displaying to the user
+            Options are:
+                BooleanInputWidget
+                StringInputWidget
+                IntInputWidget
+                FloatInputWidget
+                ListInputWidget
+
+    Virtual
+        headerTextChanged (widget, value): event that is run every time the user
+            finishes editing the header widget.
+    """
+    def __init__(
+        self,
+        parent=None,
+        name="None",
+        note="None",
+        direction=Qt.Horizontal
+    ):
+        super(AbstractInputGroupFrame, self).__init__(parent)
+        QBoxLayout(QBoxLayout.LeftToRight, self)
+
+        # default attrs
+        self._separator_length = -1
+        self._separator_width = 3
+
+        # setup layout
+        from cgwidgets.widgets.AbstractWidgets.AbstractInputWidgets import AbstractLabelInputWidget
+        self._label = AbstractLabelInputWidget(self)
+        self._label.setUserFinishedEditingEvent(self.headerTextChanged)
+        self._label.setText(name)
+
+        # set up display
+        self.setToolTip(note)
+        self.setupStyleSheet()
+        self.setDirection(direction)
+
+    """ VIRTUAL """
+    def __headerTextChanged(self, widget, value):
+        pass
+
+    def headerTextChanged(self, widget, value):
+        self.__headerTextChanged(widget, value)
+
+    def setHeaderTextChangedEvent(self, function):
+        self.__headerTextChanged = function
+    """ STYLE """
+    def setupStyleSheet(self):
+        style_sheet_args = iColor.style_sheet_args
+        style_sheet = """
+        QLabel{{color: rgba{rgba_text}}}
+        FrameInputWidget{{background-color: rgba{rgba_gray_1}}}
+        AbstractFrameInputWidget{{background-color: rgba{rgba_gray_2}}}
+        """.format(
+            **style_sheet_args
+        )
+        self.setStyleSheet(style_sheet)
+        # self._label.setStyleSheet(
+        #     self._label.styleSheet() + 'color: rgba{rgba_text}'.format(
+        #         rgba_text=iColor.rgba_text))
+
+    def setToolTip(self, tool_tip):
+        self._label.setToolTip(tool_tip)
+
+    """ Set Direction of input"""
+    def setDirection(self, direction):
+        if direction == Qt.Vertical:
+            # update alignment
+            self._label.setAlignment(Qt.AlignCenter)
+
+            # update label
+            self._label.setSizePolicy(
+                QSizePolicy.MinimumExpanding, QSizePolicy.Preferred
+            )
+
+        elif direction == Qt.Horizontal:
+            # update label
+            self._label.setSizePolicy(
+                QSizePolicy.Fixed, QSizePolicy.Preferred
+            )
+
+    def setSeparatorLength(self, length):
+        self._separator.setLength(length)
+        self._separator_length = length
+
+    def setSeparatorWidth(self, width):
+        self._separator.setLineWidth(width)
+        self._separator_width = width
+
+    """ PROPERTIES """
+    def setName(self, name):
+        self._label.setText(name)
+
+    def getName(self):
+        return self._label.text()
+
+    def labelWidth(self):
+        return self._label_width
+
+    def setLabelWidth(self, width):
+        self._label_width = width
+        self._label.setMinimumWidth(width)
 
 
 if __name__ == "__main__":

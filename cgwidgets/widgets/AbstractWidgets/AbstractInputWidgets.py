@@ -64,7 +64,6 @@ class AbstractInputWidget(object):
         self.updateStyleSheet()
 
     def updateStyleSheet(self):
-        #style_sheet = getTopBorderStyleSheet(self._rgba_border, 2)
         style_sheet_args = iColor.style_sheet_args
         style_sheet_args.update({
             "rgba_gray_0": repr(self.rgba_background),
@@ -76,6 +75,7 @@ class AbstractInputWidget(object):
             background-color: rgba{rgba_gray_0};
             color: rgba{rgba_text}
         """.format(**style_sheet_args)
+
         self.setStyleSheet(style_sheet)
 
     """ UTILS """
@@ -498,6 +498,109 @@ class AbstractStringInputWidget(AbstractInputLineEdit):
         return True
 
 
+class AbstractLabelInputWidget(AbstractStringInputWidget):
+    """
+    Essentially a QLabel with a QLineEdit delegate on it.
+
+    This line edit will automatically toggle the display state from read only
+    to editable depending on the focus.  It will be seen as a QLabel,
+    but has the handler that when clicked on is editable
+
+    Attributes:
+        isEditable (boolean): determines if this display can be edited or not
+            by clicking on it.
+    Virtual:
+        userFinishedEditingEvent (widget, value): when the user finishes editing.
+            This is a copy/paste from the iGroupInput to set up the registry
+            for user input.
+    """
+    def __init__(self, parent=None):
+        super(AbstractLabelInputWidget, self).__init__(parent)
+        self.editingFinished.connect(self.disableDelegate)
+
+        # set up editable
+        self.__setReadOnly(True)
+        self._is_editable = True
+
+        self.setupStyleSheet()
+
+    def setupStyleSheet(self):
+        style_sheet_args = iColor.style_sheet_args
+        #selection - color: rgba(0, 255, 0, 255);
+        style_sheet = """
+        AbstractLabelInputWidget{{
+            border: None;
+            color: rgba{rgba_text};
+            selection-background-color: rgba{rgba_selected};
+
+        }}
+        AbstractLabelInputWidget[readonly=true]{{
+            background-color: rgba{rgba_gray_1};
+        }}
+        AbstractLabelInputWidget[readonly=false]{{
+            background-color: rgba{rgba_gray_0};
+        }}
+        """.format(**style_sheet_args)
+        self.setStyleSheet(style_sheet)
+
+    """ API """
+    def isEditable(self):
+        return self._is_editable
+
+    def setEditable(self, enabled):
+        self._is_editable = enabled
+
+    # TODO duplicate code
+    """ VIRTUAL (copy / paste from iGroupInput"""
+    def __user_finished_editing_event(self, *args, **kwargs):
+        pass
+
+    def setUserFinishedEditingEvent(self, function):
+        """
+        Sets the function that should be triggered everytime
+        the user finishes editing this widget
+
+        This function should take two args
+        widget/item, value
+        """
+        self.__user_finished_editing_event = function
+
+    def userFinishedEditingEvent(self, *args, **kwargs):
+        """
+        Internal event to run everytime the user triggers an update.  This
+        will need to be called on every type of widget.
+        """
+        self.__user_finished_editing_event(*args, **kwargs)
+
+    def disableDelegate(self):
+        if self.isEditable():
+            self.__setReadOnly(True)
+
+    def __setReadOnly(self, enabled):
+        """
+        Overloading the setReadOnly with a wrapper
+
+        Args:
+            enabled (bool): determines if this widget is current set to read only
+                mode or edit mode.
+        """
+        self.setProperty('readonly', enabled)
+        self.setReadOnly(enabled)
+        updateStyleSheet(self)
+        pass
+
+    """ EVENTS """
+    def focusOutEvent(self, event):
+        if self.isEditable():
+            self.__setReadOnly(True)
+        return AbstractStringInputWidget.focusOutEvent(self, event)
+
+    def mousePressEvent(self, event):
+        if self.isEditable():
+            self.__setReadOnly(False)
+        return AbstractStringInputWidget.mousePressEvent(self, event)
+
+
 class AbstractBooleanInputWidget(QLabel):
     TYPE = 'bool'
     def __init__(self, parent=None, is_clicked=False):
@@ -547,25 +650,23 @@ if __name__ == "__main__":
     import sys
     from qtpy.QtWidgets import QApplication, QWidget, QVBoxLayout
     from qtpy.QtGui import QCursor
-    app = QApplication(sys.argv)
-    # w = QWidget()
-    # l = QVBoxLayout(w)
-    # l.setAlignment(Qt.AlignTop)
-    # input_widget = AbstractFloatInputWidget()
-    # gw = AbstractInputGroup(title='cool stuff')
-    # gw.layout().addWidget(input_widget)
-    #
-    #
-    # asdf = AbstractInputGroupBox(title='not cool')
-    # i2 = AbstractFloatInputWidget()
-    # asdf.layout().addWidget(i2)
-    # #gw.display_background = False
-    # l.addWidget(gw)
-    # l.addWidget(asdf)
 
-    w = AbstractIntInputWidget()
-    w.setDoMath(True)
+    import sys, inspect
+
+    app = QApplication(sys.argv)
+
+    w = AbstractLabelInputWidget()
+
+    print(AbstractIntInputWidget.mro())
     w.resize(500, 500)
     w.show()
     w.move(QCursor.pos())
     sys.exit(app.exec_())
+
+    def print_classes():
+        for name, obj in inspect.getmembers(sys.modules[__name__]):
+            if inspect.isclass(obj):
+                print(obj)
+
+    print(__name__)
+    print_classes()
