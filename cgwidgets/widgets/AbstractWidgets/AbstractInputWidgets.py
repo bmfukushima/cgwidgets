@@ -520,25 +520,27 @@ class AbstractLabelInputWidget(AbstractStringInputWidget):
 
         # set up editable
         self.__setReadOnly(True)
-        self._is_editable = True
+        self.setEditable(True)
 
         self.setupStyleSheet()
 
     def setupStyleSheet(self):
         style_sheet_args = iColor.style_sheet_args
-        #selection - color: rgba(0, 255, 0, 255);
         style_sheet = """
+        /* MAIN */
         AbstractLabelInputWidget{{
-            border: None;
+            border: 1px solid rgba{rgba_gray_1};
+            background-color: rgba{rgba_gray_1};
             color: rgba{rgba_text};
             selection-background-color: rgba{rgba_selected};
-
         }}
-        AbstractLabelInputWidget[readonly=true]{{
-            background-color: rgba{rgba_gray_1};
+        /* Border if widget can be editted */
+        AbstractLabelInputWidget[editable=true]{{
+            border: 1px solid rgba{rgba_gray_2};
         }}
+        /* Border during edit operation */
         AbstractLabelInputWidget[readonly=false]{{
-            background-color: rgba{rgba_gray_0};
+            border: 1px solid rgba{rgba_selected};
         }}
         """.format(**style_sheet_args)
         self.setStyleSheet(style_sheet)
@@ -549,6 +551,7 @@ class AbstractLabelInputWidget(AbstractStringInputWidget):
 
     def setEditable(self, enabled):
         self._is_editable = enabled
+        self.setProperty('editable', enabled)
 
     # TODO duplicate code
     """ VIRTUAL (copy / paste from iGroupInput"""
