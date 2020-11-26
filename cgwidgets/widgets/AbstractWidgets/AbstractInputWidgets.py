@@ -520,7 +520,7 @@ class AbstractLabelInputWidget(AbstractStringInputWidget):
 
         # set up editable
         self.__setReadOnly(True)
-        self.setEditable(True)
+        self.setEditable(False)
 
         self.setupStyleSheet()
 

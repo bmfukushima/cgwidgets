@@ -139,6 +139,12 @@ vertical_label_widget = createLabeledWidgets("Frame Widgets ( Vertical )", Qt.Ve
 
 """ Group Widget"""
 frame_group_input_widget = FrameGroupInputWidget(name='Frame Input Widgets', direction=Qt.Vertical)
+
+# set header editable / Display
+frame_group_input_widget.setIsHeaderEditable(True)
+frame_group_input_widget.setIsHeaderShown(True)
+
+# Add widgets
 label_widgets = {
         "float": FloatInputWidget,
         "int": IntInputWidget,
@@ -177,5 +183,7 @@ main_layout.addWidget(frame_group_input_widget)
 main_widget.resize(500, 500)
 main_widget.show()
 main_widget.move(QCursor.pos())
+
+
 
 sys.exit(app.exec_())

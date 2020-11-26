@@ -308,6 +308,7 @@ class AbstractInputGroupFrame(QFrame):
         # default attrs
         self._separator_length = -1
         self._separator_width = 3
+        self._is_header_shown = True
 
         # setup layout
         from cgwidgets.widgets.AbstractWidgets.AbstractInputWidgets import AbstractLabelInputWidget
@@ -320,6 +321,34 @@ class AbstractInputGroupFrame(QFrame):
         self.setupStyleSheet()
         self.setDirection(direction)
 
+    """ API """
+    def isHeaderEditable(self):
+        return self._label.isEditable()
+
+    def setIsHeaderEditable(self, enabled):
+        """
+        Determines if the header can be edited or not
+        """
+        self._label.setEditable(enabled)
+
+    def isHeaderShown(self):
+        return self._is_header_shown
+
+    def setIsHeaderShown(self, enabled):
+        """
+        Determines if the header should be shown
+
+        The header is the QLabel with the text name, and the
+        separator (QFrame).
+        """
+        self._is_header_shown = enabled
+        if enabled:
+            self._label.show()
+            self._separator.show()
+        else:
+            self._label.hide()
+            self._separator.hide()
+
     """ VIRTUAL """
     def __headerTextChanged(self, widget, value):
         pass
@@ -329,6 +358,7 @@ class AbstractInputGroupFrame(QFrame):
 
     def setHeaderTextChangedEvent(self, function):
         self.__headerTextChanged = function
+
     """ STYLE """
     def setupStyleSheet(self):
         style_sheet_args = iColor.style_sheet_args
@@ -392,5 +422,11 @@ if __name__ == "__main__":
     from qtpy.QtWidgets import QApplication, QLabel
     from qtpy.QtGui import QCursor
     app = QApplication(sys.argv)
-
+    widget = QWidget()
+    layout = QVBoxLayout(widget)
+    for x in range(2):
+        frame = AbstractVLine()
+        layout.addWidget(frame)
+    frame.hide()
+    widget.show()
     sys.exit(app.exec_())

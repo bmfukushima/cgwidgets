@@ -478,13 +478,35 @@ class FrameGroupInputWidget(AbstractInputGroupFrame):
         # inherit
         super(FrameGroupInputWidget, self).__init__(parent, name, note, direction)
 
+        # setup default attrs
+        self._is_header_shown = True
+
         # create separator
-        self._separator = AbstractVLine(self)
+        #self._separator = AbstractVLine(self)
 
         # add widgets to main layout
         self.layout().insertWidget(0, self._label)
-        self.layout().addWidget(self._separator)
+        #self.layout().addWidget(self._separator)
 
+        # setup defaults
+        self.setIsHeaderShown(True)
+        self.setIsHeaderEditable(False)
+
+    """ API """
+    def addInputWidget(self, widget, finished_editing_function=None):
+        if finished_editing_function:
+            widget.setUserFinishedEditingEvent(finished_editing_function)
+        self.layout().addWidget(widget)
+
+    def getInputWidgets(self):
+        input_widgets = []
+        for index in self.layout().count()[2:]:
+            widget = self.layout().itemAt(index).widget()
+            input_widgets.append(widget)
+
+        return input_widgets
+
+    """ STYLE """
     def setSeparatorLength(self, length):
         self._separator.setLength(length)
         self._separator_length = length
@@ -558,18 +580,9 @@ class FrameGroupInputWidget(AbstractInputGroupFrame):
         self.setSeparatorLength(self._separator_length)
         self.layout().insertWidget(1, self._separator)
 
-    def addInputWidget(self, widget, finished_editing_function=None):
-        if finished_editing_function:
-            widget.setUserFinishedEditingEvent(finished_editing_function)
-        self.layout().addWidget(widget)
-
-    def getInputWidgets(self):
-        input_widgets = []
-        for index in self.layout().count()[2:]:
-            widget = self.layout().itemAt(index).widget()
-            input_widgets.append(widget)
-
-        return input_widgets
+        # return if there is no header to be displayed
+        if not self.isHeaderShown():
+            self._separator.hide()
 
 
 if __name__ == "__main__":
