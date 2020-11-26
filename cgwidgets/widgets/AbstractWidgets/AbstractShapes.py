@@ -65,6 +65,270 @@ class AbstractVLine(AbstractLine):
         self.setFrameShape(QFrame.VLine)
 
 
+class AbstractInputGroupFrame(QFrame):
+    """
+    name (str): the name displayed to the user
+    input_widget (InputWidgetInstance): The instance of the input widget type
+        that is displayed to the user for manipulation
+    input_widget_base_class (InputWidgetClass): The type of input widget that this is
+        displaying to the user
+            Options are:
+                BooleanInputWidget
+                StringInputWidget
+                IntInputWidget
+                FloatInputWidget
+                ListInputWidget
+
+    Virtual
+        headerTextChanged (widget, value): event that is run every time the user
+            finishes editing the header widget.
+    """
+    def __init__(
+        self,
+        parent=None,
+        name="None",
+        note="None",
+        direction=Qt.Horizontal
+    ):
+        super(AbstractInputGroupFrame, self).__init__(parent)
+        QBoxLayout(QBoxLayout.LeftToRight, self)
+
+        # default attrs
+        self._separator_length = -1
+        self._separator_width = 3
+        self._is_header_shown = True
+
+        # setup layout
+        from cgwidgets.widgets.AbstractWidgets.AbstractInputWidgets import AbstractLabelInputWidget
+        self._label = AbstractLabelInputWidget(self)
+        self._label.setUserFinishedEditingEvent(self.headerTextChanged)
+        self._label.setText(name)
+
+        # set up display
+        self.setToolTip(note)
+        self.setupStyleSheet()
+        self.setDirection(direction)
+
+    """ API """
+    def isHeaderEditable(self):
+        return self._label.isEditable()
+
+    def setIsHeaderEditable(self, enabled):
+        """
+        Determines if the header can be edited or not
+        """
+        self._label.setEditable(enabled)
+
+    def isHeaderShown(self):
+        return self._is_header_shown
+
+    def setIsHeaderShown(self, enabled):
+        """
+        Determines if the header should be shown
+
+        The header is the QLabel with the text name, and the
+        separator (QFrame).
+        """
+        self._is_header_shown = enabled
+        if enabled:
+            self._label.show()
+            self._separator.show()
+        else:
+            self._label.hide()
+            self._separator.hide()
+
+    """ VIRTUAL """
+    def __headerTextChanged(self, widget, value):
+        pass
+
+    def headerTextChanged(self, widget, value):
+        self.__headerTextChanged(widget, value)
+
+    def setHeaderTextChangedEvent(self, function):
+        self.__headerTextChanged = function
+
+    """ STYLE """
+    def setupStyleSheet(self):
+        style_sheet_args = iColor.style_sheet_args
+        style_sheet = """
+        QLabel{{color: rgba{rgba_text}}}
+        LabelledInputWidget{{background-color: rgba{rgba_gray_1}}}
+        AbstractFrameInputWidget{{background-color: rgba{rgba_gray_2}}}
+        """.format(
+            **style_sheet_args
+        )
+        self.setStyleSheet(style_sheet)
+        # self._label.setStyleSheet(
+        #     self._label.styleSheet() + 'color: rgba{rgba_text}'.format(
+        #         rgba_text=iColor.rgba_text))
+
+    def setToolTip(self, tool_tip):
+        self._label.setToolTip(tool_tip)
+
+    """ Set Direction of input"""
+    def setDirection(self, direction):
+        if direction == Qt.Vertical:
+            # update alignment
+            self._label.setAlignment(Qt.AlignCenter)
+
+            # update label
+            self._label.setSizePolicy(
+                QSizePolicy.MinimumExpanding, QSizePolicy.Preferred
+            )
+
+        elif direction == Qt.Horizontal:
+            # update label
+            self._label.setSizePolicy(
+                QSizePolicy.Fixed, QSizePolicy.Preferred
+            )
+
+    def setSeparatorLength(self, length):
+        self._separator.setLength(length)
+        self._separator_length = length
+
+    def setSeparatorWidth(self, width):
+        self._separator.setLineWidth(width)
+        self._separator_width = width
+
+    """ PROPERTIES """
+    def setName(self, name):
+        self._label.setText(name)
+
+    def getName(self):
+        return self._label.text()
+
+    def labelWidth(self):
+        return self._label_width
+
+    def setLabelWidth(self, width):
+        self._label_width = width
+        self._label.setMinimumWidth(width)
+
+
+class AbstractFrameGroupInputWidget(AbstractInputGroupFrame):
+    """
+    Stylized input group.  This has a base of a TansuBaseWidget,
+    I'm not really sure why this is different than the InputGroupWidget...
+    """
+    def __init__(
+        self,
+        parent=None,
+        name="None",
+        note="None",
+        direction=Qt.Horizontal
+    ):
+        # inherit
+        super(AbstractFrameGroupInputWidget, self).__init__(parent, name, note, direction)
+
+        # setup default attrs
+        self._is_header_shown = True
+
+        # create separator
+        #self._separator = AbstractVLine(self)
+
+        # add widgets to main layout
+        self.layout().insertWidget(0, self._label)
+        #self.layout().addWidget(self._separator)
+
+        # setup defaults
+        self.setIsHeaderShown(True)
+        self.setIsHeaderEditable(False)
+
+    """ API """
+    def addInputWidget(self, widget, finished_editing_function=None):
+        if finished_editing_function:
+            widget.setUserFinishedEditingEvent(finished_editing_function)
+        self.layout().addWidget(widget)
+
+    def getInputWidgets(self):
+        input_widgets = []
+        for index in self.layout().count()[2:]:
+            widget = self.layout().itemAt(index).widget()
+            input_widgets.append(widget)
+
+        return input_widgets
+
+    """ STYLE """
+    def setSeparatorLength(self, length):
+        self._separator.setLength(length)
+        self._separator_length = length
+
+    def setSeparatorWidth(self, width):
+        self._separator.setLineWidth(width)
+        self._separator_width = width
+
+    def setDirection(self, direction):
+        """
+        Sets the direction this input will be displayed as.
+
+        Args:
+            direction (Qt.DIRECTION)
+        """
+        # preflight
+        if direction not in [Qt.Horizontal, Qt.Vertical]: return
+
+        # set direction
+        self._direction = direction
+
+        # update separator
+        if direction == Qt.Vertical:
+            # direction
+            self.layout().setDirection(QBoxLayout.TopToBottom)
+
+            # separator
+            self.updateSeparator(direction)
+
+            # update alignment
+            self._label.setAlignment(Qt.AlignCenter)
+            self.layout().setAlignment(Qt.AlignCenter)
+            self.layout().setSpacing(5)
+
+            # update label
+            self._label.setSizePolicy(
+                QSizePolicy.MinimumExpanding, QSizePolicy.Preferred
+            )
+
+        elif direction == Qt.Horizontal:
+            # set layout direction
+            self.layout().setDirection(QBoxLayout.LeftToRight)
+
+            # update separator
+            self.updateSeparator(direction)
+
+            # alignment
+            self.layout().setAlignment(Qt.AlignLeft)
+            self.layout().setSpacing(50)
+
+            # update label
+            self._label.setSizePolicy(
+                QSizePolicy.Fixed, QSizePolicy.Preferred
+            )
+
+        return AbstractInputGroupFrame.setDirection(self, direction)
+
+    def updateSeparator(self, direction):
+        # remove existing separator
+        if hasattr(self, '_separator'):
+            self._separator.setParent(None)
+
+        # create new separator
+        if direction == Qt.Vertical:
+            self._separator = AbstractHLine()
+        elif direction == Qt.Horizontal:
+            self._separator = AbstractVLine()
+
+        # update separator
+        self.setSeparatorWidth(self._separator_width)
+        self.setSeparatorLength(self._separator_length)
+        self.layout().insertWidget(1, self._separator)
+
+        # return if there is no header to be displayed
+        if not self.isHeaderShown():
+            self._separator.hide()
+
+""" These two need to die... and get merged with
+the AbstractInputGroupFrame hierarchy
+"""
 class AbstractInputGroup(QFrame):
     """
     Main container widget for the QGroupBox container type.
@@ -80,7 +344,7 @@ class AbstractInputGroup(QFrame):
                                     |-* AbstractUserInputContainer
                                             | -- QBoxLayout
                                                 | -- QLabel
-                                                | -- FrameInputWidget
+                                                | -- LabelledInputWidget
     """
     def __init__(self, parent=None, title='None'):
         super(AbstractInputGroup, self).__init__(parent)
@@ -275,146 +539,6 @@ class AbstractInputGroupBox(QGroupBox):
 
         self.updateStyleSheet()
         self.user_input_widget.updateStyleSheet()
-
-
-class AbstractInputGroupFrame(QFrame):
-    """
-    name (str): the name displayed to the user
-    input_widget (InputWidgetInstance): The instance of the input widget type
-        that is displayed to the user for manipulation
-    input_widget_base_class (InputWidgetClass): The type of input widget that this is
-        displaying to the user
-            Options are:
-                BooleanInputWidget
-                StringInputWidget
-                IntInputWidget
-                FloatInputWidget
-                ListInputWidget
-
-    Virtual
-        headerTextChanged (widget, value): event that is run every time the user
-            finishes editing the header widget.
-    """
-    def __init__(
-        self,
-        parent=None,
-        name="None",
-        note="None",
-        direction=Qt.Horizontal
-    ):
-        super(AbstractInputGroupFrame, self).__init__(parent)
-        QBoxLayout(QBoxLayout.LeftToRight, self)
-
-        # default attrs
-        self._separator_length = -1
-        self._separator_width = 3
-        self._is_header_shown = True
-
-        # setup layout
-        from cgwidgets.widgets.AbstractWidgets.AbstractInputWidgets import AbstractLabelInputWidget
-        self._label = AbstractLabelInputWidget(self)
-        self._label.setUserFinishedEditingEvent(self.headerTextChanged)
-        self._label.setText(name)
-
-        # set up display
-        self.setToolTip(note)
-        self.setupStyleSheet()
-        self.setDirection(direction)
-
-    """ API """
-    def isHeaderEditable(self):
-        return self._label.isEditable()
-
-    def setIsHeaderEditable(self, enabled):
-        """
-        Determines if the header can be edited or not
-        """
-        self._label.setEditable(enabled)
-
-    def isHeaderShown(self):
-        return self._is_header_shown
-
-    def setIsHeaderShown(self, enabled):
-        """
-        Determines if the header should be shown
-
-        The header is the QLabel with the text name, and the
-        separator (QFrame).
-        """
-        self._is_header_shown = enabled
-        if enabled:
-            self._label.show()
-            self._separator.show()
-        else:
-            self._label.hide()
-            self._separator.hide()
-
-    """ VIRTUAL """
-    def __headerTextChanged(self, widget, value):
-        pass
-
-    def headerTextChanged(self, widget, value):
-        self.__headerTextChanged(widget, value)
-
-    def setHeaderTextChangedEvent(self, function):
-        self.__headerTextChanged = function
-
-    """ STYLE """
-    def setupStyleSheet(self):
-        style_sheet_args = iColor.style_sheet_args
-        style_sheet = """
-        QLabel{{color: rgba{rgba_text}}}
-        FrameInputWidget{{background-color: rgba{rgba_gray_1}}}
-        AbstractFrameInputWidget{{background-color: rgba{rgba_gray_2}}}
-        """.format(
-            **style_sheet_args
-        )
-        self.setStyleSheet(style_sheet)
-        # self._label.setStyleSheet(
-        #     self._label.styleSheet() + 'color: rgba{rgba_text}'.format(
-        #         rgba_text=iColor.rgba_text))
-
-    def setToolTip(self, tool_tip):
-        self._label.setToolTip(tool_tip)
-
-    """ Set Direction of input"""
-    def setDirection(self, direction):
-        if direction == Qt.Vertical:
-            # update alignment
-            self._label.setAlignment(Qt.AlignCenter)
-
-            # update label
-            self._label.setSizePolicy(
-                QSizePolicy.MinimumExpanding, QSizePolicy.Preferred
-            )
-
-        elif direction == Qt.Horizontal:
-            # update label
-            self._label.setSizePolicy(
-                QSizePolicy.Fixed, QSizePolicy.Preferred
-            )
-
-    def setSeparatorLength(self, length):
-        self._separator.setLength(length)
-        self._separator_length = length
-
-    def setSeparatorWidth(self, width):
-        self._separator.setLineWidth(width)
-        self._separator_width = width
-
-    """ PROPERTIES """
-    def setName(self, name):
-        self._label.setText(name)
-
-    def getName(self):
-        return self._label.text()
-
-    def labelWidth(self):
-        return self._label_width
-
-    def setLabelWidth(self, width):
-        self._label_width = width
-        self._label.setMinimumWidth(width)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 import sys
 from qtpy.QtWidgets import (
-    QApplication, QWidget, QVBoxLayout, QHBoxLayout, QGroupBox)
+    QApplication, QWidget, QVBoxLayout, QHBoxLayout, QGroupBox, QSplitter)
 from qtpy.QtGui import QCursor
 from qtpy.QtCore import Qt
 
@@ -9,9 +9,9 @@ from cgwidgets.widgets import (
     IntInputWidget,
     StringInputWidget,
     BooleanInputWidget,
-    GroupInputWidget,
+    TansuGroupInputWidget,
     ListInputWidget,
-    FrameInputWidget,
+    LabelledInputWidget,
     FrameGroupInputWidget,
     PlainTextInputWidget
 )
@@ -37,20 +37,18 @@ def test(widget, value):
     print(widget, value)
     #widget.setText(str(value))
 
-""" group insert """
-group_widget_layout = QVBoxLayout()
-gw = GroupInputWidget(parent=None, title='cool stuff')
+""" Setup Tansu Widget """
+tansu_group_widget = TansuGroupInputWidget(parent=None, name='TansuGroupInputWidget')
 
 # add user inputs
-gw.insertInputWidget(0, FloatInputWidget, 'Float', test)
-gw.insertInputWidget(0, IntInputWidget, 'Int', test)
-gw.insertInputWidget(0, BooleanInputWidget, 'Boolean', test)
-gw.insertInputWidget(0, StringInputWidget, 'String', test)
-gw.insertInputWidget(0, ListInputWidget, 'List', test, data={'items_list':list_of_crap})
-gw.insertInputWidget(0, PlainTextInputWidget, 'Text', test)
+tansu_group_widget.insertInputWidget(0, FloatInputWidget, 'Float', test)
+tansu_group_widget.insertInputWidget(0, IntInputWidget, 'Int', test)
+tansu_group_widget.insertInputWidget(0, BooleanInputWidget, 'Boolean', test)
+tansu_group_widget.insertInputWidget(0, StringInputWidget, 'String', test)
+tansu_group_widget.insertInputWidget(0, ListInputWidget, 'List', test, data={'items_list':list_of_crap})
+tansu_group_widget.insertInputWidget(0, PlainTextInputWidget, 'Text', test)
 
-gw.display_background = False
-group_widget_layout.addWidget(gw)
+tansu_group_widget.display_background = False
 
 """ normal widgets """
 normal_widget = createGroupBox("Normal Widgets")
@@ -92,7 +90,7 @@ def createLabeledWidgets(title, direction=Qt.Horizontal):
     Widgets:
         GroupBox
             | -- VBox
-                    | -* FrameInputWidget
+                    | -* LabelledInputWidget
     """
     label_widgets = {
         "float": FloatInputWidget,
@@ -109,7 +107,7 @@ def createLabeledWidgets(title, direction=Qt.Horizontal):
     for arg in label_widgets:
         # create widget
         widget_type = label_widgets[arg]
-        input_widget = FrameInputWidget(name=arg, widget_type=widget_type)
+        input_widget = LabelledInputWidget(name=arg, widget_type=widget_type)
 
         # set widget orientation
         input_widget.setDirection(direction)
@@ -157,7 +155,7 @@ label_widgets = {
 for arg in label_widgets:
     # create widget
     widget_type = label_widgets[arg]
-    input_widget = FrameInputWidget(name=arg, widget_type=widget_type)
+    input_widget = LabelledInputWidget(name=arg, widget_type=widget_type)
 
     # set widget orientation
     input_widget.setDirection(Qt.Horizontal)
@@ -172,13 +170,12 @@ for arg in label_widgets:
 
 
 """ Main Widget"""
-main_widget = QWidget()
-main_layout = QHBoxLayout(main_widget)
-main_layout.addLayout(group_widget_layout)
-main_layout.addWidget(normal_widget)
-main_layout.addWidget(vertical_label_widget)
-main_layout.addWidget(horizontal_label_widget)
-main_layout.addWidget(frame_group_input_widget)
+main_widget = QSplitter()
+main_widget.addWidget(normal_widget)
+main_widget.addWidget(vertical_label_widget)
+main_widget.addWidget(horizontal_label_widget)
+main_widget.addWidget(tansu_group_widget)
+main_widget.addWidget(frame_group_input_widget)
 
 main_widget.resize(500, 500)
 main_widget.show()

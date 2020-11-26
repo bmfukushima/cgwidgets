@@ -2,8 +2,8 @@ from .InputWidgets import FloatInputWidget as FloatInputWidget
 from .InputWidgets import IntInputWidget as IntInputWidget
 from .InputWidgets import StringInputWidget as StringInputWidget
 from .InputWidgets import BooleanInputWidget as BooleanInputWidget
-from .InputWidgets import GroupInputWidget as GroupInputWidget
-from .InputWidgets import FrameInputWidget
+from .InputWidgets import TansuGroupInputWidget as TansuGroupInputWidget
+from .InputWidgets import LabelledInputWidget
 from .InputWidgets import FrameGroupInputWidget
 from .InputWidgets import PlainTextInputWidget
 

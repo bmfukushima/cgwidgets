@@ -1,6 +1,6 @@
 """
 TODO
-    AbstractInputGroup / GroupInputWidget / FrameInputWidget...
+    AbstractInputGroup / TansuGroupInputWidget / LabelledInputWidget...
         Why do I have like 90 versions of this...
 """
 
@@ -24,6 +24,7 @@ from qtpy.QtCore import Qt
 from cgwidgets.widgets import (
     AbstractInputGroup,
     AbstractInputGroupFrame,
+    AbstractFrameGroupInputWidget,
     AbstractFloatInputWidget,
     AbstractIntInputWidget,
     AbstractStringInputWidget,
@@ -32,7 +33,7 @@ from cgwidgets.widgets import (
     AbstractHLine,
     AbstractComboListInputWidget,
     AbstractListInputWidget,
-    AbstractInputPlainText
+    AbstractInputPlainText,
 )
 
 from cgwidgets.widgets import (
@@ -45,12 +46,19 @@ from cgwidgets.utils import getWidgetAncestor, updateStyleSheet, attrs, installC
 from cgwidgets.settings.colors import iColor
 
 
-class UserInputItem(TansuModelItem):
+class TansuInputWidgetItem(TansuModelItem):
     def getValue(self):
         return self._value
 
     def setValue(self, value):
         self._value = value
+
+    """ Widget Type"""
+    def widgetConstructor(self):
+        return self._widget_constructor
+
+    def setWidgetConstructor(self, widget_constructor):
+        self._widget_constructor = widget_constructor
 
     """ setup user input event """
     def __userInputEvent(self, value):
@@ -79,75 +87,7 @@ class UserInputItem(TansuModelItem):
     #     del self.getArgs()[arg]
 
 
-class GroupInputWidget(AbstractInputGroup):
-    """
-    A container for holding user parameters.  The default main
-    widget is a TansuWidget which can have the individual widgets
-    added to it
-
-    Widgets:
-        GroupInputWidget
-            | -- main_widget (GroupInputTansuWidget)
-                    | -- model
-                    | -* (UserInputItem)
-    """
-    def __init__(self, parent=None, title=None):
-
-        super(GroupInputWidget, self).__init__(parent, title)
-
-        # setup main widget
-        self.group_box.main_widget = GroupInputTansuWidget(self)
-        self.group_box.layout().addWidget(self.group_box.main_widget)
-
-    def insertInputWidget(self, index, widget, name, userInputEvent, data=None):
-        """
-        Inserts a widget into the Main Widget
-
-        index (int)
-        widget (InputWidget)
-        name (str)
-        type (str):
-        userInputEvent (fun)
-        value (str): current value if any should be set.  Bolean types will
-            have this automatically overwritten to false in their constructor
-        """
-        # setup attrs
-        if not data:
-            data = {}
-        name = "{name}  |  {type}".format(name=name, type=widget.TYPE)
-        if not 'name' in data:
-            data['name'] = name
-        if not 'value' in data:
-            data['value'] = ''
-
-        # create item
-        user_input_index = self.group_box.main_widget.insertTansuWidget(index, column_data=data)
-        user_input_item = user_input_index.internalPointer()
-
-        # setup new item
-        user_input_item.setDynamicWidgetBaseClass(widget)
-        user_input_item.setDynamicUpdateFunction(widget.updateDynamicWidget)
-        user_input_item.setUserInputEvent(userInputEvent)
-
-    def removeInputWidget(self, index):
-        self.group_box.main_widget.removeTab(index)
-
-
-class GroupInputTansuWidget(TansuModelViewWidget):
-    def __init__(self, parent=None):
-        super(GroupInputTansuWidget, self).__init__(parent)
-        self.model().setItemType(UserInputItem)
-        self.setDelegateType(TansuModelViewWidget.DYNAMIC)
-        self.setHeaderPosition(attrs.WEST)
-        self.setMultiSelect(True)
-        self.setMultiSelectDirection(Qt.Vertical)
-
-        self.handle_length = 50
-        self.delegateWidget().handle_length = 50
-        self.updateStyleSheet()
-
-
-class iGroupInput(object):
+class iTansuGroupInput(object):
     """
     Interface for group input objects.  This is added to all of the input
     widget types so that they will be compatible with the GroupInputWidgets
@@ -209,31 +149,31 @@ class iGroupInput(object):
         """
         #value = item.getArg('value')
         value = item.columnData()['value']
-        widget.getMainWidget().setText(str(value))
+        widget.getMainWidget().getInputWidget().setText(str(value))
 
 
-class FloatInputWidget(AbstractFloatInputWidget, iGroupInput):
+class FloatInputWidget(AbstractFloatInputWidget, iTansuGroupInput):
     def __init__(self, parent=None):
         super(FloatInputWidget, self).__init__(parent)
         self.setDoMath(True)
 
 
-class IntInputWidget(AbstractIntInputWidget, iGroupInput):
+class IntInputWidget(AbstractIntInputWidget, iTansuGroupInput):
     def __init__(self, parent=None):
         super(IntInputWidget, self).__init__(parent)
 
 
-class StringInputWidget(AbstractStringInputWidget, iGroupInput):
+class StringInputWidget(AbstractStringInputWidget, iTansuGroupInput):
     def __init__(self, parent=None):
         super(StringInputWidget, self).__init__(parent)
 
 
-class PlainTextInputWidget(AbstractInputPlainText, iGroupInput):
+class PlainTextInputWidget(AbstractInputPlainText, iTansuGroupInput):
     def __init__(self, parent=None):
         super(PlainTextInputWidget, self).__init__(parent)
 
 
-class BooleanInputWidget(AbstractBooleanInputWidget, iGroupInput):
+class BooleanInputWidget(AbstractBooleanInputWidget, iTansuGroupInput):
     def __init__(self, parent=None, is_clicked=False):
         super(BooleanInputWidget, self).__init__(parent, is_clicked=is_clicked)
         self.setUserFinishedEditingEvent(self.updateUserInputItem)
@@ -253,27 +193,27 @@ class BooleanInputWidget(AbstractBooleanInputWidget, iGroupInput):
         except AttributeError:
             pass
 
-    @staticmethod
-    def updateDynamicWidget(parent, widget, item):
-        """
-        When the dynamic widget is created.  This will set
-        the display text to the user
-        # get default value
-        # this is because the default value is set as '' during the constructor in
-        # GroupInputWidget --> insertInputWidget
-        """
-        # get value
-        try:
-            value = item.columnData()['value']
-        except:
-            value = False
+    # @staticmethod
+    # def updateDynamicWidget(parent, widget, item):
+    #     """
+    #     When the dynamic widget is created.  This will set
+    #     the display text to the user
+    #     # get default value
+    #     # this is because the default value is set as '' during the constructor in
+    #     # TansuGroupInputWidget --> insertInputWidget
+    #     """
+    #     # get value
+    #     try:
+    #         value = item.columnData()['value']
+    #     except:
+    #         value = False
+    #
+    #     # toggle
+    #     widget.getMainWidget().getInputWidget().is_clicked = value
+    #     updateStyleSheet(widget.getMainWidget().getInputWidget())
 
-        # toggle
-        widget.getMainWidget().is_clicked = value
-        updateStyleSheet(widget.getMainWidget())
 
-
-class ComboListInputWidget(AbstractComboListInputWidget, iGroupInput):
+class ComboListInputWidget(AbstractComboListInputWidget, iTansuGroupInput):
     TYPE = "list"
     def __init__(self, parent=None):
         super(ComboListInputWidget, self).__init__(parent)
@@ -299,11 +239,11 @@ class ComboListInputWidget(AbstractComboListInputWidget, iGroupInput):
     @staticmethod
     def updateDynamicWidget(parent, widget, item):
         item_list = item.getArg('items_list')
-        widget.getMainWidget().populate(item_list)
+        widget.getMainWidget().getInputWidget().populate(item_list)
         # print(widget, item)
 
 
-class ListInputWidget(AbstractListInputWidget, iGroupInput):
+class ListInputWidget(AbstractListInputWidget, iTansuGroupInput):
     def __init__(self, parent=None, item_list=[]):
         super(ListInputWidget, self).__init__(parent)
         self.populate(item_list)
@@ -325,16 +265,17 @@ class ListInputWidget(AbstractListInputWidget, iGroupInput):
         except AttributeError:
             pass
 
-    @staticmethod
-    def updateDynamicWidget(parent, widget, item):
-        item_list = item.columnData()['items_list']
-        value = item.columnData()['value']
-        widget.getMainWidget().populate(item_list)
-        widget.getMainWidget().setText(value)
-        # print(widget, item)
+    # @staticmethod
+    # def updateDynamicWidget(parent, widget, item):
+    #     item_list = item.columnData()['items_list']
+    #     value = item.columnData()['value']
+    #
+    #     widget.getMainWidget().getInputWidget().populate(item_list)
+    #     widget.getMainWidget().getInputWidget().setText(value)
+    #     # print(widget, item)
 
 
-class FileBrowserInputWidget(AbstractListInputWidget, iGroupInput):
+class FileBrowserInputWidget(AbstractListInputWidget, iTansuGroupInput):
     def __init__(self, parent=None):
         super(FileBrowserInputWidget, self).__init__(parent=parent)
 
@@ -372,8 +313,8 @@ class FileBrowserInputWidget(AbstractListInputWidget, iGroupInput):
 # AbstractInputGroupBox
 # TODO Move to one architecture
 
-
-class FrameInputWidget(TansuBaseWidget, AbstractInputGroupFrame):
+""" CONTAINERS """
+class LabelledInputWidget(TansuBaseWidget, AbstractInputGroupFrame):
     """
     A single input widget.  This inherits from the TansuBaseWidget,
     to provide a slider for the user to expand/contract the editable area
@@ -389,10 +330,11 @@ class FrameInputWidget(TansuBaseWidget, AbstractInputGroupFrame):
         direction=Qt.Horizontal,
         widget_type=StringInputWidget
     ):
-        super(FrameInputWidget, self).__init__(parent, direction)
+        super(LabelledInputWidget, self).__init__(parent, direction)
         AbstractInputGroupFrame.__init__(self, parent, name, note, direction)
 
         # set up attrs
+        self._input_widget = None #hack to make the setInputBaseClass update work
         self._default_label_length = 50
         self.setInputBaseClass(widget_type)
 
@@ -426,6 +368,16 @@ class FrameInputWidget(TansuBaseWidget, AbstractInputGroupFrame):
 
     def setInputBaseClass(self, _input_widget_base_class):
         self._input_widget_base_class = _input_widget_base_class
+
+        # remove input widget and rebuild
+        if self.getInputWidget():
+            self.getInputWidget().setParent(None)
+
+            # create new input widget
+            self._input_widget = _input_widget_base_class(self)
+            self._input_widget.setSizePolicy(
+                QSizePolicy.MinimumExpanding, QSizePolicy.Preferred
+            )
 
     def getInputBaseClass(self):
         return self._input_widget_base_class
@@ -463,11 +415,7 @@ class FrameInputWidget(TansuBaseWidget, AbstractInputGroupFrame):
         return TansuBaseWidget.showEvent(self, event)
 
 
-class FrameGroupInputWidget(AbstractInputGroupFrame):
-    """
-    Stylized input group.  This has a base of a TansuBaseWidget,
-    I'm not really sure why this is different than the InputGroupWidget...
-    """
+class FrameGroupInputWidget(AbstractFrameGroupInputWidget):
     def __init__(
         self,
         parent=None,
@@ -478,112 +426,138 @@ class FrameGroupInputWidget(AbstractInputGroupFrame):
         # inherit
         super(FrameGroupInputWidget, self).__init__(parent, name, note, direction)
 
-        # setup default attrs
-        self._is_header_shown = True
 
-        # create separator
-        #self._separator = AbstractVLine(self)
+class TansuGroupInputWidget(AbstractFrameGroupInputWidget):
+    """
+    A container for holding user parameters.  The default main
+    widget is a TansuWidget which can have the individual widgets
+    added to it
 
-        # add widgets to main layout
-        self.layout().insertWidget(0, self._label)
-        #self.layout().addWidget(self._separator)
+    Widgets:
+        TansuGroupInputWidget
+            | -- main_widget (AbstractTansuGroupInputWidget)
+                    | -- model
+                    | -* (TansuInputWidgetItem)
+    """
+    def __init__(
+        self,
+        parent=None,
+        name="None",
+        note="None",
+        direction=Qt.Vertical
+    ):
+        # inherit
+        super(TansuGroupInputWidget, self).__init__(parent, name, note, direction)
 
-        # setup defaults
-        self.setIsHeaderShown(True)
-        self.setIsHeaderEditable(False)
+        # setup main widget
+        self.main_widget = AbstractTansuInputWidget(self)
+        self.layout().addWidget(self.main_widget)
 
-    """ API """
-    def addInputWidget(self, widget, finished_editing_function=None):
-        if finished_editing_function:
-            widget.setUserFinishedEditingEvent(finished_editing_function)
-        self.layout().addWidget(widget)
+        # set default orientation
+        self.setDirection(Qt.Vertical)
 
-    def getInputWidgets(self):
-        input_widgets = []
-        for index in self.layout().count()[2:]:
-            widget = self.layout().itemAt(index).widget()
-            input_widgets.append(widget)
+        self.main_widget.setDelegateType(
+            TansuModelViewWidget.DYNAMIC,
+            dynamic_widget=LabelledInputWidget,
+            dynamic_function=self.updateGUI
+        )
 
-        return input_widgets
-
-    """ STYLE """
-    def setSeparatorLength(self, length):
-        self._separator.setLength(length)
-        self._separator_length = length
-
-    def setSeparatorWidth(self, width):
-        self._separator.setLineWidth(width)
-        self._separator_width = width
-
-    def setDirection(self, direction):
+    @staticmethod
+    def updateGUI(parent, widget, item):
         """
-        Sets the direction this input will be displayed as.
-
-        Args:
-            direction (Qt.DIRECTION)
+        widget (TansuModelDelegateWidget)
+        item (TansuModelItem)
         """
-        # preflight
-        if direction not in [Qt.Horizontal, Qt.Vertical]: return
+        if item:
+            # get attrs
+            name = parent.model().getItemName(item)
+            value = item.columnData()['value']
+            labelled_widget = widget.getMainWidget()
+            widget_constructor = item.widgetConstructor()
 
-        # set direction
-        self._direction = direction
+            # set attrs
+            labelled_widget.setName(name)
+            labelled_widget.setInputBaseClass(widget_constructor)
+            input_widget = labelled_widget.getInputWidget()
 
-        # update separator
-        if direction == Qt.Vertical:
-            # direction
-            self.layout().setDirection(QBoxLayout.TopToBottom)
+            # update list inputs
+            if isinstance(input_widget, ListInputWidget):
+                item_list = item.columnData()['items_list']
+                input_widget.populate(item_list)
 
-            # separator
-            self.updateSeparator(direction)
+            # update boolean inputs
+            if isinstance(input_widget, BooleanInputWidget):
+                # # get value
+                # try:
+                #     value = item.columnData()['value']
+                # except:
+                #     value = False
 
-            # update alignment
-            self._label.setAlignment(Qt.AlignCenter)
-            self.layout().setAlignment(Qt.AlignCenter)
-            self.layout().setSpacing(5)
+                # toggle
+                widget.getMainWidget().getInputWidget().is_clicked = value
+                updateStyleSheet(widget.getMainWidget().getInputWidget())
+                return
 
-            # update label
-            self._label.setSizePolicy(
-                QSizePolicy.MinimumExpanding, QSizePolicy.Preferred
-            )
+            # set input widgets current value from item
+            input_widget.setText(str(value))
 
-        elif direction == Qt.Horizontal:
-            # set layout direction
-            self.layout().setDirection(QBoxLayout.LeftToRight)
+    def insertInputWidget(self, index, widget, name, user_input_event, data=None):
+        """
+        Inserts a widget into the Main Widget
 
-            # update separator
-            self.updateSeparator(direction)
+        index (int)
+        widget (InputWidget)
+        name (str)
+        type (str):
+        user_input_event (function): should take two values widget, and value
+            widget: widget that is currently being manipulated
+            value: value being set
+        value (str): current value if any should be set.  Boolean types will
+            have this automatically overwritten to false in their constructor
+        """
+        # setup attrs
+        if not data:
+            data = {}
+        name = "{name}  |  {type}".format(name=name, type=widget.TYPE)
+        if not 'name' in data:
+            data['name'] = name
+        if not 'value' in data:
+            data['value'] = ''
 
-            # alignment
-            self.layout().setAlignment(Qt.AlignLeft)
-            self.layout().setSpacing(50)
+        # create item
+        user_input_index = self.main_widget.insertTansuWidget(index, column_data=data)
+        user_input_item = user_input_index.internalPointer()
 
-            # update label
-            self._label.setSizePolicy(
-                QSizePolicy.Fixed, QSizePolicy.Preferred
-            )
+        # setup new item
+        # TODO something...
+        # hide tansu header for widgets...
+        # use a frameInputGroupWidget thingy as the widget base class?
+        #input_frame = LabelledInputWidget(name=name, widget_type=widget)
 
-        return AbstractInputGroupFrame.setDirection(self, direction)
+        #user_input_item.setDynamicWidgetBaseClass(input_frame)
+        # tansu update?
+        #user_input_item.setDynamicUpdateFunction(widget.updateDynamicWidget)
+        user_input_item.setWidgetConstructor(widget)
+        user_input_item.setUserInputEvent(user_input_event)
 
-    def updateSeparator(self, direction):
-        # remove existing separator
-        if hasattr(self, '_separator'):
-            self._separator.setParent(None)
+    def removeInputWidget(self, index):
+        self.main_widget.removeTab(index)
 
-        # create new separator
-        if direction == Qt.Vertical:
-            self._separator = AbstractHLine()
-        elif direction == Qt.Horizontal:
-            self._separator = AbstractVLine()
 
-        # update separator
-        self.setSeparatorWidth(self._separator_width)
-        self.setSeparatorLength(self._separator_length)
-        self.layout().insertWidget(1, self._separator)
+class AbstractTansuInputWidget(TansuModelViewWidget):
+    def __init__(self, parent=None):
+        super(AbstractTansuInputWidget, self).__init__(parent)
+        self.model().setItemType(TansuInputWidgetItem)
+        self.setDelegateType(TansuModelViewWidget.DYNAMIC)
+        self.setHeaderPosition(attrs.WEST)
+        self.setMultiSelect(True)
+        self.setMultiSelectDirection(Qt.Vertical)
 
-        # return if there is no header to be displayed
-        if not self.isHeaderShown():
-            self._separator.hide()
+        self.handle_length = 50
+        self.delegateWidget().handle_length = 50
+        self.updateStyleSheet()
 
+        self.setDelegateHeaderShown(False)
 
 if __name__ == "__main__":
     import sys
@@ -610,7 +584,7 @@ if __name__ == "__main__":
 
     """ group insert """
     group_widget_layout = QVBoxLayout()
-    gw = GroupInputWidget(parent=None, title='cool stuff')
+    gw = TansuGroupInputWidget(parent=None, title='TansuGroupInputWidget')
 
     # add user inputs
     gw.insertInputWidget(0, FloatInputWidget, 'Float', test)
@@ -653,11 +627,11 @@ if __name__ == "__main__":
     # horizontal_label_widget.setTitle("Frame Widgets (Horizontal)")
     # horizontal_label_widget_layout = QVBoxLayout(horizontal_label_widget)
     #
-    # u_float_input_widget = FrameInputWidget(name="float", widget_type=FloatInputWidget)
-    # u_int_input_widget = FrameInputWidget(name="int", widget_type=IntInputWidget)
-    # u_boolean_input_widget = FrameInputWidget(name="bool", widget_type=BooleanInputWidget)
-    # u_string_input_widget = FrameInputWidget(name='str', widget_type=StringInputWidget)
-    # u_list_input_widget = FrameInputWidget(name='list', widget_type=ListInputWidget)
+    # u_float_input_widget = LabelledInputWidget(name="float", widget_type=FloatInputWidget)
+    # u_int_input_widget = LabelledInputWidget(name="int", widget_type=IntInputWidget)
+    # u_boolean_input_widget = LabelledInputWidget(name="bool", widget_type=BooleanInputWidget)
+    # u_string_input_widget = LabelledInputWidget(name='str', widget_type=StringInputWidget)
+    # u_list_input_widget = LabelledInputWidget(name='list', widget_type=ListInputWidget)
     # u_list_input_widget.getInputWidget().populate(list_of_crap)
     # u_list_input_widget.getInputWidget().display_item_colors = True
     #
@@ -678,15 +652,15 @@ if __name__ == "__main__":
     vertical_label_widget.setTitle("Frame Widgets ( Vertical )")
     vertical_label_widget_layout = QVBoxLayout(vertical_label_widget)
 
-    u_text_input_widget = FrameInputWidget(name="text", widget_type=PlainTextInputWidget)
+    u_text_input_widget = LabelledInputWidget(name="text", widget_type=PlainTextInputWidget)
 
     #u_float_input_widget.setSeparatorLength(100)
     #u_float_input_widget.setSeparatorWidth(3)
-    u_int_input_widget = FrameInputWidget(name="float", widget_type=FloatInputWidget)
-    u_int_input_widget = FrameInputWidget(name="int", widget_type=IntInputWidget)
-    u_boolean_input_widget = FrameInputWidget(name="bool", widget_type=BooleanInputWidget)
-    u_string_input_widget = FrameInputWidget(name='str', widget_type=StringInputWidget)
-    u_list_input_widget = FrameInputWidget(name='list', widget_type=ListInputWidget)
+    u_int_input_widget = LabelledInputWidget(name="float", widget_type=FloatInputWidget)
+    u_int_input_widget = LabelledInputWidget(name="int", widget_type=IntInputWidget)
+    u_boolean_input_widget = LabelledInputWidget(name="bool", widget_type=BooleanInputWidget)
+    u_string_input_widget = LabelledInputWidget(name='str', widget_type=StringInputWidget)
+    u_list_input_widget = LabelledInputWidget(name='list', widget_type=ListInputWidget)
     u_list_input_widget.getInputWidget().populate(list_of_crap)
     u_list_input_widget.getInputWidget().display_item_colors = True
     #

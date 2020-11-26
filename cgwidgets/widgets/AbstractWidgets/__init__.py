@@ -5,6 +5,7 @@ from .AbstractShapes import AbstractVLine as AbstractVLine
 from .AbstractShapes import AbstractInputGroupBox as AbstractInputGroupBox
 from .AbstractShapes import AbstractInputGroup as AbstractInputGroup
 from .AbstractShapes import AbstractInputGroupFrame
+from .AbstractShapes import AbstractFrameGroupInputWidget
 
 """ USER INPUT WIDGETS"""
 from .AbstractInputWidgets import AbstractFloatInputWidget as AbstractFloatInputWidget

@@ -4,7 +4,8 @@ from qtpy.QtCore import Qt, QModelIndex
 
 from cgwidgets.utils import getWidgetAncestor, attrs
 from cgwidgets.settings.colors import iColor
-from cgwidgets.widgets import AbstractInputGroup
+from cgwidgets.widgets import AbstractInputGroup, AbstractFrameGroupInputWidget
+
 from cgwidgets.widgets.TansuWidget import (
     TansuBaseWidget, TansuModel, iTansuDynamicWidget
 )
@@ -12,6 +13,7 @@ from cgwidgets.views import (
     AbstractDragDropTreeView,
     AbstractDragDropListView,
     AbstractDragDropAbstractView
+
 )
 
 
@@ -75,6 +77,8 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         self._header_position = direction #just a temp set... for things
         self._header_height = 50
         self._header_width = 100
+        self._delegate_header_shown = True
+        self._delegate_header_direction = Qt.Vertical
 
         # setup model / view
         self._model = TansuModel()
@@ -217,6 +221,19 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
     def setHeaderItemIsDeleteEnabled(self, enabled):
         self.headerWidget().setIsDeleteEnabled(enabled)
 
+    def setDelegateHeaderShown(self, enabled):
+        self._delegate_header_shown = enabled
+        # todo update all delegate headers
+
+    def isDelegateHeaderShown(self):
+        return self._delegate_header_shown
+
+    def setDelegateHeaderDirection(self, direction):
+        self._delegate_header_direction = direction
+        # todo update all delegate directions
+
+    def delegateHeaderDirection(self):
+        return self._delegate_header_direction
     """ MODEL """
     def model(self):
         return self._model
@@ -310,11 +327,17 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         TODO:
             Move to base tansu?
         """
-        #name = item.data()[self.model()._header_data[0]]
+        # get attrs
         name = self.model().getItemName(item)
+
+        # create delegate
         display_widget = TansuModelDelegateWidget(self, name)
+
+        # set up attrs
         display_widget.setMainWidget(widget)
         display_widget.setItem(item)
+        display_widget.setIsHeaderShown(self.isDelegateHeaderShown())
+        display_widget.setDirection(self.delegateHeaderDirection())
 
         return display_widget
 
@@ -614,7 +637,10 @@ class TansuMainDelegateWidget(TansuBaseWidget):
                 tab_tansu_widget.toggleDelegateSpacerWidget()
 
 
-class TansuModelDelegateWidget(AbstractInputGroup):
+# todo needs to somehow inherit from the FrameGroupInputWidget...
+#class TansuModelDelegateWidget(AbstractInputGroup):
+class TansuModelDelegateWidget(AbstractFrameGroupInputWidget):
+
     """
     This is a clone of the InputGroup... but I'm getting
     stuck in import recursion land... so... this is a copy

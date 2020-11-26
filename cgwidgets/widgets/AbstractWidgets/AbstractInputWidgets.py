@@ -116,7 +116,7 @@ class AbstractInputWidget(object):
 
         if is_valid:
             self.setText(self.getInput())
-            #TODO This doesn't exist in this ffunctino... moved to iGroupInput
+            #TODO This doesn't exist in this ffunctino... moved to iTansuGroupInput
             # or somewhere more logical...
             try:
                 self.userFinishedEditingEvent(self, self.getInput())
@@ -133,7 +133,7 @@ class AbstractInputWidget(object):
         is_valid = self.checkInput()
         if self._updating is True:
             if is_valid:
-                #TODO This doesn't exist in this ffunctino... moved to iGroupInput
+                #TODO This doesn't exist in this ffunctino... moved to iTansuGroupInput
                 # or somewhere more logical...
                 try:
                         self.setText(self.getInput())
@@ -511,7 +511,7 @@ class AbstractLabelInputWidget(AbstractStringInputWidget):
             by clicking on it.
     Virtual:
         userFinishedEditingEvent (widget, value): when the user finishes editing.
-            This is a copy/paste from the iGroupInput to set up the registry
+            This is a copy/paste from the iTansuGroupInput to set up the registry
             for user input.
     """
     def __init__(self, parent=None):
@@ -554,7 +554,7 @@ class AbstractLabelInputWidget(AbstractStringInputWidget):
         self.setProperty('editable', enabled)
 
     # TODO duplicate code
-    """ VIRTUAL (copy / paste from iGroupInput"""
+    """ VIRTUAL (copy / paste from iTansuGroupInput"""
     def __user_finished_editing_event(self, *args, **kwargs):
         pass
 
