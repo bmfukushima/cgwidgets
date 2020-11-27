@@ -427,12 +427,9 @@ class LabelledInputWidget(TansuBaseWidget, AbstractInputGroupFrame):
 
     def setUserFinishedEditingEvent(self, function):
         self._input_widget.setUserFinishedEditingEvent(function)
-    #
+
     def showEvent(self, event):
-        # <<<<<<< Updated upstream
-        # =======
-        #         #return_val = TansuBaseWidget.showEvent(self, event)
-        # >>>>>>> Stashed changes
+
         super(LabelledInputWidget, self).showEvent(event)
         self.resetSliderPositionToDefault()
         return TansuBaseWidget.showEvent(self, event)
