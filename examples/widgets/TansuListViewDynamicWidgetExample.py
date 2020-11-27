@@ -40,7 +40,7 @@ class TabTansuDynamicWidgetExample(QWidget):
             print ('------------- SHOW EVENT ---------------')
             print(parent, widget, item)
             name = parent.model().getItemName(item)
-            widget.setTitle(name)
+            widget.setName(name)
             widget.getMainWidget().label.setText(name)
 
 """

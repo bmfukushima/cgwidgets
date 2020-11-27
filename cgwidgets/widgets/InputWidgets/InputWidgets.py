@@ -335,7 +335,7 @@ class LabelledInputWidget(TansuBaseWidget, AbstractInputGroupFrame):
 
         # set up attrs
         self._input_widget = None #hack to make the setInputBaseClass update work
-        self._default_label_length = 50
+        self._default_label_length = 125
         self.setInputBaseClass(widget_type)
 
         # create base widget
@@ -343,6 +343,8 @@ class LabelledInputWidget(TansuBaseWidget, AbstractInputGroupFrame):
         self._input_widget.setSizePolicy(
             QSizePolicy.MinimumExpanding, QSizePolicy.Preferred
         )
+        self._input_widget.setMinimumSize(1, 1)
+
         self.addWidget(self._label)
         self.addWidget(self._input_widget)
 
@@ -352,6 +354,7 @@ class LabelledInputWidget(TansuBaseWidget, AbstractInputGroupFrame):
 
         self.rgba_background = iColor['rgba_gray_1']
         self.resetSliderPositionToDefault()
+        self._label.setMinimumSize(1, 1)
 
     def setInputWidget(self, _input_widget):
         # remove previous input widget
@@ -416,15 +419,21 @@ class LabelledInputWidget(TansuBaseWidget, AbstractInputGroupFrame):
     """ EVENTS """
     def resetSliderPositionToDefault(self):
         self.moveSplitter(self.defaultLabelLength(), 1)
+        #self.moveSplitter(100, 1)
+        #self.setSizes([1, 1000])
 
     def setUserFinishedEditingEvent(self, function):
         self._input_widget.setUserFinishedEditingEvent(function)
     #
     def showEvent(self, event):
-        return_val = super(TansuBaseWidget, self).showEvent(event)
+        # <<<<<<< Updated upstream
+        # =======
+        #         #return_val = TansuBaseWidget.showEvent(self, event)
+        # >>>>>>> Stashed changes
+        return_val = super(LabelledInputWidget, self).showEvent(event)
         self.resetSliderPositionToDefault()
-        #return TansuBaseWidget.showEvent(self, event)
-        return return_val
+        return TansuBaseWidget.showEvent(self, event)
+        #return return_val
 
 
 class FrameGroupInputWidget(AbstractFrameGroupInputWidget):
@@ -572,6 +581,13 @@ class AbstractTansuInputWidget(TansuModelViewWidget):
 
         self.setDelegateHeaderShown(False)
 
+"""
+TODO
+    it all seems to be working...
+        When it goes over a certain length... ~50, then it will take up the entire width
+        and when its under a certain width... it will auto magically be removed
+"""
+
 
 if __name__ == "__main__":
     import sys
@@ -582,14 +598,25 @@ if __name__ == "__main__":
 
 
     """ Main Widget"""
-    main_widget = LabelledInputWidget(name="name",widget_type=StringInputWidget)
-    main_widget.setDefaultLabelLength(200)
-    main_widget.setSeparatorWidth(20)
-    main_widget.setSeparatorLength(10)
-    main_widget.resize(500, 500)
+
+    main_widget = QWidget()
+    main_layout = QVBoxLayout(main_widget)
+
+    label1 = LabelledInputWidget(name="name", widget_type=StringInputWidget)
+    label2 = LabelledInputWidget(name="name", widget_type=StringInputWidget)
+    #label2.setDirection(Qt.Horizontal)
+    #label2.setDefaultLabelLength(20)
+    label2.setSeparatorLength(5)
+    label2.setSeparatorWidth(10)
+    #label2.setInputBaseClass(FloatInputWidget)
+
+    main_layout.addWidget(label1)
+    main_layout.addWidget(label2)
+    #main_widget.resize(500, 500)
 
     main_widget.show()
-    main_widget.moveSplitter(100, 1)
+
+    #main_widget.moveSplitter(100, 1)
     main_widget.move(QCursor.pos())
 
     sys.exit(app.exec_())

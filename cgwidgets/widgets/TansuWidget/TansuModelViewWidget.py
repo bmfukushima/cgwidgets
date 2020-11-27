@@ -75,6 +75,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         # etc attrs
         self.setHandleWidth(0)
         self._header_position = direction #just a temp set... for things
+        self._header_length = 50
         self._header_height = 50
         self._header_width = 100
         self._delegate_header_shown = True
@@ -220,6 +221,20 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
 
     def setHeaderItemIsDeleteEnabled(self, enabled):
         self.headerWidget().setIsDeleteEnabled(enabled)
+
+    def headerDefaultLength(self):
+        return self._header_length
+
+    def setHeaderDefaultLength(self, length):
+        # set attr
+        self._header_length = length
+        if self.headerPosition() in [attrs.NORTH, attrs.SOUTH]:
+            self.header_height = length
+        elif self.headerPosition() in [attrs.EAST, attrs.WEST]:
+            self.header_width = length
+
+        # update header
+        self.setHeaderWidgetToDefaultSize()
 
     def setDelegateHeaderShown(self, enabled):
         self._delegate_header_shown = enabled
@@ -490,9 +505,11 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
 
     """ EVENTS """
     def showEvent(self, event):
+        return_val = QSplitter.showEvent(self, event)
         self.setHeaderWidgetToDefaultSize()
         self.updateStyleSheet()
-        return QSplitter.showEvent(self, event)
+        return return_val
+        #return QSplitter.showEvent(self, event)
 
     def resizeEvent(self, event):
         model = self.model()

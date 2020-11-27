@@ -271,12 +271,12 @@ class TansuBaseWidget(QSplitter):
         if self.orientation() == Qt.Vertical:
             length = self.width()
             margin = (length - self.handle_length) * 0.5
-            margins = "10px {margin}".format(margin=margin)
+            margins = "{width} px {margin}".format(margin=margin, width=self.handleWidth()*2)
 
         elif self.orientation() == Qt.Horizontal:
             length = self.height()
             margin = (length - self.handle_length) * 0.5
-            margins = "{margin} 10px".format(margin=margin)
+            margins = "{margin} {width}px".format(margin=margin, width=self.handleWidth()*2)
 
         return margins
 

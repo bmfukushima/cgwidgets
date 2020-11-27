@@ -280,7 +280,7 @@ class AbstractFrameGroupInputWidget(AbstractInputGroupFrame):
 
             # update alignment
             self._label.setAlignment(Qt.AlignCenter)
-            self.layout().setAlignment(Qt.AlignCenter)
+            self.layout().setAlignment(Qt.AlignTop)
             self.layout().setSpacing(5)
 
             # update label
@@ -297,7 +297,7 @@ class AbstractFrameGroupInputWidget(AbstractInputGroupFrame):
 
             # alignment
             self.layout().setAlignment(Qt.AlignLeft)
-            self.layout().setSpacing(50)
+            #self.layout().setSpacing(50)
 
             # update label
             self._label.setSizePolicy(
