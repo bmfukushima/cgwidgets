@@ -421,7 +421,7 @@ class LabelledInputWidget(TansuBaseWidget, AbstractInputGroupFrame):
         self._input_widget.setUserFinishedEditingEvent(function)
     #
     def showEvent(self, event):
-        return_val = super(LabelledInputWidget, self).showEvent(event)
+        return_val = super(TansuBaseWidget, self).showEvent(event)
         self.resetSliderPositionToDefault()
         #return TansuBaseWidget.showEvent(self, event)
         return return_val
@@ -583,8 +583,11 @@ if __name__ == "__main__":
 
     """ Main Widget"""
     main_widget = LabelledInputWidget(name="name",widget_type=StringInputWidget)
-
+    main_widget.setDefaultLabelLength(200)
+    main_widget.setSeparatorWidth(20)
+    main_widget.setSeparatorLength(10)
     main_widget.resize(500, 500)
+
     main_widget.show()
     main_widget.moveSplitter(100, 1)
     main_widget.move(QCursor.pos())
