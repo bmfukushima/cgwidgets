@@ -358,8 +358,8 @@ class LabelledInputWidget(TansuBaseWidget, AbstractInputGroupFrame):
 
         # set size hints
         font_size = getFontSize(QApplication)
-        self._input_widget.setMinimumSize(1, font_size*2)
-        self._label.setMinimumSize(font_size*2, font_size*2)
+        self._input_widget.setMinimumSize(1, font_size*2.5)
+        self._label.setMinimumSize(font_size*2, font_size*2.5)
         #
         self.setStretchFactor(0, 0)
         self.setStretchFactor(1, 1)
@@ -426,7 +426,7 @@ class LabelledInputWidget(TansuBaseWidget, AbstractInputGroupFrame):
         if direction == Qt.Vertical:
             self.setMinimumSize(font_size*4, font_size*6)
         else:
-            self.setMinimumSize(font_size*12, font_size*2)
+            self.setMinimumSize(font_size*12, font_size*2.5)
 
 
         # update label
