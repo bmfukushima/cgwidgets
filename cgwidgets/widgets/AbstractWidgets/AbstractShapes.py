@@ -197,12 +197,12 @@ class AbstractInputGroupFrame(QFrame):
     def getName(self):
         return self._label.text()
 
-    def labelWidth(self):
-        return self._label_width
-
-    def setLabelWidth(self, width):
-        self._label_width = width
-        self._label.setMinimumWidth(width)
+    # def labelWidth(self):
+    #     return self._label_width
+    #
+    # def setLabelWidth(self, width):
+    #     self._label_width = width
+    #     self._label.setMinimumWidth(width)
 
 
 class AbstractFrameGroupInputWidget(AbstractInputGroupFrame):
@@ -326,8 +326,8 @@ class AbstractFrameGroupInputWidget(AbstractInputGroupFrame):
         if not self.isHeaderShown():
             self._separator.hide()
 
-""" These two need to die... and get merged with
-the AbstractInputGroupFrame hierarchy
+"""
+These are only being used in the Color Widget
 """
 class AbstractInputGroup(QFrame):
     """

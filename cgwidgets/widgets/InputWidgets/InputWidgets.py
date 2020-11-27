@@ -351,6 +351,7 @@ class LabelledInputWidget(TansuBaseWidget, AbstractInputGroupFrame):
         self.setStretchFactor(1, 1)
 
         self.rgba_background = iColor['rgba_gray_1']
+        self.resetSliderPositionToDefault()
 
     def setInputWidget(self, _input_widget):
         # remove previous input widget
@@ -378,6 +379,12 @@ class LabelledInputWidget(TansuBaseWidget, AbstractInputGroupFrame):
             self._input_widget.setSizePolicy(
                 QSizePolicy.MinimumExpanding, QSizePolicy.Preferred
             )
+            # reset splitter
+            self.addWidget(self._input_widget)
+            self._input_widget.show()
+            self.resetSliderPositionToDefault()
+            # todo
+            # I'm guesseing this never does what I'm expecting...
 
     def getInputBaseClass(self):
         return self._input_widget_base_class
@@ -407,12 +414,17 @@ class LabelledInputWidget(TansuBaseWidget, AbstractInputGroupFrame):
         self._default_label_length = length
 
     """ EVENTS """
+    def resetSliderPositionToDefault(self):
+        self.moveSplitter(self.defaultLabelLength(), 1)
+
     def setUserFinishedEditingEvent(self, function):
         self._input_widget.setUserFinishedEditingEvent(function)
     #
     def showEvent(self, event):
-        self.moveSplitter(self.defaultLabelLength(), 1)
-        return TansuBaseWidget.showEvent(self, event)
+        return_val = super(LabelledInputWidget, self).showEvent(event)
+        self.resetSliderPositionToDefault()
+        #return TansuBaseWidget.showEvent(self, event)
+        return return_val
 
 
 class FrameGroupInputWidget(AbstractFrameGroupInputWidget):
@@ -499,6 +511,7 @@ class TansuGroupInputWidget(AbstractFrameGroupInputWidget):
                 return
 
             # set input widgets current value from item
+            #input_widget.resetSliderPositionToDefault()
             input_widget.setText(str(value))
 
     def insertInputWidget(self, index, widget, name, user_input_event, data=None):
@@ -559,6 +572,7 @@ class AbstractTansuInputWidget(TansuModelViewWidget):
 
         self.setDelegateHeaderShown(False)
 
+
 if __name__ == "__main__":
     import sys
     from qtpy.QtWidgets import (
@@ -566,134 +580,13 @@ if __name__ == "__main__":
     from qtpy.QtGui import QCursor
     app = QApplication(sys.argv)
 
-    # testwidget = QLabel()
-    # testwidget.setText('init')
-    # l.addWidget(testwidget)
-    list_of_crap = [
-        ['a', (0, 0, 0, 255)], ['b', (0, 0, 0, 255)], ['c', (0, 0, 0, 255)], ['d', (0, 0, 0, 255)], ['e', (0, 0, 0, 255)],
-        ['aa', (255, 0, 0, 255)], ['bb', (0, 255, 0, 255)], ['cc', (0, 0, 255, 255)], ['dd'], ['ee'],
-        ['aba'], ['bcb'], ['cdc'], ['ded'], ['efe']
-    ]
-    l2 = [['a', (255, 0, 0, 255)], ['b'], ['c'], ['aa'], ['bb'], ['cc']]
-
-    def test(widget, value):
-        #print('setting value to... ', value)
-        #print(widget, value)
-        pass
-        #widget.setText(str(value))
-
-    """ group insert """
-    group_widget_layout = QVBoxLayout()
-    gw = TansuGroupInputWidget(parent=None, title='TansuGroupInputWidget')
-
-    # add user inputs
-    gw.insertInputWidget(0, FloatInputWidget, 'Float', test)
-    gw.insertInputWidget(0, IntInputWidget, 'Int', test)
-    gw.insertInputWidget(0, BooleanInputWidget, 'Boolean', test)
-    gw.insertInputWidget(0, StringInputWidget, 'String', test)
-    gw.insertInputWidget(0, ListInputWidget, 'List', test, data={'items_list':list_of_crap})
-    gw.insertInputWidget(0, PlainTextInputWidget, 'Plain Text', test, data={'items_list':list_of_crap})
-
-    gw.display_background = False
-    group_widget_layout.addWidget(gw)
-
-    """ normal widgets """
-    normal_widget = QGroupBox()
-    normal_widget.setTitle("Normal Widgets")
-    normal_widget_layout = QVBoxLayout(normal_widget)
-
-    float_input_widget = FloatInputWidget()
-    float_input_widget.setUseLadder(True)
-    int_input_widget = IntInputWidget()
-    int_input_widget.setUseLadder(True, value_list=[1, 2, 3, 4, 5])
-    boolean_input_widget = BooleanInputWidget()
-    string_input_widget = StringInputWidget()
-    list_input_widget = ListInputWidget(item_list=list_of_crap)
-
-    normal_widget_layout.addWidget(float_input_widget)
-    normal_widget_layout.addWidget(int_input_widget)
-    normal_widget_layout.addWidget(boolean_input_widget)
-    normal_widget_layout.addWidget(string_input_widget)
-    normal_widget_layout.addWidget(list_input_widget)
-
-    float_input_widget.setUserFinishedEditingEvent(test)
-    int_input_widget.setUserFinishedEditingEvent(test)
-    boolean_input_widget.setUserFinishedEditingEvent(test)
-    string_input_widget.setUserFinishedEditingEvent(test)
-    list_input_widget.setUserFinishedEditingEvent(test)
-
-    # """ Label widgets """
-    # horizontal_label_widget = QGroupBox()
-    # horizontal_label_widget.setTitle("Frame Widgets (Horizontal)")
-    # horizontal_label_widget_layout = QVBoxLayout(horizontal_label_widget)
-    #
-    # u_float_input_widget = LabelledInputWidget(name="float", widget_type=FloatInputWidget)
-    # u_int_input_widget = LabelledInputWidget(name="int", widget_type=IntInputWidget)
-    # u_boolean_input_widget = LabelledInputWidget(name="bool", widget_type=BooleanInputWidget)
-    # u_string_input_widget = LabelledInputWidget(name='str', widget_type=StringInputWidget)
-    # u_list_input_widget = LabelledInputWidget(name='list', widget_type=ListInputWidget)
-    # u_list_input_widget.getInputWidget().populate(list_of_crap)
-    # u_list_input_widget.getInputWidget().display_item_colors = True
-    #
-    # horizontal_label_widget_layout.addWidget(u_float_input_widget)
-    # horizontal_label_widget_layout.addWidget(u_int_input_widget)
-    # horizontal_label_widget_layout.addWidget(u_boolean_input_widget)
-    # horizontal_label_widget_layout.addWidget(u_string_input_widget)
-    # horizontal_label_widget_layout.addWidget(u_list_input_widget)
-    #
-    # u_float_input_widget.setUserFinishedEditingEvent(test)
-    # u_int_input_widget.setUserFinishedEditingEvent(test)
-    # u_boolean_input_widget.setUserFinishedEditingEvent(test)
-    # u_string_input_widget.setUserFinishedEditingEvent(test)
-    # u_list_input_widget.setUserFinishedEditingEvent(test)
-
-    """ Label widgets ( Vertical )"""
-    vertical_label_widget = QGroupBox()
-    vertical_label_widget.setTitle("Frame Widgets ( Vertical )")
-    vertical_label_widget_layout = QVBoxLayout(vertical_label_widget)
-
-    u_text_input_widget = LabelledInputWidget(name="text", widget_type=PlainTextInputWidget)
-
-    #u_float_input_widget.setSeparatorLength(100)
-    #u_float_input_widget.setSeparatorWidth(3)
-    u_int_input_widget = LabelledInputWidget(name="float", widget_type=FloatInputWidget)
-    u_int_input_widget = LabelledInputWidget(name="int", widget_type=IntInputWidget)
-    u_boolean_input_widget = LabelledInputWidget(name="bool", widget_type=BooleanInputWidget)
-    u_string_input_widget = LabelledInputWidget(name='str', widget_type=StringInputWidget)
-    u_list_input_widget = LabelledInputWidget(name='list', widget_type=ListInputWidget)
-    u_list_input_widget.getInputWidget().populate(list_of_crap)
-    u_list_input_widget.getInputWidget().display_item_colors = True
-    #
-    #u_float_input_widget.setDirection(Qt.Vertical)
-    u_int_input_widget.setDirection(Qt.Vertical)
-    u_boolean_input_widget.setDirection(Qt.Vertical)
-    u_string_input_widget.setDirection(Qt.Vertical)
-    u_list_input_widget.setDirection(Qt.Vertical)
-    #
-    vertical_label_widget_layout.addWidget(u_text_input_widget)
-    vertical_label_widget_layout.addWidget(u_int_input_widget)
-    vertical_label_widget_layout.addWidget(u_boolean_input_widget)
-    vertical_label_widget_layout.addWidget(u_string_input_widget)
-    vertical_label_widget_layout.addWidget(u_list_input_widget)
-
-    #u_float_input_widget.setUserFinishedEditingEvent(test)
-    u_int_input_widget.setUserFinishedEditingEvent(test)
-    u_boolean_input_widget.setUserFinishedEditingEvent(test)
-    u_string_input_widget.setUserFinishedEditingEvent(test)
-    u_list_input_widget.setUserFinishedEditingEvent(test)
-
-    """ FRAME GROUP """
 
     """ Main Widget"""
-    main_widget = QWidget()
-    main_layout = QHBoxLayout(main_widget)
-    main_layout.addLayout(group_widget_layout)
-    main_layout.addWidget(normal_widget)
-    main_layout.addWidget(vertical_label_widget)
-    #main_layout.addWidget(horizontal_label_widget)
+    main_widget = LabelledInputWidget(name="name",widget_type=StringInputWidget)
 
     main_widget.resize(500, 500)
     main_widget.show()
+    main_widget.moveSplitter(100, 1)
     main_widget.move(QCursor.pos())
 
     sys.exit(app.exec_())

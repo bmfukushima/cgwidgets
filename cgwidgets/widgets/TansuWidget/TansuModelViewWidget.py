@@ -4,7 +4,7 @@ from qtpy.QtCore import Qt, QModelIndex
 
 from cgwidgets.utils import getWidgetAncestor, attrs
 from cgwidgets.settings.colors import iColor
-from cgwidgets.widgets import AbstractInputGroup, AbstractFrameGroupInputWidget
+from cgwidgets.widgets import AbstractFrameGroupInputWidget
 
 from cgwidgets.widgets.TansuWidget import (
     TansuBaseWidget, TansuModel, iTansuDynamicWidget
@@ -637,8 +637,6 @@ class TansuMainDelegateWidget(TansuBaseWidget):
                 tab_tansu_widget.toggleDelegateSpacerWidget()
 
 
-# todo needs to somehow inherit from the FrameGroupInputWidget...
-#class TansuModelDelegateWidget(AbstractInputGroup):
 class TansuModelDelegateWidget(AbstractFrameGroupInputWidget):
 
     """
