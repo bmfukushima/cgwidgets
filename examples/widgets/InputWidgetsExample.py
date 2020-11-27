@@ -181,7 +181,7 @@ main_widget.addWidget(horizontal_label_widget)
 #main_widget.addWidget(tansu_group_widget)
 #main_widget.addWidget(frame_group_input_widget)
 
-#main_widget.resize(500, 500)
+main_widget.resize(500, 500)
 main_widget.show()
 main_widget.move(QCursor.pos())
 

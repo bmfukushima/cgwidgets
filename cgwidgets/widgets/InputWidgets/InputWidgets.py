@@ -345,18 +345,22 @@ class LabelledInputWidget(TansuBaseWidget, AbstractInputGroupFrame):
         self._input_widget.setSizePolicy(
             QSizePolicy.MinimumExpanding, QSizePolicy.Preferred
         )
-        self._input_widget.setMinimumSize(1, 1)
 
+        # add widgets
         self.addWidget(self._label)
         self.addWidget(self._input_widget)
 
+        # set size hints
+        self._input_widget.setMinimumSize(1, 1)
+        self._label.setMinimumSize(100, 25)
         #
         self.setStretchFactor(0, 0)
         self.setStretchFactor(1, 1)
 
-        self.rgba_background = iColor['rgba_gray_1']
         self.resetSliderPositionToDefault()
-        self._label.setMinimumSize(1, 1)
+
+        # setup style
+        self.rgba_background = iColor['rgba_gray_1']
 
     def setInputWidget(self, _input_widget):
         # remove previous input widget
@@ -410,6 +414,12 @@ class LabelledInputWidget(TansuBaseWidget, AbstractInputGroupFrame):
         # set direction
         self.setOrientation(direction)
 
+        if direction == Qt.Vertical:
+            self.setMinimumSize(70, 70)
+        else:
+            self.setMinimumSize(150, 25)
+
+
         # update label
         return AbstractInputGroupFrame.setDirection(self, direction)
 
@@ -439,6 +449,7 @@ class LabelledInputWidget(TansuBaseWidget, AbstractInputGroupFrame):
         super(LabelledInputWidget, self).resizeEvent(event)
         self.resetSliderPositionToDefault()
         return TansuBaseWidget.resizeEvent(self, event)
+
 
 class FrameGroupInputWidget(AbstractFrameGroupInputWidget):
     def __init__(
