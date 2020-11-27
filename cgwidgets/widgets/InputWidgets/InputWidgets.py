@@ -336,6 +336,8 @@ class LabelledInputWidget(TansuBaseWidget, AbstractInputGroupFrame):
         # set up attrs
         self._input_widget = None #hack to make the setInputBaseClass update work
         self._default_label_length = 125
+        self._separator_length = -1
+        self._separator_width = 5
         self.setInputBaseClass(widget_type)
 
         # create base widget
@@ -379,6 +381,7 @@ class LabelledInputWidget(TansuBaseWidget, AbstractInputGroupFrame):
 
             # create new input widget
             self._input_widget = _input_widget_base_class(self)
+            self._input_widget.setMinimumSize(1, 1)
             self._input_widget.setSizePolicy(
                 QSizePolicy.MinimumExpanding, QSizePolicy.Preferred
             )
@@ -430,11 +433,15 @@ class LabelledInputWidget(TansuBaseWidget, AbstractInputGroupFrame):
         # =======
         #         #return_val = TansuBaseWidget.showEvent(self, event)
         # >>>>>>> Stashed changes
-        return_val = super(LabelledInputWidget, self).showEvent(event)
+        super(LabelledInputWidget, self).showEvent(event)
         self.resetSliderPositionToDefault()
         return TansuBaseWidget.showEvent(self, event)
         #return return_val
 
+    def resizeEvent(self, event):
+        super(LabelledInputWidget, self).resizeEvent(event)
+        self.resetSliderPositionToDefault()
+        return TansuBaseWidget.resizeEvent(self, event)
 
 class FrameGroupInputWidget(AbstractFrameGroupInputWidget):
     def __init__(
@@ -597,26 +604,93 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
 
 
-    """ Main Widget"""
+    def createGroupBox(title):
+        group_box = QGroupBox()
+        group_box.setTitle(title)
+        group_box_layout = QVBoxLayout(group_box)
+        return group_box
 
-    main_widget = QWidget()
-    main_layout = QVBoxLayout(main_widget)
+    def createLabeledWidgets(title, direction=Qt.Horizontal):
+        """
+        Creates a GroupBox with label widgets inside of it
 
-    label1 = LabelledInputWidget(name="name", widget_type=StringInputWidget)
-    label2 = LabelledInputWidget(name="name", widget_type=StringInputWidget)
-    #label2.setDirection(Qt.Horizontal)
-    #label2.setDefaultLabelLength(20)
-    label2.setSeparatorLength(5)
-    label2.setSeparatorWidth(10)
-    #label2.setInputBaseClass(FloatInputWidget)
+        Args:
+            direction (Qt.DIRECTION): what direction the input widgets should be
+                laid out in
 
-    main_layout.addWidget(label1)
-    main_layout.addWidget(label2)
-    #main_widget.resize(500, 500)
+        Returns (QGroupBox)
 
-    main_widget.show()
+        Widgets:
+            GroupBox
+                | -- VBox
+                        | -* LabelledInputWidget
+        """
+        label_widgets = {
+            "float": FloatInputWidget,
+            "int": IntInputWidget,
+            "bool": BooleanInputWidget,
+            "str": StringInputWidget,
+            "list": ListInputWidget,
+            "text": PlainTextInputWidget
+        }
 
-    #main_widget.moveSplitter(100, 1)
-    main_widget.move(QCursor.pos())
+        """ Label widgets"""
+        group_label_widget = createGroupBox(title)
+
+        for arg in label_widgets:
+            # create widget
+            widget_type = label_widgets[arg]
+            input_widget = LabelledInputWidget(name=arg, widget_type=widget_type)
+
+            # set widget orientation
+            input_widget.setDirection(direction)
+
+            # # set separator
+            # if direction == Qt.Horizontal:
+            # input_widget._label.setMinimumWidth(100)
+            # why does this cap at 47?
+            # input_widget.setDefaultLabelLength(47)
+            input_widget.setDefaultLabelLength(250)
+            # input_widget.setSeparatorLength(10)
+            # input_widget.setSeparatorWidth(3)
+
+            # add to group layout
+            group_label_widget.layout().addWidget(input_widget)
+
+            # connect user input
+            #input_widget.setUserFinishedEditingEvent(test)
+
+            # list override
+            # if arg == "list":
+            #     input_widget.getInputWidget().populate(list_of_crap)
+            #     input_widget.getInputWidget().display_item_colors = True
+
+        return group_label_widget
+
+
+    horizontal_label_widget = createLabeledWidgets("Frame Widgets ( Horizontal )", Qt.Horizontal)
+    vertical_label_widget = createLabeledWidgets("Frame Widgets ( Vertical )", Qt.Vertical)
+    horizontal_label_widget.show()
+    #
+    # """ Main Widget"""
+    # main_widget = QWidget()
+    # main_layout = QVBoxLayout(main_widget)
+    #
+    # label1 = LabelledInputWidget(name="name", widget_type=StringInputWidget)
+    # label2 = LabelledInputWidget(name="name", widget_type=StringInputWidget)
+    # label1.setDirection(Qt.Horizontal)
+    #
+    # #label1.setInputBaseClass(FloatInputWidget)
+    # label1.setDefaultLabelLength(50)
+    # label1.setSeparatorLength(30)
+    # label1.setSeparatorWidth(3)
+    #
+    # main_layout.addWidget(label1)
+    # main_layout.addWidget(label2)
+    # main_widget.resize(500, 500)
+    #
+    # main_widget.show()
+    # #main_widget.moveSplitter(100, 1)
+    # main_widget.move(QCursor.pos())
 
     sys.exit(app.exec_())

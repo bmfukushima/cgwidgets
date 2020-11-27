@@ -301,7 +301,7 @@ class AbstractFrameGroupInputWidget(AbstractInputGroupFrame):
 
             # update label
             self._label.setSizePolicy(
-                QSizePolicy.Fixed, QSizePolicy.Preferred
+                QSizePolicy.MinimumExpanding, QSizePolicy.Preferred
             )
 
         return AbstractInputGroupFrame.setDirection(self, direction)
