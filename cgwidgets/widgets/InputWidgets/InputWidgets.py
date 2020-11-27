@@ -42,7 +42,13 @@ from cgwidgets.widgets import (
     TansuModelItem,
     TansuBaseWidget
 )
-from cgwidgets.utils import getWidgetAncestor, updateStyleSheet, attrs, installCompleterPopup
+from cgwidgets.utils import (
+    getWidgetAncestor,
+    updateStyleSheet,
+    attrs,
+    installCompleterPopup,
+    getFontSize
+)
 from cgwidgets.settings.colors import iColor
 
 
@@ -351,8 +357,9 @@ class LabelledInputWidget(TansuBaseWidget, AbstractInputGroupFrame):
         self.addWidget(self._input_widget)
 
         # set size hints
-        self._input_widget.setMinimumSize(1, 1)
-        self._label.setMinimumSize(100, 25)
+        font_size = getFontSize(QApplication)
+        self._input_widget.setMinimumSize(1, font_size*2)
+        self._label.setMinimumSize(font_size*2, font_size*2)
         #
         self.setStretchFactor(0, 0)
         self.setStretchFactor(1, 1)
@@ -414,10 +421,12 @@ class LabelledInputWidget(TansuBaseWidget, AbstractInputGroupFrame):
         # set direction
         self.setOrientation(direction)
 
+        font_size = getFontSize(QApplication)
+        # setup minimum sizes
         if direction == Qt.Vertical:
-            self.setMinimumSize(70, 70)
+            self.setMinimumSize(font_size*4, font_size*6)
         else:
-            self.setMinimumSize(150, 25)
+            self.setMinimumSize(font_size*12, font_size*2)
 
 
         # update label

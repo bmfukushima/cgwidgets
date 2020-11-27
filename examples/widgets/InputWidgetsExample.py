@@ -175,11 +175,11 @@ for arg in label_widgets:
 
 """ Main Widget"""
 main_widget = QSplitter()
-#main_widget.addWidget(normal_widget)
+main_widget.addWidget(normal_widget)
 main_widget.addWidget(vertical_label_widget)
 main_widget.addWidget(horizontal_label_widget)
-#main_widget.addWidget(tansu_group_widget)
-#main_widget.addWidget(frame_group_input_widget)
+main_widget.addWidget(tansu_group_widget)
+main_widget.addWidget(frame_group_input_widget)
 
 main_widget.resize(500, 500)
 main_widget.show()
