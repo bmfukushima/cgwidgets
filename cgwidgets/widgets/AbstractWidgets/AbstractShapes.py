@@ -153,7 +153,7 @@ class AbstractInputGroupFrame(QFrame):
         style_sheet = """
         QLabel{{color: rgba{rgba_text}}}
         LabelledInputWidget{{background-color: rgba{rgba_gray_1}}}
-        AbstractFrameInputWidget{{background-color: rgba{rgba_gray_2}}}
+        FrameGroupInputWidget{{background-color: rgba{rgba_gray_1}}}
         """.format(
             **style_sheet_args
         )
@@ -242,7 +242,9 @@ class AbstractFrameGroupInputWidget(AbstractInputGroupFrame):
 
     def getInputWidgets(self):
         input_widgets = []
-        for index in self.layout().count()[2:]:
+        # todo FAIL
+        # this might fail due to separator hiding/parenting?
+        for index in range(2, self.layout().count()):
             widget = self.layout().itemAt(index).widget()
             input_widgets.append(widget)
 
