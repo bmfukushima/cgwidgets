@@ -53,6 +53,11 @@ from cgwidgets.settings.colors import iColor
 
 
 class TansuInputWidgetItem(TansuModelItem):
+    """
+    widgetConstructor (widget): widget to build as based class
+    value (str): current value set on this item
+
+    """
     def getValue(self):
         return self._value
 
@@ -75,22 +80,6 @@ class TansuInputWidgetItem(TansuModelItem):
 
     def userInputEvent(self, value):
         self.__userInputEvent(self, value)
-
-    # """ args """
-    # def setArgs(self, args):
-    #     self._args = args
-    #
-    # def getArgs(self):
-    #     return self._args
-    #
-    # def getArg(self, arg):
-    #     return self.getArgs()[arg]
-    #
-    # def addArg(self, arg, value):
-    #     self.getArgs()[arg] = value
-    #
-    # def removeArg(self, arg):
-    #     del self.getArgs()[arg]
 
 
 class iTansuGroupInput(object):
@@ -598,19 +587,12 @@ class TansuGroupInputWidget(AbstractFrameGroupInputWidget):
 
             # update boolean inputs
             if isinstance(input_widget, BooleanInputWidget):
-                # # get value
-                # try:
-                #     value = item.columnData()['value']
-                # except:
-                #     value = False
-
                 # toggle
                 widget.getMainWidget().getInputWidget().is_clicked = value
                 updateStyleSheet(widget.getMainWidget().getInputWidget())
                 return
 
             # set input widgets current value from item
-            #input_widget.resetSliderPositionToDefault()
             input_widget.setText(str(value))
 
     def insertInputWidget(self, index, widget, name, user_input_event, data=None):
