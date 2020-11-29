@@ -128,6 +128,8 @@ class TansuBaseWidget(QSplitter):
         self.toggleIsSoloView(not self.isSoloView())
 
     def keyPressEvent(self, event):
+        """
+        """
         if event.key() == self.soloViewHotkey():
             # preflight
             pos = QCursor.pos()
@@ -169,6 +171,8 @@ class TansuBaseWidget(QSplitter):
 
     def toggleIsSoloView(self, is_solo_view, widget=None):
         """
+        Toggles how much space a widget should take up relative to its parent.
+
         Sets the widget that the mouse is currently over to take up
         all of the space inside of the splitter by hiding the rest of the
         widgets.
@@ -178,8 +182,8 @@ class TansuBaseWidget(QSplitter):
         will continue doing this recursively both up/down until there it is
         either fully expanded or fully collapsed.
 
-        TODO:
-            This works... but really needs to be cleaned up...
+        Note:
+            solo view hotkey (~) may need to be re implemented as a key event
         """
 
         # get the current splitter
