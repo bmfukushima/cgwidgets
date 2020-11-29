@@ -20,8 +20,9 @@ TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
 """
 
 from qtpy.QtWidgets import (
-    QWidget, QListView, QAbstractItemView, QScrollArea, QSplitter, QLabel)
+    QWidget, QListView, QAbstractItemView, QScrollArea, QSplitter, QLabel, qApp)
 from qtpy.QtCore import Qt, QModelIndex
+from qtpy.QtGui import QCursor
 
 from cgwidgets.utils import getWidgetAncestor, attrs
 from cgwidgets.settings.colors import iColor
@@ -572,14 +573,21 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
                     self.updateStyleSheet()
         return QSplitter.resizeEvent(self, event)
 
-    def keyPressEvent(self, event):
-        """
-        TODO
-            stop this event from happening?
-            Only want the child tansu to register... not this one...
-        """
+    @staticmethod
+    def isWidgetUnderCursorChildOfHeader():
+        pos = QCursor.pos()
+        widget_pressed = qApp.widgetAt(pos)
+        is_child_of_header = getWidgetAncestor(widget_pressed, TansuHeader)
+        return True if is_child_of_header else False
 
-        return self.delegateWidget().keyPressEvent(event)
+    def keyPressEvent(self, event):
+        is_child_of_header = TansuModelViewWidget.isWidgetUnderCursorChildOfHeader()
+        if is_child_of_header:
+            return self.headerWidget().keyPressEvent(event)
+
+        # do tansu widget key press event
+        else:
+            return self.delegateWidget().keyPressEvent(event)
 
     """ PROPERTIES """
     """ selection """
@@ -693,13 +701,24 @@ class TansuMainDelegateWidget(TansuBaseWidget):
             tab_tansu_widget.updateDelegateDisplay()
 
     def keyPressEvent(self, event):
+        # preflight | suppress if over header
+        is_child_of_header = TansuModelViewWidget.isWidgetUnderCursorChildOfHeader()
+        if is_child_of_header:
+            tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
+
+            return tab_tansu_widget.headerWidget().keyPressEvent(event)
+
+        # Tansu functions
         TansuBaseWidget.keyPressEvent(self, event)
+
+        # Global escape
         if event.key() == Qt.Key_Escape:
             tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
             if tab_tansu_widget:
                 tab_tansu_widget.updateDelegateDisplay()
                 tab_tansu_widget.toggleDelegateSpacerWidget()
 
+        # TODO TOGGLE DELEGATE KEY
         # This is also maintained under the TansuHeader
         if event.key() == TansuHeader.TOGGLE_DELEGATE_KEY:
             tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
@@ -757,19 +776,26 @@ class TansuHeader(TansuBaseWidget):
         self.rgba_background = iColor["rgba_gray_1"]
         self._view_position = attrs.SOUTH
         self._view_orientation = Qt.Vertical
+        self.setContentsMargins(0, 0, 0, 0)
 
         # setup view
         view = TansuHeaderListView(self)
         self.setView(view)
 
         # # TODO setup abstract widget
-        # # setup abstract widget area
+        # TEMP setup
         abstract_widget = QLabel("Temp!!", parent=self)
         abstract_widget.setMinimumSize(1, 1)
         self.addWidget(abstract_widget)
+
+        # setup delegate
         self.setDelegate(abstract_widget)
 
         # scroll bar moving will need to be setup differently...
+
+        # setup style
+        self.setIsSoloViewEnabled(False)
+        self.not_soloable = True
 
     def view(self):
         return self._view
@@ -780,7 +806,7 @@ class TansuHeader(TansuBaseWidget):
 
         # setup attr
         self._view = view
-
+        self._view.not_soloable = True
         self.insertWidget(0, self._view)
         #self.setOrientation(self._view_orientation, view_position=self._view_position)
 
@@ -792,6 +818,7 @@ class TansuHeader(TansuBaseWidget):
         if hasattr(self, "_delegate"):
             self._delegate.setParent(None)
         self._delegate = delegate
+        self._delegate.not_soloable = True
         self.addWidget(self._delegate)
 
     def toggleDelegateWidget(self):
@@ -915,16 +942,17 @@ class TansuHeader(TansuBaseWidget):
         :param event:
         :return:
         """
+        # TODO TOGGLE DELEGATE KEY
         # this is also maintained under... TansuMainDelegateWidget
         if event.key() == TansuHeader.TOGGLE_DELEGATE_KEY:
             if not self.delegateWidgetAlwaysOn():
                 self.toggleDelegateWidget()
-        return TansuBaseWidget.keyPressEvent(self, event)
 
 
 class TansuHeaderAbstractView(object):
     def __init__(self, parent=None):
         super(TansuHeaderAbstractView, self).__init__()
+        self.not_soloable = True
 
     def showEvent(self, event):
         tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
@@ -959,14 +987,18 @@ class TansuHeaderListView(AbstractDragDropListView, TansuHeaderAbstractView):
         super(TansuHeaderListView, self).__init__(parent)
         self.setEditTriggers(QAbstractItemView.DoubleClicked)
         self.tansu_header = parent
-        # self.verticalScrollBarPolicy()
-        # self.setVerticalScrollBarPolicy()
 
+    # TODO Copy paste to TansuHeaderTreeView
+    # probably due to self.tansu_header not working on init?
     def keyPressEvent(self, event):
+        # TODO TOGGLE DELEGATE KEY
         # tansu hotkeys esc/~
-        TansuHeader.keyPressEvent(self.tansu_header, event)
+        if event.key() == TansuHeader.TOGGLE_DELEGATE_KEY:
+            tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
+            header_widget = tab_tansu_widget.headerWidget()
+            if not header_widget.delegateWidgetAlwaysOn():
+                header_widget.toggleDelegateWidget()
 
-        #
         return AbstractDragDropListView.keyPressEvent(self, event)
 
 
@@ -976,11 +1008,19 @@ class TansuHeaderTreeView(AbstractDragDropTreeView, TansuHeaderAbstractView):
 
         self.tansu_header = parent
 
+    # TODO Copy paste to TansuHeaderListView
+    # probably due to self.tansu_header not working on init?
     def keyPressEvent(self, event):
+        # TODO TOGGLE DELEGATE KEY
         # tansu hotkeys esc/~
-        TansuHeader.keyPressEvent(self.tansu_header, event)
-        #
+        if event.key() == TansuHeader.TOGGLE_DELEGATE_KEY:
+            tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
+            header_widget = tab_tansu_widget.headerWidget()
+            if not header_widget.delegateWidgetAlwaysOn():
+                header_widget.toggleDelegateWidget()
+
         return AbstractDragDropListView.keyPressEvent(self, event)
+
     # def dropEvent(self, event):
     #     # resolve drop event
     #     return_val = super(TansuHeaderTreeView, self).dropEvent(event)
@@ -1052,34 +1092,16 @@ if __name__ == "__main__":
             self.addWidget(QLabel('c'))
 
     w = TansuModelViewWidget()
-    w.setHeaderPosition(attrs.WEST, attrs.SOUTH)
-    w.setHeaderDelegateAlwaysOn(True)
-    #w.setHeaderData(['name', 'two', 'test'])
-    # view = TansuHeaderTreeView()
+    #w.setHeaderPosition(attrs.WEST, attrs.SOUTH)
+    #header_delegate_widget = QLabel("Custom")
+    w.setHeaderDelegateAlwaysOn(False)
     #
-    # w.setHeaderWidget(view)
-    #w.setHeaderPosition(attrs.WEST, header_view_position=attrs.SOUTH)
-    w.setMultiSelect(True)
-    w.setMultiSelectDirection(Qt.Vertical)
-    w.setHeaderItemDragDropMode(QAbstractItemView.InternalMove)
-    #view.setHeaderData(['name', 'two', 'test'])
-    #view.setHeaderData(['one', 'two'])
+    # w.setMultiSelect(True)
+    # w.setMultiSelectDirection(Qt.Vertical)
+    # w.setHeaderItemDragDropMode(QAbstractItemView.InternalMove)
 
-    #
-    # new_view = TansuHeaderListView()
-    # print()
-    # new_view.show()
-    # w.setHeaderWidget(new_view)
-    # w.setHeaderPosition(TansuModelViewWidget.NORTH)
 
     dw = TabTansuDynamicWidgetExample
-    #view.setHeaderData(['name', 'one', 'two'])
-    # asdf = test(w)
-    # main_splitter = TansuBaseWidget()
-    # main_splitter.handle_length = 100
-
-    #w.insertTansuWidget(0, 'tansu', widget=main_splitter)
-    #w.insertTansuWidget(0, 'subclass', widget=asdf)
 
     for x in range(3):
         widget = QLabel(str(x))

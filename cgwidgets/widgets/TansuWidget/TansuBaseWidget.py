@@ -39,6 +39,10 @@ class TansuBaseWidget(QSplitter):
     Class Attributes:
         HANDLE_WIDTH: Default size of the handle
         FULLSCREEN_HOTKEY: Default hotkey for toggling full screen mode
+
+    Note:
+        When solo'ing arbitrary widgets.  Setting an attribute called "not_soloable"
+        will cause this widget to not be able to be solo'd (hopefully)
     """
     HANDLE_WIDTH = 2
     FULLSCREEN_HOTKEY = 96
@@ -49,6 +53,7 @@ class TansuBaseWidget(QSplitter):
         # set default attrs
         self._current_index = None
         self._current_widget = None
+        self._is_solo_view_enabled = True
         self._is_solo_view = False
         self._solo_view_hotkey = TansuBaseWidget.FULLSCREEN_HOTKEY
 
@@ -116,6 +121,23 @@ class TansuBaseWidget(QSplitter):
         else:
             return None, None
 
+    def getFirstSoloableWidget(self, widget):
+        """
+        Gets the first widget that is capable of being soloable
+
+        Currently this is hard  coded to the "not_soloable" attribute...
+        Args:
+            widget (QWidget): widget to start searching from to be solo'd
+        """
+        if hasattr(widget, "not_soloable"):
+            print(widget)
+            if widget.parent():
+                return self.getFirstSoloableWidget(widget.parent())
+            else:
+                return None
+        else:
+            return widget
+
     """ EVENTS """
     def toggleSoloViewView(self):
         """
@@ -130,15 +152,26 @@ class TansuBaseWidget(QSplitter):
     def keyPressEvent(self, event):
         """
         """
+
+        if not self.isSoloViewEnabled(): QSplitter.keyPressEvent(self, event)
+
         if event.key() == self.soloViewHotkey():
             # preflight
             pos = QCursor.pos()
-            widget = qApp.widgetAt(pos)
-            if isinstance(widget, QSplitterHandle):
+
+            widget_pressed = qApp.widgetAt(pos)
+
+            # Doesnt work because it just keeps sending the same "widget_pressed"
+            # at the cursor location through =|
+            widget_soloable = self.getFirstSoloableWidget(widget_pressed)
+            # if widget_pressed != widget_soloable:
+            #     return widget_soloable.keyPressEvent(event)
+
+            if isinstance(widget_pressed, QSplitterHandle):
                 return
 
             # toggle solo view
-            self.toggleIsSoloView(True)
+            self.toggleIsSoloView(True, widget=widget_soloable)
             return
         elif event.key() == Qt.Key_Escape:
             self.toggleIsSoloView(False)
@@ -159,6 +192,12 @@ class TansuBaseWidget(QSplitter):
         self.updateStyleSheet()
 
     """ SOLO VIEW """
+    def isSoloViewEnabled(self):
+        return self._is_solo_view_enabled
+
+    def setIsSoloViewEnabled(self, enabled):
+        self._is_solo_view_enabled = enabled
+
     def isSoloView(self):
         return self._is_solo_view
 
