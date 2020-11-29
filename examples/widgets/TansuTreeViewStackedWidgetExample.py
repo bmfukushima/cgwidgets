@@ -16,7 +16,7 @@ tansu_widget = TansuModelViewWidget()
 view = TansuHeaderTreeView()
 
 # setup header
-tansu_widget.setHeaderWidget(view)
+tansu_widget.setHeaderViewWidget(view)
 
 # set header names
 tansu_widget.setHeaderData(['name', 'one', 'two'])

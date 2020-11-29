@@ -1,5 +1,22 @@
+"""
+TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
+    |-- QBoxLayout
+        | -- TansuHeader (BaseTansuWidget)
+            | -- ViewWidget (TansuHeaderListView)
+                    ( TansuHeaderListView | TansuHeaderTableView | TansuHeaderTreeView )
+            | -- TODO # widget is provided as a label right now
+                    - This still needs the API set up for the arbitrary widget
+                    - signals on selection not reconnecting...
+                    - style sheets need to be updated
+        | -- Scroll Area
+            |-- DelegateWidget (TansuMainDelegateWidget --> TansuBaseWidget)
+                    | -- _temp_proxy_widget (QWidget)
+                    | -* TansuModelDelegateWidget (AbstractGroupBox)
+                            | -- Stacked/Dynamic Widget (main_widget)
+"""
+
 from qtpy.QtWidgets import (
-    QWidget, QListView, QAbstractItemView, QScrollArea, QSplitter)
+    QWidget, QListView, QAbstractItemView, QScrollArea, QSplitter, QLabel)
 from qtpy.QtCore import Qt, QModelIndex
 
 from cgwidgets.utils import getWidgetAncestor, attrs
@@ -52,17 +69,6 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         label: refers to the small part at the top for selecting selections
         bar: refers to the bar at the top containing all of the aforementioned tabs
         widget: refers to the area that displays the GUI for each tab
-
-    Widgets:
-        |-- QBoxLayout
-                |-- ViewWidget (TansuHeaderListView)
-                        ( TansuHeaderListView | TansuHeaderTableView | TansuHeaderTreeView )
-                | -- Scroll Area
-                    |-- DelegateWidget (TansuMainDelegateWidget --> TansuBaseWidget)
-                            | -- _temp_proxy_widget (QWidget)
-                            | -* TansuModelDelegateWidget (AbstractGroupBox)
-                                    | -- Stacked/Dynamic Widget (main_widget)
-
     """
     OUTLINE_WIDTH = 1
     STACKED = 'stacked'
@@ -83,7 +89,8 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
 
         # setup model / view
         self._model = TansuModel()
-        self._header_widget = TansuHeaderListView(self)
+        self._header_widget = TansuHeader(self)
+        #self._header_widget = TansuHeaderListView(self)
         self._header_widget.setModel(self._model)
         #self._model.header_type = str(type(self._header_widget))
 
@@ -168,6 +175,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
 
         return new_index
 
+    """ HEADER EVENT SIGNALS"""
     def setHeaderItemDragDropMode(self, drag_drop_mode):
         """
         Sets the drag/drop mode of the header.
@@ -236,6 +244,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         # update header
         self.setHeaderWidgetToDefaultSize()
 
+    """ DELEGATE HEADER """
     def setDelegateHeaderShown(self, enabled):
         self._delegate_header_shown = enabled
         # todo update all delegate headers
@@ -249,6 +258,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
 
     def delegateHeaderDirection(self):
         return self._delegate_header_direction
+
     """ MODEL """
     def model(self):
         return self._model
@@ -272,42 +282,56 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         self.setHeaderPosition(self.headerPosition())
         #self.model().header_type = str(type(self.headerWidget()))
 
+    def headerViewWidget(self):
+        return self._header_view_widget
+
+    def setHeaderViewWidget(self, _header_view_widget):
+        # remove all header widget
+        self.headerWidget().setView(_header_view_widget)
+        _header_view_widget.setModel(self.model())
+
     def headerPosition(self):
         return self._header_position
 
-    def setHeaderPosition(self, _header_position):
+    def setHeaderPosition(self, header_widget_position, header_view_position=None):
         """
         Sets the current direction this widget.  This is the orientation of
         where the tab labels will be vs where the main widget will be, where
         the tab labels bar will always be the first widget.
+
+        Args:
+            header_widget_position (attrs.DIRECTION): The header WIDGETs position
+                relative to the Delegate Widget
+            header_view_position (attrs.DIRECTION): The header VIEWs position
+                relative to the header widget.
         """
-        self._header_position = _header_position
+        self._header_position = header_widget_position
         self.headerWidget().setParent(None)
 
-        if _header_position == attrs.WEST:
+        if self._header_position == attrs.WEST:
             self.setOrientation(Qt.Horizontal)
-            self.headerWidget().setOrientation(Qt.Horizontal)
+            self.headerWidget().setOrientation(Qt.Horizontal, header_view_position)
             self.insertWidget(0, self.headerWidget())
             self.setStretchFactor(0, 0)
             self.setStretchFactor(1, 1)
 
-        elif _header_position == attrs.EAST:
+        elif self._header_position == attrs.EAST:
             self.setOrientation(Qt.Horizontal)
-            self.headerWidget().setOrientation(Qt.Horizontal)
+            self.headerWidget().setOrientation(Qt.Horizontal, header_view_position)
             self.insertWidget(1, self.headerWidget())
             self.setStretchFactor(1, 0)
             self.setStretchFactor(0, 1)
 
-        elif _header_position == attrs.NORTH:
+        elif self._header_position == attrs.NORTH:
             self.setOrientation(Qt.Vertical)
-            self.headerWidget().setOrientation(Qt.Vertical)
+            self.headerWidget().setOrientation(Qt.Vertical, header_view_position)
             self.insertWidget(0, self.headerWidget())
             self.setStretchFactor(0, 0)
             self.setStretchFactor(1, 1)
 
-        elif _header_position == attrs.SOUTH:
+        elif self._header_position == attrs.SOUTH:
             self.setOrientation(Qt.Vertical)
-            self.headerWidget().setOrientation(Qt.Vertical)
+            self.headerWidget().setOrientation(Qt.Vertical, header_view_position)
             self.insertWidget(1, self.headerWidget())
             self.setStretchFactor(1, 0)
             self.setStretchFactor(0, 1)
@@ -599,7 +623,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         # create style sheet
         style_sheet_args = iColor.style_sheet_args
         style_sheet_args = AbstractDragDropAbstractView.createAbstractStyleSheet(
-            self.headerWidget(),
+            self.headerWidget().view(),
             style_sheet_args,
             header_position=self.headerPosition(),
             outline_width=TansuModelViewWidget.OUTLINE_WIDTH
@@ -631,6 +655,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         self._header_height = _header_height
 
 
+""" DELEGATE """
 class TansuMainDelegateWidget(TansuBaseWidget):
     """
     The main delegate view that will show all of the items widgets that
@@ -691,6 +716,135 @@ class TansuModelDelegateWidget(AbstractFrameGroupInputWidget):
         return self._item
 
 
+""" HEADER """
+class TansuHeader(TansuBaseWidget):
+    def __init__(self, parent=None):
+        super(TansuHeader, self).__init__(parent)
+
+        # setup style
+        self.handle_width = 0
+        self.handle_length = 100
+        self.rgba_background = iColor["rgba_gray_1"]
+        self._view_position = attrs.SOUTH
+        self._view_orientation = Qt.Vertical
+
+        # setup view
+        view = TansuHeaderListView(self)
+        self.setView(view)
+
+        # TODO setup abstract widget
+        # setup abstract widget area
+        abstract_widget = QLabel("Temp!!")
+        abstract_widget.setMinimumSize(1, 1)
+        self.addWidget(abstract_widget)
+
+        # scroll bar moving will need to be setup differently...
+
+    def view(self):
+        return self._view
+
+    def setView(self, view):
+        if hasattr (self, "_view"):
+            self._view.setParent(None)
+
+        # setup attr
+        self._view = view
+
+        self.insertWidget(0, self._view)
+        #self.setOrientation(self._view_orientation, view_position=self._view_position)
+
+    """ VIEW INTERFACE """
+    def model(self):
+        return self.view().model()
+
+    def setModel(self, model):
+        self.view().setModel(model)
+
+    def setOrientation(self, view_orientation, view_position=None):
+        """
+        Set the orientation/direction of the header, and view.
+
+        This will determine the flow of the items, from LeftToRight,
+        or TopToBottom, depending on the orientation.
+
+        Args:
+            view_orientation (Qt.Orientation): The orientation that the view will
+                be displayed in.  Note that this is NOT this Tansu widgets
+                base orientation
+                    Qt.Horizonal | Qt.Vertical
+            view_position (attrs.DIRECTION):  When provided, will rearrange the
+                additional data to be set in that direction...  This is the default
+                orientation/position of this widget
+                    ie attrs.NORTH, will place the header view on top, and the
+                        extra view on the bottom
+
+        """
+        # set view orientation
+        try:
+            self.view().setOrientation(view_orientation)
+        except AttributeError:
+            # initializing
+            pass
+
+        # set header/abstract widget orientation/positions
+        if view_position:
+            self.view().setParent(None)
+            if view_position == attrs.NORTH:
+                self.insertWidget(1, self.view())
+                _orientation = Qt.Vertical
+            elif view_position == attrs.SOUTH:
+                _orientation = Qt.Vertical
+                self.insertWidget(0, self.view())
+            elif view_position == attrs.EAST:
+                _orientation = Qt.Horizontal
+                self.insertWidget(1, self.view())
+            elif view_position == attrs.WEST:
+                _orientation = Qt.Horizontal
+                self.insertWidget(0, self.view())
+        else:
+            _orientation = view_orientation
+        self._view_position = view_position
+        self._view_orientation = view_orientation
+        return TansuBaseWidget.setOrientation(self, _orientation)
+
+    def selectionModel(self):
+        return self.view().selectionModel()
+
+    def setMultiSelect(self, enabled):
+        self.view().setMultiSelect(enabled)
+
+    def setDragDropMode(self, drag_drop_mode):
+        """
+        Sets the drag/drop mode of the header.
+
+        Args:
+            drag_drop_mode (QAbstractItemModel.MODE): drag drop mode
+                to be implemented on the header
+        """
+        self.view().setDragDropMode(drag_drop_mode)
+
+    def setIsDragEnabled(self, enabled):
+        self.view().setIsDragEnabled(enabled)
+
+    def setIsDropEnabled(self, enabled):
+        self.view().setIsDropEnabled(enabled)
+
+    def setIsRootDropEnabled(self, enabled):
+        self.view().setIsRootDropEnabled(enabled)
+
+    def setIsEditable(self, enabled):
+        self.view().setIsEditable(enabled)
+
+    def setIsSelectable(self, enabled):
+        self.view().setIsSelectable(enabled)
+
+    def setIsEnableable(self, enabled):
+        self.view().setIsEnableable(enabled)
+
+    def setIsDeleteEnabled(self, enabled):
+        self.view().setIsDeleteEnabled(enabled)
+
+
 class TansuHeaderAbstractView(object):
     def __init__(self, parent=None):
         super(TansuHeaderAbstractView, self).__init__()
@@ -702,7 +856,6 @@ class TansuHeaderAbstractView(object):
         QAbstractItemView.showEvent(self, event)
 
     def selectionChanged(self, selected, deselected):
-        # print('selection changed...')
         top_level_widget = getWidgetAncestor(self, TansuModelViewWidget)
         if top_level_widget:
             # for index in selected.indexes():
@@ -728,6 +881,8 @@ class TansuHeaderListView(AbstractDragDropListView, TansuHeaderAbstractView):
     def __init__(self, parent=None):
         super(TansuHeaderListView, self).__init__(parent)
         self.setEditTriggers(QAbstractItemView.DoubleClicked)
+        # self.verticalScrollBarPolicy()
+        # self.setVerticalScrollBarPolicy()
 
 
 class TansuHeaderTreeView(AbstractDragDropTreeView, TansuHeaderAbstractView):
@@ -749,6 +904,7 @@ class TansuHeaderTreeView(AbstractDragDropTreeView, TansuHeaderAbstractView):
     #     return return_val
 
 
+""" EXAMPLE """
 class TabTansuDynamicWidgetExample(QWidget):
     """
     TODO:
@@ -771,11 +927,29 @@ class TabTansuDynamicWidgetExample(QWidget):
             widget.getMainWidget().label.setText(item.name())
 
 
+"""
+TODO popup search delegate...
+Need:
+    QlineEdit
+        --> Finished editing signal exposed
+        --> Signal needs to receive
+                    TansuHeaderView
+                    MainTansu?
+
+Search items
+    Hotkey --> Popup LineEdit (s)
+Create New Item
+    Hotkey --> Popup LineEdit (c)
+
+"""
+
 if __name__ == "__main__":
     import sys
     from qtpy.QtWidgets import QApplication, QLabel, QVBoxLayout
     from qtpy.QtGui import QCursor
     app = QApplication(sys.argv)
+    # w = TansuHeader()
+    # w.show()
 
 
     class test(TansuBaseWidget):
@@ -788,14 +962,14 @@ if __name__ == "__main__":
     w = TansuModelViewWidget()
 
     #w.setHeaderData(['name', 'two', 'test'])
-    view = TansuHeaderTreeView()
-
-    w.setHeaderWidget(view)
-    w.setHeaderPosition(attrs.NORTH)
+    # view = TansuHeaderTreeView()
+    #
+    # w.setHeaderWidget(view)
+    #w.setHeaderPosition(attrs.WEST, header_view_position=attrs.SOUTH)
     w.setMultiSelect(True)
     w.setMultiSelectDirection(Qt.Vertical)
     w.setHeaderItemDragDropMode(QAbstractItemView.InternalMove)
-    view.setHeaderData(['name', 'two', 'test'])
+    #view.setHeaderData(['name', 'two', 'test'])
     #view.setHeaderData(['one', 'two'])
 
     #
@@ -823,12 +997,12 @@ if __name__ == "__main__":
 
     w.resize(500, 500)
     w.delegateWidget().handle_length = 100
-
+    print(w.headerWidget().view())
     w.show()
-    #w.headerWidget().model().setIsDragEnabled(False)
-    w.setHeaderItemIsDropEnabled(True)
-    w.setHeaderItemIsDragEnabled(True)
-    w.setHeaderItemIsEnableable(True)
-    w.setHeaderItemIsDeleteEnabled(False)
+    # #w.headerWidget().model().setIsDragEnabled(False)
+    # w.setHeaderItemIsDropEnabled(True)
+    # w.setHeaderItemIsDragEnabled(True)
+    # w.setHeaderItemIsEnableable(True)
+    # w.setHeaderItemIsDeleteEnabled(False)
     w.move(QCursor.pos())
     sys.exit(app.exec_())

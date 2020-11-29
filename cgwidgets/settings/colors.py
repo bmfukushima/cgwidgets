@@ -4,8 +4,8 @@ TODO
         Green ( GO )
         Yellow ( SLOW )
         Red ( STOP )
-        blue
-        normals blue
+        blue ( MOVEABLE THINGY )
+        normals blue ( SELECTION )
     Gray's
         UI dark theme
     rgba_outline / tansu

@@ -272,6 +272,9 @@ class AbstractDragDropListView(QListView, AbstractDragDropAbstractView):
             }}
             """.format(**style_sheet_args)
 
+        from cgwidgets.settings.stylesheets import scroll_bar_ss
+
+        style_sheet += scroll_bar_ss
         return style_sheet
 
 
