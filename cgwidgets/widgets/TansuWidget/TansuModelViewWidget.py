@@ -768,7 +768,7 @@ class TansuHeader(TansuBaseWidget):
         super(TansuHeader, self).__init__(parent)
 
         # default attrs
-        self._delegate_always_on = True
+        self._delegate_always_on = False
 
         # setup style
         self.handle_width = 0
@@ -784,7 +784,7 @@ class TansuHeader(TansuBaseWidget):
 
         # # TODO setup abstract widget
         # TEMP setup
-        abstract_widget = QLabel("Temp!!", parent=self)
+        abstract_widget = QLabel(":)", parent=self)
         abstract_widget.setMinimumSize(1, 1)
         self.addWidget(abstract_widget)
 

@@ -46,7 +46,6 @@ class TansuBaseWidget(QSplitter):
     """
     HANDLE_WIDTH = 2
     FULLSCREEN_HOTKEY = 96
-    FLAG_COLOR = iColor["rgba_tansu_flag"]
 
     def __init__(self, parent=None, orientation=Qt.Vertical):
         super(TansuBaseWidget, self).__init__(parent)
@@ -130,7 +129,6 @@ class TansuBaseWidget(QSplitter):
             widget (QWidget): widget to start searching from to be solo'd
         """
         if hasattr(widget, "not_soloable"):
-            print(widget)
             if widget.parent():
                 return self.getFirstSoloableWidget(widget.parent())
             else:
@@ -152,30 +150,27 @@ class TansuBaseWidget(QSplitter):
     def keyPressEvent(self, event):
         """
         """
-
+        # preflight
         if not self.isSoloViewEnabled(): QSplitter.keyPressEvent(self, event)
 
+        # solo view
         if event.key() == self.soloViewHotkey():
             # preflight
             pos = QCursor.pos()
-
             widget_pressed = qApp.widgetAt(pos)
-
-            # Doesnt work because it just keeps sending the same "widget_pressed"
-            # at the cursor location through =|
-            widget_soloable = self.getFirstSoloableWidget(widget_pressed)
-            # if widget_pressed != widget_soloable:
-            #     return widget_soloable.keyPressEvent(event)
-
-            if isinstance(widget_pressed, QSplitterHandle):
-                return
+            if isinstance(widget_pressed, QSplitterHandle): return
 
             # toggle solo view
+            widget_soloable = self.getFirstSoloableWidget(widget_pressed)
             self.toggleIsSoloView(True, widget=widget_soloable)
             return
+
+        # unsolo view
         elif event.key() == Qt.Key_Escape:
             self.toggleIsSoloView(False)
             return
+
+        # something else
         return QSplitter.keyPressEvent(self, event)
 
     def isolateWidgets(self, widget_list):

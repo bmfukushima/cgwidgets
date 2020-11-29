@@ -65,11 +65,11 @@ class AbstractDragDropAbstractView(object):
 
         # item style snippets ( so it can be combined later...)
         style_sheet_args['item_snippet'] = """
-                    border: {outline_width}px solid rgba{rgba_outline};
+                    border: {outline_width}px solid rgba{rgba_black};
                     background-color: rgba{rgba_gray_0};
                 """.format(**style_sheet_args)
         style_sheet_args['item_selected_snippet'] = """
-                    border: {outline_width}px solid rgba{rgba_outline};
+                    border: {outline_width}px solid rgba{rgba_selected};
                     background-color: rgba{rgba_gray_1};
                 """.format(**style_sheet_args)
 
@@ -272,9 +272,11 @@ class AbstractDragDropListView(QListView, AbstractDragDropAbstractView):
             }}
             """.format(**style_sheet_args)
 
+        # add scroll bar
         from cgwidgets.settings.stylesheets import scroll_bar_ss
-
         style_sheet += scroll_bar_ss
+
+        #
         return style_sheet
 
 
@@ -305,7 +307,7 @@ class AbstractDragDropTreeView(QTreeView, AbstractDragDropAbstractView):
         QHeaderView::section {{
             background-color: rgba{rgba_gray_0};
             color: rgba{rgba_text};
-            border: {outline_width}px solid rgba{rgba_outline};
+            border: {outline_width}px solid rgba{rgba_black};
         }}
         {type}::item{{
             {item_snippet}
@@ -321,6 +323,11 @@ class AbstractDragDropTreeView(QTreeView, AbstractDragDropAbstractView):
         }}  
             """.format(**style_sheet_args)
 
+        # add scroll bar
+        from cgwidgets.settings.stylesheets import scroll_bar_ss
+        style_sheet += scroll_bar_ss
+
+        # return
         return style_sheet
 
     def setFlow(self, _):

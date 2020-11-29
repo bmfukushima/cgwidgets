@@ -20,6 +20,10 @@ from cgwidgets.utils import attrs
 
 class Colors(dict):
     def __init__(self):
+
+        self["rgba_black"] = (0, 0, 0, 255)
+        self["rgba_white"] = (255, 255, 255, 255)
+
         """ background"""
         self["rgba_invisible"] = (0, 0, 0, 0)
         self["rgba_gray_0"] = (32, 32, 32, 255)
@@ -46,8 +50,8 @@ class Colors(dict):
         """ outline """
         # self["rgba_outline"] = (180, 70, 10, 255)
         # self["rgba_outline_hover"] = (255, 100, 15, 255)
-        self["rgba_outline"] = self["rgba_green_3"]
-        self["rgba_outline_hover"] = self["rgba_green_4"]
+        self["rgba_outline"] = self["rgba_blue_3"]
+        self["rgba_outline_hover"] = self["rgba_blue_4"]
 
         """ text """
         self["rgba_text"] = (192, 192, 192, 255)
@@ -67,11 +71,6 @@ class Colors(dict):
         self["rgba_cancel_hover"] = Colors.multiplyRGBAValues(self["rgba_cancel"], golden_ratio=True)
         self["rgba_maybe_hover"] = Colors.multiplyRGBAValues(self["rgba_maybe"], golden_ratio=True)
         self["rgba_error_hover"] = Colors.multiplyRGBAValues(self["rgba_error"], golden_ratio=True)
-
-        """ TANSU """
-        self["rgba_tansu_flag"] = (10, 20, 95, 255)
-        self["rgba_tansu_handle"] = (10, 95, 20, 255)
-        self["rgba_tansu_handle_hover"] = Colors.multiplyRGBAValues(self["rgba_tansu_handle"], golden_ratio=True)
 
         self.style_sheet_args = self.createStyleSheetArgs()
 
