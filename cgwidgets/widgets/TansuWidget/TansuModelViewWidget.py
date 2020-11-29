@@ -250,7 +250,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         self.setHeaderWidgetToDefaultSize()
 
     """ DELEGATE HEADER """
-    def setDelegateHeaderShown(self, enabled):
+    def setIsDelegateHeaderShown(self, enabled):
         self._delegate_header_shown = enabled
         # todo update all delegate headers
 
@@ -786,7 +786,8 @@ class TansuHeader(TansuBaseWidget):
         # TEMP setup
         abstract_widget = QLabel(":)", parent=self)
         abstract_widget.setMinimumSize(1, 1)
-        self.addWidget(abstract_widget)
+        abstract_widget.hide()
+        #self.addWidget(abstract_widget)
 
         # setup delegate
         self.setDelegate(abstract_widget)
@@ -826,6 +827,9 @@ class TansuHeader(TansuBaseWidget):
             self.delegate().hide()
         else:
             self.delegate().show()
+            self.delegate().setFocus()
+
+            # todo - set focus on delegate
 
     def delegateWidgetAlwaysOn(self):
         return self._delegate_always_on
