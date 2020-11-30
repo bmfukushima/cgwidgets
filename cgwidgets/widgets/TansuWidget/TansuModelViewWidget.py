@@ -225,6 +225,16 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
     def setHeaderItemDeleteEvent(self, function):
         self.model().setItemDeleteEvent(function)
 
+    def setHeaderDelegateToggleEvent(self, function):
+        """
+        Event run when the toggle is hidden/shown
+
+        Should take two inputs
+            event (QEvent)
+            enabled (bool)
+        """
+        self.headerWidget().setDelegateToggleEvent(function)
+
     def setHeaderItemIsDragEnabled(self, enabled):
         self.headerWidget().setIsDragEnabled(enabled)
 
@@ -259,6 +269,8 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
 
         # update header
         self.setHeaderWidgetToDefaultSize()
+
+
 
     """ DELEGATE HEADER """
     def setIsDelegateHeaderShown(self, enabled):
@@ -737,7 +749,7 @@ class TansuMainDelegateWidget(TansuBaseWidget):
         if event.key() in tab_tansu_widget.TOGGLE_DELEGATE_KEYS:
             header_widget = tab_tansu_widget.headerWidget()
             if not header_widget.delegateWidgetAlwaysOn():
-                header_widget.toggleDelegateWidget()
+                header_widget.toggleDelegateWidget(event)
 
 
 class TansuModelDelegateWidget(AbstractFrameGroupInputWidget):
@@ -834,14 +846,16 @@ class TansuHeader(TansuBaseWidget):
         self._delegate.not_soloable = True
         self.addWidget(self._delegate)
 
-    def toggleDelegateWidget(self):
+    def toggleDelegateWidget(self, event):
         if self.delegate().isVisible():
+            enabled = False
             self.delegate().hide()
         else:
+            enabled = True
             self.delegate().show()
             self.delegate().setFocus()
 
-            # todo - set focus on delegate
+        self.delegateToggleEvent(event, enabled)
 
     def delegateWidgetAlwaysOn(self):
         return self._delegate_always_on
@@ -963,8 +977,17 @@ class TansuHeader(TansuBaseWidget):
         tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
         if event.key() in tab_tansu_widget.TOGGLE_DELEGATE_KEYS:
             if not self.delegateWidgetAlwaysOn():
-                self.toggleDelegateWidget()
+                self.toggleDelegateWidget(event)
 
+    def __delegateToggleEvent(self, event, enabled):
+        return
+
+    def delegateToggleEvent(self, event, enabled):
+        self.__delegateToggleEvent(event, enabled)
+        pass
+
+    def setDelegateToggleEvent(self, function):
+        self.__delegateToggleEvent = function
 
 class TansuHeaderAbstractView(object):
     def __init__(self, parent=None):
@@ -1015,7 +1038,7 @@ class TansuHeaderListView(AbstractDragDropListView, TansuHeaderAbstractView):
         if event.key() in tab_tansu_widget.TOGGLE_DELEGATE_KEYS:
             header_widget = tab_tansu_widget.headerWidget()
             if not header_widget.delegateWidgetAlwaysOn():
-                header_widget.toggleDelegateWidget()
+                header_widget.toggleDelegateWidget(event)
 
         return AbstractDragDropAbstractView.keyPressEvent(self, event)
 
@@ -1035,7 +1058,7 @@ class TansuHeaderTreeView(AbstractDragDropTreeView, TansuHeaderAbstractView):
         if event.key() in tab_tansu_widget.TOGGLE_DELEGATE_KEYS:
             header_widget = tab_tansu_widget.headerWidget()
             if not header_widget.delegateWidgetAlwaysOn():
-                header_widget.toggleDelegateWidget()
+                header_widget.toggleDelegateWidget(event)
 
         return AbstractDragDropAbstractView.keyPressEvent(self, event)
 
@@ -1093,6 +1116,10 @@ Create New Item
 
 """
 
+
+# def toggleDelegateEvent(self, event, enabled):
+#     self.__toggleDelegateEvent(event, enabled)
+#     pass
 if __name__ == "__main__":
     import sys
     from qtpy.QtWidgets import QApplication, QLabel, QVBoxLayout

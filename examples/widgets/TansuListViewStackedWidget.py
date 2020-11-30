@@ -41,6 +41,10 @@ def testEnable(item, enabled):
 def testDelete(item):
     print(item.columnData()['example'])
 
+def testToggle(event, enabled):
+    print('---- TOGGLE EVENT ----')
+    print (event, enabled)
+
 app = QApplication(sys.argv)
 
 tansu_widget = TansuModelViewWidget()
@@ -72,6 +76,7 @@ tansu_widget.setHeaderItemIsEnableable(True)
 tansu_widget.setHeaderItemIsDeleteEnabled(True)
 tansu_widget.setHeaderItemEnabledEvent(testEnable)
 tansu_widget.setHeaderItemDeleteEvent(testDelete)
+tansu_widget.setHeaderDelegateToggleEvent(testToggle)
 # setup drag/drop events
 tansu_widget.setHeaderItemDragStartEvent(testDrag)
 tansu_widget.setHeaderItemDropEvent(testDrop)
