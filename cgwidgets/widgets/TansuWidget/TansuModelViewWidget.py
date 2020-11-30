@@ -26,6 +26,7 @@ from qtpy.QtGui import QCursor
 
 from cgwidgets.utils import getWidgetAncestor, attrs
 from cgwidgets.settings.colors import iColor
+from cgwidgets.settings.keylist import CHARACTER_KEYS
 from cgwidgets.widgets import AbstractFrameGroupInputWidget
 
 from cgwidgets.widgets.TansuWidget import (
@@ -81,6 +82,9 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
     MULTI = False
     TYPE = STACKED
 
+    # delegate hotkey toggle buttons
+    TOGGLE_DELEGATE_KEYS = [key for key in CHARACTER_KEYS if key not in [Qt.Key_D]]
+    #TOGGLE_DELEGATE_KEYS = [Qt.Key_D]
     def __init__(self, parent=None, direction=attrs.NORTH):
         super(TansuModelViewWidget, self).__init__(parent)
         # etc attrs
@@ -179,6 +183,13 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
             view_delegate_widget.hide()
 
         return new_index
+
+    def getAllSelectedIndexes(self):
+        selected_indexes = []
+        for index in self.headerWidget().selectionModel().selectedIndexes():
+            if index.column() == 0:
+                selected_indexes.append(index)
+        return selected_indexes
 
     """ HEADER EVENT SIGNALS"""
     def setHeaderItemDragDropMode(self, drag_drop_mode):
@@ -691,6 +702,7 @@ class TansuMainDelegateWidget(TansuBaseWidget):
     The main delegate view that will show all of the items widgets that
      the user currently has selected
     """
+
     def __init__(self, parent=None):
         super(TansuMainDelegateWidget, self).__init__(parent)
         self.rgba_background = iColor["rgba_gray_0"]
@@ -720,8 +732,9 @@ class TansuMainDelegateWidget(TansuBaseWidget):
 
         # TODO TOGGLE DELEGATE KEY
         # This is also maintained under the TansuHeader
-        if event.key() == TansuHeader.TOGGLE_DELEGATE_KEY:
-            tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
+
+        tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
+        if event.key() in tab_tansu_widget.TOGGLE_DELEGATE_KEYS:
             header_widget = tab_tansu_widget.headerWidget()
             if not header_widget.delegateWidgetAlwaysOn():
                 header_widget.toggleDelegateWidget()
@@ -763,7 +776,6 @@ class TansuModelDelegateWidget(AbstractFrameGroupInputWidget):
 
 """ HEADER """
 class TansuHeader(TansuBaseWidget):
-    TOGGLE_DELEGATE_KEY = Qt.Key_A
     def __init__(self, parent=None):
         super(TansuHeader, self).__init__(parent)
 
@@ -948,7 +960,8 @@ class TansuHeader(TansuBaseWidget):
         """
         # TODO TOGGLE DELEGATE KEY
         # this is also maintained under... TansuMainDelegateWidget
-        if event.key() == TansuHeader.TOGGLE_DELEGATE_KEY:
+        tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
+        if event.key() in tab_tansu_widget.TOGGLE_DELEGATE_KEYS:
             if not self.delegateWidgetAlwaysOn():
                 self.toggleDelegateWidget()
 
@@ -997,8 +1010,8 @@ class TansuHeaderListView(AbstractDragDropListView, TansuHeaderAbstractView):
     def keyPressEvent(self, event):
         # TODO TOGGLE DELEGATE KEY
         # tansu hotkeys esc/~
-        if event.key() == TansuHeader.TOGGLE_DELEGATE_KEY:
-            tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
+        tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
+        if event.key() in tab_tansu_widget.TOGGLE_DELEGATE_KEYS:
             header_widget = tab_tansu_widget.headerWidget()
             if not header_widget.delegateWidgetAlwaysOn():
                 header_widget.toggleDelegateWidget()
@@ -1017,13 +1030,13 @@ class TansuHeaderTreeView(AbstractDragDropTreeView, TansuHeaderAbstractView):
     def keyPressEvent(self, event):
         # TODO TOGGLE DELEGATE KEY
         # tansu hotkeys esc/~
-        if event.key() == TansuHeader.TOGGLE_DELEGATE_KEY:
-            tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
+        tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
+        if event.key() in tab_tansu_widget.TOGGLE_DELEGATE_KEYS:
             header_widget = tab_tansu_widget.headerWidget()
             if not header_widget.delegateWidgetAlwaysOn():
                 header_widget.toggleDelegateWidget()
 
-        return AbstractDragDropListView.keyPressEvent(self, event)
+        return AbstractDragDropTreeView.keyPressEvent(self, event)
 
     # def dropEvent(self, event):
     #     # resolve drop event

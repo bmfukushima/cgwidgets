@@ -31,7 +31,7 @@ from cgwidgets.utils import (
     getFontSize, checkIfValueInRange, checkNegative
 )
 from cgwidgets.settings.colors import iColor
-
+from cgwidgets.settings.keylist import NUMERICAL_INPUT_KEYS, MATH_KEYS
 from cgwidgets.widgets.AbstractWidgets import AbstractInputGroupBox, AbstractInputGroup
 
 
@@ -252,41 +252,12 @@ class AbstractNumberInputWidget(AbstractInputLineEdit):
         do_math (bool): determines if this widget will support
             mathematical functions.  This is run by a simple eval(user_input).
     """
-    KEY_LIST = [
-        Qt.Key_0,
-        Qt.Key_1,
-        Qt.Key_2,
-        Qt.Key_3,
-        Qt.Key_4,
-        Qt.Key_5,
-        Qt.Key_6,
-        Qt.Key_7,
-        Qt.Key_8,
-        Qt.Key_9,
-        Qt.Key_Left,
-        Qt.Key_Right,
-        Qt.Key_Up,
-        Qt.Key_Down,
-        Qt.Key_Delete,
-        Qt.Key_Backspace,
-        Qt.Key_Return,
-        Qt.Key_Enter,
-        Qt.Key_CapsLock
-    ]
-    MATH_KEYS = [
-        Qt.Key_Plus,
-        Qt.Key_plusminus,
-        Qt.Key_Minus,
-        Qt.Key_multiply,
-        Qt.Key_Asterisk,
-        Qt.Key_Slash
-    ]
-
     def __init__(
         self, parent=None, allow_negative=True, do_math=True
     ):
         super(AbstractNumberInputWidget, self).__init__(parent)
-        self.setKeyList(AbstractNumberInputWidget.KEY_LIST)
+
+        self.setKeyList(NUMERICAL_INPUT_KEYS)
         self.setDoMath(do_math)
         self.setRange(False)
         self.setAllowNegative(True)
@@ -358,10 +329,10 @@ class AbstractNumberInputWidget(AbstractInputLineEdit):
 
         # add key to key list
         if _do_math is True:
-            for key in AbstractNumberInputWidget.MATH_KEYS:
+            for key in MATH_KEYS:
                 self.appendKey(key)
         else:
-            for key in AbstractNumberInputWidget.MATH_KEYS:
+            for key in MATH_KEYS:
                 self.removeKey(key)
 
     def getDoMath(self):
