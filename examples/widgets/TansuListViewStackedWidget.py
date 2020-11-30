@@ -35,6 +35,12 @@ def testEdit(item, old_value, new_value):
     print("---- EDIT EVENT ----")
     print(item, old_value, new_value)
 
+def testEnable(item, enabled):
+    print(item.columnData()['example'], enabled)
+
+def testDelete(item):
+    print(item.columnData()['example'])
+
 app = QApplication(sys.argv)
 
 tansu_widget = TansuModelViewWidget()
@@ -62,6 +68,10 @@ tansu_widget.insertTansuWidget(0, column_data={'example' : '<title> tansu'}, wid
 tansu_widget.setHeaderItemIsDropEnabled(False)
 tansu_widget.setHeaderItemIsDragEnabled(True)
 tansu_widget.setHeaderItemIsEditable(True)
+tansu_widget.setHeaderItemIsEnableable(True)
+tansu_widget.setHeaderItemIsDeleteEnabled(True)
+tansu_widget.setHeaderItemEnabledEvent(testEnable)
+tansu_widget.setHeaderItemDeleteEvent(testDelete)
 # setup drag/drop events
 tansu_widget.setHeaderItemDragStartEvent(testDrag)
 tansu_widget.setHeaderItemDropEvent(testDrop)

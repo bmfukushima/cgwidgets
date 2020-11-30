@@ -1016,7 +1016,7 @@ class TansuHeaderListView(AbstractDragDropListView, TansuHeaderAbstractView):
             if not header_widget.delegateWidgetAlwaysOn():
                 header_widget.toggleDelegateWidget()
 
-        return AbstractDragDropListView.keyPressEvent(self, event)
+        return AbstractDragDropAbstractView.keyPressEvent(self, event)
 
 
 class TansuHeaderTreeView(AbstractDragDropTreeView, TansuHeaderAbstractView):
@@ -1036,7 +1036,7 @@ class TansuHeaderTreeView(AbstractDragDropTreeView, TansuHeaderAbstractView):
             if not header_widget.delegateWidgetAlwaysOn():
                 header_widget.toggleDelegateWidget()
 
-        return AbstractDragDropTreeView.keyPressEvent(self, event)
+        return AbstractDragDropAbstractView.keyPressEvent(self, event)
 
     # def dropEvent(self, event):
     #     # resolve drop event

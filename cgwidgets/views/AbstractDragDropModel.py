@@ -551,7 +551,7 @@ class AbstractDragDropModel(QAbstractItemModel):
         return ['application/x-qabstractitemmodeldatalist']
 
     def mimeData(self, indexes):
-        self.indexes = [index.internalPointer() for index in indexes]
+        self.indexes = [index.internalPointer() for index in indexes if index.column() == 0]
         mimedata = QMimeData()
         mimedata.setData('application/x-qabstractitemmodeldatalist', QByteArray())
 
