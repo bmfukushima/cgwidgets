@@ -299,7 +299,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         #self.model().header_type = str(type(self.headerWidget()))
 
     def headerViewWidget(self):
-        return self._header_view_widget
+        return self.headerWidget().view()
 
     def setHeaderViewWidget(self, _header_view_widget):
         # remove all header widget
@@ -970,6 +970,7 @@ class TansuHeaderAbstractView(object):
     def __init__(self, parent=None):
         super(TansuHeaderAbstractView, self).__init__()
         self.not_soloable = True
+        self.setContentsMargins(0, 0, 0, 0)
 
     def showEvent(self, event):
         tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
