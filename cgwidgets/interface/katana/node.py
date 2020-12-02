@@ -1,19 +1,7 @@
-""" NODE """
 from qtpy.QtCore import QPoint
-
-#from cgwidgets.interface.AbstractPort import AbstractPort
-
 import NodegraphAPI
 
 """ PORT """
-# def ports(node, port_type):
-#     if port_type == AbstractPort.FEMALE:
-#         return node.getInputPorts()
-#     elif port_type == AbstractPort.MALE:
-#         return node.getOutputPorts()
-#     else:
-#         return node.getOutputPorts() + node.getInputPorts()
-
 def getInputPorts(node):
     return node.getInputPorts()
 
@@ -30,21 +18,55 @@ def createOutputPort(node, name, index):
     port = node.addOutputPortAtIndex(name, index)
     return port
 
-# def createPort(node, port_type, name, index=None):
-#     # todo get num children and put at end
-#     # default insertino index
-#     if not index:
-#         index = 0
-#
-#     # if FEMALE
-#     if port_type == AbstractPort.FEMALE:
-#         port = node.addInputPortAtIndex(name, index)
-#         return port
-#
-#     # if MALE
-#     elif port_type == AbstractPort.MALE:
-#         port = node.addOutputPortAtIndex(name, index)
-#         return port
+""" PARAMETER """
+def parameter(node, parameter_path):
+    parameter = node.getParameter(parameter_path)
+    return parameter
+
+def getRootParameter(node):
+    return node.getParameters()
+
+def createGroupParameter(
+    node,
+    parameter_type,
+    parameter_parent=None,
+    name="parameter",
+    value=None
+):
+    parameter = parameter_parent.createChildGroup(name)
+    return parameter
+
+def createStringParameter(
+    node,
+    parameter_type,
+    parameter_parent,
+    name="parameter",
+    value=''):
+
+    parameter = parameter_parent.createChildString(name, value)
+    return parameter
+
+def createIntegerParameter(
+    node,
+    parameter_type,
+    parameter_parent,
+    name="parameter",
+    value=0):
+
+    parameter = parameter_parent.createChildNumber(name, value)
+
+    return parameter
+
+def createFloatParameter(
+    node,
+    parameter_type,
+    parameter_parent,
+    name="parameter",
+    value=0):
+
+    parameter = parameter_parent.createChildNumber(name, value)
+
+    return parameter
 
 """ HIERARCHY """
 def parent(node):
@@ -89,7 +111,6 @@ def createNode(node_type, parent, name=None):
 
 def getRootNode():
     return NodegraphAPI.GetRootNode()
-
 
 def getNodeFromName(name):
     return NodegraphAPI.GetNode(name)

@@ -19,34 +19,18 @@ MARI = 'MARI'
 HOUDINI = 'HOUDINI'
 
 if 'katana' in dcc_path:
-    from cgwidgets.interface.katana import port as dccport
+    from cgwidgets.interface.katana import parameter as dccparam
 # todo setup other translators
 if 'nuke' in dcc_path:
-    from cgwidgets.interface.nuke import port as dccport
+    from cgwidgets.interface.nuke import parameter as dccparam
 if 'houdini' in dcc_path:
-    from cgwidgets.interface.houdini import port as dccport
+    from cgwidgets.interface.houdini import parameter as dccparam
 if 'mari' in dcc_path:
-    from cgwidgets.interface.mari import port as dccport
-
-def connect(port_a, port_b):
-    # preflight
-    type_a = port_a.type()
-    type_b = port_b.type()
-    if type_a == type_b: return
+    from cgwidgets.interface.mari import parameter as dccparam
 
 """ ARGS """
-def name(port):
-    return dccport.name(port.port())
+def value(parameter, frame=0):
+    return dccparam.value(parameter.parameter(), frame=frame)
 
-def node(port):
-    return dccport.node(port.port())
-
-def setName(port, name):
-    dccport.setName(port.port(), name)
-
-def gender(port):
-    """
-    0 = MALE
-    1 = FEMALE
-    """
-    return dccport.gender(port)
+def setValue(parameter, value, frame=0):
+    dccparam.setValue(parameter.parameter(), value, frame=frame)

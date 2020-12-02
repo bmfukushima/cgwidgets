@@ -3,6 +3,7 @@ from qtpy.QtCore import QPoint
 from cgwidgets.interface import (
     AbstractNode,
     AbstractPort,
+    AbstractParameter,
     AbstractNodeInterfaceAPI,
 )
 
@@ -31,9 +32,28 @@ node_name = node.name()
 pos = node.pos()
 node.setPos(QPoint(100, 50))
 
+# get parameters
+parameter = node.createParameter(
+    AbstractParameter.GROUP,
+    name="Group"
+)
+# create child parameter?
+child_parameter = AbstractNodeInterfaceAPI.createParameter(
+        node,
+        AbstractParameter.STRING,
+        parameter_parent=parameter,
+        name="foo",
+        value="bar")
+
+child_parameter_value = child_parameter.value()
+
 print ('-------  ABSTRACT NODE API  -------')
 print('node name === ', node_name)
 print('node type === ', node_type)
+
+print('child_parameter === ', child_parameter)
+print('child parameter value === ', child_parameter_value)
+
 print('input ports === ', input_ports)
 print('output ports ===', output_ports)
 print('parent === ', parent)

@@ -152,6 +152,44 @@ def setPos(node, pos):
     """
     dccnode.setPos(node.node(), pos)
 
+""" PARAMETERS """
+def parameter(node, parameter_path):
+    from cgwidgets.interface import AbstractParameter
+    _parameter = dccnode.parameter(node.node(), parameter_path)
+    return AbstractParameter(_parameter)
+
+def getRootParameter(node):
+    from cgwidgets.interface import AbstractParameter
+    return AbstractParameter(dccnode.getRootParameter(node.node()))
+
+def createParameter(
+        node,
+        parameter_type,
+        parameter_parent=None,
+        name="parameter",
+        value=None):
+    # import / initialize
+    from cgwidgets.interface import AbstractParameter
+    # get parent param
+    if not parameter_parent:
+        parameter_parent = getRootParameter(node).parameter()
+    else:
+        parameter_parent = parameter_parent.parameter()
+
+    node = node.node()
+    # create param
+    if parameter_type == AbstractParameter.GROUP:
+        parameter = dccnode.createGroupParameter(
+            node, parameter_type, parameter_parent, name, value)
+    if parameter_type == AbstractParameter.INTEGER:
+        parameter = dccnode.createIntegerParameter(
+            node, parameter_type, parameter_parent, name, value)
+    if parameter_type == AbstractParameter.STRING:
+        parameter = dccnode.createStringParameter(
+            node, parameter_type, parameter_parent, name, value)
+    # return param
+    return AbstractParameter(parameter)
+
 """ ARGS """
 def name(node):
     return dccnode.name(node.node())

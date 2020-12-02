@@ -1,6 +1,5 @@
 from cgwidgets.interface import AbstractNodeInterfaceAPI
 
-
 class AbstractNode(object):
     """
     Arbitrary node class.  DCC specific nodes should be converted into a node of this type.
@@ -101,10 +100,29 @@ class AbstractNode(object):
         AbstractNodeInterfaceAPI.createPort(self, port_type, port_name, index=index)
 
     """ PARAMETERS """
-    def parameter(self, path):
+    def parameter(self, parameter_path):
+        return AbstractNodeInterfaceAPI.parameter(self, parameter_path)
+
+    def createParameter(
+        self,
+        parameter_type,
+        name="parameter",
+        value=None,
+        parameter_parent=None
+    ):
+        parameter = AbstractNodeInterfaceAPI.createParameter(
+            self,
+            parameter_type,
+            parameter_parent=parameter_parent,
+            name=name,
+            value=value
+        )
+        return parameter
+
+    def parameterValue(self, path):
         return
 
-    def setParameter(self, path, value):
+    def setParameterValue(self, path, value):
         return
 
     """ PROPERTIES """
