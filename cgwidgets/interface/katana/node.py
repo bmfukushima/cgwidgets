@@ -1,37 +1,50 @@
 """ NODE """
 from qtpy.QtCore import QPoint
 
-from cgwidgets.interface.AbstractPort import AbstractPort
+#from cgwidgets.interface.AbstractPort import AbstractPort
 
 import NodegraphAPI
 
-
-
 """ PORT """
-def ports(node, port_type):
-    if port_type == AbstractPort.INPUT:
-        return node.getInputPorts()
-    elif port_type == AbstractPort.OUTPUT:
-        return node.getOutputPorts()
-    else:
-        return node.getOutputPorts() + node.getInputPorts()
+# def ports(node, port_type):
+#     if port_type == AbstractPort.FEMALE:
+#         return node.getInputPorts()
+#     elif port_type == AbstractPort.MALE:
+#         return node.getOutputPorts()
+#     else:
+#         return node.getOutputPorts() + node.getInputPorts()
 
-def createPort(node, port_type, name, index=None):
-    # todo get num children and put at end
-    # default insertino index
-    if not index:
-        index = 0
+def getInputPorts(node):
+    return node.getInputPorts()
 
-    # if INPUT
-    if port_type == AbstractPort.INPUT:
-        port = node.addInputPortAtIndex(name, index)
-        return port
+def getOutputPorts(node):
+    return node.getOutputPorts()
 
-    # if OUTPUT
-    elif port_type == AbstractPort.OUTPUT:
-        port = node.addOutputPortAtIndex(name, index)
-        return port
+def createInputPort(node, name, index):
+    node = node.node()
+    port = node.addInputPortAtIndex(name, index)
+    return port
 
+def createOutputPort(node, name, index):
+    node = node.node()
+    port = node.addOutputPortAtIndex(name, index)
+    return port
+
+# def createPort(node, port_type, name, index=None):
+#     # todo get num children and put at end
+#     # default insertino index
+#     if not index:
+#         index = 0
+#
+#     # if FEMALE
+#     if port_type == AbstractPort.FEMALE:
+#         port = node.addInputPortAtIndex(name, index)
+#         return port
+#
+#     # if MALE
+#     elif port_type == AbstractPort.MALE:
+#         port = node.addOutputPortAtIndex(name, index)
+#         return port
 
 """ HIERARCHY """
 def parent(node):
@@ -65,8 +78,19 @@ def setType(node, type):
     #node.setName(type)
     pass
 
-
 """ NODEGRAPH API"""
+def createNode(node_type, parent, name=None):
+    # get name
+    if not name:
+        name = node_type
+    new_node = NodegraphAPI.CreateNode(node_type, parent.node())
+    new_node.setName(name)
+    return new_node
+
+def getRootNode():
+    return NodegraphAPI.GetRootNode()
+
+
 def getNodeFromName(name):
     return NodegraphAPI.GetNode(name)
 

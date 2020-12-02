@@ -13,7 +13,7 @@ def name(port):
 def setName(port, name):
     port.setName(name)
 
-def type(port):
+def gender(port):
     return port.getType()
 
 

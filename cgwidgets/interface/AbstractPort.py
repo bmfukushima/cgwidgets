@@ -3,12 +3,12 @@ from cgwidgets.interface import AbstractPortInterfaceAPI
 
 class AbstractPort(object):
         """
-        type (data input)
+        gender (data FEMALE)
         name
         connected ports
         index
 
-        Arbitrary port class.  DCC specific ports should be converted into a port of this type.
+        Arbitrary port class.  DCC specific ports should be using this as a wrapper.
 
         Setters on this port should be going through the AbstractPortInterfaceAPI,
         to choose which DCC to use to do the setting.
@@ -20,8 +20,8 @@ class AbstractPort(object):
             port (port): current DCC port
 
         """
-        OUTPUT = 0
-        INPUT = 1
+        MALE = 0
+        FEMALE = 1
 
         def __init__(self, port, args=None):
             # initialize port
@@ -41,6 +41,8 @@ class AbstractPort(object):
         connect
         disconnect
         """
+        def connect(self, port_a, port_b):
+            AbstractPortInterfaceAPI.connect(port_a, port_b)
 
         """ ARGS """
         def port(self):
@@ -50,16 +52,16 @@ class AbstractPort(object):
             self._port = port
 
         def node(self):
-            return AbstractPortInterfaceAPI.node(self.port())
+            return AbstractPortInterfaceAPI.node(self)
 
         def name(self):
-            return AbstractPortInterfaceAPI.name(self.port())
+            return AbstractPortInterfaceAPI.name(self)
 
-        def type(self):
-            return AbstractPortInterfaceAPI.type(self.port())
+        def gender(self):
+            return AbstractPortInterfaceAPI.gender(self)
 
         def setName(self, name):
-            AbstractPortInterfaceAPI.setName(self.port(), name)
+            AbstractPortInterfaceAPI.setName(self, name)
 
         """ ARBITRARY ARGS"""
 

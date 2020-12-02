@@ -27,25 +27,31 @@ class AbstractNode(object):
 
     """ PARENT """
     def parent(self):
-        parent_node = AbstractNodeInterfaceAPI.parent(self.node())
+        parent_node = AbstractNodeInterfaceAPI.parent(self)
         return AbstractNode(parent_node)
 
     def setParent(self, parent):
+        """
+        Sets the parent
+
+        Args:
+            parent (AbstractNode): parent to set to
+        """
         # update dcc
-        AbstractNodeInterfaceAPI.setParent(self.node(), parent)
+        AbstractNodeInterfaceAPI.setParent(self, parent)
 
     """ CHILDREN """
     def hasChildren(self):
-        has_children = True if 0 < len(AbstractNodeInterfaceAPI.children(self.node())) else False
+        has_children = True if 0 < len(self.children()) else False
         return has_children
 
     def children(self):
-        children = AbstractNodeInterfaceAPI.children(self.node())
+        children = AbstractNodeInterfaceAPI.children(self)
 
         return [AbstractNode(child) for child in children]
 
     def pos(self):
-        AbstractNodeInterfaceAPI.pos(self.node())
+        AbstractNodeInterfaceAPI.pos(self)
 
     def setPos(self, pos):
         """
@@ -54,54 +60,54 @@ class AbstractNode(object):
         Args:
             pos (QPoint)
         """
-        AbstractNodeInterfaceAPI.setPos(self.node(), pos)
+        AbstractNodeInterfaceAPI.setPos(self, pos)
 
     """ PORTS """
     # TODO setup node ports
     """
-    create Input
-    create Output
-    insert Input
-    insert Output
     getNumInputPorts
     getNumOutputPorts
     """
-    def createPort(self, port_type, port_name=None, index=None):
-        """
-        Creates an port on the node of the specified type.
-
-        Args:
-            port_type (AbstractPort.TYPE): type of port to create,
-                0 = output
-                1 = input
-            port_name (string):
-            index (int):
-        """
-        AbstractNodeInterfaceAPI.createPort(self.node(), port_type, port_name, index=index)
-
     def ports(self, port_type=None):
         """
         Returns all of the ports of the specified type.
 
-        If none specified will return input and output ports
+        If none specified will return FEMALE and MALE ports
 
         Args:
             port_type (AbstractPort.TYPE): type of port to create,
-                0 = output
-                1 = input
+                0 = MALE
+                1 = FEMALE
         """
-        AbstractNodeInterfaceAPI.ports(self.node(), port_type)
-        # get all input ports AbstractNodeInterfaceAPI
+        return AbstractNodeInterfaceAPI.ports(self, port_type)
+        # get all FEMALE ports AbstractNodeInterfaceAPI
         # AbstractPortInterfaceAPI...
 
         # returns a list of AbstractPorts?
         #
         pass
 
-    def getOutputPorts(self):
-        pass
+    def createPort(self, port_type, port_name=None, index=None):
+        """
+        Creates an port on the node of the specified type.
 
-    """ ARGS """
+        Args:
+            port_type (AbstractPort.TYPE): type of port to create,
+                0 = MALE
+                1 = FEMALE
+            port_name (string):
+            index (int):
+        """
+        AbstractNodeInterfaceAPI.createPort(self, port_type, port_name, index=index)
+
+    """ PARAMETERS """
+    def parameter(self, path):
+        return
+
+    def setParameter(self, path, value):
+        return
+
+    """ PROPERTIES """
     def node(self):
         return self._node
 
@@ -109,16 +115,16 @@ class AbstractNode(object):
         self._node = node
 
     def name(self):
-        return AbstractNodeInterfaceAPI.name(self.node())
+        return AbstractNodeInterfaceAPI.name(self)
 
     def setName(self, name):
-        AbstractNodeInterfaceAPI.setName(self.node(), name)
+        AbstractNodeInterfaceAPI.setName(self, name)
 
     def type(self):
-        return AbstractNodeInterfaceAPI.type(self.node())
+        return AbstractNodeInterfaceAPI.type(self)
 
     def setType(self, type):
-        AbstractNodeInterfaceAPI.setType(self.node(), type)
+        AbstractNodeInterfaceAPI.setType(self, type)
 
     """ ARBITRARY ARGS"""
     def args(self):

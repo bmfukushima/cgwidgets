@@ -5,10 +5,10 @@ DCC's API to use.
 NOTE:
     on abstract classes:
     <node>
-        - Receiving is always the DCC node
+        - Receiving is always the AbstractNodes node
         - Returns AbstractNodes
     <port>
-        - Receiving is DCC Port
+        - Receiving is AbstractPort
         - Returns AbstractPorts
 
     modules are loaded on demand due to import recursion caused when loading
@@ -44,33 +44,67 @@ if 'houdini' in dcc_path:
 if 'mari' in dcc_path:
     from cgwidgets.interface.mari import node as dccnode
 
-""" NODE API"""
-def getNodeFromName(name):
-    """ returns an abstract node"""
-
-    dccnode.getNodeFromName(name)
-
 """ PORTS """
 def ports(node, port_type):
     """
     returns a list of ports
-    """
-    ports = dccnode.ports(node, port_type)
 
-    # on demand imports... due to recursion errors
+    Args:
+        node (AbstractNode)
+        port_type (AbstractPort.GENDER)
+    """
     from cgwidgets.interface import AbstractPort
-    return [AbstractPort(port) for port in ports]
+
+    node = node.node()
+
+    # get ports list
+    if port_type == AbstractPort.FEMALE:
+        port_list = dccnode.getInputPorts(node)
+    elif port_type == AbstractPort.MALE:
+        port_list = dccnode.getOutputPorts(node)
+    else:
+        port_list = dccnode.getOutputPorts(node) + dccnode.getInputPorts(node)
+
+    # return abstract ports
+    return [AbstractPort(port) for port in port_list]
 
 def createPort(node, port_type, name, index=None):
     """
 
-    :param node: AbstractNode
-    :param port_type: Port.TYPE
-    :param name: Port name
-    :param index: insertino index
+    Args:
+        node (AbstractNode):
+        port_type (AbstractPort.GENDER):
+        name (str): Port name
+
+        index (int): index to be inserted at.
+            If not provided, will insert as the 0th index
     :return:
     """
-    dccnode.createPort(node, port_type, name, index=index)
+    #return dccnode.createPort(node.node(), port_type, name, index=index)
+
+    # todo get num children and put at end
+    # default insertino index
+    from cgwidgets.interface import AbstractPort
+
+    # get index
+    if not index:
+        index = 0
+
+    # create port
+    # FEMALE
+    if port_type == AbstractPort.FEMALE:
+        if not name:
+            name = 'i0'
+        port = dccnode.createInputPort(node, name, index)
+
+    # MALE
+    elif port_type == AbstractPort.MALE:
+        if not name:
+            name = 'o0'
+        port = dccnode.createOutputPort(node, name, index)
+
+    # return
+    return AbstractPort(port)
 
 """ HIERARCHY """
 def parent(node):
@@ -81,7 +115,7 @@ def parent(node):
     """
     # on demand imports... due to recursion errors
     from cgwidgets.interface import AbstractNode
-    return AbstractNode(dccnode.parent(node))
+    return AbstractNode(dccnode.parent(node.node()))
 
 def setParent(node, parent):
     """
@@ -91,13 +125,13 @@ def setParent(node, parent):
         node (dccNode): node to set the parent of
         parent (dccNode): node to set the parent to
     """
-    dccnode.setParent(node, parent)
+    dccnode.setParent(node.node(), parent.node())
 
 def children(node):
     """
     Returns a list of all of the children of specified node
     """
-    children = dccnode.children(node)
+    children = dccnode.children(node.node())
     # on demand imports... due to recursion errors
     from cgwidgets.interface import AbstractNode
     return [AbstractNode(child) for child in children]
@@ -107,7 +141,7 @@ def pos(node):
     """
     Returns the nodes position as a QPoint
     """
-    return dccnode.pos(node)
+    return dccnode.pos(node.node())
 
 def setPos(node, pos):
     """
@@ -116,15 +150,33 @@ def setPos(node, pos):
     Args:
         pos (QPoint): position to set the node at
     """
-    dccnode.setPos(node, pos)
+    dccnode.setPos(node.node(), pos)
 
 """ ARGS """
 def name(node):
-    dccnode.name(node)
+    return dccnode.name(node.node())
 
 def setName(node, name):
-    dccnode.setName(node, name)
+    dccnode.setName(node.node(), name)
 
+def type(node):
+    return dccnode.type(node.node())
 
-def test():
-    print(DCC)
+def setType(node, type):
+    # todo setup setType (not sure I want this...)
+    #node.setName(type)
+    pass
+
+""" NODEGRAPH API"""
+
+def createNode(node_type, parent, name=None):
+    from cgwidgets.interface import AbstractNode
+    return AbstractNode(dccnode.createNode(node_type, parent, name=name))
+
+def getRootNode():
+    from cgwidgets.interface import AbstractNode
+    return AbstractNode(dccnode.getRootNode())
+
+def getNodeFromName(name):
+    from cgwidgets.interface import AbstractNode
+    return AbstractNode(dccnode.getNodeFromName(name))
