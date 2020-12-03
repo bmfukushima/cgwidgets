@@ -90,7 +90,8 @@ def name(node):
     return node.getName()
 
 def setName(node, name):
-    node.setName(name)
+    node = node.setName(name)
+    return node.getName()
 
 def type(node):
     return node.getType()
@@ -98,7 +99,7 @@ def type(node):
 def setType(node, type):
     # todo setup setType (not sure I want this...)
     #node.setName(type)
-    pass
+    return type
 
 """ NODEGRAPH API"""
 def createNode(node_type, parent, name=None):

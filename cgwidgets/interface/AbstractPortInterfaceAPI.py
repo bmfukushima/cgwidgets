@@ -11,7 +11,7 @@ import sys
 #from cgwidgets.interface import AbstractPort
 
 # get DCC
-dcc_path = sys.argv[0]
+dcc_path = sys.argv[0].lower()
 
 KATANA = 'KATANA'
 NUKE = 'NUKE'

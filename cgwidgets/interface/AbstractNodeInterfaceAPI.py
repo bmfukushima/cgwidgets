@@ -19,16 +19,9 @@ NOTE:
 """
 
 import sys
-# TODO Import loop fail =\
-# recursive import between Interface --> Node
-# import loop
-# from cgwidgets.interface import AbstractNode
-# from cgwidgets.interface import AbstractPort
-
 
 # get DCC
-dcc_path = sys.argv[0]
-
+dcc_path = sys.argv[0].lower()
 KATANA = 'KATANA'
 NUKE = 'NUKE'
 MARI = 'MARI'
@@ -196,7 +189,7 @@ def name(node):
     return dccnode.name(node.node())
 
 def setName(node, name):
-    dccnode.setName(node.node(), name)
+    return dccnode.setName(node.node(), name)
 
 def type(node):
     return dccnode.type(node.node())
