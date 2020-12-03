@@ -33,7 +33,7 @@ class AbstractNode(object):
     """
     def __init__(
         self,
-        node,
+        node=None,
         args=None,
         children=None,
         female_ports=None,
@@ -44,6 +44,8 @@ class AbstractNode(object):
         _type=None
     ):
         # initialize args
+        if not node:
+            node = self
         self._node = node
         self._parent = parent
         self._pos = pos

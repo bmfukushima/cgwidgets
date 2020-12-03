@@ -38,6 +38,11 @@ if 'houdini' in dcc_path:
 if 'mari' in dcc_path:
     from cgwidgets.interface.mari import node as dccnode
 
+TRANSLATE = False
+for dcc in ['katana', 'nuke', 'houdini', 'mari']:
+    if dcc in dcc_path:
+        TRANSLATE = True
+
 """ PORTS """
 def ports(node, port_type):
     """
@@ -203,11 +208,20 @@ def setType(node, type):
 
 def createNode(node_type, parent, name=None):
     from cgwidgets.interface import AbstractNode
-    return AbstractNode(dccnode.createNode(node_type, parent, name=name))
+    if TRANSLATE:
+        node = AbstractNode(dccnode.createNode(node_type, parent=parent, name=name))
+    else:
+        node = AbstractNode(parent=parent, name=name)
+
+    return node
 
 def getRootNode():
-    from cgwidgets.interface import AbstractNode
-    return AbstractNode(dccnode.getRootNode())
+    if TRANSLATE:
+        from cgwidgets.interface import AbstractNode
+        return AbstractNode(dccnode.getRootNode())
+    else:
+        # todo not sure if this is right... or how to do root node atm...
+        return None
 
 def getNodeFromName(name):
     from cgwidgets.interface import AbstractNode
