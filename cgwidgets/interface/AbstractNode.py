@@ -119,10 +119,14 @@ class AbstractNode(object):
         )
         return parameter
 
-    def parameterValue(self, path):
+    def parameterValue(self, path, frame=0):
+        parameter = self.parameter(path)
+        parameter.value(frame=frame)
         return
 
-    def setParameterValue(self, path, value):
+    def setParameterValue(self, path, value, frame=0):
+        parameter = self.parameter(path)
+        parameter.setValue(value, frame=frame)
         return
 
     """ PROPERTIES """

@@ -32,6 +32,19 @@ node_name = node.name()
 pos = node.pos()
 node.setPos(QPoint(100, 50))
 
+
+print ('-------  ABSTRACT NODE API  -------')
+print('node name === ', node_name)
+print('node type === ', node_type)
+
+
+print('input ports === ', input_ports)
+print('output ports ===', output_ports)
+print('parent === ', parent)
+print('has children ===', has_children)
+print('children ===', children)
+
+print ('-------  PARAMETER API  -------')
 # get parameters
 parameter = node.createParameter(
     AbstractParameter.GROUP,
@@ -46,20 +59,20 @@ child_parameter = AbstractNodeInterfaceAPI.createParameter(
         value="bar")
 
 child_parameter_value = child_parameter.value()
+node.parameter('Group.foo').setValue('test', frame=0)
+node.parameter('Group.foo').value()
 
-print ('-------  ABSTRACT NODE API  -------')
-print('node name === ', node_name)
-print('node type === ', node_type)
+parent = child_parameter.parent()
+child = parameter.child('foo')
+child_by_index = parameter.childAtIndex(0)
+children = parameter.children()
 
 print('child_parameter === ', child_parameter)
 print('child parameter value === ', child_parameter_value)
-
-print('input ports === ', input_ports)
-print('output ports ===', output_ports)
-print('parent === ', parent)
-print('has children ===', has_children)
-print('children ===', children)
-
+print('parent == ', parent)
+print('child == ', child)
+print('child_by_index == ', child_by_index)
+print('children == ', children)
 
 """ NodegraphAPI """
 print ('-------  ABSTRACT NODEGRAPH API  -------')

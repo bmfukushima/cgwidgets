@@ -20,6 +20,7 @@ HOUDINI = 'HOUDINI'
 
 if 'katana' in dcc_path:
     from cgwidgets.interface.katana import port as dccport
+    split_type = '.'
 # todo setup other translators
 if 'nuke' in dcc_path:
     from cgwidgets.interface.nuke import port as dccport
