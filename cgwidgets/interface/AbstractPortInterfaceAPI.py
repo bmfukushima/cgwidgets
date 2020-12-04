@@ -43,11 +43,24 @@ def node(port):
     return dccport.node(port.port())
 
 def setName(port, name):
-    dccport.setName(port.port(), name)
+    return dccport.setName(port.port(), name)
 
 def gender(port):
     """
-    0 = MALE
-    1 = FEMALE
+    dccport.gender should return:
+        0 = MALE
+        1 = FEMALE
     """
-    return dccport.gender(port)
+    from cgwidgets.interface import AbstractPort
+    port_gender = dccport.gender(port)
+    if port_gender == 0:
+        return AbstractPort.MALE
+    elif port_gender == 1:
+        return AbstractPort.FEMALE
+
+def index(port):
+    return dccport.index(port.port())
+
+def setIndex(port, index):
+    return dccport.setIndex(port.port(), index)
+

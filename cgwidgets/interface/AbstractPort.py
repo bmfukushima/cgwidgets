@@ -1,5 +1,12 @@
+import sys
+
 from cgwidgets.interface import AbstractPortInterfaceAPI
 
+dcc_path = sys.argv[0].lower()
+TRANSLATE = False
+for dcc in ['katana', 'nuke', 'houdini', 'mari']:
+    if dcc in dcc_path:
+        TRANSLATE = True
 
 class AbstractPort(object):
         """
@@ -23,9 +30,24 @@ class AbstractPort(object):
         MALE = 0
         FEMALE = 1
 
-        def __init__(self, port, args=None):
-            # initialize port
-            self.setPort(port)
+        def __init__(
+            self,
+            args=None,
+            gender=None,
+            index=None,
+            name='port',
+            node='None',
+            port=None,
+
+        ):
+            # initialize attrs
+            if not port:
+                port = self
+            self._port = port
+            self._gender = gender
+            self._name = name
+            self._node = node
+            self._index = index
 
             # initialize arbitrary args
             if args:
@@ -45,6 +67,17 @@ class AbstractPort(object):
             AbstractPortInterfaceAPI.connect(port_a, port_b)
 
         """ ARGS """
+        def index(self):
+            if TRANSLATE:
+                self._index = AbstractPortInterfaceAPI.index(self)
+            return self._index
+
+        def setIndex(self, index):
+            if TRANSLATE:
+                self._index = AbstractPortInterfaceAPI.setIndex(index)
+            else:
+                self._index = index
+
         def port(self):
             return self._port
 
@@ -52,16 +85,29 @@ class AbstractPort(object):
             self._port = port
 
         def node(self):
-            return AbstractPortInterfaceAPI.node(self)
+            if TRANSLATE:
+                self._node = AbstractPortInterfaceAPI.node(self)
 
-        def name(self):
-            return AbstractPortInterfaceAPI.name(self)
+            return self._node
 
         def gender(self):
-            return AbstractPortInterfaceAPI.gender(self)
+            if TRANSLATE:
+                self._gender = AbstractPortInterfaceAPI.gender(self)
+            return self._gender
+
+        def setGender(self, gender):
+            self._gender = gender
+
+        def name(self):
+            if TRANSLATE:
+                self._name = AbstractPortInterfaceAPI.name(self)
+            return self._name
 
         def setName(self, name):
-            AbstractPortInterfaceAPI.setName(self, name)
+            if TRANSLATE:
+                self._name = AbstractPortInterfaceAPI.setName(self, name)
+            else:
+                self._name = name
 
         """ ARBITRARY ARGS"""
 

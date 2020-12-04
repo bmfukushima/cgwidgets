@@ -44,22 +44,22 @@ for dcc in ['katana', 'nuke', 'houdini', 'mari']:
         TRANSLATE = True
 
 """ PORTS """
-def ports(node, port_type):
+def ports(node, port_gender):
     """
     returns a list of ports
 
     Args:
         node (AbstractNode)
-        port_type (AbstractPort.GENDER)
+        port_gender (AbstractPort.GENDER)
     """
     from cgwidgets.interface import AbstractPort
 
     node = node.node()
 
     # get ports list
-    if port_type == AbstractPort.FEMALE:
+    if port_gender == AbstractPort.FEMALE:
         port_list = dccnode.getInputPorts(node)
-    elif port_type == AbstractPort.MALE:
+    elif port_gender == AbstractPort.MALE:
         port_list = dccnode.getOutputPorts(node)
     else:
         port_list = dccnode.getOutputPorts(node) + dccnode.getInputPorts(node)
@@ -67,19 +67,19 @@ def ports(node, port_type):
     # return abstract ports
     return [AbstractPort(port) for port in port_list]
 
-def createPort(node, port_type, name, index=None):
+def createPort(node, port_gender, name, index=None):
     """
 
     Args:
         node (AbstractNode):
-        port_type (AbstractPort.GENDER):
+        port_gender (AbstractPort.GENDER):
         name (str): Port name
 
         index (int): index to be inserted at.
             If not provided, will insert as the 0th index
     :return:
     """
-    #return dccnode.createPort(node.node(), port_type, name, index=index)
+    #return dccnode.createPort(node.node(), port_gender, name, index=index)
 
     # todo get num children and put at end
     # default insertino index
@@ -91,13 +91,13 @@ def createPort(node, port_type, name, index=None):
 
     # create port
     # FEMALE
-    if port_type == AbstractPort.FEMALE:
+    if port_gender == AbstractPort.FEMALE:
         if not name:
             name = 'i0'
         port = dccnode.createInputPort(node, name, index)
 
     # MALE
-    elif port_type == AbstractPort.MALE:
+    elif port_gender == AbstractPort.MALE:
         if not name:
             name = 'o0'
         port = dccnode.createOutputPort(node, name, index)

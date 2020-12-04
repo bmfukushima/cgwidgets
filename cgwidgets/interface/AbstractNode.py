@@ -55,7 +55,7 @@ class AbstractNode(object):
         if not male_ports:
             self._male_ports = []
         if not female_ports:
-            self._male_ports = []
+            self._female_ports = []
         self._name = name
 
         # initialize arbitrary args
@@ -124,50 +124,57 @@ class AbstractNode(object):
             self._pos = pos
         return self._pos
 
-
     """ PORTS """
     # TODO setup node ports
     """
     getNumInputPorts
     getNumOutputPorts
     """
-    def ports(self, port_type=None):
+    def ports(self, port_gender=None):
         """
         Returns all of the ports of the specified type.
 
         If none specified will return FEMALE and MALE ports
 
         Args:
-            port_type (AbstractPort.TYPE): type of port to create,
+            port_gender (AbstractPort.TYPE): type of port to create,
                 0 = MALE
                 1 = FEMALE
         """
+        from cgwidgets.interface import AbstractPort
+
         if TRANSLATE:
-            ports = AbstractNodeInterfaceAPI.ports(self, port_type)
+            ports = AbstractNodeInterfaceAPI.ports(self, port_gender)
         else:
-            if port_type == AbstractPort.FEMALE:
+            if port_gender == AbstractPort.FEMALE:
                 ports = self._female_ports
-            elif port_type == AbstractPort.MALE:
+            elif port_gender == AbstractPort.MALE:
                 ports = self._male_ports
         return ports
 
-    def createPort(self, port_type, port_name=None, index=None):
+    def createPort(self, port_gender, port_name=None, index=None):
         """
         Creates an port on the node of the specified type.
 
         Args:
-            port_type (AbstractPort.TYPE): type of port to create,
+            port_gender (AbstractPort.TYPE): type of port to create,
                 0 = MALE
                 1 = FEMALE
             port_name (string):
             index (int):
         """
+
+        if not index:
+            index = len(self.ports(port_gender=port_gender))
+
         if TRANSLATE:
-            port = AbstractNodeInterfaceAPI.createPort(self, port_type, port_name, index=index)
+            port = AbstractNodeInterfaceAPI.createPort(self, port_gender, port_name, index=index)
         else:
             # todo setup universal port constructor
-            port = AbstractPort(self, port_type, port_name, index=index)
-            self.ports(port_type=port_type).insert(index, port)
+            from cgwidgets.interface import AbstractPort
+
+            port = AbstractPort(node=self, gender=port_gender, name=port_name, index=index)
+            self.ports(port_gender=port_gender).insert(index, port)
         return port
 
     """ PARAMETERS """

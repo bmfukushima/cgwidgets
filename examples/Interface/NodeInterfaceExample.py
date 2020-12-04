@@ -28,19 +28,19 @@ print('parent === ', parent)
 print('has children ===', has_children)
 print('children ===', children)
 
-# print ('-------  PORT API  -------')
-# # create port
-# node.createPort(AbstractPort.MALE, "o0")
-# node.createPort(AbstractPort.FEMALE, "i0")
-# node.createPort(AbstractPort.FEMALE, "insert_this", index=0)
-# node.createPort(AbstractPort.FEMALE)
-# # get ports
-# input_ports = node.ports(AbstractPort.FEMALE)
-# output_ports = node.ports(AbstractPort.MALE)
+print ('-------  PORT API  -------')
+# create port
+node.createPort(AbstractPort.MALE, "o0")
+node.createPort(AbstractPort.FEMALE, "i0")
+node.createPort(AbstractPort.FEMALE, "insert_this", index=0)
+node.createPort(AbstractPort.FEMALE)
+# get ports
+female_ports = node.ports(AbstractPort.FEMALE)
+male_ports = node.ports(AbstractPort.MALE)
 
 # # todo connect port
-# print('input ports === ', input_ports)
-# print('output ports ===', output_ports)
+print('female ports === ', female_ports)
+print('male ports ===', male_ports)
 
 # print ('-------  PARAMETER API  -------')
 # # get parameters
