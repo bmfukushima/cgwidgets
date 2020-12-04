@@ -8,25 +8,31 @@ from cgwidgets.interface import (
 )
 
 # create node
-node = AbstractNodeInterfaceAPI.createNode('Group', AbstractNodeInterfaceAPI.getRootNode())
+node = AbstractNodeInterfaceAPI.createNode('Group', parent=AbstractNodeInterfaceAPI.getRootNode())
 node.setName("AbstractNode")
 
-parent = node.parent()
-node_type = node.type()
-has_children = node.hasChildren()
-children = node.children()
-node_name = node.name()
+child_node = AbstractNodeInterfaceAPI.createNode('Group', parent=node)
+child_node.setName("ChildNode")
 
 # position node
 pos = node.pos()
 node.setPos(QPoint(100, 50))
 
-print ('-------  ABSTRACT NODE API  -------')
-print('node name === ', node_name)
-print('node type === ', node_type)
-print('parent === ', parent)
-print('has children ===', has_children)
-print('children ===', children)
+print(node)
+print(child_node)
+# parent = node.parent()
+# node_type = node.type()
+# has_children = node.hasChildren()
+# children = node.children()
+# node_name = node.name()
+#
+#
+# print ('-------  ABSTRACT NODE API  -------')
+# print('node name === ', node_name)
+# print('node type === ', node_type)
+# print('parent === ', parent)
+# print('has children ===', has_children)
+# print('children ===', children)
 
 print ('-------  PORT API  -------')
 # create port

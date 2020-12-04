@@ -48,6 +48,9 @@ class AbstractNode(object):
             node = self
         self._node = node
         self._parent = parent
+        if parent:
+            self.setParent(parent)
+        # how to if no parent get root item?
         self._pos = pos
         self._type = _type
         if not children:
@@ -63,6 +66,32 @@ class AbstractNode(object):
             self._args = args
         else:
             self._args = {}
+
+    def __name__(self):
+        return "AbstractNode"
+
+    def __str__(self):
+        args = {
+            'parent':self.parent(),
+            'node_type':self.type(),
+            'has_children':self.hasChildren(),
+            'children':self.children(),
+            'node_name':self.name(),
+        }
+        if self.parent():
+            args['parent'] = self.parent().name()
+        output = """
+        -------  ABSTRACT NODE API  -------
+        node name === {node_name}
+        node type === {node_type}
+        parent === {parent}
+        has children === {has_children}
+        children === {children}
+        """.format(**args)
+
+        #print(output)
+        return output
+
 
     """ PARENT """
     def parent(self):
@@ -84,6 +113,7 @@ class AbstractNode(object):
             self._parent = AbstractNodeInterfaceAPI.setParent(self, parent)
         else:
             # set up add/remove parent
+
             self._parent.removeChild(self)
             self._parent = parent
             self._parent.addChild(self)
@@ -103,7 +133,8 @@ class AbstractNode(object):
         self._children.append(child)
 
     def removeChild(self, child):
-        self._children.remove(child)
+        if child in self.children():
+            self._children.remove(child)
 
     def pos(self):
         if TRANSLATE:
@@ -223,7 +254,6 @@ class AbstractNode(object):
     def setParameterValue(self, path, value, frame=0):
         parameter = self.parameter(path)
         parameter.setValue(value, frame=frame)
-
 
     """ PROPERTIES """
     def node(self):
