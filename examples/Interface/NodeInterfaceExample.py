@@ -18,21 +18,8 @@ child_node.setName("ChildNode")
 pos = node.pos()
 node.setPos(QPoint(100, 50))
 
-print(node)
+print(repr(node))
 print(child_node)
-# parent = node.parent()
-# node_type = node.type()
-# has_children = node.hasChildren()
-# children = node.children()
-# node_name = node.name()
-#
-#
-# print ('-------  ABSTRACT NODE API  -------')
-# print('node name === ', node_name)
-# print('node type === ', node_type)
-# print('parent === ', parent)
-# print('has children ===', has_children)
-# print('children ===', children)
 
 print ('-------  PORT API  -------')
 # create port
@@ -49,28 +36,48 @@ print('female ports === ', female_ports)
 print('male ports ===', male_ports)
 
 # print ('-------  PARAMETER API  -------')
-# # get parameters
-# parameter = node.createParameter(
-#     AbstractParameter.GROUP,
-#     name="Group"
-# )
-# # create child parameter?
-# child_parameter = AbstractNodeInterfaceAPI.createParameter(
-#         node,
-#         AbstractParameter.STRING,
-#         parameter_parent=parameter,
-#         name="foo",
-#         value="bar")
-#
-# child_parameter_value = child_parameter.value()
-# node.parameter('Group.foo').setValue('test', frame=0)
-# node.parameter('Group.foo').value()
-#
-# parent = child_parameter.parent()
-# child = parameter.child('foo')
-# child_by_index = parameter.childAtIndex(0)
-# children = parameter.children()
-#
+# get parameters
+
+parameter = node.createParameter(
+    AbstractParameter.GROUP,
+    name="Group",
+    parent=node.rootParameter()
+)
+
+# create child parameter?
+child_parameter = node.createParameter(
+        AbstractParameter.STRING,
+        parent=parameter,
+        name="foo",
+        value="bar")
+
+other_param = node.createParameter(
+    AbstractParameter.STRING,
+    name="try",
+    value="hard")
+
+# get param children
+node.parameter('Group').child('foo')
+
+
+# parameter values
+node.parameter('Group').child('foo').setValue('test', frame=0)
+child_parameter_value = child_parameter.value()
+node.parameter('Group.foo').value()
+
+# reparent parameter
+other_param.setParent(child_parameter, index=0)
+
+parent = child_parameter.parent()
+child = parameter.child('foo')
+child_by_index = parameter.childAtIndex(0)
+children = parameter.children()
+#insertChild
+#setParent
+#remove
+## set path...
+print(repr(node.rootParameter()))
+# print('\n\n')
 # print('child_parameter === ', child_parameter)
 # print('child parameter value === ', child_parameter_value)
 # print('parent == ', parent)

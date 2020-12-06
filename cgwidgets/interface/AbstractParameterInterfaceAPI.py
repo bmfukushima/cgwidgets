@@ -34,7 +34,7 @@ def name(parameter):
     return dccparam.name(parameter.parameter())
 
 def setName(parameter, name):
-    dccparam.setName(parameter.parameter(), name)
+    return dccparam.setName(parameter.parameter(), name)
 
 """ HIERARCHY """
 def path(parameter):
@@ -43,12 +43,21 @@ def path(parameter):
 
     parameter = dccparam.path(parameter.parameter())
     return AbstractParameter(parameter)
-
 # todo
-# not set up
 def setPath(parameter, path):
+    # todo
+    # not set up
     parent_path = '{split_type}'.format(split_type=split_type).join(path.split('{split_type}'.format(split_type=split_type))[:-1])
     dccparam.setPath(parameter.parameter(), path)
+    return path
+# todo
+def insertChild(parameter, index, child):
+    # todo dccparam insert child
+    dccparam.insertChild(parameter.parameter(), index, child)
+# todo
+def removeChild(parameter, child):
+    # todo dccparam remove child
+    dccparam.removeChild(parameter.parameter(), child)
 
 def child(parameter, child_name):
     # import / initialize
@@ -76,9 +85,30 @@ def parent(parameter):
     parent = dccparam.parent(parameter.parameter())
     return AbstractParameter(parent)
 
+# todo
+def setParent(parameter, parent, index=0):
+    """
+    Sets the parameters parent.
+
+    This should set the parameter to a new parent at
+    the specified index.
+
+    Args:
+        parameter (AbstractParameter)
+        parent (AbstractParameter)
+        index (int)
+
+    Returns (AbstractParameter)
+    """
+    from cgwidgets.interface import AbstractParameter
+
+    # todo dccparam setParent
+    new_parent = dccparam.setParent(parameter.parameter(), parent.parameter(), index)
+    return AbstractParameter(new_parent)
+
 """ ARGS """
 def value(parameter, frame=0):
     return dccparam.value(parameter.parameter(), frame=frame)
 
 def setValue(parameter, value, frame=0):
-    dccparam.setValue(parameter.parameter(), value, frame=frame)
+    return dccparam.setValue(parameter.parameter(), value, frame=frame)

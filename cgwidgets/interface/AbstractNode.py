@@ -41,6 +41,7 @@ class AbstractNode(object):
         name='node',
         parent=None,
         pos=QPoint(1, 1),
+        root_parameter=None,
         _type=None
     ):
         # initialize args
@@ -52,6 +53,10 @@ class AbstractNode(object):
             self.setParent(parent)
         # how to if no parent get root item?
         self._pos = pos
+        if not root_parameter:
+            from cgwidgets.interface import  AbstractParameter
+            root_parameter = AbstractParameter(None, name='root')
+        self._root_parameter = root_parameter
         self._type = _type
         if not children:
             self._children = []
@@ -70,6 +75,27 @@ class AbstractNode(object):
     def __name__(self):
         return "AbstractNode"
 
+    def log(self, tabLevel=-1):
+
+        output = ""
+        tabLevel += 1
+
+        for i in range(tabLevel):
+            output += "\t"
+
+        output += "|------  " + self._name + "\n"
+
+        for child in self.children():
+            output += child.log(tabLevel)
+
+        tabLevel -= 1
+        output += "\n"
+
+        return output
+
+    def __repr__(self):
+        return self.log()
+
     def __str__(self):
         args = {
             'parent':self.parent(),
@@ -82,16 +108,15 @@ class AbstractNode(object):
             args['parent'] = self.parent().name()
         output = """
         -------  ABSTRACT NODE API  -------
+        parent === {parent}
         node name === {node_name}
         node type === {node_type}
-        parent === {parent}
         has children === {has_children}
         children === {children}
         """.format(**args)
 
         #print(output)
         return output
-
 
     """ PARENT """
     def parent(self):
@@ -209,35 +234,41 @@ class AbstractNode(object):
         return port
 
     """ PARAMETERS """
+    def rootParameter(self):
+        if TRANSLATE:
+            self._root_parameter = AbstractNodeInterfaceAPI.rootParameter()
+        return self._root_parameter
+
     def parameter(self, parameter_path):
         if TRANSLATE:
-            AbstractNodeInterfaceAPI.parameter(self, parameter_path)
+            parameter = AbstractNodeInterfaceAPI.parameter(self, parameter_path)
         else:
             # todo setup get child
             # search from root parameter?
-            parameter = self.rootParameter().getChild(parameter_path)
-        return
+            parameter = self.rootParameter().child(parameter_path)
+        return parameter
 
     def createParameter(
         self,
         parameter_type,
         name="parameter",
         value=None,
-        parameter_parent=None
+        parent=None
     ):
         if TRANSLATE:
             parameter = AbstractNodeInterfaceAPI.createParameter(
-                self,
-                parameter_type,
-                parameter_parent=parameter_parent,
+                node=self,
+                type=parameter_type,
+                parent=parent,
                 name=name,
                 value=value
             )
         else:
+            from cgwidgets.interface import AbstractParameter
             parameter = AbstractParameter(
-                self,
-                parameter_type,
-                parameter_parent=parameter_parent,
+                node=self,
+                type=parameter_type,
+                parent=parent,
                 name=name,
                 value=value
             )

@@ -23,7 +23,7 @@ def parameter(node, parameter_path):
     parameter = node.getParameter(parameter_path)
     return parameter
 
-def getRootParameter(node):
+def rootParameter(node):
     return node.getParameters()
 
 def createGroupParameter(

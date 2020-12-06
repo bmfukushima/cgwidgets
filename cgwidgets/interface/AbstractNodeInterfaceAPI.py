@@ -157,35 +157,35 @@ def parameter(node, parameter_path):
     _parameter = dccnode.parameter(node.node(), parameter_path)
     return AbstractParameter(_parameter)
 
-def getRootParameter(node):
+def rootParameter(node):
     from cgwidgets.interface import AbstractParameter
-    return AbstractParameter(dccnode.getRootParameter(node.node()))
+    return AbstractParameter(dccnode.rootParameter(node.node()))
 
 def createParameter(
         node,
         parameter_type,
-        parameter_parent=None,
+        parent=None,
         name="parameter",
         value=None):
     # import / initialize
     from cgwidgets.interface import AbstractParameter
     # get parent param
-    if not parameter_parent:
-        parameter_parent = getRootParameter(node).parameter()
+    if not parent:
+        parent = rootParameter(node).parameter()
     else:
-        parameter_parent = parameter_parent.parameter()
+        parent = parent.parameter()
 
     node = node.node()
     # create param
     if parameter_type == AbstractParameter.GROUP:
         parameter = dccnode.createGroupParameter(
-            node, parameter_type, parameter_parent, name, value)
+            node, parameter_type, parent, name, value)
     if parameter_type == AbstractParameter.INTEGER:
         parameter = dccnode.createIntegerParameter(
-            node, parameter_type, parameter_parent, name, value)
+            node, parameter_type, parent, name, value)
     if parameter_type == AbstractParameter.STRING:
         parameter = dccnode.createStringParameter(
-            node, parameter_type, parameter_parent, name, value)
+            node, parameter_type, parent, name, value)
     # return param
     return AbstractParameter(parameter)
 
