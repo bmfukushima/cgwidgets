@@ -21,7 +21,7 @@ Basically:
   * Sublicense: Nerp (I don't even know what sublicensing is so I'm just going to do a blanket no atm )
 	
 Final Note:
-The work in this library represents my learning path from scripting towards  Software Engineering.
+The work in this library represents my learning path from scripting towards Software Engineering.
 There will be many questionable choices made, and things that many of you find incredibly idiotic.
 Chances are, I just fucked up and plead ignorance, so please let me know if you find anything
 idiotic in here as it is a learning experience for myself.
