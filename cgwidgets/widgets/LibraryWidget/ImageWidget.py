@@ -197,9 +197,9 @@ class ImageWidget(QLabel):
         """
         current_index = self.proxyImageIndex
         image_list = self.proxyImageList
-        if direction is 'next':
+        if direction == 'next':
             current_index += 1
-        elif direction is 'previous':
+        elif direction == 'previous':
             current_index -= 1
         new_image = image_list[current_index]
         proxy_image_dir = self.proxyImageDir
