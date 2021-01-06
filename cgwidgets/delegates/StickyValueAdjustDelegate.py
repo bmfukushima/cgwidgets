@@ -4,6 +4,27 @@ TODO:
         Return cursor to center of ACTIVE widget...
             - This will make it so that after the cursor disappears it is shown where
             the user is already looking
+    Clicks:
+        options of different functions for different clicking combos...
+            ie mmb / rmb / lmb all perform different tasks...
+    PER TICK UPDATE (default is batch update)
+        def getInput(self):
+            self._temp = 0.0
+            return 0.0
+        def setValue(self, value):
+            if value != self._temp:
+                delta_value = value - self._temp
+                self._temp = value
+                self.camera.translate(0, 0, delta_value, local_coord=self.local_coord)
+    getInput
+        move to function provided by user, with a default of widget.getInput()
+    setValue:
+        move to function to provide a dict of
+            {user_input: setValueFunction}
+    magnitude
+        needs to have option to return x/y magnitudes
+        getMagnitude
+        __setValue
 """
 
 import math
@@ -564,7 +585,6 @@ def testWidget():
     def testDeactivate(*args):
         print(args)
 
-
     def testValueUpdate(obj, original_value, slider_pos, num_ticks):
         print('obj == %s' % obj)
         print('original_value == %s' % original_value)
@@ -600,6 +620,10 @@ def testItem():
 
 
 if __name__ == '__main__':
+    """
+
+    """
+
     from qtpy.QtWidgets import QVBoxLayout
     from cgwidgets.utils import installInvisibleWidgetEvent
     from cgwidgets.utils import installStickyAdjustDelegate
