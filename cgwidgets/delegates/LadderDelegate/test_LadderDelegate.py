@@ -73,7 +73,7 @@ class iTest():
                     item.mouseMoveEvent(move_event)
 
                     # do math for test
-                    magnitude = LadderItem._LadderItem__getMagnitude(item, QCursor().pos(), pos)
+                    magnitude = LadderItem._LadderItem__getMagnitude(item, QCursor().pos(), pos).magnitude
                     if num_ticks != int(magnitude):
                         # set significant digits
                         sig_digits = item.parent()._significant_digits

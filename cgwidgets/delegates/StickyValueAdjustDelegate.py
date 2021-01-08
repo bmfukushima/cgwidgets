@@ -1,3 +1,4 @@
+# TODO
 """
 TODO:
     IDEA
@@ -27,6 +28,16 @@ TODO:
         __setValue
 """
 
+"""
+Hierarchy
+    iStickyValueAdjustDelegate, iStickyActivationDelegate
+        |- StickyValueAdjustWidgetDelegate --> QWidget
+        |- StickyValueAdjustItemDelegate --> QGraphicsItem
+    iStickyValueAdjustDelegate
+        |- StickyDragWindowWidget
+
+
+"""
 import math
 import sys
 import logging
@@ -337,7 +348,7 @@ class StickyDragWindowWidget(QFrame, iStickyValueAdjustDelegate):
         the valueUpdateEvent
         """
         current_pos = QCursor.pos()
-        magnitude = getMagnitude(self._calc_pos, current_pos)
+        magnitude = getMagnitude(self._calc_pos, current_pos).magnitude
         self._slider_pos, self._num_ticks = math.modf(magnitude / self.pixelsPerTick())
 
         # update values

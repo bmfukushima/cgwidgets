@@ -1,3 +1,10 @@
+"""
+private         :- / :>
+is  a           -->
+has a           |>
+parent/child    |-
+"""
+
 class StyleGuide(object):
     """
 A one line summary of the module or program, terminated by a period.

@@ -146,9 +146,16 @@ def getMagnitude(start_pos, current_pos, multiplier=1):
             clicked, or when the last tick was registered
         current_pos (QPoint)
             current position of the cursor
-    Returns:
-        float
+    Returns (Magnitude): container of floats
+            xoffset | yoffset | magnitude
+
     """
+    class Magnitude(object):
+        def __init__(self, magnitude, xoffset, yoffset):
+            self.magnitude = magnitude
+            self.xoffset = xoffset
+            self.yoffset = yoffset
+
     # get magnitude
     xoffset = start_pos.x() - current_pos.x()
     yoffset = start_pos.y() - current_pos.y()
@@ -163,7 +170,7 @@ def getMagnitude(start_pos, current_pos, multiplier=1):
 
     # user mult
     magnitude *= multiplier
-    return magnitude
+    return Magnitude(magnitude, xoffset, yoffset)
 
 
 def getMainWidget(widget, name):

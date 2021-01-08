@@ -171,23 +171,24 @@ def installLadderDelegate(
 """ STICKY VALUE DRAG"""
 def installStickyAdjustDelegate(
         active_object,
+        activation_event=None,
+        activation_object=None,
+        deactivation_event=None,
+        magnitude_as_2d=False,
         pixels_per_tick=200,
         value_per_tick=0.01,
-        activation_object=None,
-        activation_event=None,
-        deactivation_event=None,
         value_update_event=None
     ):
     """
     Args:
-        active_object (QWidget | QGraphicsItem): widget to set the value on.
-        activation_object (QWidget | QGraphicsItem): widget when clicked on will start this delegate
-        pixels_per_tick (int):
-        value_per_tick (float):
         activation_event (function): run every time the activation object is clicked
             active_object, drag_widget, event
+        active_object (QWidget | QGraphicsItem): widget to set the value on.
+        activation_object (QWidget | QGraphicsItem): widget when clicked on will start this delegate
         deactivation_event (function): run when the sticky adjust is deactivated
             active_object, activation_widget, event
+        pixels_per_tick (int):
+        value_per_tick (float):
         value_update_event (function): runs every time the sticky value sends a
             obj, original_value, slider_pos, num_ticks
     todo:
