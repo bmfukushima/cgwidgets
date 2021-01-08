@@ -109,6 +109,28 @@ class iStickyValueAdjustDelegate(object):
     def setPixelsPerTick(self, _pixels_per_tick):
         self._pixels_per_tick = _pixels_per_tick
 
+    # def valueUpdateEvent(self):
+    #     self.__valueUpdateEvent()
+
+    def __valueUpdateEvent(self, obj, original_value, slider_pos, num_ticks):
+        """
+        obj (QWidget): the widget that should have its values manipulated
+        original_value (float)
+        slider_pos (float)
+        num_ticks (int)
+        """
+        pass
+
+    def setValueUpdateEvent(self, valueUpdateEvent):
+        """
+        This takes one function which should be run when ever the value
+        is changed during a slide event.
+
+        This function will be required to take 3 args
+            original_value, slider_pos, num_ticks
+        """
+        self.__valueUpdateEvent = valueUpdateEvent
+
 
 class iStickyActivationDelegate(object):
     """
@@ -143,25 +165,6 @@ class iStickyActivationDelegate(object):
         self.__activationEvent = activationEvent
 
     """ VIRTUAL EVENTS >> DRAG WIDGET """
-    def __valueUpdateEvent(self, obj, original_value, slider_pos, num_ticks):
-        """
-        obj (QWidget): the widget that should have its values manipulated
-        original_value (float)
-        slider_pos (float)
-        num_ticks (int)
-        """
-        pass
-
-    def setValueUpdateEvent(self, valueUpdateEvent):
-        """
-        This takes one function which should be run when ever the value
-        is changed during a slide event.
-
-        This function will be required to take 3 args
-            original_value, slider_pos, num_ticks
-        """
-        self.__valueUpdateEvent = valueUpdateEvent
-
     def __deactivationEvent(self, active_object, activation_widget, event):
         """
         obj (QWidget): the widget that should have its values manipulated
@@ -206,7 +209,7 @@ class iStickyActivationDelegate(object):
 
         # user activation event
         # todo set deactivation function on drag widget
-        drag_widget.setValueUpdateEvent(self.__valueUpdateEvent)
+        #drag_widget.setValueUpdateEvent(self.__valueUpdateEvent)
         drag_widget.setDeactivationEvent(self.__deactivationEvent)
         self.activationEvent(active_object, drag_widget, event)
 
@@ -287,6 +290,8 @@ class StickyDragWindowWidget(QFrame, iStickyValueAdjustDelegate):
         setAsTool(self)
         setAsTransparent(self)
 
+        self.setValueUpdateEvent(self.valueUpdateEvent)
+
     """ PROPERTIES """
     def activeObject(self):
         return self._active_object
@@ -317,6 +322,7 @@ class StickyDragWindowWidget(QFrame, iStickyValueAdjustDelegate):
                 orig_value = self.activeObject().text()
 
         self._orig_value = float(orig_value)
+
     """ UTILS """
     def __deactivateStickyDrag(self):
         self._drag_STICKY = False
@@ -365,29 +371,33 @@ class StickyDragWindowWidget(QFrame, iStickyValueAdjustDelegate):
         logging.debug(new_value)
         self.activeObject().setValue(new_value)
 
-    """ VIRTUAL FUNCTIONSs"""
+    """ VIRTUAL FUNCTIONS"""
     def __valueUpdateEvent(self, obj, original_value, slider_pos, num_ticks):
         """
-        obj (QWidget): the widget that should have its values manipulated
-        original_value (float)
-        slider_pos (float)
-        num_ticks (int)
+        Traceback (most recent call last):
+  File "/media/ssd01/dev/python/cgwidgets/cgwidgets/delegates/StickyValueAdjustDelegate.py", line 249, in eventFilter
+    self.penDownEvent(activation_obj, event)
+  File "/media/ssd01/dev/python/cgwidgets/cgwidgets/delegates/StickyValueAdjustDelegate.py", line 212, in penDownEvent
+    drag_widget.setValueUpdateEvent(self.__valueUpdateEvent)
+AttributeError: 'StickyValueAdjustWidgetDelegate' object has no attribute '_iStickyActivationDelegate__valueUpdateEvent'
+
         """
+        # todo why does this not inherit from iStickyValueAdjustDelegate
         pass
 
     def valueUpdateEvent(self):
         obj = self.activeObject()
         return self.__valueUpdateEvent(obj, self._orig_value, self._slider_pos, self._num_ticks)
 
-    def setValueUpdateEvent(self, valueUpdateEvent):
-        """
-        This takes one function which should be run when ever the value
-        is changed during a slide event.
-
-        This function will be required to take 3 args
-            original_value, slider_pos, num_ticks
-        """
-        self.__valueUpdateEvent = valueUpdateEvent
+    # def setValueUpdateEvent(self, valueUpdateEvent):
+    #     """
+    #     This takes one function which should be run when ever the value
+    #     is changed during a slide event.
+    #
+    #     This function will be required to take 3 args
+    #         original_value, slider_pos, num_ticks
+    #     """
+    #     self.__valueUpdateEvent = valueUpdateEvent
 
     def __deactivationEvent(self, active_object, activation_widget, event):
         """

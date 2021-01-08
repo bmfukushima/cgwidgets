@@ -151,6 +151,13 @@ def getMagnitude(start_pos, current_pos, multiplier=1):
 
     """
     class Magnitude(object):
+        """
+        Object containing the offset/magnitude between two points
+        Properties:
+            magnitude (float):
+            xoffset (float):
+            yoffset (float):
+        """
         def __init__(self, magnitude, xoffset, yoffset):
             self.magnitude = magnitude
             self.xoffset = xoffset

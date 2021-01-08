@@ -174,7 +174,6 @@ def installStickyAdjustDelegate(
         activation_event=None,
         activation_object=None,
         deactivation_event=None,
-        magnitude_as_2d=False,
         pixels_per_tick=200,
         value_per_tick=0.01,
         value_update_event=None
