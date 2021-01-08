@@ -1,4 +1,7 @@
 """
+# TODO
+    - Value slider not updating properly
+    - Values not left aligned
 Inputs:
     No modifier:
         LMB = HUE / Value
