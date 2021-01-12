@@ -136,7 +136,24 @@ def getWidgetUnderCursor():
     return widget
 
 
-def getMagnitude(start_pos, current_pos, multiplier=1):
+class Magnitude(object):
+    x = 0
+    y = 1
+    m = 2
+    """
+    Object containing the offset/magnitude between two points
+    Properties:
+        magnitude (float):
+        xoffset (float):
+        yoffset (float):
+    """
+    def __init__(self, magnitude, xoffset, yoffset):
+        self.magnitude = magnitude
+        self.xoffset = xoffset
+        self.yoffset = yoffset
+
+
+def getMagnitude(magnitude_type, start_pos, current_pos, multiplier=1):
     """
     returns the magnitude of a user click/drop operation
 
@@ -146,23 +163,12 @@ def getMagnitude(start_pos, current_pos, multiplier=1):
             clicked, or when the last tick was registered
         current_pos (QPoint)
             current position of the cursor
+        magnitude_type (Magnitude.TYPE): What type of magnitude to get
+            x | y | m
     Returns (Magnitude): container of floats
             xoffset | yoffset | magnitude
 
     """
-    class Magnitude(object):
-        """
-        Object containing the offset/magnitude between two points
-        Properties:
-            magnitude (float):
-            xoffset (float):
-            yoffset (float):
-        """
-        def __init__(self, magnitude, xoffset, yoffset):
-            self.magnitude = magnitude
-            self.xoffset = xoffset
-            self.yoffset = yoffset
-
     # get magnitude
     xoffset = start_pos.x() - current_pos.x()
     yoffset = start_pos.y() - current_pos.y()
@@ -177,7 +183,14 @@ def getMagnitude(start_pos, current_pos, multiplier=1):
 
     # user mult
     magnitude *= multiplier
-    return Magnitude(magnitude, xoffset, yoffset)
+
+    # return magnitude
+    if magnitude_type == Magnitude.x:
+        return xoffset
+    elif magnitude_type == Magnitude.y:
+        return yoffset
+    elif magnitude_type == Magnitude.m:
+        return magnitude
 
 
 def getMainWidget(widget, name):

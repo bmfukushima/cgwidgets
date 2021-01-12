@@ -2,6 +2,9 @@ from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 from qtpy.QtGui import *
 
+from .utils import Magnitude
+
+
 """ COMPLETER POPUP """
 def installCompleterPopup(completer):
     """
@@ -176,6 +179,7 @@ def installStickyAdjustDelegate(
         deactivation_event=None,
         input_button=Qt.LeftButton,
         input_modifiers=Qt.AltModifier,
+        magnitude_type=Magnitude.m,
         pixels_per_tick=200,
         value_per_tick=0.01,
         value_update_event=None
@@ -188,8 +192,10 @@ def installStickyAdjustDelegate(
         activation_object (QWidget | QGraphicsItem): widget when clicked on will start this delegate
         deactivation_event (function): run when the sticky adjust is deactivated
             active_object, activation_widget, event
-        input_button (Qt.KEY | Qt.CLICK): The
-        input_modifiers (Qt.Modifiers)
+        input_button (Qt.KEY | Qt.CLICK): Determines what keys should be used
+        input_modifiers (Qt.Modifiers): determines what modifiers should be used
+        magnitude_type (Magnitude.TYPE): determines what value should be used as the offset.
+            x | y | m
         pixels_per_tick (int):
         value_per_tick (float):
         value_update_event (function): runs every time the sticky value sends a
@@ -223,7 +229,7 @@ def installStickyAdjustDelegate(
         main_application_widget._sticky_drag_window_widget = StickyDragWindowWidget(main_application_widget)
 
     drag_widget = main_application_widget._sticky_drag_window_widget
-
+    drag_widget._magnitude_type = magnitude_type
     # check activation widget
     if not activation_object:
         activation_object = active_object

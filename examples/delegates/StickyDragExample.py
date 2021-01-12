@@ -8,6 +8,8 @@ from qtpy.QtWidgets import (
     QGraphicsEllipseItem, QGraphicsTextItem
 )
 from qtpy.QtGui import QColor, QBrush, QPen, QCursor
+from qtpy.QtCore import Qt
+
 
 from cgwidgets.utils import installStickyAdjustDelegate
 
@@ -149,6 +151,7 @@ def testWidget():
         activation_object=w3,
         activation_event=testActivate,
         deactivation_event=testDeactivate,
+        input_button=Qt.LeftButton,
         value_update_event=testValueUpdate
     )
 

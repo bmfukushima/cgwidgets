@@ -82,6 +82,8 @@ class iStickyValueAdjustDelegate(object):
     """
     input_events = [
         QEvent.MouseButtonPress,
+        QEvent.KeyPress,
+        QEvent.KeyRelease,
         QEvent.GraphicsSceneMousePress
     ]
 
@@ -240,8 +242,13 @@ class StickyValueAdjustWidgetDelegate(QWidget, iStickyValueAdjustDelegate):
         modifiers = QApplication.keyboardModifiers()
         if modifiers == self.modifiers:
             if event.type() in self.input_events:
-                self.penDownEvent(activation_obj, event)
-                return False
+                if event.type() == QEvent.MouseButtonPress:
+                    if event.button() == self.input_button:
+                        self.penDownEvent(activation_obj, event)
+                        return False
+                # if event.type() == QEvent.KeyPress:
+                #     if event.key() == self.input_button:
+                #         self.penDownEvent(activation_obj, event)
         return False
 
         # # activate
@@ -268,7 +275,13 @@ class StickyValueAdjustItemDelegate(QGraphicsItem, iStickyValueAdjustDelegate):
         modifiers = QApplication.keyboardModifiers()
         if modifiers == self.modifiers:
             if event.type() in self.input_events:
-                self.penDownEvent(activation_obj, event)
+                if event.type() == QEvent.GraphicsSceneMousePress:
+                    if event.button() == self.input_button:
+                        self.penDownEvent(activation_obj, event)
+                        return False
+                # if event.type() == QEvent.KeyPress:
+                #     if event.key() == self.input_button:
+                #         self.penDownEvent(activation_obj, event)
                 return False
         return False
 
@@ -361,7 +374,8 @@ class StickyDragWindowWidget(QFrame, iStickyValueAdjustDelegate):
         the valueUpdateEvent
         """
         current_pos = QCursor.pos()
-        magnitude = getMagnitude(self._calc_pos, current_pos).magnitude
+        magnitude = getMagnitude(self._magnitude_type, self._calc_pos, current_pos)
+        print(magnitude)
         self._slider_pos, self._num_ticks = math.modf(magnitude / self.pixelsPerTick())
 
         # update values
