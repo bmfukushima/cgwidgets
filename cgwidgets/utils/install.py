@@ -174,6 +174,8 @@ def installStickyAdjustDelegate(
         activation_event=None,
         activation_object=None,
         deactivation_event=None,
+        input_button=Qt.LeftButton,
+        input_modifiers=Qt.AltModifier,
         pixels_per_tick=200,
         value_per_tick=0.01,
         value_update_event=None
@@ -186,6 +188,8 @@ def installStickyAdjustDelegate(
         activation_object (QWidget | QGraphicsItem): widget when clicked on will start this delegate
         deactivation_event (function): run when the sticky adjust is deactivated
             active_object, activation_widget, event
+        input_button (Qt.KEY | Qt.CLICK): The
+        input_modifiers (Qt.Modifiers)
         pixels_per_tick (int):
         value_per_tick (float):
         value_update_event (function): runs every time the sticky value sends a
@@ -233,6 +237,9 @@ def installStickyAdjustDelegate(
 
     sticky_widget_filter.setPixelsPerTick(pixels_per_tick)
     sticky_widget_filter.setValuePerTick(value_per_tick)
+
+    sticky_widget_filter.modifiers = input_modifiers
+    sticky_widget_filter.input_button = input_button
 
     # set attrs
     sticky_widget_data = {

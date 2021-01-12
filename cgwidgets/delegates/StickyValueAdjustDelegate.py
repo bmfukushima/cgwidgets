@@ -236,12 +236,20 @@ class StickyValueAdjustWidgetDelegate(QWidget, iStickyValueAdjustDelegate):
         iStickyValueAdjustDelegate.__init__(self)
 
     def eventFilter(self, activation_obj, event, *args, **kwargs):
-        # activate
-        if event.type() in iStickyValueAdjustDelegate.input_events:
-            self.penDownEvent(activation_obj, event)
-            return False
 
+        modifiers = QApplication.keyboardModifiers()
+        if modifiers == self.modifiers:
+            if event.type() in self.input_events:
+                self.penDownEvent(activation_obj, event)
+                return False
         return False
+
+        # # activate
+        # if event.type() in iStickyValueAdjustDelegate.input_events:
+        #     self.penDownEvent(activation_obj, event)
+        #     return False
+        #
+        # return False
 
 
 class StickyValueAdjustItemDelegate(QGraphicsItem, iStickyValueAdjustDelegate):
@@ -257,11 +265,18 @@ class StickyValueAdjustItemDelegate(QGraphicsItem, iStickyValueAdjustDelegate):
 
     def sceneEventFilter(self, activation_obj, event, *args, **kwargs):
         # get widgets
-        if event.type() in iStickyValueAdjustDelegate.input_events:
-            self.penDownEvent(activation_obj, event)
-            return False
-
+        modifiers = QApplication.keyboardModifiers()
+        if modifiers == self.modifiers:
+            if event.type() in self.input_events:
+                self.penDownEvent(activation_obj, event)
+                return False
         return False
+
+        # if event.type() in iStickyValueAdjustDelegate.input_events:
+        #     self.penDownEvent(activation_obj, event)
+        #     return False
+        #
+        # return False
 
 
 class StickyDragWindowWidget(QFrame, iStickyValueAdjustDelegate):
