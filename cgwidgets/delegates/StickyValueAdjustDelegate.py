@@ -39,19 +39,17 @@ Hierarchy
 
 """
 import math
-import sys
 import logging
 
 from qtpy.QtCore import QEvent, Qt, QPoint, QRectF
 from qtpy.QtWidgets import (
-    QWidget, QApplication, QLabel, QDesktopWidget, QGraphicsItem, QFrame
+    QWidget, QApplication, QGraphicsItem, QFrame
 )
 from qtpy.QtGui import QCursor
 
 from cgwidgets.utils import (
     getMagnitude, getTopLeftPos, setAsTransparent, setAsTool, getGlobalPos
 )
-from cgwidgets.settings.colors import iColor
 
 
 class iStickyValueAdjustDelegate(object):
@@ -70,10 +68,17 @@ class iStickyValueAdjustDelegate(object):
         _drag_STICKY (bool): if the user is current in a click/drag event
         widget (QWidget): Widget to adjust.
 
+    Virtual Functions:
+        activationEvent ( active_object, drag_widget, event ): will run every time
+            the activation object is clicked on
+        setValueUpdateEvent (function): which takes
+            obj, original_value, slider_pos, num_ticks
     Notes:
         - widget/item provided needs setValue method that will set the text/value
         - if you want the live update to work on InputWidgets, you'll need to toggle the
             _updating attr on the input widget.
+        - Interface for the activation objects
+
     """
     input_events = [
         QEvent.MouseButtonPress,
@@ -109,9 +114,7 @@ class iStickyValueAdjustDelegate(object):
     def setPixelsPerTick(self, _pixels_per_tick):
         self._pixels_per_tick = _pixels_per_tick
 
-    # def valueUpdateEvent(self):
-    #     self.__valueUpdateEvent()
-
+    """ VIRTUAL EVENTS """
     def __valueUpdateEvent(self, obj, original_value, slider_pos, num_ticks):
         """
         obj (QWidget): the widget that should have its values manipulated
@@ -131,17 +134,6 @@ class iStickyValueAdjustDelegate(object):
         """
         self.__valueUpdateEvent = valueUpdateEvent
 
-
-class iStickyActivationDelegate(object):
-    """
-    Interface for the activation objects
-
-    Virtual Functions:
-        activationEvent ( active_object, drag_widget, event ): will run every time
-            the activation object is clicked on
-
-    """
-    """ VIRTUAL EVENTS """
     def __activationEvent(self, active_object, drag_widget, event):
         """
         obj (QWidget): the widget that should have its values manipulated
@@ -209,7 +201,7 @@ class iStickyActivationDelegate(object):
 
         # user activation event
         # todo set deactivation function on drag widget
-        #drag_widget.setValueUpdateEvent(self.__valueUpdateEvent)
+        drag_widget.setValueUpdateEvent(self.__valueUpdateEvent)
         drag_widget.setDeactivationEvent(self.__deactivationEvent)
         self.activationEvent(active_object, drag_widget, event)
 
@@ -238,7 +230,7 @@ class iStickyActivationDelegate(object):
             obj.setCursor(Qt.BlankCursor)
 
 
-class StickyValueAdjustWidgetDelegate(QWidget, iStickyActivationDelegate, iStickyValueAdjustDelegate):
+class StickyValueAdjustWidgetDelegate(QWidget, iStickyValueAdjustDelegate):
     def __init__(self, parent=None):
         super(StickyValueAdjustWidgetDelegate, self).__init__(parent)
         iStickyValueAdjustDelegate.__init__(self)
@@ -252,7 +244,7 @@ class StickyValueAdjustWidgetDelegate(QWidget, iStickyActivationDelegate, iStick
         return False
 
 
-class StickyValueAdjustItemDelegate(QGraphicsItem, iStickyActivationDelegate, iStickyValueAdjustDelegate):
+class StickyValueAdjustItemDelegate(QGraphicsItem, iStickyValueAdjustDelegate):
     def __init__(self, parent=None):
         super(StickyValueAdjustItemDelegate, self).__init__(parent)
         iStickyValueAdjustDelegate.__init__(self)
