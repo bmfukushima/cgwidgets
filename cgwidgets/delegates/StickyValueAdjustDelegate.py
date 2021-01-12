@@ -5,9 +5,6 @@ TODO:
         Return cursor to center of ACTIVE widget...
             - This will make it so that after the cursor disappears it is shown where
             the user is already looking
-    Clicks:
-        options of different functions for different clicking combos...
-            ie mmb / rmb / lmb all perform different tasks...
     PER TICK UPDATE (default is batch update)
         def getInput(self):
             self._temp = 0.0
@@ -17,15 +14,9 @@ TODO:
                 delta_value = value - self._temp
                 self._temp = value
                 self.camera.translate(0, 0, delta_value, local_coord=self.local_coord)
-    getInput
-        move to function provided by user, with a default of widget.getInput()
     setValue:
         move to function to provide a dict of
             {user_input: setValueFunction}
-    magnitude
-        needs to have option to return x/y magnitudes
-        getMagnitude
-        __setValue
 """
 
 """
@@ -80,6 +71,7 @@ class iStickyValueAdjustDelegate(object):
         - Interface for the activation objects
 
     """
+    # todo key press events
     input_events = [
         QEvent.MouseButtonPress,
         QEvent.KeyPress,
@@ -238,7 +230,7 @@ class StickyValueAdjustWidgetDelegate(QWidget, iStickyValueAdjustDelegate):
         iStickyValueAdjustDelegate.__init__(self)
 
     def eventFilter(self, activation_obj, event, *args, **kwargs):
-
+        # todo key press events
         modifiers = QApplication.keyboardModifiers()
         if modifiers == self.modifiers:
             if event.type() in self.input_events:
@@ -271,6 +263,7 @@ class StickyValueAdjustItemDelegate(QGraphicsItem, iStickyValueAdjustDelegate):
         return None
 
     def sceneEventFilter(self, activation_obj, event, *args, **kwargs):
+        # todo key press events
         # get widgets
         modifiers = QApplication.keyboardModifiers()
         if modifiers == self.modifiers:
@@ -375,7 +368,6 @@ class StickyDragWindowWidget(QFrame, iStickyValueAdjustDelegate):
         """
         current_pos = QCursor.pos()
         magnitude = getMagnitude(self._magnitude_type, self._calc_pos, current_pos)
-        print(magnitude)
         self._slider_pos, self._num_ticks = math.modf(magnitude / self.pixelsPerTick())
 
         # update values
