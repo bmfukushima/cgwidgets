@@ -131,11 +131,12 @@ def testWidget():
     def testDeactivate(*args):
         print(args)
 
-    def testValueUpdate(obj, original_value, slider_pos, num_ticks):
+    def testValueUpdate(obj, original_value, slider_pos, num_ticks, magnitude):
         print('obj == %s' % obj)
         print('original_value == %s' % original_value)
         print('slider pos == %s' % slider_pos)
         print('num_ticks == %s' % num_ticks)
+        print('magnitude == %s' % magnitude)
 
     w = QWidget()
     l = QVBoxLayout(w)
@@ -152,7 +153,8 @@ def testWidget():
         activation_event=testActivate,
         deactivation_event=testDeactivate,
         input_button=Qt.LeftButton,
-        value_update_event=testValueUpdate
+        value_update_event=testValueUpdate,
+        magnitude_type=None
     )
 
     return w

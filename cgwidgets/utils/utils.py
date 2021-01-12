@@ -153,7 +153,7 @@ class Magnitude(object):
         self.yoffset = yoffset
 
 
-def getMagnitude(magnitude_type, start_pos, current_pos, multiplier=1):
+def getMagnitude(start_pos, current_pos, magnitude_type=None, multiplier=1):
     """
     returns the magnitude of a user click/drop operation
 
@@ -191,6 +191,8 @@ def getMagnitude(magnitude_type, start_pos, current_pos, multiplier=1):
         return yoffset
     elif magnitude_type == Magnitude.m:
         return magnitude
+    else:
+        return Magnitude(magnitude, xoffset, yoffset)
 
 
 def getMainWidget(widget, name):

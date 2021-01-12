@@ -39,7 +39,8 @@ from qtpy.QtWidgets import (
 from qtpy.QtGui import QCursor
 
 from cgwidgets.utils import (
-    getMagnitude, getTopLeftPos, setAsTransparent, setAsTool, getGlobalPos
+    getMagnitude, Magnitude, getTopLeftPos,
+    setAsTransparent, setAsTool, getGlobalPos
 )
 
 
@@ -367,12 +368,21 @@ class StickyDragWindowWidget(QFrame, iStickyValueAdjustDelegate):
         the valueUpdateEvent
         """
         current_pos = QCursor.pos()
-        magnitude = getMagnitude(self._magnitude_type, self._calc_pos, current_pos)
-        self._slider_pos, self._num_ticks = math.modf(magnitude / self.pixelsPerTick())
+        self._magnitude = getMagnitude(self._calc_pos, current_pos, magnitude_type=self._magnitude_type)
+        # has magnitude type set
+        if not isinstance(self._magnitude, Magnitude):
+            self._slider_pos, self._num_ticks = math.modf(self._magnitude / self.pixelsPerTick())
 
-        # update values
-        self.valueUpdateEvent()
-        self.__updateValue()
+            # update values
+            self.valueUpdateEvent()
+            self.__updateValue()
+        # no type set
+        else:
+            self._slider_pos = None
+            self._num_ticks = None
+            self.valueUpdateEvent()
+
+        return
 
     def __updateValue(self):
         """
@@ -400,17 +410,17 @@ AttributeError: 'StickyValueAdjustWidgetDelegate' object has no attribute '_iSti
 
     def valueUpdateEvent(self):
         obj = self.activeObject()
-        return self.__valueUpdateEvent(obj, self._orig_value, self._slider_pos, self._num_ticks)
+        return self.__valueUpdateEvent(obj, self._orig_value, self._slider_pos, self._num_ticks, self._magnitude)
 
-    # def setValueUpdateEvent(self, valueUpdateEvent):
-    #     """
-    #     This takes one function which should be run when ever the value
-    #     is changed during a slide event.
-    #
-    #     This function will be required to take 3 args
-    #         original_value, slider_pos, num_ticks
-    #     """
-    #     self.__valueUpdateEvent = valueUpdateEvent
+    def setValueUpdateEvent(self, valueUpdateEvent):
+        """
+        This takes one function which should be run when ever the value
+        is changed during a slide event.
+
+        This function will be required to take 3 args
+            original_value, slider_pos, num_ticks
+        """
+        self.__valueUpdateEvent = valueUpdateEvent
 
     def __deactivationEvent(self, active_object, activation_widget, event):
         """

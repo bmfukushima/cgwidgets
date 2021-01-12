@@ -178,7 +178,7 @@ def installStickyAdjustDelegate(
         activation_object=None,
         deactivation_event=None,
         input_button=Qt.LeftButton,
-        input_modifiers=Qt.AltModifier,
+        input_modifier=Qt.AltModifier,
         magnitude_type=Magnitude.m,
         pixels_per_tick=200,
         value_per_tick=0.01,
@@ -193,7 +193,7 @@ def installStickyAdjustDelegate(
         deactivation_event (function): run when the sticky adjust is deactivated
             active_object, activation_widget, event
         input_button (Qt.KEY | Qt.CLICK): Determines what keys should be used
-        input_modifiers (Qt.Modifiers): determines what modifiers should be used
+        input_modifier (Qt.Modifiers): determines what modifiers should be used
         magnitude_type (Magnitude.TYPE): determines what value should be used as the offset.
             x | y | m
         pixels_per_tick (int):
@@ -244,7 +244,7 @@ def installStickyAdjustDelegate(
     sticky_widget_filter.setPixelsPerTick(pixels_per_tick)
     sticky_widget_filter.setValuePerTick(value_per_tick)
 
-    sticky_widget_filter.modifiers = input_modifiers
+    sticky_widget_filter.modifiers = input_modifier
     sticky_widget_filter.input_button = input_button
 
     # set attrs
