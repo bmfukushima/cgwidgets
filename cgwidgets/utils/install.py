@@ -139,7 +139,7 @@ def removeSlideDelegate(item, slide_delegate):
 def installLadderDelegate(
     widget,
     user_input=QEvent.MouseButtonRelease,
-        value_list=None
+    value_list=None
 ):
     """
     Args:
@@ -177,8 +177,8 @@ def installStickyAdjustDelegate(
         activation_event=None,
         activation_object=None,
         deactivation_event=None,
-        input_button=Qt.LeftButton,
-        input_modifier=Qt.AltModifier,
+        input_buttons=[Qt.LeftButton],
+        input_modifier=Qt.NoModifier,
         magnitude_type=Magnitude.m,
         pixels_per_tick=200,
         value_per_tick=0.01,
@@ -192,7 +192,8 @@ def installStickyAdjustDelegate(
         activation_object (QWidget | QGraphicsItem): widget when clicked on will start this delegate
         deactivation_event (function): run when the sticky adjust is deactivated
             active_object, activation_widget, event
-        input_button (Qt.KEY | Qt.CLICK): Determines what keys should be used
+        input_buttons (list): of mouse button / key presses that should be used to initialize the sticky drag
+            Qt.KEY | Qt.CLICK
         input_modifier (Qt.Modifiers): determines what modifiers should be used
         magnitude_type (Magnitude.TYPE): determines what value should be used as the offset.
             x | y | m
@@ -245,7 +246,7 @@ def installStickyAdjustDelegate(
     sticky_widget_filter.setValuePerTick(value_per_tick)
 
     sticky_widget_filter.modifiers = input_modifier
-    sticky_widget_filter.input_button = input_button
+    sticky_widget_filter.input_buttons = input_buttons
 
     # set attrs
     sticky_widget_data = {

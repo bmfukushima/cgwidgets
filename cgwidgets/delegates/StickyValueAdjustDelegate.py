@@ -110,12 +110,13 @@ class iStickyValueAdjustDelegate(object):
         self._pixels_per_tick = _pixels_per_tick
 
     """ VIRTUAL EVENTS """
-    def __valueUpdateEvent(self, obj, original_value, slider_pos, num_ticks):
+    def __valueUpdateEvent(self, obj, original_value, slider_pos, num_ticks, magnitude):
         """
         obj (QWidget): the widget that should have its values manipulated
         original_value (float)
         slider_pos (float)
         num_ticks (int)
+        magnitude (Utils.Magnitude)
         """
         pass
 
@@ -236,11 +237,11 @@ class StickyValueAdjustWidgetDelegate(QWidget, iStickyValueAdjustDelegate):
         if modifiers == self.modifiers:
             if event.type() in self.input_events:
                 if event.type() == QEvent.MouseButtonPress:
-                    if event.button() == self.input_button:
+                    if event.button() in self.input_buttons:
                         self.penDownEvent(activation_obj, event)
                         return False
                 # if event.type() == QEvent.KeyPress:
-                #     if event.key() == self.input_button:
+                #     if event.key() == self.input_buttons:
                 #         self.penDownEvent(activation_obj, event)
         return False
 
@@ -270,11 +271,11 @@ class StickyValueAdjustItemDelegate(QGraphicsItem, iStickyValueAdjustDelegate):
         if modifiers == self.modifiers:
             if event.type() in self.input_events:
                 if event.type() == QEvent.GraphicsSceneMousePress:
-                    if event.button() == self.input_button:
+                    if event.button() in self.input_buttons:
                         self.penDownEvent(activation_obj, event)
                         return False
                 # if event.type() == QEvent.KeyPress:
-                #     if event.key() == self.input_button:
+                #     if event.key() == self.input_buttons:
                 #         self.penDownEvent(activation_obj, event)
                 return False
         return False
@@ -395,7 +396,7 @@ class StickyDragWindowWidget(QFrame, iStickyValueAdjustDelegate):
         self.activeObject().setValue(new_value)
 
     """ VIRTUAL FUNCTIONS"""
-    def __valueUpdateEvent(self, obj, original_value, slider_pos, num_ticks):
+    def __valueUpdateEvent(self, obj, original_value, slider_pos, num_ticks, magnitude):
         """
         Traceback (most recent call last):
   File "/media/ssd01/dev/python/cgwidgets/cgwidgets/delegates/StickyValueAdjustDelegate.py", line 249, in eventFilter

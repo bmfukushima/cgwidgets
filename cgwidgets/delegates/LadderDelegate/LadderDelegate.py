@@ -478,10 +478,6 @@ Notes:
             self.layout().addWidget(widget)
             self.item_list.append(widget)
 
-            # install click/drag mechanism
-            # installStickyAdjustDelegate(
-            #     widget, pixels_per_tick=self.getPixelsPerTick(), value_per_tick=value
-            # )
             installStickyAdjustDelegate(
                 widget,
                 pixels_per_tick=self.getPixelsPerTick(),
@@ -698,6 +694,9 @@ Attributes:
         return FloatInputWidget.keyPressEvent(self, event)
 
     def setMiddleValue(self):
+        # print(self)
+        # print(self.parent())
+        # print (self.parent().parent())
         self.parent().parent().setValue(str(self.text()))
 
     def setValue(self, value):

@@ -152,7 +152,7 @@ def testWidget():
         activation_object=w3,
         activation_event=testActivate,
         deactivation_event=testDeactivate,
-        input_button=Qt.LeftButton,
+        input_buttons=Qt.LeftButton,
         value_update_event=testValueUpdate,
         magnitude_type=None
     )
