@@ -138,26 +138,46 @@ def testWidget():
         print('num_ticks == %s' % num_ticks)
         print('magnitude == %s' % magnitude)
 
-    w = QWidget()
-    l = QVBoxLayout(w)
-    w2 = TestWidget()
-    w3 = QLabel('test')
-    l.addWidget(w2)
-    l.addWidget(w3)
+    # create GUI
+    main_widget = QWidget()
+    main_layout = QVBoxLayout(main_widget)
+    sticky_widget = TestWidget()
+    sticky_activation_widget = QLabel('test')
+    main_layout.addWidget(sticky_widget)
+    main_layout.addWidget(sticky_activation_widget)
 
+    # install sticky drag
+    """
+    Args:
+    activation_event (function): run every time the activation object is clicked
+        active_object, drag_widget, event
+    active_object (QWidget | QGraphicsItem): widget to set the value on.
+    activation_object (QWidget | QGraphicsItem): widget when clicked on will start this delegate
+    deactivation_event (function): run when the sticky adjust is deactivated
+        active_object, activation_widget, event
+    input_buttons (list): of mouse button / key presses that should be used to initialize the sticky drag
+        Qt.KEY | Qt.CLICK
+    input_modifier (Qt.Modifiers): determines what modifiers should be used
+    magnitude_type (Magnitude.TYPE): determines what value should be used as the offset.
+        x | y | m
+    pixels_per_tick (int):
+    value_per_tick (float):
+    value_update_event (function): runs every time the sticky value sends a
+        obj, original_value, slider_pos, num_ticks
+    """
     installStickyAdjustDelegate(
-        w2,
+        sticky_widget,
         pixels_per_tick=500,
         value_per_tick=.01,
-        activation_object=w3,
+        activation_object=sticky_activation_widget,
         activation_event=testActivate,
         deactivation_event=testDeactivate,
-        input_buttons=Qt.LeftButton,
+        input_buttons=[Qt.LeftButton],
         value_update_event=testValueUpdate,
         magnitude_type=None
     )
 
-    return w
+    return main_widget
 
 
 if __name__ == '__main__':

@@ -158,19 +158,23 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         # create new model index
         if not parent:
             parent = QModelIndex()
-        self.model().insertRow(row, parent)
 
-        # setup custom object
-        item_type = self.model().itemType()
-        view_item = item_type()
-        #view_item.setColumnData(column_data)
-
-        self.model().createIndex(row, 1, view_item)
-
-        # get new index/item created
-        new_index = self.model().index(row, 1, parent)
+        new_index = self.model().insertNewIndex(row, parent=parent)
         view_item = new_index.internalPointer()
         view_item.setColumnData(column_data)
+        # self.model().insertRow(row, parent)
+        #
+        # # setup custom object
+        # item_type = self.model().itemType()
+        # view_item = item_type()
+        #
+        # # create new index
+        # self.model().createIndex(row, 1, view_item)
+        #
+        # # get new index/item created
+        # new_index = self.model().index(row, 1, parent)
+        # view_item = new_index.internalPointer()
+        # view_item.setColumnData(column_data)
 
         # add to layout if stacked
         if self.getDelegateType() == TansuModelViewWidget.STACKED:

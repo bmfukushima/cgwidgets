@@ -373,10 +373,29 @@ class AbstractDragDropModel(QAbstractItemModel):
         return new_item
 
     def insertNewIndex(self, row, name="None", parent=QModelIndex()):
+        """
+
+        Args:
+            row (int):
+            name (str):
+            parent (QModelIndex):
+
+        Returns (QModelIndex):
+
+        """
         self.insertRow(row, parent)
-        new_index = self.index(row, 0, parent)
-        item = new_index.internalPointer()
-        item.setColumnData({self._header_data[0]:name})
+
+        # setup custom object
+        item_type = self.itemType()
+        view_item = item_type()
+
+        # create new index
+        self.createIndex(row, 1, view_item)
+
+        # get new index/item created
+        new_index = self.index(row, 1, parent)
+        view_item = new_index.internalPointer()
+        view_item.setColumnData({"name":name})
 
         return new_index
 

@@ -1,7 +1,6 @@
 """
 You can also set the dynamic functions on the item.  Which will be called
 instead of the primary ones if you want to do a per item override.
-
 """
 
 import sys

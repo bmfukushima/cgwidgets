@@ -42,7 +42,9 @@ list_view.setModel(model)
 
 # insert indexes
 for x in range(0, 4):
-    model.insertNewIndex(x, str('node%s'%x))
+    index = model.insertNewIndex(x, name=str('node%s'%x))
+    for i, char in enumerate('abc'):
+        model.insertNewIndex(i, name=char, parent=index)
 
 # set model event
 model.setDragStartEvent(testDrag)
