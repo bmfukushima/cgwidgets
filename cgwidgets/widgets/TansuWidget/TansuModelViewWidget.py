@@ -162,19 +162,6 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         new_index = self.model().insertNewIndex(row, parent=parent)
         view_item = new_index.internalPointer()
         view_item.setColumnData(column_data)
-        # self.model().insertRow(row, parent)
-        #
-        # # setup custom object
-        # item_type = self.model().itemType()
-        # view_item = item_type()
-        #
-        # # create new index
-        # self.model().createIndex(row, 1, view_item)
-        #
-        # # get new index/item created
-        # new_index = self.model().index(row, 1, parent)
-        # view_item = new_index.internalPointer()
-        # view_item.setColumnData(column_data)
 
         # add to layout if stacked
         if self.getDelegateType() == TansuModelViewWidget.STACKED:
@@ -993,6 +980,7 @@ class TansuHeader(TansuBaseWidget):
     def setDelegateToggleEvent(self, function):
         self.__delegateToggleEvent = function
 
+
 class TansuHeaderAbstractView(object):
     def __init__(self, parent=None):
         super(TansuHeaderAbstractView, self).__init__()
@@ -1004,14 +992,6 @@ class TansuHeaderAbstractView(object):
         if tab_tansu_widget:
             tab_tansu_widget.updateDelegateDisplay()
         QAbstractItemView.showEvent(self, event)
-
-    def selectionChanged(self, selected, deselected):
-        top_level_widget = getWidgetAncestor(self, TansuModelViewWidget)
-        if top_level_widget:
-            # for index in selected.indexes():
-            #     if index.column() == 0:
-            #         print(index.internalPointer().columnData()['name'])
-            top_level_widget.updateDelegateDisplayFromSelection(selected, deselected)
 
     def dropEvent(self, event):
         # resolve drop event
@@ -1033,6 +1013,7 @@ class TansuHeaderListView(AbstractDragDropListView, TansuHeaderAbstractView):
         self.setEditTriggers(QAbstractItemView.DoubleClicked)
         self.tansu_header = parent
 
+
     # TODO Copy paste to TansuHeaderTreeView
     # probably due to self.tansu_header not working on init?
     def keyPressEvent(self, event):
@@ -1046,6 +1027,13 @@ class TansuHeaderListView(AbstractDragDropListView, TansuHeaderAbstractView):
 
         return AbstractDragDropAbstractView.keyPressEvent(self, event)
 
+    def selectionChanged(self, selected, deselected):
+        top_level_widget = getWidgetAncestor(self, TansuModelViewWidget)
+        if top_level_widget:
+            # for index in selected.indexes():
+            #     if index.column() == 0:
+            #         print(index.internalPointer().columnData()['name'])
+            top_level_widget.updateDelegateDisplayFromSelection(selected, deselected)
 
 class TansuHeaderTreeView(AbstractDragDropTreeView, TansuHeaderAbstractView):
     def __init__(self, parent=None):
@@ -1066,6 +1054,13 @@ class TansuHeaderTreeView(AbstractDragDropTreeView, TansuHeaderAbstractView):
 
         return AbstractDragDropAbstractView.keyPressEvent(self, event)
 
+    def selectionChanged(self, selected, deselected):
+        top_level_widget = getWidgetAncestor(self, TansuModelViewWidget)
+        if top_level_widget:
+            # for index in selected.indexes():
+            #     if index.column() == 0:
+            #         print(index.internalPointer().columnData()['name'])
+            top_level_widget.updateDelegateDisplayFromSelection(selected, deselected)
     # def dropEvent(self, event):
     #     # resolve drop event
     #     return_val = super(TansuHeaderTreeView, self).dropEvent(event)

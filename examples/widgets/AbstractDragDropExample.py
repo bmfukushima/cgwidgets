@@ -15,20 +15,25 @@ from cgwidgets.views import (
 app = QApplication(sys.argv)
 
 # create event functions
+def testDelete(item):
+    print("DELETING --> -->", item.columnData()['name'])
+
 def testDrag(indexes):
     print(indexes)
+    print("DRAGGING -->", indexes)
 
 def testDrop(row, indexes, parent):
-    print(row, indexes, parent)
+    print("DROPPING -->", row, indexes, parent)
 
 def testEdit(item, old_value, new_value):
-    print(item, old_value, new_value)
+    print("EDITING -->", item, old_value, new_value)
 
 def testEnable(item, enabled):
-    print(item.columnData()['name'], enabled)
+    print("ENABLING -->", item.columnData()['name'], enabled)
 
-def testDelete(item):
-    print(item.columnData()['name'])
+def testSelect(item, enabled):
+    print("SELECTING -->", item.columnData()['name'], enabled)
+
 
 # create model
 model = AbstractDragDropModel()
@@ -52,6 +57,7 @@ model.setDropEvent(testDrop)
 model.setTextChangedEvent(testEdit)
 model.setItemEnabledEvent(testEnable)
 model.setItemDeleteEvent(testDelete)
+model.setItemSelectedEvent(testSelect)
 
 # set flags
 tree_view.setIsRootDropEnabled(True)

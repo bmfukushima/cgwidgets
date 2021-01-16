@@ -44,12 +44,6 @@ class AbstractDragDropModelItem(object):
         if parent is not None:
             parent.addChild(self)
 
-    # def isSelected(self):
-    #     return self._is_selected
-    #
-    # def setSelected(self, selected):
-    #     self._is_selected = selected
-
     def addChild(self, child):
         self._children.append(child)
 
@@ -685,6 +679,27 @@ class AbstractDragDropModel(QAbstractItemModel):
         self.__textChangedEvent(item, old_value, new_value)
 
     def __textChangedEvent(self, item, old_value, new_value):
-        print(item, item)
         pass
+
+    def setItemSelectedEvent(self, function):
+        self.__itemSelectedEvent = function
+
+    def itemSelectedEvent(self, item, enabled):
+        """
+        When an item is selected, this event will run.
+
+        Args:
+            item (AbstractDragDropModelItem): item that has been manipulated
+            enabled (boolean): whether or not the item was enabled/disabled
+
+        Note:
+            This will run through a for each loop and run for every single item in
+            the current selection
+        """
+        self.__itemSelectedEvent(item, enabled)
+
+    def __itemSelectedEvent(self, item, enabled):
+        # print(item.columnData()['name'], enabled)
+        pass
+
 
