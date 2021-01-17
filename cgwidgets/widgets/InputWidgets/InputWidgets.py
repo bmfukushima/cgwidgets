@@ -314,8 +314,6 @@ class LabelledInputWidget(TansuBaseWidget, AbstractInputGroupFrame):
     A single input widget.  This inherits from the TansuBaseWidget,
     to provide a slider for the user to expand/contract the editable area
     vs the view label.
-
-
     """
     def __init__(
         self,
@@ -404,7 +402,6 @@ class LabelledInputWidget(TansuBaseWidget, AbstractInputGroupFrame):
         widgets_list = LabelledInputWidget.getAllParrallelWidgets(self)
 
         for widget in widgets_list:
-
             widget.moveSplitter(pos, 1)
 
         self.__splitter_event_is_paused = False
@@ -422,7 +419,6 @@ class LabelledInputWidget(TansuBaseWidget, AbstractInputGroupFrame):
 
     # ?
     def getHandleOffset(self):
-
         pass
 
     def setInputWidget(self, _input_widget):
@@ -470,19 +466,38 @@ class LabelledInputWidget(TansuBaseWidget, AbstractInputGroupFrame):
         self.setHandleWidth(width)
         self._separator_width = width
 
-    def setDirection(self, direction):
+    def setDirection(self, direction, update_defaults=False):
+        """
+
+        Args:
+            direction (Qt.DIRECITON):
+            update_defaults (bool): If enabled will automagically update
+                the display of the splitter to correctly display the default sizes.
+
+        Returns:
+
+        """
         # preflight
         if direction not in [Qt.Horizontal, Qt.Vertical]: return
 
         # set direction
         self.setOrientation(direction)
 
-        font_size = getFontSize(QApplication)
         # setup minimum sizes
+        font_size = getFontSize(QApplication)
         if direction == Qt.Vertical:
             self.setMinimumSize(font_size*4, font_size*6)
         else:
             self.setMinimumSize(font_size*12, font_size*2.5)
+
+        # update defaults
+        if update_defaults:
+            if direction == Qt.Horizontal:
+                self.setDefaultLabelLength(100)
+                self.setSeparatorWidth(30)
+            elif direction == Qt.Vertical:
+                self.setDefaultLabelLength(30)
+            self.resetSliderPositionToDefault()
 
         # update label
         return AbstractInputGroupFrame.setDirection(self, direction)
@@ -651,7 +666,7 @@ class AbstractTansuInputWidget(TansuModelViewWidget):
         self.delegateWidget().handle_length = 50
         self.updateStyleSheet()
 
-        self.setIsDelegateHeaderShown(False)
+        self.setDelegateHeaderIsShown(False)
 
 """
 TODO

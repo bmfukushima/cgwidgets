@@ -261,14 +261,12 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         # update header
         self.setHeaderWidgetToDefaultSize()
 
-
-
     """ DELEGATE HEADER """
-    def setIsDelegateHeaderShown(self, enabled):
+    def setDelegateHeaderIsShown(self, enabled):
         self._delegate_header_shown = enabled
         # todo update all delegate headers
 
-    def isDelegateHeaderShown(self):
+    def delegateHeaderIsShown(self):
         return self._delegate_header_shown
 
     def setDelegateHeaderDirection(self, direction):
@@ -412,7 +410,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         # set up attrs
         display_widget.setMainWidget(widget)
         display_widget.setItem(item)
-        display_widget.setIsHeaderShown(self.isDelegateHeaderShown())
+        display_widget.setIsHeaderShown(self.delegateHeaderIsShown())
         display_widget.setDirection(self.delegateHeaderDirection())
 
         return display_widget
@@ -1013,9 +1011,8 @@ class TansuHeaderListView(AbstractDragDropListView, TansuHeaderAbstractView):
         self.setEditTriggers(QAbstractItemView.DoubleClicked)
         self.tansu_header = parent
 
-
     # TODO Copy paste to TansuHeaderTreeView
-    # probably due to self.tansu_header not working on init?
+    # due to inheritance order
     def keyPressEvent(self, event):
         # TODO TOGGLE DELEGATE KEY
         # tansu hotkeys esc/~
@@ -1035,14 +1032,15 @@ class TansuHeaderListView(AbstractDragDropListView, TansuHeaderAbstractView):
             #         print(index.internalPointer().columnData()['name'])
             top_level_widget.updateDelegateDisplayFromSelection(selected, deselected)
 
+
 class TansuHeaderTreeView(AbstractDragDropTreeView, TansuHeaderAbstractView):
     def __init__(self, parent=None):
         super(TansuHeaderTreeView, self).__init__(parent)
-
+        self.setEditTriggers(QAbstractItemView.DoubleClicked)
         self.tansu_header = parent
 
     # TODO Copy paste to TansuHeaderListView
-    # probably due to self.tansu_header not working on init?
+    # due to inheritance order
     def keyPressEvent(self, event):
         # TODO TOGGLE DELEGATE KEY
         # tansu hotkeys esc/~
