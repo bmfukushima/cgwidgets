@@ -509,6 +509,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         automatically show/hide widgets as needed
         """
         if selected:
+            item.delegateWidget().setIsHeaderShown(self.delegateHeaderIsShown())
             item.delegateWidget().show()
         else:
             try:

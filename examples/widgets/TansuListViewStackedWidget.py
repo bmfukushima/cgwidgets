@@ -77,11 +77,13 @@ tansu_widget.setHeaderItemIsDeleteEnabled(True)
 tansu_widget.setHeaderItemEnabledEvent(testEnable)
 tansu_widget.setHeaderItemDeleteEvent(testDelete)
 tansu_widget.setHeaderDelegateToggleEvent(testToggle)
+
 # setup drag/drop events
 tansu_widget.setHeaderItemDragStartEvent(testDrag)
 tansu_widget.setHeaderItemDropEvent(testDrop)
 tansu_widget.setHeaderItemTextChangedEvent(testEdit)
 
+tansu_widget.setDelegateHeaderIsShown(False)
 
 # display widget
 tansu_widget.resize(500, 500)
