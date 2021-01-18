@@ -265,7 +265,7 @@ class AbstractDragDropModel(QAbstractItemModel):
             return color
 
         elif role == Qt.BackgroundRole:
-            return QColor(255,0,0,255)
+            return QColor(255, 0, 0, 255)
 
         if role == Qt.SizeHintRole:
             return QSize(self.item_width, self.item_height)
@@ -297,6 +297,7 @@ class AbstractDragDropModel(QAbstractItemModel):
     def setHeaderData(self, _header_data):
         self._header_data = _header_data
 
+    """ INDEX | ITEMS """
     def parent(self, index):
         """
         INPUTS: QModelIndex
@@ -331,6 +332,46 @@ class AbstractDragDropModel(QAbstractItemModel):
             return self.createIndex(row, column, child_item)
         else:
             return QModelIndex()
+
+    def findItems(self, value, index=None, role=Qt.DisplayRole):
+        """
+        Finds all of the indexes of the value provided that are descendents of the index provided.
+        If no index is provided, the default index will be the root.
+
+        Args:
+            value (string): to search for
+            index (QModelIndex): to search from
+            role (Qt.DisplayRole): to search data of
+
+        Returns (list): of QModelIndex
+
+        """
+        indexes = []
+        # get children to search from
+        if index:
+            children = index.internalPointer().children()
+        else:
+            children = self.getRootItem().children()
+
+        # get list
+        for child in children:
+            current_index = self.getIndexFromItem(child)
+            indexes += self.match(current_index, role, value, flags=Qt.MatchRecursive)
+
+        return indexes
+
+    def getIndexFromItem(self, item):
+
+        # tree_view.selectionModel().select(index, QItemSelectionModel.Select)
+        #parent_item = item.parent()
+        row = item.row()
+
+        if item and row:
+            index = self.createIndex(row, 0, item)
+        else:
+            index = QModelIndex()
+
+        return index
 
     def getItem(self, index):
         """

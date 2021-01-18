@@ -51,6 +51,7 @@ for x in range(0, 4):
     for i, char in enumerate('abc'):
         model.insertNewIndex(i, name=char, parent=index)
 
+
 # set model event
 model.setDragStartEvent(testDrag)
 model.setDropEvent(testDrop)
@@ -70,7 +71,52 @@ tree_view.setIsDeleteEnabled(True)
 # set selection mode
 tree_view.setSelectionMode(QAbstractItemView.MultiSelection)
 
+#list_view.setItemSelected(index, True)
 # show
-tree_view.move(QCursor.pos())
-tree_view.show()
+# tree_view.move(QCursor.pos())
+# tree_view.show()
+
+###########################################
+# new...
+###########################################
+from qtpy.QtWidgets import QWidget, QVBoxLayout, QPushButton
+from qtpy.QtCore import QModelIndex
+
+def testSelectToggle():
+    """    match(const
+    QModelIndex & start, int
+    role, const
+    QVariant & value, int
+    hits = 1, Qt::MatchFlags
+    flags = Qt::MatchFlags(Qt::MatchStartsWith | Qt::MatchWrap)) const"""
+
+    from qtpy.QtCore import Qt, QVariant
+    #from qtpy.QtGui import QVar
+    #index = model.getIndexFromItem(item)
+    # https://doc.qt.io/archives/qt-4.8/qt.html#MatchFlag-enum
+    # , flags=Qt.MatchFlags(Qt.MatchContains)
+    global model
+    indexes = model.findItems('a')
+
+    for index in indexes:
+        item = index.internalPointer()
+        print(item.columnData())
+        tree_view.setItemSelected(index, True)
+    from cgwidgets.utils import updateStyleSheet
+    #updateStyleSheet(tree_view)
+
+w = QWidget()
+button = QPushButton("sinep")
+button.clicked.connect(testSelectToggle)
+l = QVBoxLayout(w)
+l.addWidget(tree_view)
+l.addWidget(button)
+
+w.move(QCursor.pos())
+w.show()
+
+###########################################
+# end new ...
+###########################################
+
 sys.exit(app.exec_())

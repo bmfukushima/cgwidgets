@@ -162,9 +162,25 @@ class AbstractDragDropAbstractView(object):
         self._isDeleteEnabled = enabled
         self.model().setIsDeleteEnabled(enabled)
 
+    """ SELECTION """
+    def setItemSelected(self, item, selected):
+        if selected:
+            print('1', item)
+            self.selectionModel().select(item, QItemSelectionModel.Select)
+        else:
+            print('2', item)
+            self.selectionModel().select(item, QItemSelectionModel.Deselect)
+
+        return True
+        #item.setIsSelected(selected)
+        #self.itemEnabledEvent(item, selected)
+
+    def clearItemSelection(self):
+        for index in self.selectedIndexes():
+            self.selectionModel().select(index, QItemSelectionModel.Deselect)
+
     """ EVENTS """
     def selectionChanged(self, selected, deselected):
-
         for index in selected.indexes():
             item = index.internalPointer()
             self.model().itemSelectedEvent(item, True)
@@ -174,6 +190,11 @@ class AbstractDragDropAbstractView(object):
             self.model().itemSelectedEvent(item, False)
 
     def keyPressEvent(self, event):
+
+        # Clear Selection
+        if event.key() == Qt.Key_Escape:
+            self.clearItemSelection()
+
         # Delete Item
         if self.model().isDeleteEnabled():
             if event.key() in [Qt.Key_Delete, Qt.Key_Backspace]:
@@ -376,8 +397,8 @@ class AbstractDragDropModelDelegate(QStyledItemDelegate):
         return delegate_widget
 
     def setEditorData(self, editor, index):
-        text = index.model().data(index, Qt.DisplayRole)
-        #editor.setText(text)
+        # text = index.model().data(index, Qt.DisplayRole)
+        # editor.setText(text)
         return QStyledItemDelegate.setEditorData(self, editor, index)
 
     def setModelData(self, editor, model, index):
