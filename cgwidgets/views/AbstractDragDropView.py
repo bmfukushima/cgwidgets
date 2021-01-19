@@ -214,9 +214,15 @@ class AbstractDragDropAbstractView(object):
                         item = index.internalPointer()
                         enabled = False if item.isEnabled() else True
                         self.model().setItemEnabled(item, enabled)
-
+        self.__keyPressEvent(event)
         return QAbstractItemView.keyPressEvent(self, event)
 
+    """ VIRTUAL """
+    def __keyPressEvent(self, event):
+        return
+
+    def setKeyPressEvent(self, function):
+        self.__keyPressEvent = function
 
 class AbstractDragDropListView(QListView, AbstractDragDropAbstractView):
     def __init__(self, parent=None):

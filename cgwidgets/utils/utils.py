@@ -136,6 +136,79 @@ def getWidgetUnderCursor():
     return widget
 
 
+class LayoutOrientation(object):
+    """
+    Sets the orientation for a widget.
+
+    This will create a QBoxLayout and set that as the main layout.
+
+    Attributes:
+        orientation (Qt.ORIENTATION): default is Qt.Vertical
+            Qt.Vertical | Qt.Horizontal
+
+    Virtual:
+        orientationChangeEvent (Qt.ORIENTATION): function to be run
+            when setOrientation is called.  Please note that this will
+            run AFTER the orientation has been set.
+    """
+    def __init__(self, orientation=Qt.Vertical):
+        self._layout_orientation = orientation
+        if orientation == Qt.Vertical:
+            QBoxLayout(QBoxLayout.TopToBottom, self)
+        if orientation == Qt.Horizontal:
+            QBoxLayout(QBoxLayout.LeftToRight, self)
+
+        self.setLayoutOrientation(orientation)
+
+    """ PROPERTIES """
+    def layoutOrientation(self):
+        return self._layout_orientation
+
+    def setLayoutOrientation(self, orientation, spacing=5):
+        """
+        Sets the orientation this input will be displayed as.
+
+        Args:
+            orientation (Qt.DIRECTION)
+            spacing (int)
+        """
+        # preflight
+        if orientation not in [Qt.Horizontal, Qt.Vertical]: return
+
+        # set orientation
+        self._layout_orientation = orientation
+
+        # update separator
+        if orientation == Qt.Vertical:
+            # orientation
+            self.layout().setDirection(QBoxLayout.TopToBottom)
+
+            self.layout().setAlignment(Qt.AlignTop)
+            self.layout().setSpacing(spacing)
+
+        elif orientation == Qt.Horizontal:
+            # set layout orientation
+            self.layout().setDirection(QBoxLayout.LeftToRight)
+
+            # alignment
+            self.layout().setAlignment(Qt.AlignLeft)
+
+        # virtual fucntion
+        self.layoutOrientationChangedEvent(orientation)
+
+    """ VIRTUAL FUNCTIONS """
+    def setLayoutOrientationChangedEvent(self, function):
+        self.__orientationChangedEvent = function
+
+    def layoutOrientationChangedEvent(self, orientation):
+        self.__layoutOrientationChangedEvent(orientation)
+
+    def __layoutOrientationChangedEvent(self, orientation):
+        pass
+    # toggle orientation
+    # toggle orientation function
+
+
 class Magnitude(object):
     x = 0
     y = 1

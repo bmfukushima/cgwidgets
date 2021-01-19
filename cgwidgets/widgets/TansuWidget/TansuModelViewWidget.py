@@ -1069,25 +1069,9 @@ class TansuHeaderTreeView(AbstractDragDropTreeView, TansuHeaderAbstractView):
     def selectionChanged(self, selected, deselected):
         top_level_widget = getWidgetAncestor(self, TansuModelViewWidget)
         if top_level_widget:
-            # for index in selected.indexes():
-            #     if index.column() == 0:
-            #         print(index.internalPointer().columnData()['name'])
             top_level_widget.updateDelegateDisplayFromSelection(selected, deselected)
 
         return AbstractDragDropAbstractView.selectionChanged(self, selected, deselected)
-    # def dropEvent(self, event):
-    #     # resolve drop event
-    #     return_val = super(TansuHeaderTreeView, self).dropEvent(event)
-    #
-    #     # get main widget
-    #     main_widget = getWidgetAncestor(self, TansuModelViewWidget)
-    #
-    #     # clear selection
-    #     main_widget.delegateWidget().displayAllWidgets(False)
-    #     main_widget.delegateWidget().clear()
-    #     self.selectionModel().clearSelection()
-    #
-    #     return return_val
 
 
 """ EXAMPLE """
