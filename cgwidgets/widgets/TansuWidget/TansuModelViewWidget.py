@@ -216,6 +216,16 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
     def setHeaderItemDeleteEvent(self, function):
         self.model().setItemDeleteEvent(function)
 
+    def setHeaderItemSelectedEvent(self, function):
+        """
+        Event run when the toggle is hidden/shown
+
+        Should take two inputs
+            event (QEvent)
+            enabled (bool)
+        """
+        self.model().setItemSelectedEvent(function)
+
     def setHeaderDelegateToggleEvent(self, function):
         """
         Event run when the toggle is hidden/shown
@@ -226,6 +236,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         """
         self.headerWidget().setDelegateToggleEvent(function)
 
+    """ SET FLAGS """
     def setHeaderItemIsDragEnabled(self, enabled):
         self.headerWidget().setIsDragEnabled(enabled)
 
@@ -1033,6 +1044,8 @@ class TansuHeaderListView(AbstractDragDropListView, TansuHeaderAbstractView):
             #         print(index.internalPointer().columnData()['name'])
             top_level_widget.updateDelegateDisplayFromSelection(selected, deselected)
 
+        return AbstractDragDropAbstractView.selectionChanged(self, selected, deselected)
+
 
 class TansuHeaderTreeView(AbstractDragDropTreeView, TansuHeaderAbstractView):
     def __init__(self, parent=None):
@@ -1060,6 +1073,8 @@ class TansuHeaderTreeView(AbstractDragDropTreeView, TansuHeaderAbstractView):
             #     if index.column() == 0:
             #         print(index.internalPointer().columnData()['name'])
             top_level_widget.updateDelegateDisplayFromSelection(selected, deselected)
+
+        return AbstractDragDropAbstractView.selectionChanged(self, selected, deselected)
     # def dropEvent(self, event):
     #     # resolve drop event
     #     return_val = super(TansuHeaderTreeView, self).dropEvent(event)

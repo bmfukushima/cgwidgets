@@ -45,6 +45,9 @@ def testToggle(event, enabled):
     print('---- TOGGLE EVENT ----')
     print (event, enabled)
 
+def testSelect(item, enabled):
+    print("SELECTING -->", item.columnData(), enabled)
+
 app = QApplication(sys.argv)
 
 tansu_widget = TansuModelViewWidget()
@@ -59,7 +62,7 @@ tab_3.addWidget(QLabel('c'))
 
 # set attrs
 tansu_widget.setHeaderPosition(attrs.WEST)
-#tansu_widget.setMultiSelect(True)
+#tansu_widget.setHeaderDelegateWidget(header_delegate_widget)
 tansu_widget.setMultiSelectDirection(Qt.Vertical)
 tansu_widget.delegateWidget().handle_length = 100
 
@@ -82,6 +85,7 @@ tansu_widget.setHeaderDelegateToggleEvent(testToggle)
 tansu_widget.setHeaderItemDragStartEvent(testDrag)
 tansu_widget.setHeaderItemDropEvent(testDrop)
 tansu_widget.setHeaderItemTextChangedEvent(testEdit)
+tansu_widget.setHeaderItemSelectedEvent(testSelect)
 
 tansu_widget.setDelegateHeaderIsShown(False)
 

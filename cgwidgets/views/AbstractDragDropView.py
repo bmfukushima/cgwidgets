@@ -176,8 +176,9 @@ class AbstractDragDropAbstractView(object):
         #self.itemEnabledEvent(item, selected)
 
     def clearItemSelection(self):
-        for index in self.selectedIndexes():
-            self.selectionModel().select(index, QItemSelectionModel.Deselect)
+        self.selectionModel().clearSelection()
+        # for index in self.selectedIndexes():
+        #     self.selectionModel().select(index, QItemSelectionModel.Deselect)
 
     """ EVENTS """
     def selectionChanged(self, selected, deselected):
