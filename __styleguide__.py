@@ -1,8 +1,9 @@
 """
-private         :- / :>
-is  a           -->
-has a           |>
-parent/child    |-
+Hierarchy:
+    private         :- / :>
+    is  a           -->
+    has a           |>
+    parent/child    |-
 """
 
 class StyleGuide(object):

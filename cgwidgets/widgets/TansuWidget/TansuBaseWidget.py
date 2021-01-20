@@ -112,13 +112,14 @@ class TansuBaseWidget(QSplitter):
         Returns (int, widget):
             if returns None, then bypass everything.
         """
-        if widget.parent():
-            if isinstance(widget.parent(), TansuBaseWidget):
-                return widget.parent().indexOf(widget), widget
+        if widget:
+            if widget.parent():
+                if isinstance(widget.parent(), TansuBaseWidget):
+                    return widget.parent().indexOf(widget), widget
+                else:
+                    return TansuBaseWidget.getIndexOfWidget(widget.parent())
             else:
-                return TansuBaseWidget.getIndexOfWidget(widget.parent())
-        else:
-            return None, None
+                return None, None
 
     def getFirstSoloableWidget(self, widget):
         """
@@ -223,6 +224,8 @@ class TansuBaseWidget(QSplitter):
         # get the current splitter
         if not widget:
             widget = qApp.widgetAt(QCursor.pos())
+        if not widget:
+            return
         current_index, current_widget = self.getIndexOfWidget(widget)
         if not current_widget: return
         current_splitter = current_widget.parent()

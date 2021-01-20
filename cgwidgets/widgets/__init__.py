@@ -9,6 +9,9 @@ THE IMPORT ORDER MATTERS!!
 """ IMPORT ABSTRACT WIDGETS """
 from .AbstractWidgets import *
 
+""" MODEL VIEW WIDGET"""
+from .ModelViewWidget import ModelViewWidget as ModelViewWidget
+
 """ TANSU """
 from .TansuWidget import TansuModelItem as TansuModelItem
 from .TansuWidget import TansuModel as TansuModel
