@@ -29,6 +29,8 @@ for x in range(3):
 # add tansu to tansu
 main_tansu_widget.addWidget(tansu_widget_2)
 # show widget
+f = QLabel("what")
+f.show()
 main_tansu_widget.show()
 main_tansu_widget.move(QCursor.pos())
 sys.exit(app.exec_())

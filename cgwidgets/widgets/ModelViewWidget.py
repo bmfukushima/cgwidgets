@@ -8,9 +8,8 @@ from cgwidgets.views import (
     AbstractDragDropTreeView,
     AbstractDragDropListView,
 )
-from cgwidgets.utils import LayoutOrientation, attrs, getWidgetAncestor
+from cgwidgets.utils import attrs
 from cgwidgets.settings.colors import iColor
-#from cgwidgets.widgets import TansuBaseWidget
 from cgwidgets.widgets.TansuWidget.TansuBaseWidget import TansuBaseWidget
 
 
@@ -21,14 +20,29 @@ class ModelViewWidget(TansuBaseWidget):
     Args:
 
     Attributes:
+        view
+        model
+        delegate_manifest (list): when the input/modifier combo is pressed
+            the widget will be displayed
+            {   "input" : Qt.Key_*,
+                "modifier"  :   Qt.Modifier,
+                "widget" : QWidget}
 
     Virtual:
+        delegateToggleEvent (event, widget, enabled)
+        dragStartEvent (item)
+        dropEvent (row_dropped_on, item, parent)
+        itemDeleteEvent (item)
+        itemEnabledEvent (item, enabled)
+        itemSelectedEvent (item, enabled)
+        textChangedEvent (item, old_value, new_value)
 
     Hierarchy:
         TansuBaseWidget --> QSplitter
             |- view --> (AbstractDragDropListView | AbstractDragDropTreeView) --> QSplitter
+                |- model (AbstractDragDropModel)
+                    |- (AbstractDragDropModelItems)
             |* delegate --> QWidget
-
 
     """
     LIST_VIEW = 0
@@ -106,21 +120,6 @@ class ModelViewWidget(TansuBaseWidget):
         return self.view().selectionModel()
 
     """ DELEGATE """
-    def delegateWidgetAlwaysOn(self):
-        return self._delegate_always_on
-
-    def setDelegateWidgetAlwaysOn(self, enabled):
-        """
-        Flag to determine if the delegate should always be on, or toggled via hotkey
-        """
-        self._delegate_always_on = enabled
-
-        # hide / show widget
-        if enabled:
-            self.delegate().show()
-        else:
-            self.delegate().hide()
-
     def delegateInputManifest(self):
         """
         Args:
@@ -182,20 +181,21 @@ class ModelViewWidget(TansuBaseWidget):
             widget.setFocus()
 
         # run virtual function
-        self.delegateToggleEvent(event, enabled)
+        self.delegateToggleEvent(event, widget, enabled)
 
     """ DELEGATE VIRTUAL """
-    def __delegateToggleEvent(self, event, enabled):
+    def __delegateToggleEvent(self, event, widget, enabled):
         return
 
-    def delegateToggleEvent(self, event, enabled):
-        self.__delegateToggleEvent(event, enabled)
+    def delegateToggleEvent(self, event, widget, enabled):
+        self.__delegateToggleEvent(event, widget, enabled)
         pass
 
     def setDelegateToggleEvent(self, function):
         self.__delegateToggleEvent = function
 
         """ VIRTUAL FUNCTIONS """
+
     def setItemDeleteEvent(self, function):
         self.model().setItemDeleteEvent(function)
 
@@ -302,6 +302,7 @@ class ModelViewWidget(TansuBaseWidget):
         # TODO TOGGLE DELEGATE KEY
         # this is also maintained under... TansuMainDelegateWidget
         """
+
         # get attrs
         modifiers = QApplication.keyboardModifiers()
         input_manifest = self.delegateInputManifest()
@@ -313,9 +314,8 @@ class ModelViewWidget(TansuBaseWidget):
             input_modifier = delegate_manifest["modifier"]
             if modifiers == input_modifier:
                 if event.key() in input_keys:
-                    if not self.delegateWidgetAlwaysOn():
-                        widget = delegate_manifest["widget"]
-                        self.toggleDelegateWidget(event, widget)
+                    widget = delegate_manifest["widget"]
+                    self.toggleDelegateWidget(event, widget)
 
         # disable full screen ability of Tansu
         if event.key() != TansuBaseWidget.FULLSCREEN_HOTKEY:
@@ -328,12 +328,12 @@ app = QApplication(sys.argv)
 def testDelete(item):
     print("DELETING --> -->", item.columnData()['name'])
 
-def testDrag(indexes):
-    print(indexes)
-    print("DRAGGING -->", indexes)
+def testDrag(items):
+    print(items)
+    print("DRAGGING -->", items)
 
-def testDrop(row, indexes, parent):
-    print("DROPPING -->", row, indexes, parent)
+def testDrop(row, items, parent):
+    print("DROPPING -->", row, items, parent)
 
 def testEdit(item, old_value, new_value):
     print("EDITING -->", item, old_value, new_value)
@@ -344,11 +344,9 @@ def testEnable(item, enabled):
 def testSelect(item, enabled):
     print("SELECTING -->", item.columnData()['name'], enabled)
 
+def testDelegateToggle(event, widget, enabled):
+    print('test')
 
-###########################################
-# new...
-###########################################
-from qtpy.QtWidgets import QWidget
 
 main_widget = ModelViewWidget()
 
@@ -372,15 +370,16 @@ main_widget.setTextChangedEvent(testEdit)
 main_widget.setItemEnabledEvent(testEnable)
 main_widget.setItemDeleteEvent(testDelete)
 main_widget.setItemSelectedEvent(testSelect)
-#
+main_widget.setDelegateToggleEvent(testDelegateToggle)
+
 # set flags
-main_widget.setIsRootDropEnabled(False)
-main_widget.setIsEditable(False)
-main_widget.setIsDragEnabled(False)
-main_widget.setIsDropEnabled(False)
-main_widget.setIsEnableable(False)
-main_widget.setIsDeleteEnabled(False)
-#
+main_widget.setIsRootDropEnabled(True)
+main_widget.setIsEditable(True)
+main_widget.setIsDragEnabled(True)
+main_widget.setIsDropEnabled(True)
+main_widget.setIsEnableable(True)
+main_widget.setIsDeleteEnabled(True)
+
 # set selection mode
 main_widget.setMultiSelect(True)
 

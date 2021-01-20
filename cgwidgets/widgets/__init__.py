@@ -10,7 +10,8 @@ THE IMPORT ORDER MATTERS!!
 from .AbstractWidgets import *
 
 """ MODEL VIEW WIDGET"""
-from .ModelViewWidget import ModelViewWidget as ModelViewWidget
+# todo wtf? This import makes everything break?
+#from .ModelViewWidget import ModelViewWidget as ModelViewWidget
 
 """ TANSU """
 from .TansuWidget import TansuModelItem as TansuModelItem

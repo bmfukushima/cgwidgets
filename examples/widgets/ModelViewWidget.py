@@ -28,12 +28,11 @@ def testEnable(item, enabled):
 def testSelect(item, enabled):
     print("SELECTING -->", item.columnData()['name'], enabled)
 
+def testDelegateToggle(event, widget, enabled):
+    print("TOGGLING -{key}->".format(key=event.key()), widget, enabled)
 
-###########################################
-# new...
-###########################################
-from qtpy.QtWidgets import QWidget
 
+# create main Model View Widget
 main_widget = ModelViewWidget()
 
 # create delegates
@@ -64,7 +63,8 @@ main_widget.setIsDragEnabled(False)
 main_widget.setIsDropEnabled(False)
 main_widget.setIsEnableable(False)
 main_widget.setIsDeleteEnabled(False)
-#
+main_widget.setDelegateToggleEvent(testDelegateToggle)
+
 # set selection mode
 main_widget.setMultiSelect(True)
 
