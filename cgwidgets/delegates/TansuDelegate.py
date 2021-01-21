@@ -247,7 +247,7 @@ class TansuDelegate(QSplitter):
                 current_widget.show()
                 TansuDelegate.setIsSoloView(current_splitter, True)
                 current_widget.setFocus()
-                #return
+
         # exit full screen
         else:
             # adjust current widget
@@ -266,11 +266,6 @@ class TansuDelegate(QSplitter):
                     TansuDelegate.setIsSoloView(parent_splitter, False)
                     parent_splitter.setFocus()
                     current_widget1.setFocus()
-
-        # set attrs
-
-        #current_splitter.setCurrentIndex(current_index)
-        #current_splitter.setCurrentWidget(current_widget)
 
     def soloViewHotkey(self):
         return self._solo_view_hotkey

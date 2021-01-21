@@ -117,7 +117,6 @@ class ModelViewWidget(TansuDelegate):
 
     """ MODEL """
     def model(self):
-        print(self.view().model())
         return self.view().model()
 
     def setModel(self, model):
@@ -331,8 +330,8 @@ class ModelViewWidget(TansuDelegate):
                     self.setFocus()
 
         # disable full screen ability of Tansu
-        if event.key() != TansuDelegate.FULLSCREEN_HOTKEY:
-            return TansuDelegate.keyPressEvent(self, event)
+        #if event.key() != TansuDelegate.FULLSCREEN_HOTKEY:
+        return TansuDelegate.keyPressEvent(self, event)
 
 
 if __name__ == "__main__":

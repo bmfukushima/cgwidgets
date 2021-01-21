@@ -48,15 +48,15 @@ tansu_widget.setHeaderItemIsDropEnabled(True)
 tansu_widget.setHeaderItemIsEditable(False)
 
 #print(tansu_widget.headerWidget().setViewType(ModelViewWidget.TREE_VIEW))
-#tansu_widget.setHeaderViewType(ModelViewWidget.TREE_VIEW)
+tansu_widget.setHeaderViewType(ModelViewWidget.TREE_VIEW)
 
-from qtpy.QtWidgets import QTreeView
-view = QTreeView()
-# setKeyPressEvent(function(QEvent.KeyPress))
-# createStyleSheet() returns StyleSheet
-
-# setup header
-tansu_widget.setHeaderViewWidget(view)
+# from qtpy.QtWidgets import QTreeView
+# view = QTreeView()
+# # setKeyPressEvent(function(QEvent.KeyPress))
+# # createStyleSheet() returns StyleSheet
+#
+# # setup header
+# tansu_widget.setHeaderViewWidget(view)
 
 # show view
 tansu_widget.resize(500, 500)

@@ -21,12 +21,11 @@ TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
 
 from qtpy.QtWidgets import (
     QWidget, QAbstractItemView, QScrollArea, QSplitter, qApp)
-from qtpy.QtCore import Qt, QModelIndex
+from qtpy.QtCore import Qt, QModelIndex, QEvent
 from qtpy.QtGui import QCursor
 
 from cgwidgets.utils import getWidgetAncestor, attrs
 from cgwidgets.settings.colors import iColor
-from cgwidgets.settings.keylist import CHARACTER_KEYS
 from cgwidgets.widgets import AbstractFrameGroupInputWidget, ModelViewWidget
 from cgwidgets.delegates import TansuDelegate
 
@@ -162,6 +161,9 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
             # insert tab widget
             self.delegateWidget().insertWidget(row, view_delegate_widget)
             view_delegate_widget.hide()
+
+            # todo key event...
+            widget.installEventFilter(self)
 
         return new_index
 
@@ -342,6 +344,10 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         """
         self.headerWidget().addDelegate(input, widget, modifier=modifier)
         #w.addDelegate([Qt.Key_Q], delegate_widget)
+
+    def delegateInputManifest(self):
+        return self.headerWidget().delegateInputManifest()
+
     # def headerDelegateWidget(self):
     #     return self.headerWidget().delegate()
     #
@@ -564,6 +570,8 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
             self.delegateWidget().addWidget(dynamic_widget)
             item.setDelegateWidget(dynamic_widget)
             self.updateDynamicWidget(self, dynamic_widget, item)
+            # todo dynamic key event
+            #dynamic_widget.installEventFilter(self)
         else:
             # destroy widget
             try:
@@ -622,6 +630,24 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
                     self.updateStyleSheet()
         return QSplitter.resizeEvent(self, event)
 
+    def eventFilter(self, widget, event):
+        """
+        This event filter is to be installed on the widgets
+        of the items that are selected.  So that when those
+        widgets grab focus, the TansuDelegate key events can still
+        be registered
+        """
+        if event.type() == QEvent.KeyPress:
+            print('key pressed?')
+            if (event.key() == TansuDelegate.FULLSCREEN_HOTKEY
+                    or
+                event.key() == Qt.Key_Escape
+            ):
+                print('yolo bolo')
+                self.delegateWidget().keyPressEvent(event)
+
+        return False
+
     @staticmethod
     def isWidgetUnderCursorChildOfHeader():
         """
@@ -634,7 +660,9 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         """
         pos = QCursor.pos()
         widget_pressed = qApp.widgetAt(pos)
-        is_child_of_header = getWidgetAncestor(widget_pressed, TansuHeader)
+        is_child_of_header = None
+        if widget_pressed:
+            is_child_of_header = getWidgetAncestor(widget_pressed, TansuHeader)
         return True if is_child_of_header else False
 
     def keyPressEvent(self, event):
@@ -642,8 +670,11 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         # did I need this? It was causing a double registry event of the keyPress
         # for the ModelViewWidget
         # need for hover press... or else you gotta click on it... focus?
-        pass
-        # is_child_of_header = TansuModelViewWidget.isWidgetUnderCursorChildOfHeader()
+
+        is_child_of_header = TansuModelViewWidget.isWidgetUnderCursorChildOfHeader()
+        if not is_child_of_header:
+            return self.delegateWidget().keyPressEvent(event)
+
         # if is_child_of_header:
         #     return self.headerWidget().keyPressEvent(event)
         #
@@ -766,29 +797,25 @@ class TansuMainDelegateWidget(TansuDelegate):
     def keyPressEvent(self, event):
         # preflight | suppress if over header
         is_child_of_header = TansuModelViewWidget.isWidgetUnderCursorChildOfHeader()
+        tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
         if is_child_of_header:
-            tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
-
             return tab_tansu_widget.headerWidget().keyPressEvent(event)
 
-        # Tansu functions
-        ModelViewWidget.keyPressEvent(self, event)
+        #ModelViewWidget.keyPressEvent(tab_tansu_widget.headerWidget(), event)
 
         # Global escape
+        # Todo double escape fail
+        """
+        When the widget is focused, the user will have to hit escape
+        twice in order to properly get out...
+        """
         if event.key() == Qt.Key_Escape:
             tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
             if tab_tansu_widget:
                 tab_tansu_widget.updateDelegateDisplay()
                 tab_tansu_widget.toggleDelegateSpacerWidget()
-
-        # # TODO TOGGLE DELEGATE KEY
-        # # This is also maintained under the TansuHeader
-        # tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
-        # if event.key() in tab_tansu_widget.TOGGLE_DELEGATE_KEYS:
-        #     header_widget = tab_tansu_widget.headerWidget()
-        #     if not header_widget.delegateWidgetAlwaysOn():
-        #         header_widget.toggleDelegateWidget(event)
-
+        else:
+            return TansuDelegate.keyPressEvent(self, event)
 
 class TansuModelDelegateWidget(AbstractFrameGroupInputWidget):
     """
