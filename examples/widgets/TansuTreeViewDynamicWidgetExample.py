@@ -103,7 +103,7 @@ tansu_widget.delegateWidget().handle_length = 100
 tansu_widget.setHeaderItemIsDropEnabled(True)
 tansu_widget.setHeaderItemIsDragEnabled(True)
 
-tansu_widget.setDelegateHeaderIsShown(False)
+tansu_widget.setDelegateTitleIsShown(False)
 # show view
 tansu_widget.resize(500, 500)
 tansu_widget.show()

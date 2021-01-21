@@ -135,7 +135,7 @@ tansu_widget.resize(500, 500)
 
 delegate_widget = QLabel("Q")
 tansu_widget.addHeaderDelegateWidget([Qt.Key_Q], delegate_widget)
-tansu_widget.setDelegateHeaderIsShown(True)
+tansu_widget.setDelegateTitleIsShown(True)
 tansu_widget.show()
 tansu_widget.move(QCursor.pos())
 sys.exit(app.exec_())

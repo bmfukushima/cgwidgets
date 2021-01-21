@@ -666,7 +666,7 @@ class AbstractTansuInputWidget(TansuModelViewWidget):
         self.delegateWidget().handle_length = 50
         self.updateStyleSheet()
 
-        self.setDelegateHeaderIsShown(False)
+        self.setDelegateTitleIsShown(False)
 
 """
 TODO

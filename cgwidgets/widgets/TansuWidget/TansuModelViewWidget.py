@@ -53,7 +53,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
             only works when the mode is set to view the labels on the north/south
         header_width (int): the default width of the tab label in pixels
             only works when the mode is set to view the labels on the east/west
-        header_position (attrs.DIRECTION): Where the header should be placed
+        header_view_position (attrs.DIRECTION): Where the header should be placed
 
     Class Attrs:
         TYPE
@@ -78,11 +78,11 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         super(TansuModelViewWidget, self).__init__(parent)
         # etc attrs
         self.setHandleWidth(0)
-        self._header_position = direction #just a temp set... for things
+        self._header_view_position = direction #just a temp set... for things
         self._header_length = 50
         self._header_height = 50
         self._header_width = 100
-        self._delegate_header_shown = False
+        self._delegate_title_shown = False
         self._delegate_header_direction = Qt.Vertical
 
         # setup model / view
@@ -268,12 +268,12 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         self.setHeaderWidgetToDefaultSize()
 
     """ DELEGATE HEADER """
-    def setDelegateHeaderIsShown(self, enabled):
-        self._delegate_header_shown = enabled
+    def setDelegateTitleIsShown(self, enabled):
+        self._delegate_title_shown = enabled
         # todo update all delegate headers
 
-    def delegateHeaderIsShown(self):
-        return self._delegate_header_shown
+    def delegateTitleIsShown(self):
+        return self._delegate_title_shown
 
     def setDelegateHeaderDirection(self, direction):
         self._delegate_header_direction = direction
@@ -331,29 +331,28 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         self.headerWidget().setViewType(view_type)
         self.headerWidget().setModel(self.model())
 
-    def setHeaderDelegateDirection(self, direction, position=attrs.SOUTH):
-        """
-        Set the orientation/direction of the header, and view.
-
-        This will determine the flow of the items, from LeftToRight,
-        or TopToBottom, depending on the orientation.
-
-        Args:
-            view_orientation (Qt.Orientation): The orientation that the view will
-                be displayed in.  Note that this is NOT this Tansu widgets
-                base orientation
-                    Qt.Horizonal | Qt.Vertical
-            view_position (attrs.DIRECTION):  When provided, will rearrange the
-                additional data to be set in that direction...  This is the default
-                orientation/position of this widget
-                    ie attrs.NORTH, will place the header view on top, and the
-                        extra view on the bottom
-        """
-        self._header_delegate_direction = direction
-        self._header_delegate_position = position
-
-        self.headerWidget().setOrientation(direction, view_position=position)
-
+    # def setHeaderDelegateDirection(self, direction, position=attrs.SOUTH):
+    #     """
+    #     Set the orientation/direction of the header, and view.
+    #
+    #     This will determine the flow of the items, from LeftToRight,
+    #     or TopToBottom, depending on the orientation.
+    #
+    #     Args:
+    #         view_orientation (Qt.Orientation): The orientation that the view will
+    #             be displayed in.  Note that this is NOT this Tansu widgets
+    #             base orientation
+    #                 Qt.Horizonal | Qt.Vertical
+    #         view_position (attrs.DIRECTION):  When provided, will rearrange the
+    #             additional data to be set in that direction...  This is the default
+    #             orientation/position of this widget
+    #                 ie attrs.NORTH, will place the header view on top, and the
+    #                     extra view on the bottom
+    #     """
+    #     self._header_delegate_direction = direction
+    #     self._header_delegate_position = position
+    #
+    #     self.headerWidget().setOrientation(direction, view_position=position)
 
     def addHeaderDelegateWidget(self, input, widget, modifier=Qt.NoModifier):
         """
@@ -391,47 +390,48 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
     #     self.headerWidget().setDelegateWidgetAlwaysOn(enabled)
 
     def headerPosition(self):
-        return self._header_position
+        return self._header_view_position
 
-    def setHeaderPosition(self, header_widget_position, header_view_position=None):
+    def setHeaderPosition(self, header_view_position, header_delegate_position=None):
         """
         Sets the current direction this widget.  This is the orientation of
         where the tab labels will be vs where the main widget will be, where
         the tab labels bar will always be the first widget.
 
         Args:
-            header_widget_position (attrs.DIRECTION): The header WIDGETs position
-                relative to the Delegate Widget
             header_view_position (attrs.DIRECTION): The header VIEWs position
+                relative to the Delegate Widget
+            header_delegate_position (attrs.DIRECTION): The header DELEGATEs position
                 relative to the header widget.
         """
-        self._header_position = header_widget_position
+        self._header_view_position = header_view_position
+        self._header_delegate_position = header_delegate_position
         self.headerWidget().setParent(None)
 
-        if self._header_position == attrs.WEST:
+        if self._header_view_position == attrs.WEST:
             self.setOrientation(Qt.Horizontal)
-            self.headerWidget().setOrientation(Qt.Horizontal, header_view_position)
+            self.headerWidget().setOrientation(Qt.Horizontal, header_delegate_position)
             self.insertWidget(0, self.headerWidget())
             self.setStretchFactor(0, 0)
             self.setStretchFactor(1, 1)
 
-        elif self._header_position == attrs.EAST:
+        elif self._header_view_position == attrs.EAST:
             self.setOrientation(Qt.Horizontal)
-            self.headerWidget().setOrientation(Qt.Horizontal, header_view_position)
+            self.headerWidget().setOrientation(Qt.Horizontal, header_delegate_position)
             self.insertWidget(1, self.headerWidget())
             self.setStretchFactor(1, 0)
             self.setStretchFactor(0, 1)
 
-        elif self._header_position == attrs.NORTH:
+        elif self._header_view_position == attrs.NORTH:
             self.setOrientation(Qt.Vertical)
-            self.headerWidget().setOrientation(Qt.Vertical, header_view_position)
+            self.headerWidget().setOrientation(Qt.Vertical, header_delegate_position)
             self.insertWidget(0, self.headerWidget())
             self.setStretchFactor(0, 0)
             self.setStretchFactor(1, 1)
 
-        elif self._header_position == attrs.SOUTH:
+        elif self._header_view_position == attrs.SOUTH:
             self.setOrientation(Qt.Vertical)
-            self.headerWidget().setOrientation(Qt.Vertical, header_view_position)
+            self.headerWidget().setOrientation(Qt.Vertical, header_delegate_position)
             self.insertWidget(1, self.headerWidget())
             self.setStretchFactor(1, 0)
             self.setStretchFactor(0, 1)
@@ -475,7 +475,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         # set up attrs
         display_widget.setMainWidget(widget)
         display_widget.setItem(item)
-        display_widget.setIsHeaderShown(self.delegateHeaderIsShown())
+        display_widget.setIsHeaderShown(self.delegateTitleIsShown())
         display_widget.setDirection(self.delegateHeaderDirection())
 
         return display_widget
@@ -516,13 +516,13 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
                 widget_list.append(widget)
             self.delegateWidget().isolateWidgets(widget_list)
         # TODO updated for dynamic... I've never used this...
-        elif self.getDelegateType() == TansuModelViewWidget.DYNAMIC:
-            selection_model = self.headerWidget().selectionModel()
-            for index in selection_model.selectedIndexes():
-                item = index.internalPointer()
-                if index.column() == 0:
-                    self.updateDelegateItem(item, False)
-                    self.updateDelegateItem(item, True)
+        # elif self.getDelegateType() == TansuModelViewWidget.DYNAMIC:
+        #     selection_model = self.headerWidget().selectionModel()
+        #     for index in selection_model.selectedIndexes():
+        #         item = index.internalPointer()
+        #         if index.column() == 0:
+        #             self.updateDelegateItem(item, False)
+        #             self.updateDelegateItem(item, True)
             #self.updateDynamicWidget()
 
     # def updateDelegateDisplayFromSelection(self, selected, deselected):
@@ -574,7 +574,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         automatically show/hide widgets as needed
         """
         if selected:
-            item.delegateWidget().setIsHeaderShown(self.delegateHeaderIsShown())
+            item.delegateWidget().setIsHeaderShown(self.delegateTitleIsShown())
             item.delegateWidget().show()
         else:
             try:

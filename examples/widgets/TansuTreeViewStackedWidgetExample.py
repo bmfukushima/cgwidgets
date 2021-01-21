@@ -11,7 +11,7 @@ app = QApplication(sys.argv)
 
 # create widget
 tansu_widget = TansuModelViewWidget()
-
+tansu_widget.setHeaderViewType(ModelViewWidget.TREE_VIEW)
 # # create view
 # view = TansuHeaderTreeView()
 #
@@ -48,7 +48,7 @@ tansu_widget.setHeaderItemIsDropEnabled(True)
 tansu_widget.setHeaderItemIsEditable(False)
 
 #print(tansu_widget.headerWidget().setViewType(ModelViewWidget.TREE_VIEW))
-tansu_widget.setHeaderViewType(ModelViewWidget.TREE_VIEW)
+#tansu_widget.setHeaderViewType(ModelViewWidget.TREE_VIEW)
 
 # from qtpy.QtWidgets import QTreeView
 # view = QTreeView()
