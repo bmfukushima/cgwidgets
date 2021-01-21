@@ -331,6 +331,30 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         self.headerWidget().setViewType(view_type)
         self.headerWidget().setModel(self.model())
 
+    def setHeaderDelegateDirection(self, direction, position=attrs.SOUTH):
+        """
+        Set the orientation/direction of the header, and view.
+
+        This will determine the flow of the items, from LeftToRight,
+        or TopToBottom, depending on the orientation.
+
+        Args:
+            view_orientation (Qt.Orientation): The orientation that the view will
+                be displayed in.  Note that this is NOT this Tansu widgets
+                base orientation
+                    Qt.Horizonal | Qt.Vertical
+            view_position (attrs.DIRECTION):  When provided, will rearrange the
+                additional data to be set in that direction...  This is the default
+                orientation/position of this widget
+                    ie attrs.NORTH, will place the header view on top, and the
+                        extra view on the bottom
+        """
+        self._header_delegate_direction = direction
+        self._header_delegate_position = position
+
+        self.headerWidget().setOrientation(direction, view_position=position)
+
+
     def addHeaderDelegateWidget(self, input, widget, modifier=Qt.NoModifier):
         """
         Adds a new delegate that can be activated with the input/modifer combo provided
@@ -816,6 +840,7 @@ class TansuMainDelegateWidget(TansuDelegate):
                 tab_tansu_widget.toggleDelegateSpacerWidget()
         else:
             return TansuDelegate.keyPressEvent(self, event)
+
 
 class TansuModelDelegateWidget(AbstractFrameGroupInputWidget):
     """

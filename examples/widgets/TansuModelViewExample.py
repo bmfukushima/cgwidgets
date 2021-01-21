@@ -1,14 +1,8 @@
 """
 TODO:
     * custom model / items
-    * custom delegates
     * Directions
-        entire widget NESW
         header delegates NESW
-    # bugs
-        * focus widget not full screen
-        * something weird showing them all at once...
-            something to do with escaping out of no selection???
 """
 
 from qtpy.QtCore import Qt
@@ -122,7 +116,10 @@ the user presses a specific key/modifier combination
 """
 delegate_widget = QLabel("Q")
 tansu_widget.addHeaderDelegateWidget([Qt.Key_Q], delegate_widget, modifier=Qt.NoModifier)
-tansu_widget.setDelegateHeaderDirection(Qt.Horizontal)
+tansu_widget.setHeaderDelegateDirection(Qt.Vertical, position=attrs.SOUTH)
+
+#
+#tansu_widget.setDelegate
 
 # display widget
 tansu_widget.resize(500, 500)

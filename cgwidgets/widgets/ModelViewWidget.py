@@ -240,7 +240,6 @@ class ModelViewWidget(TansuDelegate):
                 orientation/position of this widget
                     ie attrs.NORTH, will place the header view on top, and the
                         extra view on the bottom
-
         """
         # set view orientation
         try:
@@ -330,8 +329,8 @@ class ModelViewWidget(TansuDelegate):
                     self.setFocus()
 
         # disable full screen ability of Tansu
-        #if event.key() != TansuDelegate.FULLSCREEN_HOTKEY:
-        return TansuDelegate.keyPressEvent(self, event)
+        if event.key() != TansuDelegate.FULLSCREEN_HOTKEY:
+            return TansuDelegate.keyPressEvent(self, event)
 
 
 if __name__ == "__main__":
