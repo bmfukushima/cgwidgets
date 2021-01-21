@@ -9,7 +9,7 @@ from cgwidgets.widgets import TansuModelViewWidget, FloatInputWidget
 from cgwidgets.utils import attrs
 
 import sys
-from qtpy.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget, QAbstractItemView
+from qtpy.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget
 from qtpy.QtGui import QCursor
 
 app = QApplication(sys.argv)
@@ -115,25 +115,27 @@ for x in range(3):
 # custom_index.internalPointer().setDynamicUpdateFunction(CustomDynamicWidget.updateGUI)
 
 # set attrs
-tansu_widget.setHeaderPosition(attrs.NORTH)
-tansu_widget.setMultiSelect(True)
-tansu_widget.setMultiSelectDirection(Qt.Vertical)
-tansu_widget.delegateWidget().handle_length = 100
-
-# enable drag/drop
-tansu_widget.setHeaderItemIsDropEnabled(False)
-tansu_widget.setHeaderItemIsDragEnabled(True)
-
-# setup drag/drop events
-tansu_widget.setHeaderItemDragStartEvent(testDrag)
-tansu_widget.setHeaderItemDropEvent(testDrop)
-tansu_widget.setHeaderItemTextChangedEvent(testEdit)
-tansu_widget.setHeaderItemEnabledEvent(testEnable)
+# tansu_widget.setHeaderPosition(attrs.NORTH)
+# tansu_widget.setMultiSelect(True)
+# tansu_widget.setMultiSelectDirection(Qt.Vertical)
+# tansu_widget.delegateWidget().handle_length = 100
+#
+# # enable drag/drop
+# tansu_widget.setHeaderItemIsDropEnabled(False)
+# tansu_widget.setHeaderItemIsDragEnabled(True)
+#
+# # setup drag/drop events
+# tansu_widget.setHeaderItemDragStartEvent(testDrag)
+# tansu_widget.setHeaderItemDropEvent(testDrop)
+# tansu_widget.setHeaderItemTextChangedEvent(testEdit)
+# tansu_widget.setHeaderItemEnabledEvent(testEnable)
 
 # set size / show
 tansu_widget.resize(500, 500)
 
+delegate_widget = QLabel("Q")
+tansu_widget.addHeaderDelegateWidget([Qt.Key_Q], delegate_widget)
+tansu_widget.setDelegateHeaderIsShown(True)
 tansu_widget.show()
-
 tansu_widget.move(QCursor.pos())
 sys.exit(app.exec_())

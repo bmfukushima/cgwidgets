@@ -56,7 +56,7 @@ from cgwidgets.settings.colors import (
     iColor
 )
 
-from cgwidgets.widgets import FloatInputWidget
+from cgwidgets.widgets import AbstractFloatInputWidget #AbstractFloatInputWidget
 
 
 class LadderDelegate(QFrame):
@@ -490,7 +490,7 @@ Notes:
 
     def __createMiddleItem(self):
         """
-        Creates the middle item which is a FloatInputWidget for the user.
+        Creates the middle item which is a AbstractFloatInputWidget for the user.
         """
         # special handler for display widget
         self.middle_item = LadderMiddleItem(
@@ -657,7 +657,7 @@ Notes:
         return QFrame.eventFilter(self, obj, event, *args, **kwargs)
 
 
-class LadderMiddleItem(FloatInputWidget):
+class LadderMiddleItem(AbstractFloatInputWidget):
     """
 This is the display label to overlayover the current widget.
 Due to how awesomely bad transparency is to do in Qt =\
@@ -683,15 +683,15 @@ Attributes:
             """.format(**iColor.style_sheet_args))
 
     def mousePressEvent(self, event):
-        return FloatInputWidget.mousePressEvent(self, event)
+        return AbstractFloatInputWidget.mousePressEvent(self, event)
 
     def mouseReleaseEvent(self, event):
-        return FloatInputWidget.mouseReleaseEvent(self, event)
+        return AbstractFloatInputWidget.mouseReleaseEvent(self, event)
 
     def keyPressEvent(self, event):
         if event.key() in [Qt.Key_Return, Qt.Key_Enter]:
             self.parent().hide()
-        return FloatInputWidget.keyPressEvent(self, event)
+        return AbstractFloatInputWidget.keyPressEvent(self, event)
 
     def setMiddleValue(self):
         # print(self)
@@ -794,7 +794,7 @@ def main():
     w2 = QWidget(mw)
     l2 = QVBoxLayout()
     w2.setLayout(l2)
-    float_input = FloatInputWidget()
+    float_input = AbstractFloatInputWidget()
     float_input.setDoMath(True)
     ladder = installLadderDelegate(
         float_input

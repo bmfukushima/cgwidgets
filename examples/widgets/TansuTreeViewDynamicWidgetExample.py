@@ -9,7 +9,7 @@ from qtpy.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget, QAbstract
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QCursor
 
-from cgwidgets.widgets import TansuModelViewWidget, FloatInputWidget, TansuHeaderTreeView
+from cgwidgets.widgets import TansuModelViewWidget, FloatInputWidget
 from cgwidgets.utils import attrs
 
 app = QApplication(sys.argv)
@@ -68,10 +68,11 @@ class CustomDynamicWidget(FloatInputWidget):
 
 # create tansu widget
 tansu_widget = TansuModelViewWidget()
-view = TansuHeaderTreeView()
+
+#view = TansuHeaderTreeView()
 
 # setup header
-tansu_widget.setHeaderViewWidget(view)
+#tansu_widget.setHeaderViewWidget(view)
 tansu_widget.setHeaderPosition(attrs.WEST, header_view_position=attrs.SOUTH)
 tansu_widget.setHeaderData(['name', 'test', 'three'])
 

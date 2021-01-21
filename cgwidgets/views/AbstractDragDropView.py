@@ -224,6 +224,7 @@ class AbstractDragDropAbstractView(object):
     def setKeyPressEvent(self, function):
         self.__keyPressEvent = function
 
+
 class AbstractDragDropListView(QListView, AbstractDragDropAbstractView):
     def __init__(self, parent=None):
         super(AbstractDragDropListView, self).__init__(parent)

@@ -88,8 +88,6 @@ tansu_widget.setHeaderItemDropEvent(testDrop)
 tansu_widget.setHeaderItemTextChangedEvent(testEdit)
 tansu_widget.setHeaderItemSelectedEvent(testSelect)
 
-#print('model == ', tansu_widget.model())
-#tansu_widget.setDelegateHeaderIsShown(False)
 
 # display widget
 tansu_widget.resize(500, 500)

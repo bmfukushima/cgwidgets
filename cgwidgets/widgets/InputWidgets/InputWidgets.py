@@ -39,9 +39,9 @@ from cgwidgets.widgets import (
 from cgwidgets.widgets import (
     TansuModelViewWidget,
     TansuModelDelegateWidget,
-    TansuModelItem,
-    TansuBaseWidget
+    TansuModelItem
 )
+from cgwidgets.delegates import TansuDelegate
 from cgwidgets.utils import (
     getWidgetAncestor,
     updateStyleSheet,
@@ -309,9 +309,9 @@ class FileBrowserInputWidget(AbstractListInputWidget, iTansuGroupInput):
 # TODO Move to one architecture
 
 """ CONTAINERS """
-class LabelledInputWidget(TansuBaseWidget, AbstractInputGroupFrame):
+class LabelledInputWidget(TansuDelegate, AbstractInputGroupFrame):
     """
-    A single input widget.  This inherits from the TansuBaseWidget,
+    A single input widget.  This inherits from the TansuDelegate,
     to provide a slider for the user to expand/contract the editable area
     vs the view label.
     """
@@ -521,13 +521,13 @@ class LabelledInputWidget(TansuBaseWidget, AbstractInputGroupFrame):
 
         super(LabelledInputWidget, self).showEvent(event)
         self.resetSliderPositionToDefault()
-        return TansuBaseWidget.showEvent(self, event)
+        return TansuDelegate.showEvent(self, event)
         #return return_val
 
     def resizeEvent(self, event):
         super(LabelledInputWidget, self).resizeEvent(event)
         self.resetSliderPositionToDefault()
-        return TansuBaseWidget.resizeEvent(self, event)
+        return TansuDelegate.resizeEvent(self, event)
 
 
 class FrameGroupInputWidget(AbstractFrameGroupInputWidget):

@@ -11,16 +11,16 @@ from .AbstractWidgets import *
 
 """ MODEL VIEW WIDGET"""
 # todo wtf? This import makes everything break?
-#from .ModelViewWidget import ModelViewWidget as ModelViewWidget
+from .ModelViewWidget import ModelViewWidget as ModelViewWidget
 
 """ TANSU """
 from .TansuWidget import TansuModelItem as TansuModelItem
 from .TansuWidget import TansuModel as TansuModel
 
-from .TansuWidget import TansuBaseWidget as TansuBaseWidget
+#from .TansuWidget import TansuDelegate as TansuDelegate
 from .TansuWidget import TansuModelViewWidget as TansuModelViewWidget
-from .TansuWidget import TansuHeaderListView as TansuHeaderListView
-from .TansuWidget import TansuHeaderTreeView as TansuHeaderTreeView
+#from .TansuWidget import TansuHeaderListView as TansuHeaderListView
+#from .TansuWidget import TansuHeaderTreeView as TansuHeaderTreeView
 from .TansuWidget import TansuModelDelegateWidget as TansuModelDelegateWidget
 
 """ INPUT WIDGETS """

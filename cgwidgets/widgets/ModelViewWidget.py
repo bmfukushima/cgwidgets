@@ -10,10 +10,10 @@ from cgwidgets.views import (
 )
 from cgwidgets.utils import attrs
 from cgwidgets.settings.colors import iColor
-from cgwidgets.widgets.TansuWidget.TansuBaseWidget import TansuBaseWidget
+from cgwidgets.delegates import TansuDelegate
 
 
-class ModelViewWidget(TansuBaseWidget):
+class ModelViewWidget(TansuDelegate):
     """
     View widget for the Abstract ModelViewDelegate in this lib
 
@@ -38,7 +38,7 @@ class ModelViewWidget(TansuBaseWidget):
         textChangedEvent (item, old_value, new_value)
 
     Hierarchy:
-        TansuBaseWidget --> QSplitter
+        TansuDelegate --> QSplitter
             |- view --> (AbstractDragDropListView | AbstractDragDropTreeView) --> QSplitter
                 |- model (AbstractDragDropModel)
                     |- (AbstractDragDropModelItems)
@@ -86,28 +86,38 @@ class ModelViewWidget(TansuBaseWidget):
         # setup attr
         self._view = view
         self._view.not_soloable = True
+
+        # add view
         self.insertWidget(0, self._view)
-        view.setKeyPressEvent(self.keyPressEvent)
+
+        # setup custom key presses
+        if hasattr(view, "setKeyPressEvent"):
+            view.setKeyPressEvent(self.keyPressEvent)
+
+        # setup model
         if self.model():
+            view.setModel(self.model())
             if isinstance(view, AbstractDragDropListView):
                 self.setIsDropEnabled(False)
 
     def setViewType(self, view_type):
         """
-
         Args:
             view_type (ModelViewWidget.VIEW_TYPE): the view type to be used.
                 ModelViewWidget.TREE_VIEW | ModelViewWidget.LIST_VIEW
         """
         if view_type == ModelViewWidget.TREE_VIEW:
             view = AbstractDragDropTreeView()
+            self.view_type = AbstractDragDropTreeView
         if view_type == ModelViewWidget.LIST_VIEW:
             view = AbstractDragDropListView()
+            self.view_type = AbstractDragDropListView
 
         self.setView(view)
 
     """ MODEL """
     def model(self):
+        print(self.view().model())
         return self.view().model()
 
     def setModel(self, model):
@@ -147,7 +157,6 @@ class ModelViewWidget(TansuBaseWidget):
             modifier (Qt.MODIFIER):
 
         Returns:
-
         """
         # add to manifest
         delegate_manifest = {}
@@ -260,7 +269,7 @@ class ModelViewWidget(TansuBaseWidget):
             _orientation = view_orientation
         self._view_position = view_position
         self._view_orientation = view_orientation
-        return TansuBaseWidget.setOrientation(self, _orientation)
+        return TansuDelegate.setOrientation(self, _orientation)
 
     def setMultiSelect(self, enabled):
         self.view().setMultiSelect(enabled)
@@ -297,6 +306,9 @@ class ModelViewWidget(TansuBaseWidget):
         self.view().setIsDeleteEnabled(enabled)
 
     """ EVENTS """
+    def enterEvent(self, event):
+        self.setFocus()
+
     def keyPressEvent(self, event):
         """
         # TODO TOGGLE DELEGATE KEY
@@ -316,75 +328,77 @@ class ModelViewWidget(TansuBaseWidget):
                 if event.key() in input_keys:
                     widget = delegate_manifest["widget"]
                     self.toggleDelegateWidget(event, widget)
+                    self.setFocus()
 
         # disable full screen ability of Tansu
-        if event.key() != TansuBaseWidget.FULLSCREEN_HOTKEY:
-            return TansuBaseWidget.keyPressEvent(self, event)
+        if event.key() != TansuDelegate.FULLSCREEN_HOTKEY:
+            return TansuDelegate.keyPressEvent(self, event)
 
 
-app = QApplication(sys.argv)
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
 
-# create event functions
-def testDelete(item):
-    print("DELETING --> -->", item.columnData()['name'])
+    # create event functions
+    def testDelete(item):
+        print("DELETING --> -->", item.columnData()['name'])
 
-def testDrag(items):
-    print(items)
-    print("DRAGGING -->", items)
+    def testDrag(items):
+        print(items)
+        print("DRAGGING -->", items)
 
-def testDrop(row, items, parent):
-    print("DROPPING -->", row, items, parent)
+    def testDrop(row, items, parent):
+        print("DROPPING -->", row, items, parent)
 
-def testEdit(item, old_value, new_value):
-    print("EDITING -->", item, old_value, new_value)
+    def testEdit(item, old_value, new_value):
+        print("EDITING -->", item, old_value, new_value)
 
-def testEnable(item, enabled):
-    print("ENABLING -->", item.columnData()['name'], enabled)
+    def testEnable(item, enabled):
+        print("ENABLING -->", item.columnData()['name'], enabled)
 
-def testSelect(item, enabled):
-    print("SELECTING -->", item.columnData()['name'], enabled)
+    def testSelect(item, enabled):
+        print("SELECTING -->", item.columnData()['name'], enabled)
 
-def testDelegateToggle(event, widget, enabled):
-    print('test')
-
-
-main_widget = ModelViewWidget()
-
-# create delegates
-delegate_widget = QLabel("F")
-main_widget.addDelegate([Qt.Key_F], delegate_widget)
-
-delegate_widget = QLabel("Q")
-main_widget.addDelegate([Qt.Key_Q], delegate_widget)
-
-# insert indexes
-for x in range(0, 4):
-    index = main_widget.model().insertNewIndex(x, name=str('node%s'%x))
-    for i, char in enumerate('abc'):
-        main_widget.model().insertNewIndex(i, name=char, parent=index)
-
-# set model event
-main_widget.setDragStartEvent(testDrag)
-main_widget.setDropEvent(testDrop)
-main_widget.setTextChangedEvent(testEdit)
-main_widget.setItemEnabledEvent(testEnable)
-main_widget.setItemDeleteEvent(testDelete)
-main_widget.setItemSelectedEvent(testSelect)
-main_widget.setDelegateToggleEvent(testDelegateToggle)
-
-# set flags
-main_widget.setIsRootDropEnabled(True)
-main_widget.setIsEditable(True)
-main_widget.setIsDragEnabled(True)
-main_widget.setIsDropEnabled(True)
-main_widget.setIsEnableable(True)
-main_widget.setIsDeleteEnabled(True)
-
-# set selection mode
-main_widget.setMultiSelect(True)
-
-main_widget.move(QCursor.pos())
-main_widget.show()
+    def testDelegateToggle(event, widget, enabled):
+        print('test')
 
 
-sys.exit(app.exec_())
+    main_widget = ModelViewWidget()
+
+    # create delegates
+    delegate_widget = QLabel("F")
+    main_widget.addDelegate([Qt.Key_F], delegate_widget)
+
+    delegate_widget = QLabel("Q")
+    main_widget.addDelegate([Qt.Key_Q], delegate_widget)
+
+    # insert indexes
+    for x in range(0, 4):
+        index = main_widget.model().insertNewIndex(x, name=str('node%s'%x))
+        for i, char in enumerate('abc'):
+            main_widget.model().insertNewIndex(i, name=char, parent=index)
+
+    # set model event
+    main_widget.setDragStartEvent(testDrag)
+    main_widget.setDropEvent(testDrop)
+    main_widget.setTextChangedEvent(testEdit)
+    main_widget.setItemEnabledEvent(testEnable)
+    main_widget.setItemDeleteEvent(testDelete)
+    main_widget.setItemSelectedEvent(testSelect)
+    main_widget.setDelegateToggleEvent(testDelegateToggle)
+
+    # set flags
+    main_widget.setIsRootDropEnabled(True)
+    main_widget.setIsEditable(True)
+    main_widget.setIsDragEnabled(True)
+    main_widget.setIsDropEnabled(True)
+    main_widget.setIsEnableable(True)
+    main_widget.setIsDeleteEnabled(True)
+
+    # set selection mode
+    main_widget.setMultiSelect(True)
+
+    main_widget.move(QCursor.pos())
+    main_widget.show()
+
+
+    sys.exit(app.exec_())

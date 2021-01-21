@@ -13,31 +13,25 @@ TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
                     *  Display Mode ( On / Off / Hotkey popup )
 
         | -- Scroll Area
-            |-- DelegateWidget (TansuMainDelegateWidget --> TansuBaseWidget)
+            |-- DelegateWidget (TansuMainDelegateWidget --> TansuDelegate)
                     | -- _temp_proxy_widget (QWidget)
                     | -* TansuModelDelegateWidget (AbstractGroupBox)
                             | -- Stacked/Dynamic Widget (main_widget)
 """
 
 from qtpy.QtWidgets import (
-    QWidget, QListView, QAbstractItemView, QScrollArea, QSplitter, QLabel, qApp)
+    QWidget, QAbstractItemView, QScrollArea, QSplitter, qApp)
 from qtpy.QtCore import Qt, QModelIndex
 from qtpy.QtGui import QCursor
 
 from cgwidgets.utils import getWidgetAncestor, attrs
 from cgwidgets.settings.colors import iColor
 from cgwidgets.settings.keylist import CHARACTER_KEYS
-from cgwidgets.widgets import AbstractFrameGroupInputWidget
+from cgwidgets.widgets import AbstractFrameGroupInputWidget, ModelViewWidget
+from cgwidgets.delegates import TansuDelegate
 
-from cgwidgets.widgets.TansuWidget import (
-    TansuBaseWidget, TansuModel, iTansuDynamicWidget
-)
-from cgwidgets.views import (
-    AbstractDragDropTreeView,
-    AbstractDragDropListView,
-    AbstractDragDropAbstractView
-
-)
+from cgwidgets.widgets.TansuWidget import (TansuModel, iTansuDynamicWidget)
+from cgwidgets.views import (AbstractDragDropAbstractView)
 
 
 class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
@@ -81,10 +75,6 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
     DYNAMIC = 'dynamic'
     MULTI = False
     TYPE = STACKED
-
-    # delegate hotkey toggle buttons
-    TOGGLE_DELEGATE_KEYS = [key for key in CHARACTER_KEYS if key not in [Qt.Key_D]]
-    #TOGGLE_DELEGATE_KEYS = [Qt.Key_D]
     def __init__(self, parent=None, direction=attrs.NORTH):
         super(TansuModelViewWidget, self).__init__(parent)
         # etc attrs
@@ -93,15 +83,14 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         self._header_length = 50
         self._header_height = 50
         self._header_width = 100
-        self._delegate_header_shown = True
+        self._delegate_header_shown = False
         self._delegate_header_direction = Qt.Vertical
 
         # setup model / view
         self._model = TansuModel()
         self._header_widget = TansuHeader(self)
-        #self._header_widget = TansuHeaderListView(self)
         self._header_widget.setModel(self._model)
-        #self._model.header_type = str(type(self._header_widget))
+        self._header_widget.setItemSelectedEvent(self._header_widget.selectionChanged)
 
         # # setup drag/drop
         # self._isSelectable = False
@@ -114,7 +103,8 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         self._temp_proxy_widget = QWidget()
         self._temp_proxy_widget.setObjectName("proxy_widget")
 
-        self.delegateWidget().addWidget(self._temp_proxy_widget)
+        #self.delegateWidget().addWidget(self._temp_proxy_widget)
+        self.delegateWidget().insertWidget(0, self._temp_proxy_widget)
 
         # setup main layout
         scroll_area = QScrollArea()
@@ -224,7 +214,10 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
             event (QEvent)
             enabled (bool)
         """
-        self.model().setItemSelectedEvent(function)
+        self.itemSelectedEvent = function
+
+    def itemSelectedEvent(self, item, enabled):
+        pass
 
     def setHeaderDelegateToggleEvent(self, function):
         """
@@ -314,27 +307,58 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         return self.headerWidget().view()
 
     def setHeaderViewWidget(self, _header_view_widget):
+        """
+        Sets the header widget to be a custom widget type
+        Args:
+            _header_view_widget (QWidget):
+
+        Returns:
+
+        """
         # remove all header widget
         self.headerWidget().setView(_header_view_widget)
         _header_view_widget.setModel(self.model())
 
-    def headerDelegateWidget(self):
-        return self.headerWidget().delegate()
+    def setHeaderViewType(self, view_type):
+        """
+        Forces the HeaderWidget to be a preset view type
+        Args:
+            view_type (ModelViewWidget.VIEW_TYPE): the view type to be used.
+                ModelViewWidget.TREE_VIEW | ModelViewWidget.LIST_VIEW
+        """
+        self.headerWidget().setViewType(view_type)
+        self.headerWidget().setModel(self.model())
 
-    def setHeaderDelegateWidget(self, widget):
+    def addHeaderDelegateWidget(self, input, widget, modifier=Qt.NoModifier):
         """
-        Interface to set the headers delegate widget
-        """
-        self.headerWidget().setDelegate(widget)
+        Adds a new delegate that can be activated with the input/modifer combo provided
 
-    def headerDelegateAlwaysOn(self):
-        return self.headerWidget().delegateWidgetAlwaysOn()
+        Args:
+            input (list): of Qt.KEY
+            widget (QWidget):
+            modifier (Qt.MODIFIER):
 
-    def setHeaderDelegateAlwaysOn(self, enabled):
+        Returns (None):
         """
-        Interface to determine if header delegate widget is enabled
-        """
-        self.headerWidget().setDelegateWidgetAlwaysOn(enabled)
+        self.headerWidget().addDelegate(input, widget, modifier=modifier)
+        #w.addDelegate([Qt.Key_Q], delegate_widget)
+    # def headerDelegateWidget(self):
+    #     return self.headerWidget().delegate()
+    #
+    # def setHeaderDelegateWidget(self, widget):
+    #     """
+    #     Interface to set the headers delegate widget
+    #     """
+    #     self.headerWidget().setDelegate(widget)
+
+    # def headerDelegateAlwaysOn(self):
+    #     return self.headerWidget().delegateWidgetAlwaysOn()
+    #
+    # def setHeaderDelegateAlwaysOn(self, enabled):
+    #     """
+    #     Interface to determine if header delegate widget is enabled
+    #     """
+    #     self.headerWidget().setDelegateWidgetAlwaysOn(enabled)
 
     def headerPosition(self):
         return self._header_position
@@ -467,39 +491,39 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
             for index in selection_model.selectedIndexes():
                 item = index.internalPointer()
                 if index.column() == 0:
-                    self.__updateDelegateItem(item, False)
-                    self.__updateDelegateItem(item, True)
+                    self.updateDelegateItem(item, False)
+                    self.updateDelegateItem(item, True)
             #self.updateDynamicWidget()
 
-    def updateDelegateDisplayFromSelection(self, selected, deselected):
-        """
-        Determines whether or not an items delegateWidget() should be
-        displayed/updated/destroyed.
+    # def updateDelegateDisplayFromSelection(self, selected, deselected):
+    #     """
+    #     Determines whether or not an items delegateWidget() should be
+    #     displayed/updated/destroyed.
+    #
+    #     """
+    #     self.toggleDelegateSpacerWidget()
+    #
+    #     # update display
+    #     self._selection_item = selected
+    #     for index in selected.indexes():
+    #         if index.column() == 0:
+    #             item = index.internalPointer()
+    #             self.updateDelegateItem(item, True)
+    #
+    #     for index in deselected.indexes():
+    #         item = index.internalPointer()
+    #         #item.setSelected(False)
+    #         self.updateDelegateItem(item, False)
+    #
+    #     # update delegate background
+    #     if hasattr(self, '_delegate_widget'):
+    #         selection = self.headerWidget().selectionModel().selectedIndexes()
+    #         if len(selection) == 0:
+    #             self.delegateWidget().rgba_background = iColor['rgba_gray_0']
+    #         else:
+    #             self.delegateWidget().rgba_background = iColor['rgba_gray_1']
 
-        """
-        self.toggleDelegateSpacerWidget()
-
-        # update display
-        self._selection_item = selected
-        for index in selected.indexes():
-            if index.column() == 0:
-                item = index.internalPointer()
-                self.__updateDelegateItem(item, True)
-
-        for index in deselected.indexes():
-            item = index.internalPointer()
-            #item.setSelected(False)
-            self.__updateDelegateItem(item, False)
-
-        # update delegate background
-        if hasattr(self, '_delegate_widget'):
-            selection = self.headerWidget().selectionModel().selectedIndexes()
-            if len(selection) == 0:
-                self.delegateWidget().rgba_background = iColor['rgba_gray_0']
-            else:
-                self.delegateWidget().rgba_background = iColor['rgba_gray_1']
-
-    def __updateDelegateItem(self, item, selected):
+    def updateDelegateItem(self, item, selected):
         """
         item (TansuModelItem)
         selected (bool): determines if this item has been selected
@@ -533,6 +557,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         If the delegate display type is set to DYNAMIC, this will
         automatically dynamically create/destroy widgets as needed.
         """
+
         if selected:
             # create dynamic widget
             dynamic_widget = self.createNewDynamicWidget(item)
@@ -599,19 +624,32 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
 
     @staticmethod
     def isWidgetUnderCursorChildOfHeader():
+        """
+        Determines if the widget under the cursor is a child of the header.
+
+        This is to determine where key press events happen and to send that signal
+        to the correct side of the widget.
+        Returns:
+
+        """
         pos = QCursor.pos()
         widget_pressed = qApp.widgetAt(pos)
         is_child_of_header = getWidgetAncestor(widget_pressed, TansuHeader)
         return True if is_child_of_header else False
 
     def keyPressEvent(self, event):
-        is_child_of_header = TansuModelViewWidget.isWidgetUnderCursorChildOfHeader()
-        if is_child_of_header:
-            return self.headerWidget().keyPressEvent(event)
-
-        # do tansu widget key press event
-        else:
-            return self.delegateWidget().keyPressEvent(event)
+        # todo
+        # did I need this? It was causing a double registry event of the keyPress
+        # for the ModelViewWidget
+        # need for hover press... or else you gotta click on it... focus?
+        pass
+        # is_child_of_header = TansuModelViewWidget.isWidgetUnderCursorChildOfHeader()
+        # if is_child_of_header:
+        #     return self.headerWidget().keyPressEvent(event)
+        #
+        # # do tansu widget key press event
+        # else:
+        #     return self.delegateWidget().keyPressEvent(event)
 
     """ PROPERTIES """
     """ selection """
@@ -710,7 +748,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
 
 
 """ DELEGATE """
-class TansuMainDelegateWidget(TansuBaseWidget):
+class TansuMainDelegateWidget(TansuDelegate):
     """
     The main delegate view that will show all of the items widgets that
      the user currently has selected
@@ -734,7 +772,7 @@ class TansuMainDelegateWidget(TansuBaseWidget):
             return tab_tansu_widget.headerWidget().keyPressEvent(event)
 
         # Tansu functions
-        TansuBaseWidget.keyPressEvent(self, event)
+        ModelViewWidget.keyPressEvent(self, event)
 
         # Global escape
         if event.key() == Qt.Key_Escape:
@@ -743,18 +781,16 @@ class TansuMainDelegateWidget(TansuBaseWidget):
                 tab_tansu_widget.updateDelegateDisplay()
                 tab_tansu_widget.toggleDelegateSpacerWidget()
 
-        # TODO TOGGLE DELEGATE KEY
-        # This is also maintained under the TansuHeader
-
-        tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
-        if event.key() in tab_tansu_widget.TOGGLE_DELEGATE_KEYS:
-            header_widget = tab_tansu_widget.headerWidget()
-            if not header_widget.delegateWidgetAlwaysOn():
-                header_widget.toggleDelegateWidget(event)
+        # # TODO TOGGLE DELEGATE KEY
+        # # This is also maintained under the TansuHeader
+        # tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
+        # if event.key() in tab_tansu_widget.TOGGLE_DELEGATE_KEYS:
+        #     header_widget = tab_tansu_widget.headerWidget()
+        #     if not header_widget.delegateWidgetAlwaysOn():
+        #         header_widget.toggleDelegateWidget(event)
 
 
 class TansuModelDelegateWidget(AbstractFrameGroupInputWidget):
-
     """
     Attributes:
         main_widget (QWidget): the main display widget
@@ -788,214 +824,29 @@ class TansuModelDelegateWidget(AbstractFrameGroupInputWidget):
 
 
 """ HEADER """
-class TansuHeader(TansuBaseWidget):
+class TansuHeader(ModelViewWidget):
+    LIST_VIEW = 0
+    TREE_VIEW = 1
     def __init__(self, parent=None):
         super(TansuHeader, self).__init__(parent)
+        self.setViewType(ModelViewWidget.LIST_VIEW)
 
-        # default attrs
-        self._delegate_always_on = False
-
-        # setup style
-        self.handle_width = 0
-        self.handle_length = 100
-        self.rgba_background = iColor["rgba_gray_1"]
-        self._view_position = attrs.SOUTH
-        self._view_orientation = Qt.Vertical
-        self.setContentsMargins(0, 0, 0, 0)
-
-        # setup view
-        view = TansuHeaderListView(self)
-        self.setView(view)
-
-        # # TODO setup abstract widget
-        # TEMP setup
-        abstract_widget = QLabel(":)", parent=self)
-        abstract_widget.setMinimumSize(1, 1)
-        abstract_widget.hide()
-        #self.addWidget(abstract_widget)
-
-        # setup delegate
-        self.setDelegate(abstract_widget)
-
-        # scroll bar moving will need to be setup differently...
-
-        # setup style
-        self.setIsSoloViewEnabled(False)
-        self.not_soloable = True
-
-    def view(self):
-        return self._view
-
-    def setView(self, view):
-        if hasattr (self, "_view"):
-            self._view.setParent(None)
-
-        # setup attr
-        self._view = view
-        self._view.not_soloable = True
-        self.insertWidget(0, self._view)
-        #self.setOrientation(self._view_orientation, view_position=self._view_position)
-
-    """ DELEGATE """
-    def delegate(self):
-        return self._delegate
-
-    def setDelegate(self, delegate):
-        if hasattr(self, "_delegate"):
-            self._delegate.setParent(None)
-        self._delegate = delegate
-        self._delegate.not_soloable = True
-        self.addWidget(self._delegate)
-
-    def toggleDelegateWidget(self, event):
-        if self.delegate().isVisible():
-            enabled = False
-            self.delegate().hide()
-        else:
-            enabled = True
-            self.delegate().show()
-            self.delegate().setFocus()
-
-        self.delegateToggleEvent(event, enabled)
-
-    def delegateWidgetAlwaysOn(self):
-        return self._delegate_always_on
-
-    def setDelegateWidgetAlwaysOn(self, enabled):
-        """
-        Flag to determine if the delegate should always be on, or toggled via hotkey
-        """
-        self._delegate_always_on = enabled
-
-        # hide / show widget
-        if enabled:
-            self.delegate().show()
-        else:
-            self.delegate().hide()
-
-    """ VIEW INTERFACE """
-    def model(self):
-        return self.view().model()
-
-    def setModel(self, model):
-        self.view().setModel(model)
-
-    def setOrientation(self, view_orientation, view_position=None):
-        """
-        Set the orientation/direction of the header, and view.
-
-        This will determine the flow of the items, from LeftToRight,
-        or TopToBottom, depending on the orientation.
-
-        Args:
-            view_orientation (Qt.Orientation): The orientation that the view will
-                be displayed in.  Note that this is NOT this Tansu widgets
-                base orientation
-                    Qt.Horizonal | Qt.Vertical
-            view_position (attrs.DIRECTION):  When provided, will rearrange the
-                additional data to be set in that direction...  This is the default
-                orientation/position of this widget
-                    ie attrs.NORTH, will place the header view on top, and the
-                        extra view on the bottom
-
-        """
-        # set view orientation
-        try:
-            self.view().setOrientation(view_orientation)
-        except AttributeError:
-            # initializing
-            pass
-
-        # set header/abstract widget orientation/positions
-        if view_position:
-            self.view().setParent(None)
-            if view_position == attrs.NORTH:
-                self.insertWidget(1, self.view())
-                _orientation = Qt.Vertical
-            elif view_position == attrs.SOUTH:
-                _orientation = Qt.Vertical
-                self.insertWidget(0, self.view())
-            elif view_position == attrs.EAST:
-                _orientation = Qt.Horizontal
-                self.insertWidget(1, self.view())
-            elif view_position == attrs.WEST:
-                _orientation = Qt.Horizontal
-                self.insertWidget(0, self.view())
-        else:
-            _orientation = view_orientation
-        self._view_position = view_position
-        self._view_orientation = view_orientation
-        return TansuBaseWidget.setOrientation(self, _orientation)
-
-    def selectionModel(self):
-        return self.view().selectionModel()
-
-    def setMultiSelect(self, enabled):
-        self.view().setMultiSelect(enabled)
-
-    def setDragDropMode(self, drag_drop_mode):
-        """
-        Sets the drag/drop mode of the header.
-
-        Args:
-            drag_drop_mode (QAbstractItemModel.MODE): drag drop mode
-                to be implemented on the header
-        """
-        self.view().setDragDropMode(drag_drop_mode)
-
-    def setIsDragEnabled(self, enabled):
-        self.view().setIsDragEnabled(enabled)
-
-    def setIsDropEnabled(self, enabled):
-        self.view().setIsDropEnabled(enabled)
-
-    def setIsRootDropEnabled(self, enabled):
-        self.view().setIsRootDropEnabled(enabled)
-
-    def setIsEditable(self, enabled):
-        self.view().setIsEditable(enabled)
-
-    def setIsSelectable(self, enabled):
-        self.view().setIsSelectable(enabled)
-
-    def setIsEnableable(self, enabled):
-        self.view().setIsEnableable(enabled)
-
-    def setIsDeleteEnabled(self, enabled):
-        self.view().setIsDeleteEnabled(enabled)
-
-    """ EVENTS """
-    def keyPressEvent(self, event):
-        """
-        Note duplicate to view...
-
-         must it be duplicate?
-        :param event:
-        :return:
-        """
-        # TODO TOGGLE DELEGATE KEY
-        # this is also maintained under... TansuMainDelegateWidget
-        tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
-        if event.key() in tab_tansu_widget.TOGGLE_DELEGATE_KEYS:
-            if not self.delegateWidgetAlwaysOn():
-                self.toggleDelegateWidget(event)
-
-    def __delegateToggleEvent(self, event, enabled):
-        return
-
-    def delegateToggleEvent(self, event, enabled):
-        self.__delegateToggleEvent(event, enabled)
-        pass
-
-    def setDelegateToggleEvent(self, function):
-        self.__delegateToggleEvent = function
-
-
-class TansuHeaderAbstractView(object):
-    def __init__(self, parent=None):
-        super(TansuHeaderAbstractView, self).__init__()
-        self.not_soloable = True
-        self.setContentsMargins(0, 0, 0, 0)
+    # def setViewType(self, view_type):
+    #     """
+    #
+    #     Args:
+    #         view_type (TansuHeaderViewType):
+    #             TansuHeaderListView | TansuHeaderTreeView
+    #
+    #     Returns:
+    #
+    #     """
+    #     if view_type == TansuHeader.LIST_VIEW:
+    #         view = TansuHeaderListView(self)
+    #     elif view_type == TansuHeader.TREE_VIEW:
+    #         view = TansuHeaderTreeView(self)
+    #
+    #     self.setView(view)
 
     def showEvent(self, event):
         tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
@@ -1016,62 +867,29 @@ class TansuHeaderAbstractView(object):
 
         return return_val
 
-
-class TansuHeaderListView(AbstractDragDropListView, TansuHeaderAbstractView):
-    def __init__(self, parent=None):
-        super(TansuHeaderListView, self).__init__(parent)
-        self.setEditTriggers(QAbstractItemView.DoubleClicked)
-        self.tansu_header = parent
-
-    # TODO Copy paste to TansuHeaderTreeView
-    # due to inheritance order
-    def keyPressEvent(self, event):
-        # TODO TOGGLE DELEGATE KEY
-        # tansu hotkeys esc/~
-        tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
-        if event.key() in tab_tansu_widget.TOGGLE_DELEGATE_KEYS:
-            header_widget = tab_tansu_widget.headerWidget()
-            if not header_widget.delegateWidgetAlwaysOn():
-                header_widget.toggleDelegateWidget(event)
-
-        return AbstractDragDropAbstractView.keyPressEvent(self, event)
-
-    def selectionChanged(self, selected, deselected):
+    def selectionChanged(self, item, enabled):
+        """
+        Determines whether or not an items delegateWidget() should be
+        displayed/updated/destroyed.
+        """
         top_level_widget = getWidgetAncestor(self, TansuModelViewWidget)
-        if top_level_widget:
-            # for index in selected.indexes():
-            #     if index.column() == 0:
-            #         print(index.internalPointer().columnData()['name'])
-            top_level_widget.updateDelegateDisplayFromSelection(selected, deselected)
+        top_level_widget.toggleDelegateSpacerWidget()
 
-        return AbstractDragDropAbstractView.selectionChanged(self, selected, deselected)
+        # update display
+        top_level_widget._selection_item = enabled
+        top_level_widget.updateDelegateItem(item, enabled)
 
+        # update delegate background
+        if hasattr(top_level_widget, '_delegate_widget'):
+            selection = top_level_widget.headerWidget().selectionModel().selectedIndexes()
+            if len(selection) == 0:
+                top_level_widget.delegateWidget().rgba_background = iColor['rgba_gray_0']
+            else:
+                top_level_widget.delegateWidget().rgba_background = iColor['rgba_gray_1']
 
-class TansuHeaderTreeView(AbstractDragDropTreeView, TansuHeaderAbstractView):
-    def __init__(self, parent=None):
-        super(TansuHeaderTreeView, self).__init__(parent)
-        self.setEditTriggers(QAbstractItemView.DoubleClicked)
-        self.tansu_header = parent
-
-    # TODO Copy paste to TansuHeaderListView
-    # due to inheritance order
-    def keyPressEvent(self, event):
-        # TODO TOGGLE DELEGATE KEY
-        # tansu hotkeys esc/~
-        tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
-        if event.key() in tab_tansu_widget.TOGGLE_DELEGATE_KEYS:
-            header_widget = tab_tansu_widget.headerWidget()
-            if not header_widget.delegateWidgetAlwaysOn():
-                header_widget.toggleDelegateWidget(event)
-
-        return AbstractDragDropAbstractView.keyPressEvent(self, event)
-
-    def selectionChanged(self, selected, deselected):
-        top_level_widget = getWidgetAncestor(self, TansuModelViewWidget)
-        if top_level_widget:
-            top_level_widget.updateDelegateDisplayFromSelection(selected, deselected)
-
-        return AbstractDragDropAbstractView.selectionChanged(self, selected, deselected)
+        # custom input event | need this as we're overriding the models input
+        top_level_widget.itemSelectedEvent(item, enabled)
+        #return self.view_type.selectionChanged(self, selected, deselected)
 
 
 """ EXAMPLE """
@@ -1126,7 +944,7 @@ if __name__ == "__main__":
     # w.show()
 
 
-    class test(TansuBaseWidget):
+    class test(ModelViewWidget):
         def __init__(self, parent=None):
             super(test, self).__init__(parent)
             self.addWidget(QLabel('a'))
@@ -1136,12 +954,13 @@ if __name__ == "__main__":
     w = TansuModelViewWidget()
     #w.setHeaderPosition(attrs.WEST, attrs.SOUTH)
     #header_delegate_widget = QLabel("Custom")
-    w.setHeaderDelegateAlwaysOn(False)
+    #w.setHeaderDelegateAlwaysOn(False)
     #
     # w.setMultiSelect(True)
     # w.setMultiSelectDirection(Qt.Vertical)
     # w.setHeaderItemDragDropMode(QAbstractItemView.InternalMove)
-
+    delegate_widget = QLabel("Q")
+    w.addHeaderDelegateWidget([Qt.Key_Q], delegate_widget)
 
     dw = TabTansuDynamicWidgetExample
 
@@ -1154,7 +973,7 @@ if __name__ == "__main__":
 
     w.resize(500, 500)
     w.delegateWidget().handle_length = 100
-    print(w.headerWidget().view())
+
     w.show()
     # #w.headerWidget().model().setIsDragEnabled(False)
     # w.setHeaderItemIsDropEnabled(True)
