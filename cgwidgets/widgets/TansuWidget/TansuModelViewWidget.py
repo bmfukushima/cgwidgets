@@ -218,7 +218,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         """
         self.itemSelectedEvent = function
 
-    def itemSelectedEvent(self, item, enabled):
+    def itemSelectedEvent(self, item, enabled, column=0):
         pass
 
     def setHeaderDelegateToggleEvent(self, function):
@@ -553,20 +553,23 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
     #         else:
     #             self.delegateWidget().rgba_background = iColor['rgba_gray_1']
 
-    def updateDelegateItem(self, item, selected):
+    def updateDelegateItem(self, item, selected, column=0):
         """
         item (TansuModelItem)
         selected (bool): determines if this item has been selected
             or un selected.
         """
         # update static widgets
-        if self.getDelegateType() == TansuModelViewWidget.STACKED:
-            if item.delegateWidget():
-                self.__updateStackedDisplay(item, selected)
+        # todo column registry.
+        ## note that this is set so that it will not run for each column
+        if column == 0:
+            if self.getDelegateType() == TansuModelViewWidget.STACKED:
+                if item.delegateWidget():
+                    self.__updateStackedDisplay(item, selected)
 
-        # update dynamic widgets
-        if self.getDelegateType() == TansuModelViewWidget.DYNAMIC:
-            self.__updateDynamicDisplay(item, selected)
+            # update dynamic widgets
+            if self.getDelegateType() == TansuModelViewWidget.DYNAMIC:
+                self.__updateDynamicDisplay(item, selected)
 
     def __updateStackedDisplay(self, item, selected):
         """
@@ -919,17 +922,21 @@ class TansuHeader(ModelViewWidget):
 
         return return_val
 
-    def selectionChanged(self, item, enabled):
+    def selectionChanged(self, item, enabled, column=0):
         """
         Determines whether or not an items delegateWidget() should be
         displayed/updated/destroyed.
         """
+
+        # todo for some reason this double registers the selection even
+
+        # when using dynamic tree widgets...
         top_level_widget = getWidgetAncestor(self, TansuModelViewWidget)
         top_level_widget.toggleDelegateSpacerWidget()
 
         # update display
         top_level_widget._selection_item = enabled
-        top_level_widget.updateDelegateItem(item, enabled)
+        top_level_widget.updateDelegateItem(item, enabled, column)
 
         # update delegate background
         if hasattr(top_level_widget, '_delegate_widget'):
@@ -940,8 +947,8 @@ class TansuHeader(ModelViewWidget):
                 top_level_widget.delegateWidget().rgba_background = iColor['rgba_gray_1']
 
         # custom input event | need this as we're overriding the models input
-        top_level_widget.itemSelectedEvent(item, enabled)
-        #return self.view_type.selectionChanged(self, selected, deselected)
+        top_level_widget.itemSelectedEvent(item, enabled, column)
+        #return ModelViewWidget.selectionChanged(self, selected, deselected)
 
 
 """ EXAMPLE """

@@ -76,7 +76,7 @@ note:
     when providing column data, the key in the dict with the 0th
     index is required, and is the text displayed to the user by default
 """
-tansu_widget.setHeaderData(['name', 'SINEP'])
+tansu_widget.setHeaderData(['name', 'SINEP', "woowoo"])
 
 
 #####################################################
@@ -176,8 +176,9 @@ def setupAsDynamic():
 
 #setupAsStacked()
 setupAsDynamic()
+
 #####################################################
-# set attrs
+# SET FLAGS
 #####################################################
 tansu_widget.setMultiSelect(True)
 tansu_widget.setMultiSelectDirection(Qt.Vertical)
@@ -185,7 +186,7 @@ tansu_widget.delegateWidget().handle_length = 100
 tansu_widget.setHeaderPosition(attrs.WEST, attrs.SOUTH)
 
 #####################################################
-# Flags
+# SET EVENT FLAGS
 #####################################################
 tansu_widget.setHeaderItemIsDropEnabled(False)
 tansu_widget.setHeaderItemIsDragEnabled(True)
@@ -236,9 +237,9 @@ def testDelegateToggle(event, widget, enabled):
     print('---- TOGGLE EVENT ----')
     print (event, widget, enabled)
 
-def testSelect(item, enabled):
+def testSelect(item, enabled, column=0):
     print('---- SELECT EVENT ----')
-    print(item.columnData(), enabled)
+    print(column, item.columnData(), enabled)
 
 tansu_widget.setHeaderItemEnabledEvent(testEnable)
 tansu_widget.setHeaderItemDeleteEvent(testDelete)

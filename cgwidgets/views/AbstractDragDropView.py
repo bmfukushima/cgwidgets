@@ -184,11 +184,11 @@ class AbstractDragDropAbstractView(object):
     def selectionChanged(self, selected, deselected):
         for index in selected.indexes():
             item = index.internalPointer()
-            self.model().itemSelectedEvent(item, True)
+            self.model().itemSelectedEvent(item, True, column=index.column())
 
         for index in deselected.indexes():
             item = index.internalPointer()
-            self.model().itemSelectedEvent(item, False)
+            self.model().itemSelectedEvent(item, False, column=index.column())
 
     def keyPressEvent(self, event):
 

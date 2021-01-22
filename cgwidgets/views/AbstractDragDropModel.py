@@ -725,21 +725,21 @@ class AbstractDragDropModel(QAbstractItemModel):
     def setItemSelectedEvent(self, function):
         self.__itemSelectedEvent = function
 
-    def itemSelectedEvent(self, item, enabled):
+    def itemSelectedEvent(self, item, enabled, column=0):
         """
         When an item is selected, this event will run.
 
         Args:
             item (AbstractDragDropModelItem): item that has been manipulated
             enabled (boolean): whether or not the item was enabled/disabled
-
+            column (int): index of column selected
         Note:
             This will run through a for each loop and run for every single item in
             the current selection
         """
-        self.__itemSelectedEvent(item, enabled)
+        self.__itemSelectedEvent(item, enabled, column)
 
-    def __itemSelectedEvent(self, item, enabled):
+    def __itemSelectedEvent(self, item, enabled, column=0):
         # print(item.columnData()['name'], enabled)
         pass
 
