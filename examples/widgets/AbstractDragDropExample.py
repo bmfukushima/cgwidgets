@@ -18,12 +18,12 @@ app = QApplication(sys.argv)
 def testDelete(item):
     print("DELETING --> -->", item.columnData()['name'])
 
-def testDrag(indexes):
-    print(indexes)
-    print("DRAGGING -->", indexes)
+def testDrag(items, model):
+    print(items)
+    print("DRAGGING -->", items)
 
-def testDrop(row, indexes, parent):
-    print("DROPPING -->", row, indexes, parent)
+def testDrop(items, model, row, parent):
+    print("DROPPING -->", row, items, parent)
 
 def testEdit(item, old_value, new_value):
     print("EDITING -->", item, old_value, new_value)
@@ -31,12 +31,17 @@ def testEdit(item, old_value, new_value):
 def testEnable(item, enabled):
     print("ENABLING -->", item.columnData()['name'], enabled)
 
-def testSelect(item, enabled):
+def testSelect(item, enabled, column=0):
     print("SELECTING -->", item.columnData()['name'], enabled)
 
 
 # create model
 model = AbstractDragDropModel()
+
+from cgwidgets.views import AbstractDragDropModel, AbstractDragDropModelItem
+# model = AbstractDragDropModel()
+# item_type = AbstractDragDropModelItem()
+# model.setItemType(item_type)
 
 # create views
 tree_view = AbstractDragDropTreeView()

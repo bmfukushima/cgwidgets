@@ -163,17 +163,22 @@ class AbstractDragDropAbstractView(object):
         self.model().setIsDeleteEnabled(enabled)
 
     """ SELECTION """
-    def setItemSelected(self, item, selected):
+    def setItemSelected(self, index, selected):
+        """
+
+        Args:
+            index (QModelIndex):
+            selected (bool):
+
+        Returns:
+
+        """
         if selected:
-            print('1', item)
-            self.selectionModel().select(item, QItemSelectionModel.Select)
+            self.selectionModel().select(index, QItemSelectionModel.Select)
         else:
-            print('2', item)
-            self.selectionModel().select(item, QItemSelectionModel.Deselect)
+            self.selectionModel().select(index, QItemSelectionModel.Deselect)
 
         return True
-        #item.setIsSelected(selected)
-        #self.itemEnabledEvent(item, selected)
 
     def clearItemSelection(self):
         self.selectionModel().clearSelection()

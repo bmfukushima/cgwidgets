@@ -49,8 +49,8 @@ Hierachy
 TODO:
     * custom model / items
     * add model/main widget to virtual events?
-    * dynamic double show?
-        only DYNAMIC + TREE
+        I don't think this is necessary...  Assuming that you can access the
+        main widget through some class attr.
 """
 import sys
 
@@ -58,9 +58,12 @@ from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QApplication, QLabel, QLineEdit, QWidget, QVBoxLayout
 from qtpy.QtGui import QCursor
 
-from cgwidgets.widgets import TansuModelViewWidget, ModelViewWidget, FloatInputWidget
+from cgwidgets.widgets import (
+    TansuModelViewWidget, TansuModelItem, TansuModel,
+    ModelViewWidget, FloatInputWidget)
 from cgwidgets.delegates import TansuDelegate
 from cgwidgets.utils import attrs
+
 
 app = QApplication(sys.argv)
 
@@ -69,6 +72,22 @@ app = QApplication(sys.argv)
 #####################################################
 tansu_widget = TansuModelViewWidget()
 tansu_widget.setHeaderViewType(ModelViewWidget.TREE_VIEW)
+
+# setup custom model...
+def setupCustomModel():
+    class CustomModel(TansuModel):
+        def __init__(self):
+            pass
+
+    class CustomModelItem(TansuModelItem):
+        def __init__(self):
+            pass
+    model = CustomModel()
+    item_type = CustomModelItem
+    model.setItemType(item_type)
+    tansu_widget.setModel(model)
+
+setupCustomModel()
 
 # Set column names
 """
@@ -184,6 +203,7 @@ tansu_widget.setMultiSelect(True)
 tansu_widget.setMultiSelectDirection(Qt.Vertical)
 tansu_widget.delegateWidget().handle_length = 100
 tansu_widget.setHeaderPosition(attrs.WEST, attrs.SOUTH)
+tansu_widget.setDelegateTitleIsShown(True)
 
 #####################################################
 # SET EVENT FLAGS
@@ -193,33 +213,37 @@ tansu_widget.setHeaderItemIsDragEnabled(True)
 tansu_widget.setHeaderItemIsEditable(True)
 tansu_widget.setHeaderItemIsEnableable(True)
 tansu_widget.setHeaderItemIsDeleteEnabled(True)
-
+#select
+#toggle
 #####################################################
 # Setup Virtual Events
 #####################################################
-def testDrag(indexes):
+def testDrag(items, model):
     """
     Initialized when the drag has started.  This triggers in the mimeData portion
     of the model.
 
     Args:
-        indexes (list): of TansuModelItems
+        items (list): of TansuModelItems
+        model (TansuModel)
     """
     print("---- DRAG EVENT ----")
-    print(indexes)
+    print(items, model)
 
-def testDrop(row, indexes, parent):
+def testDrop(items, model, row, parent):
     """
     Run when the user does a drop.  This is triggered on the dropMimeData funciton
     in the model.
 
     Args:
-        indexes (list): of TansuModelItems
+        items (list): of TansuModelItems
+        model (TansuModel):
+        row (int): row item dropped at
         parent (TansuModelItem): parent item that was dropped on
 
     """
     print("---- DROP EVENT ----")
-    print(row, indexes, parent)
+    print(row, model, items, parent)
 
 def testEdit(item, old_value, new_value):
     print("---- EDIT EVENT ----")
@@ -230,16 +254,42 @@ def testEnable(item, enabled):
     print(item.columnData()['name'], enabled)
 
 def testDelete(item):
+    """
+
+    Args:
+        item:
+    """
     print('---- DELETE EVENT ----')
     print(item.columnData()['name'])
 
 def testDelegateToggle(event, widget, enabled):
+    """
+
+    Args:
+        event (QEvent.KeyPress):
+        widget (QWidget): widget currently being toggled
+        enabled (bool):
+
+    Returns:
+
+    """
     print('---- TOGGLE EVENT ----')
     print (event, widget, enabled)
 
 def testSelect(item, enabled, column=0):
-    print('---- SELECT EVENT ----')
-    print(column, item.columnData(), enabled)
+    """
+    Handler that is run when the user selects an item in the view.
+
+    Note that this will run for each column in that row.  So in order
+    to have this only register once, have it register to the 0 column
+    Args:
+        item:
+        enabled:
+        column:
+    """
+    if column == 0:
+        print('---- SELECT EVENT ----')
+        print(column, item.columnData(), enabled)
 
 tansu_widget.setHeaderItemEnabledEvent(testEnable)
 tansu_widget.setHeaderItemDeleteEvent(testDelete)

@@ -102,9 +102,13 @@ class ModelViewWidget(TansuDelegate):
 
     def setViewType(self, view_type):
         """
+        Sets the view to either a LIST or a TREE view
+
         Args:
             view_type (ModelViewWidget.VIEW_TYPE): the view type to be used.
                 ModelViewWidget.TREE_VIEW | ModelViewWidget.LIST_VIEW
+
+        Returns (QWidget): view
         """
         if view_type == ModelViewWidget.TREE_VIEW:
             view = AbstractDragDropTreeView()
@@ -114,6 +118,8 @@ class ModelViewWidget(TansuDelegate):
             self.view_type = AbstractDragDropListView
 
         self.setView(view)
+
+        return view
 
     """ MODEL """
     def model(self):
@@ -192,11 +198,11 @@ class ModelViewWidget(TansuDelegate):
         self.delegateToggleEvent(event, widget, enabled)
 
     """ DELEGATE VIRTUAL """
-    def __delegateToggleEvent(self, event, widget, enabled):
+    def __delegateToggleEvent(self, enabled, event, widget):
         return
 
-    def delegateToggleEvent(self, event, widget, enabled):
-        self.__delegateToggleEvent(event, widget, enabled)
+    def delegateToggleEvent(self, enabled, event, widget):
+        self.__delegateToggleEvent(enabled, event, widget)
         pass
 
     def setDelegateToggleEvent(self, function):

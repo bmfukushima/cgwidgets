@@ -610,7 +610,7 @@ class AbstractDragDropModel(QAbstractItemModel):
         mimedata.setData('application/x-qabstractitemmodeldatalist', QByteArray())
 
         # run virtual function
-        self.dragStartEvent(self.indexes)
+        self.dragStartEvent(self.indexes, self)
         return mimedata
 
     def dropMimeData(self, data, action, row, column, parent):
@@ -644,7 +644,7 @@ class AbstractDragDropModel(QAbstractItemModel):
             self.endInsertRows()
 
         # run virtual function
-        self.dropEvent(row, indexes, parent_item)
+        self.dropEvent(indexes, self, row, parent_item)
 
         return False
 
@@ -661,26 +661,27 @@ class AbstractDragDropModel(QAbstractItemModel):
     def setDragStartEvent(self, function):
         self.__startDragEvent = function
 
-    def dragStartEvent(self, indexes):
-        self.__startDragEvent(indexes)
+    def dragStartEvent(self, items, model):
+        self.__startDragEvent(items, model)
 
-    def __startDragEvent(self, indexes):
+    def __startDragEvent(self, items, model):
         pass
 
     def setDropEvent(self, function):
         self.__dropEvent = function
 
-    def dropEvent(self, row, indexes, parent):
+    def dropEvent(self, items, model, row, parent):
         """
         Virtual function that is run after the mime data has been dropped.
 
         Args:
-            indexes (list): of AbstractDragDropModelItems
+            items (list): of AbstractDragDropModelItems
             parent (AbstractDragDropModelItem): item that was dropped on
+            row (int): row that the item was dropped at
         """
-        self.__dropEvent(row, indexes, parent)
+        self.__dropEvent(items, model, row, parent)
 
-    def __dropEvent(self, row, indexes, parent):
+    def __dropEvent(self, items, model, row, parent):
         pass
 
     def setItemEnabledEvent(self, function):
