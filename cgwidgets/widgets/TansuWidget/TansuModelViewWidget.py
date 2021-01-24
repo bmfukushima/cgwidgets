@@ -329,7 +329,6 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         #self.setHeaderWidget(header_widget)
         self.headerWidget().setModel(self.model())
 
-
     def addHeaderDelegateWidget(self, input, widget, modifier=Qt.NoModifier):
         """
         Adds a new delegate that can be activated with the input/modifer combo provided

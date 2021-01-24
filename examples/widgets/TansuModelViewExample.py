@@ -62,32 +62,52 @@ from cgwidgets.widgets import (
     TansuModelViewWidget, TansuModelItem, TansuModel,
     ModelViewWidget, FloatInputWidget)
 from cgwidgets.delegates import TansuDelegate
+from cgwidgets.views import AbstractDragDropListView, AbstractDragDropTreeView
 from cgwidgets.utils import attrs
 
 
 app = QApplication(sys.argv)
 
-#####################################################
+
 # CREATE MAIN WIDGET
-#####################################################
 tansu_widget = TansuModelViewWidget()
+
+# SETUP VIEW
 tansu_widget.setHeaderViewType(ModelViewWidget.TREE_VIEW)
 
-# setup custom model...
+# custom view
+def setupCustomView():
+    class CustomView(AbstractDragDropListView):
+        """
+        Can also inherit from
+            <AbstractDragDropTreeView>
+        """
+        def __init__(self):
+            super(CustomView, self).__init__()
+            pass
+    view = CustomView()
+    tansu_widget.setHeaderViewWidget(view)
+
+setupCustomView()
+
+
+# SETUP CUSTOM MODEL
 def setupCustomModel():
     class CustomModel(TansuModel):
-        def __init__(self):
-            pass
+        def __init__(self, parent=None, root_item=None):
+            super(CustomModel, self).__init__(parent, root_item=root_item)
 
     class CustomModelItem(TansuModelItem):
-        def __init__(self):
-            pass
-    model = CustomModel()
+        def __init__(self, parent=None):
+            super(CustomModelItem, self).__init__(parent)
+
+    model = TansuModel()
     item_type = CustomModelItem
     model.setItemType(item_type)
     tansu_widget.setModel(model)
 
 setupCustomModel()
+
 
 # Set column names
 """
@@ -97,10 +117,7 @@ note:
 """
 tansu_widget.setHeaderData(['name', 'SINEP', "woowoo"])
 
-
-#####################################################
 # CREATE ITEMS / TABS
-#####################################################
 def setupAsStacked():
     # insert tabs
     tansu_widget.insertTansuWidget(0, column_data={'name' : '<title> hello'}, widget=QLabel('hello'))
@@ -196,9 +213,7 @@ def setupAsDynamic():
 #setupAsStacked()
 setupAsDynamic()
 
-#####################################################
 # SET FLAGS
-#####################################################
 tansu_widget.setMultiSelect(True)
 tansu_widget.setMultiSelectDirection(Qt.Vertical)
 tansu_widget.delegateWidget().handle_length = 100
@@ -290,6 +305,7 @@ def testSelect(item, enabled, column=0):
     if column == 0:
         print('---- SELECT EVENT ----')
         print(column, item.columnData(), enabled)
+
 
 tansu_widget.setHeaderItemEnabledEvent(testEnable)
 tansu_widget.setHeaderItemDeleteEvent(testDelete)
