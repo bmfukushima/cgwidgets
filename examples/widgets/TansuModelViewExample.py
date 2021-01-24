@@ -323,7 +323,7 @@ In the Tree/List view this is a widget that will pop up when
 the user presses a specific key/modifier combination
 """
 delegate_widget = QLabel("Q")
-tansu_widget.addHeaderDelegateWidget([Qt.Key_Q], delegate_widget, modifier=Qt.NoModifier)
+tansu_widget.addHeaderDelegateWidget([Qt.Key_Q], delegate_widget, modifier=Qt.NoModifier, focus=False)
 
 # display widget
 tansu_widget.resize(500, 500)

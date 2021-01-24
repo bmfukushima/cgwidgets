@@ -3,6 +3,7 @@ from qtpy.QtWidgets import (QApplication, QLabel)
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QCursor
 
+from cgwidgets.widgets import AbstractStringInputWidget
 from cgwidgets.views import (
     AbstractDragDropModel,
     AbstractDragDropTreeView,
@@ -47,6 +48,9 @@ class ModelViewWidget(TansuDelegate):
     """
     LIST_VIEW = 0
     TREE_VIEW = 1
+    SEARCH_KEY = [Qt.Key_F]
+    SEARCH_MODIFIER = Qt.ControlModifier
+
     def __init__(self, parent=None):
         super(ModelViewWidget, self).__init__(parent)
 
@@ -64,12 +68,14 @@ class ModelViewWidget(TansuDelegate):
 
         # setup view
         self.setViewType(ModelViewWidget.LIST_VIEW)
-        # view = AbstractDragDropListView(self)
-        # self.setView(view)
 
         # setup model
         model = AbstractDragDropModel()
         self.setModel(model)
+
+        # set up search bar
+        self.search_box = ModelViewSearchWidget(self)
+        self.addDelegate(ModelViewWidget.SEARCH_KEY, self.search_box, ModelViewWidget.SEARCH_MODIFIER, focus=True)
 
         # setup style
         self.setIsSoloViewEnabled(False)
@@ -152,7 +158,7 @@ class ModelViewWidget(TansuDelegate):
     def setDelegateInputManifest(self, manifest={}):
         self._delegate_manifest = manifest
 
-    def addDelegate(self, input, widget, modifier=Qt.NoModifier):
+    def addDelegate(self, input, widget, modifier=Qt.NoModifier, focus=False):
         """
         Adds a new delegate that can be activated with the input/modifer combo provided
 
@@ -160,6 +166,7 @@ class ModelViewWidget(TansuDelegate):
             input (list): of Qt.KEY
             widget (QWidget):
             modifier (Qt.MODIFIER):
+            focus (bool): determines if the widget should be focus when it is shown or not
 
         Returns:
         """
@@ -168,6 +175,7 @@ class ModelViewWidget(TansuDelegate):
         delegate_manifest["input"] = input
         delegate_manifest["widget"] = widget
         delegate_manifest["modifier"] = modifier
+        delegate_manifest["focus"] = focus
         self._delegate_manifest.append(delegate_manifest)
 
         # add widget
@@ -332,11 +340,24 @@ class ModelViewWidget(TansuDelegate):
                 if event.key() in input_keys:
                     widget = delegate_manifest["widget"]
                     self.toggleDelegateWidget(event, widget)
-                    self.setFocus()
+                    if delegate_manifest["focus"]:
+                        widget.setFocus()
+                    else:
+                        self.setFocus()
 
         # disable full screen ability of Tansu
         if event.key() != TansuDelegate.FULLSCREEN_HOTKEY:
             return TansuDelegate.keyPressEvent(self, event)
+
+
+class ModelViewSearchWidget(AbstractStringInputWidget):
+    def __init__(self, parent=None):
+        super(ModelViewSearchWidget, self).__init__(parent)
+
+    def showEvent(self, event):
+        print ('show')
+        AbstractStringInputWidget.showEvent(self, event)
+
 
 
 if __name__ == "__main__":

@@ -329,7 +329,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         #self.setHeaderWidget(header_widget)
         self.headerWidget().setModel(self.model())
 
-    def addHeaderDelegateWidget(self, input, widget, modifier=Qt.NoModifier):
+    def addHeaderDelegateWidget(self, input, widget, modifier=Qt.NoModifier, focus=False):
         """
         Adds a new delegate that can be activated with the input/modifer combo provided
 
@@ -337,10 +337,11 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
             input (list): of Qt.KEY
             widget (QWidget):
             modifier (Qt.MODIFIER):
+            focus (bool): determines if the widget should be focus when it is shown or not
 
         Returns (None):
         """
-        self.headerWidget().addDelegate(input, widget, modifier=modifier)
+        self.headerWidget().addDelegate(input, widget, modifier=modifier, focus=focus)
 
     def delegateInputManifest(self):
         return self.headerWidget().delegateInputManifest()
