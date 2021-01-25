@@ -17,6 +17,10 @@ NUMBER_KEYS = [
     Qt.Key_9,
 ]
 
+ACCEPT_KEYS = [Qt.Key_Enter, Qt.Key_Return]
+
+DELETE_KEYS = [Qt.Key_Delete, Qt.Key_Backspace]
+
 ARROW_KEYS = [
     Qt.Key_Left,
     Qt.Key_Right,

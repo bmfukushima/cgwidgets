@@ -2,7 +2,7 @@
 from qtpy.QtWidgets import (
     QStyledItemDelegate, QApplication, QWidget, QStyle, QStyleOptionViewItem)
 from qtpy.QtCore import (
-    Qt, QModelIndex, QAbstractItemModel, QItemSelectionModel,
+    Qt, QModelIndex, QAbstractItemModel, QItemSelectionModel, QSortFilterProxyModel,
     QSize, QMimeData, QByteArray, QPoint, QRect)
 from qtpy.QtGui import QPainter, QColor, QPen, QBrush, QCursor, QPolygonF, QPainterPath
 
@@ -236,7 +236,7 @@ class AbstractDragDropModel(QAbstractItemModel):
         """
         if not index.isValid():
             return None
-
+        model = index.model()
         item = index.internalPointer()
 
         if role == Qt.DisplayRole or role == Qt.EditRole:
@@ -253,7 +253,16 @@ class AbstractDragDropModel(QAbstractItemModel):
             #font = self.font()
             font = QApplication.font()
             font.setStrikeOut(not item.isEnabled())
+            # todo DISABLE UPDATES
+            # doesnt register for some reason segfaults?!?!
+            # WRONG INDEX...
+            print('1')
+            #self.invalidateFilter()
+            print('2')
+            print(self)
             self.layoutChanged.emit()
+            print('3')
+
             return font
             #self.setFont(0, font)
         # todo disabled item color
@@ -269,6 +278,7 @@ class AbstractDragDropModel(QAbstractItemModel):
 
         if role == Qt.SizeHintRole:
             return QSize(self.item_width, self.item_height)
+
 
         # if role == Qt.BackgroundRole:
         #     return None
@@ -738,10 +748,104 @@ class AbstractDragDropModel(QAbstractItemModel):
             This will run through a for each loop and run for every single item in
             the current selection
         """
+        print('DragDropModel')
         self.__itemSelectedEvent(item, enabled, column)
+        print('end??')
 
     def __itemSelectedEvent(self, item, enabled, column=0):
+        print("DragDropModel --> itemSelectDefault")
         # print(item.columnData()['name'], enabled)
         pass
 
+# TODO PROXY
+class AbstractSortFilterProxyModel(QSortFilterProxyModel):
+    def __init__(self, parent=None):
+        super(AbstractSortFilterProxyModel, self).__init__(parent)
 
+    """ VIRTUAL """
+    def insertNewIndex(self, row, name="None", parent=QModelIndex()):
+        if parent:
+            self.sourceModel().insertNewIndex(row, name=name, parent=parent)
+
+    """ VIRTUAL EVENTS """
+    """ VIRTUAL UTILS """
+    def setItemEnabled(self, item, enabled):
+        item.setIsEnabled(enabled)
+        self.sourceModel().itemEnabledEvent(item, enabled)
+
+    def deleteItem(self, item, event_update=False):
+        self.sourceModel().deleteItem(item, event_update=event_update)
+    """ VIRTUAL FUNCTIONS """
+    def setItemDeleteEvent(self, function):
+        self.sourceModel().setItemDeleteEvent(function)
+
+    def setDragStartEvent(self, function):
+        self.sourceModel().setDragStartEvent(function)
+
+    def setDropEvent(self, function):
+        self.sourceModel().setDropEvent(function)
+
+    def setItemEnabledEvent(self, function):
+        self.sourceModel().setItemEnabledEvent(function)
+
+    def setTextChangedEvent(self, function):
+        self.sourceModel().setTextChangedEvent(function)
+
+    def setItemSelectedEvent(self, function):
+        self.sourceModel().setItemSelectedEvent(function)
+    #
+    def itemSelectedEvent(self, item, enabled, column=0):
+        print("AbstractSortFilterProxyModel")
+        self.sourceModel().itemSelectedEvent(item, enabled, column=column)
+
+    """ DRAG / DROP PROPERTIES """
+    def isSelectable(self):
+        return self.sourceModel().isSelectable()
+
+    def isDeleteEnabled(self):
+        return self.sourceModel().isDeleteEnabled()
+
+    def isDragEnabled(self):
+        self.sourceModel().isDragEnabled()
+
+    def isDropEnabled(self):
+        self.sourceModel().isDropEnabled()
+
+    def isEnableable(self):
+        return self.sourceModel().isEnableable()
+
+    def isRootDropEnabled(self):
+        return self.sourceModel().isRootDropEnabled()
+
+    def setIsRootDropEnabled(self, _root_drop_enabled):
+        self._root_drop_enabled = _root_drop_enabled
+
+    def isEditable(self):
+        if self._isEditable:
+            return Qt.ItemIsEditable
+        else:
+            return 0
+
+    def setIsEditable(self, _isEditable):
+        self._isEditable = _isEditable
+
+    def setIsRootDropEnabled(self, enabled):
+        self.sourceModel().setIsRootDropEnabled(enabled)
+
+    def setIsSelectable(self, _isSelectable):
+        self.sourceModel().setIsSelectable(_isSelectable)
+
+    def setIsDeleteEnabled(self, _isDeleteEnabled):
+        self.sourceModel().setIsDeleteEnabled(_isDeleteEnabled)
+
+    def setIsDragEnabled(self, _isDragEnabled):
+        self.sourceModel().setIsDragEnabled(_isDragEnabled)
+
+    def setIsDropEnabled(self, _isDropEnabled):
+        self.sourceModel().setIsDropEnabled(_isDropEnabled)
+
+    def setIsEnableable(self, _isEnableable):
+        self.sourceModel().setIsEnableable(_isEnableable)
+
+    def setIsEditable(self, _isEditable):
+        self.sourceModel().setIsEditable(_isEditable)

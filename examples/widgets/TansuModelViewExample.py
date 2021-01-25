@@ -101,10 +101,74 @@ def setupCustomModel():
         def __init__(self, parent=None):
             super(CustomModelItem, self).__init__(parent)
 
+    # model = TansuModel()
+    # item_type = CustomModelItem
+    # model.setItemType(item_type)
+    # tansu_widget.setModel(model)
+
     model = TansuModel()
-    item_type = CustomModelItem
-    model.setItemType(item_type)
-    tansu_widget.setModel(model)
+
+    from qtpy.QtCore import QSortFilterProxyModel
+    proxy_model = QSortFilterProxyModel()
+    proxy_model.setSourceModel(model)
+    tansu_widget.setModel(proxy_model)
+    tansu_widget.headerWidget().search_box.setModel(model)
+    # --- setup completer
+    # self.completer = QCompleter(self)
+    # self.completer.setModel(proxy_model)
+
+
+    """ COMPLETER """
+    def _updateModel(self, item_list=None):
+        # get item list
+        if not item_list:
+            item_list = self.getCleanItems()
+
+        # completer = CustomModelCompleter()
+        # self.setCompleter(completer)
+        # update model items
+        self._model = CustomModel(item_list=item_list)
+        self._model.display_item_colors = self.display_item_colors
+        self.proxy_model = QSortFilterProxyModel()
+        self.proxy_model.setSourceModel(self._model)
+
+        # set models
+        self.completer().setModel(self.proxy_model)
+
+        # set item for popup
+        # this makes it so that the stylesheet can be attached...
+        # https://forum.qt.io/topic/26703/solved-stylize-using-css-and-editable-qcombobox-s-completions-list-view/7
+        delegate = QStyledItemDelegate()
+        self.completer().popup().setItemDelegate(delegate)
+
+    def setupCustomModelCompleter(self, item_list):
+        """
+        Creates a new completely custom completer
+
+        Args:
+            item_list (list): of strings to be the list of things
+                that is displayed to the user
+        """
+        # create completer/models
+        completer = CustomModelCompleter()
+        self.setCompleter(completer)
+        self.proxy_model = QSortFilterProxyModel()
+        self._updateModel(item_list)
+
+    def filterCompletionResults(self):
+        """
+        Filter the current proxy model based off of the text in the input string
+        """
+        # preflight
+        if not self.filter_results: return
+
+        # filter results
+        if self.text() != '':
+            self.completer().setCaseSensitivity(False)
+            self.completer().setCompletionMode(QCompleter.PopupCompletion)
+        else:
+            self.completer().setCompletionMode(QCompleter.UnfilteredPopupCompletion)
+
 
 setupCustomModel()
 
@@ -324,6 +388,8 @@ the user presses a specific key/modifier combination
 """
 delegate_widget = QLabel("Q")
 tansu_widget.addHeaderDelegateWidget([Qt.Key_Q], delegate_widget, modifier=Qt.NoModifier, focus=False)
+
+
 
 # display widget
 tansu_widget.resize(500, 500)

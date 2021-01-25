@@ -2,7 +2,7 @@ from qtpy.QtWidgets import (
     QListView, QAbstractItemView, QTreeView,
     QProxyStyle, QStyledItemDelegate, QStyleOptionViewItem, QStyle
 )
-from qtpy.QtCore import Qt, QPoint, QRect, QItemSelectionModel
+from qtpy.QtCore import Qt, QPoint, QRect, QItemSelectionModel, QSortFilterProxyModel
 from qtpy.QtGui import QColor, QPen, QBrush, QCursor, QPolygonF, QPainterPath
 
 from cgwidgets.utils import attrs
@@ -13,10 +13,15 @@ from cgwidgets.settings.icons import icons
 """ VIEWS """
 class AbstractDragDropAbstractView(object):
     def __init__(self):
+        # attrs
+        #self._model = None
+        self._proxy_model = None
+        self._source_model = None
         # setup style
         self.style = AbstractDragDropIndicator()
         self.setStyle(self.style)
-        self.setupCustomDelegate()
+        # todo this causes failure?
+        # self.setupCustomDelegate()
 
         # setup flags
         self.setDragDropMode(QAbstractItemView.InternalMove)
@@ -101,7 +106,7 @@ class AbstractDragDropAbstractView(object):
         https://bugreports.qt.io/browse/QTBUG-72234
         """
         pos = self.viewport().mapFromParent(self.mapFromGlobal(QCursor.pos()))
-        index = self.indexAt(pos)
+        index = self.getSourceIndex(self.indexAt(pos))
         return index
 
     def setOrientation(self, orientation):
@@ -173,6 +178,7 @@ class AbstractDragDropAbstractView(object):
         Returns:
 
         """
+        index = self.getSourceIndex(index, self.model())
         if selected:
             self.selectionModel().select(index, QItemSelectionModel.Select)
         else:
@@ -185,15 +191,39 @@ class AbstractDragDropAbstractView(object):
         # for index in self.selectedIndexes():
         #     self.selectionModel().select(index, QItemSelectionModel.Deselect)
 
+    def getSourceIndex(self, index, model):
+        """
+
+        Args:
+            index (QModelIndex): returns the source index from  QModelIndex.
+                This source index needs to be returned due to the fact that
+                it could be using a proxy model for filtering
+
+        Returns (QModelIndex):
+
+        """
+        from cgwidgets.views import AbstractDragDropModel
+        if isinstance(model, AbstractDragDropModel):
+            return index
+        else:
+            return model.mapToSource(index)
+
     """ EVENTS """
     def selectionChanged(self, selected, deselected):
-        for index in selected.indexes():
-            item = index.internalPointer()
-            self.model().itemSelectedEvent(item, True, column=index.column())
+        # todo PROXY
+        model = self.model()
+        from cgwidgets.views import AbstractSortFilterProxyModel
+        if isinstance(self.model(), AbstractSortFilterProxyModel):
+            model = self.model().sourceModel()
 
-        for index in deselected.indexes():
+        for index in selected.indexes():
+            index = self.getSourceIndex(index, self.model())
             item = index.internalPointer()
-            self.model().itemSelectedEvent(item, False, column=index.column())
+            model.itemSelectedEvent(item, True, column=index.column())
+        for index in deselected.indexes():
+            index = self.getSourceIndex(index, self.model())
+            item = index.internalPointer()
+            model.itemSelectedEvent(item, False, column=index.column())
 
     def keyPressEvent(self, event):
 
@@ -206,6 +236,7 @@ class AbstractDragDropAbstractView(object):
             if event.key() in [Qt.Key_Delete, Qt.Key_Backspace]:
                 indexes = self.selectionModel().selectedIndexes()
                 for index in indexes:
+                    index = self.getSourceIndex(index, self.model())
                     if index.column() == 0:
                         item = index.internalPointer()
                         self.model().deleteItem(item, event_update=True)
@@ -215,10 +246,13 @@ class AbstractDragDropAbstractView(object):
             if event.key() == Qt.Key_D:
                 indexes = self.selectionModel().selectedIndexes()
                 for index in indexes:
+                    #index = self.model().mapToSource(index)
+                    index = self.getSourceIndex(index, self.model())
                     if index.column() == 0:
                         item = index.internalPointer()
                         enabled = False if item.isEnabled() else True
                         self.model().setItemEnabled(item, enabled)
+
         self.__keyPressEvent(event)
         return QAbstractItemView.keyPressEvent(self, event)
 
@@ -235,6 +269,24 @@ class AbstractDragDropListView(QListView, AbstractDragDropAbstractView):
         super(AbstractDragDropListView, self).__init__(parent)
         self.setEditTriggers(QAbstractItemView.DoubleClicked)
         self._isDropEnabled = False
+
+    # def model(self):
+    #     #return self.model()
+    #     return self._source_model
+    #
+    # def proxyModel(self):
+    #     return self._proxy_model
+    #
+    # def setProxyModel(self, source_model, proxy_model=None):
+    #     # todo FILTER
+    #     if not proxy_model:
+    #         proxy_model = QSortFilterProxyModel()
+    #
+    #     self._source_model = source_model
+    #     self._proxy_model = proxy_model
+    #
+    #     self._proxy_model.setSourceModel(source_model)
+    #     self.setModel(self._proxy_model)
 
     def createStyleSheet(self, header_position, style_sheet_args):
         """
