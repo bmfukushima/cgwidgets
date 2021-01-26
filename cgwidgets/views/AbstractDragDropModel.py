@@ -204,8 +204,6 @@ class AbstractDragDropModel(QAbstractItemModel):
         old_parent_item.children().remove(item)
         self.endRemoveRows()
 
-        # TODO remove item
-
     def rowCount(self, parent):
         """
         INPUTS: QModelIndex
@@ -236,7 +234,7 @@ class AbstractDragDropModel(QAbstractItemModel):
         """
         if not index.isValid():
             return None
-        model = index.model()
+
         item = index.internalPointer()
 
         if role == Qt.DisplayRole or role == Qt.EditRole:
@@ -256,12 +254,8 @@ class AbstractDragDropModel(QAbstractItemModel):
             # todo DISABLE UPDATES
             # doesnt register for some reason segfaults?!?!
             # WRONG INDEX...
-            print('1')
             #self.invalidateFilter()
-            print('2')
-            print(self)
             self.layoutChanged.emit()
-            print('3')
 
             return font
             #self.setFont(0, font)
@@ -273,8 +267,8 @@ class AbstractDragDropModel(QAbstractItemModel):
                 color = QColor(*iColor["rgba_text_disabled"])
             return color
 
-        elif role == Qt.BackgroundRole:
-            return QColor(255, 0, 0, 255)
+        # elif role == Qt.BackgroundRole:
+        #     return QColor(255, 0, 0, 255)
 
         if role == Qt.SizeHintRole:
             return QSize(self.item_width, self.item_height)
@@ -371,12 +365,16 @@ class AbstractDragDropModel(QAbstractItemModel):
         return indexes
 
     def getIndexFromItem(self, item):
+        """
+        Returns a QModelIndex relating to the corresponding item given
+        Args:
+            item (AbstractDragDropModelItem):
 
-        # tree_view.selectionModel().select(index, QItemSelectionModel.Select)
-        #parent_item = item.parent()
+        Returns:
+
+        """
         row = item.row()
-
-        if item and row:
+        if item:
             index = self.createIndex(row, 0, item)
         else:
             index = QModelIndex()
@@ -616,6 +614,8 @@ class AbstractDragDropModel(QAbstractItemModel):
 
     def mimeData(self, indexes):
         self.indexes = [index.internalPointer() for index in indexes if index.column() == 0]
+        #self.indexes = [model.mapToSource(index).internalPointer() for index in indexes if index.column() == 0]
+
         mimedata = QMimeData()
         mimedata.setData('application/x-qabstractitemmodeldatalist', QByteArray())
 
@@ -655,7 +655,7 @@ class AbstractDragDropModel(QAbstractItemModel):
 
         # run virtual function
         self.dropEvent(indexes, self, row, parent_item)
-
+        #self.layoutChanged.emit()
         return False
 
     """ VIRTUAL FUNCTIONS """
@@ -748,9 +748,7 @@ class AbstractDragDropModel(QAbstractItemModel):
             This will run through a for each loop and run for every single item in
             the current selection
         """
-        print('DragDropModel')
         self.__itemSelectedEvent(item, enabled, column)
-        print('end??')
 
     def __itemSelectedEvent(self, item, enabled, column=0):
         print("DragDropModel --> itemSelectDefault")

@@ -3,14 +3,14 @@ from qtpy.QtWidgets import (QApplication, QLabel)
 from qtpy.QtCore import Qt, QSortFilterProxyModel
 from qtpy.QtGui import QCursor
 
-from cgwidgets.widgets import AbstractStringInputWidget
+from cgwidgets.widgets import AbstractStringInputWidget, AbstractListInputWidget
 from cgwidgets.views import (
     AbstractDragDropModel,
     AbstractDragDropTreeView,
     AbstractDragDropListView,
     AbstractSortFilterProxyModel
 )
-from cgwidgets.utils import attrs
+from cgwidgets.utils import attrs, getWidgetAncestor
 from cgwidgets.settings.colors import iColor
 from cgwidgets.delegates import TansuDelegate
 
@@ -77,8 +77,14 @@ class ModelViewWidget(TansuDelegate):
         self.setModel(model)
 
         # set up search bar
-        self.search_box = ModelViewSearchWidget(self)
-        self.addDelegate(ModelViewWidget.SEARCH_KEY, self.search_box, ModelViewWidget.SEARCH_MODIFIER, focus=True)
+        self.search_widget = ModelViewSearchWidget(self)
+        self.addDelegate(
+            ModelViewWidget.SEARCH_KEY,
+            self.search_widget,
+            ModelViewWidget.SEARCH_MODIFIER,
+            focus=True,
+            focus_widget=self.search_widget.search_box
+        )
 
         # setup style
         self.setIsSoloViewEnabled(False)
@@ -139,11 +145,13 @@ class ModelViewWidget(TansuDelegate):
 
     def setModel(self, model, proxy_model=AbstractSortFilterProxyModel()):
         # todo PROXY
-        self.proxy_model = proxy_model
-        self.proxy_model.setSourceModel(model)
-        #self.view().setProxyModel(model, proxy_model)
+        # self.proxy_model = proxy_model
+        # self.proxy_model.setSourceModel(model)
+        # #self.view().setProxyModel(model, proxy_model)
+        #
+        # self.view().setModel(self.proxy_model)
 
-        self.view().setModel(self.proxy_model)
+        self.view().setModel(model)
 
         # if isinstance(self.view(), AbstractDragDropListView):
         #     self.setIsDropEnabled(False)
@@ -170,7 +178,7 @@ class ModelViewWidget(TansuDelegate):
     def setDelegateInputManifest(self, manifest={}):
         self._delegate_manifest = manifest
 
-    def addDelegate(self, input, widget, modifier=Qt.NoModifier, focus=False):
+    def addDelegate(self, input, widget, modifier=Qt.NoModifier, focus=False, focus_widget=None):
         """
         Adds a new delegate that can be activated with the input/modifer combo provided
 
@@ -188,6 +196,8 @@ class ModelViewWidget(TansuDelegate):
         delegate_manifest["widget"] = widget
         delegate_manifest["modifier"] = modifier
         delegate_manifest["focus"] = focus
+        delegate_manifest["focus_widget"] = focus_widget
+
         self._delegate_manifest.append(delegate_manifest)
 
         # add widget
@@ -352,9 +362,17 @@ class ModelViewWidget(TansuDelegate):
                 if event.key() in input_keys:
                     widget = delegate_manifest["widget"]
                     self.toggleDelegateWidget(event, widget)
+
+                    # set focus
                     if delegate_manifest["focus"]:
-                        widget.setFocus()
+                        # focus widget provided
+                        if delegate_manifest["focus_widget"]:
+                            delegate_manifest["focus_widget"].setFocus()
+                        # focus delegate
+                        else:
+                            widget.setFocus()
                     else:
+                        # focus model
                         self.setFocus()
 
         # disable full screen ability of Tansu
@@ -363,65 +381,90 @@ class ModelViewWidget(TansuDelegate):
 
 
 from qtpy.QtCore import QSortFilterProxyModel, QRegExp
-from qtpy.QtWidgets import QCompleter, QStyledItemDelegate, QListView, QWidget, QVBoxLayout
-class ModelViewSearchWidget(AbstractStringInputWidget):
+from qtpy.QtWidgets import QCompleter, QStyledItemDelegate, QTreeView, QWidget, QVBoxLayout, QHBoxLayout
+
+class ModelViewSearchWidget(TansuDelegate):
+    """
+    Input widget containing the controls to search for specific items in the model.
+
+    This widget can be shown by hitting the CTRL+F combo
+    """
     def __init__(self, parent=None):
         super(ModelViewSearchWidget, self).__init__(parent)
-        self.textChanged.connect(self.filterCompletionResults)
+        # create widgets
+
+        # search area
+        self.search_box = ModelViewSearchBox(self)
+        self.search_type = ModelViewSearchOptions(self)
+        # setup layout
+        self.addWidget(self.search_box)
+        self.addWidget(self.search_type)
+
+        # setup style
+        self.setOrientation(Qt.Horizontal)
+
+    # def showEvent(self, event):
+    #     super(ModelViewSearchWidget, self).showEvent(event)
+
+
+class ModelViewSearchBox(AbstractStringInputWidget):
+    def __init__(self, parent=None):
+        super(ModelViewSearchBox, self).__init__(parent)
+        #self.textChanged.connect(self.filterCompletionResults)
         completer = QCompleter()
         self.setCompleter(completer)
 
     """ COMPLETER """
 
-    def _updateModel(self):
-        # get item list
-        # if not item_list:
-        #     item_list = self.getCleanItems()
+    # def _updateModel(self):
+    #     # get item list
+    #     # if not item_list:
+    #     #     item_list = self.getCleanItems()
+    #
+    #     # completer = CustomModelCompleter()
+    #     # self.setCompleter(completer)
+    #     # update model items
+    #     #self._model = CustomModel(item_list=item_list)
+    #     #self._model.display_item_colors = self.display_item_colors
+    #     self.proxy_model = QSortFilterProxyModel()
+    #     self.proxy_model.setSourceModel(self._model)
+    #
+    #     # set models
+    #     self.completer().setModel(self.proxy_model)
+    #
+    #     # set item for popup
+    #     # this makes it so that the stylesheet can be attached...
+    #     # https://forum.qt.io/topic/26703/solved-stylize-using-css-and-editable-qcombobox-s-completions-list-view/7
+    #     delegate = QStyledItemDelegate()
+    #     self.completer().popup().setItemDelegate(delegate)
 
-        # completer = CustomModelCompleter()
-        # self.setCompleter(completer)
-        # update model items
-        #self._model = CustomModel(item_list=item_list)
-        #self._model.display_item_colors = self.display_item_colors
-        self.proxy_model = QSortFilterProxyModel()
-        self.proxy_model.setSourceModel(self._model)
+    # def setupCustomModelCompleter(self, item_list):
+    #     """
+    #     Creates a new completely custom completer
+    #
+    #     Args:
+    #         item_list (list): of strings to be the list of things
+    #             that is displayed to the user
+    #     """
+    #     # create completer/models
+    #
+    #
+    #     self.proxy_model = QSortFilterProxyModel()
+    #     self._updateModel(item_list)
 
-        # set models
-        self.completer().setModel(self.proxy_model)
-
-        # set item for popup
-        # this makes it so that the stylesheet can be attached...
-        # https://forum.qt.io/topic/26703/solved-stylize-using-css-and-editable-qcombobox-s-completions-list-view/7
-        delegate = QStyledItemDelegate()
-        self.completer().popup().setItemDelegate(delegate)
-
-    def setupCustomModelCompleter(self, item_list):
-        """
-        Creates a new completely custom completer
-
-        Args:
-            item_list (list): of strings to be the list of things
-                that is displayed to the user
-        """
-        # create completer/models
-
-
-        self.proxy_model = QSortFilterProxyModel()
-        self._updateModel(item_list)
-
-    def filterCompletionResults(self):
-        """
-        Filter the current proxy model based off of the text in the input string
-        """
-        # preflight
-        if not self.filter_results: return
-
-        # filter results
-        if self.text() != '':
-            self.completer().setCaseSensitivity(False)
-            self.completer().setCompletionMode(QCompleter.PopupCompletion)
-        else:
-            self.completer().setCompletionMode(QCompleter.UnfilteredPopupCompletion)
+    # def filterCompletionResults(self):
+    #     """
+    #     Filter the current proxy model based off of the text in the input string
+    #     """
+    #     # preflight
+    #     if not self.filter_results: return
+    #
+    #     # filter results
+    #     if self.text() != '':
+    #         self.completer().setCaseSensitivity(False)
+    #         self.completer().setCompletionMode(QCompleter.PopupCompletion)
+    #     else:
+    #         self.completer().setCompletionMode(QCompleter.UnfilteredPopupCompletion)
 
     def keyPressEvent(self, event):
         from cgwidgets.settings.keylist import ACCEPT_KEYS
@@ -429,8 +472,9 @@ class ModelViewSearchWidget(AbstractStringInputWidget):
         if event.key() in ACCEPT_KEYS:
             print('======='*5)
             text = self.text()
-            self.parent().model().findItems(text, Qt.MatchExactly)
-            matches = self.parent().model().findItems(text, Qt.MatchExactly)
+            #self.parent().model().findItems(text, Qt.MatchExactly)
+            model_view_widget = getWidgetAncestor(self, ModelViewWidget)
+            matches = model_view_widget.model().findItems(text, role=Qt.MatchExactly)
             for match in matches:
                 print(match.internalPointer())
                 print(match.internalPointer().columnData())
@@ -445,9 +489,13 @@ class ModelViewSearchWidget(AbstractStringInputWidget):
             #         print(item.data(), item.text(), item.index())
         return AbstractStringInputWidget.keyPressEvent(self, event)
 
-    def showEvent(self, event):
-        print ('show')
-        AbstractStringInputWidget.showEvent(self, event)
+    # def showEvent(self, event):
+    #     AbstractStringInputWidget.showEvent(self, event)
+
+
+class ModelViewSearchOptions(AbstractListInputWidget):
+    def __init__(self, parent=None):
+        super(ModelViewSearchOptions, self).__init__(parent)
 
 
 if __name__ == "__main__":
@@ -478,8 +526,8 @@ if __name__ == "__main__":
         print('test')
 
     main_widget = ModelViewWidget()
-    main_widget.setViewType(ModelViewWidget.LIST_VIEW)
-    view = QListView()
+    main_widget.setViewType(ModelViewWidget.TREE_VIEW)
+    view = QTreeView()
     model = main_widget.model()
     proxy_model = AbstractSortFilterProxyModel(main_widget)
 
@@ -502,7 +550,7 @@ if __name__ == "__main__":
     #         self.filterCaseSensitivityCheckBox.isChecked()
     #         and Qt.CaseSensitive or Qt.CaseInsensitive)
     # regExp = QRegExp("node0")
-    regExp = QRegExp("node0")
+    regExp = QRegExp("a")
     proxy_model.setFilterRegExp(regExp)
     #main_widget.model().setFilterRegExp(regExp)
 

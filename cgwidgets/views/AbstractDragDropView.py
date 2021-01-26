@@ -235,6 +235,7 @@ class AbstractDragDropAbstractView(object):
         if self.model().isDeleteEnabled():
             if event.key() in [Qt.Key_Delete, Qt.Key_Backspace]:
                 indexes = self.selectionModel().selectedIndexes()
+                #self.selectionModel().reset()
                 for index in indexes:
                     index = self.getSourceIndex(index, self.model())
                     if index.column() == 0:
@@ -246,14 +247,16 @@ class AbstractDragDropAbstractView(object):
             if event.key() == Qt.Key_D:
                 indexes = self.selectionModel().selectedIndexes()
                 for index in indexes:
-                    #index = self.model().mapToSource(index)
                     index = self.getSourceIndex(index, self.model())
                     if index.column() == 0:
                         item = index.internalPointer()
                         enabled = False if item.isEnabled() else True
                         self.model().setItemEnabled(item, enabled)
+                self.model().layoutChanged.emit()
 
         self.__keyPressEvent(event)
+        #self
+
         return QAbstractItemView.keyPressEvent(self, event)
 
     """ VIRTUAL """
