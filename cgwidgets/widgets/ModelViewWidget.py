@@ -423,12 +423,13 @@ class ModelViewSearchBox(AbstractStringInputWidget):
         # clear view
         view.clearItemSelection()
 
+        # select / expand
+        def expandIndex(view, index, expanded=True):
+            view.setExpanded(index, expanded)
+
         for index in indexes:
             view.setItemSelected(index, True)
-            view.expandIndexToRoot(index, True)
-        # clear
-
-        # select
+            view.recurseFromIndexToRoot(index, expandIndex, expanded=True)
 
     def keyPressEvent(self, event):
         from cgwidgets.settings.keylist import ACCEPT_KEYS
@@ -506,7 +507,7 @@ if __name__ == "__main__":
         print("SELECTING -->", item.columnData()['name'], enabled)
     #
     def testDelegateToggle(event, widget, enabled):
-        print('test')
+        print('toggle joe')
 
     main_widget = ModelViewWidget()
     main_widget.setViewType(ModelViewWidget.TREE_VIEW)

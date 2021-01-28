@@ -188,23 +188,29 @@ class AbstractDragDropAbstractView(object):
         self.selectionModel().clearSelection()
         # for index in self.selectedIndexes():
         #     self.selectionModel().select(index, QItemSelectionModel.Deselect)
-    #
-    # def getSourceIndex(self, index, model):
-    #     """
-    #
-    #     Args:
-    #         index (QModelIndex): returns the source index from  QModelIndex.
-    #             This source index needs to be returned due to the fact that
-    #             it could be using a proxy model for filtering
-    #
-    #     Returns (QModelIndex):
-    #
-    #     """
-    #     from cgwidgets.views import AbstractDragDropModel
-    #     if isinstance(model, AbstractDragDropModel):
-    #         return index
-    #     else:
-    #         return model.mapToSource(index)
+
+    """ UTILS """
+    def recurseFromIndexToRoot(self, index, function, *args, **kwargs):
+        """
+        Recursively searches up the ancestory doing the function provided to each index
+
+        Args:
+            index (QModelIndex):
+            function (function): function to be passed to index.  This function takes
+                atleast one arg, index
+                Args: view, index, *args, **kwargs
+
+        Returns:
+
+        """
+        parent_index = index.parent()
+        parent_item = parent_index.internalPointer()
+        if parent_item:
+            function(self, parent_index, *args, **kwargs)
+            #self.setExpanded(parent_index, expanded)
+            return self.recurseFromIndexToRoot(parent_index, function, *args, **kwargs)
+        else:
+            return
 
     """ EVENTS """
     def selectionChanged(self, selected, deselected):
@@ -254,17 +260,8 @@ class AbstractDragDropAbstractView(object):
         self.__keyPressEvent = function
 
     def setExpanded(self, index, bool):
+        """ override for list views """
         return QAbstractItemView.keyPressEvent(self, index, bool)
-
-    def expandIndexToRoot(self, index, expanded):
-        print("parent ===", index.parent().internalPointer())
-        parent_index = index.parent()
-        parent_item = parent_index.internalPointer()
-        if parent_item:
-            self.setExpanded(parent_index, expanded)
-            return self.expandIndexToRoot(parent_index, expanded)
-        else:
-            return
 
 
 class AbstractDragDropListView(QListView, AbstractDragDropAbstractView):
@@ -420,10 +417,6 @@ class AbstractDragDropTreeView(QTreeView, AbstractDragDropAbstractView):
 
     def setFlow(self, _):
         pass
-
-    # def expandRecursively(self, index:PySide2.QtCore.QModelIndex, depth:int=...) -> None:
-    # def dropEvent(self, event):
-    #     return QTreeView.dropEvent(self, event)
 
 
 """ STYLES """
