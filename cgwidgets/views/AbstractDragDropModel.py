@@ -337,33 +337,6 @@ class AbstractDragDropModel(QAbstractItemModel):
         else:
             return QModelIndex()
 
-    def findItems(self, value, index=None, role=Qt.DisplayRole):
-        """
-        Finds all of the indexes of the value provided that are descendents of the index provided.
-        If no index is provided, the default index will be the root.
-
-        Args:
-            value (string): to search for
-            index (QModelIndex): to search from
-            role (Qt.DisplayRole): to search data of
-
-        Returns (list): of QModelIndex
-
-        """
-        indexes = []
-        # get children to search from
-        if index:
-            children = index.internalPointer().children()
-        else:
-            children = self.getRootItem().children()
-
-        # get list
-        for child in children:
-            current_index = self.getIndexFromItem(child)
-            indexes += self.match(current_index, role, value, flags=Qt.MatchRecursive)
-
-        return indexes
-
     def getIndexFromItem(self, item):
         """
         Returns a QModelIndex relating to the corresponding item given
@@ -374,7 +347,7 @@ class AbstractDragDropModel(QAbstractItemModel):
 
         """
         row = item.row()
-        if item:
+        if item and row != None:
             index = self.createIndex(row, 0, item)
         else:
             index = QModelIndex()
@@ -398,6 +371,37 @@ class AbstractDragDropModel(QAbstractItemModel):
     def getItemName(self, item):
         name = item.columnData()[self._header_data[0]]
         return name
+
+    """ ITEM SEARCHING """
+    def findItems(self, value, index=None, role=Qt.DisplayRole, match_type=Qt.MatchExactly):
+        """
+        Finds all of the indexes of the value provided that are descendents of the index provided.
+        If no index is provided, the default index will be the root.
+
+        Args:
+            value (string): to search for
+            index (QModelIndex): to search from
+            role (Qt.DisplayRole): to search data of
+            match_type (Qt.MatchFlags): Flags to match with...
+                Qt.MatchExactly | Qt.MatchStartsWith
+                https://doc.qt.io/archives/qtjambi-4.5.2_01/com/trolltech/qt/core/Qt.MatchFlag.html
+        Returns (list): of QModelIndex
+
+        """
+        indexes = []
+
+        # get children to search from
+        if index:
+            children = index.internalPointer().children()
+        else:
+            children = self.getRootItem().children()
+
+        # get list
+        for child in children:
+            current_index = self.getIndexFromItem(child)
+            indexes += self.match(current_index, role, value, flags=Qt.MatchRecursive | match_type, hits=-1)
+
+        return indexes
 
     """ Create index/items"""
     def setItemType(self, item_type):
@@ -751,99 +755,4 @@ class AbstractDragDropModel(QAbstractItemModel):
         self.__itemSelectedEvent(item, enabled, column)
 
     def __itemSelectedEvent(self, item, enabled, column=0):
-        print("DragDropModel --> itemSelectDefault")
-        # print(item.columnData()['name'], enabled)
         pass
-
-# TODO PROXY
-class AbstractSortFilterProxyModel(QSortFilterProxyModel):
-    def __init__(self, parent=None):
-        super(AbstractSortFilterProxyModel, self).__init__(parent)
-
-    """ VIRTUAL """
-    def insertNewIndex(self, row, name="None", parent=QModelIndex()):
-        if parent:
-            self.sourceModel().insertNewIndex(row, name=name, parent=parent)
-
-    """ VIRTUAL EVENTS """
-    """ VIRTUAL UTILS """
-    def setItemEnabled(self, item, enabled):
-        item.setIsEnabled(enabled)
-        self.sourceModel().itemEnabledEvent(item, enabled)
-
-    def deleteItem(self, item, event_update=False):
-        self.sourceModel().deleteItem(item, event_update=event_update)
-    """ VIRTUAL FUNCTIONS """
-    def setItemDeleteEvent(self, function):
-        self.sourceModel().setItemDeleteEvent(function)
-
-    def setDragStartEvent(self, function):
-        self.sourceModel().setDragStartEvent(function)
-
-    def setDropEvent(self, function):
-        self.sourceModel().setDropEvent(function)
-
-    def setItemEnabledEvent(self, function):
-        self.sourceModel().setItemEnabledEvent(function)
-
-    def setTextChangedEvent(self, function):
-        self.sourceModel().setTextChangedEvent(function)
-
-    def setItemSelectedEvent(self, function):
-        self.sourceModel().setItemSelectedEvent(function)
-    #
-    def itemSelectedEvent(self, item, enabled, column=0):
-        print("AbstractSortFilterProxyModel")
-        self.sourceModel().itemSelectedEvent(item, enabled, column=column)
-
-    """ DRAG / DROP PROPERTIES """
-    def isSelectable(self):
-        return self.sourceModel().isSelectable()
-
-    def isDeleteEnabled(self):
-        return self.sourceModel().isDeleteEnabled()
-
-    def isDragEnabled(self):
-        self.sourceModel().isDragEnabled()
-
-    def isDropEnabled(self):
-        self.sourceModel().isDropEnabled()
-
-    def isEnableable(self):
-        return self.sourceModel().isEnableable()
-
-    def isRootDropEnabled(self):
-        return self.sourceModel().isRootDropEnabled()
-
-    def setIsRootDropEnabled(self, _root_drop_enabled):
-        self._root_drop_enabled = _root_drop_enabled
-
-    def isEditable(self):
-        if self._isEditable:
-            return Qt.ItemIsEditable
-        else:
-            return 0
-
-    def setIsEditable(self, _isEditable):
-        self._isEditable = _isEditable
-
-    def setIsRootDropEnabled(self, enabled):
-        self.sourceModel().setIsRootDropEnabled(enabled)
-
-    def setIsSelectable(self, _isSelectable):
-        self.sourceModel().setIsSelectable(_isSelectable)
-
-    def setIsDeleteEnabled(self, _isDeleteEnabled):
-        self.sourceModel().setIsDeleteEnabled(_isDeleteEnabled)
-
-    def setIsDragEnabled(self, _isDragEnabled):
-        self.sourceModel().setIsDragEnabled(_isDragEnabled)
-
-    def setIsDropEnabled(self, _isDropEnabled):
-        self.sourceModel().setIsDropEnabled(_isDropEnabled)
-
-    def setIsEnableable(self, _isEnableable):
-        self.sourceModel().setIsEnableable(_isEnableable)
-
-    def setIsEditable(self, _isEditable):
-        self.sourceModel().setIsEditable(_isEditable)

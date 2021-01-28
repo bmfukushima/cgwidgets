@@ -1,6 +1,5 @@
 from .AbstractDragDropModel import AbstractDragDropModelItem
 from .AbstractDragDropModel import AbstractDragDropModel
-from .AbstractDragDropModel import AbstractSortFilterProxyModel
 
 from .AbstractDragDropView import AbstractDragDropListView
 from .AbstractDragDropView import AbstractDragDropTreeView
