@@ -13,7 +13,7 @@ main_tansu_widget = TansuDelegate()
 main_tansu_widget.handle_length = 100
 
 # add widgets
-for char in "SINEP":
+for char in "SINE.":
     widget = QLabel(char)
     main_tansu_widget.addWidget(widget)
     widget.setStyleSheet("color: rgba(255,0,0,255)")

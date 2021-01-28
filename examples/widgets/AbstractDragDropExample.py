@@ -111,7 +111,7 @@ def testSelectToggle():
     #updateStyleSheet(tree_view)
 
 w = QWidget()
-button = QPushButton("sinep")
+button = QPushButton("SINE.")
 button.clicked.connect(testSelectToggle)
 l = QVBoxLayout(w)
 l.addWidget(tree_view)

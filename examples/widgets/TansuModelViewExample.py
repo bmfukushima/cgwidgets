@@ -179,7 +179,7 @@ note:
     when providing column data, the key in the dict with the 0th
     index is required, and is the text displayed to the user by default
 """
-tansu_widget.setHeaderData(['name', 'SINEP', "woowoo"])
+tansu_widget.setHeaderData(['name', 'SINE.', "woowoo"])
 
 # CREATE ITEMS / TABS
 def setupAsStacked():
@@ -188,14 +188,14 @@ def setupAsStacked():
     tansu_widget.insertTansuWidget(0, column_data={'name' : '<title> world'}, widget=QLabel('world'))
 
     tansu_delegate = TansuDelegate()
-    for char in 'sinep':
+    for char in 'SINE.':
         tansu_delegate.addWidget(QLineEdit(char))
     tansu_delegate_item = tansu_widget.insertTansuWidget(0, column_data={'name' : '<title> tansu'}, widget=tansu_delegate)
 
     # insert child tabs
     # insert child widgets
     for y in range(0, 2):
-        widget = QLineEdit(str("sinep"))
+        widget = QLineEdit(str("SINE."))
         tansu_widget.insertTansuWidget(y, column_data={'name': str(y), 'one': 'datttaaa'}, widget=widget, parent=tansu_delegate_item)
 
 def setupAsDynamic():

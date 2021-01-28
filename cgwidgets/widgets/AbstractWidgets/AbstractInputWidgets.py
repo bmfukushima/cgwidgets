@@ -13,7 +13,7 @@ Input Group
                 | -* InputWidget
 
 Input Widgets
-    AbstractInputWidget (QLineEdit)
+    iAbstractInputWidget (QLineEdit)
         | -- AbstractStringInputWidget
         | -- AbstractNumberInputWidget
                 | -- AbstractFloatInputWidget
@@ -22,20 +22,20 @@ Input Widgets
 """
 
 from qtpy.QtWidgets import (
-    QLineEdit, QLabel, QApplication, QPlainTextEdit
+    QLineEdit, QLabel, QPlainTextEdit, QStackedWidget, QApplication
 )
 from qtpy.QtCore import Qt, QEvent
 
 from cgwidgets.utils import (
     updateStyleSheet, clearLayout, installLadderDelegate, getWidgetAncestor,
-    getFontSize, checkIfValueInRange, checkNegative
+    getFontSize, checkIfValueInRange, checkNegative, setAsTransparent
 )
 from cgwidgets.settings.colors import iColor
 from cgwidgets.settings.keylist import NUMERICAL_INPUT_KEYS, MATH_KEYS
 from cgwidgets.widgets.AbstractWidgets import AbstractInputGroupBox, AbstractInputGroup
 
 
-class AbstractInputWidget(object):
+class iAbstractInputWidget(object):
     """
     Base class for users to input data into.
 
@@ -51,7 +51,7 @@ class AbstractInputWidget(object):
     """
 
     def __init__(self):
-        super(AbstractInputWidget, self).__init__()
+        super(iAbstractInputWidget, self).__init__()
         # setup default args
         self._key_list = []
         self._orig_value = None
@@ -194,7 +194,7 @@ class AbstractInputWidget(object):
         #self.updateStyleSheet()
 
 
-class AbstractInputLineEdit(QLineEdit, AbstractInputWidget):
+class AbstractInputLineEdit(QLineEdit, iAbstractInputWidget):
     def __init__(self, parent=None):
         super(AbstractInputLineEdit, self).__init__(parent)
 
@@ -219,7 +219,7 @@ class AbstractInputLineEdit(QLineEdit, AbstractInputWidget):
         return QLineEdit.mousePressEvent(self, event, *args, **kwargs)
 
 
-class AbstractInputPlainText(QPlainTextEdit, AbstractInputWidget):
+class AbstractInputPlainText(QPlainTextEdit, iAbstractInputWidget):
     TYPE = "text"
     def __init__(self, parent=None):
         super(AbstractInputPlainText, self).__init__()
@@ -623,6 +623,48 @@ class AbstractBooleanInputWidget(QLabel):
         updateStyleSheet(self)
 
 
+class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
+    """
+    Input widget with a display delegate overlaid.  This delegate will dissapear
+    when the user first hover enters.
+
+    Args:
+        input_widget (QWidget): Widget for user to input values into
+        title (string): Text to display when the widget is shown
+            for the first time.
+
+    Attributes:
+        input_widget:
+        overlay_widget:
+    """
+    def __init__(
+            self,
+            parent=None,
+            input_widget=None,
+            title=""
+    ):
+        super(AbstractOverlayInputWidget, self).__init__(parent)
+
+        # create widgets
+        self.overlay_widget = QLabel(title)
+        if not input_widget:
+            input_widget = AbstractStringInputWidget(self)
+        self.input_widget = input_widget
+
+        # add widgets
+        self.addWidget(self.overlay_widget)
+        self.addWidget(self.input_widget)
+
+        # setup style
+        setAsTransparent(self.overlay_widget)
+        self.overlay_widget.setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
+
+    def enterEvent(self, event):
+        self.setCurrentIndex(1)
+        QStackedWidget.enterEvent(self, event)
+        self.input_widget.setFocus()
+
+
 if __name__ == "__main__":
     import sys
     from qtpy.QtWidgets import QApplication, QWidget, QVBoxLayout
@@ -631,13 +673,14 @@ if __name__ == "__main__":
     import sys, inspect
 
     app = QApplication(sys.argv)
-
-    w = AbstractLabelInputWidget()
+    input_widget = AbstractStringInputWidget()
+    title = "yolo bolo"
+    w = AbstractOverlayInputWidget(input_widget=input_widget, title=title)
 
     print(AbstractIntInputWidget.mro())
     w.resize(500, 500)
     w.show()
-    w.move(QCursor.pos())
+    #w.move(QCursor.pos())
     sys.exit(app.exec_())
 
     def print_classes():

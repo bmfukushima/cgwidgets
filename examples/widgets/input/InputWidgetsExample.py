@@ -13,6 +13,7 @@ from cgwidgets.widgets import (
     ListInputWidget,
     LabelledInputWidget,
     FrameGroupInputWidget,
+    OverlayInputWidget,
     PlainTextInputWidget
 )
 
@@ -61,6 +62,7 @@ boolean_input_widget = BooleanInputWidget()
 string_input_widget = StringInputWidget()
 list_input_widget = ListInputWidget(item_list=list_of_crap)
 plain_text_input_widget = PlainTextInputWidget()
+overlay_input_widget = OverlayInputWidget(input_widget=StringInputWidget(), title="SINE.")
 
 normal_widget.layout().addWidget(float_input_widget)
 normal_widget.layout().addWidget(int_input_widget)
@@ -68,6 +70,7 @@ normal_widget.layout().addWidget(boolean_input_widget)
 normal_widget.layout().addWidget(string_input_widget)
 normal_widget.layout().addWidget(list_input_widget)
 normal_widget.layout().addWidget(plain_text_input_widget)
+normal_widget.layout().addWidget(overlay_input_widget)
 
 float_input_widget.setUserFinishedEditingEvent(test)
 int_input_widget.setUserFinishedEditingEvent(test)

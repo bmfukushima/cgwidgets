@@ -17,8 +17,7 @@ from qtpy.QtCore import (
     QEvent, Qt, QSortFilterProxyModel, Qt, QEvent, QDir
 )
 
-from qtpy.QtWidgets import (
-    QSplitter, QLabel, QFrame, QBoxLayout, QLineEdit, QWidget, QLineEdit, QFileSystemModel, QApplication, QCompleter, QListView, QStyledItemDelegate)
+from qtpy.QtWidgets import (QFileSystemModel, QCompleter, QApplication)
 from qtpy.QtCore import Qt
 
 from cgwidgets.widgets import (
@@ -29,6 +28,7 @@ from cgwidgets.widgets import (
     AbstractIntInputWidget,
     AbstractStringInputWidget,
     AbstractBooleanInputWidget,
+    AbstractOverlayInputWidget,
     AbstractVLine,
     AbstractHLine,
     AbstractComboListInputWidget,
@@ -667,6 +667,30 @@ class AbstractTansuInputWidget(TansuModelViewWidget):
         self.updateStyleSheet()
 
         self.setDelegateTitleIsShown(False)
+
+
+class OverlayInputWidget(AbstractOverlayInputWidget):
+    """
+    Input widget with a display delegate overlaid.  This delegate will dissapear
+    when the user first hover enters.
+
+    Args:
+        input_widget (QWidget): Widget for user to input values into
+        title (string): Text to display when the widget is shown
+            for the first time.
+
+    Attributes:
+        input_widget:
+        overlay_widget:
+    """
+    def __init__(
+            self,
+            parent=None,
+            input_widget=None,
+            title=""
+    ):
+        super(OverlayInputWidget, self).__init__(parent, input_widget=input_widget, title=title)
+
 
 """
 TODO

@@ -39,7 +39,7 @@ for x in range(5):
 
 # insert child widgets
 for y in range(0, 2):
-    widget = QLabel(str("sinep"))
+    widget = QLabel(str("SINE."))
     tansu_widget.insertTansuWidget(y, column_data={'name': str(y), 'one': 'datttaaa'}, widget=widget, parent=parent_item)
 
 # enable drag/drop
