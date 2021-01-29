@@ -75,7 +75,7 @@ tansu_widget = TansuModelViewWidget()
 # SETUP VIEW
 tansu_widget.setHeaderViewType(ModelViewWidget.TREE_VIEW)
 
-# custom view
+# CUSTOM VIEW
 def setupCustomView():
     class CustomView(AbstractDragDropListView):
         """
@@ -101,22 +101,10 @@ def setupCustomModel():
         def __init__(self, parent=None):
             super(CustomModelItem, self).__init__(parent)
 
-    # model = TansuModel()
-    # item_type = CustomModelItem
-    # model.setItemType(item_type)
-    # tansu_widget.setModel(model)
-
     model = TansuModel()
-
-    from qtpy.QtCore import QSortFilterProxyModel
-    proxy_model = QSortFilterProxyModel()
-    proxy_model.setSourceModel(model)
-    tansu_widget.setModel(proxy_model)
-    tansu_widget.headerWidget().search_box.setModel(model)
-    # --- setup completer
-    # self.completer = QCompleter(self)
-    # self.completer.setModel(proxy_model)
-
+    item_type = CustomModelItem
+    model.setItemType(item_type)
+    tansu_widget.setModel(model)
 
     """ COMPLETER """
     def _updateModel(self, item_list=None):

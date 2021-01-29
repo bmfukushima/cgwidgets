@@ -486,8 +486,10 @@ class LabelledInputWidget(TansuDelegate, AbstractInputGroupFrame):
         # setup minimum sizes
         font_size = getFontSize(QApplication)
         if direction == Qt.Vertical:
+            self.setIsHandleStatic(True)
             self.setMinimumSize(font_size*4, font_size*6)
         else:
+            self.setIsHandleStatic(False)
             self.setMinimumSize(font_size*12, font_size*2.5)
 
         # update defaults

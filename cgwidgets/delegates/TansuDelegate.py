@@ -27,6 +27,8 @@ class TansuDelegate(QSplitter):
             allows the user to press a hotkey to make a widget take up the
             entire space of this splitter.  The default hotkey for this is ~ but can be
             set with the setSoloViewHotkey() call.
+        is_handle_static (bool): determines if the handles are adjustable or not.
+            This is mainly used for reusing the tansu view as bidirectional layout
         rgba_handle (rgba): color of the handle
         rgba_handle_hover (rgba): color of the handle when hovered over
         # not used... but I set them up anyways lol
@@ -55,6 +57,7 @@ class TansuDelegate(QSplitter):
         self._is_solo_view_enabled = True
         self._is_solo_view = False
         self._solo_view_hotkey = TansuDelegate.FULLSCREEN_HOTKEY
+        self._is_handle_static = False
 
         # set colors
         self._rgba_handle = iColor["rgba_outline"]
@@ -274,6 +277,16 @@ class TansuDelegate(QSplitter):
         self._solo_view_hotkey = solo_view_hotkey
 
     """ HANDLE """
+    def setIsHandleStatic(self, enabled):
+        self._is_handle_static = enabled
+
+    def isHandleStatic(self):
+        return self._is_handle_static
+
+    def createHandle(self):
+        handle = TansuHandle(self.orientation(), self)
+        return handle
+
     @property
     def handle_width(self):
         return self._handle_width
@@ -414,6 +427,17 @@ class TansuDelegate(QSplitter):
     def rgba_text(self, _rgba_text):
         self._rgba_text = _rgba_text
         self.updateStyleSheet()
+
+
+class TansuHandle(QSplitterHandle):
+    def __init__(self, orientation, parent=None):
+        super(TansuHandle, self).__init__(orientation, parent)
+
+    def mouseMoveEvent(self, event):
+        if self.parent().isHandleStatic():
+            return
+        else:
+            return QSplitterHandle.mouseMoveEvent(self, event)
 
 
 if __name__ == "__main__":

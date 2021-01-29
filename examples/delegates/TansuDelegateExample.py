@@ -11,6 +11,10 @@ main_tansu_widget = TansuDelegate()
 
 # OPTIONAL | set handle length (if not set, by default this will be full length)
 main_tansu_widget.handle_length = 100
+main_tansu_widget.handle_width = 15
+main_tansu_widget.setIsHandleStatic(False)
+main_tansu_widget.setIsSoloViewEnabled(True)
+main_tansu_widget.setOrientation(Qt.Vertical)
 
 # add widgets
 for char in "SINE.":
@@ -32,7 +36,6 @@ for x in range(3):
 main_tansu_widget.addWidget(tansu_widget_2)
 
 # show widget
-
 main_tansu_widget.show()
 main_tansu_widget.move(QCursor.pos())
 sys.exit(app.exec_())
