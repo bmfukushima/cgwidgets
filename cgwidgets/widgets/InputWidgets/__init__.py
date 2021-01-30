@@ -7,6 +7,7 @@ from .InputWidgets import LabelledInputWidget
 from .InputWidgets import FrameGroupInputWidget
 from .InputWidgets import PlainTextInputWidget
 from .InputWidgets import OverlayInputWidget
+from .InputWidgets import MultiButtonInputWidget
 
 from .InputWidgets import ListInputWidget as ListInputWidget
 from .InputWidgets import ComboListInputWidget as ComboListInputWidget

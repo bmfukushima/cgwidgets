@@ -922,7 +922,7 @@ if __name__ == "__main__":
         w.insertTansuWidget(y, column_data={'name':str(y)}, widget=widget, parent=parent_item)
 
     w.resize(500, 500)
-    w.delegateWidget().setHandleLength(100)
+    w.delegateWidget().handle_length = 100
 
     w.show()
     # #w.headerWidget().model().setIsDragEnabled(False)

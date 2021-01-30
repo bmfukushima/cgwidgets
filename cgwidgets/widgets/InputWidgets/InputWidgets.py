@@ -25,6 +25,8 @@ from cgwidgets.widgets import (
     AbstractComboListInputWidget,
     AbstractListInputWidget,
     AbstractInputPlainText,
+    AbstractMultiButtonInputWidget,
+    AbstractButtonInputWidget
 )
 
 from cgwidgets.widgets import (
@@ -136,6 +138,29 @@ class iTansuGroupInput(object):
         #value = item.getArg('value')
         value = item.columnData()['value']
         widget.getMainWidget().getInputWidget().setText(str(value))
+
+
+class OverlayInputWidget(AbstractOverlayInputWidget):
+    """
+    Input widget with a display delegate overlaid.  This delegate will dissapear
+    when the user first hover enters.
+
+    Args:
+        input_widget (QWidget): Widget for user to input values into
+        title (string): Text to display when the widget is shown
+            for the first time.
+
+    Attributes:
+        input_widget:
+        overlay_widget:
+    """
+    def __init__(
+            self,
+            parent=None,
+            input_widget=None,
+            title=""
+    ):
+        super(OverlayInputWidget, self).__init__(parent, input_widget=input_widget, title=title)
 
 
 class FloatInputWidget(AbstractFloatInputWidget, iTansuGroupInput):
@@ -450,7 +475,7 @@ class LabelledInputWidget(TansuView, AbstractInputGroupFrame):
         return self._input_widget_base_class
 
     def setSeparatorLength(self, length):
-        self.setHandleLength(length)
+        self.handle_length = length
         self._separator_length = length
 
     def setSeparatorWidth(self, width):
@@ -655,87 +680,59 @@ class AbstractTansuInputWidget(TansuModelViewWidget):
         self.setMultiSelect(True)
         self.setMultiSelectDirection(Qt.Vertical)
 
-        self.setHandleLength(50)
-        self.delegateWidget().setHandleLength(50)
+        self.handle_length = 50
+        self.delegateWidget().handle_length = 50
         self.updateStyleSheet()
 
         self.setDelegateTitleIsShown(False)
 
 
-class OverlayInputWidget(AbstractOverlayInputWidget):
+class MultiButtonInputWidget(AbstractMultiButtonInputWidget):
     """
-    Input widget with a display delegate overlaid.  This delegate will dissapear
-    when the user first hover enters.
+    Provides a multi button input widget.
 
+    This widget should primarily be used for setting flags.
+
+    Colors
+    Hide Widget Handles?
     Args:
-        input_widget (QWidget): Widget for user to input values into
-        title (string): Text to display when the widget is shown
-            for the first time.
+        buttons (list): of lists ["title": virtualFunction]
+            The virtual  function needs to take one arg.  This arg
+            will return the widget that is created to display this
+            event
 
     Attributes:
-        input_widget:
-        overlay_widget:
+        _buttons (dict): of clickable buttons
+            name: button
+        _current_buttons (List): of AbstractButtonInputWidget that are
+            currently selected by the user
     """
-    def __init__(
-            self,
-            parent=None,
-            input_widget=None,
-            title=""
-    ):
-        super(OverlayInputWidget, self).__init__(parent, input_widget=input_widget, title=title)
-
-
-"""
-TODO
-    it all seems to be working...
-        When it goes over a certain length... ~50, then it will take up the entire width
-        and when its under a certain width... it will auto magically be removed
-"""
+    def __init__(self, parent=None, buttons=None, orientation=Qt.Horizontal):
+        super(MultiButtonInputWidget, self).__init__(parent, buttons, orientation)
 
 
 if __name__ == "__main__":
     import sys
-    from qtpy.QtWidgets import (
-        QApplication, QWidget, QVBoxLayout, QHBoxLayout, QGroupBox)
+    from qtpy.QtWidgets import QApplication, QWidget, QVBoxLayout
     from qtpy.QtGui import QCursor
+
+    import sys, inspect
+
     app = QApplication(sys.argv)
+    def userEvent(widget):
+        print("user input...", widget)
 
-    """ Group Widget"""
-    frame_group_input_widget = FrameGroupInputWidget(name='Frame Input Widgets', direction=Qt.Vertical)
+    buttons = []
+    for x in range(3):
+        buttons.append([str(x), userEvent])
 
-    # set header editable / Display
-    frame_group_input_widget.setIsHeaderEditable(True)
-    frame_group_input_widget.setIsHeaderShown(True)
-
-    # Add widgets
-    label_widgets = {
-        "float": FloatInputWidget,
-        "int": IntInputWidget,
-        "bool": BooleanInputWidget,
-        "str": StringInputWidget,
-        "list": ListInputWidget,
-        "text": PlainTextInputWidget
-    }
-
-    for arg in label_widgets:
-        # create widget
-        widget_type = label_widgets[arg]
-        input_widget = LabelledInputWidget(name=arg, widget_type=widget_type)
-
-        # set widget orientation
-        input_widget.setDirection(Qt.Horizontal)
-
-        # add to group layout
-        frame_group_input_widget.addInputWidget(input_widget)
-
-    LabelledInputWidget.getAllParrallelWidgets(input_widget)
+    widget = MultiButtonInputWidget(buttons=buttons, orientation=Qt.Horizontal)
 
 
-
-    frame_group_input_widget.show()
-    frame_group_input_widget.move(QCursor.pos())
-
-    #input_widget.offsetAllHandles(5)
-    #input_widget.offsetAllHandles(5)
-
+    widget.move(QCursor.pos())
+    widget.show()
+    widget.resize(256, 256)
+    widget.resize(500, 500)
+    widget.show()
+    #w.move(QCursor.pos())
     sys.exit(app.exec_())

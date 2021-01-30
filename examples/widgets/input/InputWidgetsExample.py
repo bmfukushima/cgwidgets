@@ -14,7 +14,8 @@ from cgwidgets.widgets import (
     LabelledInputWidget,
     FrameGroupInputWidget,
     OverlayInputWidget,
-    PlainTextInputWidget
+    PlainTextInputWidget,
+    MultiButtonInputWidget
 )
 
 app = QApplication(sys.argv)
@@ -63,6 +64,12 @@ string_input_widget = StringInputWidget()
 list_input_widget = ListInputWidget(item_list=list_of_crap)
 plain_text_input_widget = PlainTextInputWidget()
 overlay_input_widget = OverlayInputWidget(input_widget=StringInputWidget(), title="SINE.")
+def userEvent(widget):
+    print("user input...", widget)
+buttons = []
+for x in range(3):
+    buttons.append([str(x), userEvent])
+multi_button_input_widget = MultiButtonInputWidget(buttons=buttons, orientation=Qt.Horizontal)
 
 normal_widget.layout().addWidget(float_input_widget)
 normal_widget.layout().addWidget(int_input_widget)
@@ -71,6 +78,7 @@ normal_widget.layout().addWidget(string_input_widget)
 normal_widget.layout().addWidget(list_input_widget)
 normal_widget.layout().addWidget(plain_text_input_widget)
 normal_widget.layout().addWidget(overlay_input_widget)
+normal_widget.layout().addWidget(multi_button_input_widget)
 
 float_input_widget.setUserFinishedEditingEvent(test)
 int_input_widget.setUserFinishedEditingEvent(test)

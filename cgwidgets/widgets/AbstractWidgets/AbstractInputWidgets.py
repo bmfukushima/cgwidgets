@@ -80,7 +80,7 @@ class iAbstractInputWidget(object):
             color: rgba{rgba_hover};
         }}
         {type}[is_selected=true]{{
-            background-color: rgba(255,0,0,255)
+            border: 1px solid rgba{rgba_hover};
         }}
         """.format(**style_sheet_args)
 
@@ -651,10 +651,13 @@ class AbstractMultiButtonInputWidget(TansuView):
     """
     Provides a multi button input widget.
 
-    Resize
     Colors
     Hide Widget Handles?
-    Multiselect
+    Args:
+        buttons (list): of lists ["title": virtualFunction]
+            The virtual  function needs to take one arg.  This arg
+            will return the widget that is created to display this
+            event
 
     Attributes:
         _buttons (dict): of clickable buttons
@@ -662,19 +665,24 @@ class AbstractMultiButtonInputWidget(TansuView):
         _current_buttons (List): of AbstractButtonInputWidget that are
             currently selected by the user
     """
-    def __init__(self, parent=None, orientation=Qt.Vertical):
+    def __init__(self, parent=None, buttons=None, orientation=Qt.Vertical):
         self._rgba_flag = iColor["rgba_hover"]
 
         super(AbstractMultiButtonInputWidget, self).__init__(parent, orientation)
         self.setIsSoloViewEnabled(False)
         self.setIsHandleStatic(True)
-        self.handle_width = 0
-        self.setHandleLength(0)
+        self.handle_width = 1
+        self.handle_length = 1
 
         #
         self._buttons = {}
         self._is_multi_select = True
         self._current_buttons = []
+
+        #
+        if buttons:
+            for button in buttons:
+                self.addButton(button[0], button[1])
 
     """ PROPERTIES """
     def isMultiSelect(self):
@@ -733,6 +741,10 @@ class AbstractMultiButtonInputWidget(TansuView):
             title (str): display name
             user_clicked_event (function): to run when the user clicks
             image:
+
+        Note:
+            image is not currently setup.  This kwarg is merely a place holder.
+        Todo: setup image
         """
         button = AbstractButtonInputWidget(self, user_clicked_event=user_clicked_event, title=title)
         self._buttons[title] = button
@@ -780,9 +792,13 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     def userEvent(widget):
         print("user input...", widget)
-    widget = AbstractMultiButtonInputWidget(orientation=Qt.Horizontal)
+
+    buttons = []
     for x in range(3):
-        widget.addButton(str(x), userEvent)
+        buttons.append([str(x), userEvent])
+
+    widget = AbstractMultiButtonInputWidget(buttons=buttons, orientation=Qt.Horizontal)
+
 
     widget.move(QCursor.pos())
     widget.show()

@@ -309,12 +309,14 @@ class TansuView(QSplitter):
         handle = TansuViewHandle(self.orientation(), self)
         return handle
 
-    def setHandleLength(self, length):
+    @property
+    def handle_length(self):
+        return self._handle_length
+
+    @handle_length.setter
+    def handle_length(self, length):
         self._handle_length = length
         self.updateStyleSheet()
-
-    def handleLength(self):
-        return self._handle_length
 
     def getAllHandles(self):
         """
@@ -354,17 +356,17 @@ class TansuView(QSplitter):
         Returns (str): <margin>px <margin>px
             ie 10px 10px
         """
-        if self.handleLength() < 0:
+        if self.handle_length < 0:
             return "10px 10px"
         margin_offset = 2
         if self.orientation() == Qt.Vertical:
             length = self.width()
-            margin = (length - self.handleLength()) * 0.5
+            margin = (length - self.handle_length) * 0.5
             margins = "{margin_offset}px {margin}px".format(margin=margin, margin_offset=margin_offset)
 
         elif self.orientation() == Qt.Horizontal:
             length = self.height()
-            margin = (length - self.handleLength()) * 0.5
+            margin = (length - self.handle_length) * 0.5
             margins = "{margin}px {margin_offset}px".format(margin=margin, margin_offset=margin_offset)
 
         return margins
@@ -487,7 +489,7 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     main_splitter = TansuView()
-    main_splitter.setHandleLength(100)
+    main_splitter.handle_length = 100
     main_splitter.setObjectName("main")
     label = QLabel('a')
     main_splitter.addWidget(label)
