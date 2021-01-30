@@ -102,6 +102,28 @@ class TansuView(QSplitter):
             if widget not in exclusion_list:
                 widget.setParent(None)
 
+    def setAllWidgetsToUniformSize(self):
+        """
+        Sets all of the widgets to a uniform size.
+
+        This will be done, by setting all of the handle positions to a
+        value relative to the handles index and the width/height of this
+        TansuView.
+
+        Note:
+            Handle at 0 index is ALWAYs invisible
+
+        """
+        num_handles = len(self.getAllHandles())
+        # get offset
+        if self.orientation() == Qt.Vertical:
+            offset = self.height() / (num_handles)
+        elif self.orientation() == Qt.Horizontal:
+            offset = self.width() / (num_handles)
+
+        for i in range(1, num_handles):
+            self.moveSplitter(int(offset * (i)) - 1, i)
+
     @staticmethod
     def getIndexOfWidget(widget):
         """
@@ -284,7 +306,7 @@ class TansuView(QSplitter):
         return self._is_handle_static
 
     def createHandle(self):
-        handle = TansuHandle(self.orientation(), self)
+        handle = TansuViewHandle(self.orientation(), self)
         return handle
 
     def setHandleLength(self, length):
@@ -293,6 +315,17 @@ class TansuView(QSplitter):
 
     def handleLength(self):
         return self._handle_length
+
+    def getAllHandles(self):
+        """
+        Returns (list): of all handles in this TansuView
+
+        """
+        _handles = []
+        for i, child in enumerate(self.children()):
+            if isinstance(child, TansuViewHandle):
+                _handles.append(child)
+        return _handles
 
     @property
     def handle_width(self):
@@ -436,9 +469,9 @@ class TansuView(QSplitter):
         self.updateStyleSheet()
 
 
-class TansuHandle(QSplitterHandle):
+class TansuViewHandle(QSplitterHandle):
     def __init__(self, orientation, parent=None):
-        super(TansuHandle, self).__init__(orientation, parent)
+        super(TansuViewHandle, self).__init__(orientation, parent)
 
     def mouseMoveEvent(self, event):
         if self.parent().isHandleStatic():

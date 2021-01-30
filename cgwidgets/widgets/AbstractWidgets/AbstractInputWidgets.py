@@ -1,12 +1,4 @@
 """
-TODO:
-    Group Box
-        *   Dynamic text size
-                QApplication.font()
-        *   Rounded vs straight corners?
-        *   Expose orientation?
-                That's a lot of work...
-
 Input Group
     AbstractInputGroupBox (QGroupBox)
         | -- TabTansuWidget
@@ -26,13 +18,14 @@ from qtpy.QtWidgets import (
 )
 from qtpy.QtCore import Qt, QEvent
 
-from cgwidgets.utils import (
-    updateStyleSheet, clearLayout, installLadderDelegate, getWidgetAncestor,
-    getFontSize, checkIfValueInRange, checkNegative, setAsTransparent, updateStyleSheet
-)
+
 from cgwidgets.settings.colors import iColor
 from cgwidgets.settings.keylist import NUMERICAL_INPUT_KEYS, MATH_KEYS
-from cgwidgets.views import TansuView
+from cgwidgets.utils import (
+    installLadderDelegate, getFontSize, checkIfValueInRange,
+    checkNegative, setAsTransparent, updateStyleSheet
+)
+from cgwidgets.views import TansuView, TansuViewHandle
 
 
 class iAbstractInputWidget(object):
@@ -656,57 +649,93 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
 
 class AbstractMultiButtonInputWidget(TansuView):
     """
-    Resizing... Block hovering / resizing
-    Allow size setting
+    Provides a multi button input widget.
+
+    Resize
+    Colors
+    Hide Widget Handles?
+    Multiselect
+
     Attributes:
-        button_list (dict): of clickable buttons
+        _buttons (dict): of clickable buttons
             name: button
-        current_button (QWidget): currently selected button
+        _current_buttons (List): of AbstractButtonInputWidget that are
+            currently selected by the user
     """
     def __init__(self, parent=None, orientation=Qt.Vertical):
         self._rgba_flag = iColor["rgba_hover"]
-        #super(iAbstractInputWidget, self).__init__()
+
         super(AbstractMultiButtonInputWidget, self).__init__(parent, orientation)
         self.setIsSoloViewEnabled(False)
         self.setIsHandleStatic(True)
-        self.button_list = {}
-        self.setHandleWidth(0)
+        self.handle_width = 0
         self.setHandleLength(0)
 
-    def updateButtonSelection(self, selected_button):
-        for button in self.button_list.values():
-            button.setProperty("is_selected", False)
-            updateStyleSheet(button)
-
-        self.setCurrentButton(selected_button)
-
-    def currentButton(self):
-        return self._current_button
-
-    def setCurrentButton(self, current_button):
         #
-        self._current_button = current_button
+        self._buttons = {}
+        self._is_multi_select = True
+        self._current_buttons = []
 
-        # reset button to first index
+    """ PROPERTIES """
+    def isMultiSelect(self):
+        return self._is_multi_select
+
+    def setIsMultiSelect(self, enabled):
+        self._is_multi_select = enabled
+
+    """ BUTTONS """
+    def updateButtonSelection(self, selected_button):
+        if selected_button in self.currentButtons():
+            self.setButtonAsCurrent(selected_button, False)
+        else:
+            self.setButtonAsCurrent(selected_button, True)
+
+        # update display
+        for button in self._buttons.values():
+            if button not in self.currentButtons():
+                button.setProperty("is_selected", False)
+                updateStyleSheet(button)
+        self.setAllWidgetsToUniformSize()
+
+    def currentButtons(self):
+        return self._current_buttons
+
+    def setButtonAsCurrent(self, current_button, enabled):
+        """
+        Sets the button provided as enabled/disabled.
+
+        Args:
+            current_button (AbstractButtonInputWidget): to enable/disable
+            enabled (bool):
+        """
         current_button.setParent(None)
-        self.insertWidget(0, current_button)
+        if self.isMultiSelect():
+            if enabled:
+                self._current_buttons.append(current_button)
+                self.insertWidget(len(self.currentButtons()) - 1, current_button)
+            else:
+                self._current_buttons.remove(current_button)
+                self.insertWidget(len(self.currentButtons()), current_button)
+        else:
+            self._current_buttons = [current_button]
+            self.insertWidget(0, current_button)
 
         # setup button style
         current_button.setProperty("is_selected", True)
 
+        self.update()
+
     def addButton(self, title, user_clicked_event, image=None):
         """
+        Adds a button to this widget
 
         Args:
             title (str): display name
             user_clicked_event (function): to run when the user clicks
             image:
-
-        Returns:
-
         """
         button = AbstractButtonInputWidget(self, user_clicked_event=user_clicked_event, title=title)
-        self.button_list[title] = button
+        self._buttons[title] = button
         self.addWidget(button)
 
 
@@ -737,6 +766,7 @@ class AbstractButtonInputWidget(QLabel, iAbstractInputWidget):
     def mouseReleaseEvent(self, event):
         self.parent().updateButtonSelection(self)
         self.userClickedEvent()
+        self.parent().setAllWidgetsToUniformSize()
         updateStyleSheet(self)
 
 
