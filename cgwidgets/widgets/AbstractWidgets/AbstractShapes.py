@@ -207,7 +207,7 @@ class AbstractInputGroupFrame(QFrame):
 
 class AbstractFrameGroupInputWidget(AbstractInputGroupFrame):
     """
-    Stylized input group.  This has a base of a TansuDelegate,
+    Stylized input group.  This has a base of a TansuView,
     I'm not really sure why this is different than the InputGroupWidget...
     """
     def __init__(

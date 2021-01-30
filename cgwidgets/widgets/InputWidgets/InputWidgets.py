@@ -6,17 +6,8 @@ TODO
 
 import os
 
-from qtpy.QtWidgets import (
-    QComboBox, QLineEdit, QCompleter, QSizePolicy
-)
-
-from qtpy.QtGui import(
-    QStandardItem, QStandardItemModel
-)
-from qtpy.QtCore import (
-    QEvent, Qt, QSortFilterProxyModel, Qt, QEvent, QDir
-)
-
+from qtpy.QtWidgets import (QSizePolicy)
+from qtpy.QtCore import (QEvent, QDir)
 from qtpy.QtWidgets import (QFileSystemModel, QCompleter, QApplication)
 from qtpy.QtCore import Qt
 
@@ -41,7 +32,7 @@ from cgwidgets.widgets import (
     TansuModelDelegateWidget,
     TansuModelItem
 )
-from cgwidgets.delegates import TansuDelegate
+from cgwidgets.views import TansuView
 from cgwidgets.utils import (
     getWidgetAncestor,
     updateStyleSheet,
@@ -309,9 +300,9 @@ class FileBrowserInputWidget(AbstractListInputWidget, iTansuGroupInput):
 # TODO Move to one architecture
 
 """ CONTAINERS """
-class LabelledInputWidget(TansuDelegate, AbstractInputGroupFrame):
+class LabelledInputWidget(TansuView, AbstractInputGroupFrame):
     """
-    A single input widget.  This inherits from the TansuDelegate,
+    A single input widget.  This inherits from the TansuView,
     to provide a slider for the user to expand/contract the editable area
     vs the view label.
     """
@@ -459,7 +450,7 @@ class LabelledInputWidget(TansuDelegate, AbstractInputGroupFrame):
         return self._input_widget_base_class
 
     def setSeparatorLength(self, length):
-        self.handle_length = length
+        self.setHandleLength(length)
         self._separator_length = length
 
     def setSeparatorWidth(self, width):
@@ -523,13 +514,13 @@ class LabelledInputWidget(TansuDelegate, AbstractInputGroupFrame):
 
         super(LabelledInputWidget, self).showEvent(event)
         self.resetSliderPositionToDefault()
-        return TansuDelegate.showEvent(self, event)
+        return TansuView.showEvent(self, event)
         #return return_val
 
     def resizeEvent(self, event):
         super(LabelledInputWidget, self).resizeEvent(event)
         self.resetSliderPositionToDefault()
-        return TansuDelegate.resizeEvent(self, event)
+        return TansuView.resizeEvent(self, event)
 
 
 class FrameGroupInputWidget(AbstractFrameGroupInputWidget):
@@ -664,8 +655,8 @@ class AbstractTansuInputWidget(TansuModelViewWidget):
         self.setMultiSelect(True)
         self.setMultiSelectDirection(Qt.Vertical)
 
-        self.handle_length = 50
-        self.delegateWidget().handle_length = 50
+        self.setHandleLength(50)
+        self.delegateWidget().setHandleLength(50)
         self.updateStyleSheet()
 
         self.setDelegateTitleIsShown(False)

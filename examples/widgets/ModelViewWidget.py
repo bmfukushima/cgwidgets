@@ -25,7 +25,7 @@ def testEdit(item, old_value, new_value):
 def testEnable(item, enabled):
     print("ENABLING -->", item.columnData()['name'], enabled)
 
-def testSelect(item, enabled):
+def testSelect(item, enabled, column=0):
     print("SELECTING -->", item.columnData()['name'], enabled)
 
 def testDelegateToggle(event, widget, enabled):

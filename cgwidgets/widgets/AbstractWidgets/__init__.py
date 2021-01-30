@@ -8,6 +8,7 @@ from .AbstractShapes import AbstractInputGroupFrame
 from .AbstractShapes import AbstractFrameGroupInputWidget
 
 """ USER INPUT WIDGETS"""
+from .AbstractInputWidgets import iAbstractInputWidget
 from .AbstractInputWidgets import AbstractFloatInputWidget as AbstractFloatInputWidget
 from .AbstractInputWidgets import AbstractIntInputWidget as AbstractIntInputWidget
 from .AbstractInputWidgets import AbstractStringInputWidget as AbstractStringInputWidget
@@ -16,6 +17,10 @@ from .AbstractListInputWidget import AbstractComboListInputWidget as AbstractCom
 from .AbstractListInputWidget import AbstractListInputWidget as AbstractListInputWidget
 from .AbstractInputWidgets import AbstractInputPlainText as AbstractInputPlainText
 from .AbstractInputWidgets import AbstractOverlayInputWidget as AbstractOverlayInputWidget
+
+from .AbstractInputWidgets import AbstractButtonInputWidget
+from .AbstractInputWidgets import AbstractMultiButtonInputWidget
+
 
 
 

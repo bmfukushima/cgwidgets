@@ -28,11 +28,11 @@ from qtpy.QtCore import Qt, QEvent
 
 from cgwidgets.utils import (
     updateStyleSheet, clearLayout, installLadderDelegate, getWidgetAncestor,
-    getFontSize, checkIfValueInRange, checkNegative, setAsTransparent
+    getFontSize, checkIfValueInRange, checkNegative, setAsTransparent, updateStyleSheet
 )
 from cgwidgets.settings.colors import iColor
 from cgwidgets.settings.keylist import NUMERICAL_INPUT_KEYS, MATH_KEYS
-from cgwidgets.widgets.AbstractWidgets import AbstractInputGroupBox, AbstractInputGroup
+from cgwidgets.views import TansuView
 
 
 class iAbstractInputWidget(object):
@@ -60,6 +60,7 @@ class iAbstractInputWidget(object):
         self.rgba_border = iColor["rgba_outline"]
         self.rgba_background = iColor["rgba_gray_0"]
         self.rgba_text = iColor["rgba_text"]
+        self.rgba_hover = iColor["rgba_hover"]
 
         self.updateStyleSheet()
 
@@ -71,12 +72,23 @@ class iAbstractInputWidget(object):
         style_sheet_args.update({
             "rgba_gray_0": repr(self.rgba_background),
             "rgba_border": repr(self.rgba_border),
-            "rgba_text": repr(self.rgba_text)
+            "rgba_text": repr(self.rgba_text),
+            "rgba_hover": repr(self.rgba_hover),
+            "type": type(self).__name__
         })
         style_sheet = """
+        {type}{{
             border: None;
             background-color: rgba{rgba_gray_0};
             color: rgba{rgba_text}
+        }}
+        {type}::hover{{
+            border: 1px dotted rgba{rgba_hover};
+            color: rgba{rgba_hover};
+        }}
+        {type}[is_selected=true]{{
+            background-color: rgba(255,0,0,255)
+        }}
         """.format(**style_sheet_args)
 
         self.setStyleSheet(style_sheet)
@@ -167,32 +179,6 @@ class iAbstractInputWidget(object):
     def getOrigValue(self):
         return self._orig_value
 
-    @property
-    def rgba_border(self):
-        return self._rgba_border
-
-    @rgba_border.setter
-    def rgba_border(self, _rgba_border):
-        self._rgba_border = _rgba_border
-
-    @property
-    def rgba_background(self):
-        return self._rgba_background
-
-    @rgba_background.setter
-    def rgba_background(self, _rgba_background):
-        self._rgba_background = _rgba_background
-        #self.updateStyleSheet()
-
-    @property
-    def rgba_text(self):
-        return self._rgba_text
-
-    @rgba_text.setter
-    def rgba_text(self, _rgba_text):
-        self._rgba_text = _rgba_text
-        #self.updateStyleSheet()
-
 
 class AbstractInputLineEdit(QLineEdit, iAbstractInputWidget):
     def __init__(self, parent=None):
@@ -217,6 +203,9 @@ class AbstractInputLineEdit(QLineEdit, iAbstractInputWidget):
         if event.button() == Qt.MiddleButton:
             return
         return QLineEdit.mousePressEvent(self, event, *args, **kwargs)
+
+    # def enterEvent(self, event):
+    #     QLineEdit.enterEvent(self, event)
 
 
 class AbstractInputPlainText(QPlainTextEdit, iAbstractInputWidget):
@@ -665,6 +654,92 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
         self.input_widget.setFocus()
 
 
+class AbstractMultiButtonInputWidget(TansuView):
+    """
+    Resizing... Block hovering / resizing
+    Allow size setting
+    Attributes:
+        button_list (dict): of clickable buttons
+            name: button
+        current_button (QWidget): currently selected button
+    """
+    def __init__(self, parent=None, orientation=Qt.Vertical):
+        self._rgba_flag = iColor["rgba_hover"]
+        #super(iAbstractInputWidget, self).__init__()
+        super(AbstractMultiButtonInputWidget, self).__init__(parent, orientation)
+        self.setIsSoloViewEnabled(False)
+        self.setIsHandleStatic(True)
+        self.button_list = {}
+        self.setHandleWidth(0)
+        self.setHandleLength(0)
+
+    def updateButtonSelection(self, selected_button):
+        for button in self.button_list.values():
+            button.setProperty("is_selected", False)
+            updateStyleSheet(button)
+
+        self.setCurrentButton(selected_button)
+
+    def currentButton(self):
+        return self._current_button
+
+    def setCurrentButton(self, current_button):
+        #
+        self._current_button = current_button
+
+        # reset button to first index
+        current_button.setParent(None)
+        self.insertWidget(0, current_button)
+
+        # setup button style
+        current_button.setProperty("is_selected", True)
+
+    def addButton(self, title, user_clicked_event, image=None):
+        """
+
+        Args:
+            title (str): display name
+            user_clicked_event (function): to run when the user clicks
+            image:
+
+        Returns:
+
+        """
+        button = AbstractButtonInputWidget(self, user_clicked_event=user_clicked_event, title=title)
+        self.button_list[title] = button
+        self.addWidget(button)
+
+
+class AbstractButtonInputWidget(QLabel, iAbstractInputWidget):
+    def __init__(self, parent, user_clicked_event=None, title="CLICK ME"):
+        super(AbstractButtonInputWidget, self).__init__(parent)
+
+        # setup style
+        self.rgba_background = iColor["rgba_invisible"]
+        self.updateStyleSheet()
+        self.setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
+
+        # setup defaults
+        self.setText(title)
+        if user_clicked_event:
+            self.setUserClickedEvent(user_clicked_event)
+
+    def enterEvent(self, event):
+        return QLabel.enterEvent(self,event)
+
+    """ VIRTUAL FUNCTIONS """
+    def setUserClickedEvent(self, function):
+        self._user_clicked_event = function
+
+    def userClickedEvent(self):
+        self._user_clicked_event(self)
+
+    def mouseReleaseEvent(self, event):
+        self.parent().updateButtonSelection(self)
+        self.userClickedEvent()
+        updateStyleSheet(self)
+
+
 if __name__ == "__main__":
     import sys
     from qtpy.QtWidgets import QApplication, QWidget, QVBoxLayout
@@ -673,13 +748,17 @@ if __name__ == "__main__":
     import sys, inspect
 
     app = QApplication(sys.argv)
-    input_widget = AbstractStringInputWidget()
-    title = "yolo bolo"
-    w = AbstractOverlayInputWidget(input_widget=input_widget, title=title)
+    def userEvent(widget):
+        print("user input...", widget)
+    widget = AbstractMultiButtonInputWidget(orientation=Qt.Horizontal)
+    for x in range(3):
+        widget.addButton(str(x), userEvent)
 
-    print(AbstractIntInputWidget.mro())
-    w.resize(500, 500)
-    w.show()
+    widget.move(QCursor.pos())
+    widget.show()
+    widget.resize(256, 256)
+    widget.resize(500, 500)
+    widget.show()
     #w.move(QCursor.pos())
     sys.exit(app.exec_())
 

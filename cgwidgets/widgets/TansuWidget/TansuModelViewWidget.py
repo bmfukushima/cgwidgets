@@ -13,7 +13,7 @@ TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
                     *  Display Mode ( On / Off / Hotkey popup )
 
         | -- Scroll Area
-            |-- DelegateWidget (TansuMainDelegateWidget --> TansuDelegate)
+            |-- DelegateWidget (TansuMainDelegateWidget --> TansuView)
                     | -- _temp_proxy_widget (QWidget)
                     | -* TansuModelDelegateWidget (AbstractGroupBox)
                             | -- Stacked/Dynamic Widget (main_widget)
@@ -27,7 +27,7 @@ from qtpy.QtGui import QCursor
 from cgwidgets.utils import getWidgetAncestor, attrs
 from cgwidgets.settings.colors import iColor
 from cgwidgets.widgets import AbstractFrameGroupInputWidget, ModelViewWidget
-from cgwidgets.delegates import TansuDelegate
+from cgwidgets.views import TansuView
 
 from cgwidgets.widgets.TansuWidget import (TansuModel, iTansuDynamicWidget)
 from cgwidgets.views import (AbstractDragDropAbstractView)
@@ -581,12 +581,12 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         """
         This event filter is to be installed on the widgets
         of the items that are selected.  So that when those
-        widgets grab focus, the TansuDelegate key events can still
+        widgets grab focus, the TansuView key events can still
         be registered
         """
         if event.type() == QEvent.KeyPress:
             print('key pressed?')
-            if (event.key() == TansuDelegate.FULLSCREEN_HOTKEY
+            if (event.key() == TansuView.FULLSCREEN_HOTKEY
                     or
                 event.key() == Qt.Key_Escape
             ):
@@ -714,7 +714,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
 
 
 """ DELEGATE """
-class TansuMainDelegateWidget(TansuDelegate):
+class TansuMainDelegateWidget(TansuView):
     """
     The main delegate view that will show all of the items widgets that
      the user currently has selected
@@ -750,7 +750,7 @@ class TansuMainDelegateWidget(TansuDelegate):
                 tab_tansu_widget.updateDelegateDisplay()
                 tab_tansu_widget.toggleDelegateSpacerWidget()
         else:
-            return TansuDelegate.keyPressEvent(self, event)
+            return TansuView.keyPressEvent(self, event)
 
 
 class TansuModelDelegateWidget(AbstractFrameGroupInputWidget):
@@ -922,7 +922,7 @@ if __name__ == "__main__":
         w.insertTansuWidget(y, column_data={'name':str(y)}, widget=widget, parent=parent_item)
 
     w.resize(500, 500)
-    w.delegateWidget().handle_length = 100
+    w.delegateWidget().setHandleLength(100)
 
     w.show()
     # #w.headerWidget().model().setIsDragEnabled(False)

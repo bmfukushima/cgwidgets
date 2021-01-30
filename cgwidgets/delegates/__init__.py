@@ -6,7 +6,6 @@ from .StickyValueAdjustDelegate import StickyValueAdjustItemDelegate as StickyVa
 from .StickyValueAdjustDelegate import StickyDragWindowWidget as StickyDragWindowWidget
 
 # stand alone delegates
-from .TansuDelegate import TansuDelegate as TansuDelegate
 from .LadderDelegate import LadderDelegate as LadderDelegate
 
 # utils

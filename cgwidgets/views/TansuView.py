@@ -17,7 +17,7 @@ from cgwidgets.settings.colors import(
 from cgwidgets.utils import updateStyleSheet
 
 
-class TansuDelegate(QSplitter):
+class TansuView(QSplitter):
     """
     Splitter widget that has advanced functionality.  This serves as a base
     class for everything that will be used through this library.
@@ -50,13 +50,13 @@ class TansuDelegate(QSplitter):
     FULLSCREEN_HOTKEY = 96
 
     def __init__(self, parent=None, orientation=Qt.Vertical):
-        super(TansuDelegate, self).__init__(parent)
+        super(TansuView, self).__init__(parent)
         # set default attrs
         self._current_index = None
         self._current_widget = None
         self._is_solo_view_enabled = True
         self._is_solo_view = False
-        self._solo_view_hotkey = TansuDelegate.FULLSCREEN_HOTKEY
+        self._solo_view_hotkey = TansuView.FULLSCREEN_HOTKEY
         self._is_handle_static = False
 
         # set colors
@@ -69,7 +69,7 @@ class TansuDelegate(QSplitter):
         self.setOrientation(orientation)
 
         # set up handle defaults
-        self.setHandleWidth(TansuDelegate.HANDLE_WIDTH)
+        self.setHandleWidth(TansuView.HANDLE_WIDTH)
         self._handle_length = -1
 
     """ UTILS """
@@ -117,10 +117,10 @@ class TansuDelegate(QSplitter):
         """
         if widget:
             if widget.parent():
-                if isinstance(widget.parent(), TansuDelegate):
+                if isinstance(widget.parent(), TansuView):
                     return widget.parent().indexOf(widget), widget
                 else:
-                    return TansuDelegate.getIndexOfWidget(widget.parent())
+                    return TansuView.getIndexOfWidget(widget.parent())
             else:
                 return None, None
 
@@ -241,14 +241,14 @@ class TansuDelegate(QSplitter):
                 if current_widget1:
                     parent_splitter = current_widget.parent()
                     parent_splitter.toggleIsSoloView(True, current_splitter)
-                    TansuDelegate.setIsSoloView(parent_splitter, True)
+                    TansuView.setIsSoloView(parent_splitter, True)
                     parent_splitter.setFocus()
 
             # adjust current widget
             elif current_splitter.isSoloView() is False:
                 current_splitter.displayAllWidgets(False)
                 current_widget.show()
-                TansuDelegate.setIsSoloView(current_splitter, True)
+                TansuView.setIsSoloView(current_splitter, True)
                 current_widget.setFocus()
 
         # exit full screen
@@ -256,7 +256,7 @@ class TansuDelegate(QSplitter):
             # adjust current widget
             if current_splitter.isSoloView() is True:
                 current_splitter.displayAllWidgets(True)
-                TansuDelegate.setIsSoloView(current_splitter, False)
+                TansuView.setIsSoloView(current_splitter, False)
                 current_widget.setFocus()
                 #return
             # adjust parent widget
@@ -266,7 +266,7 @@ class TansuDelegate(QSplitter):
                     parent_splitter = current_widget.parent()
                     parent_splitter.toggleIsSoloView(False, current_splitter)
 
-                    TansuDelegate.setIsSoloView(parent_splitter, False)
+                    TansuView.setIsSoloView(parent_splitter, False)
                     parent_splitter.setFocus()
                     current_widget1.setFocus()
 
@@ -287,6 +287,13 @@ class TansuDelegate(QSplitter):
         handle = TansuHandle(self.orientation(), self)
         return handle
 
+    def setHandleLength(self, length):
+        self._handle_length = length
+        self.updateStyleSheet()
+
+    def handleLength(self):
+        return self._handle_length
+
     @property
     def handle_width(self):
         return self._handle_width
@@ -296,14 +303,14 @@ class TansuDelegate(QSplitter):
         self._handle_width = _handle_width
         self.setHandleWidth(_handle_width)
 
-    @property
-    def handle_length(self):
-        return self._handle_length
-
-    @handle_length.setter
-    def handle_length(self, _handle_length):
-        self._handle_length = _handle_length
-        self.updateStyleSheet()
+    # @property
+    # def handle_length(self):
+    #     return self._handle_length
+    #
+    # @handle_length.setter
+    # def handle_length(self, _handle_length):
+    #     self._handle_length = _handle_length
+    #     self.updateStyleSheet()
 
     def getHandleLengthMargin(self):
         """
@@ -314,17 +321,17 @@ class TansuDelegate(QSplitter):
         Returns (str): <margin>px <margin>px
             ie 10px 10px
         """
-        if self.handle_length < 0:
+        if self.handleLength() < 0:
             return "10px 10px"
         margin_offset = 2
         if self.orientation() == Qt.Vertical:
             length = self.width()
-            margin = (length - self.handle_length) * 0.5
+            margin = (length - self.handleLength()) * 0.5
             margins = "{margin_offset}px {margin}px".format(margin=margin, margin_offset=margin_offset)
 
         elif self.orientation() == Qt.Horizontal:
             length = self.height()
-            margin = (length - self.handle_length) * 0.5
+            margin = (length - self.handleLength()) * 0.5
             margins = "{margin}px {margin_offset}px".format(margin=margin, margin_offset=margin_offset)
 
         return margins
@@ -362,12 +369,12 @@ class TansuDelegate(QSplitter):
             'handle_length_margin': self.getHandleLengthMargin()
         })
         style_sheet = """
-            TansuDelegate{{
+            TansuView{{
                 background-color: rgba{rgba_background};
                 border: 3px solid rgba{rgba_invisible};
                 color: rgba{rgba_text};
             }}
-            TansuDelegate[is_solo_view=true]{{
+            TansuView[is_solo_view=true]{{
                 border: 3px solid rgba{rgba_flag}; 
             }}
             QSplitter::handle {{
@@ -446,15 +453,15 @@ if __name__ == "__main__":
     from qtpy.QtGui import QCursor
     app = QApplication(sys.argv)
 
-    main_splitter = TansuDelegate()
-    main_splitter.handle_length = 100
+    main_splitter = TansuView()
+    main_splitter.setHandleLength(100)
     main_splitter.setObjectName("main")
     label = QLabel('a')
     main_splitter.addWidget(label)
     main_splitter.addWidget(QLabel('b'))
     main_splitter.addWidget(QLabel('c'))
     label.setStyleSheet("color: rgba(255,0,0,255)")
-    splitter1 = TansuDelegate(orientation=Qt.Horizontal)
+    splitter1 = TansuView(orientation=Qt.Horizontal)
     splitter1.setObjectName("embed")
     for x in range(3):
         l = QLabel(str(x))

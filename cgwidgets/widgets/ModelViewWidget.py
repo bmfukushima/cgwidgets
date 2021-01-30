@@ -11,12 +11,12 @@ from cgwidgets.views import (
 )
 from cgwidgets.utils import attrs, getWidgetAncestor
 from cgwidgets.settings.colors import iColor
-from cgwidgets.delegates import TansuDelegate
+from cgwidgets.views import TansuView
 
 from qtpy.QtCore import QModelIndex
 
 
-class ModelViewWidget(TansuDelegate):
+class ModelViewWidget(TansuView):
     """
     View widget for the Abstract ModelViewDelegate in this lib
 
@@ -41,7 +41,7 @@ class ModelViewWidget(TansuDelegate):
         textChangedEvent (item, old_value, new_value)
 
     Hierarchy:
-        TansuDelegate --> QSplitter
+        TansuView --> QSplitter
             |- view --> (AbstractDragDropListView | AbstractDragDropTreeView) --> QSplitter
                 |- model (AbstractDragDropModel)
                     |- (AbstractDragDropModelItems)
@@ -62,7 +62,7 @@ class ModelViewWidget(TansuDelegate):
 
         # setup style
         self.handle_width = 0
-        self.handle_length = 100
+        self._handle_length = 100
         self.rgba_background = iColor["rgba_gray_1"]
         self._view_position = attrs.SOUTH
         self._view_orientation = Qt.Vertical
@@ -292,7 +292,7 @@ class ModelViewWidget(TansuDelegate):
             _orientation = view_orientation
         self._view_position = view_position
         self._view_orientation = view_orientation
-        return TansuDelegate.setOrientation(self, _orientation)
+        return TansuView.setOrientation(self, _orientation)
 
     def setMultiSelect(self, enabled):
         self.view().setMultiSelect(enabled)
@@ -365,15 +365,15 @@ class ModelViewWidget(TansuDelegate):
                         self.setFocus()
 
         # disable full screen ability of Tansu
-        if event.key() != TansuDelegate.FULLSCREEN_HOTKEY:
-            return TansuDelegate.keyPressEvent(self, event)
+        if event.key() != TansuView.FULLSCREEN_HOTKEY:
+            return TansuView.keyPressEvent(self, event)
 
 
 from qtpy.QtCore import QSortFilterProxyModel, QRegExp
 from qtpy.QtWidgets import QCompleter, QStyledItemDelegate, QTreeView, QWidget, QVBoxLayout, QHBoxLayout
 
 
-class ModelViewSearchWidget(TansuDelegate):
+class ModelViewSearchWidget(TansuView):
     """
     Input widget containing the controls to search for specific items in the model.
 
@@ -448,18 +448,7 @@ class ModelViewSearchBox(AbstractStringInputWidget):
 
             self.selectIndexes(matches)
 
-
-            # https://doc.qt.io/archives/qtjambi-4.5.2_01/com/trolltech/qt/core/Qt.MatchFlag.html
-            # ---- list all items
-            # --- returns items
-            # for row in range(model.rowCount()):
-            #     for column in range(model.columnCount()):
-            #         item = model.item(row, column)
-            #         print(item.data(), item.text(), item.index())
         return AbstractStringInputWidget.keyPressEvent(self, event)
-
-    # def showEvent(self, event):
-    #     AbstractStringInputWidget.showEvent(self, event)
 
 
 class ModelViewSearchOptions(AbstractListInputWidget):
