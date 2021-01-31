@@ -26,6 +26,7 @@ from cgwidgets.utils import (
     checkNegative, setAsTransparent, updateStyleSheet
 )
 from cgwidgets.views import TansuView, TansuViewHandle
+from cgwidgets.settings.icons import icons
 
 
 class iAbstractInputWidget(object):
@@ -63,25 +64,62 @@ class iAbstractInputWidget(object):
     def updateStyleSheet(self):
         style_sheet_args = iColor.style_sheet_args
         style_sheet_args.update({
-            "rgba_gray_0": repr(self.rgba_background),
+            "rgba_background": repr(self.rgba_background),
             "rgba_border": repr(self.rgba_border),
             "rgba_text": repr(self.rgba_text),
             "rgba_hover": repr(self.rgba_hover),
+            "rgba_invisble": iColor["rgba_invisible"],
+            "gradient_background": icons["gradient_background"],
             "type": type(self).__name__
         })
         style_sheet = """
+        /* DEFAULT */
         {type}{{
             border: None;
-            background-color: rgba{rgba_gray_0};
+            background-color: rgba{rgba_background};
             color: rgba{rgba_text}
         }}
-        {type}::hover{{
-            border: 1px dotted rgba{rgba_hover};
-            color: rgba{rgba_hover};
-        }}
+
+        /* SELECTION                  spread: repeat,*/
+
         {type}[is_selected=true]{{
-            border: 1px solid rgba{rgba_hover};
+            background: qradialgradient(
+                radius: 0.9,
+                cx:0.50, cy:0.50,
+                fx:0.5, fy:0.5,
+                stop:0.5 rgba{rgba_background},
+                stop:0.75 rgba{rgba_accept}
+            );
         }}
+        {type}[is_selected=false]{{
+            background: qradialgradient(
+                radius: 0.9,
+                cx:0.50, cy:0.50,
+                fx:0.5, fy:0.5,
+                stop:0.5 rgba{rgba_background},
+                stop:0.75 rgba{rgba_cancel}
+            );
+        }}
+        /*
+        {type}::hover{{
+            background: qlineargradient(
+                x1:0.00, y1:0.00, x2:0.9, y2:0.9, x3:1, y3:1,
+                stop:0 rgba{rgba_background},
+                stop:0.5 rgba{rgba_hover},
+                stop:1 rgba{rgba_accept}
+            );
+        }}
+        */
+        {type}::hover{{
+            background: qradialgradient(
+                radius: 0.9,
+                cx:0.50, cy:0.50,
+                fx:0.5, fy:0.5,
+                stop:0.5 rgba{rgba_background},
+                stop:0.75 rgba{rgba_hover}
+            );
+        }}
+
         """.format(**style_sheet_args)
 
         self.setStyleSheet(style_sheet)
@@ -560,48 +598,50 @@ class AbstractLabelInputWidget(AbstractStringInputWidget):
         return AbstractStringInputWidget.mousePressEvent(self, event)
 
 
-class AbstractBooleanInputWidget(QLabel):
+class AbstractBooleanInputWidget(QLabel, iAbstractInputWidget):
     TYPE = 'bool'
-    def __init__(self, parent=None, is_clicked=False):
+    def __init__(self, parent=None, text=None, is_selected=False):
         super(AbstractBooleanInputWidget, self).__init__(parent)
-        self.is_clicked = is_clicked
-
-    def setupStyleSheet(self):
-        style_sheet_args = iColor.style_sheet_args
-        style_sheet_args['name'] = type(self).__name__
-        style_sheet = """
-        QLabel{{background-color: rgba{rgba_gray_0}}}
-        QLabel[is_clicked=true]{{
-            border: 3px solid rgba{rgba_accept}
-        }}
-        QLabel[is_clicked=false]{{
-            border: 3px solid rgba{rgba_cancel};
-        }};
-        """.format(
-            **style_sheet_args
-        )
-        self.setStyleSheet(style_sheet)
+        self.is_selected = is_selected
+        if text:
+            self.setText(text)
+        self.updateStyleSheet()
+    # def setupStyleSheet(self):
+    #     style_sheet_args = iColor.style_sheet_args
+    #     style_sheet_args['name'] = type(self).__name__
+    #     style_sheet = """
+    #     QLabel{{background-color: rgba{rgba_gray_0}}}
+    #     QLabel[is_selected=true]{{
+    #         border: 3px solid rgba{rgba_accept}
+    #     }}
+    #     QLabel[is_selected=false]{{
+    #         border: 3px solid rgba{rgba_cancel};
+    #     }};
+    #     """.format(
+    #         **style_sheet_args
+    #     )
+    #     self.setStyleSheet(style_sheet)
 
     """ EVENTS """
     def mouseReleaseEvent(self, event):
-        self.is_clicked = not self.is_clicked
+        self.is_selected = not self.is_selected
 
         # run user triggered event
         try:
-            self.userFinishedEditingEvent(self, self.is_clicked)
+            self.userFinishedEditingEvent(self, self.is_selected)
         except AttributeError:
             pass
         return QLabel.mouseReleaseEvent(self, event)
 
     """ PROPERTIES """
     @property
-    def is_clicked(self):
-        return self._is_clicked
+    def is_selected(self):
+        return self._is_selected
 
-    @is_clicked.setter
-    def is_clicked(self, is_clicked):
-        self._is_clicked = is_clicked
-        self.setProperty('is_clicked', is_clicked)
+    @is_selected.setter
+    def is_selected(self, is_selected):
+        self._is_selected = is_selected
+        self.setProperty('is_selected', is_selected)
         updateStyleSheet(self)
 
 
@@ -730,7 +770,7 @@ class AbstractMultiButtonInputWidget(TansuView):
             self.insertWidget(0, current_button)
 
         # setup button style
-        current_button.setProperty("is_selected", True)
+        current_button.is_selected = True
 
         self.update()
 
@@ -752,7 +792,7 @@ class AbstractMultiButtonInputWidget(TansuView):
         self.addWidget(button)
 
 
-class AbstractButtonInputWidget(QLabel, iAbstractInputWidget):
+class AbstractButtonInputWidget(AbstractBooleanInputWidget):
     def __init__(self, parent, user_clicked_event=None, title="CLICK ME"):
         super(AbstractButtonInputWidget, self).__init__(parent)
 
