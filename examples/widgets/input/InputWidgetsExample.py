@@ -69,7 +69,7 @@ def userEvent(widget):
 buttons = []
 for x in range(3):
     buttons.append([str(x), userEvent])
-multi_button_input_widget = MultiButtonInputWidget(buttons=buttons, orientation=Qt.Horizontal)
+multi_button_input_widget = MultiButtonInputWidget(buttons=buttons, orientation=Qt.Vertical)
 
 normal_widget.layout().addWidget(float_input_widget)
 normal_widget.layout().addWidget(int_input_widget)

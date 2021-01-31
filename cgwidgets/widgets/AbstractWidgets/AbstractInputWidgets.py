@@ -665,14 +665,14 @@ class AbstractMultiButtonInputWidget(TansuView):
         _current_buttons (List): of AbstractButtonInputWidget that are
             currently selected by the user
     """
-    def __init__(self, parent=None, buttons=None, orientation=Qt.Vertical):
+    def __init__(self, parent=None, buttons=None, orientation=Qt.Horizontal):
         self._rgba_flag = iColor["rgba_hover"]
 
         super(AbstractMultiButtonInputWidget, self).__init__(parent, orientation)
         self.setIsSoloViewEnabled(False)
         self.setIsHandleStatic(True)
-        self.handle_width = 1
-        self.handle_length = 1
+        self.handle_width = 2
+        self.handle_length = 10
 
         #
         self._buttons = {}
