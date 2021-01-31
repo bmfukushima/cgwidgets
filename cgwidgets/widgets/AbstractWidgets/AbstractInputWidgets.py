@@ -667,12 +667,13 @@ class AbstractMultiButtonInputWidget(TansuView):
     """
     def __init__(self, parent=None, buttons=None, orientation=Qt.Horizontal):
         self._rgba_flag = iColor["rgba_hover"]
-
         super(AbstractMultiButtonInputWidget, self).__init__(parent, orientation)
         self.setIsSoloViewEnabled(False)
         self.setIsHandleStatic(True)
-        self.handle_width = 2
-        self.handle_length = 10
+        self.setHandleWidth(0)
+        #self.handle_width = 1
+        self.handle_length = -1
+        self.handle_margin = (0, 0)
 
         #
         self._buttons = {}
@@ -756,7 +757,7 @@ class AbstractButtonInputWidget(QLabel, iAbstractInputWidget):
         super(AbstractButtonInputWidget, self).__init__(parent)
 
         # setup style
-        self.rgba_background = iColor["rgba_invisible"]
+        # self.rgba_background = iColor["rgba_invisible"]
         self.updateStyleSheet()
         self.setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
 

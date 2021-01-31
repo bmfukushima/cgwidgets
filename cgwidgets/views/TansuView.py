@@ -37,6 +37,8 @@ class TansuView(QSplitter):
         handle_width (int): width of the handle
         handle_length (int): length of handle:
             if set to -1, this will returen the entire length
+        handle_margin (int, int): offset from sides of each handle.  This will only
+            work when the length is set to -1
 
     Class Attributes:
         HANDLE_WIDTH: Default size of the handle
@@ -71,6 +73,7 @@ class TansuView(QSplitter):
         # set up handle defaults
         self.setHandleWidth(TansuView.HANDLE_WIDTH)
         self._handle_length = -1
+        self._handle_margin = (10, 10)
 
     """ UTILS """
     def displayAllWidgets(self, value):
@@ -301,6 +304,7 @@ class TansuView(QSplitter):
     """ HANDLE """
     def setIsHandleStatic(self, enabled):
         self._is_handle_static = enabled
+        self.setProperty("is_handle_static", True)
 
     def isHandleStatic(self):
         return self._is_handle_static
@@ -308,15 +312,6 @@ class TansuView(QSplitter):
     def createHandle(self):
         handle = TansuViewHandle(self.orientation(), self)
         return handle
-
-    @property
-    def handle_length(self):
-        return self._handle_length
-
-    @handle_length.setter
-    def handle_length(self, length):
-        self._handle_length = length
-        self.updateStyleSheet()
 
     def getAllHandles(self):
         """
@@ -338,14 +333,23 @@ class TansuView(QSplitter):
         self._handle_width = _handle_width
         self.setHandleWidth(_handle_width)
 
-    # @property
-    # def handle_length(self):
-    #     return self._handle_length
-    #
-    # @handle_length.setter
-    # def handle_length(self, _handle_length):
-    #     self._handle_length = _handle_length
-    #     self.updateStyleSheet()
+    @property
+    def handle_length(self):
+        return self._handle_length
+
+    @handle_length.setter
+    def handle_length(self, _handle_length):
+        self._handle_length = _handle_length
+        self.updateStyleSheet()
+
+    @property
+    def handle_margin(self):
+        return self._handle_margin
+
+    @handle_margin.setter
+    def handle_margin(self, _handle_margin):
+        self._handle_margin = _handle_margin
+        self.updateStyleSheet()
 
     def getHandleLengthMargin(self):
         """
@@ -357,7 +361,7 @@ class TansuView(QSplitter):
             ie 10px 10px
         """
         if self.handle_length < 0:
-            return "10px 10px"
+            return "{x}px {y}px".format(x=self.handle_margin[0], y=self.handle_margin[1])
         margin_offset = 2
         if self.orientation() == Qt.Vertical:
             length = self.width()
@@ -416,9 +420,14 @@ class TansuView(QSplitter):
                 border: 1px double rgba{rgba_handle};
                 margin: {handle_length_margin};
             }}
-            QSplitter::handle:hover {{
+            QSplitter[is_handle_static=false]::handle:hover {{
                 border: 2px double rgba{rgba_handle_hover};
             }}
+            QSplitter[is_handle_static=true]::handle {{
+                border: 1px solid rgba{rgba_handle};
+                margin: {handle_length_margin};
+            }}
+
         """.format(
             **style_sheet_args
         )
