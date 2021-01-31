@@ -185,8 +185,8 @@ class PlainTextInputWidget(AbstractInputPlainText, iTansuGroupInput):
 
 
 class BooleanInputWidget(AbstractBooleanInputWidget, iTansuGroupInput):
-    def __init__(self, parent=None, is_selected=False):
-        super(BooleanInputWidget, self).__init__(parent, is_selected=is_selected)
+    def __init__(self, parent=None, text=None, is_selected=False):
+        super(BooleanInputWidget, self).__init__(parent, is_selected=is_selected, text=text)
         self.setUserFinishedEditingEvent(self.updateUserInputItem)
         #self.setupStyleSheet()
 

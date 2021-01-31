@@ -69,6 +69,7 @@ class iAbstractInputWidget(object):
             "rgba_text": repr(self.rgba_text),
             "rgba_hover": repr(self.rgba_hover),
             "rgba_invisble": iColor["rgba_invisible"],
+            "rgba_selected": iColor["rgba_selected"],
             "gradient_background": icons["gradient_background"],
             "type": type(self).__name__
         })
@@ -77,29 +78,52 @@ class iAbstractInputWidget(object):
         {type}{{
             border: None;
             background-color: rgba{rgba_background};
-            color: rgba{rgba_text}
+            color: rgba{rgba_text};
+            selection-background-color: rgba{rgba_selected};
         }}
 
-        /* SELECTION                  spread: repeat,*/
-
+        /* SELECTION spread: repeat,*/
         {type}[is_selected=true]{{
             background: qradialgradient(
                 radius: 0.9,
                 cx:0.50, cy:0.50,
                 fx:0.5, fy:0.5,
                 stop:0.5 rgba{rgba_background},
-                stop:0.75 rgba{rgba_accept}
-            );
-        }}
+                stop:0.75 rgba{rgba_accept});
+            }}
         {type}[is_selected=false]{{
             background: qradialgradient(
                 radius: 0.9,
                 cx:0.50, cy:0.50,
                 fx:0.5, fy:0.5,
                 stop:0.5 rgba{rgba_background},
-                stop:0.75 rgba{rgba_cancel}
-            );
-        }}
+                stop:0.75 rgba{rgba_cancel});
+            }}
+        {type}:focus{{
+            background: qradialgradient(
+                radius: 0.9,
+                cx:0.50, cy:0.50,
+                fx:0.5, fy:0.5,
+                stop:0.5 rgba{rgba_background},
+                stop:0.75 rgba{rgba_selected});
+            }}
+        {type}::hover[boolean_clicked=false]{{
+            background: qradialgradient(
+                radius: 0.9,
+                cx:0.50, cy:0.50,
+                fx:0.5, fy:0.5,
+                stop:0.5 rgba{rgba_background},
+                stop:0.75 rgba{rgba_hover});
+            }}
+        {type}::hover:focus{{
+            background: qradialgradient(
+                radius: 0.9,
+                cx:0.50, cy:0.50,
+                fx:0.5, fy:0.5,
+                stop:0.5 rgba{rgba_background},
+                stop:0.75 rgba{rgba_selected});
+            }}
+
         /*
         {type}::hover{{
             background: qlineargradient(
@@ -109,16 +133,8 @@ class iAbstractInputWidget(object):
                 stop:1 rgba{rgba_accept}
             );
         }}
+        
         */
-        {type}::hover{{
-            background: qradialgradient(
-                radius: 0.9,
-                cx:0.50, cy:0.50,
-                fx:0.5, fy:0.5,
-                stop:0.5 rgba{rgba_background},
-                stop:0.75 rgba{rgba_hover}
-            );
-        }}
 
         """.format(**style_sheet_args)
 
@@ -214,7 +230,6 @@ class iAbstractInputWidget(object):
 class AbstractInputLineEdit(QLineEdit, iAbstractInputWidget):
     def __init__(self, parent=None):
         super(AbstractInputLineEdit, self).__init__(parent)
-
         # set up signals
         self.editingFinished.connect(self.userFinishedEditing)
         self.textChanged.connect(self.userContinuousEditing)
@@ -225,7 +240,12 @@ class AbstractInputLineEdit(QLineEdit, iAbstractInputWidget):
         ladder widgets?
         """
         self.setOrigValue(self.text())
+        #self.setProperty("is_focused", True)
         return QLineEdit.focusInEvent(self, *args, **kwargs)
+    #
+    # def focusOutEvent(self, event):
+    #     self.setProperty("is_focused", False)
+    #     return QLineEdit.focusOutEvent(self, event)
 
     def mousePressEvent(self, event, *args, **kwargs):
         """
@@ -234,9 +254,6 @@ class AbstractInputLineEdit(QLineEdit, iAbstractInputWidget):
         if event.button() == Qt.MiddleButton:
             return
         return QLineEdit.mousePressEvent(self, event, *args, **kwargs)
-
-    # def enterEvent(self, event):
-    #     QLineEdit.enterEvent(self, event)
 
 
 class AbstractInputPlainText(QPlainTextEdit, iAbstractInputWidget):
@@ -603,9 +620,11 @@ class AbstractBooleanInputWidget(QLabel, iAbstractInputWidget):
     def __init__(self, parent=None, text=None, is_selected=False):
         super(AbstractBooleanInputWidget, self).__init__(parent)
         self.is_selected = is_selected
+        self.setProperty("boolean_clicked", False)
         if text:
             self.setText(text)
         self.updateStyleSheet()
+
     # def setupStyleSheet(self):
     #     style_sheet_args = iColor.style_sheet_args
     #     style_sheet_args['name'] = type(self).__name__
@@ -623,6 +642,11 @@ class AbstractBooleanInputWidget(QLabel, iAbstractInputWidget):
     #     self.setStyleSheet(style_sheet)
 
     """ EVENTS """
+    def enterEvent(self, event):
+        self.setProperty("boolean_clicked", False)
+        updateStyleSheet(self)
+        return QLabel.enterEvent(self, event)
+
     def mouseReleaseEvent(self, event):
         self.is_selected = not self.is_selected
 
@@ -631,6 +655,10 @@ class AbstractBooleanInputWidget(QLabel, iAbstractInputWidget):
             self.userFinishedEditingEvent(self, self.is_selected)
         except AttributeError:
             pass
+
+        self.setProperty("boolean_clicked", True)
+        updateStyleSheet(self)
+
         return QLabel.mouseReleaseEvent(self, event)
 
     """ PROPERTIES """
@@ -806,9 +834,6 @@ class AbstractButtonInputWidget(AbstractBooleanInputWidget):
         if user_clicked_event:
             self.setUserClickedEvent(user_clicked_event)
 
-    def enterEvent(self, event):
-        return QLabel.enterEvent(self,event)
-
     """ VIRTUAL FUNCTIONS """
     def setUserClickedEvent(self, function):
         self._user_clicked_event = function
@@ -817,10 +842,24 @@ class AbstractButtonInputWidget(AbstractBooleanInputWidget):
         self._user_clicked_event(self)
 
     def mouseReleaseEvent(self, event):
+        """ TODO this can probably be updated to use the AbstractBooleanInputWidget default
+            mouse release event
+        """
+        # update selection
         self.parent().updateButtonSelection(self)
         self.userClickedEvent()
         self.parent().setAllWidgetsToUniformSize()
+
+        # update style
+        self.setProperty("boolean_clicked", True)
         updateStyleSheet(self)
+
+        # run user triggered event
+        try:
+            self.userFinishedEditingEvent(self, self.is_selected)
+        except AttributeError:
+            pass
+        #return AbstractBooleanInputWidget.mouseReleaseEvent(self, event)
 
 
 if __name__ == "__main__":

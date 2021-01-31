@@ -407,24 +407,24 @@ class AbstractListInputWidget(AbstractStringInputWidget):
         """
         return self.__getCleanItems()
 
-    """ Style Sheet"""
-    def updateStyleSheet(self):
-        style_sheet_args = iColor.style_sheet_args
-        style_sheet_args.update({
-            'type': type(self).__name__
-        })
-
-        style_sheet = """
-        {type}{{
-            border:None;
-            background-color: rgba{rgba_gray_0};
-            selection-background-color: rgba{rgba_selected};
-            color: rgba{rgba_text}
-        }}
-
-        """.format(**style_sheet_args)
-
-        self.setStyleSheet(style_sheet)
+    # """ Style Sheet"""
+    # def updateStyleSheet(self):
+    #     style_sheet_args = iColor.style_sheet_args
+    #     style_sheet_args.update({
+    #         'type': type(self).__name__
+    #     })
+    #
+    #     style_sheet = """
+    #     {type}{{
+    #         border:None;
+    #         background-color: rgba{rgba_gray_0};
+    #         selection-background-color: rgba{rgba_selected};
+    #         color: rgba{rgba_text}
+    #     }}
+    #
+    #     """.format(**style_sheet_args)
+    #
+    #     self.setStyleSheet(style_sheet)
 
     """ COMPLETER """
     def _updateModel(self, item_list=None):
