@@ -722,7 +722,7 @@ class TansuMainDelegateWidget(TansuView):
 
     def __init__(self, parent=None):
         super(TansuMainDelegateWidget, self).__init__(parent)
-        self.rgba_background = iColor["rgba_gray_0"]
+        self.rgba_background = iColor["rgba_gray_2"]
 
     def showEvent(self, event):
         tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
@@ -765,7 +765,7 @@ class TansuModelDelegateWidget(AbstractFrameGroupInputWidget):
         self.setStyleSheet("""
             TansuModelDelegateWidget{{background-color: rgba{background_color}}}
         """.format(
-            background_color=iColor["rgba_gray_1"]
+            background_color=iColor["rgba_gray_3"]
         ))
 
     def setMainWidget(self, widget):
@@ -833,9 +833,9 @@ class TansuHeader(ModelViewWidget):
         if hasattr(top_level_widget, '_delegate_widget'):
             selection = top_level_widget.headerWidget().selectionModel().selectedIndexes()
             if len(selection) == 0:
-                top_level_widget.delegateWidget().rgba_background = iColor['rgba_gray_0']
+                top_level_widget.delegateWidget().rgba_background = iColor['rgba_gray_2']
             else:
-                top_level_widget.delegateWidget().rgba_background = iColor['rgba_gray_1']
+                top_level_widget.delegateWidget().rgba_background = iColor['rgba_gray_3']
 
         # custom input event | need this as we're overriding the models input
         top_level_widget.itemSelectedEvent(item, enabled, column)

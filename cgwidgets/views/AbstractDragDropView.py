@@ -56,13 +56,13 @@ class AbstractDragDropAbstractView(object):
         # header
         base_header_style_sheet = """
                 QHeaderView::section {{
-                    background-color: rgba{rgba_gray_0};
+                    background-color: rgba{rgba_gray_2};
                     color: rgba{rgba_text};
                     border: {outline_width}px solid rgba{rgba_outline};
                 }}
                 {type}{{
                     border:None;
-                    background-color: rgba{rgba_gray_0};
+                    background-color: rgba{rgba_gray_2};
                     selection-background-color: rgba{rgba_invisible};
                 }}
                     """.format(**style_sheet_args)
@@ -70,11 +70,11 @@ class AbstractDragDropAbstractView(object):
         # item style snippets ( so it can be combined later...)
         style_sheet_args['item_snippet'] = """
                     border: {outline_width}px solid rgba{rgba_black};
-                    background-color: rgba{rgba_gray_0};
+                    background-color: rgba{rgba_gray_2};
                 """.format(**style_sheet_args)
         style_sheet_args['item_selected_snippet'] = """
                     border: {outline_width}px solid rgba{rgba_selected};
-                    background-color: rgba{rgba_gray_1};
+                    background-color: rgba{rgba_gray_3};
                 """.format(**style_sheet_args)
 
         # create style sheet
@@ -390,7 +390,7 @@ class AbstractDragDropTreeView(QTreeView, AbstractDragDropAbstractView):
         """
         style_sheet = """
         QHeaderView::section {{
-            background-color: rgba{rgba_gray_0};
+            background-color: rgba{rgba_gray_2};
             color: rgba{rgba_text};
             border: {outline_width}px solid rgba{rgba_black};
         }}
@@ -579,7 +579,7 @@ class AbstractDragDropIndicator(QProxyStyle):
             )
 
             # set fill color
-            background_color = QColor(*iColor["rgba_gray_1"])
+            background_color = QColor(*iColor["rgba_gray_3"])
             brush = QBrush(background_color)
             path = QPainterPath()
             path.addPolygon(l_indicator)
@@ -610,7 +610,7 @@ class AbstractDragDropIndicator(QProxyStyle):
             )
 
             # set fill color
-            background_color = QColor(*iColor["rgba_gray_1"])
+            background_color = QColor(*iColor["rgba_gray_3"])
             brush = QBrush(background_color)
             path = QPainterPath()
             path.addPolygon(top_indicator)

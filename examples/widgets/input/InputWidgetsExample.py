@@ -4,6 +4,7 @@ from qtpy.QtWidgets import (
 from qtpy.QtGui import QCursor
 from qtpy.QtCore import Qt
 
+from cgwidgets.settings.colors import iColor
 from cgwidgets.widgets import (
     FloatInputWidget,
     IntInputWidget,
@@ -30,6 +31,7 @@ l2 = [['a', (255, 0, 0, 255)], ['b'], ['c'], ['aa'], ['bb'], ['cc']]
 def createGroupBox(title):
     group_box = QGroupBox()
     group_box.setTitle(title)
+    group_box.setStyleSheet("color: rgba{rgba_text}".format(**iColor))
     group_box_layout = QVBoxLayout(group_box)
     return group_box
 
@@ -68,7 +70,8 @@ def userEvent(widget):
     print("user input...", widget)
 buttons = []
 for x in range(3):
-    buttons.append([str(x), userEvent])
+    flag = x
+    buttons.append(["button_" + str(x), flag, userEvent])
 multi_button_input_widget = MultiButtonInputWidget(buttons=buttons, orientation=Qt.Vertical)
 
 normal_widget.layout().addWidget(float_input_widget)
@@ -185,6 +188,7 @@ for arg in label_widgets:
 
 """ Main Widget"""
 main_widget = QSplitter()
+main_widget.setStyleSheet("""background-color: rgba{rgba_gray_3}""".format(rgba_gray_3=iColor["rgba_gray_2"]))
 main_widget.addWidget(normal_widget)
 main_widget.addWidget(vertical_label_widget)
 main_widget.addWidget(horizontal_label_widget)

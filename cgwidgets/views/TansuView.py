@@ -57,6 +57,7 @@ class TansuView(QSplitter):
         self._current_index = None
         self._current_widget = None
         self._is_solo_view_enabled = True
+        self.setProperty("is_solo_view_enableable", True)
         self._is_solo_view = False
         self._solo_view_hotkey = TansuView.FULLSCREEN_HOTKEY
         self._is_handle_static = False
@@ -65,7 +66,8 @@ class TansuView(QSplitter):
         self._rgba_handle = iColor["rgba_outline"]
         self._rgba_handle_hover = iColor["rgba_outline_hover"]
         self._rgba_flag = iColor["rgba_hover"]
-        self._rgba_background = iColor["rgba_invisible"]
+        #self._rgba_background = iColor["rgba_invisible"]
+        self._rgba_background = iColor["rgba_gray_2"]
         self._rgba_text = iColor["rgba_text"]
 
         self.setOrientation(orientation)
@@ -220,7 +222,14 @@ class TansuView(QSplitter):
         return self._is_solo_view_enabled
 
     def setIsSoloViewEnabled(self, enabled):
+        """
+        Determines is this widget can be set to Solo view or not.
+
+        Args:
+            enabled:
+        """
         self._is_solo_view_enabled = enabled
+        self.setProperty("is_solo_view_enableable", enabled)
 
     def isSoloView(self):
         return self._is_solo_view
@@ -408,23 +417,27 @@ class TansuView(QSplitter):
             'handle_length_margin': self.getHandleLengthMargin()
         })
         style_sheet = """
+        /* VIEW */
             TansuView{{
                 background-color: rgba{rgba_background};
-                border: 3px solid rgba{rgba_invisible};
                 color: rgba{rgba_text};
             }}
-            TansuView[is_solo_view=true]{{
-                border: 3px solid rgba{rgba_flag}; 
+            TansuView[is_solo_view_enableable=true]{{
+                border: 2px solid rgba{rgba_background};
             }}
+            TansuView[is_solo_view=true]{{
+                border: 2px dotted rgba{rgba_flag}; 
+            }}
+        /* HANDLE */
             QSplitter::handle {{
-                border: 1px double rgba{rgba_handle};
+                border: 2px dotted rgba{rgba_handle};
                 margin: {handle_length_margin};
             }}
             QSplitter[is_handle_static=false]::handle:hover {{
-                border: 2px double rgba{rgba_handle_hover};
+                border: 2px dotted rgba{rgba_handle_hover};
             }}
             QSplitter[is_handle_static=true]::handle {{
-                border: 1px solid rgba{rgba_handle};
+                border: 2px dotted rgba{rgba_handle};
                 margin: {handle_length_margin};
             }}
 

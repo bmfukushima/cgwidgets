@@ -182,12 +182,12 @@ class AbstractComboListInputWidget(QComboBox):
         style_sheet_args['width'] = dropdown_width
         # QComboBox {{
         #     border: None;
-        #     background-color: rgba{rgba_gray_0}
+        #     background-color: rgba{rgba_gray_2}
         # }}
         style_sheet = """
             QComboBox{{
                 border: None;
-                background-color: rgba{rgba_gray_0};
+                background-color: rgba{rgba_gray_2};
                 color: rgba{rgba_text};
             }}
             QComboBox::drop-down {{
@@ -195,12 +195,12 @@ class AbstractComboListInputWidget(QComboBox):
             }}
             QLineEdit{{
                 border: None;
-                background-color: rgba{rgba_gray_0};
+                background-color: rgba{rgba_gray_2};
                 color: rgba{rgba_text};
             }}
             QListView{{
                 border: None;
-                background-color: rgba{rgba_gray_0};
+                background-color: rgba{rgba_gray_2};
                 color: rgba{rgba_text};
             }}
             QListView::item:hover{{
@@ -211,7 +211,7 @@ class AbstractComboListInputWidget(QComboBox):
         self.completer.popup().setStyleSheet("""
             QListView{{
                 border: None;
-                background-color: rgba{rgba_gray_0};
+                background-color: rgba{rgba_gray_2};
                 color: rgba{rgba_text};
             }}
             QListView::item:hover{{
@@ -406,7 +406,7 @@ class AbstractListInputWidget(AbstractStringInputWidget):
     #     style_sheet = """
     #     {type}{{
     #         border:None;
-    #         background-color: rgba{rgba_gray_0};
+    #         background-color: rgba{rgba_gray_2};
     #         selection-background-color: rgba{rgba_selected};
     #         color: rgba{rgba_text}
     #     }}
@@ -616,7 +616,7 @@ class CustomModel(QAbstractListModel):
             try:
                 color = QColor(*self.item_list[index.row()][1])
             except IndexError:
-                color = QColor(*iColor["rgba_gray_0"])
+                color = QColor(*iColor["rgba_gray_2"])
 
             # create pixmap/icon
             pixmap = QPixmap(int(getFontSize(QApplication) * 2), int(getFontSize(QApplication) * 0.5))

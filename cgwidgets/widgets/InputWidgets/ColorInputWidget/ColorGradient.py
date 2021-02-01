@@ -898,7 +898,7 @@ class ColorGradientHeaderWidget(ColorHeaderWidget):
 
     def updateStyleSheet(self):
         self.setStyleSheet("""
-        background-color: rgba{rgba_gray_1}
+        background-color: rgba{rgba_gray_3}
 
         """.format(**iColor.style_sheet_args))
 
@@ -928,7 +928,7 @@ class ColorGradientHeaderWidgetItem(ColorHeaderWidgetItem):
     def __init__(self, parent=None, title='None', value='None'):
         super(ColorGradientHeaderWidgetItem, self).__init__(parent, title)
         # setup display
-        #self.setStyleSheet("background-color: rgba{rgba_gray_1}".format(**iColor.style_sheet_args))
+        #self.setStyleSheet("background-color: rgba{rgba_gray_3}".format(**iColor.style_sheet_args))
         self.setMinimumWidth(75)
         self.setMinimumHeight(100)
 

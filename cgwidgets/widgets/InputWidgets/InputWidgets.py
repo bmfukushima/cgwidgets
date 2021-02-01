@@ -371,7 +371,7 @@ class LabelledInputWidget(TansuView, AbstractInputGroupFrame):
         self.resetSliderPositionToDefault()
 
         # setup style
-        self.rgba_background = iColor['rgba_gray_1']
+        #self.rgba_background = iColor['rgba_gray_2']
 
         self.splitterMoved.connect(self.__splitterMoved)
 
@@ -696,7 +696,8 @@ class MultiButtonInputWidget(AbstractMultiButtonInputWidget):
     Colors
     Hide Widget Handles?
     Args:
-        buttons (list): of lists ["title": virtualFunction]
+        buttons (list): of lists ["title", flag, virtualFunction]
+        buttons (list): of lists ["title", flag, virtualFunction]
             The virtual  function needs to take one arg.  This arg
             will return the widget that is created to display this
             event
@@ -724,7 +725,7 @@ if __name__ == "__main__":
 
     buttons = []
     for x in range(3):
-        buttons.append([str(x), userEvent])
+        buttons.append([str(x), x, userEvent])
 
     widget = MultiButtonInputWidget(buttons=buttons, orientation=Qt.Horizontal)
 

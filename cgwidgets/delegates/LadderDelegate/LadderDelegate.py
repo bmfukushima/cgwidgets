@@ -136,8 +136,8 @@ Notes:
 
         # setup default colors
         self.rgba_selection = iColor["rgba_hover"]
-        self.rgba_bg_slide = iColor["rgba_gray_0"]
-        self.rgba_fg_slide = iColor["rgba_gray_1"]
+        self.rgba_bg_slide = iColor["rgba_gray_2"]
+        self.rgba_fg_slide = iColor["rgba_gray_3"]
 
         # create items
         self.middle_item_index = int(len(value_list) * 0.5)
@@ -331,16 +331,16 @@ Notes:
         }
 
         style_sheet_args.update(update_kwargs)
-        #                 background-color: rgba{rgba_gray_0}
+        #                 background-color: rgba{rgba_gray_2}
 
         style_sheet = """
         LadderDelegate{{
-            background-color: rgba{rgba_gray_0};
+            background-color: rgba{rgba_gray_2};
             border: 1px solid rgba{rgba_outline}
         }}
         LadderItem{{
             color: rgba{rgba_text};
-            background-color: rgba{rgba_gray_0}
+            background-color: rgba{rgba_gray_2}
         }}
         LadderItem::hover[is_drag_STICKY=false]{{background-color: rgba{rgba_selected}}}
         LadderItem[is_drag_STICKY=true]{{background-color: rgba{rgba_selected}}}
@@ -678,7 +678,7 @@ Attributes:
         self.editingFinished.connect(self.setMiddleValue)
         self.setStyleSheet(
             """
-            background-color: rgba{rgba_blue_3};
+            background-color: rgba{rgba_blue_5};
             color: rgba{rgba_text}
             """.format(**iColor.style_sheet_args))
 

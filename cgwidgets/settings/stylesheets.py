@@ -12,7 +12,8 @@ scroll_bar_ss = """
     
     /* MOVING PART */
     QScrollBar::handle:horizontal {{
-        background: rgba{rgba_blue_4};
+        border: 2px dotted rgba{rgba_outline};
+        /* background: rgba{rgba_outline}; */
         width: 10px;
     }}
     
@@ -43,7 +44,8 @@ scroll_bar_ss = """
     
     /* MOVING PART */
     QScrollBar::handle:vertical {{
-        background: rgba{rgba_blue_4};
+        border: 2px dotted rgba{rgba_outline};
+        /* background: rgba{rgba_outline}; */
         height: 10px;
     }}
     
@@ -64,6 +66,22 @@ scroll_bar_ss = """
     }}
 """.format(**iColor.style_sheet_args)
 
+# todo not in use...
+# todo how to handle handle_length_margin arg?
+# splitter_handle = """
+# QSplitter::handle {{
+#     border: 1px double rgba{rgba_handle};
+#     margin: {handle_length_margin};
+# }}
+# QSplitter[is_handle_static=false]::handle:hover {{
+#     border: 2px double rgba{rgba_handle_hover};
+# }}
+# QSplitter[is_handle_static=true]::handle {{
+#     border: 1px solid rgba{rgba_handle};
+#     margin: {handle_length_margin};
+# }}
+# """.format(**iColor.style_sheet_args)
+
 # "type": type(self).__name__
 """
 background: qradialgradient(
@@ -77,6 +95,7 @@ background: qradialgradient(
 /*
 {type}::hover{{
     background: qlineargradient(
+        spread: repeat,
         x1:0.00, y1:0.00, x2:0.9, y2:0.9, x3:1, y3:1,
         stop:0 rgba{rgba_background},
         stop:0.5 rgba{rgba_hover},

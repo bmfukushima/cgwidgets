@@ -21,52 +21,45 @@ from cgwidgets.utils import attrs
 class Colors(dict):
     def __init__(self):
 
+        """ COLOR GENERATOR """
+        # CONSTANT
         self["rgba_black"] = (0, 0, 0, 255)
         self["rgba_white"] = (255, 255, 255, 255)
-
-        """ background"""
         self["rgba_invisible"] = (0, 0, 0, 0)
-        self["rgba_gray_0"] = (32, 32, 32, 255)
-        self["rgba_gray_1"] = Colors.multiplyRGBAValues(self["rgba_gray_0"], golden_ratio=True)
-        self["rgba_gray_2"] = Colors.multiplyRGBAValues(self["rgba_gray_1"], golden_ratio=True)
-        self["rgba_gray_3"] = Colors.multiplyRGBAValues(self["rgba_gray_2"], golden_ratio=True)
-        self["rgba_gray_4"] = Colors.multiplyRGBAValues(self["rgba_gray_3"], golden_ratio=True)
 
-        """ blue """
-        self["rgba_blue_0"] = (0, 0, 32, 255)
-        self["rgba_blue_1"] = Colors.multiplyRGBAValues(self["rgba_blue_0"], golden_ratio=True)
-        self["rgba_blue_2"] = Colors.multiplyRGBAValues(self["rgba_blue_1"], golden_ratio=True)
-        self["rgba_blue_3"] = Colors.multiplyRGBAValues(self["rgba_blue_2"], golden_ratio=True)
-        self["rgba_blue_4"] = Colors.multiplyRGBAValues(self["rgba_blue_3"], golden_ratio=True)
+        # COLOR GRADIENTS
+        num_colors = 8
+        start_color = 10
+        # pure blood
+        createColorRange("rgba_gray", (start_color, start_color, start_color, 255), self, num_colors, desaturate=False)
+        createColorRange("rgba_blue", (0, 0, start_color, 255), self, num_colors)
+        createColorRange("rgba_green", (0, start_color, 0, 255), self, num_colors)
+        createColorRange("rgba_red", (start_color, 0, 0, 255), self, num_colors)
 
-        """ green """
-        self["rgba_green_0"] = (0, 32, 0, 255)
-        self["rgba_green_1"] = Colors.multiplyRGBAValues(self["rgba_green_0"], golden_ratio=True)
-        self["rgba_green_2"] = Colors.multiplyRGBAValues(self["rgba_green_1"], golden_ratio=True)
-        self["rgba_green_3"] = Colors.multiplyRGBAValues(self["rgba_green_2"], golden_ratio=True)
-        self["rgba_green_4"] = Colors.multiplyRGBAValues(self["rgba_green_3"], golden_ratio=True)
-        #self["rgba_gray_selected"] = Colors.multiplyRGBAValues(self["rgba_gray_0"])
-
+        # mud blood
+        createColorRange("rgba_yellow", (start_color, start_color, start_color*0.5, 255), self, num_colors, desaturate=False)
+        createColorRange("rgba_cyan", (start_color * 0.5, start_color, start_color, 255), self, num_colors, desaturate=False)
+        createColorRange("rgba_magenta", (start_color, start_color * 0.5, start_color * 0.5, 255), self, num_colors, desaturate=False)
+        """ COLOR REFERENCES"""
         """ outline """
-        # self["rgba_outline"] = (180, 70, 10, 255)
-        # self["rgba_outline_hover"] = (255, 100, 15, 255)
-        self["rgba_outline"] = self["rgba_blue_3"]
-        self["rgba_outline_hover"] = self["rgba_blue_4"]
+
+        self["rgba_outline"] = self["rgba_blue_6"]
+        self["rgba_outline_hover"] = self["rgba_blue_7"]
 
         """ text """
-        self["rgba_text"] = (192, 192, 192, 255)
+        self["rgba_text"] = self["rgba_gray_6"]
         self["rgba_text_disabled"] = Colors.multiplyRGBAValues(self["rgba_text"], golden_ratio=False, alpha=255)
         self["rgba_text_hover"] = Colors.multiplyRGBAValues(self["rgba_text"], golden_ratio=True)
 
         """ hover / select"""
-        self["rgba_selected"] = (96, 96, 192, 255)
-        self["rgba_hover"] = Colors.multiplyRGBAValues(self["rgba_selected"], golden_ratio=True)
+        self["rgba_selected"] = self["rgba_cyan_6"]
+        self["rgba_hover"] = self["rgba_cyan_7"]
 
         """ accept / decline"""
-        self["rgba_accept"] = (64, 128, 64, 255)
-        self["rgba_cancel"] = (128, 64, 64, 255)
-        self["rgba_maybe"] = (64, 64, 128, 255)
-        self["rgba_error"] = (192, 0, 0, 255)
+        self["rgba_accept"] = self["rgba_green_desat_5"]
+        self["rgba_cancel"] = self["rgba_red_desat_6"]
+        self["rgba_maybe"] =  self["rgba_yellow_5"]
+        self["rgba_error"] =  self["rgba_red_7"]
         self["rgba_accept_hover"] = Colors.multiplyRGBAValues(self["rgba_accept"], golden_ratio=True)
         self["rgba_cancel_hover"] = Colors.multiplyRGBAValues(self["rgba_cancel"], golden_ratio=True)
         self["rgba_maybe_hover"] = Colors.multiplyRGBAValues(self["rgba_maybe"], golden_ratio=True)
@@ -91,7 +84,7 @@ class Colors(dict):
 
         args = {
             'type': type(current_instance).__name__,
-            'rgba_background': iColor['rgba_gray_0'],
+            'rgba_background': iColor['rgba_gray_2'],
             'rgba_text': iColor['rgba_text'],
             'additional_args': ''
         }
@@ -210,6 +203,53 @@ def updateColorFromArgValue(orig_color, arg, value):
 
     # set color from an arg value
     return new_color
+
+
+def createColorRange(name, color, colors_dict, num_values=8, desaturate=True):
+    """
+    Creates a range of colors from the original color provided.
+
+    Args:
+        name (string):
+        color (tuple(RGBA)):
+        colors_dict (dict): main container storing colors
+        num_values (int): number of values to create
+
+    Returns:
+
+    """
+    colors_dict["{name}_0".format(name=name)] = color
+
+    for x in range(1, num_values):
+        # create color
+        colors_dict["{name}_{x}".format(x=x, name=name)] = Colors.multiplyRGBAValues(
+            colors_dict["{name}_{y}".format(name=name, y=x - 1)], golden_ratio=True)
+
+        # desaturated color
+        if desaturate:
+            colors_dict["{name}_desat_{x}".format(x=x, name=name)] = desaturateColor(colors_dict["{name}_{x}".format(x=x, name=name)])
+    return colors_dict
+
+
+def desaturateColor(color, desaturation_amount=0.5):
+    """
+    Takes a color, and returns a color that is desaturated by the amount provided.
+    Args:
+        color (RGBA): tuple of RGBA 255 values
+        desaturation_amount (float): amount to desaturate color by
+
+    Returns (RGBA):
+
+    """
+    desaturate_color = []
+    initial_value = max(color[:3])
+    for c in color:
+        if c < initial_value:
+            new_value = int(c + (initial_value * desaturation_amount))
+            desaturate_color.append(new_value)
+        else:
+            desaturate_color.append(c)
+    return tuple(desaturate_color)
 
 
 iColor = Colors()

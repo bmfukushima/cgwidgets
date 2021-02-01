@@ -53,7 +53,7 @@ class iAbstractInputWidget(object):
 
         # set up style
         self.rgba_border = iColor["rgba_outline"]
-        self.rgba_background = iColor["rgba_gray_0"]
+        self.rgba_background = iColor["rgba_gray_2"]
         self.rgba_text = iColor["rgba_text"]
         self.rgba_hover = iColor["rgba_hover"]
 
@@ -65,7 +65,6 @@ class iAbstractInputWidget(object):
         font_size = getFontSize(QApplication)
         self.setMinimumSize(font_size*2, font_size*2)
 
-
     def updateStyleSheet(self):
         style_sheet_args = iColor.style_sheet_args
         style_sheet_args.update({
@@ -73,6 +72,7 @@ class iAbstractInputWidget(object):
             "rgba_border": repr(self.rgba_border),
             "rgba_text": repr(self.rgba_text),
             "rgba_hover": repr(self.rgba_hover),
+            #"rgba_gray": iColor["rgba_gray_3"],
             "rgba_invisble": iColor["rgba_invisible"],
             "rgba_selected": iColor["rgba_selected"],
             "gradient_background": icons["gradient_background"],
@@ -81,13 +81,13 @@ class iAbstractInputWidget(object):
         style_sheet = """
         /* DEFAULT */
         {type}{{
-            border: None;
+            border: 1px dotted rgba{rgba_gray_4};
             background-color: rgba{rgba_background};
             color: rgba{rgba_text};
             selection-background-color: rgba{rgba_selected};
         }}
 
-        /* SELECTION spread: repeat,*/
+        /* SELECTION */
         {type}[is_selected=true]{{
             background: qradialgradient(
                 radius: 0.9,
@@ -533,14 +533,14 @@ class AbstractLabelInputWidget(AbstractStringInputWidget):
         style_sheet = """
         /* MAIN */
         AbstractLabelInputWidget{{
-            border: 1px solid rgba{rgba_gray_1};
-            background-color: rgba{rgba_gray_1};
+            border: 1px solid rgba{rgba_gray_2};
+            background-color: rgba{rgba_gray_2};
             color: rgba{rgba_text};
             selection-background-color: rgba{rgba_selected};
         }}
         /* Border if widget can be editted */
         AbstractLabelInputWidget[editable=true]{{
-            border: 1px solid rgba{rgba_gray_2};
+            border: 1px solid rgba{rgba_gray_3};
         }}
         /* Border during edit operation */
         AbstractLabelInputWidget[readonly=false]{{
@@ -618,11 +618,13 @@ class AbstractBooleanInputWidget(QLabel, iAbstractInputWidget):
             self.setText(text)
         self.updateStyleSheet()
 
+        self.setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
+
     # def setupStyleSheet(self):
     #     style_sheet_args = iColor.style_sheet_args
     #     style_sheet_args['name'] = type(self).__name__
     #     style_sheet = """
-    #     QLabel{{background-color: rgba{rgba_gray_0}}}
+    #     QLabel{{background-color: rgba{rgba_gray_2}}}
     #     QLabel[is_selected=true]{{
     #         border: 3px solid rgba{rgba_accept}
     #     }}
@@ -689,7 +691,7 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
         super(AbstractOverlayInputWidget, self).__init__(parent)
 
         # create widgets
-        self.overlay_widget = QLabel(title)
+        self.overlay_widget = AbstractLabelInputWidget(title)
         if not input_widget:
             input_widget = AbstractStringInputWidget(self)
         self.input_widget = input_widget
@@ -699,7 +701,7 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
         self.addWidget(self.input_widget)
 
         # setup style
-        setAsTransparent(self.overlay_widget)
+        #setAsTransparent(self.overlay_widget)
         self.overlay_widget.setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
 
     def enterEvent(self, event):
@@ -744,7 +746,12 @@ class AbstractMultiButtonInputWidget(TansuView):
         #
         if buttons:
             for button in buttons:
-                self.addButton(button[0], button[1])
+                self.addButton(*button)
+
+    """ GET FLAGS """
+    def flags(self):
+        buttons = self.currentButtons()
+        return [button.flag() for button in buttons]
 
     """ PROPERTIES """
     def isMultiSelect(self):
@@ -795,12 +802,13 @@ class AbstractMultiButtonInputWidget(TansuView):
 
         self.update()
 
-    def addButton(self, title, user_clicked_event, image=None):
+    def addButton(self, title, flag, user_clicked_event, image=None):
         """
         Adds a button to this widget
 
         Args:
             title (str): display name
+            flag (arbitrary): flag to be returned to denote that this button is selected
             user_clicked_event (function): to run when the user clicks
             image:
 
@@ -808,24 +816,39 @@ class AbstractMultiButtonInputWidget(TansuView):
             image is not currently setup.  This kwarg is merely a place holder.
         Todo: setup image
         """
-        button = AbstractButtonInputWidget(self, user_clicked_event=user_clicked_event, title=title)
+        button = AbstractButtonInputWidget(self, user_clicked_event=user_clicked_event, title=title, flag=flag)
         self._buttons[title] = button
         self.addWidget(button)
 
 
 class AbstractButtonInputWidget(AbstractBooleanInputWidget):
-    def __init__(self, parent, user_clicked_event=None, title="CLICK ME"):
+    """
+    Toggleable button designed to work with the AbstractMultiButtonInputWidget.
+
+    Args:
+        title (str): display name
+        flag (arbitrary): flag to be returned to denote that this button is selected
+        user_clicked_event (function): to run when the user clicks
+        image:
+    """
+    def __init__(self, parent, user_clicked_event=None, title="CLICK ME", flag=None):
         super(AbstractButtonInputWidget, self).__init__(parent)
 
         # setup style
         # self.rgba_background = iColor["rgba_invisible"]
         self.updateStyleSheet()
-        self.setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
 
         # setup defaults
         self.setText(title)
+        self.setFlag(flag)
         if user_clicked_event:
             self.setUserClickedEvent(user_clicked_event)
+
+    def flag(self):
+        return self._flag
+
+    def setFlag(self, flag):
+        self._flag = flag
 
     """ VIRTUAL FUNCTIONS """
     def setUserClickedEvent(self, function):
@@ -852,6 +875,8 @@ class AbstractButtonInputWidget(AbstractBooleanInputWidget):
             self.userFinishedEditingEvent(self, self.is_selected)
         except AttributeError:
             pass
+
+        print(self.parent().flags())
         #return AbstractBooleanInputWidget.mouseReleaseEvent(self, event)
 
 
@@ -868,7 +893,8 @@ if __name__ == "__main__":
 
     buttons = []
     for x in range(3):
-        buttons.append([str(x), userEvent])
+        flag = x
+        buttons.append(["button_"+str(x), flag, userEvent])
 
     widget = AbstractMultiButtonInputWidget(buttons=buttons, orientation=Qt.Horizontal)
 
@@ -880,11 +906,11 @@ if __name__ == "__main__":
     widget.show()
     #w.move(QCursor.pos())
     sys.exit(app.exec_())
-
-    def print_classes():
-        for name, obj in inspect.getmembers(sys.modules[__name__]):
-            if inspect.isclass(obj):
-                print(obj)
-
-    print(__name__)
-    print_classes()
+    #
+    # def print_classes():
+    #     for name, obj in inspect.getmembers(sys.modules[__name__]):
+    #         if inspect.isclass(obj):
+    #             print(obj)
+    #
+    # print(__name__)
+    # print_classes()

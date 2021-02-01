@@ -61,7 +61,7 @@ class AbstractColorClock(QWidget):
 
         # setup display
         self.layout().setContentsMargins(0, 0, 0, 0)
-        self.setStyleSheet("background-color: rgba{rgba_gray_2}".format(**iColor.style_sheet_args))
+        self.setStyleSheet("background-color: rgba{rgba_gray_4}".format(**iColor.style_sheet_args))
         self._createHeaderWidgetItems()
         self._updateHeaderWidgetPosition()
         self.setOffset(30)
