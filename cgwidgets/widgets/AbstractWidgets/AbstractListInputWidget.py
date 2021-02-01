@@ -4,21 +4,10 @@ TODO
     AbstractFileBrowser currently located in KatanaBebop
 """
 from qtpy.QtWidgets import (
-    QComboBox, QLineEdit, QCompleter, QSizePolicy, QVBoxLayout
-)
-
+    QComboBox, QSizePolicy, QLineEdit, QCompleter, QStyledItemDelegate, QApplication)
 from qtpy.QtGui import(
-    QStandardItem, QStandardItemModel, QPixmap, QIcon, QColor
-)
-from qtpy.QtCore import (
-    QEvent, Qt, QSortFilterProxyModel
-)
-
-
-from qtpy.QtCore import (
-    QAbstractListModel, Qt, QRegExp, QSortFilterProxyModel)
-from qtpy.QtWidgets import (
-    QLineEdit, QCompleter, QListView, QStyledItemDelegate, QApplication)
+    QStandardItem, QStandardItemModel, QPixmap, QIcon, QColor)
+from qtpy.QtCore import (QEvent, QAbstractListModel, Qt, QSortFilterProxyModel)
 
 from cgwidgets.widgets.AbstractWidgets import AbstractStringInputWidget
 from cgwidgets.utils import getBottomLeftPos, getFontSize
@@ -630,7 +619,7 @@ class CustomModel(QAbstractListModel):
                 color = QColor(*iColor["rgba_gray_0"])
 
             # create pixmap/icon
-            pixmap = QPixmap(getFontSize(QApplication) * 2, getFontSize(QApplication) * 0.5)
+            pixmap = QPixmap(int(getFontSize(QApplication) * 2), int(getFontSize(QApplication) * 0.5))
             pixmap.fill(color)
             icon = QIcon(pixmap)
             return icon
@@ -660,7 +649,9 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     w = QWidget()
     l = QVBoxLayout(w)
-    r = AbstractListInputWidget(item_list=[['a', (255,0,0, 255)], ['b'], ['c'], ['aa'], ['bb'], ['cc']])
+    r = AbstractListInputWidget(item_list=[
+        ['a', (255,0,0, 255)], ['b'], ['c'], ['aa'], ['bb'], ['cc'], ['b'], ['c'], ['aa'], ['bb'], ['cc']]
+    )
     r.display_item_colors = True
     e = CompleterPopup()
     l.addWidget(r)

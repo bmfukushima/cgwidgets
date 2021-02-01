@@ -50,16 +50,21 @@ class iAbstractInputWidget(object):
         self._key_list = []
         self._orig_value = None
         self._updating = False
+
         # set up style
         self.rgba_border = iColor["rgba_outline"]
         self.rgba_background = iColor["rgba_gray_0"]
         self.rgba_text = iColor["rgba_text"]
         self.rgba_hover = iColor["rgba_hover"]
 
+        # setup properties
+        self.setProperty("hover_display", True)
+
         self.updateStyleSheet()
 
         font_size = getFontSize(QApplication)
         self.setMinimumSize(font_size*2, font_size*2)
+
 
     def updateStyleSheet(self):
         style_sheet_args = iColor.style_sheet_args
@@ -107,7 +112,7 @@ class iAbstractInputWidget(object):
                 stop:0.5 rgba{rgba_background},
                 stop:0.75 rgba{rgba_selected});
             }}
-        {type}::hover[boolean_clicked=false]{{
+        {type}::hover[hover_display=true]{{
             background: qradialgradient(
                 radius: 0.9,
                 cx:0.50, cy:0.50,
@@ -123,18 +128,6 @@ class iAbstractInputWidget(object):
                 stop:0.5 rgba{rgba_background},
                 stop:0.75 rgba{rgba_selected});
             }}
-
-        /*
-        {type}::hover{{
-            background: qlineargradient(
-                x1:0.00, y1:0.00, x2:0.9, y2:0.9, x3:1, y3:1,
-                stop:0 rgba{rgba_background},
-                stop:0.5 rgba{rgba_hover},
-                stop:1 rgba{rgba_accept}
-            );
-        }}
-        
-        */
 
         """.format(**style_sheet_args)
 
@@ -620,7 +613,7 @@ class AbstractBooleanInputWidget(QLabel, iAbstractInputWidget):
     def __init__(self, parent=None, text=None, is_selected=False):
         super(AbstractBooleanInputWidget, self).__init__(parent)
         self.is_selected = is_selected
-        self.setProperty("boolean_clicked", False)
+        self.setProperty("hover_display", True)
         if text:
             self.setText(text)
         self.updateStyleSheet()
@@ -643,7 +636,7 @@ class AbstractBooleanInputWidget(QLabel, iAbstractInputWidget):
 
     """ EVENTS """
     def enterEvent(self, event):
-        self.setProperty("boolean_clicked", False)
+        self.setProperty("hover_display", True)
         updateStyleSheet(self)
         return QLabel.enterEvent(self, event)
 
@@ -656,7 +649,7 @@ class AbstractBooleanInputWidget(QLabel, iAbstractInputWidget):
         except AttributeError:
             pass
 
-        self.setProperty("boolean_clicked", True)
+        self.setProperty("hover_display", False)
         updateStyleSheet(self)
 
         return QLabel.mouseReleaseEvent(self, event)
@@ -851,7 +844,7 @@ class AbstractButtonInputWidget(AbstractBooleanInputWidget):
         self.parent().setAllWidgetsToUniformSize()
 
         # update style
-        self.setProperty("boolean_clicked", True)
+        self.setProperty("hover_display", False)
         updateStyleSheet(self)
 
         # run user triggered event

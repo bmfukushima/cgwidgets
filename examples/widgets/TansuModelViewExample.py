@@ -61,8 +61,7 @@ from qtpy.QtGui import QCursor
 from cgwidgets.widgets import (
     TansuModelViewWidget, TansuModelItem, TansuModel,
     ModelViewWidget, FloatInputWidget)
-from cgwidgets.delegates import TansuDelegate
-from cgwidgets.views import AbstractDragDropListView, AbstractDragDropTreeView
+from cgwidgets.views import TansuView, AbstractDragDropListView, AbstractDragDropTreeView
 from cgwidgets.utils import attrs
 
 
