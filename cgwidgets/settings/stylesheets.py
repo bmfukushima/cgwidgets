@@ -1,7 +1,26 @@
+"""
+Note:
+    When importing these into modules, if they don't have the string formatting, they will
+    to have that the string formatting added later
+        ie
+    {splitter_handle_ss}
+    .format(
+        **style_sheet_args,
+        splitter_handle_ss=splitter_handle_ss.format(**style_sheet_args)
+    )
+"""
+
 from .colors import iColor
 
+"""
+Kwargs:
+    rgba_invisible:
+    rgba_outline
+    
+"""
 scroll_bar_ss = """
 /* HORIZONTAL */
+
     /* BACKGROUND */
     QScrollBar:horizontal {{
         border: None;
@@ -34,7 +53,7 @@ scroll_bar_ss = """
     }}
 
 /* VERTICAL */
-/* BACKGROUND */
+    /* BACKGROUND */
     QScrollBar:vertical {{
         border: None;
         background: rgba{rgba_invisible};
@@ -66,23 +85,93 @@ scroll_bar_ss = """
     }}
 """.format(**iColor.style_sheet_args)
 
-# todo not in use...
-# todo how to handle handle_length_margin arg?
-# splitter_handle = """
-# QSplitter::handle {{
-#     border: 1px double rgba{rgba_handle};
-#     margin: {handle_length_margin};
-# }}
-# QSplitter[is_handle_static=false]::handle:hover {{
-#     border: 2px double rgba{rgba_handle_hover};
-# }}
-# QSplitter[is_handle_static=true]::handle {{
-#     border: 1px solid rgba{rgba_handle};
-#     margin: {handle_length_margin};
-# }}
-# """.format(**iColor.style_sheet_args)
+input_widget_ss ="""
+/* DEFAULT */
+    {type}{{
+        border: 1px dotted rgba{rgba_gray_4};
+        border-radius: 10px;
+        background-color: rgba{rgba_background};
+        color: rgba{rgba_text};
+        selection-background-color: rgba{rgba_selected_background};
+    }}
 
-# "type": type(self).__name__
+    /* SELECTION */
+    {type}[is_selected=true]{{
+        background: qradialgradient(
+            radius: 0.9,
+            cx:0.50, cy:0.50,
+            fx:0.5, fy:0.5,
+            stop:0.5 rgba{rgba_background},
+            stop:0.75 rgba{rgba_accept});
+        }}
+    {type}[is_selected=false]{{
+        background: qradialgradient(
+            radius: 0.9,
+            cx:0.50, cy:0.50,
+            fx:0.5, fy:0.5,
+            stop:0.5 rgba{rgba_background},
+            stop:0.75 rgba{rgba_cancel});
+        }}
+    {type}:focus{{
+        background: qradialgradient(
+            radius: 0.9,
+            cx:0.50, cy:0.50,
+            fx:0.5, fy:0.5,
+            stop:0.5 rgba{rgba_background},
+            stop:0.75 rgba{rgba_selected_background});
+        }}
+    {type}::hover[hover_display=true]{{
+        background: qradialgradient(
+            radius: 0.9,
+            cx:0.50, cy:0.50,
+            fx:0.5, fy:0.5,
+            stop:0.5 rgba{rgba_background},
+            stop:0.75 rgba{rgba_selected_hover});
+        }}
+    {type}::hover:focus{{
+        background: qradialgradient(
+            radius: 0.9,
+            cx:0.50, cy:0.50,
+            fx:0.5, fy:0.5,
+            stop:0.5 rgba{rgba_background},
+            stop:0.75 rgba{rgba_selected_background});
+        }}
+
+"""
+
+"""
+Kwargs:
+    handle_length_margin: <int>px <int>px
+    rgba_handle_hover: (r, g, b, a)
+    rgba_handle: (r, g, b, a)
+Properties:
+    is_handle_visible
+    is_handle_static
+"""
+splitter_handle_ss = """
+/* HANDLE ;*/
+    {type}[is_handle_visible=true]::handle {{
+        border: 2px dotted rgba{rgba_handle};
+        margin: {handle_length_margin};
+    }}
+    
+    /* VISIBLE */
+    {type}[is_handle_visible=false]::handle {{
+        border: None;
+        margin: 0px;
+    }}
+
+    /* STATIC HANDLE */
+    {type}[is_handle_visible=true][is_handle_static=false]::handle:hover {{
+        border: 2px dotted rgba{rgba_handle_hover};
+    }}
+
+    {type}[is_handle_visible=true][is_handle_static=true]::handle {{
+        border: 2px dotted rgba{rgba_handle};
+    }}
+"""
+
+
 """
 background: qradialgradient(
     radius: 0.9,

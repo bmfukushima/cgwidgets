@@ -27,6 +27,7 @@ from cgwidgets.utils import (
 )
 from cgwidgets.views import TansuView, TansuViewHandle
 from cgwidgets.settings.icons import icons
+from cgwidgets.settings.stylesheets import input_widget_ss
 
 
 class iAbstractInputWidget(object):
@@ -79,58 +80,8 @@ class iAbstractInputWidget(object):
             "type": type(self).__name__
         })
         style_sheet = """
-        /* DEFAULT */
-        {type}{{
-            border: 1px dotted rgba{rgba_gray_4};
-            border-radius: 10px;
-            background-color: rgba{rgba_background};
-            color: rgba{rgba_text};
-            selection-background-color: rgba{rgba_selected_background};
-        }}
-
-        /* SELECTION */
-        {type}[is_selected=true]{{
-            background: qradialgradient(
-                radius: 0.9,
-                cx:0.50, cy:0.50,
-                fx:0.5, fy:0.5,
-                stop:0.5 rgba{rgba_background},
-                stop:0.75 rgba{rgba_accept});
-            }}
-        {type}[is_selected=false]{{
-            background: qradialgradient(
-                radius: 0.9,
-                cx:0.50, cy:0.50,
-                fx:0.5, fy:0.5,
-                stop:0.5 rgba{rgba_background},
-                stop:0.75 rgba{rgba_cancel});
-            }}
-        {type}:focus{{
-            background: qradialgradient(
-                radius: 0.9,
-                cx:0.50, cy:0.50,
-                fx:0.5, fy:0.5,
-                stop:0.5 rgba{rgba_background},
-                stop:0.75 rgba{rgba_selected_background});
-            }}
-        {type}::hover[hover_display=true]{{
-            background: qradialgradient(
-                radius: 0.9,
-                cx:0.50, cy:0.50,
-                fx:0.5, fy:0.5,
-                stop:0.5 rgba{rgba_background},
-                stop:0.75 rgba{rgba_selected_hover});
-            }}
-        {type}::hover:focus{{
-            background: qradialgradient(
-                radius: 0.9,
-                cx:0.50, cy:0.50,
-                fx:0.5, fy:0.5,
-                stop:0.5 rgba{rgba_background},
-                stop:0.75 rgba{rgba_selected_background});
-            }}
-
-        """.format(**style_sheet_args)
+            {input_widget_ss}
+        """.format(input_widget_ss=input_widget_ss.format(**style_sheet_args))
 
         self.setStyleSheet(style_sheet)
 
@@ -172,8 +123,6 @@ class iAbstractInputWidget(object):
 
         if is_valid:
             self.setText(self.getInput())
-            #TODO This doesn't exist in this ffunctino... moved to iTansuGroupInput
-            # or somewhere more logical...
             try:
                 self.userFinishedEditingEvent(self, self.getInput())
             except AttributeError:
@@ -189,12 +138,9 @@ class iAbstractInputWidget(object):
         is_valid = self.checkInput()
         if self._updating is True:
             if is_valid:
-                #TODO This doesn't exist in this ffunctino... moved to iTansuGroupInput
-                # or somewhere more logical...
                 try:
-                        self.setText(self.getInput())
-                        self.liveInputEvent(self, self.getInput())
-                        #self.setCursorPosition(0)
+                    self.setText(self.getInput())
+                    self.liveInputEvent(self, self.getInput())
                 except AttributeError:
                     pass
 
@@ -317,29 +263,6 @@ class AbstractNumberInputWidget(AbstractInputLineEdit):
             self.ladder.setRange(self.range_enabled, self.range_min, self.range_max)
             self.ladder.setAllowNegative(self.getAllowNegative())
 
-        #     # set up ladder discrete drag
-        #     self.ladder.setDiscreteDrag(True, alignment=Qt.AlignLeft, depth=10)
-        #     self.ladder.setDiscreteDrag(
-        #         True,
-        #         alignment=alignment,
-        #         depth=10,
-        #         display_widget=self.parent()
-        #         )
-        #     # set up outline on ladder
-        #     base_group = getWidgetAncestor(self, AbstractInputGroupBox)
-        #     if base_group:
-        #         outline_color = base_group.rgba_border
-        #     else:
-        #         outline_color = iColor["rgba_outline"]
-        #     self.ladder.setStyleSheet("""
-        #     AbstractNumberInputWidget{{border: 1px solid rgba{outline_color}}}
-        #     """.format(
-        #         outline_color=repr(outline_color))
-        #     )
-        # else:
-        #     if hasattr(self, 'ladder'):
-        #         self.ladder.setParent(None)
-        # pass
         self._use_ladder_delegate = _use_ladder_delegate
 
     def getUseLadder(self):
@@ -620,22 +543,6 @@ class AbstractBooleanInputWidget(QLabel, iAbstractInputWidget):
         self.updateStyleSheet()
 
         self.setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
-
-    # def setupStyleSheet(self):
-    #     style_sheet_args = iColor.style_sheet_args
-    #     style_sheet_args['name'] = type(self).__name__
-    #     style_sheet = """
-    #     QLabel{{background-color: rgba{rgba_gray_2}}}
-    #     QLabel[is_selected=true]{{
-    #         border: 3px solid rgba{rgba_accept}
-    #     }}
-    #     QLabel[is_selected=false]{{
-    #         border: 3px solid rgba{rgba_cancel};
-    #     }};
-    #     """.format(
-    #         **style_sheet_args
-    #     )
-    #     self.setStyleSheet(style_sheet)
 
     """ EVENTS """
     def enterEvent(self, event):

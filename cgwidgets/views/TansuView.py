@@ -10,9 +10,8 @@ from qtpy.QtWidgets import QSplitter, QSplitterHandle, qApp
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QCursor
 
-from cgwidgets.settings.colors import(
-    iColor
-)
+from cgwidgets.settings.colors import iColor
+from cgwidgets.settings.stylesheets import splitter_handle_ss
 
 from cgwidgets.utils import updateStyleSheet
 
@@ -431,28 +430,10 @@ class TansuView(QSplitter):
                 border: 2px dotted rgba{rgba_flag}; 
             }}
         /* HANDLE ;*/
-            {type}[is_handle_visible=true]::handle {{
-                border: 2px dotted rgba{rgba_handle};
-                margin: {handle_length_margin};
-            }}
-            
-            /* VISIBLE */
-            {type}[is_handle_visible=false]::handle {{
-                border: None;
-                margin: 0px;
-            }}
-
-            /* STATIC HANDLE */
-            {type}[is_handle_visible=true][is_handle_static=false]::handle:hover {{
-                border: 2px dotted rgba{rgba_handle_hover};
-            }}
-
-            {type}[is_handle_visible=true][is_handle_static=true]::handle {{
-                border: 2px dotted rgba{rgba_handle};
-            }}
-
+            {splitter_handle_ss}
         """.format(
-            **style_sheet_args
+            **style_sheet_args,
+            splitter_handle_ss=splitter_handle_ss.format(**style_sheet_args)
         )
 
         self.setStyleSheet(style_sheet)
