@@ -499,10 +499,12 @@ class LabelledInputWidget(TansuView, AbstractInputGroupFrame):
         if direction == Qt.Vertical:
             # hide handle?
             self.setHandleMarginOffset(0)
+            self.setIsHandleVisible(False)
             self.setIsHandleStatic(True)
             self.setMinimumSize(font_size*4, font_size*6)
-        else:
+        elif direction == Qt.Horizontal:
             self.setHandleMarginOffset(15)
+            self.setIsHandleVisible(True)
             self.setIsHandleStatic(False)
             self.setMinimumSize(font_size*12, font_size*2.5)
 

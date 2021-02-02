@@ -57,7 +57,7 @@ class TansuView(QSplitter):
 
         # set colors
         self._rgba_handle = iColor["rgba_outline"]
-        self._rgba_handle_hover = iColor["rgba_outline_hover"]
+        self._rgba_handle_hover = iColor["rgba_selected_hover"]
         self._rgba_flag = iColor["rgba_selected"]
         self._rgba_background = iColor["rgba_gray_2"]
         self._rgba_text = iColor["rgba_text"]
@@ -67,10 +67,13 @@ class TansuView(QSplitter):
         self._current_widget = None
         self._is_solo_view_enabled = True
         self.setProperty("is_solo_view_enableable", True)
+
         self._is_solo_view = False
         self._solo_view_hotkey = TansuView.FULLSCREEN_HOTKEY
         self._is_handle_static = False
-
+        self.setProperty("is_handle_static", False)
+        self._is_handle_visible = True
+        self.setProperty("is_handle_visible", True)
         self.setOrientation(orientation)
 
         # set up handle defaults
@@ -312,12 +315,21 @@ class TansuView(QSplitter):
         self._solo_view_hotkey = solo_view_hotkey
 
     """ HANDLE """
-    def setIsHandleStatic(self, enabled):
-        self._is_handle_static = enabled
-        self.setProperty("is_handle_static", True)
+    def isHandleVisible(self):
+        return self._is_handle_visible
+
+    def setIsHandleVisible(self, enabled):
+        self._is_handle_visible = enabled
+        self.setProperty("is_handle_visible", enabled)
+        updateStyleSheet(self)
 
     def isHandleStatic(self):
         return self._is_handle_static
+
+    def setIsHandleStatic(self, enabled):
+        self._is_handle_static = enabled
+        self.setProperty("is_handle_static", enabled)
+        updateStyleSheet(self)
 
     def createHandle(self):
         handle = TansuViewHandle(self.orientation(), self)
@@ -340,13 +352,6 @@ class TansuView(QSplitter):
     def setHandleLength(self, _handle_length):
         self._handle_length = _handle_length
         self.updateStyleSheet()
-
-    # def handleMargin(self):
-    #     return self._handle_margin
-    #
-    # def setHandleMargin(self, _handle_margin):
-    #     self._handle_margin = _handle_margin
-    #
 
     def handleMarginOffset(self):
         return self._handle_margin_offset
@@ -410,29 +415,39 @@ class TansuView(QSplitter):
             'rgba_handle_hover': repr(self.rgba_handle_hover),
             'rgba_background': repr(self.rgba_background),
             'rgba_text': repr(self.rgba_text),
-            'handle_length_margin': self.getHandleLengthMargin()
+            'handle_length_margin': self.getHandleLengthMargin(),
+            'type': type(self).__name__,
         })
         style_sheet = """
         /* VIEW */
-            TansuView{{
+            {type}{{
                 background-color: rgba{rgba_background};
                 color: rgba{rgba_text};
             }}
-            TansuView[is_solo_view_enableable=true]{{
+            {type}[is_solo_view_enableable=true]{{
                 border: 2px solid rgba{rgba_background};
             }}
-            TansuView[is_solo_view=true]{{
+            {type}[is_solo_view=true]{{
                 border: 2px dotted rgba{rgba_flag}; 
             }}
-        /* HANDLE */
-            QSplitter::handle {{
+        /* HANDLE ;*/
+            {type}[is_handle_visible=true]::handle {{
                 border: 2px dotted rgba{rgba_handle};
                 margin: {handle_length_margin};
             }}
-            QSplitter[is_handle_static=false]::handle:hover {{
+            
+            /* VISIBLE */
+            {type}[is_handle_visible=false]::handle {{
+                border: None;
+                margin: 0px;
+            }}
+
+            /* STATIC HANDLE */
+            {type}[is_handle_visible=true][is_handle_static=false]::handle:hover {{
                 border: 2px dotted rgba{rgba_handle_hover};
             }}
-            QSplitter[is_handle_static=true]::handle {{
+
+            {type}[is_handle_visible=true][is_handle_static=true]::handle {{
                 border: 2px dotted rgba{rgba_handle};
             }}
 
@@ -506,8 +521,11 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     main_splitter = TansuView()
+    main_splitter.setOrientation(Qt.Horizontal)
+    main_splitter.setIsHandleVisible(False)
     main_splitter.setHandleLength(100)
     main_splitter.setObjectName("main")
+
     label = QLabel('a')
     main_splitter.addWidget(label)
     main_splitter.addWidget(QLabel('b'))
@@ -521,6 +539,7 @@ if __name__ == "__main__":
         splitter1.addWidget(l)
 
     main_splitter.addWidget(splitter1)
+
 
     main_splitter.show()
     #main_splitter.updateStyleSheet()

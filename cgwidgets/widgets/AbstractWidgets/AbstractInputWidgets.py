@@ -747,6 +747,8 @@ class AbstractMultiButtonInputWidget(TansuView):
             for button in buttons:
                 self.addButton(*button)
 
+        self.setIsHandleVisible(False)
+
     """ GET FLAGS """
     def flags(self):
         buttons = self.currentButtons()
@@ -896,7 +898,8 @@ if __name__ == "__main__":
         buttons.append(["button_"+str(x), flag, userEvent])
 
     widget = AbstractMultiButtonInputWidget(buttons=buttons, orientation=Qt.Horizontal)
-
+    # widget.setIsHandleVisible(False)
+    # updateStyleSheet(widget)
 
     widget.move(QCursor.pos())
     widget.show()

@@ -52,7 +52,7 @@ class Colors(dict):
         self["rgba_text_hover"] = Colors.multiplyRGBAValues(self["rgba_text"], golden_ratio=True)
 
         """ hover / select"""
-        self["rgba_selected_background"]  = self["rgba_cyan_5"]
+        self["rgba_selected_background"] = self["rgba_cyan_5"]
         self["rgba_selected"] = self["rgba_cyan_6"]
         self["rgba_selected_hover"] = self["rgba_cyan_7"]
 
