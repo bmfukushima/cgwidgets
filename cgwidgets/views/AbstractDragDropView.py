@@ -88,7 +88,7 @@ class AbstractDragDropAbstractView(object):
         style_sheet = """
         {base_header_style_sheet}
         {header_style_sheet}
-        {type}::item:hover{{color: rgba{rgba_hover}}}
+        {type}::item:hover{{color: rgba{rgba_selected_hover}}}
         {splitter_style_sheet}
         """.format(**style_sheet_args)
 

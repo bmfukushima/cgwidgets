@@ -98,7 +98,7 @@ background: qradialgradient(
         spread: repeat,
         x1:0.00, y1:0.00, x2:0.9, y2:0.9, x3:1, y3:1,
         stop:0 rgba{rgba_background},
-        stop:0.5 rgba{rgba_hover},
+        stop:0.5 rgba{rgba_selected_hover},
         stop:1 rgba{rgba_accept}
     );
 }}

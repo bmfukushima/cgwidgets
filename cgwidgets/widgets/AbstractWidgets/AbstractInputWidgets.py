@@ -55,7 +55,7 @@ class iAbstractInputWidget(object):
         self.rgba_border = iColor["rgba_outline"]
         self.rgba_background = iColor["rgba_gray_2"]
         self.rgba_text = iColor["rgba_text"]
-        self.rgba_hover = iColor["rgba_hover"]
+        self.rgba_selected_hover = iColor["rgba_selected_hover"]
 
         # setup properties
         self.setProperty("hover_display", True)
@@ -71,10 +71,10 @@ class iAbstractInputWidget(object):
             "rgba_background": repr(self.rgba_background),
             "rgba_border": repr(self.rgba_border),
             "rgba_text": repr(self.rgba_text),
-            "rgba_hover": repr(self.rgba_hover),
+            "rgba_selected_hover": repr(self.rgba_selected_hover),
             #"rgba_gray": iColor["rgba_gray_3"],
             "rgba_invisble": iColor["rgba_invisible"],
-            "rgba_selected": iColor["rgba_selected"],
+            "rgba_selected_background": iColor["rgba_selected_background"],
             "gradient_background": icons["gradient_background"],
             "type": type(self).__name__
         })
@@ -82,9 +82,10 @@ class iAbstractInputWidget(object):
         /* DEFAULT */
         {type}{{
             border: 1px dotted rgba{rgba_gray_4};
+            border-radius: 10px;
             background-color: rgba{rgba_background};
             color: rgba{rgba_text};
-            selection-background-color: rgba{rgba_selected};
+            selection-background-color: rgba{rgba_selected_background};
         }}
 
         /* SELECTION */
@@ -110,7 +111,7 @@ class iAbstractInputWidget(object):
                 cx:0.50, cy:0.50,
                 fx:0.5, fy:0.5,
                 stop:0.5 rgba{rgba_background},
-                stop:0.75 rgba{rgba_selected});
+                stop:0.75 rgba{rgba_selected_background});
             }}
         {type}::hover[hover_display=true]{{
             background: qradialgradient(
@@ -118,7 +119,7 @@ class iAbstractInputWidget(object):
                 cx:0.50, cy:0.50,
                 fx:0.5, fy:0.5,
                 stop:0.5 rgba{rgba_background},
-                stop:0.75 rgba{rgba_hover});
+                stop:0.75 rgba{rgba_selected_hover});
             }}
         {type}::hover:focus{{
             background: qradialgradient(
@@ -126,7 +127,7 @@ class iAbstractInputWidget(object):
                 cx:0.50, cy:0.50,
                 fx:0.5, fy:0.5,
                 stop:0.5 rgba{rgba_background},
-                stop:0.75 rgba{rgba_selected});
+                stop:0.75 rgba{rgba_selected_background});
             }}
 
         """.format(**style_sheet_args)
@@ -729,7 +730,7 @@ class AbstractMultiButtonInputWidget(TansuView):
             currently selected by the user
     """
     def __init__(self, parent=None, buttons=None, orientation=Qt.Horizontal):
-        self._rgba_flag = iColor["rgba_hover"]
+        self._rgba_flag = iColor["rgba_selected_hover"]
         super(AbstractMultiButtonInputWidget, self).__init__(parent, orientation)
         self.setIsSoloViewEnabled(False)
         self.setIsHandleStatic(True)

@@ -135,7 +135,7 @@ Notes:
         self.setItemHeight(50)
 
         # setup default colors
-        self.rgba_selection = iColor["rgba_hover"]
+        self.rgba_selection = iColor["rgba_selected_hover"]
         self.rgba_bg_slide = iColor["rgba_gray_2"]
         self.rgba_fg_slide = iColor["rgba_gray_3"]
 

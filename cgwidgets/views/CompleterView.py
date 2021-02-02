@@ -24,10 +24,10 @@ class CompleterPopup(QListView):
             color: rgba{rgba_text};
         }}
         CompleterPopup::item:selected{{
-            color: rgba{rgba_hover};
+            color: rgba{rgba_selected_hover};
             background-color: rgba{rgba_gray_4};
         }}
-        CompleterPopup::item:hover{{color: rgba{rgba_hover}}}
+        CompleterPopup::item:hover{{color: rgba{rgba_selected_hover}}}
         CompleterPopup::item{{
             border: None ;
             background-color: rgba{rgba_gray_2};

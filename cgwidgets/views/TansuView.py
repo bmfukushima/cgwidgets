@@ -65,7 +65,7 @@ class TansuView(QSplitter):
         # set colors
         self._rgba_handle = iColor["rgba_outline"]
         self._rgba_handle_hover = iColor["rgba_outline_hover"]
-        self._rgba_flag = iColor["rgba_hover"]
+        self._rgba_flag = iColor["rgba_selected"]
         #self._rgba_background = iColor["rgba_invisible"]
         self._rgba_background = iColor["rgba_gray_2"]
         self._rgba_text = iColor["rgba_text"]
