@@ -735,9 +735,7 @@ class AbstractMultiButtonInputWidget(TansuView):
         self.setIsSoloViewEnabled(False)
         self.setIsHandleStatic(True)
         self.setHandleWidth(0)
-        #self.handle_width = 1
-        self.handle_length = -1
-        self.handle_margin = (0, 0)
+        self.setHandleLength(-1)
 
         #
         self._buttons = {}

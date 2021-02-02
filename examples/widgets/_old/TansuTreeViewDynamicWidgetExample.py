@@ -97,7 +97,7 @@ tansu_widget.setHeaderPosition(attrs.WEST, header_view_position=attrs.SOUTH)
 tansu_widget.setMultiSelect(True)
 tansu_widget.setMultiSelectDirection(Qt.Vertical)
 #tansu_widget.setHeaderDelegateAlwaysOn(False)
-tansu_widget.delegateWidget().handle_length = 100
+tansu_widget.delegateWidget().setHandleLength(100)
 
 # enable drag/drop
 tansu_widget.setHeaderItemIsDropEnabled(True)

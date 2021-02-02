@@ -29,7 +29,7 @@ tansu_widget.setMultiSelect(True)
 tansu_widget.setMultiSelectDirection(Qt.Vertical)
 
 # set handle width
-tansu_widget.delegateWidget().handle_length = 100
+tansu_widget.delegateWidget().setHandleLength(100)
 
 
 # insert widgets

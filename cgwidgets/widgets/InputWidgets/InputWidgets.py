@@ -367,7 +367,6 @@ class LabelledInputWidget(TansuView, AbstractInputGroupFrame):
         #
         self.setStretchFactor(0, 0)
         self.setStretchFactor(1, 1)
-
         self.resetSliderPositionToDefault()
 
         # setup style
@@ -433,10 +432,6 @@ class LabelledInputWidget(TansuView, AbstractInputGroupFrame):
         """
         return
 
-    # ?
-    def getHandleOffset(self):
-        pass
-
     def setInputWidget(self, _input_widget):
         # remove previous input widget
         if self.getInputWidget():
@@ -475,7 +470,7 @@ class LabelledInputWidget(TansuView, AbstractInputGroupFrame):
         return self._input_widget_base_class
 
     def setSeparatorLength(self, length):
-        self.handle_length = length
+        self.setHandleLength(length)
         self._separator_length = length
 
     def setSeparatorWidth(self, width):
@@ -502,9 +497,12 @@ class LabelledInputWidget(TansuView, AbstractInputGroupFrame):
         # setup minimum sizes
         font_size = getFontSize(QApplication)
         if direction == Qt.Vertical:
+            # hide handle?
+            self.setHandleMarginOffset(0)
             self.setIsHandleStatic(True)
             self.setMinimumSize(font_size*4, font_size*6)
         else:
+            self.setHandleMarginOffset(15)
             self.setIsHandleStatic(False)
             self.setMinimumSize(font_size*12, font_size*2.5)
 
@@ -680,8 +678,8 @@ class AbstractTansuInputWidget(TansuModelViewWidget):
         self.setMultiSelect(True)
         self.setMultiSelectDirection(Qt.Vertical)
 
-        self.handle_length = 50
-        self.delegateWidget().handle_length = 50
+        #self.setHandleLength(50)
+        self.delegateWidget().setHandleLength(50)
         self.updateStyleSheet()
 
         self.setDelegateTitleIsShown(False)

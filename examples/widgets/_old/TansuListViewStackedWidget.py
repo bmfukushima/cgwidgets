@@ -1,7 +1,7 @@
 from qtpy.QtCore import Qt
 
 from cgwidgets.widgets import TansuModelViewWidget
-from cgwidgets.delegates import TansuDelegate
+from cgwidgets.delegates import TansuView
 from cgwidgets.utils import attrs
 
 import sys
@@ -55,7 +55,7 @@ tansu_widget = TansuModelViewWidget()
 tansu_widget.setHeaderData(['example'])
 tab_1 = QLabel('hello')
 tab_2 = QLabel('world')
-tab_3 = TansuDelegate()
+tab_3 = TansuView()
 tab_3.setObjectName("main")
 tab_3.addWidget(QLabel('a'))
 tab_3.addWidget(QLabel('b'))
@@ -65,7 +65,7 @@ tab_3.addWidget(QLabel('c'))
 tansu_widget.setHeaderPosition(attrs.WEST)
 #tansu_widget.setHeaderDelegateWidget(header_delegate_widget)
 tansu_widget.setMultiSelectDirection(Qt.Vertical)
-tansu_widget.delegateWidget().handle_length = 100
+tansu_widget.delegateWidget().setHandleLength(100)
 
 # insert tabs
 tansu_widget.insertTansuWidget(0, column_data={'example' : '<title> hello'}, widget=tab_1)

@@ -19,11 +19,11 @@ Header (ModelViewWidget):
     These delegates can be used for multiple purposes, such as setting up filtering of the
     view, item creation, etc.TREE
 
-Delegate (TansuDelegate):
+Delegate (TansuView):
     This is the area that displays the widgets when the user selects different items in the
     header.  If multi select is enabled, AND the user selects multiple items, the delegate
     will display ALL of the widgets to the user.  Any widget can become full screen by pressing
-    the ~ key (note that this key can also be set using TansuDelegate.FULLSCREEN_HOTKEY class attr),
+    the ~ key (note that this key can also be set using TansuView.FULLSCREEN_HOTKEY class attr),
     and can leave full screen by pressing the ESC key.  Pressing the ESC key harder will earn you
     epeen points for how awesome you are.  The recommended approach is to use both hands and slam
     them down on the ESC key for maximum effect.  Bonus points are earned if the key board is lifted
@@ -42,7 +42,7 @@ Hierachy
                     |* delegate --> QWidget
 
             | -- Scroll Area
-                |-- DelegateWidget (TansuMainDelegateWidget --> TansuDelegate)
+                |-- DelegateWidget (TansuMainDelegateWidget --> TansuView)
                         | -- _temp_proxy_widget (QWidget)
                         | -* TansuModelDelegateWidget (AbstractGroupBox)
                                 | -- Stacked/Dynamic Widget (main_widget)
@@ -174,7 +174,7 @@ def setupAsStacked():
     tansu_widget.insertTansuWidget(0, column_data={'name' : '<title> hello'}, widget=QLabel('hello'))
     tansu_widget.insertTansuWidget(0, column_data={'name' : '<title> world'}, widget=QLabel('world'))
 
-    tansu_delegate = TansuDelegate()
+    tansu_delegate = TansuView()
     for char in 'SINE.':
         tansu_delegate.addWidget(QLineEdit(char))
     tansu_delegate_item = tansu_widget.insertTansuWidget(0, column_data={'name' : '<title> tansu'}, widget=tansu_delegate)
@@ -267,7 +267,7 @@ setupAsDynamic()
 # SET FLAGS
 tansu_widget.setMultiSelect(True)
 tansu_widget.setMultiSelectDirection(Qt.Vertical)
-tansu_widget.delegateWidget().handle_length = 100
+tansu_widget.delegateWidget().setHandleLength(100)
 tansu_widget.setHeaderPosition(attrs.WEST, attrs.SOUTH)
 tansu_widget.setDelegateTitleIsShown(True)
 

@@ -39,6 +39,7 @@ class TansuView(QSplitter):
             if set to -1, this will returen the entire length
         handle_margin (int, int): offset from sides of each handle.  This will only
             work when the length is set to -1
+        handle_margin_offset (int): offset for handle margin towards widgets
 
     Class Attributes:
         HANDLE_WIDTH: Default size of the handle
@@ -53,6 +54,14 @@ class TansuView(QSplitter):
 
     def __init__(self, parent=None, orientation=Qt.Vertical):
         super(TansuView, self).__init__(parent)
+
+        # set colors
+        self._rgba_handle = iColor["rgba_outline"]
+        self._rgba_handle_hover = iColor["rgba_outline_hover"]
+        self._rgba_flag = iColor["rgba_selected"]
+        self._rgba_background = iColor["rgba_gray_2"]
+        self._rgba_text = iColor["rgba_text"]
+
         # set default attrs
         self._current_index = None
         self._current_widget = None
@@ -62,20 +71,12 @@ class TansuView(QSplitter):
         self._solo_view_hotkey = TansuView.FULLSCREEN_HOTKEY
         self._is_handle_static = False
 
-        # set colors
-        self._rgba_handle = iColor["rgba_outline"]
-        self._rgba_handle_hover = iColor["rgba_outline_hover"]
-        self._rgba_flag = iColor["rgba_selected"]
-        #self._rgba_background = iColor["rgba_invisible"]
-        self._rgba_background = iColor["rgba_gray_2"]
-        self._rgba_text = iColor["rgba_text"]
-
         self.setOrientation(orientation)
 
         # set up handle defaults
+        self._handle_margin_offset = 0
         self.setHandleWidth(TansuView.HANDLE_WIDTH)
-        self._handle_length = -1
-        self._handle_margin = (10, 10)
+        self.setHandleLength(-1)
 
     """ UTILS """
     def displayAllWidgets(self, value):
@@ -333,32 +334,26 @@ class TansuView(QSplitter):
                 _handles.append(child)
         return _handles
 
-    @property
-    def handle_width(self):
-        return self._handle_width
-
-    @handle_width.setter
-    def handle_width(self, _handle_width):
-        self._handle_width = _handle_width
-        self.setHandleWidth(_handle_width)
-
-    @property
-    def handle_length(self):
+    def handleLength(self):
         return self._handle_length
 
-    @handle_length.setter
-    def handle_length(self, _handle_length):
+    def setHandleLength(self, _handle_length):
         self._handle_length = _handle_length
         self.updateStyleSheet()
 
-    @property
-    def handle_margin(self):
-        return self._handle_margin
+    # def handleMargin(self):
+    #     return self._handle_margin
+    #
+    # def setHandleMargin(self, _handle_margin):
+    #     self._handle_margin = _handle_margin
+    #
 
-    @handle_margin.setter
-    def handle_margin(self, _handle_margin):
-        self._handle_margin = _handle_margin
-        self.updateStyleSheet()
+    def handleMarginOffset(self):
+        return self._handle_margin_offset
+
+    def setHandleMarginOffset(self, _handle_margin_offset):
+        self._handle_margin_offset = _handle_margin_offset
+        #self.updateStyleSheet()
 
     def getHandleLengthMargin(self):
         """
@@ -369,18 +364,18 @@ class TansuView(QSplitter):
         Returns (str): <margin>px <margin>px
             ie 10px 10px
         """
-        if self.handle_length < 0:
-            return "{x}px {y}px".format(x=self.handle_margin[0], y=self.handle_margin[1])
-        margin_offset = 2
+        if self.handleLength() < 0:
+            return "{x}px {y}px".format(x=self.handleMarginOffset(), y=self.handleMarginOffset())
+
         if self.orientation() == Qt.Vertical:
             length = self.width()
-            margin = (length - self.handle_length) * 0.5
-            margins = "{margin_offset}px {margin}px".format(margin=margin, margin_offset=margin_offset)
+            margin = (length - self.handleLength()) * 0.5
+            margins = "{margin_offset}px {margin}px".format(margin=margin, margin_offset=self.handleMarginOffset())
 
         elif self.orientation() == Qt.Horizontal:
             length = self.height()
-            margin = (length - self.handle_length) * 0.5
-            margins = "{margin}px {margin_offset}px".format(margin=margin, margin_offset=margin_offset)
+            margin = (length - self.handleLength()) * 0.5
+            margins = "{margin}px {margin_offset}px".format(margin=margin, margin_offset=self.handleMarginOffset())
 
         return margins
 
@@ -408,6 +403,7 @@ class TansuView(QSplitter):
         """
 
         style_sheet_args = iColor.style_sheet_args
+
         style_sheet_args.update({
             'rgba_flag': repr(self.rgba_flag),
             'rgba_handle': repr(self.rgba_handle),
@@ -438,7 +434,6 @@ class TansuView(QSplitter):
             }}
             QSplitter[is_handle_static=true]::handle {{
                 border: 2px dotted rgba{rgba_handle};
-                margin: {handle_length_margin};
             }}
 
         """.format(
@@ -511,7 +506,7 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     main_splitter = TansuView()
-    main_splitter.handle_length = 100
+    main_splitter.setHandleLength(100)
     main_splitter.setObjectName("main")
     label = QLabel('a')
     main_splitter.addWidget(label)

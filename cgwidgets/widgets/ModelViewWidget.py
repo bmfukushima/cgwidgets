@@ -61,7 +61,7 @@ class ModelViewWidget(TansuView):
         self._delegate_manifest = []
 
         # setup style
-        self.handle_width = 0
+        self.setHandleWidth(0)
         self._handle_length = 100
         self.rgba_background = iColor["rgba_gray_3"]
         self._view_position = attrs.SOUTH
