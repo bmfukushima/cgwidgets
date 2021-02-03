@@ -105,58 +105,6 @@ def setupCustomModel():
     model.setItemType(item_type)
     tansu_widget.setModel(model)
 
-    """ COMPLETER """
-    def _updateModel(self, item_list=None):
-        # get item list
-        if not item_list:
-            item_list = self.getCleanItems()
-
-        # completer = CustomModelCompleter()
-        # self.setCompleter(completer)
-        # update model items
-        self._model = CustomModel(item_list=item_list)
-        self._model.display_item_colors = self.display_item_colors
-        self.proxy_model = QSortFilterProxyModel()
-        self.proxy_model.setSourceModel(self._model)
-
-        # set models
-        self.completer().setModel(self.proxy_model)
-
-        # set item for popup
-        # this makes it so that the stylesheet can be attached...
-        # https://forum.qt.io/topic/26703/solved-stylize-using-css-and-editable-qcombobox-s-completions-list-view/7
-        delegate = QStyledItemDelegate()
-        self.completer().popup().setItemDelegate(delegate)
-
-    def setupCustomModelCompleter(self, item_list):
-        """
-        Creates a new completely custom completer
-
-        Args:
-            item_list (list): of strings to be the list of things
-                that is displayed to the user
-        """
-        # create completer/models
-        completer = CustomModelCompleter()
-        self.setCompleter(completer)
-        self.proxy_model = QSortFilterProxyModel()
-        self._updateModel(item_list)
-
-    def filterCompletionResults(self):
-        """
-        Filter the current proxy model based off of the text in the input string
-        """
-        # preflight
-        if not self.filter_results: return
-
-        # filter results
-        if self.text() != '':
-            self.completer().setCaseSensitivity(False)
-            self.completer().setCompletionMode(QCompleter.PopupCompletion)
-        else:
-            self.completer().setCompletionMode(QCompleter.UnfilteredPopupCompletion)
-
-
 setupCustomModel()
 
 

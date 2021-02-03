@@ -342,6 +342,9 @@ class ModelViewWidget(TansuView):
         modifiers = QApplication.keyboardModifiers()
         input_manifest = self.delegateInputManifest()
 
+        # if event.key() in [Qt.Key_D, Qt.Key_Backspace, Qt.Key_Delete]:
+        #     return self.view().keyPressEvent(event)
+
         # check manifest for key/modifier combo
         ## if found, show/hide widget
         for delegate_manifest in input_manifest:
@@ -467,8 +470,6 @@ class ModelViewSearchOptions(AbstractListInputWidget):
         _options = [[option] for option in ModelViewSearchOptions.MATCH.keys()]
         self.populate(_options)
         self.setText("EXACT")
-
-
 
 
 if __name__ == "__main__":

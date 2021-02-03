@@ -61,8 +61,8 @@ main_widget.setIsRootDropEnabled(False)
 main_widget.setIsEditable(False)
 main_widget.setIsDragEnabled(False)
 main_widget.setIsDropEnabled(False)
-main_widget.setIsEnableable(False)
-main_widget.setIsDeleteEnabled(False)
+main_widget.setIsEnableable(True)
+main_widget.setIsDeleteEnabled(True)
 main_widget.setDelegateToggleEvent(testDelegateToggle)
 
 # set selection mode

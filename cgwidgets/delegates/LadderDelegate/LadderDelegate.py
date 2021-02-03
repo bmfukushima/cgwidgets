@@ -342,8 +342,22 @@ Notes:
             color: rgba{rgba_text};
             background-color: rgba{rgba_gray_2}
         }}
-        LadderItem::hover[is_drag_STICKY=false]{{background-color: rgba{rgba_selected}}}
-        LadderItem[is_drag_STICKY=true]{{background-color: rgba{rgba_selected}}}
+        LadderItem::hover[is_drag_STICKY=false]{{
+            background: qradialgradient(
+                radius: 0.9,
+                cx:0.50, cy:0.50,
+                fx:0.5, fy:0.5,
+                stop:0.5 rgba{rgba_background},
+                stop:0.75 rgba{rgba_selected_hover});
+        }}
+        LadderItem[is_drag_STICKY=true]{{
+            background: qradialgradient(
+                radius: 0.9,
+                cx:0.50, cy:0.50,
+                fx:0.5, fy:0.5,
+                stop:0.5 rgba{rgba_background},
+                stop:0.75 rgba{rgba_selected_hover});
+        }}
         LadderItem[gradient_on=true]{{background: qlineargradient(
            x1:{slider_pos1} y1:0,
            x2:{slider_pos2} y2:0,
@@ -676,11 +690,14 @@ Attributes:
         super(LadderMiddleItem, self).__init__(parent)
         self.setValue(value)
         self.editingFinished.connect(self.setMiddleValue)
-        self.setStyleSheet(
-            """
-            background-color: rgba{rgba_blue_5};
-            color: rgba{rgba_text}
-            """.format(**iColor.style_sheet_args))
+        self.setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
+        self.rgba_background = iColor["rgba_gray_4"]
+        self.updateStyleSheet()
+        # self.setStyleSheet(
+        #     """
+        #     background-color: rgba{rgba_blue_5};
+        #     color: rgba{rgba_text}
+        #     """.format(**iColor.style_sheet_args))
 
     def mousePressEvent(self, event):
         return AbstractFloatInputWidget.mousePressEvent(self, event)
@@ -726,6 +743,7 @@ Args:
         # set default attrs
         self.setProperty("is_drag_STICKY", False)
         self.setText(str(value_mult))
+        self.setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
 
     def setGradientEnable(self, enable):
         """

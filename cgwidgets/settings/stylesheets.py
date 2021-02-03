@@ -11,6 +11,99 @@ Note:
 """
 
 from .colors import iColor
+#from colors import iColor
+
+def createRadialGradientSS(radius, center_radius, focal_radius, stops):
+    """
+
+    Args:
+        radius:
+        center_radius (tuple): center radius (float, float)
+        focal_radius (tuple): focal radius (float, float)
+        stops (list): [position (float), color_name (string)]
+            ie  [0.5, "rgba_background"]
+
+    """
+    ss = """    
+        background: qradialgradient(
+        radius: {radius},
+        cx:{cx}, cy:{cy},
+        fx:{fx}, fy:{fy},
+        """.format(
+            radius=radius,
+            cx=center_radius[0], cy=center_radius[1],
+            fx=focal_radius[0], fy=focal_radius[1])
+
+    stops_ss = ""
+    for stop in stops:
+        stops_ss += "stop:{pos} rgba{{{color_name}}},\n\t\t".format(pos=stop[0], color_name=stop[1])
+    stops_ss = stops_ss
+
+    # close CSS stylesheet
+    ss += stops_ss[:-4] + ')'
+    return ss
+
+background_hover_radial = """
+qradialgradient(
+    radius: 0.9,
+    cx:0.50, cy:0.50,
+    fx:0.5, fy:0.5,
+    stop:0.5 rgba{rgba_background},
+    stop:0.75 rgba{rgba_selected_background};
+"""
+
+input_widget_ss ="""
+/* DEFAULT */
+    {type}{{
+        border: 1px dotted rgba{rgba_gray_4};
+        border-radius: 10px;
+        background-color: rgba{rgba_background};
+        color: rgba{rgba_text};
+        selection-background-color: rgba{rgba_selected_background};
+    }}
+
+    /* SELECTION */
+    {type}[is_selected=true]{{
+        background: qradialgradient(
+            radius: 0.9,
+            cx:0.50, cy:0.50,
+            fx:0.5, fy:0.5,
+            stop:0.5 rgba{rgba_background},
+            stop:0.75 rgba{rgba_accept});
+        }}
+    {type}[is_selected=false]{{
+        background: qradialgradient(
+            radius: 0.9,
+            cx:0.50, cy:0.50,
+            fx:0.5, fy:0.5,
+            stop:0.5 rgba{rgba_background},
+            stop:0.75 rgba{rgba_cancel});
+        }}
+    {type}:focus{{
+        background: qradialgradient(
+            radius: 0.9,
+            cx:0.50, cy:0.50,
+            fx:0.5, fy:0.5,
+            stop:0.5 rgba{rgba_background},
+            stop:0.75 rgba{rgba_selected_background});
+        }}
+    {type}::hover[hover_display=true]{{
+        background: qradialgradient(
+            radius: 0.9,
+            cx:0.50, cy:0.50,
+            fx:0.5, fy:0.5,
+            stop:0.5 rgba{rgba_background},
+            stop:0.75 rgba{rgba_selected_hover});
+        }}
+    {type}::hover:focus{{
+        background: qradialgradient(
+            radius: 0.9,
+            cx:0.50, cy:0.50,
+            fx:0.5, fy:0.5,
+            stop:0.5 rgba{rgba_background},
+            stop:0.75 rgba{rgba_selected_background});
+        }}
+"""
 
 """
 Kwargs:
@@ -85,59 +178,6 @@ scroll_bar_ss = """
     }}
 """.format(**iColor.style_sheet_args)
 
-input_widget_ss ="""
-/* DEFAULT */
-    {type}{{
-        border: 1px dotted rgba{rgba_gray_4};
-        border-radius: 10px;
-        background-color: rgba{rgba_background};
-        color: rgba{rgba_text};
-        selection-background-color: rgba{rgba_selected_background};
-    }}
-
-    /* SELECTION */
-    {type}[is_selected=true]{{
-        background: qradialgradient(
-            radius: 0.9,
-            cx:0.50, cy:0.50,
-            fx:0.5, fy:0.5,
-            stop:0.5 rgba{rgba_background},
-            stop:0.75 rgba{rgba_accept});
-        }}
-    {type}[is_selected=false]{{
-        background: qradialgradient(
-            radius: 0.9,
-            cx:0.50, cy:0.50,
-            fx:0.5, fy:0.5,
-            stop:0.5 rgba{rgba_background},
-            stop:0.75 rgba{rgba_cancel});
-        }}
-    {type}:focus{{
-        background: qradialgradient(
-            radius: 0.9,
-            cx:0.50, cy:0.50,
-            fx:0.5, fy:0.5,
-            stop:0.5 rgba{rgba_background},
-            stop:0.75 rgba{rgba_selected_background});
-        }}
-    {type}::hover[hover_display=true]{{
-        background: qradialgradient(
-            radius: 0.9,
-            cx:0.50, cy:0.50,
-            fx:0.5, fy:0.5,
-            stop:0.5 rgba{rgba_background},
-            stop:0.75 rgba{rgba_selected_hover});
-        }}
-    {type}::hover:focus{{
-        background: qradialgradient(
-            radius: 0.9,
-            cx:0.50, cy:0.50,
-            fx:0.5, fy:0.5,
-            stop:0.5 rgba{rgba_background},
-            stop:0.75 rgba{rgba_selected_background});
-        }}
-
-"""
 
 """
 Kwargs:

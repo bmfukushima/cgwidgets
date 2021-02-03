@@ -73,7 +73,6 @@ class iAbstractInputWidget(object):
             "rgba_border": repr(self.rgba_border),
             "rgba_text": repr(self.rgba_text),
             "rgba_selected_hover": repr(self.rgba_selected_hover),
-            #"rgba_gray": iColor["rgba_gray_3"],
             "rgba_invisble": iColor["rgba_invisible"],
             "rgba_selected_background": iColor["rgba_selected_background"],
             "gradient_background": icons["gradient_background"],
@@ -253,6 +252,17 @@ class AbstractNumberInputWidget(AbstractInputLineEdit):
             value_list=[0.01, 0.1, 1, 10],
             alignment=Qt.AlignLeft
     ):
+        """
+
+        Args:
+            _use_ladder_delegate (bool): enables/disables ladder
+            user_input (QEvent.MouseButton): input event to display the ladder
+            value_list (list): of values to adjust with
+            alignment:
+
+        Returns:
+
+        """
         # create ladder
         if _use_ladder_delegate is True:
             self.ladder = installLadderDelegate(

@@ -65,14 +65,23 @@ class TansuInputWidgetItem(TansuModelItem):
         self._widget_constructor = widget_constructor
 
     """ setup user input event """
-    def __userInputEvent(self, value):
+    def __userInputEvent(self, widget, value):
         return
 
     def setUserInputEvent(self, function):
         self.__userInputEvent = function
 
-    def userInputEvent(self, value):
-        self.__userInputEvent(self, value)
+    def userInputEvent(self, widget, value):
+        self.__userInputEvent(widget, value)
+
+    def __userLiveInputEvent(self, widget, value):
+        return
+
+    def setUserLiveInputEvent(self, function):
+        self.__userLiveInputEvent = function
+
+    def userLiveInputEvent(self, widget, value):
+        self.__userLiveInputEvent(widget, value)
 
 
 class iTansuGroupInput(object):
@@ -120,10 +129,14 @@ class iTansuGroupInput(object):
         """
         When the user inputs text, this will update the model item
         """
+        # print('args')
+        # for arg in args:
+        #     print (arg)
         try:
             widget = getWidgetAncestor(self, TansuModelDelegateWidget)
             widget.item().columnData()['value'] = self.getInput()
-            widget.item().userInputEvent(self.getInput())
+            widget.item().userInputEvent(args[0], self.getInput())
+            #widget.item().userInputEvent(self, self.getInput())
         except AttributeError:
             pass
 
@@ -450,6 +463,10 @@ class LabelledInputWidget(TansuView, AbstractInputGroupFrame):
         self._input_widget_base_class = _input_widget_base_class
 
         # remove input widget and rebuild
+        # if self.getInputWidget():
+        #     _input_widget = _input_widget_base_class(self)
+        #     self.setInputWidget(_input_widget)
+            #self.getInputWidget().show()
         if self.getInputWidget():
             self.getInputWidget().setParent(None)
 
@@ -463,8 +480,6 @@ class LabelledInputWidget(TansuView, AbstractInputGroupFrame):
             self.addWidget(self._input_widget)
             self._input_widget.show()
             self.resetSliderPositionToDefault()
-            # todo
-            # I'm guesseing this never does what I'm expecting...
 
     def getInputBaseClass(self):
         return self._input_widget_base_class
@@ -628,7 +643,10 @@ class TansuGroupInputWidget(AbstractFrameGroupInputWidget):
             # set input widgets current value from item
             input_widget.setText(str(value))
 
-    def insertInputWidget(self, index, widget, name, user_input_event, data=None):
+            #input_widget.setUserFinishedEditingEvent(item.userInputEvent)
+            input_widget.setLiveInputEvent(item.userLiveInputEvent)
+
+    def insertInputWidget(self, index, widget, name, user_input_event, user_live_update_event=None, data=None):
         """
         Inserts a widget into the Main Widget
 
@@ -666,6 +684,7 @@ class TansuGroupInputWidget(AbstractFrameGroupInputWidget):
         #user_input_item.setDynamicUpdateFunction(widget.updateDynamicWidget)
         user_input_item.setWidgetConstructor(widget)
         user_input_item.setUserInputEvent(user_input_event)
+        user_input_item.setUserLiveInputEvent(user_live_update_event)
 
     def removeInputWidget(self, index):
         self.main_widget.removeTab(index)
