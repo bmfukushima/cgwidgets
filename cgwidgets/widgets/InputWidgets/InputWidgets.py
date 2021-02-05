@@ -379,8 +379,8 @@ class LabelledInputWidget(TansuView, AbstractInputGroupFrame):
 
         # set size hints
         font_size = getFontSize(QApplication)
-        self._input_widget.setMinimumSize(1, font_size*2.5)
-        self._label.setMinimumSize(font_size*2, font_size*2.5)
+        self._input_widget.setMinimumSize(1, int(font_size*2.5))
+        self._label.setMinimumSize(font_size*2, int(font_size*2.5))
         #
         self.setStretchFactor(0, 0)
         self.setStretchFactor(1, 1)
@@ -390,6 +390,8 @@ class LabelledInputWidget(TansuView, AbstractInputGroupFrame):
         #self.rgba_background = iColor['rgba_gray_2']
 
         self.splitterMoved.connect(self.__splitterMoved)
+
+        self.setIsSoloViewEnabled(False)
 
     """ HANDLE GROUP FRAME MOVING"""
 
@@ -521,7 +523,7 @@ class LabelledInputWidget(TansuView, AbstractInputGroupFrame):
             self.setHandleMarginOffset(15)
             self.setIsHandleVisible(True)
             self.setIsHandleStatic(False)
-            self.setMinimumSize(font_size*12, font_size*2.5)
+            self.setMinimumSize(font_size*12, int(font_size*2.5))
 
         # update defaults
         if update_defaults:
@@ -559,6 +561,11 @@ class LabelledInputWidget(TansuView, AbstractInputGroupFrame):
         self.resetSliderPositionToDefault()
         return TansuView.resizeEvent(self, event)
 
+    # def keyPressEvent(self, event):
+    #     if event.key() == self.soloViewHotkey():
+    #         if self.parent():
+    #             return self.parent().keyPressEvent(event)
+    #     return TansuView.keyPressEvent(self, event)
 
 class FrameGroupInputWidget(AbstractFrameGroupInputWidget):
     def __init__(
@@ -623,6 +630,7 @@ class TansuGroupInputWidget(AbstractFrameGroupInputWidget):
             # set attrs
             labelled_widget.setName(name)
             labelled_widget.setInputBaseClass(widget_constructor)
+            #labelled_widget.setIsSoloViewEnabled(False)
             input_widget = labelled_widget.getInputWidget()
 
             # update list inputs
@@ -692,6 +700,12 @@ class TansuGroupInputWidget(AbstractFrameGroupInputWidget):
     def removeInputWidget(self, index):
         self.main_widget.removeTab(index)
 
+    # def keyPressEvent(self, event):
+    #     if event.key() == 96:
+    #         return
+    #     else:
+    #         return TansuGroupInputWidget.keyPressEvent(self, event)
+
 
 class AbstractTansuInputWidget(TansuModelViewWidget):
     def __init__(self, parent=None):
@@ -749,12 +763,27 @@ if __name__ == "__main__":
     for x in range(3):
         buttons.append([str(x), x, userEvent])
 
-    widget = MultiButtonInputWidget(buttons=buttons, orientation=Qt.Horizontal)
+    #widget = MultiButtonInputWidget(buttons=buttons, orientation=Qt.Horizontal)
+    widget = LabelledInputWidget(name='weiner', widget_type=FloatInputWidget)
 
+
+    def asdf(item, widget, value):
+        return
+
+
+    @staticmethod
+    def liveEdit(item, widget, value):
+        return
+    # inputs = ["cx", "cy", "fx", "fy", "radius"]  # , stops"""
+    #
+    # for i in inputs:
+    #     widget.insertInputWidget(0, FloatInputWidget, i, asdf, user_live_update_event=liveEdit, default_value=0.5)
+
+    #widget.setIsHeaderShown(False)
 
     widget.move(QCursor.pos())
     widget.show()
-    widget.resize(256, 256)
+    #widget.resize(256, 256)
     widget.resize(500, 500)
     widget.show()
     #w.move(QCursor.pos())

@@ -181,6 +181,10 @@ class TansuView(QSplitter):
         # toggle attrs
         self.toggleIsSoloView(not self.isSoloView())
 
+    def enterEvent(self, event):
+        self.setFocus()
+        return QSplitter.enterEvent(self, event)
+
     def keyPressEvent(self, event):
         """
         """
@@ -220,7 +224,28 @@ class TansuView(QSplitter):
         #pass
         self.updateStyleSheet()
 
+    def addWidget(self, widget):
+        self.setChildSoloable(self.isSoloViewEnabled(), widget)
+        return QSplitter.addWidget(self, widget)
+
+    def insertWidget(self, index, widget):
+        self.setChildSoloable(self.isSoloViewEnabled(), widget)
+        return QSplitter.insertWidget(self, index, widget)
+
     """ SOLO VIEW """
+    def setChildSoloable(self, enabled, child):
+        """
+        Determines if the child widget provided can enter a "solo" view state
+        Args:
+            enabled (bool):
+            child (widget):
+        """
+        if enabled:
+            if hasattr(child, "not_soloable"):
+                delattr(child, "not_soloable")
+        else:
+            child.not_soloable = True
+
     def isSoloViewEnabled(self):
         return self._is_solo_view_enabled
 
@@ -233,6 +258,8 @@ class TansuView(QSplitter):
         """
         self._is_solo_view_enabled = enabled
         self.setProperty("is_solo_view_enableable", enabled)
+        for child in self.children():
+            self.setChildSoloable(enabled, child)
 
     def isSoloView(self):
         return self._is_solo_view

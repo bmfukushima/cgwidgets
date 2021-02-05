@@ -151,9 +151,9 @@ class AbstractInputGroupFrame(QFrame):
     def setupStyleSheet(self):
         style_sheet_args = iColor.style_sheet_args
         style_sheet = """
-        QLabel{{color: rgba{rgba_text}}}
-        LabelledInputWidget{{background-color: rgba{rgba_gray_3}}}
-        FrameGroupInputWidget{{background-color: rgba{rgba_gray_3}}}
+            QLabel{{color: rgba{rgba_text}}}
+            LabelledInputWidget{{background-color: rgba{rgba_gray_3}}}
+            FrameGroupInputWidget{{background-color: rgba{rgba_gray_3}}}
         """.format(
             **style_sheet_args
         )

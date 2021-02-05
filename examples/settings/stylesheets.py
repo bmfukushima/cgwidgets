@@ -44,16 +44,24 @@ if __name__ == "__main__":
                 self.insertInputWidget(0, FloatLadderInputWidget, i, self.asdf,
                                           user_live_update_event=self.liveEdit, default_value=0.5)
 
-            self.setIsHeaderShown(False)
-            #self.main_widget.delegateWidget().setIsHandleVisible(False)
-            self.main_widget.delegateWidget().setHandleMarginOffset(1)
-            tansu_view = self.main_widget.delegateWidget()
 
+            #self.main_widget.delegateWidget().setIsHandleVisible(False)
+            #self.main_widget.delegateWidget().setHandleMarginOffset(1)
+            tansu_view = self.main_widget.delegateWidget()
+            #self._handle_margin_offset = 0
             tansu_view.setIsSoloViewEnabled(False)
             tansu_view.setIsHandleStatic(True)
             tansu_view.setHandleWidth(0)
             tansu_view.setHandleLength(-1)
+            tansu_view.setHandleMarginOffset(0)
+            tansu_view.updateStyleSheet()
 
+            for index, child in enumerate(tansu_view.children()):
+                tansu_view.setStretchFactor(index, 0)
+            tansu_view.setStretchFactor(index, 1)
+            #tansu_view.setIsHeaderShown(False)
+            print(tansu_view)
+            #tansu_view.set
             #tansu_view.setIsHandleVisible(False)
 
 
@@ -100,10 +108,6 @@ if __name__ == "__main__":
     radial_gradient_wigdet = RadialGradientInputWidget()
 
     # setup view
-
-    #style_sheet = stylesheets.createRadialGradientSS(0.5, (0.5, 0.5), (0.75, 0.75), stops)
-    #style_sheet = style_sheet.format(**iColor.style_sheet_args)
-
     view_widget = QLabel()
     style_sheet = stylesheets.createRadialGradientSS(
         radial_gradient_wigdet.radius,
@@ -113,24 +117,8 @@ if __name__ == "__main__":
     )
     style_sheet = style_sheet.format(**iColor.style_sheet_args)
     view_widget.setStyleSheet(style_sheet)
-    #ladder_labelled_input.show()
-    #ladder_labelled_input.setDirection(Qt.Horizontal)
-    #ladder_labelled_input.setDefaultLabelLength(20)
 
-    # frame_group_input_widget = FrameGroupInputWidget(name='Frame Input Widgets', direction=Qt.Vertical)
-    # frame_group_input_widget_labelled = LabelledInputWidget(widget_type=FloatLadderInputWidget)
-    # # set widget orientation
-    #
-    # # add to group layout
-    # frame_group_input_widget.addInputWidget(frame_group_input_widget_labelled, finished_editing_function=None)
-    """
-    #InputWidgets --> LabelledInputWidget --> setInputBaseClass???
-    # changing parent of widgets...
-    
-    Something in the TansuView --> TansuGroupInputWidget
-    """
     # # create main widget
-
     main_widget = TansuView()
     main_widget.addWidget(radial_gradient_wigdet)
     main_widget.addWidget(view_widget)

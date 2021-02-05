@@ -585,7 +585,6 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         be registered
         """
         if event.type() == QEvent.KeyPress:
-            print('key pressed?')
             if (event.key() == TansuView.FULLSCREEN_HOTKEY
                     or
                 event.key() == Qt.Key_Escape
@@ -735,8 +734,10 @@ class TansuMainDelegateWidget(TansuView):
         tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
         if is_child_of_header:
             return tab_tansu_widget.headerWidget().keyPressEvent(event)
+        # else:
+        #     return TansuView.keyPressEvent(self, event)
 
-        # ModelViewWidget.keyPressEvent(tab_tansu_widget.headerWidget(), event)
+        ModelViewWidget.keyPressEvent(tab_tansu_widget.headerWidget(), event)
 
         # Global escape
         # Todo double escape fail
@@ -841,6 +842,11 @@ class TansuHeader(ModelViewWidget):
         top_level_widget.itemSelectedEvent(item, enabled, column)
         #return ModelViewWidget.selectionChanged(self, selected, deselected)
 
+    # def keyPressEvent(self, event):
+    #     if event.key() == 96 or event.key() == Qt.Key_Escape:
+    #         return
+    #     else:
+    #         return ModelViewWidget.keyPressEvent(self, event)
 
 """ EXAMPLE """
 class TabTansuDynamicWidgetExample(QWidget):
