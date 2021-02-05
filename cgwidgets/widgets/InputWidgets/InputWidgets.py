@@ -72,7 +72,7 @@ class TansuInputWidgetItem(TansuModelItem):
         self.__userInputEvent = function
 
     def userInputEvent(self, widget, value):
-        self.__userInputEvent(widget, value)
+        self.__userInputEvent(self, widget, value)
 
     def __userLiveInputEvent(self, widget, value):
         return
@@ -81,7 +81,7 @@ class TansuInputWidgetItem(TansuModelItem):
         self.__userLiveInputEvent = function
 
     def userLiveInputEvent(self, widget, value):
-        self.__userLiveInputEvent(widget, value)
+        self.__userLiveInputEvent(self, widget, value)
 
 
 class iTansuGroupInput(object):
@@ -343,6 +343,10 @@ class LabelledInputWidget(TansuView, AbstractInputGroupFrame):
     A single input widget.  This inherits from the TansuView,
     to provide a slider for the user to expand/contract the editable area
     vs the view label.
+
+    Note:
+        Needs parent to be provided in order for the default size to be
+        displayed correctly
     """
     def __init__(
         self,
@@ -357,7 +361,7 @@ class LabelledInputWidget(TansuView, AbstractInputGroupFrame):
 
         # set up attrs
         self._input_widget = None #hack to make the setInputBaseClass update work
-        self._default_label_length = 125
+        self._default_label_length = 50
         self._separator_length = -1
         self._separator_width = 5
         self.__splitter_event_is_paused = False
@@ -460,13 +464,9 @@ class LabelledInputWidget(TansuView, AbstractInputGroupFrame):
         return self._input_widget
 
     def setInputBaseClass(self, _input_widget_base_class):
+
         self._input_widget_base_class = _input_widget_base_class
 
-        # remove input widget and rebuild
-        # if self.getInputWidget():
-        #     _input_widget = _input_widget_base_class(self)
-        #     self.setInputWidget(_input_widget)
-            #self.getInputWidget().show()
         if self.getInputWidget():
             self.getInputWidget().setParent(None)
 
@@ -526,7 +526,7 @@ class LabelledInputWidget(TansuView, AbstractInputGroupFrame):
         # update defaults
         if update_defaults:
             if direction == Qt.Horizontal:
-                self.setDefaultLabelLength(100)
+                self.setDefaultLabelLength(50)
                 self.setSeparatorWidth(30)
             elif direction == Qt.Vertical:
                 self.setDefaultLabelLength(30)
@@ -543,19 +543,16 @@ class LabelledInputWidget(TansuView, AbstractInputGroupFrame):
 
     """ EVENTS """
     def resetSliderPositionToDefault(self):
+        #print(self.defaultLabelLength())
         self.moveSplitter(self.defaultLabelLength(), 1)
-        #self.moveSplitter(100, 1)
-        #self.setSizes([1, 1000])
 
     def setUserFinishedEditingEvent(self, function):
         self._input_widget.setUserFinishedEditingEvent(function)
 
     def showEvent(self, event):
-
         super(LabelledInputWidget, self).showEvent(event)
         self.resetSliderPositionToDefault()
         return TansuView.showEvent(self, event)
-        #return return_val
 
     def resizeEvent(self, event):
         super(LabelledInputWidget, self).resizeEvent(event)
@@ -646,7 +643,17 @@ class TansuGroupInputWidget(AbstractFrameGroupInputWidget):
             #input_widget.setUserFinishedEditingEvent(item.userInputEvent)
             input_widget.setLiveInputEvent(item.userLiveInputEvent)
 
-    def insertInputWidget(self, index, widget, name, user_input_event, user_live_update_event=None, data=None):
+    def insertInputWidget(
+            self,
+            index,
+            widget,
+            name,
+            user_input_event,
+            user_live_update_event=None,
+            data=None,
+            display_data_type=False,
+            default_value=''
+        ):
         """
         Inserts a widget into the Main Widget
 
@@ -654,6 +661,7 @@ class TansuGroupInputWidget(AbstractFrameGroupInputWidget):
         widget (InputWidget)
         name (str)
         type (str):
+        display_data_type (bool): determines if the data type will be displayed in the title
         user_input_event (function): should take two values widget, and value
             widget: widget that is currently being manipulated
             value: value being set
@@ -663,25 +671,20 @@ class TansuGroupInputWidget(AbstractFrameGroupInputWidget):
         # setup attrs
         if not data:
             data = {}
-        name = "{name}  |  {type}".format(name=name, type=widget.TYPE)
+
+        if display_data_type:
+            name = "{name}  |  {type}".format(name=name, type=widget.TYPE)
+
         if not 'name' in data:
             data['name'] = name
         if not 'value' in data:
-            data['value'] = ''
+            data['value'] = default_value
 
         # create item
         user_input_index = self.main_widget.insertTansuWidget(index, column_data=data)
         user_input_item = user_input_index.internalPointer()
 
         # setup new item
-        # TODO something...
-        # hide tansu header for widgets...
-        # use a frameInputGroupWidget thingy as the widget base class?
-        #input_frame = LabelledInputWidget(name=name, widget_type=widget)
-
-        #user_input_item.setDynamicWidgetBaseClass(input_frame)
-        # tansu update?
-        #user_input_item.setDynamicUpdateFunction(widget.updateDynamicWidget)
         user_input_item.setWidgetConstructor(widget)
         user_input_item.setUserInputEvent(user_input_event)
         user_input_item.setUserLiveInputEvent(user_live_update_event)

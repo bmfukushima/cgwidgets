@@ -480,6 +480,7 @@ AttributeError: 'StickyValueAdjustWidgetDelegate' object has no attribute '_iSti
         width, height = screen_resolution.width() - (offset*2), screen_resolution.height() - (offset*2)
         self.setFixedSize(width, height)
         self.move(offset, offset)
+        #self.setStyleSheet("background-color: rgba(255,0,0,255)")
         return QFrame.showEvent(self, event)
 
     def keyPressEvent(self, event):

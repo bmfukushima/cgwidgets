@@ -1,4 +1,13 @@
 """
+TODO:
+    BUGS:
+        Cannot have the following hierarchy
+            TansuView --> TansuViewer --> LabelledInputWidget --> Ladder
+            The invisible drag on the ladder for some reason gets bricked, and the invisible
+            widget is displayed as a giant black square...
+        Default Size... Labelled input wigdet
+            This is always broken =\
+
 * All imports...
     need to register to import from cgwidgets.
     needs to assume that this lib is in the pythonpath
@@ -14,12 +23,7 @@ Unit Tests:
     * How to run tests in different environments...
         bash script...
 
-Workflow...
-    events...
-        delegates?
-        delegates.utils?
-            - Then how to have utils utils?
-            - Do I even need utils?
+
 
 Widgets:
     - Error on PySide for ColorWidget

@@ -484,7 +484,7 @@ def setAsTransparent(widget):
         | Qt.WindowStaysOnTopHint
     )
     widget.setAttribute(Qt.WA_TranslucentBackground)
-    widget.setStyleSheet("background-color: rgba(255,0,0,255)")
+    widget.setStyleSheet("background-color: rgba(0,0,0,0)")
 
 
 def updateStyleSheet(widget):
