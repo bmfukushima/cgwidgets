@@ -60,7 +60,7 @@ from qtpy.QtGui import QCursor
 
 from cgwidgets.widgets import (
     TansuModelViewWidget, TansuModelItem, TansuModel,
-    ModelViewWidget, FloatInputWidget)
+    ModelViewWidget, FloatInputWidget, LabelledInputWidget)
 from cgwidgets.views import TansuView, AbstractDragDropListView, AbstractDragDropTreeView
 from cgwidgets.utils import attrs
 
@@ -119,7 +119,9 @@ tansu_widget.setHeaderData(['name', 'SINE.', "woowoo"])
 # CREATE ITEMS / TABS
 def setupAsStacked():
     # insert tabs
-    tansu_widget.insertTansuWidget(0, column_data={'name' : '<title> hello'}, widget=QLabel('hello'))
+
+    tansu_widget.insertTansuWidget(0, column_data={'name' : '<title> hello'},
+                                   widget=LabelledInputWidget(name='hello', widget_type=FloatInputWidget))
     tansu_widget.insertTansuWidget(0, column_data={'name' : '<title> world'}, widget=QLabel('world'))
 
     tansu_delegate = TansuView()
@@ -212,7 +214,7 @@ def setupAsDynamic():
 setupAsStacked()
 #setupAsDynamic()
 
-# SET FLAGS
+# SET FLAGSLabelledInputWidget
 tansu_widget.setMultiSelect(True)
 tansu_widget.setMultiSelectDirection(Qt.Vertical)
 tansu_widget.delegateWidget().setHandleLength(100)
@@ -323,8 +325,6 @@ the user presses a specific key/modifier combination
 """
 delegate_widget = QLabel("Q")
 tansu_widget.addHeaderDelegateWidget([Qt.Key_Q], delegate_widget, modifier=Qt.NoModifier, focus=False)
-
-
 
 # display widget
 tansu_widget.resize(500, 500)

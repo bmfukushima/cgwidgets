@@ -381,7 +381,6 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
 
         elif self._header_view_position == attrs.NORTH:
             self.setOrientation(Qt.Vertical)
-            print(self.headerWidget())
             self.headerWidget().setOrientation(Qt.Vertical, header_delegate_position)
             self.insertWidget(0, self.headerWidget())
             self.setStretchFactor(0, 0)
@@ -577,22 +576,6 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
                     self.updateStyleSheet()
         return QSplitter.resizeEvent(self, event)
 
-    # def eventFilter(self, widget, event):
-    #     """
-    #     This event filter is to be installed on the widgets
-    #     of the items that are selected.  So that when those
-    #     widgets grab focus, the TansuView key events can still
-    #     be registered
-    #     """
-    #     if event.type() == QEvent.KeyPress:
-    #         print ('filter???')
-    #         if (event.key() == TansuView.FULLSCREEN_HOTKEY
-    #                 or
-    #             event.key() == Qt.Key_Escape
-    #         ):
-    #             self.delegateWidget().keyPressEvent(event)
-    #     return True
-
     @staticmethod
     def isWidgetUnderCursorChildOfHeader():
         """
@@ -609,12 +592,6 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         if widget_pressed:
             is_child_of_header = getWidgetAncestor(widget_pressed, TansuHeader)
         return True if is_child_of_header else False
-
-    # Todo key press fail
-    # def keyPressEvent(self, event):
-    #     is_child_of_header = TansuModelViewWidget.isWidgetUnderCursorChildOfHeader()
-    #     if not is_child_of_header:
-    #         return self.delegateWidget().keyPressEvent(event)
 
     """ PROPERTIES """
     """ selection """
@@ -734,8 +711,6 @@ class TansuMainDelegateWidget(TansuView):
         tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
         if is_child_of_header:
             return tab_tansu_widget.headerWidget().keyPressEvent(event)
-        # else:
-        #     return TansuView.keyPressEvent(self, event)
 
         ModelViewWidget.keyPressEvent(tab_tansu_widget.headerWidget(), event)
 
@@ -745,6 +720,17 @@ class TansuMainDelegateWidget(TansuView):
             if tab_tansu_widget:
                 tab_tansu_widget.updateDelegateDisplay()
                 tab_tansu_widget.toggleDelegateSpacerWidget()
+        # Global override for conflicts
+        elif event.key() == self.soloViewHotkey():
+            """
+            If this is another tansu/labelled input etc, it will bypass
+            and use that widgets key press.  If it is over the main delegate,
+            it will register a TansuView press.
+            """
+            pos = QCursor.pos()
+            widget_pressed = qApp.widgetAt(pos)
+            if isinstance(widget_pressed, TansuModelDelegateWidget):
+                return TansuView.keyPressEvent(self, event)
         else:
             return TansuView.keyPressEvent(self, event)
 

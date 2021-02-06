@@ -580,7 +580,6 @@ class FrameGroupInputWidget(AbstractFrameGroupInputWidget):
         super(FrameGroupInputWidget, self).__init__(parent, name, note, direction)
 
 
-#class TansuGroupInputWidget(AbstractFrameGroupInputWidget):
 class TansuGroupInputWidget(LabelledInputWidget):
     """
     A container for holding user parameters.  The default main
