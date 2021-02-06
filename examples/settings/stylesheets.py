@@ -47,7 +47,7 @@ if __name__ == "__main__":
 
             #self.main_widget.delegateWidget().setIsHandleVisible(False)
             #self.main_widget.delegateWidget().setHandleMarginOffset(1)
-            tansu_view = self.main_widget.delegateWidget()
+            tansu_view = self.getInputWidget().delegateWidget()
             #self._handle_margin_offset = 0
             tansu_view.setIsSoloViewEnabled(False)
             tansu_view.setIsHandleStatic(True)

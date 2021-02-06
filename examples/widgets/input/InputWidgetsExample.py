@@ -41,16 +41,22 @@ def test(widget, value):
     print(widget, value)
     #widget.setText(str(value))
 
+def tansuInputTest(item, widget, value):
+    print("---- TANSU input function ----")
+    print('setting value to... ', value)
+    print(item, widget, value)
+    # widget.setText(str(value))
+
 """ Setup Tansu Widget """
 tansu_group_widget = TansuGroupInputWidget(parent=None, name='TansuGroupInputWidget')
 
 # add user inputs
-tansu_group_widget.insertInputWidget(0, FloatInputWidget, 'Float', test)
-tansu_group_widget.insertInputWidget(0, IntInputWidget, 'Int', test)
-tansu_group_widget.insertInputWidget(0, BooleanInputWidget, 'Boolean', test)
-tansu_group_widget.insertInputWidget(0, StringInputWidget, 'String', test)
-tansu_group_widget.insertInputWidget(0, ListInputWidget, 'List', test, data={'items_list':list_of_crap})
-tansu_group_widget.insertInputWidget(0, PlainTextInputWidget, 'Text', test)
+tansu_group_widget.insertInputWidget(0, FloatInputWidget, 'Float', tansuInputTest)
+tansu_group_widget.insertInputWidget(0, IntInputWidget, 'Int', tansuInputTest)
+tansu_group_widget.insertInputWidget(0, BooleanInputWidget, 'Boolean', tansuInputTest)
+tansu_group_widget.insertInputWidget(0, StringInputWidget, 'String', tansuInputTest)
+tansu_group_widget.insertInputWidget(0, ListInputWidget, 'List', tansuInputTest, data={'items_list':list_of_crap})
+tansu_group_widget.insertInputWidget(0, PlainTextInputWidget, 'Text', tansuInputTest)
 
 tansu_group_widget.display_background = False
 

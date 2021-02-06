@@ -567,6 +567,7 @@ class LabelledInputWidget(TansuView, AbstractInputGroupFrame):
     #             return self.parent().keyPressEvent(event)
     #     return TansuView.keyPressEvent(self, event)
 
+
 class FrameGroupInputWidget(AbstractFrameGroupInputWidget):
     def __init__(
         self,
@@ -579,7 +580,8 @@ class FrameGroupInputWidget(AbstractFrameGroupInputWidget):
         super(FrameGroupInputWidget, self).__init__(parent, name, note, direction)
 
 
-class TansuGroupInputWidget(AbstractFrameGroupInputWidget):
+#class TansuGroupInputWidget(AbstractFrameGroupInputWidget):
+class TansuGroupInputWidget(LabelledInputWidget):
     """
     A container for holding user parameters.  The default main
     widget is a TansuWidget which can have the individual widgets
@@ -587,7 +589,7 @@ class TansuGroupInputWidget(AbstractFrameGroupInputWidget):
 
     Widgets:
         TansuGroupInputWidget
-            | -- main_widget (AbstractTansuGroupInputWidget)
+            | -- getInputWidget() (AbstractTansuGroupInputWidget)
                     | -- model
                     | -* (TansuInputWidgetItem)
     """
@@ -598,17 +600,28 @@ class TansuGroupInputWidget(AbstractFrameGroupInputWidget):
         note="None",
         direction=Qt.Vertical
     ):
+        class AbstractTansuInputWidget(TansuModelViewWidget):
+            def __init__(self, parent=None):
+                super(AbstractTansuInputWidget, self).__init__(parent)
+                self.model().setItemType(TansuInputWidgetItem)
+                self.setDelegateType(TansuModelViewWidget.DYNAMIC)
+                self.setHeaderPosition(attrs.WEST)
+                self.setMultiSelect(True)
+                self.setMultiSelectDirection(Qt.Vertical)
+
+                # self.setHandleLength(50)
+                self.delegateWidget().setHandleLength(50)
+                self.updateStyleSheet()
+
+                self.setDelegateTitleIsShown(False)
+
         # inherit
-        super(TansuGroupInputWidget, self).__init__(parent, name, note, direction)
+        super(TansuGroupInputWidget, self).__init__(parent, name, direction=direction, widget_type=AbstractTansuInputWidget)
+
+        self.setIsSoloViewEnabled(False)
 
         # setup main widget
-        self.main_widget = AbstractTansuInputWidget(self)
-        self.layout().addWidget(self.main_widget)
-
-        # set default orientation
-        self.setDirection(Qt.Vertical)
-
-        self.main_widget.setDelegateType(
+        self.getInputWidget().setDelegateType(
             TansuModelViewWidget.DYNAMIC,
             dynamic_widget=LabelledInputWidget,
             dynamic_function=self.updateGUI
@@ -689,7 +702,7 @@ class TansuGroupInputWidget(AbstractFrameGroupInputWidget):
             data['value'] = default_value
 
         # create item
-        user_input_index = self.main_widget.insertTansuWidget(index, column_data=data)
+        user_input_index = self.getInputWidget().insertTansuWidget(index, column_data=data)
         user_input_item = user_input_index.internalPointer()
 
         # setup new item
@@ -698,29 +711,7 @@ class TansuGroupInputWidget(AbstractFrameGroupInputWidget):
         user_input_item.setUserLiveInputEvent(user_live_update_event)
 
     def removeInputWidget(self, index):
-        self.main_widget.removeTab(index)
-
-    # def keyPressEvent(self, event):
-    #     if event.key() == 96:
-    #         return
-    #     else:
-    #         return TansuGroupInputWidget.keyPressEvent(self, event)
-
-
-class AbstractTansuInputWidget(TansuModelViewWidget):
-    def __init__(self, parent=None):
-        super(AbstractTansuInputWidget, self).__init__(parent)
-        self.model().setItemType(TansuInputWidgetItem)
-        self.setDelegateType(TansuModelViewWidget.DYNAMIC)
-        self.setHeaderPosition(attrs.WEST)
-        self.setMultiSelect(True)
-        self.setMultiSelectDirection(Qt.Vertical)
-
-        #self.setHandleLength(50)
-        self.delegateWidget().setHandleLength(50)
-        self.updateStyleSheet()
-
-        self.setDelegateTitleIsShown(False)
+        self.getInputWidget().removeTab(index)
 
 
 class MultiButtonInputWidget(AbstractMultiButtonInputWidget):

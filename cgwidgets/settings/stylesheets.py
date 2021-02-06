@@ -211,7 +211,7 @@ splitter_handle_ss = """
     }}
 
     {type}[is_handle_visible=true][is_handle_static=true]::handle {{
-        border: 2px dotted rgba{rgba_handle};
+        border: 1px solid rgba{rgba_outline};
     }}
 """
 

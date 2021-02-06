@@ -577,22 +577,21 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
                     self.updateStyleSheet()
         return QSplitter.resizeEvent(self, event)
 
-    def eventFilter(self, widget, event):
-        """
-        This event filter is to be installed on the widgets
-        of the items that are selected.  So that when those
-        widgets grab focus, the TansuView key events can still
-        be registered
-        """
-        if event.type() == QEvent.KeyPress:
-            if (event.key() == TansuView.FULLSCREEN_HOTKEY
-                    or
-                event.key() == Qt.Key_Escape
-            ):
-                print('yolo bolo')
-                self.delegateWidget().keyPressEvent(event)
-
-        return False
+    # def eventFilter(self, widget, event):
+    #     """
+    #     This event filter is to be installed on the widgets
+    #     of the items that are selected.  So that when those
+    #     widgets grab focus, the TansuView key events can still
+    #     be registered
+    #     """
+    #     if event.type() == QEvent.KeyPress:
+    #         print ('filter???')
+    #         if (event.key() == TansuView.FULLSCREEN_HOTKEY
+    #                 or
+    #             event.key() == Qt.Key_Escape
+    #         ):
+    #             self.delegateWidget().keyPressEvent(event)
+    #     return True
 
     @staticmethod
     def isWidgetUnderCursorChildOfHeader():
@@ -611,10 +610,11 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
             is_child_of_header = getWidgetAncestor(widget_pressed, TansuHeader)
         return True if is_child_of_header else False
 
-    def keyPressEvent(self, event):
-        is_child_of_header = TansuModelViewWidget.isWidgetUnderCursorChildOfHeader()
-        if not is_child_of_header:
-            return self.delegateWidget().keyPressEvent(event)
+    # Todo key press fail
+    # def keyPressEvent(self, event):
+    #     is_child_of_header = TansuModelViewWidget.isWidgetUnderCursorChildOfHeader()
+    #     if not is_child_of_header:
+    #         return self.delegateWidget().keyPressEvent(event)
 
     """ PROPERTIES """
     """ selection """
@@ -740,11 +740,6 @@ class TansuMainDelegateWidget(TansuView):
         ModelViewWidget.keyPressEvent(tab_tansu_widget.headerWidget(), event)
 
         # Global escape
-        # Todo double escape fail
-        """
-        When the widget is focused, the user will have to hit escape
-        twice in order to properly get out...
-        """
         if event.key() == Qt.Key_Escape:
             tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
             if tab_tansu_widget:

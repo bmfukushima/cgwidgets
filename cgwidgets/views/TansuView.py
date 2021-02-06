@@ -224,12 +224,18 @@ class TansuView(QSplitter):
         #pass
         self.updateStyleSheet()
 
-    def addWidget(self, widget):
-        self.setChildSoloable(self.isSoloViewEnabled(), widget)
+    def addWidget(self, widget, is_soloable=None):
+        if is_soloable is not None:
+            self.setChildSoloable(is_soloable)
+        else:
+            self.setChildSoloable(self.isSoloViewEnabled(), widget)
         return QSplitter.addWidget(self, widget)
 
-    def insertWidget(self, index, widget):
-        self.setChildSoloable(self.isSoloViewEnabled(), widget)
+    def insertWidget(self, index, widget, is_soloable=None):
+        if is_soloable is not None:
+            self.setChildSoloable(is_soloable)
+        else:
+            self.setChildSoloable(self.isSoloViewEnabled(), widget)
         return QSplitter.insertWidget(self, index, widget)
 
     """ SOLO VIEW """
@@ -529,7 +535,7 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     main_splitter = TansuView()
-    main_splitter.setOrientation(Qt.Horizontal)
+    main_splitter.setOrientation(Qt.Vertical)
     main_splitter.setIsHandleVisible(False)
     main_splitter.setHandleLength(100)
     main_splitter.setObjectName("main")

@@ -3,6 +3,7 @@ from qtpy.QtWidgets import QApplication, QLabel
 from qtpy.QtGui import QCursor
 from qtpy.QtCore import Qt
 from cgwidgets.views import TansuView
+from cgwidgets.widgets import TansuModelViewWidget
 
 app = QApplication(sys.argv)
 
@@ -35,8 +36,25 @@ for x in range(3):
 # add tansu to tansu
 main_tansu_widget.addWidget(tansu_widget_2)
 
+from cgwidgets.widgets import TansuGroupInputWidget, FloatInputWidget, LabelledInputWidget
+
+def asdf(item, widget, value):
+    return
+
+# add model view
+mvw = TansuGroupInputWidget()
+inputs = ["cx", "cy", "fx", "fy", "radius"]  # , stops"""
+for i in inputs:
+    mvw.insertInputWidget(0, FloatInputWidget, i, asdf,
+                           user_live_update_event=asdf, default_value=0.5)
+
+labelled_input = LabelledInputWidget(name="test", widget_type=FloatInputWidget)
+
+main_tansu_widget.addWidget(mvw)
+main_tansu_widget.addWidget(labelled_input)
 # show widget
 main_tansu_widget.show()
 main_tansu_widget.move(QCursor.pos())
+main_tansu_widget.resize(512, 512)
 sys.exit(app.exec_())
 
