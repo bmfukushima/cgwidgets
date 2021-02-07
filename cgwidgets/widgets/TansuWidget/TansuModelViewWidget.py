@@ -829,6 +829,7 @@ class TansuHeader(ModelViewWidget):
     #     else:
     #         return ModelViewWidget.keyPressEvent(self, event)
 
+
 """ EXAMPLE """
 class TabTansuDynamicWidgetExample(QWidget):
     """

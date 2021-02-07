@@ -23,11 +23,10 @@ if __name__ == "__main__":
     class RadialGradientInputWidget(TansuGroupInputWidget):
         def __init__(self,
             parent=None,
-            name="None",
-            note="None",
             direction=Qt.Vertical
         ):
-            super(RadialGradientInputWidget, self).__init__(parent, name, note, direction)
+            name = "Radial Gradient"
+            super(RadialGradientInputWidget, self).__init__(parent, name, direction=direction)
             self.cx = 0.5
             self.cy = 0.5
             self.fx = 0.5
@@ -44,11 +43,7 @@ if __name__ == "__main__":
                 self.insertInputWidget(0, FloatLadderInputWidget, i, self.asdf,
                                           user_live_update_event=self.liveEdit, default_value=0.5)
 
-
-            #self.main_widget.delegateWidget().setIsHandleVisible(False)
-            #self.main_widget.delegateWidget().setHandleMarginOffset(1)
             tansu_view = self.getInputWidget().delegateWidget()
-            #self._handle_margin_offset = 0
             tansu_view.setIsSoloViewEnabled(False)
             tansu_view.setIsHandleStatic(True)
             tansu_view.setHandleWidth(0)
@@ -59,11 +54,6 @@ if __name__ == "__main__":
             for index, child in enumerate(tansu_view.children()):
                 tansu_view.setStretchFactor(index, 0)
             tansu_view.setStretchFactor(index, 1)
-            #tansu_view.setIsHeaderShown(False)
-            print(tansu_view)
-            #tansu_view.set
-            #tansu_view.setIsHandleVisible(False)
-
 
         @staticmethod
         def asdf(item, widget, value):

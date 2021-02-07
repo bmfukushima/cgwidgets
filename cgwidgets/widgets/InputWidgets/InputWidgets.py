@@ -561,12 +561,6 @@ class LabelledInputWidget(TansuView, AbstractInputGroupFrame):
         self.resetSliderPositionToDefault()
         return TansuView.resizeEvent(self, event)
 
-    # def keyPressEvent(self, event):
-    #     if event.key() == self.soloViewHotkey():
-    #         if self.parent():
-    #             return self.parent().keyPressEvent(event)
-    #     return TansuView.keyPressEvent(self, event)
-
 
 class FrameGroupInputWidget(AbstractFrameGroupInputWidget):
     def __init__(
@@ -610,14 +604,33 @@ class TansuGroupInputWidget(LabelledInputWidget):
 
                 # self.setHandleLength(50)
                 self.delegateWidget().setHandleLength(50)
+                self.setHeaderPosition(attrs.WEST, attrs.SOUTH)
                 self.updateStyleSheet()
 
                 self.setDelegateTitleIsShown(False)
 
+            def keyPressEvent(self, event):
+                """
+                Bypass the key press event?
+                Args:
+                    event:
+
+                Returns:
+
+                """
+                return
+                print('AbstractTansuInputWidget')
+                if self.parent():
+                    return self.parent().keyPressEvent(event)
+                # if event.key() == 96:
+                #     return
+                # else:
+                #     return TansuModelViewWidget.keyPressEvent(self, event)
+
         # inherit
         super(TansuGroupInputWidget, self).__init__(parent, name, direction=direction, widget_type=AbstractTansuInputWidget)
 
-        self.setIsSoloViewEnabled(False)
+        #self.setIsSoloViewEnabled(False)
 
         # setup main widget
         self.getInputWidget().setDelegateType(
@@ -712,6 +725,11 @@ class TansuGroupInputWidget(LabelledInputWidget):
     def removeInputWidget(self, index):
         self.getInputWidget().removeTab(index)
 
+    # def keyPressEvent(self, event):
+    #     return
+        # print('tansu group input?')
+        # if self.getInputWidget():
+        #     return self.getInputWidget().keyPressEvent(event)
 
 class MultiButtonInputWidget(AbstractMultiButtonInputWidget):
     """
@@ -749,13 +767,6 @@ if __name__ == "__main__":
     def userEvent(widget):
         print("user input...", widget)
 
-    buttons = []
-    for x in range(3):
-        buttons.append([str(x), x, userEvent])
-
-    #widget = MultiButtonInputWidget(buttons=buttons, orientation=Qt.Horizontal)
-    widget = LabelledInputWidget(name='weiner', widget_type=FloatInputWidget)
-
 
     def asdf(item, widget, value):
         return
@@ -764,12 +775,16 @@ if __name__ == "__main__":
     @staticmethod
     def liveEdit(item, widget, value):
         return
-    # inputs = ["cx", "cy", "fx", "fy", "radius"]  # , stops"""
-    #
-    # for i in inputs:
-    #     widget.insertInputWidget(0, FloatInputWidget, i, asdf, user_live_update_event=liveEdit, default_value=0.5)
 
-    #widget.setIsHeaderShown(False)
+
+    widget = TansuGroupInputWidget(name="test")
+    inputs = ["cx", "cy", "fx", "fy", "radius"]  # , stops"""
+    for i in inputs:
+        widget.insertInputWidget(0, FloatInputWidget, i, asdf,
+                               user_live_update_event=asdf, default_value=0.5)
+
+    #test_labelled_embed = LabelledInputWidget(name="embed", widget_type=FloatInputWidget)
+    #labelled_input = LabelledInputWidget(name="test", widget_type=test_labelled_embed)
 
     widget.move(QCursor.pos())
     widget.show()
