@@ -1,3 +1,16 @@
+"""
+TANSU VIEW
+
+The Tansu View is essentially a QSplitter that has the option to
+allow any widget inside of it to become full screen using the
+the hotkey set with setSoloViewHotkey(), by default this is set to
+tilda, "~", or 96 (note: right now 96 is hard coded as ~ seems to be
+hard to get Qt to register in their Key_KEY shit)
+
+The user can leave full screen by hitting the "ESC" key.
+
+"""
+
 import sys
 from qtpy.QtWidgets import QApplication, QLabel
 from qtpy.QtGui import QCursor
@@ -9,6 +22,8 @@ app = QApplication(sys.argv)
 
 # create tansu
 main_tansu_widget = TansuView()
+embedded_tansu_01 = TansuView(orientation=Qt.Horizontal)
+embedded_tansu_02 = TansuView(orientation=Qt.Vertical)
 
 # OPTIONAL | set handle length (if not set, by default this will be full length)
 main_tansu_widget.setHandleLength(100)
@@ -17,57 +32,27 @@ main_tansu_widget.setIsHandleStatic(False)
 main_tansu_widget.setIsSoloViewEnabled(True)
 main_tansu_widget.setOrientation(Qt.Vertical)
 
-# add widgets
+# add regular widgets
 for char in "SINE.":
     widget = QLabel(char)
     main_tansu_widget.addWidget(widget)
     widget.setStyleSheet("color: rgba(255,0,0,255)")
 
-# create second tansu widget
-tansu_widget_2 = TansuView(orientation=Qt.Horizontal)
-tansu_widget_3 = TansuView(orientation=Qt.Vertical)
-
-
-# add widgets
+# add embedded Tansu Views
 for x in range(3):
     l = QLabel(str(x))
-    tansu_widget_2.addWidget(l)
+    embedded_tansu_01.addWidget(l)
     l.setStyleSheet("color: rgba(255,0,0,255)")
 
     l = QLabel(str(x))
-    tansu_widget_3.addWidget(l)
+    embedded_tansu_02.addWidget(l)
     l.setStyleSheet("color: rgba(255,0,0,255)")
 
-tansu_widget_2.addWidget(tansu_widget_3)
-
+embedded_tansu_01.addWidget(embedded_tansu_02)
 
 # add tansu to tansu
-main_tansu_widget.addWidget(tansu_widget_2)
+main_tansu_widget.addWidget(embedded_tansu_01)
 
-from cgwidgets.widgets import TansuGroupInputWidget, FloatInputWidget, LabelledInputWidget, TansuModelViewWidget
-
-def asdf(item, widget, value):
-    return
-
-# add TansuGroupInputWidget
-tgbi = TansuGroupInputWidget(name="test")
-inputs = ["cx", "cy", "fx", "fy", "radius"]  # , stops"""
-for i in inputs:
-    tgbi.insertInputWidget(0, FloatInputWidget, i, asdf,
-                           user_live_update_event=asdf, default_value=0.5)
-
-labelled_input = LabelledInputWidget(name="test", widget_type=FloatInputWidget)
-
-main_tansu_widget.addWidget(tgbi)
-
-mvw = TansuModelViewWidget()
-for i in inputs:
-    mvw.insertTansuWidget(0, column_data={'name':str(i)}, widget=QLabel(str(i)))
-mvw.setMultiSelect(True)
-
-main_tansu_widget.addWidget(mvw)
-
-main_tansu_widget.addWidget(labelled_input)
 # show widget
 main_tansu_widget.show()
 main_tansu_widget.move(QCursor.pos())

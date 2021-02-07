@@ -196,13 +196,24 @@ class TansuView(QSplitter):
             # preflight
             pos = QCursor.pos()
             widget_pressed = qApp.widgetAt(pos)
-            if isinstance(widget_pressed, QSplitterHandle): return
 
-            # toggle solo view
+            # bypass handles
+            # toggle solo view ( tansu view )
+            if isinstance(widget_pressed, QSplitterHandle):
+                #self.toggleIsSoloView(True, widget=self)
+                return
+
+            # toggle solo view (individual widget )
             widget_soloable = self.getFirstSoloableWidget(widget_pressed)
             self.toggleIsSoloView(True, widget=widget_soloable)
             return
-
+        elif event.key() == Qt.Key_G:
+            pos = QCursor.pos()
+            widget_pressed = qApp.widgetAt(pos)
+            widget_soloable = self.getFirstSoloableWidget(widget_pressed)
+            if widget_soloable.parent():
+                self.toggleIsSoloView(True, widget=widget_soloable.parent())
+            return
         # unsolo view
         elif event.key() == Qt.Key_Escape:
             self.toggleIsSoloView(False)
