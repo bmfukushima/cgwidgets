@@ -38,17 +38,6 @@ class CompleterPopup(QListView):
 
         self.setStyleSheet(style_sheet)
 
-    # def selectionChanged(self, selected, deselected):
-    #     for index in selected.indexes():
-    #         #item = index.internalPointer()
-    #         print(self.model().item_list[index.row()])
-
-    # def mousePressEvent(self, event):
-    #     return
-
-    # def mouseReleaseEvent(self, event):
-    #     return
-
     def showEvent(self, event):
         if not self.model(): return
         row_count = self.model().rowCount(QModelIndex())

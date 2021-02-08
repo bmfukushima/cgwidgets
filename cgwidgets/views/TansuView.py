@@ -202,18 +202,15 @@ class TansuView(QSplitter):
             if isinstance(widget_pressed, QSplitterHandle):
                 #self.toggleIsSoloView(True, widget=self)
                 return
+            widget_soloable = self.getFirstSoloableWidget(widget_pressed)
+            if event.modifiers() == Qt.AltModifier:
+                if widget_soloable.parent():
+                    self.toggleIsSoloView(True, widget=widget_soloable.parent())
+            else:
+                # toggle solo view (individual widget )
+                self.toggleIsSoloView(True, widget=widget_soloable)
+            return
 
-            # toggle solo view (individual widget )
-            widget_soloable = self.getFirstSoloableWidget(widget_pressed)
-            self.toggleIsSoloView(True, widget=widget_soloable)
-            return
-        elif event.key() == Qt.Key_G:
-            pos = QCursor.pos()
-            widget_pressed = qApp.widgetAt(pos)
-            widget_soloable = self.getFirstSoloableWidget(widget_pressed)
-            if widget_soloable.parent():
-                self.toggleIsSoloView(True, widget=widget_soloable.parent())
-            return
         # unsolo view
         elif event.key() == Qt.Key_Escape:
             self.toggleIsSoloView(False)

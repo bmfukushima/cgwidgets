@@ -5,10 +5,15 @@ The Tansu View is essentially a QSplitter that has the option to
 allow any widget inside of it to become full screen using the
 the hotkey set with setSoloViewHotkey(), by default this is set to
 tilda, "~", or 96 (note: right now 96 is hard coded as ~ seems to be
-hard to get Qt to register in their Key_KEY shit)
+hard to get Qt to register in their Key_KEY shit).  Using the ALT modifier
+when using multiple Tansu Views embedded inside each other will make
+the current Tansu View full screen, rather than the widget that it is
+hovering over.  The user can leave full screen by hitting the "ESC" key.
 
-The user can leave full screen by hitting the "ESC" key.
-
+NOTE:
+    On systems using GNOME such as Ubuntu 20.04, you may need to disable
+    the "Super/Alt+Tilda" system level hotkey which is normally set to
+        "Switch windows of an application"
 """
 
 import sys
@@ -16,7 +21,6 @@ from qtpy.QtWidgets import QApplication, QLabel
 from qtpy.QtGui import QCursor
 from qtpy.QtCore import Qt
 from cgwidgets.views import TansuView
-from cgwidgets.widgets import TansuModelViewWidget
 
 app = QApplication(sys.argv)
 

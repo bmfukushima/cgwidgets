@@ -108,6 +108,11 @@ input_widget_ss ="""
     background_accept_radial=background_accept_radial,
     background_select_hover_radial=background_select_hover_radial)
 
+display_label_ss = """
+    background-color: rgba{rgba_background};
+    color: rgba{rgba_text};
+"""
+
 
 """
 Kwargs:

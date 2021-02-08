@@ -1,6 +1,8 @@
 import sys
-from qtpy.QtWidgets import (QApplication, QLabel)
-from qtpy.QtCore import Qt, QSortFilterProxyModel
+from qtpy.QtWidgets import
+
+from qtpy.QtWidgets import (QApplication, QLabel, QCompleter, QTreeView, QWidget, QVBoxLayout)
+from qtpy.QtCore import Qt
 from qtpy.QtGui import QCursor
 
 from cgwidgets.widgets import AbstractStringInputWidget, AbstractListInputWidget
@@ -11,9 +13,8 @@ from cgwidgets.views import (
 )
 from cgwidgets.utils import attrs, getWidgetAncestor
 from cgwidgets.settings.colors import iColor
+from cgwidgets.settings.stylesheets import  display_label_ss
 from cgwidgets.views import TansuView
-
-from qtpy.QtCore import QModelIndex
 
 
 class ModelViewWidget(TansuView):
@@ -372,15 +373,17 @@ class ModelViewWidget(TansuView):
             return TansuView.keyPressEvent(self, event)
 
 
-from qtpy.QtCore import QSortFilterProxyModel, QRegExp
-from qtpy.QtWidgets import QCompleter, QStyledItemDelegate, QTreeView, QWidget, QVBoxLayout, QHBoxLayout
-
-
 class ModelViewSearchWidget(TansuView):
     """
     Input widget containing the controls to search for specific items in the model.
 
-    This widget can be shown by hitting the CTRL+F combo
+    This widget can be shown by hitting the CTRL+F combo'
+
+    Hierarchy:
+        ModelViewSearchWidget --> TansuView
+            |- ModelViewSearchBox (AbstractStringInputWidget)
+            |- search_options --> TansuView / HBox
+                    |-
     """
     def __init__(self, parent=None):
         super(ModelViewSearchWidget, self).__init__(parent)
