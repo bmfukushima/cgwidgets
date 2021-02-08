@@ -1,5 +1,4 @@
 import sys
-from qtpy.QtWidgets import
 
 from qtpy.QtWidgets import (QApplication, QLabel, QCompleter, QTreeView, QWidget, QVBoxLayout)
 from qtpy.QtCore import Qt
@@ -381,27 +380,35 @@ class ModelViewSearchWidget(TansuView):
 
     Hierarchy:
         ModelViewSearchWidget --> TansuView
-            |- ModelViewSearchBox (AbstractStringInputWidget)
-            |- search_options --> TansuView / HBox
-                    |-
+            |- ModelViewSearchBox --> AbstractStringInputWidget
+            |- search_options --> TansuView
+                    |- select_flags --> (ModelViewSelectFlags --> AbstractListInputWidget)
+                    |- match_flags --> (ModelViewSelectFlags --> AbstractListInputWidget)
     """
     def __init__(self, parent=None):
         super(ModelViewSearchWidget, self).__init__(parent)
         # create widgets
 
         # search area
+
+        # create search box
         self.search_box = ModelViewSearchBox(self)
-        self.match_flags = ModelViewSearchOptions(self)
-        # setup layout
-        self.addWidget(QLabel("SELECT"))
+
+        # setup flag
+        self.flags_layout = TansuView(self, orientation=Qt.Horizontal)
+        self.select_flags = ModelViewSelectFlags(self)
+        self.match_flags = ModelViewMatchFlags(self)
+
+        self.flags_layout.addWidget(self.select_flags)
+        self.flags_layout.addWidget(self.match_flags)
+
+        # add main widgets
         self.addWidget(self.search_box)
-        self.addWidget(self.match_flags)
+        self.addWidget(self.flags_layout)
 
         # setup style
-        self.setOrientation(Qt.Horizontal)
-
-    # def showEvent(self, event):
-    #     super(ModelViewSearchWidget, self).showEvent(event)
+        self.setOrientation(Qt.Vertical)
+        self.setIsHandleVisible(False)
 
 
 class ModelViewSearchBox(AbstractStringInputWidget):
@@ -446,7 +453,7 @@ class ModelViewSearchBox(AbstractStringInputWidget):
 
             match_type = self.parent().match_flags.text()
             try:
-                match_type = ModelViewSearchOptions.MATCH[match_type]
+                match_type = ModelViewMatchFlags.MATCH[match_type]
             except KeyError:
                 match_type = Qt.MatchExactly
 
@@ -457,7 +464,22 @@ class ModelViewSearchBox(AbstractStringInputWidget):
         return AbstractStringInputWidget.keyPressEvent(self, event)
 
 
-class ModelViewSearchOptions(AbstractListInputWidget):
+class ModelViewSelectFlags(AbstractListInputWidget):
+    """
+    List input that displays all of the available search options.
+    """
+    SELECT = [
+        "SELECT"
+    ]
+    def __init__(self, parent=None):
+        super(ModelViewSelectFlags, self).__init__(parent)
+        self.setAlignment(Qt.AlignCenter)
+        _options = [[option] for option in ModelViewSelectFlags.SELECT]
+        self.populate(_options)
+        self.setText("SELECT")
+
+
+class ModelViewMatchFlags(AbstractListInputWidget):
     """
     List input that displays all of the available search options.
     """
@@ -468,9 +490,9 @@ class ModelViewSearchOptions(AbstractListInputWidget):
         "STARTS WITH": Qt.MatchStartsWith
     }
     def __init__(self, parent=None):
-        super(ModelViewSearchOptions, self).__init__(parent)
+        super(ModelViewMatchFlags, self).__init__(parent)
         self.setAlignment(Qt.AlignCenter)
-        _options = [[option] for option in ModelViewSearchOptions.MATCH.keys()]
+        _options = [[option] for option in ModelViewMatchFlags.MATCH.keys()]
         self.populate(_options)
         self.setText("EXACT")
 
