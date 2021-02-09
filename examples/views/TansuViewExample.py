@@ -10,19 +10,33 @@ when using multiple Tansu Views embedded inside each other will make
 the current Tansu View full screen, rather than the widget that it is
 hovering over.  The user can leave full screen by hitting the "ESC" key.
 
+Widgets can be added/inserted with the kwarg "is_soloable", to stop the
+widget from being able to be solo'd, or force it to be on in some
+scenerios.  This kwarg controls an attribute "not_soloable" on the child widget.
+Where if the attribute exists, the child will not be able to be solo'd, and if the
+attribute does not exist, the child will be soloable.
+
 NOTE:
     On systems using GNOME such as Ubuntu 20.04, you may need to disable
     the "Super/Alt+Tilda" system level hotkey which is normally set to
         "Switch windows of an application"
+    Alt+Esc
+        "Switch windows directly"
 """
-
 import sys
 from qtpy.QtWidgets import QApplication, QLabel
 from qtpy.QtGui import QCursor
 from qtpy.QtCore import Qt
+
 from cgwidgets.views import TansuView
+from cgwidgets.settings.colors import iColor
 
 app = QApplication(sys.argv)
+class DisplayLabel(QLabel):
+    def __init__(self, parent=None):
+        super(DisplayLabel, self).__init__(parent)
+        self.setStyleSheet("color: rgba{rgba_text}".format(**iColor.style_sheet_args))
+        self.setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
 
 # create tansu
 main_tansu_widget = TansuView()
@@ -38,25 +52,23 @@ main_tansu_widget.setOrientation(Qt.Vertical)
 
 # add regular widgets
 for char in "SINE.":
-    widget = QLabel(char)
-    main_tansu_widget.addWidget(widget)
-    widget.setStyleSheet("color: rgba(255,0,0,255)")
+    # main widget
+    widget = DisplayLabel(char)
+    main_tansu_widget.addWidget(widget, is_soloable=False)
+
+    # embedded_tansu_02
+    l = DisplayLabel(str(char))
+    embedded_tansu_02.addWidget(l)
 
 # add embedded Tansu Views
 for x in range(3):
-    l = QLabel(str(x))
+    l = DisplayLabel(str(x))
     embedded_tansu_01.addWidget(l)
-    l.setStyleSheet("color: rgba(255,0,0,255)")
-
-    l = QLabel(str(x))
-    embedded_tansu_02.addWidget(l)
-    l.setStyleSheet("color: rgba(255,0,0,255)")
 
 embedded_tansu_01.addWidget(embedded_tansu_02)
 
 # add tansu to tansu
 main_tansu_widget.addWidget(embedded_tansu_01)
-
 # show widget
 main_tansu_widget.show()
 main_tansu_widget.move(QCursor.pos())

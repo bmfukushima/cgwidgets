@@ -84,11 +84,11 @@ class TansuView(QSplitter):
     def displayAllWidgets(self, value):
         """
         Hides/shows all of the widgets in this splitter.  This is a utility function
-        for toggling inbetween full screen modes.
+        for toggling in between full screen modes.
 
         Args:
             value (bool): If True this will show all the widgets, if False,
-                this will hide everythign.
+                this will hide all widgets.
         """
         for index in range(self.count()):
             widget = self.widget(index)
@@ -171,16 +171,6 @@ class TansuView(QSplitter):
             return widget
 
     """ EVENTS """
-    def toggleSoloViewView(self):
-        """
-        Toggles between the full view of either the parameters
-        or the creation portion of this widget.  This is to help
-        to try and provide more screen real estate to this widget
-        which already does not have enough
-        """
-        # toggle attrs
-        self.toggleIsSoloView(not self.isSoloView())
-
     def enterEvent(self, event):
         self.setFocus()
         return QSplitter.enterEvent(self, event)
@@ -212,13 +202,24 @@ class TansuView(QSplitter):
             return
 
         # unsolo view
+
         elif event.key() == Qt.Key_Escape:
-            self.toggleIsSoloView(False)
+            if event.modifiers() == Qt.AltModifier:
+                self.unsoloAll(self)
+                pass
+            else:
+                self.toggleIsSoloView(False)
             return
 
         # something else
         return QSplitter.keyPressEvent(self, event)
 
+    def resizeEvent(self, event):
+        """TODO why was I resizing here..."""
+        #pass
+        self.updateStyleSheet()
+
+    """ WIDGETS """
     def isolateWidgets(self, widget_list):
         """
         Shows only the widgets provided to the widget list
@@ -227,26 +228,34 @@ class TansuView(QSplitter):
         for widget in widget_list:
             widget.show()
 
-    def resizeEvent(self, event):
-        """TODO why was I resizing here..."""
-        #pass
-        self.updateStyleSheet()
-
     def addWidget(self, widget, is_soloable=None):
         if is_soloable is not None:
-            self.setChildSoloable(is_soloable)
+            self.setChildSoloable(is_soloable, widget)
         else:
             self.setChildSoloable(self.isSoloViewEnabled(), widget)
         return QSplitter.addWidget(self, widget)
 
     def insertWidget(self, index, widget, is_soloable=None):
         if is_soloable is not None:
-            self.setChildSoloable(is_soloable)
+            self.setChildSoloable(is_soloable, widget)
         else:
             self.setChildSoloable(self.isSoloViewEnabled(), widget)
         return QSplitter.insertWidget(self, index, widget)
 
     """ SOLO VIEW """
+    def unsoloAll(self, widget):
+        """
+        Unsolo's the current widget provided, and then recurses up the hierarchy
+        and unsolo's all available widgets.
+
+        Args:
+            widget (QWidget): Widget to start recursively searching up from
+        """
+        if hasattr(widget, "toggleIsSoloView"):
+            widget.toggleIsSoloView(False)
+        if widget.parent():
+            return self.unsoloAll(widget.parent())
+
     def setChildSoloable(self, enabled, child):
         """
         Determines if the child widget provided can enter a "solo" view state
@@ -423,19 +432,6 @@ class TansuView(QSplitter):
             margins = "{margin}px {margin_offset}px".format(margin=margin, margin_offset=self.handleMarginOffset())
 
         return margins
-
-    """ PROPERTIES """
-    def getCurrentWidget(self):
-        return self._current_widget
-
-    def setCurrentWidget(self, widget):
-        self._current_widget = widget
-
-    def getCurrentIndex(self):
-        return self._current_index
-
-    def setCurrentIndex(self, current_index):
-        self._current_index = current_index
 
     """ COLORS """
     def updateStyleSheet(self):
