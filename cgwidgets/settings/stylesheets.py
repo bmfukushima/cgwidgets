@@ -13,6 +13,8 @@ Note:
 from .colors import iColor
 #from colors import iColor
 
+
+
 def createRadialGradientSS(radius, center_radius, focal_radius, stops):
     """
 
@@ -42,6 +44,15 @@ def createRadialGradientSS(radius, center_radius, focal_radius, stops):
     # close CSS stylesheet
     ss += stops_ss[:-4] + ')'
     return ss
+
+background_radial = """
+qradialgradient(
+            radius: 0.9,
+            cx:0.50, cy:0.50,
+            fx:0.5, fy:0.5,
+            stop:0.5 rgba{rgba_background},
+            stop:0.75 rgba{rgba_background_2});
+"""
 
 background_hover_radial = """
 qradialgradient(
@@ -75,6 +86,70 @@ qradialgradient(
             stop:0.5 rgba{rgba_background},
             stop:0.75 rgba{rgba_selected_hover});
 """
+
+def installHoverDisplaySS(widget, hover_type=None, hover_type_flag={}):
+    """
+    Adds a hover display to a widget.  This makes it so that when
+    a users cursor hovers over a widget that widget will show that
+    the cursor is over it.
+
+    This will also change the display based off of the current focus
+    level.  This is specifically designed for letting users know
+    where the current focus point is in the UI.
+
+    Hover
+    Hover Select (Mouse pressed after hover)
+    Selected No Hover
+    Args:
+        widget:
+        hover_type:
+        hover_type_flag (dict): of properties for each respective portion
+            of the hover type
+                {hover:{property:bool, propert2:bool},
+                hover_focus:{property:bool, propert2:bool},
+
+                }
+
+    Returns:
+
+    """
+    style_sheet_args = iColor.style_sheet_args
+    style_sheet_args.update({
+        'widget_style_sheet': widget.styleSheet(),
+        'type': type(widget).__name__,
+        "rgba_selected_hover": iColor["rgba_selected_hover"],
+        "rgba_selected_background": iColor["rgba_selected_background"],
+        "background_hover_radial": background_radial.format(
+            rgba_background=iColor["rgba_selected_background"],
+            rgba_background_2=iColor["rgba_selected_hover"]),
+        "background_cancel_radial":background_radial.format(
+            rgba_background=iColor["rgba_selected_background"],
+            rgba_background_2=iColor["rgba_selected_hover"]),
+        "background_accept_radial":background_radial.format(
+            rgba_background=iColor["rgba_selected_background"],
+            rgba_background_2=iColor["rgba_selected_hover"]),
+        "background_select_hover_radial":background_radial.format(
+            rgba_background=iColor["rgba_selected_background"],
+            rgba_background_2=iColor["rgba_selected_hover"])
+    })
+    # {type}::hover[hover_display=true][is_soloable=true]{{
+    #     border: 3px dotted rgba{rgba_selected_hover};
+    # }}
+    style_sheet = """
+    {widget_style_sheet}
+
+    {type}:focus{{
+        background: rgba(255,0,0,255);
+        }}
+    {type}::hover[hover_display=true]{{
+        background: rgba(0,255,0,255);
+        }}
+    {type}::hover:focus{{
+            background: rgba(0,0,255,255);
+    }}
+    """.format(**style_sheet_args)
+
+    widget.setStyleSheet(style_sheet)
 
 input_widget_ss ="""
 /* DEFAULT */

@@ -29,13 +29,14 @@ from qtpy.QtGui import QCursor
 from qtpy.QtCore import Qt
 
 from cgwidgets.views import TansuView
+from cgwidgets.widgets import StringInputWidget, FloatInputWidget
 from cgwidgets.settings.colors import iColor
 
 app = QApplication(sys.argv)
-class DisplayLabel(QLabel):
+class DisplayLabel(StringInputWidget):
     def __init__(self, parent=None):
         super(DisplayLabel, self).__init__(parent)
-        self.setStyleSheet("color: rgba{rgba_text}".format(**iColor.style_sheet_args))
+        #self.setStyleSheet("color: rgba{rgba_text}".format(**iColor.style_sheet_args))
         self.setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
 
 # create tansu

@@ -88,6 +88,7 @@ class ModelViewWidget(TansuView):
         # setup style
         self.setIsSoloViewEnabled(False)
         self.not_soloable = True
+        self.setProperty('is_soloable', True)
 
     """ VIEW """
     def view(self):
