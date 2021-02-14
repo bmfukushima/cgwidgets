@@ -85,6 +85,8 @@ class TansuView(QSplitter):
         self.setHandleWidth(TansuView.HANDLE_WIDTH)
         self.setHandleLength(-1)
 
+        #self.updateStyleSheet()
+
     """ UTILS """
     def displayAllWidgets(self, value):
         """
@@ -182,6 +184,7 @@ class TansuView(QSplitter):
             #updateStyleSheet(obj)
         elif event.type() == QEvent.Leave:
             obj.setProperty("hover_display", False)
+
         # elif event.type() == QEvent.FocusIn:
         #     obj.setProperty("hover_display", False)
             #updateStyleSheet(obj)
@@ -204,11 +207,12 @@ class TansuView(QSplitter):
             widget_pressed = qApp.widgetAt(pos)
 
             # bypass handles
-            # toggle solo view ( tansu view )
             if isinstance(widget_pressed, QSplitterHandle):
-                #self.toggleIsSoloView(True, widget=self)
                 return
+
+            # Press solo view hotkey
             widget_soloable = self.getFirstSoloableWidget(widget_pressed)
+            # toggle solo view ( tansu view )
             if event.modifiers() == Qt.AltModifier:
                 if widget_soloable.parent():
                     self.toggleIsSoloView(True, widget=widget_soloable.parent())
@@ -250,7 +254,7 @@ class TansuView(QSplitter):
         else:
             self.setChildSoloable(self.isSoloViewEnabled(), widget)
 
-        # widget.setProperty("hover_display", False)
+        widget.setProperty("hover_display", True)
         widget.installEventFilter(self)
         installHoverDisplaySS(widget)
         # style_sheet_args = iColor.style_sheet_args
@@ -314,8 +318,10 @@ class TansuView(QSplitter):
         if enabled:
             if hasattr(child, "not_soloable"):
                 delattr(child, "not_soloable")
+            child.setProperty("hover_display", True)
         else:
             child.not_soloable = True
+            child.setProperty("hover_display", False)
         child.setProperty('is_soloable', enabled)
 
     def isSoloViewEnabled(self):
@@ -341,7 +347,6 @@ class TansuView(QSplitter):
         tansu_widget._is_solo_view = _is_solo_view
         tansu_widget.setProperty('is_solo_view', _is_solo_view)
         updateStyleSheet(tansu_widget)
-        #print('setting is solo ', _is_solo_view)
 
     def toggleIsSoloView(self, is_solo_view, widget=None):
         """
@@ -490,6 +495,9 @@ class TansuView(QSplitter):
         Args:
             color (rgba): color to display when not hovering over handle
             hover_color (rgba): color to display when hover over handle
+
+        ToDo: Style display bug
+            Since this isnt resizing the handle sizes wont update anymore...
         """
 
         style_sheet_args = iColor.style_sheet_args
@@ -516,12 +524,18 @@ class TansuView(QSplitter):
                 border: 2px dotted rgba{rgba_flag}; 
             }}
 
-        /* HANDLE ;*/
+        /* HANDLE */
             {splitter_handle_ss}
         """.format(
             **style_sheet_args,
             splitter_handle_ss=splitter_handle_ss.format(**style_sheet_args)
         )
+
+        for child in self.children():
+            if child.property("is_soloable"):
+                child.setProperty("hover_display", True)
+            else:
+                child.setProperty("hover_display", False)
 
         self.setStyleSheet(style_sheet)
 

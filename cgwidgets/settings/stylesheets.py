@@ -13,8 +13,6 @@ Note:
 from .colors import iColor
 #from colors import iColor
 
-
-
 def createRadialGradientSS(radius, center_radius, focal_radius, stops):
     """
 
@@ -137,14 +135,13 @@ def installHoverDisplaySS(widget, hover_type=None, hover_type_flag={}):
     # }}
     style_sheet = """
     {widget_style_sheet}
-
-    {type}:focus{{
+    {type}:focus[hover_display=true]{{
         background: rgba(255,0,0,255);
         }}
     {type}::hover[hover_display=true]{{
         background: rgba(0,255,0,255);
         }}
-    {type}::hover:focus{{
+    {type}::hover:focus[hover_display=true]{{
             background: rgba(0,0,255,255);
     }}
     """.format(**style_sheet_args)
@@ -171,7 +168,7 @@ input_widget_ss ="""
     {{type}}:focus{{{{
         background: {background_hover_radial}
         }}}}
-    {{type}}::hover[hover_display=true]{{{{
+    {{type}}::hover{{{{
         background: {background_select_hover_radial}
         }}}}
     {{type}}::hover:focus{{{{
