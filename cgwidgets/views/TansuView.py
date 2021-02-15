@@ -11,12 +11,8 @@ from qtpy.QtCore import Qt, QEvent
 from qtpy.QtGui import QCursor
 
 from cgwidgets.settings.colors import iColor
-from cgwidgets.settings.stylesheets import (
-    splitter_handle_ss,
-    background_select_hover_radial,
-    background_hover_radial,
-    installHoverDisplaySS
-)
+from cgwidgets.settings.stylesheets import (splitter_handle_ss)
+from cgwidgets.settings.hover_display import installHoverDisplaySS, BACKGROUND_00, BORDER_00
 
 from cgwidgets.utils import updateStyleSheet
 
@@ -182,8 +178,13 @@ class TansuView(QSplitter):
         if event.type() == QEvent.Enter:
             obj.setProperty("hover_display", True)
             #updateStyleSheet(obj)
-        elif event.type() == QEvent.Leave:
+        if event.type() == QEvent.Leave:
             obj.setProperty("hover_display", False)
+
+        if event.type() == QEvent.FocusIn:
+            obj.setProperty("is_focused", True)
+        if event.type() == QEvent.FocusOut:
+            obj.setProperty("is_focused", False)
 
         # elif event.type() == QEvent.FocusIn:
         #     obj.setProperty("hover_display", False)
@@ -254,35 +255,26 @@ class TansuView(QSplitter):
         else:
             self.setChildSoloable(self.isSoloViewEnabled(), widget)
 
-        widget.setProperty("hover_display", True)
+        #widget.setProperty("is_focused", True)
         widget.installEventFilter(self)
-        installHoverDisplaySS(widget)
-        # style_sheet_args = iColor.style_sheet_args
-        # style_sheet_args.update({
-        #     'widget_style_sheet': widget.styleSheet(),
-        #     'type': type(widget).__name__,
-        #     "rgba_selected_hover": iColor["rgba_selected_hover"],
-        #     "rgba_selected_background":iColor["rgba_selected_background"]
-        # })
-        # new_ss = """
-        #     {widget_style_sheet}
-        #     /* Hover Focus */
-        #     {type}::hover[hover_display=true][is_soloable=true]{{
-        #         border: 3px dotted rgba{rgba_selected_hover};
-        #     }}
-        #     /* Selected Focus */
-        #     /*
-        #     {type}:focus[is_soloable=true]{{
-        #         border: 3px dotted rgba{rgba_selected_background};
-        #     }}
-        #
-        #     {type}::hover:focus[hover_display=true][is_soloable=true]{{
-        #         border: 3px dotted rgba{rgba_selected_background};
-        #     }}
-        #     */
-        # """.format(**style_sheet_args)
-        #
-        # widget.setStyleSheet(new_ss)
+        # hover_type_flags = {
+        #     'focus':{'is_soloable':True, 'is_focused':True},
+        #     'hover_focus':{'is_soloable':True, 'is_focused':True},
+        #     'hover':{'is_soloable':True, 'is_focused':False},
+        # }
+        hover_type_flags = {
+            'focus':{'hover_display':True},
+            'hover_focus':{'hover_display':True},
+            'hover':{'hover_display':True},
+        }
+        installHoverDisplaySS(
+            widget,
+            hover_type=BORDER_00,
+            hover_focus_type=BACKGROUND_00,
+            focus_type=BACKGROUND_00,
+            hover_type_flags=hover_type_flags)
+        print("=======")
+        print(widget.styleSheet())
         return QSplitter.addWidget(self, widget)
 
     def insertWidget(self, index, widget, is_soloable=None):
@@ -531,6 +523,7 @@ class TansuView(QSplitter):
             splitter_handle_ss=splitter_handle_ss.format(**style_sheet_args)
         )
 
+        # update hover display property
         for child in self.children():
             if child.property("is_soloable"):
                 child.setProperty("hover_display", True)

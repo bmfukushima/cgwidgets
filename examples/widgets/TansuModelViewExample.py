@@ -60,7 +60,7 @@ from qtpy.QtGui import QCursor
 
 from cgwidgets.widgets import (
     TansuModelViewWidget, TansuModelItem, TansuModel,
-    ModelViewWidget, FloatInputWidget, LabelledInputWidget)
+    ModelViewWidget, FloatInputWidget, LabelledInputWidget, StringInputWidget)
 from cgwidgets.views import TansuView, AbstractDragDropListView, AbstractDragDropTreeView
 from cgwidgets.utils import attrs
 
@@ -126,7 +126,7 @@ def setupAsStacked():
 
     tansu_delegate = TansuView()
     for char in 'SINE.':
-        tansu_delegate.addWidget(QLineEdit(char))
+        tansu_delegate.addWidget(StringInputWidget(char))
     tansu_delegate_item = tansu_widget.insertTansuWidget(0, column_data={'name' : '<title> tansu'}, widget=tansu_delegate)
 
     # insert child tabs
