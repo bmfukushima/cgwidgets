@@ -255,26 +255,20 @@ class TansuView(QSplitter):
         else:
             self.setChildSoloable(self.isSoloViewEnabled(), widget)
 
-        #widget.setProperty("is_focused", True)
         widget.installEventFilter(self)
-        # hover_type_flags = {
-        #     'focus':{'is_soloable':True, 'is_focused':True},
-        #     'hover_focus':{'is_soloable':True, 'is_focused':True},
-        #     'hover':{'is_soloable':True, 'is_focused':False},
-        # }
         hover_type_flags = {
             'focus':{'hover_display':True},
             'hover_focus':{'hover_display':True},
             'hover':{'hover_display':True},
         }
+
         installHoverDisplaySS(
             widget,
             hover_type=BORDER_00,
             hover_focus_type=BACKGROUND_00,
             focus_type=BACKGROUND_00,
             hover_type_flags=hover_type_flags)
-        print("=======")
-        print(widget.styleSheet())
+
         return QSplitter.addWidget(self, widget)
 
     def insertWidget(self, index, widget, is_soloable=None):

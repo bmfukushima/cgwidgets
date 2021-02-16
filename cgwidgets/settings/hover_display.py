@@ -1,10 +1,21 @@
+"""
+This file contains the contents for creating a hover display on a widget.
+
+This style sheet can be installed on any widget using the "installHoverDisplaySS()" method.
+
+Different hover display options are available using the "HoverStyleSheet" class.
+This class must be instantiated first, and then set the focus/hover/hover focus
+portions of the style sheet.  Please note that these portions will automagically
+be wrapped like:
+    {type}:focus{focus_properties}{{
+                {focus_ss}
+    }}
+"""
+
 from .colors import iColor
 from .stylesheets import convertDictToCSSFlags, background_radial
 
-# BORDER_00 = 0
-# BACKGROUND_00 = 1
-
-""" GET SS ARGS"""
+""" UTILS """
 def compileSSArgs(widget, hover_type_flags, hover_type, focus_type, hover_focus_type):
     """
     Compiles a dictionary for all of the kwargs that will be used in the Style Sheet.
@@ -37,16 +48,16 @@ def compileSSArgs(widget, hover_type_flags, hover_type, focus_type, hover_focus_
         "rgba_selected_hover": iColor["rgba_selected_hover"],
         "rgba_selected_background": iColor["rgba_selected_background"],
         "background_hover_radial": background_radial.format(
-            rgba_background=iColor["rgba_gray_2"],
-            rgba_background_2=iColor["rgba_selected_hover"]),
+            rgba_background=iColor["rgba_background"],
+            rgba_background_2=iColor["rgba_selected_background"]),
         "background_cancel_radial":background_radial.format(
-            rgba_background=iColor["rgba_gray_2"],
-            rgba_background_2=iColor["rgba_selected_hover"]),
+            rgba_background=iColor["rgba_background"],
+            rgba_background_2=iColor["rgba_cancel"]),
         "background_accept_radial":background_radial.format(
-            rgba_background=iColor["rgba_gray_2"],
-            rgba_background_2=iColor["rgba_selected_hover"]),
+            rgba_background=iColor["rgba_background"],
+            rgba_background_2=iColor["rgba_accept"]),
         "background_select_hover_radial":background_radial.format(
-            rgba_background=iColor["rgba_gray_2"],
+            rgba_background=iColor["rgba_background"],
             rgba_background_2=iColor["rgba_selected_hover"])
     })
 
@@ -60,9 +71,6 @@ def compileSSArgs(widget, hover_type_flags, hover_type, focus_type, hover_focus_
 
     return style_sheet_args
 
-""" STYLE SHEET UTILS """
-
-""" CREATE STYLE SHEETS """
 class HoverStyleSheet(object):
     def __init__(self, name):
         """
@@ -149,6 +157,7 @@ class HoverStyleSheet(object):
         """
         self._focusSS = focusSS
 
+""" CREATE STYLE SHEETS """
 TEST = HoverStyleSheet("TEST")
 TEST.setFocusSS("""background: rgba(255,0,0,255);""")
 TEST.setHoverSS("""background: rgba(0,255,0,255);""")
@@ -165,106 +174,13 @@ BACKGROUND_00.setFocusSS("""
     background: {background_hover_radial};""")
 BACKGROUND_00.setHoverSS("""
     border: 6px dotted rgba{rgba_invisible};
-    background: {background_select_hover_radial}""")
+    background: {background_select_hover_radial};""")
 BACKGROUND_00.setHoverFocusSS("""
     border: 6px dotted rgba{rgba_invisible};
     background: {background_hover_radial};""")
 
 
 """ CREATE MAIN STYLE SHEET """
-def createHoverSS(style_sheet, style_sheet_args, hover_type):
-    """
-    Creates a style sheet for when the cursor is hovering over a widget
-    Args:
-        style_sheet (string): current style sheet
-        style_sheet_args (dict): of kwargs
-        hover_type (hover_display.TYPE):
-
-    Returns (styleSheet):
-
-    """
-
-    """
-    {type}::hover{hover_focus_properties}{{
-        {hover_ss}
-    }}
-    """.format(**style_sheet_args)
-
-    # if hover_type == BORDER_00:
-    #     style_sheet = """
-    #     {type}::hover{hover_focus_properties}{{
-    #         border: 6px dotted rgba{rgba_background};
-    #     }}
-    #     """.format(**style_sheet_args)
-    #
-    # if hover_type == BACKGROUND_00:
-    #     style_sheet = """
-    #     {type}::hover{hover_focus_properties}{{
-    #         border: 6px dotted rgba{rgba_invisible};
-    #         background: {background_select_hover_radial}
-    #     }}
-    #     """.format(**style_sheet_args)
-
-    return style_sheet
-
-
-def createHoverFocusSS(style_sheet, style_sheet_args, hover_focus_type):
-    """
-    Creates a style sheet for when the cursor is hovering over a widget
-    Args:
-        style_sheet (string): current style sheet
-        style_sheet_args (dict): of kwargs
-        hover_type (hover_display.TYPE):
-
-    Returns (styleSheet):
-
-    """
-    if hover_focus_type == BORDER_00:
-        style_sheet = """
-        {type}:hover:focus{hover_focus_properties}{{
-            border: 6px dotted rgba{rgba_invisible};
-        }}
-        """.format(**style_sheet_args)
-    if hover_focus_type == BACKGROUND_00:
-        style_sheet = """
-        {type}:hover:focus{hover_focus_properties}{{
-            border: 6px dotted rgba{rgba_invisible};
-            background: {background_hover_radial};
-        }}
-        """.format(**style_sheet_args)
-
-    return style_sheet
-
-
-def createFocusSS(style_sheet, style_sheet_args, hover_focus_type):
-    """
-    Creates a style sheet for when the cursor is hovering over a widget
-    Args:
-        style_sheet (string): current style sheet
-        style_sheet_args (dict): of kwargs
-        hover_type (hover_display.TYPE):
-
-    Returns (styleSheet):
-
-    """
-    if hover_focus_type == BORDER_00:
-        style_sheet = """
-        {type}:focus{focus_properties}{{
-            border: 6px dotted rgba{rgba_invisible};
-        }}
-    """.format(**style_sheet_args)
-
-    if hover_focus_type == BACKGROUND_00:
-        style_sheet = """
-        {type}:focus{focus_properties}{{
-            border: 6px dotted rgba{rgba_invisible};
-            background: {background_hover_radial};
-        }}
-        """
-
-    return style_sheet
-
-
 def installHoverDisplaySS(
         widget,
         hover_type=TEST,

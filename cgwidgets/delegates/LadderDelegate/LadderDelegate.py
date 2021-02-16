@@ -331,8 +331,8 @@ Notes:
         }
 
         style_sheet_args.update(update_kwargs)
-        #                 background-color: rgba{rgba_gray_2}
 
+        #
         style_sheet = """
         LadderDelegate{{
             background-color: rgba{rgba_gray_2};
@@ -347,7 +347,7 @@ Notes:
                 radius: 0.9,
                 cx:0.50, cy:0.50,
                 fx:0.5, fy:0.5,
-                stop:0.5 rgba{rgba_background},
+                stop:0.5 rgba{rgba_gray_2},
                 stop:0.75 rgba{rgba_selected_hover});
         }}
         LadderItem[is_drag_STICKY=true]{{
@@ -355,7 +355,7 @@ Notes:
                 radius: 0.9,
                 cx:0.50, cy:0.50,
                 fx:0.5, fy:0.5,
-                stop:0.5 rgba{rgba_background},
+                stop:0.5 rgba{rgba_gray_2},
                 stop:0.75 rgba{rgba_selected_hover});
         }}
         LadderItem[gradient_on=true]{{background: qlineargradient(

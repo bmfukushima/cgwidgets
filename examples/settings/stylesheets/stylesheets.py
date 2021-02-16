@@ -2,14 +2,14 @@ from qtpy.QtWidgets import QLabel, QWidget, QHBoxLayout
 from qtpy.QtCore import Qt
 
 from cgwidgets.settings.colors import iColor
-from cgwidgets.settings import stylesheets
+from cgwidgets.settings import stylesheets, hover_display
 from cgwidgets.widgets import LabelledInputWidget, FloatInputWidget, TansuGroupInputWidget, FrameGroupInputWidget
 from cgwidgets.views import TansuView
 from cgwidgets.utils import getWidgetAncestor
 
 if __name__ == "__main__":
     import sys
-    from qtpy.QtWidgets import QApplication, QSplitter
+    from qtpy.QtWidgets import QApplication, QSplitter, QLineEdit
     from qtpy.QtGui import QCursor
     app = QApplication(sys.argv)
 
@@ -123,6 +123,19 @@ if __name__ == "__main__":
     proxy_widget.show()
     proxy_widget.move(QCursor.pos())
 
+
+    # widget = QLineEdit("Test")
+    # hover_display.installHoverDisplaySS(
+    #     widget,
+    #     hover_type=hover_display.TEST,
+    #     focus_type=hover_display.TEST,
+    #     hover_focus_type=hover_display.TEST,
+    #     focus=True,
+    #     hover=True,
+    #     hover_focus=True,
+    #     hover_type_flags={'focus':{}, 'hover_focus':{}, 'hover':{}})
+    #
+    # widget.show()
     sys.exit(app.exec_())
 
 # a = """ {{{test}}}""".format(test="yolo")

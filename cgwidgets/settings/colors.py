@@ -41,8 +41,10 @@ class Colors(dict):
         createColorRange("rgba_cyan", (start_color * 0.5, start_color, start_color, 255), self, num_colors, desaturate=False)
         createColorRange("rgba_magenta", (start_color, start_color * 0.5, start_color * 0.5, 255), self, num_colors, desaturate=False)
         """ COLOR REFERENCES"""
-        """ outline """
+        """ background """
+        self["rgba_background"] = self["rgba_gray_1"]
 
+        """ outline """
         self["rgba_outline"] = self["rgba_blue_6"]
         self["rgba_outline_hover"] = self["rgba_blue_7"]
 
