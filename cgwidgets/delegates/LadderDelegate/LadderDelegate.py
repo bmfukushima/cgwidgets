@@ -136,8 +136,8 @@ Notes:
 
         # setup default colors
         self.rgba_selection = iColor["rgba_selected_hover"]
-        self.rgba_bg_slide = iColor["rgba_gray_2"]
-        self.rgba_fg_slide = iColor["rgba_gray_3"]
+        self.rgba_bg_slide = iColor["rgba_background_00"]
+        self.rgba_fg_slide = iColor["rgba_background_01"]
 
         # create items
         self.middle_item_index = int(len(value_list) * 0.5)
@@ -335,19 +335,19 @@ Notes:
         #
         style_sheet = """
         LadderDelegate{{
-            background-color: rgba{rgba_gray_2};
+            background-color: rgba{rgba_background_00};
             border: 1px solid rgba{rgba_outline}
         }}
         LadderItem{{
             color: rgba{rgba_text};
-            background-color: rgba{rgba_gray_2}
+            background-color: rgba{rgba_background_00}
         }}
         LadderItem::hover[is_drag_STICKY=false]{{
             background: qradialgradient(
                 radius: 0.9,
                 cx:0.50, cy:0.50,
                 fx:0.5, fy:0.5,
-                stop:0.5 rgba{rgba_gray_2},
+                stop:0.5 rgba{rgba_background_00},
                 stop:0.75 rgba{rgba_selected_hover});
         }}
         LadderItem[is_drag_STICKY=true]{{
@@ -355,7 +355,7 @@ Notes:
                 radius: 0.9,
                 cx:0.50, cy:0.50,
                 fx:0.5, fy:0.5,
-                stop:0.5 rgba{rgba_gray_2},
+                stop:0.5 rgba{rgba_background_00},
                 stop:0.75 rgba{rgba_selected_hover});
         }}
         LadderItem[gradient_on=true]{{background: qlineargradient(
@@ -691,7 +691,7 @@ Attributes:
         self.setValue(value)
         self.editingFinished.connect(self.setMiddleValue)
         self.setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
-        self.rgba_background = iColor["rgba_gray_4"]
+        self.rgba_background = iColor["rgba_background_01"]
         self.updateStyleSheet()
         # self.setStyleSheet(
         #     """

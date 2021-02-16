@@ -20,7 +20,7 @@ class CompleterPopup(QListView):
         style_sheet = """
         CompleterPopup{{
             border: 1px solid rgba{rgba_outline};
-            background-color: rgba{rgba_gray_2};
+            background-color: rgba{rgba_background_00};
             color: rgba{rgba_text};
         }}
         CompleterPopup::item:selected{{
@@ -29,7 +29,7 @@ class CompleterPopup(QListView):
         }}
         CompleterPopup::item{{
             border: None ;
-            background-color: rgba{rgba_gray_2};
+            background-color: rgba{rgba_background_00};
             color: rgba{rgba_text};
         }}
         CompleterPopup::item:hover{{color: rgba{rgba_selected_hover}}}

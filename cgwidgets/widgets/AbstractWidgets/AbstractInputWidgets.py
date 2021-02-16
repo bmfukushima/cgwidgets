@@ -54,7 +54,7 @@ class iAbstractInputWidget(object):
 
         # set up style
         self.rgba_border = iColor["rgba_outline"]
-        self.rgba_background = iColor["rgba_gray_2"]
+        self.rgba_background = iColor["rgba_background_00"]
         self.rgba_text = iColor["rgba_text"]
         self.rgba_selected_hover = iColor["rgba_selected_hover"]
 
@@ -467,14 +467,14 @@ class AbstractLabelInputWidget(AbstractStringInputWidget):
         style_sheet = """
         /* MAIN */
         AbstractLabelInputWidget{{
-            border: 1px solid rgba{rgba_gray_2};
-            background-color: rgba{rgba_gray_2};
+            border: 1px solid rgba{rgba_background_00};
+            background-color: rgba{rgba_background_00};
             color: rgba{rgba_text};
             selection-background-color: rgba{rgba_selected};
         }}
         /* Border if widget can be editted */
         AbstractLabelInputWidget[editable=true]{{
-            border: 1px solid rgba{rgba_gray_3};
+            border: 1px solid rgba{rgba_background_01};
         }}
         /* Border during edit operation */
         AbstractLabelInputWidget[readonly=false]{{

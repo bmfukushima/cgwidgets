@@ -180,14 +180,11 @@ class AbstractComboListInputWidget(QComboBox):
         dropdown_width = int(width * 0.35)
         style_sheet_args = iColor.style_sheet_args
         style_sheet_args['width'] = dropdown_width
-        # QComboBox {{
-        #     border: None;
-        #     background-color: rgba{rgba_gray_2}
-        # }}
+
         style_sheet = """
             QComboBox{{
                 border: None;
-                background-color: rgba{rgba_gray_2};
+                background-color: rgba{rgba_background_00};
                 color: rgba{rgba_text};
             }}
             QComboBox::drop-down {{
@@ -195,12 +192,12 @@ class AbstractComboListInputWidget(QComboBox):
             }}
             QLineEdit{{
                 border: None;
-                background-color: rgba{rgba_gray_2};
+                background-color: rgba{rgba_background_00};
                 color: rgba{rgba_text};
             }}
             QListView{{
                 border: None;
-                background-color: rgba{rgba_gray_2};
+                background-color: rgba{rgba_background_00};
                 color: rgba{rgba_text};
             }}
             QListView::item:hover{{
@@ -211,7 +208,7 @@ class AbstractComboListInputWidget(QComboBox):
         self.completer.popup().setStyleSheet("""
             QListView{{
                 border: None;
-                background-color: rgba{rgba_gray_2};
+                background-color: rgba{rgba_background_00};
                 color: rgba{rgba_text};
             }}
             QListView::item:hover{{
@@ -395,25 +392,6 @@ class AbstractListInputWidget(AbstractStringInputWidget):
         setCleanItemsFunction
         """
         return self.__getCleanItems()
-
-    # """ Style Sheet"""
-    # def updateStyleSheet(self):
-    #     style_sheet_args = iColor.style_sheet_args
-    #     style_sheet_args.update({
-    #         'type': type(self).__name__
-    #     })
-    #
-    #     style_sheet = """
-    #     {type}{{
-    #         border:None;
-    #         background-color: rgba{rgba_gray_2};
-    #         selection-background-color: rgba{rgba_selected};
-    #         color: rgba{rgba_text}
-    #     }}
-    #
-    #     """.format(**style_sheet_args)
-    #
-    #     self.setStyleSheet(style_sheet)
 
     """ COMPLETER """
     def _updateModel(self, item_list=None):
@@ -616,7 +594,7 @@ class CustomModel(QAbstractListModel):
             try:
                 color = QColor(*self.item_list[index.row()][1])
             except IndexError:
-                color = QColor(*iColor["rgba_gray_2"])
+                color = QColor(*iColor["rgba_background_00"])
 
             # create pixmap/icon
             pixmap = QPixmap(int(getFontSize(QApplication) * 2), int(getFontSize(QApplication) * 0.5))

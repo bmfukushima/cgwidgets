@@ -5,8 +5,11 @@ TODO:
             TansuView --> TansuViewer --> LabelledInputWidget --> Ladder
             The invisible drag on the ladder for some reason gets bricked, and the invisible
             widget is displayed as a giant black square...
-        Default Size... Labelled input wigdet
-            This is always broken =\
+    CLEANUP:
+        settings
+            import settings.module
+                or
+            from settings import thingy
 
 * All imports...
     need to register to import from cgwidgets.

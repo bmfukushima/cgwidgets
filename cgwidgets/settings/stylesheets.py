@@ -48,7 +48,7 @@ qradialgradient(
             radius: 0.9,
             cx:0.50, cy:0.50,
             fx:0.5, fy:0.5,
-            stop:0.5 rgba{rgba_background},
+            stop:0.5 rgba{rgba_background_00},
             stop:0.75 rgba{rgba_background_2})
 """
 
@@ -57,7 +57,7 @@ qradialgradient(
             radius: 0.9,
             cx:0.50, cy:0.50,
             fx:0.5, fy:0.5,
-            stop:0.5 rgba{rgba_background},
+            stop:0.5 rgba{rgba_background_00},
             stop:0.75 rgba{rgba_selected_background});
 """
 background_accept_radial = """
@@ -65,7 +65,7 @@ qradialgradient(
             radius: 0.9,
             cx:0.50, cy:0.50,
             fx:0.5, fy:0.5,
-            stop:0.5 rgba{rgba_background},
+            stop:0.5 rgba{rgba_background_00},
             stop:0.75 rgba{rgba_accept});
 """
 background_cancel_radial = """
@@ -73,7 +73,7 @@ qradialgradient(
             radius: 0.9,
             cx:0.50, cy:0.50,
             fx:0.5, fy:0.5,
-            stop:0.5 rgba{rgba_background},
+            stop:0.5 rgba{rgba_background_00},
             stop:0.75 rgba{rgba_cancel});
 """
 background_select_hover_radial = """
@@ -81,7 +81,7 @@ qradialgradient(
             radius: 0.9,
             cx:0.50, cy:0.50,
             fx:0.5, fy:0.5,
-            stop:0.5 rgba{rgba_background},
+            stop:0.5 rgba{rgba_background_00},
             stop:0.75 rgba{rgba_selected_hover});
 """
 

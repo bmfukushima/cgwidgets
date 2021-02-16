@@ -56,13 +56,13 @@ class AbstractDragDropAbstractView(object):
         # header
         base_header_style_sheet = """
                 QHeaderView::section {{
-                    background-color: rgba{rgba_gray_2};
+                    background-color: rgba{rgba_background_00};
                     color: rgba{rgba_text};
                     border: {outline_width}px solid rgba{rgba_outline};
                 }}
                 {type}{{
                     border:None;
-                    background-color: rgba{rgba_gray_2};
+                    background-color: rgba{rgba_background_00};
                     selection-background-color: rgba{rgba_invisible};
                 }}
                     """.format(**style_sheet_args)
@@ -70,7 +70,7 @@ class AbstractDragDropAbstractView(object):
         # item style snippets ( so it can be combined later...)
         style_sheet_args['item_snippet'] = """
                     border: {outline_width}px solid rgba{rgba_black};
-                    background-color: rgba{rgba_gray_2};
+                    background-color: rgba{rgba_background_00};
                 """.format(**style_sheet_args)
         style_sheet_args['item_selected_snippet'] = """
                     border: {outline_width}px solid rgba{rgba_selected};
@@ -220,6 +220,10 @@ class AbstractDragDropAbstractView(object):
         for index in deselected.indexes():
             item = index.internalPointer()
             self.model().itemSelectedEvent(item, False, column=index.column())
+
+    def enterEvent(self, event):
+        self.setFocus()
+        return QAbstractItemView.enterEvent(self, event)
 
     def keyPressEvent(self, event):
 
@@ -390,7 +394,7 @@ class AbstractDragDropTreeView(QTreeView, AbstractDragDropAbstractView):
         """
         style_sheet = """
         QHeaderView::section {{
-            background-color: rgba{rgba_gray_2};
+            background-color: rgba{rgba_background_00};
             color: rgba{rgba_text};
             border: {outline_width}px solid rgba{rgba_black};
         }}

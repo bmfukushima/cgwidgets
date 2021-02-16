@@ -48,16 +48,16 @@ def compileSSArgs(widget, hover_type_flags, hover_type, focus_type, hover_focus_
         "rgba_selected_hover": iColor["rgba_selected_hover"],
         "rgba_selected_background": iColor["rgba_selected_background"],
         "background_hover_radial": background_radial.format(
-            rgba_background=iColor["rgba_background"],
+            rgba_background_00=iColor["rgba_background_00"],
             rgba_background_2=iColor["rgba_selected_background"]),
         "background_cancel_radial":background_radial.format(
-            rgba_background=iColor["rgba_background"],
+            rgba_background_00=iColor["rgba_background_00"],
             rgba_background_2=iColor["rgba_cancel"]),
         "background_accept_radial":background_radial.format(
-            rgba_background=iColor["rgba_background"],
+            rgba_background_00=iColor["rgba_background_00"],
             rgba_background_2=iColor["rgba_accept"]),
         "background_select_hover_radial":background_radial.format(
-            rgba_background=iColor["rgba_background"],
+            rgba_background_00=iColor["rgba_background_00"],
             rgba_background_2=iColor["rgba_selected_hover"])
     })
 
@@ -164,9 +164,9 @@ TEST.setHoverSS("""background: rgba(0,255,0,255);""")
 TEST.setHoverFocusSS("""background: rgba(0,0,255,255);""")
 
 BORDER_00 = HoverStyleSheet("BORDER_00")
-BORDER_00.setFocusSS("""border: 6px dotted rgba{rgba_invisible};""")
-BORDER_00.setHoverSS("""border: 6px dotted rgba{rgba_background};""")
-BORDER_00.setHoverFocusSS("""border: 6px dotted rgba{rgba_invisible};""")
+BORDER_00.setFocusSS("""border: 6px dotted rgba{rgba_background_00};""")
+BORDER_00.setHoverSS("""border: 6px dotted rgba{rgba_background_00};""")
+BORDER_00.setHoverFocusSS("""border: 6px dotted rgba{rgba_background_00};""")
 
 BACKGROUND_00 = HoverStyleSheet("BACKGROUND_00")
 BACKGROUND_00.setFocusSS("""

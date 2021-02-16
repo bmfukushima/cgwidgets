@@ -89,18 +89,6 @@ class TansuModel(AbstractDragDropModel):
         #self._header_type = ''
         self.setItemType(TansuModelItem)
 
-    # def dropMimeData(self, data, action, row, column, parent):
-    #     return_val = super(TansuModel, self).dropMimeData(data, action, row, column, parent)
-    #     self.selectionModel().clearSelection()
-    #     return return_val
-    # @property
-    # def header_type(self):
-    #     return self._header_type
-    #
-    # @header_type.setter
-    # def header_type(self, _header_type):
-    #     self._header_type = _header_type
-
 
 if __name__ == '__main__':
     from qtpy.QtWidgets import (

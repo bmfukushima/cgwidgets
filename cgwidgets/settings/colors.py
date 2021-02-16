@@ -42,16 +42,17 @@ class Colors(dict):
         createColorRange("rgba_magenta", (start_color, start_color * 0.5, start_color * 0.5, 255), self, num_colors, desaturate=False)
         """ COLOR REFERENCES"""
         """ background """
-        self["rgba_background"] = self["rgba_gray_1"]
+        self["rgba_background_00"] = self["rgba_gray_2"]
+        self["rgba_background_01"] = self["rgba_gray_3"]
 
         """ outline """
         self["rgba_outline"] = self["rgba_blue_6"]
         self["rgba_outline_hover"] = self["rgba_blue_7"]
 
         """ text """
-        self["rgba_text"] = self["rgba_gray_6"]
+        self["rgba_text"] = self["rgba_gray_7"]
         self["rgba_text_disabled"] = Colors.multiplyRGBAValues(self["rgba_text"], golden_ratio=False, alpha=255)
-        self["rgba_text_hover"] = Colors.multiplyRGBAValues(self["rgba_text"], golden_ratio=True)
+        self["rgba_text_hover"] = self["rgba_cyan_7"]
 
         """ hover / select"""
         self["rgba_selected_background"] = self["rgba_cyan_5"]
@@ -87,7 +88,7 @@ class Colors(dict):
 
         args = {
             'type': type(current_instance).__name__,
-            'rgba_background': iColor['rgba_gray_2'],
+            'rgba_background': iColor['rgba_background_00'],
             'rgba_text': iColor['rgba_text'],
             'additional_args': ''
         }
@@ -95,7 +96,7 @@ class Colors(dict):
         args.update(updated_args)
         default_style_sheet = """
         {type}{{
-                background-color: rgba{rgba_background};
+                background-color: rgba{rgba_background_00};
                 color: rgba{rgba_text};
                 border: None;}}
         {additional_args}

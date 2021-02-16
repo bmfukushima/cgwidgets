@@ -72,7 +72,8 @@ app = QApplication(sys.argv)
 tansu_widget = TansuModelViewWidget()
 
 # SETUP VIEW
-tansu_widget.setHeaderViewType(ModelViewWidget.TREE_VIEW)
+#tansu_widget.setHeaderViewType(ModelViewWidget.TREE_VIEW)
+tansu_widget.setHeaderViewType(ModelViewWidget.LIST_VIEW)
 
 # CUSTOM VIEW
 def setupCustomView():

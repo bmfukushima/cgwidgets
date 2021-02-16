@@ -34,6 +34,7 @@ def testDelegateToggle(event, widget, enabled):
 
 # create main Model View Widget
 main_widget = ModelViewWidget()
+main_widget.setViewType(ModelViewWidget.TREE_VIEW)
 
 # create delegates
 delegate_widget = QLabel("F")

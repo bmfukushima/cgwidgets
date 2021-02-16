@@ -387,8 +387,6 @@ class LabelledInputWidget(TansuView, AbstractInputGroupFrame):
         self.resetSliderPositionToDefault()
 
         # setup style
-        #self.rgba_background = iColor['rgba_gray_2']
-
         self.splitterMoved.connect(self.__splitterMoved)
 
         self.setIsSoloViewEnabled(False)

@@ -59,7 +59,7 @@ class TansuView(QSplitter):
         self._rgba_handle = iColor["rgba_outline"]
         self._rgba_handle_hover = iColor["rgba_selected_hover"]
         self._rgba_flag = iColor["rgba_selected"]
-        self._rgba_background = iColor["rgba_gray_2"]
+        self._rgba_background = iColor["rgba_background_00"]
         self._rgba_text = iColor["rgba_text"]
 
         # set default attrs
@@ -175,20 +175,28 @@ class TansuView(QSplitter):
 
     """ EVENTS """
     def eventFilter(self, obj, event):
+        """
+        Events run on every child widget.
+
+        Handles the dynamic style sheet updates, and overrides
+        the solo view operator.
+
+        Args:
+            obj (QWidget):
+            event:
+        """
+        # hover properties
         if event.type() == QEvent.Enter:
             obj.setProperty("hover_display", True)
             #updateStyleSheet(obj)
         if event.type() == QEvent.Leave:
             obj.setProperty("hover_display", False)
 
-        if event.type() == QEvent.FocusIn:
-            obj.setProperty("is_focused", True)
-        if event.type() == QEvent.FocusOut:
-            obj.setProperty("is_focused", False)
+        if event.type() == QEvent.KeyPress:
+            if event.key() == self.soloViewHotkey():
+                self.keyPressEvent(event)
+                return True
 
-        # elif event.type() == QEvent.FocusIn:
-        #     obj.setProperty("hover_display", False)
-            #updateStyleSheet(obj)
         return QSplitter.eventFilter(self, obj, event)
 
     def enterEvent(self, event):
@@ -241,6 +249,28 @@ class TansuView(QSplitter):
         self.updateStyleSheet()
 
     """ WIDGETS """
+    def __installHoverDisplay(self, widget):
+        """
+        Installs the hover display mechanisn on child widgets
+        Args:
+            widget (QWidget): child to have hover display installed on.
+
+        Returns:
+
+        """
+        widget.installEventFilter(self)
+        hover_type_flags = {
+            'focus':{'hover_display':True},
+            'hover_focus':{'hover_display':True},
+            'hover':{'hover_display':True},
+        }
+        installHoverDisplaySS(
+            widget,
+            hover_type=BORDER_00,
+            hover_focus_type=BORDER_00,
+            focus_type=BORDER_00,
+            hover_type_flags=hover_type_flags)
+
     def isolateWidgets(self, widget_list):
         """
         Shows only the widgets provided to the widget list
@@ -249,25 +279,14 @@ class TansuView(QSplitter):
         for widget in widget_list:
             widget.show()
 
+    # good use case for a decorator?
     def addWidget(self, widget, is_soloable=None):
         if is_soloable is not None:
             self.setChildSoloable(is_soloable, widget)
         else:
             self.setChildSoloable(self.isSoloViewEnabled(), widget)
 
-        widget.installEventFilter(self)
-        hover_type_flags = {
-            'focus':{'hover_display':True},
-            'hover_focus':{'hover_display':True},
-            'hover':{'hover_display':True},
-        }
-
-        installHoverDisplaySS(
-            widget,
-            hover_type=BORDER_00,
-            hover_focus_type=BACKGROUND_00,
-            focus_type=BACKGROUND_00,
-            hover_type_flags=hover_type_flags)
+        self.__installHoverDisplay(widget)
 
         return QSplitter.addWidget(self, widget)
 
@@ -277,7 +296,8 @@ class TansuView(QSplitter):
         else:
             self.setChildSoloable(self.isSoloViewEnabled(), widget)
 
-        # widget.installEventFilter(self)
+        self.__installHoverDisplay(widget)
+
         return QSplitter.insertWidget(self, index, widget)
 
     """ SOLO VIEW """
