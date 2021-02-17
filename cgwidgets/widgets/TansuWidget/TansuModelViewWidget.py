@@ -729,6 +729,7 @@ class TansuMainDelegateWidget(TansuView):
             """
             pos = QCursor.pos()
             widget_pressed = qApp.widgetAt(pos)
+
             if isinstance(widget_pressed, TansuModelDelegateWidget):
                 return TansuView.keyPressEvent(self, event)
         else:
@@ -749,6 +750,29 @@ class TansuModelDelegateWidget(AbstractFrameGroupInputWidget):
         """.format(
             background_color=iColor["rgba_gray_3"]
         ))
+
+    # def enterEvent(self, event):
+    #     pos = QCursor.pos()
+    #     widget_pressed = qApp.widgetAt(pos)
+    #     if widget_pressed == self:
+    #         self.setFocus()
+    #     #print(widget_pressed)
+    #     return AbstractFrameGroupInputWidget.enterEvent(self, event)
+    #
+    # def keyPressEvent(self, event):
+    #     print("key press???")
+    #     print(self.parent())
+    #     if event.key() == self.parent().soloViewHotkey():
+    #         print ('tilda?')
+    #     return AbstractFrameGroupInputWidget.keyPressEvent(self, event)
+
+    # def focusInEvent(self, event):
+    #     print('focus!')
+    #     return AbstractFrameGroupInputWidget.focusInEvent(self, event)
+    #
+    # def focusOutEvent(self, event):
+    #     print('un focus =(')
+    #     return AbstractFrameGroupInputWidget.focusOutEvent(self, event)
 
     def setMainWidget(self, widget):
         # remove old main widget if it exists

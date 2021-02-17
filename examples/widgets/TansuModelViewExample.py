@@ -212,8 +212,8 @@ def setupAsDynamic():
     custom_index.internalPointer().setDynamicWidgetBaseClass(DynamicItemExample)
     custom_index.internalPointer().setDynamicUpdateFunction(DynamicItemExample.updateGUI)
 
-setupAsStacked()
-#setupAsDynamic()
+#setupAsStacked()
+setupAsDynamic()
 
 # SET FLAGSLabelledInputWidget
 tansu_widget.setMultiSelect(True)

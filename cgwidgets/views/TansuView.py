@@ -174,6 +174,34 @@ class TansuView(QSplitter):
             return widget
 
     """ EVENTS """
+    def __soloViewHotkeyPressed(self, event):
+        """
+        Helper function for when the "soloViewHotkey()" is pressed.
+
+        This provides the primary functionality for when the user presses the
+        hotkey to go into solo view on a widget.
+
+        Args:
+            event (QEvent): Key press event
+        """
+        # preflight
+        pos = QCursor.pos()
+        widget_pressed = qApp.widgetAt(pos)
+
+        # bypass handles
+        if isinstance(widget_pressed, QSplitterHandle):
+            return
+
+        # Press solo view hotkey
+        widget_soloable = self.getFirstSoloableWidget(widget_pressed)
+        # toggle solo view ( tansu view )
+        if event.modifiers() == Qt.AltModifier:
+            if widget_soloable.parent():
+                self.toggleIsSoloView(True, widget=widget_soloable.parent())
+        else:
+            # toggle solo view (individual widget )
+            self.toggleIsSoloView(True, widget=widget_soloable)
+
     def eventFilter(self, obj, event):
         """
         Events run on every child widget.
@@ -194,7 +222,7 @@ class TansuView(QSplitter):
 
         if event.type() == QEvent.KeyPress:
             if event.key() == self.soloViewHotkey():
-                self.keyPressEvent(event)
+                self.__soloViewHotkeyPressed(event)
                 return True
 
         return QSplitter.eventFilter(self, obj, event)
@@ -211,23 +239,7 @@ class TansuView(QSplitter):
 
         # solo view
         if event.key() == self.soloViewHotkey():
-            # preflight
-            pos = QCursor.pos()
-            widget_pressed = qApp.widgetAt(pos)
-
-            # bypass handles
-            if isinstance(widget_pressed, QSplitterHandle):
-                return
-
-            # Press solo view hotkey
-            widget_soloable = self.getFirstSoloableWidget(widget_pressed)
-            # toggle solo view ( tansu view )
-            if event.modifiers() == Qt.AltModifier:
-                if widget_soloable.parent():
-                    self.toggleIsSoloView(True, widget=widget_soloable.parent())
-            else:
-                # toggle solo view (individual widget )
-                self.toggleIsSoloView(True, widget=widget_soloable)
+            self.__soloViewHotkeyPressed(event)
             return
 
         # unsolo view
