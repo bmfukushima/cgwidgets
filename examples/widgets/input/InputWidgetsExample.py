@@ -194,7 +194,7 @@ for arg in label_widgets:
 
 """ Main Widget"""
 main_widget = QSplitter()
-main_widget.setStyleSheet("""background-color: rgba{rgba_background_00}""".format(rgba_gray_3=iColor["rgba_background_00"]))
+main_widget.setStyleSheet("""background-color: rgba{rgba_background_00}""".format(**iColor.style_sheet_args))
 main_widget.addWidget(normal_widget)
 main_widget.addWidget(vertical_label_widget)
 main_widget.addWidget(horizontal_label_widget)

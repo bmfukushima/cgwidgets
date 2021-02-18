@@ -688,6 +688,9 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
     def header_height(self, _header_height):
         self._header_height = _header_height
 
+    def keyPressEvent(self, event):
+        print ("key press??")
+        return QSplitter.keyPressEvent(self, event)
 
 """ DELEGATE """
 class TansuMainDelegateWidget(TansuView):
@@ -699,6 +702,23 @@ class TansuMainDelegateWidget(TansuView):
     def __init__(self, parent=None):
         super(TansuMainDelegateWidget, self).__init__(parent)
         self.rgba_background = iColor["rgba_background_00"]
+        self.setToggleSoloViewEvent(self.resetTansuViewDisplay)
+
+    def resetTansuViewDisplay(self, enabled, widget):
+        """
+
+        Args:
+            enabled:
+            widget:
+
+        Returns:
+
+        """
+        if not enabled:
+            tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
+            if tab_tansu_widget:
+                tab_tansu_widget.updateDelegateDisplay()
+                tab_tansu_widget.toggleDelegateSpacerWidget()
 
     def showEvent(self, event):
         tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
@@ -711,29 +731,31 @@ class TansuMainDelegateWidget(TansuView):
         tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
         if is_child_of_header:
             return tab_tansu_widget.headerWidget().keyPressEvent(event)
-
-        ModelViewWidget.keyPressEvent(tab_tansu_widget.headerWidget(), event)
-
-        # Global escape
-        if event.key() == Qt.Key_Escape:
-            tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
-            if tab_tansu_widget:
-                tab_tansu_widget.updateDelegateDisplay()
-                tab_tansu_widget.toggleDelegateSpacerWidget()
-        # Global override for conflicts
-        elif event.key() == self.soloViewHotkey():
-            """
-            If this is another tansu/labelled input etc, it will bypass
-            and use that widgets key press.  If it is over the main delegate,
-            it will register a TansuView press.
-            """
-            pos = QCursor.pos()
-            widget_pressed = qApp.widgetAt(pos)
-
-            if isinstance(widget_pressed, TansuModelDelegateWidget):
-                return TansuView.keyPressEvent(self, event)
         else:
             return TansuView.keyPressEvent(self, event)
+        # ModelViewWidget.keyPressEvent(tab_tansu_widget.headerWidget(), event)
+
+        # Global escape
+        # if event.key() == Qt.Key_Escape:
+        #     pass
+            # tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
+            # if tab_tansu_widget:
+            #     tab_tansu_widget.updateDelegateDisplay()
+            #     tab_tansu_widget.toggleDelegateSpacerWidget()
+        # Global override for conflicts
+        # if event.key() == self.soloViewHotkey():
+        #     """
+        #     If this is another tansu/labelled input etc, it will bypass
+        #     and use that widgets key press.  If it is over the main delegate,
+        #     it will register a TansuView press.
+        #     """
+        #     pos = QCursor.pos()
+        #     widget_pressed = qApp.widgetAt(pos)
+        #
+        #     if isinstance(widget_pressed, TansuModelDelegateWidget):
+        #         return TansuView.keyPressEvent(self, event)
+        # else:
+        #     return TansuView.keyPressEvent(self, event)
 
 
 class TansuModelDelegateWidget(AbstractFrameGroupInputWidget):
@@ -750,29 +772,6 @@ class TansuModelDelegateWidget(AbstractFrameGroupInputWidget):
         """.format(
             background_color=iColor["rgba_gray_3"]
         ))
-
-    # def enterEvent(self, event):
-    #     pos = QCursor.pos()
-    #     widget_pressed = qApp.widgetAt(pos)
-    #     if widget_pressed == self:
-    #         self.setFocus()
-    #     #print(widget_pressed)
-    #     return AbstractFrameGroupInputWidget.enterEvent(self, event)
-    #
-    # def keyPressEvent(self, event):
-    #     print("key press???")
-    #     print(self.parent())
-    #     if event.key() == self.parent().soloViewHotkey():
-    #         print ('tilda?')
-    #     return AbstractFrameGroupInputWidget.keyPressEvent(self, event)
-
-    # def focusInEvent(self, event):
-    #     print('focus!')
-    #     return AbstractFrameGroupInputWidget.focusInEvent(self, event)
-    #
-    # def focusOutEvent(self, event):
-    #     print('un focus =(')
-    #     return AbstractFrameGroupInputWidget.focusOutEvent(self, event)
 
     def setMainWidget(self, widget):
         # remove old main widget if it exists
@@ -846,13 +845,6 @@ class TansuHeader(ModelViewWidget):
         # custom input event | need this as we're overriding the models input
         top_level_widget.itemSelectedEvent(item, enabled, column)
         #return ModelViewWidget.selectionChanged(self, selected, deselected)
-
-    # def keyPressEvent(self, event):
-    #     if event.key() == 96 or event.key() == Qt.Key_Escape:
-    #         return
-    #     else:
-    #         return ModelViewWidget.keyPressEvent(self, event)
-
 
 """ EXAMPLE """
 class TabTansuDynamicWidgetExample(QWidget):

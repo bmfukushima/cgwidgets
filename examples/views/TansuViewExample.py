@@ -29,8 +29,7 @@ from qtpy.QtGui import QCursor
 from qtpy.QtCore import Qt
 
 from cgwidgets.views import TansuView
-from cgwidgets.widgets import StringInputWidget, FloatInputWidget
-from cgwidgets.settings.colors import iColor
+from cgwidgets.widgets import StringInputWidget
 
 app = QApplication(sys.argv)
 class DisplayLabel(StringInputWidget):
@@ -49,6 +48,12 @@ main_tansu_widget.setHandleWidth(5)
 main_tansu_widget.setIsHandleStatic(False)
 main_tansu_widget.setIsSoloViewEnabled(True)
 main_tansu_widget.setOrientation(Qt.Vertical)
+
+# set up events
+def toggleSoloEvent(enabled, widget):
+    print(enabled, widget)
+
+main_tansu_widget.setToggleSoloViewEvent(toggleSoloEvent)
 
 # add regular widgets
 for char in "SINE.":
@@ -69,6 +74,7 @@ embedded_tansu_01.addWidget(embedded_tansu_02)
 
 # add tansu to tansu
 main_tansu_widget.addWidget(embedded_tansu_01)
+
 # show widget
 main_tansu_widget.show()
 main_tansu_widget.move(QCursor.pos())

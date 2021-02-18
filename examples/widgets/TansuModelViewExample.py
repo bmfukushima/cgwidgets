@@ -72,10 +72,10 @@ app = QApplication(sys.argv)
 tansu_widget = TansuModelViewWidget()
 
 # SETUP VIEW
-#tansu_widget.setHeaderViewType(ModelViewWidget.TREE_VIEW)
-tansu_widget.setHeaderViewType(ModelViewWidget.LIST_VIEW)
-
-# CUSTOM VIEW
+"""
+Choose between a Tree, List, or Custom view.
+By default this will be a LIST_VIEW
+"""
 def setupCustomView():
     class CustomView(AbstractDragDropListView):
         """
@@ -88,7 +88,9 @@ def setupCustomView():
     view = CustomView()
     tansu_widget.setHeaderViewWidget(view)
 
-setupCustomView()
+tansu_widget.setHeaderViewType(ModelViewWidget.TREE_VIEW)
+#tansu_widget.setHeaderViewType(ModelViewWidget.LIST_VIEW)
+#setupCustomView()
 
 
 # SETUP CUSTOM MODEL
@@ -133,7 +135,7 @@ def setupAsStacked():
     # insert child tabs
     # insert child widgets
     for y in range(0, 2):
-        widget = QLineEdit(str("SINE."))
+        widget = StringInputWidget(str("SINE."))
         tansu_widget.insertTansuWidget(y, column_data={'name': str(y), 'one': 'datttaaa'}, widget=widget, parent=tansu_delegate_item)
 
 def setupAsDynamic():
@@ -212,8 +214,8 @@ def setupAsDynamic():
     custom_index.internalPointer().setDynamicWidgetBaseClass(DynamicItemExample)
     custom_index.internalPointer().setDynamicUpdateFunction(DynamicItemExample.updateGUI)
 
-#setupAsStacked()
-setupAsDynamic()
+setupAsStacked()
+#setupAsDynamic()
 
 # SET FLAGSLabelledInputWidget
 tansu_widget.setMultiSelect(True)

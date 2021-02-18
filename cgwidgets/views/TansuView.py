@@ -173,6 +173,35 @@ class TansuView(QSplitter):
         else:
             return widget
 
+    """ VIRTUAL EVENTS """
+    def setToggleSoloViewEvent(self, function):
+        """
+        Sets the event to be run after the soloHotkey has been pressed.
+
+        This virtual function will take one argument
+
+        Args:
+            function (function)
+        """
+        self.__toggleSoloViewEvent = function
+
+    def toggleSoloViewEvent(self, enabled, widget):
+        """
+        Event that is run after a solo/unsolo operation has happened.
+
+        Args:
+            enabled (bool): if True, widget is being solo, if False,
+                widget is being unsolod
+            widget (QWidget): First soloable widget that was pressed.
+
+        Returns:
+
+        """
+        self.__toggleSoloViewEvent(enabled, widget)
+
+    def __toggleSoloViewEvent(self, enabled, widget):
+        pass
+
     """ EVENTS """
     def __soloViewHotkeyPressed(self, event):
         """
@@ -197,7 +226,9 @@ class TansuView(QSplitter):
         # toggle solo view ( tansu view )
         if event.modifiers() == Qt.AltModifier:
             if widget_soloable.parent():
-                self.toggleIsSoloView(True, widget=widget_soloable.parent())
+                widget_soloable = widget_soloable.parent()
+                self.toggleIsSoloView(True, widget=widget_soloable)
+
         else:
             # toggle solo view (individual widget )
             self.toggleIsSoloView(True, widget=widget_soloable)
@@ -216,16 +247,27 @@ class TansuView(QSplitter):
         # hover properties
         if event.type() == QEvent.Enter:
             obj.setProperty("hover_display", True)
-            #updateStyleSheet(obj)
         if event.type() == QEvent.Leave:
             obj.setProperty("hover_display", False)
 
-        if event.type() == QEvent.KeyPress:
-            if event.key() == self.soloViewHotkey():
-                self.__soloViewHotkeyPressed(event)
-                return True
+        # if event.type() == QEvent.KeyPress:
+        #     print('eveent filter perss?')
+        #     if event.key() == self.soloViewHotkey():
+        #         self.__soloViewHotkeyPressed(event)
+        #         self.toggleSoloViewEvent(True, obj)
+        #         return True
+        #     elif event.key() == Qt.Key_Escape:
+        #         if event.modifiers() == Qt.AltModifier:
+        #             self.unsoloAll(self)
+        #         else:
+        #             self.toggleIsSoloView(False)
+        #         self.toggleSoloViewEvent(False, obj)
+        #         return True
+        #     #return True
 
-        return QSplitter.eventFilter(self, obj, event)
+        # return QSplitter.eventFilter(self, obj, event)
+
+        return False
 
     def enterEvent(self, event):
         self.setFocus()
@@ -243,11 +285,9 @@ class TansuView(QSplitter):
             return
 
         # unsolo view
-
         elif event.key() == Qt.Key_Escape:
             if event.modifiers() == Qt.AltModifier:
                 self.unsoloAll(self)
-                pass
             else:
                 self.toggleIsSoloView(False)
             return
@@ -313,6 +353,14 @@ class TansuView(QSplitter):
         return QSplitter.insertWidget(self, index, widget)
 
     """ SOLO VIEW """
+    def setIsSoloView(self, tansu_view, _is_solo_view):
+        tansu_view._is_solo_view = _is_solo_view
+        tansu_view.setProperty('is_solo_view', _is_solo_view)
+        updateStyleSheet(tansu_view)
+
+        # run solo view event
+        tansu_view.toggleSoloViewEvent(_is_solo_view, tansu_view)
+
     def unsoloAll(self, widget):
         """
         Unsolo's the current widget provided, and then recurses up the hierarchy
@@ -360,12 +408,6 @@ class TansuView(QSplitter):
     def isSoloView(self):
         return self._is_solo_view
 
-    @staticmethod
-    def setIsSoloView(tansu_widget, _is_solo_view):
-        tansu_widget._is_solo_view = _is_solo_view
-        tansu_widget.setProperty('is_solo_view', _is_solo_view)
-        updateStyleSheet(tansu_widget)
-
     def toggleIsSoloView(self, is_solo_view, widget=None):
         """
         Toggles how much space a widget should take up relative to its parent.
@@ -375,7 +417,7 @@ class TansuView(QSplitter):
         widgets.
 
         If it is already taking up all of the space, it will look for the next
-        AbstractSplitter and set that one to take up the entire space.  It
+        TansuView and set that one to take up the entire space.  It
         will continue doing this recursively both up/down until there it is
         either fully expanded or fully collapsed.
 
@@ -383,50 +425,54 @@ class TansuView(QSplitter):
             solo view hotkey (~) may need to be re implemented as a key event
         """
 
-        # get the current splitter
+        # pre flight
         if not widget:
             widget = qApp.widgetAt(QCursor.pos())
         if not widget:
             return
+
         current_index, current_widget = self.getIndexOfWidget(widget)
+
         if not current_widget: return
-        current_splitter = current_widget.parent()
+
+        #
+        current_tansu = current_widget.parent()
 
         # enter full screen
         if is_solo_view is True:
             # adjust parent widget
-            if current_splitter.isSoloView() is True:
-                current_index1, current_widget1 = self.getIndexOfWidget(current_splitter)
+            if current_tansu.isSoloView() is True:
+                current_index1, current_widget1 = self.getIndexOfWidget(current_tansu)
                 if current_widget1:
-                    parent_splitter = current_widget.parent()
-                    parent_splitter.toggleIsSoloView(True, current_splitter)
-                    TansuView.setIsSoloView(parent_splitter, True)
-                    parent_splitter.setFocus()
+                    parent_tansu = current_widget.parent()
+                    parent_tansu.toggleIsSoloView(True, current_tansu)
+                    self.setIsSoloView(parent_tansu, True)
+                    parent_tansu.setFocus()
 
             # adjust current widget
-            elif current_splitter.isSoloView() is False:
-                current_splitter.displayAllWidgets(False)
+            elif current_tansu.isSoloView() is False:
+                current_tansu.displayAllWidgets(False)
                 current_widget.show()
-                TansuView.setIsSoloView(current_splitter, True)
+                self.setIsSoloView(current_tansu, True)
                 current_widget.setFocus()
 
         # exit full screen
         else:
             # adjust current widget
-            if current_splitter.isSoloView() is True:
-                current_splitter.displayAllWidgets(True)
-                TansuView.setIsSoloView(current_splitter, False)
+            if current_tansu.isSoloView() is True:
+                current_tansu.displayAllWidgets(True)
+                self.setIsSoloView(current_tansu, False)
                 current_widget.setFocus()
-                #return
-            # adjust parent widget
-            elif current_splitter.isSoloView() is False:
-                current_index1, current_widget1 = self.getIndexOfWidget(current_splitter)
-                if current_widget1:
-                    parent_splitter = current_widget.parent()
-                    parent_splitter.toggleIsSoloView(False, current_splitter)
 
-                    TansuView.setIsSoloView(parent_splitter, False)
-                    parent_splitter.setFocus()
+            # adjust parent widget
+            elif current_tansu.isSoloView() is False:
+                current_index1, current_widget1 = self.getIndexOfWidget(current_tansu)
+                if current_widget1:
+                    parent_tansu = current_widget.parent()
+                    parent_tansu.toggleIsSoloView(False, current_tansu)
+
+                    self.setIsSoloView(parent_tansu, False)
+                    parent_tansu.setFocus()
                     current_widget1.setFocus()
 
     def soloViewHotkey(self):
