@@ -688,9 +688,6 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
     def header_height(self, _header_height):
         self._header_height = _header_height
 
-    def keyPressEvent(self, event):
-        print ("key press??")
-        return QSplitter.keyPressEvent(self, event)
 
 """ DELEGATE """
 class TansuMainDelegateWidget(TansuView):

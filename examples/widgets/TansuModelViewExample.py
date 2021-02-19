@@ -227,7 +227,7 @@ tansu_widget.setDelegateTitleIsShown(True)
 #####################################################
 # SET EVENT FLAGS
 #####################################################
-tansu_widget.setHeaderItemIsDropEnabled(False)
+tansu_widget.setHeaderItemIsDropEnabled(True)
 tansu_widget.setHeaderItemIsDragEnabled(True)
 tansu_widget.setHeaderItemIsEditable(True)
 tansu_widget.setHeaderItemIsEnableable(True)

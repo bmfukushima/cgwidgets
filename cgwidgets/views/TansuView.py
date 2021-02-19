@@ -430,13 +430,19 @@ class TansuView(QSplitter):
             widget = qApp.widgetAt(QCursor.pos())
         if not widget:
             return
-
         current_index, current_widget = self.getIndexOfWidget(widget)
-
         if not current_widget: return
 
         #
         current_tansu = current_widget.parent()
+
+        # check to ensure tansu view has solo mode enabled
+        if hasattr(widget, "isSoloViewEnabled"):
+            if not current_tansu.isSoloViewEnabled():
+                if current_tansu.parent():
+                    return self.toggleIsSoloView(is_solo_view, widget=current_tansu.parent())
+                else:
+                    return
 
         # enter full screen
         if is_solo_view is True:

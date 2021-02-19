@@ -607,28 +607,10 @@ class TansuGroupInputWidget(LabelledInputWidget):
 
                 self.setDelegateTitleIsShown(False)
 
-            def keyPressEvent(self, event):
-                """
-                Bypass the key press event?
-                Args:
-                    event:
-
-                Returns:
-
-                """
-                return
-                print('AbstractTansuInputWidget')
-                if self.parent():
-                    return self.parent().keyPressEvent(event)
-                # if event.key() == 96:
-                #     return
-                # else:
-                #     return TansuModelViewWidget.keyPressEvent(self, event)
-
         # inherit
         super(TansuGroupInputWidget, self).__init__(parent, name, direction=direction, widget_type=AbstractTansuInputWidget)
 
-        #self.setIsSoloViewEnabled(False)
+        self.setIsSoloViewEnabled(False)
 
         # setup main widget
         self.getInputWidget().setDelegateType(
@@ -728,6 +710,7 @@ class TansuGroupInputWidget(LabelledInputWidget):
         # print('tansu group input?')
         # if self.getInputWidget():
         #     return self.getInputWidget().keyPressEvent(event)
+
 
 class MultiButtonInputWidget(AbstractMultiButtonInputWidget):
     """
