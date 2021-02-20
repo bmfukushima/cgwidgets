@@ -5,6 +5,7 @@ from cgwidgets.interface import (
     AbstractPort,
     AbstractParameter,
     AbstractNodeInterfaceAPI,
+    AbstractUtilsInterfaceAPI
 )
 
 # create node
@@ -23,13 +24,13 @@ print(child_node)
 
 print ('-------  PORT API  -------')
 # create port
-node.createPort(AbstractPort.MALE, "o0")
-node.createPort(AbstractPort.FEMALE, "i0")
-node.createPort(AbstractPort.FEMALE, "insert_this", index=0)
-node.createPort(AbstractPort.FEMALE)
+node.createPort(AbstractPort.eMALE, "o0")
+node.createPort(AbstractPort.eFEMALE, "i0")
+node.createPort(AbstractPort.eFEMALE, "insert_this", index=0)
+node.createPort(AbstractPort.eFEMALE)
 # get ports
-female_ports = node.ports(AbstractPort.FEMALE)
-male_ports = node.ports(AbstractPort.MALE)
+female_ports = node.ports(AbstractPort.eFEMALE)
+male_ports = node.ports(AbstractPort.eMALE)
 
 # # todo connect port
 print('female ports === ', female_ports)
@@ -72,6 +73,9 @@ parent = child_parameter.parent()
 child = parameter.child('foo')
 child_by_index = parameter.childAtIndex(0)
 children = parameter.children()
+
+# process event queue
+AbstractUtilsInterfaceAPI.processAllEvents()
 #insertChild
 #setParent
 #remove

@@ -579,7 +579,11 @@ class TansuView(QSplitter):
             'rgba_background': repr(self.rgba_background),
             'rgba_text': repr(self.rgba_text),
             'handle_length_margin': self.getHandleLengthMargin(),
-            'type': type(self).__name__
+            'type': type(self).__name__,
+
+        })
+        style_sheet_args.update({
+            'splitter_handle_ss': splitter_handle_ss.format(**style_sheet_args)
         })
         style_sheet = """
         /* VIEW */
@@ -596,10 +600,7 @@ class TansuView(QSplitter):
 
         /* HANDLE */
             {splitter_handle_ss}
-        """.format(
-            **style_sheet_args,
-            splitter_handle_ss=splitter_handle_ss.format(**style_sheet_args)
-        )
+        """.format(**style_sheet_args)
 
         # update hover display property
         for child in self.children():

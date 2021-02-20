@@ -35,6 +35,18 @@ def connect(port_a, port_b):
     type_b = port_b.type()
     if type_a == type_b: return
 
+    dccport.connect(port_a, port_b)
+
+def disconnect(port_a, port_b):
+    type_a = port_a.type()
+    type_b = port_b.type()
+    if type_a == type_b: return
+
+    dccport.disconnect(port_a, port_b)
+
+def connectedPorts(port):
+    dccport.connectedPorts(port)
+
 """ ARGS """
 def name(port):
     return dccport.name(port.port())
@@ -54,10 +66,13 @@ def gender(port):
     from cgwidgets.interface import AbstractPort
     port_gender = dccport.gender(port)
     if port_gender == 0:
-        return AbstractPort.MALE
+        return AbstractPort.eMALE
     elif port_gender == 1:
-        return AbstractPort.FEMALE
-
+        return AbstractPort.eFEMALE
+    elif port_gender == 2:
+        return AbstractPort.iMALE
+    elif port_gender == 4:
+        return AbstractPort.iFEMALE
 def index(port):
     return dccport.index(port.port())
 

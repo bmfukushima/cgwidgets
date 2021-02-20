@@ -25,10 +25,13 @@ class AbstractPort(object):
 
         Args:
             port (port): current DCC port
+            connect_ports (list): list of ports that this port is currently connected to
 
         """
-        MALE = 0
-        FEMALE = 1
+        eMALE = 0
+        eFEMALE = 1
+        iMALE = 2
+        iFEMALE = 4
 
         def __init__(
             self,
@@ -63,8 +66,35 @@ class AbstractPort(object):
         connect
         disconnect
         """
-        def connect(self, port_a, port_b):
-            AbstractPortInterfaceAPI.connect(port_a, port_b)
+        def connect(self, port):
+            """
+            Connects this port to the port provided
+            Args:
+                port (AbstractPort): port to be connected to
+            """
+            # disconnect
+            AbstractPortInterfaceAPI.connect(self, port)
+
+            # add to port list
+            self._connected_ports.append(port)
+
+        def disconnect(self, port):
+            """
+            Disconnects this port to the port provided
+            Args:
+                port (AbstractPort): port to be connected to
+            """
+            # disconnect
+            AbstractPortInterfaceAPI.disconnect(self, port)
+
+            # remove port from port list
+            if port in self.connectedPorts():
+                self._connected_ports.remove(port)
+
+        def connectedPorts(self):
+            if TRANSLATE:
+                return AbstractPortInterfaceAPI.connectedPorts(self)
+            return self._connected_ports
 
         """ ARGS """
         def index(self):

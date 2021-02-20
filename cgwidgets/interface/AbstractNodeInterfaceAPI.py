@@ -57,10 +57,14 @@ def ports(node, port_gender):
     node = node.node()
 
     # get ports list
-    if port_gender == AbstractPort.FEMALE:
+    if port_gender == AbstractPort.eFEMALE:
         port_list = dccnode.getInputPorts(node)
-    elif port_gender == AbstractPort.MALE:
+    elif port_gender == AbstractPort.eMALE:
         port_list = dccnode.getOutputPorts(node)
+    elif port_gender == AbstractPort.iFEMALE:
+        port_list = dccnode.getReturnPorts(node)
+    elif port_gender == AbstractPort.iMALE:
+        port_list = dccnode.getSendPorts(node)
     else:
         port_list = dccnode.getOutputPorts(node) + dccnode.getInputPorts(node)
 
@@ -91,13 +95,13 @@ def createPort(node, port_gender, name, index=None):
 
     # create port
     # FEMALE
-    if port_gender == AbstractPort.FEMALE:
+    if port_gender == AbstractPort.eFEMALE:
         if not name:
             name = 'i0'
         port = dccnode.createInputPort(node, name, index)
 
     # MALE
-    elif port_gender == AbstractPort.MALE:
+    elif port_gender == AbstractPort.eMALE:
         if not name:
             name = 'o0'
         port = dccnode.createOutputPort(node, name, index)
@@ -226,3 +230,15 @@ def getRootNode():
 def getNodeFromName(name):
     from cgwidgets.interface import AbstractNode
     return AbstractNode(dccnode.getNodeFromName(name))
+
+def getAllNodeTypes():
+    """
+
+    Returns (list): of strings of all of the node types available
+        to be created.
+
+    """
+    if TRANSLATE:
+        return dccnode.getAllNodeTypes()
+    else:
+        return ['test', 'list', 'of', 'nodes']

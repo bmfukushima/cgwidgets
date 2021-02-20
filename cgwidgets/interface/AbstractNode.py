@@ -36,8 +36,11 @@ class AbstractNode(object):
         node=None,
         args=None,
         children=None,
-        female_ports=None,
-        male_ports=None,
+        is_pubescent=False,
+        e_female_ports=None,
+        e_male_ports=None,
+        i_female_ports=None,
+        i_male_ports=None,
         name='node',
         parent=None,
         pos=QPoint(1, 1),
@@ -54,16 +57,25 @@ class AbstractNode(object):
         # how to if no parent get root item?
         self._pos = pos
         if not root_parameter:
-            from cgwidgets.interface import  AbstractParameter
+            from cgwidgets.interface import AbstractParameter
             root_parameter = AbstractParameter(None, name='root')
         self._root_parameter = root_parameter
         self._type = _type
+
+        # children
+        self._is_pubescent = is_pubescent
         if not children:
             self._children = []
-        if not male_ports:
-            self._male_ports = []
-        if not female_ports:
-            self._female_ports = []
+
+        # ports
+        if not e_male_ports:
+            self._e_male_ports = []
+        if not e_female_ports:
+            self._e_female_ports = []
+        if not i_male_ports:
+            self._i_male_ports = []
+        if not i_female_ports:
+            self._i_female_ports = []
         self._name = name
 
         # initialize arbitrary args
@@ -144,6 +156,12 @@ class AbstractNode(object):
             self._parent.addChild(self)
 
     """ CHILDREN """
+    def isPubescent(self):
+        return self._is_pubescent
+
+    def setIsPubescent(self, enabled):
+        self._is_pubescent = enabled
+
     def hasChildren(self):
         self._has_children = True if 0 < len(self.children()) else False
         return self._has_children
@@ -202,10 +220,14 @@ class AbstractNode(object):
         if TRANSLATE:
             ports = AbstractNodeInterfaceAPI.ports(self, port_gender)
         else:
-            if port_gender == AbstractPort.FEMALE:
-                ports = self._female_ports
-            elif port_gender == AbstractPort.MALE:
-                ports = self._male_ports
+            if port_gender == AbstractPort.eFEMALE:
+                ports = self._e_female_ports
+            elif port_gender == AbstractPort.eMALE:
+                ports = self._e_male_ports
+            elif port_gender == AbstractPort.iFEMALE:
+                ports = self._i_female_ports
+            elif port_gender == AbstractPort.iMALE:
+                ports = self._i_male_ports
         return ports
 
     def createPort(self, port_gender, port_name=None, index=None):

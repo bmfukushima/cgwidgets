@@ -8,6 +8,22 @@ def getInputPorts(node):
 def getOutputPorts(node):
     return node.getOutputPorts()
 
+def getSendPorts(node):
+    send_ports = []
+    for port in node.getInputPorts():
+        port_name = port.getName()
+        send_ports.append(node.getSendPort(port_name))
+
+    return send_ports
+
+def getReturnPorts(node):
+    return_ports = []
+    for port in node.getOutputPorts():
+        port_name = port.getName()
+        return_ports.append(node.getReturnPort(port_name))
+
+    return return_ports
+
 def createInputPort(node, name, index):
     node = node.node()
     port = node.addInputPortAtIndex(name, index)
@@ -116,4 +132,5 @@ def getRootNode():
 def getNodeFromName(name):
     return NodegraphAPI.GetNode(name)
 
-
+def getAllNodeTypes():
+    return NodegraphAPI.GetNodeTypes()

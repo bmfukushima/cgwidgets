@@ -28,7 +28,7 @@ def testEnable(item, enabled):
 def testSelect(item, enabled, column=0):
     print("SELECTING -->", item.columnData()['name'], enabled)
 
-def testDelegateToggle(event, widget, enabled):
+def testDelegateToggle(enabled, event, widget):
     print("TOGGLING -{key}->".format(key=event.key()), widget, enabled)
 
 

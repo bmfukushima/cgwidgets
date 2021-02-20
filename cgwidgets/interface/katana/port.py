@@ -3,6 +3,16 @@ from qtpy.QtCore import QPoint
 
 import NodegraphAPI
 
+""" CONNECT """
+def connect(port_a, port_b):
+    port_a.connect(port_b)
+
+def disconnect(port_a, port_b):
+    port_a.disconnect(port_b)
+
+def connectedPorts(port):
+    return port.getConnectedPorts()
+
 """ ARGS """
 def node(port):
     return port.getNode()

@@ -26,6 +26,9 @@ from .InputWidgets import *
 from .InputWidgets.ColorInputWidget import ColorGradientDelegate as ColorGradientDelegate
 from .InputWidgets.ColorInputWidget import ColorInputWidget as ColorInputWidget
 
+""" NODE WIDGETS """
+from .NodeWidgets import NodeTypeListWidget
+# from .NodeTreeWidget import NodeTreeMainWidget
 # old stuff
 from .LibraryWidget import LibraryWidget as LibraryWidget
 from .LadderWidget import LadderWidget as LadderWidget

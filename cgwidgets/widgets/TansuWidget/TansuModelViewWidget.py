@@ -800,7 +800,7 @@ class TansuHeader(ModelViewWidget):
         tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
         if tab_tansu_widget:
             tab_tansu_widget.updateDelegateDisplay()
-        QAbstractItemView.showEvent(self, event)
+        ModelViewWidget.showEvent(self, event)
 
     def dropEvent(self, event):
         # resolve drop event
@@ -842,6 +842,7 @@ class TansuHeader(ModelViewWidget):
         # custom input event | need this as we're overriding the models input
         top_level_widget.itemSelectedEvent(item, enabled, column)
         #return ModelViewWidget.selectionChanged(self, selected, deselected)
+
 
 """ EXAMPLE """
 class TabTansuDynamicWidgetExample(QWidget):

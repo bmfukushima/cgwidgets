@@ -12,7 +12,6 @@ from cgwidgets.views import (
 )
 from cgwidgets.utils import attrs, getWidgetAncestor
 from cgwidgets.settings.colors import iColor
-from cgwidgets.settings.stylesheets import  display_label_ss
 from cgwidgets.views import TansuView
 
 
@@ -215,7 +214,7 @@ class ModelViewWidget(TansuView):
             widget.setFocus()
 
         # run virtual function
-        self.delegateToggleEvent(event, widget, enabled)
+        self.delegateToggleEvent(enabled, event, widget)
 
     """ DELEGATE VIRTUAL """
     def __delegateToggleEvent(self, enabled, event, widget):
