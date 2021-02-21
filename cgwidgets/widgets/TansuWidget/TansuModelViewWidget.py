@@ -460,7 +460,8 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
 
     def updateDelegateDisplay(self):
         """
-        Updates which widgets should be shown/hidden based off of
+
+        Updates/refreshes which widgets should be shown/hidden based off of
         the current models selection list
         """
         if self.getDelegateType() == TansuModelViewWidget.STACKED:
@@ -472,6 +473,15 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
                 widget = item.delegateWidget()
                 widget_list.append(widget)
             self.delegateWidget().isolateWidgets(widget_list)
+
+        # update dynamic delagate
+        elif self.getDelegateType() == TansuModelViewWidget.DYNAMIC:
+            selection_model = self.headerWidget().selectionModel()
+            for index in selection_model.selectedIndexes():
+                item = index.internalPointer()
+                if index.column() == 0:
+                    self.updateDelegateItem(item, False, index.column())
+                    self.updateDelegateItem(item, True, index.column())
 
     def updateDelegateItem(self, item, selected, column=0):
         """
