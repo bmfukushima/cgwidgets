@@ -1,7 +1,7 @@
 """
 Input Group
     AbstractInputGroupBox (QGroupBox)
-        | -- TabTansuWidget
+        | -- TabShojiWidget
                 | -* InputWidget
 
 Input Widgets
@@ -25,7 +25,7 @@ from cgwidgets.utils import (
     installLadderDelegate, getFontSize, checkIfValueInRange,
     checkNegative, setAsTransparent, updateStyleSheet
 )
-from cgwidgets.views import TansuView, TansuViewHandle
+from cgwidgets.views import ShojiView, ShojiViewHandle
 from cgwidgets.settings.icons import icons
 from cgwidgets.settings.stylesheets import input_widget_ss
 
@@ -449,7 +449,7 @@ class AbstractLabelInputWidget(AbstractStringInputWidget):
             by clicking on it.
     Virtual:
         userFinishedEditingEvent (widget, value): when the user finishes editing.
-            This is a copy/paste from the iTansuGroupInput to set up the registry
+            This is a copy/paste from the iShojiGroupInput to set up the registry
             for user input.
     """
     def __init__(self, parent=None):
@@ -492,7 +492,7 @@ class AbstractLabelInputWidget(AbstractStringInputWidget):
         self.setProperty('editable', enabled)
 
     # TODO duplicate code
-    """ VIRTUAL (copy / paste from iTansuGroupInput"""
+    """ VIRTUAL (copy / paste from iShojiGroupInput"""
     def __user_finished_editing_event(self, *args, **kwargs):
         pass
 
@@ -628,7 +628,7 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
         self.input_widget.setFocus()
 
 
-class AbstractMultiButtonInputWidget(TansuView):
+class AbstractMultiButtonInputWidget(ShojiView):
     """
     Provides a multi button input widget.
 

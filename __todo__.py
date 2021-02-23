@@ -2,7 +2,7 @@
 TODO:
     BUGS:
         Cannot have the following hierarchy
-            TansuView --> TansuViewer --> LabelledInputWidget --> Ladder
+            ShojiView --> ShojiViewer --> LabelledInputWidget --> Ladder
             The invisible drag on the ladder for some reason gets bricked, and the invisible
             widget is displayed as a giant black square...
     CLEANUP:

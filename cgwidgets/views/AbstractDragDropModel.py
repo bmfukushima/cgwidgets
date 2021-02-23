@@ -16,7 +16,7 @@ class AbstractDragDropModelItem(object):
         delegate_widget (QWidget): Widget to be shown when this item is
             selected
         dynamic_widget_base_class (QWidget): Widget to be shown when this item is
-            selected if the Tansu is in DYNAMIC mode.
+            selected if the Shoji is in DYNAMIC mode.
         column_data (dict): Dictionary of key pair values relating to the column name,
             and the value for the item in that column.  Special column names are
                 name
@@ -145,7 +145,7 @@ class AbstractDragDropModelItem(object):
 
 class AbstractDragDropModel(QAbstractItemModel):
     """
-    Abstract model that is used for the Tansu.  This supports tables, lists, and
+    Abstract model that is used for the Shoji.  This supports tables, lists, and
     trees.  However not yet...
     TODO:
         - multi column support

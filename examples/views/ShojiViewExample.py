@@ -1,13 +1,13 @@
 """
 TANSU VIEW
 
-The Tansu View is essentially a QSplitter that has the option to
+The Shoji View is essentially a QSplitter that has the option to
 allow any widget inside of it to become full screen using the
 the hotkey set with setSoloViewHotkey(), by default this is set to
 tilda, "~", or 96 (note: right now 96 is hard coded as ~ seems to be
 hard to get Qt to register in their Key_KEY shit).  Using the ALT modifier
-when using multiple Tansu Views embedded inside each other will make
-the current Tansu View full screen, rather than the widget that it is
+when using multiple Shoji Views embedded inside each other will make
+the current Shoji View full screen, rather than the widget that it is
 hovering over.  The user can leave full screen by hitting the "ESC" key.
 
 Widgets can be added/inserted with the kwarg "is_soloable", to stop the
@@ -28,7 +28,7 @@ from qtpy.QtWidgets import QApplication, QLabel
 from qtpy.QtGui import QCursor
 from qtpy.QtCore import Qt
 
-from cgwidgets.views import TansuView
+from cgwidgets.views import ShojiView
 from cgwidgets.widgets import StringInputWidget
 
 app = QApplication(sys.argv)
@@ -38,9 +38,9 @@ class DisplayLabel(StringInputWidget):
         self.setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
 
 # create tansu
-main_tansu_widget = TansuView()
-embedded_tansu_01 = TansuView(orientation=Qt.Horizontal)
-embedded_tansu_02 = TansuView(orientation=Qt.Vertical)
+main_tansu_widget = ShojiView()
+embedded_tansu_01 = ShojiView(orientation=Qt.Horizontal)
+embedded_tansu_02 = ShojiView(orientation=Qt.Vertical)
 
 # OPTIONAL | set handle length (if not set, by default this will be full length)
 main_tansu_widget.setHandleLength(100)
@@ -65,7 +65,7 @@ for char in "SINE.":
     l = DisplayLabel(str(char))
     embedded_tansu_02.addWidget(l)
 
-# add embedded Tansu Views
+# add embedded Shoji Views
 for x in range(3):
     l = DisplayLabel(str(x))
     embedded_tansu_01.addWidget(l)

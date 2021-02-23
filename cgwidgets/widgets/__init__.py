@@ -1,6 +1,6 @@
 """
 THE IMPORT ORDER MATTERS!!
-    Input widgets rely on Tab Tansu
+    Input widgets rely on Tab Shoji
     ColorWidget relies on user input widgets
 
     I need more abstract classes...
@@ -13,11 +13,11 @@ from .AbstractWidgets import *
 from .ModelViewWidget import ModelViewWidget as ModelViewWidget
 
 """ TANSU """
-from .TansuWidget import TansuModelItem as TansuModelItem
-from .TansuWidget import TansuModel as TansuModel
+from .ShojiWidget import ShojiModelItem as ShojiModelItem
+from .ShojiWidget import ShojiModel as ShojiModel
 
-from .TansuWidget import TansuModelViewWidget as TansuModelViewWidget
-from .TansuWidget import TansuModelDelegateWidget as TansuModelDelegateWidget
+from .ShojiWidget import ShojiModelViewWidget as ShojiModelViewWidget
+from .ShojiWidget import ShojiModelDelegateWidget as ShojiModelDelegateWidget
 
 """ INPUT WIDGETS """
 from .InputWidgets import *

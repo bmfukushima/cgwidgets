@@ -43,7 +43,7 @@ class AbstractDragDropAbstractView(object):
             header_position (attrs.POSITION): What the current position of the header is.
             outline_width (int): the width of the outline shown
         """
-        # todo this is a duplicate call to the TansuModelViewWidget
+        # todo this is a duplicate call to the ShojiModelViewWidget
         # * need to figure out how to auto populate this.. while maintaining customization
         # setup args
 

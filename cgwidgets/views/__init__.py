@@ -9,5 +9,5 @@ from .AbstractDragDropView import AbstractDragDropAbstractView
 
 from .CompleterView import CompleterPopup
 
-from .TansuView import TansuView
-from .TansuView import TansuViewHandle
+from .ShojiView import ShojiView
+from .ShojiView import ShojiViewHandle

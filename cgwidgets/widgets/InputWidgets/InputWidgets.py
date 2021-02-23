@@ -1,6 +1,6 @@
 """
 TODO
-    AbstractInputGroup / TansuGroupInputWidget / LabelledInputWidget...
+    AbstractInputGroup / ShojiGroupInputWidget / LabelledInputWidget...
         Why do I have like 90 versions of this...
 """
 
@@ -30,11 +30,11 @@ from cgwidgets.widgets import (
 )
 
 from cgwidgets.widgets import (
-    TansuModelViewWidget,
-    TansuModelDelegateWidget,
-    TansuModelItem
+    ShojiModelViewWidget,
+    ShojiModelDelegateWidget,
+    ShojiModelItem
 )
-from cgwidgets.views import TansuView
+from cgwidgets.views import ShojiView
 from cgwidgets.utils import (
     getWidgetAncestor,
     updateStyleSheet,
@@ -45,7 +45,7 @@ from cgwidgets.utils import (
 from cgwidgets.settings.colors import iColor
 
 
-class TansuInputWidgetItem(TansuModelItem):
+class ShojiInputWidgetItem(ShojiModelItem):
     """
     widgetConstructor (widget): widget to build as based class
     value (str): current value set on this item
@@ -84,7 +84,7 @@ class TansuInputWidgetItem(TansuModelItem):
         self.__userLiveInputEvent(self, widget, value)
 
 
-class iTansuGroupInput(object):
+class iShojiGroupInput(object):
     """
     Interface for group input objects.  This is added to all of the input
     widget types so that they will be compatible with the GroupInputWidgets
@@ -133,7 +133,7 @@ class iTansuGroupInput(object):
         # for arg in args:
         #     print (arg)
         try:
-            widget = getWidgetAncestor(self, TansuModelDelegateWidget)
+            widget = getWidgetAncestor(self, ShojiModelDelegateWidget)
             widget.item().columnData()['value'] = self.getInput()
             widget.item().userInputEvent(args[0], self.getInput())
             #widget.item().userInputEvent(self, self.getInput())
@@ -176,28 +176,28 @@ class OverlayInputWidget(AbstractOverlayInputWidget):
         super(OverlayInputWidget, self).__init__(parent, input_widget=input_widget, title=title)
 
 
-class FloatInputWidget(AbstractFloatInputWidget, iTansuGroupInput):
+class FloatInputWidget(AbstractFloatInputWidget, iShojiGroupInput):
     def __init__(self, parent=None):
         super(FloatInputWidget, self).__init__(parent)
         self.setDoMath(True)
 
 
-class IntInputWidget(AbstractIntInputWidget, iTansuGroupInput):
+class IntInputWidget(AbstractIntInputWidget, iShojiGroupInput):
     def __init__(self, parent=None):
         super(IntInputWidget, self).__init__(parent)
 
 
-class StringInputWidget(AbstractStringInputWidget, iTansuGroupInput):
+class StringInputWidget(AbstractStringInputWidget, iShojiGroupInput):
     def __init__(self, parent=None):
         super(StringInputWidget, self).__init__(parent)
 
 
-class PlainTextInputWidget(AbstractInputPlainText, iTansuGroupInput):
+class PlainTextInputWidget(AbstractInputPlainText, iShojiGroupInput):
     def __init__(self, parent=None):
         super(PlainTextInputWidget, self).__init__(parent)
 
 
-class BooleanInputWidget(AbstractBooleanInputWidget, iTansuGroupInput):
+class BooleanInputWidget(AbstractBooleanInputWidget, iShojiGroupInput):
     def __init__(self, parent=None, text=None, is_selected=False):
         super(BooleanInputWidget, self).__init__(parent, is_selected=is_selected, text=text)
         self.setUserFinishedEditingEvent(self.updateUserInputItem)
@@ -208,7 +208,7 @@ class BooleanInputWidget(AbstractBooleanInputWidget, iTansuGroupInput):
         When the user clicks on this
         """
         try:
-            widget = getWidgetAncestor(self, TansuModelDelegateWidget)
+            widget = getWidgetAncestor(self, ShojiModelDelegateWidget)
             widget.item().columnData()['value'] = self.is_clicked
             self.is_clicked = self.is_clicked
 
@@ -224,7 +224,7 @@ class BooleanInputWidget(AbstractBooleanInputWidget, iTansuGroupInput):
     #     the display text to the user
     #     # get default value
     #     # this is because the default value is set as '' during the constructor in
-    #     # TansuGroupInputWidget --> insertInputWidget
+    #     # ShojiGroupInputWidget --> insertInputWidget
     #     """
     #     # get value
     #     try:
@@ -237,7 +237,7 @@ class BooleanInputWidget(AbstractBooleanInputWidget, iTansuGroupInput):
     #     updateStyleSheet(widget.getMainWidget().getInputWidget())
 
 
-class ComboListInputWidget(AbstractComboListInputWidget, iTansuGroupInput):
+class ComboListInputWidget(AbstractComboListInputWidget, iShojiGroupInput):
     TYPE = "list"
     def __init__(self, parent=None):
         super(ComboListInputWidget, self).__init__(parent)
@@ -250,7 +250,7 @@ class ComboListInputWidget(AbstractComboListInputWidget, iTansuGroupInput):
 
     def updateUserInputItem(self, *args):
         try:
-            widget = getWidgetAncestor(self, TansuModelDelegateWidget)
+            widget = getWidgetAncestor(self, ShojiModelDelegateWidget)
             widget.item().setValue(self.currentText())
 
             # add user input event
@@ -267,7 +267,7 @@ class ComboListInputWidget(AbstractComboListInputWidget, iTansuGroupInput):
         # print(widget, item)
 
 
-class ListInputWidget(AbstractListInputWidget, iTansuGroupInput):
+class ListInputWidget(AbstractListInputWidget, iShojiGroupInput):
     def __init__(self, parent=None, item_list=[]):
         super(ListInputWidget, self).__init__(parent)
         self.populate(item_list)
@@ -280,7 +280,7 @@ class ListInputWidget(AbstractListInputWidget, iTansuGroupInput):
 
     def updateUserInputItem(self, *args):
         try:
-            widget = getWidgetAncestor(self, TansuModelDelegateWidget)
+            widget = getWidgetAncestor(self, ShojiModelDelegateWidget)
             widget.item().columnData()['value'] = self.text()
 
             # add user input event
@@ -299,7 +299,7 @@ class ListInputWidget(AbstractListInputWidget, iTansuGroupInput):
     #     # print(widget, item)
 
 
-class FileBrowserInputWidget(AbstractListInputWidget, iTansuGroupInput):
+class FileBrowserInputWidget(AbstractListInputWidget, iShojiGroupInput):
     def __init__(self, parent=None):
         super(FileBrowserInputWidget, self).__init__(parent=parent)
 
@@ -338,9 +338,9 @@ class FileBrowserInputWidget(AbstractListInputWidget, iTansuGroupInput):
 # TODO Move to one architecture
 
 """ CONTAINERS """
-class LabelledInputWidget(TansuView, AbstractInputGroupFrame):
+class LabelledInputWidget(ShojiView, AbstractInputGroupFrame):
     """
-    A single input widget.  This inherits from the TansuView,
+    A single input widget.  This inherits from the ShojiView,
     to provide a slider for the user to expand/contract the editable area
     vs the view label.
 
@@ -438,8 +438,8 @@ class LabelledInputWidget(TansuView, AbstractInputGroupFrame):
 
         self.__splitter_event_is_paused = False
         # todo
-        # how to handle TansuGroups?
-        #TansuGroupInputWidget
+        # how to handle ShojiGroups?
+        #ShojiGroupInputWidget
 
     def getHandlePosition(self):
         """
@@ -552,12 +552,12 @@ class LabelledInputWidget(TansuView, AbstractInputGroupFrame):
     def showEvent(self, event):
         super(LabelledInputWidget, self).showEvent(event)
         self.resetSliderPositionToDefault()
-        return TansuView.showEvent(self, event)
+        return ShojiView.showEvent(self, event)
 
     def resizeEvent(self, event):
         super(LabelledInputWidget, self).resizeEvent(event)
         self.resetSliderPositionToDefault()
-        return TansuView.resizeEvent(self, event)
+        return ShojiView.resizeEvent(self, event)
 
 
 class FrameGroupInputWidget(AbstractFrameGroupInputWidget):
@@ -572,17 +572,17 @@ class FrameGroupInputWidget(AbstractFrameGroupInputWidget):
         super(FrameGroupInputWidget, self).__init__(parent, name, note, direction)
 
 
-class TansuGroupInputWidget(LabelledInputWidget):
+class ShojiGroupInputWidget(LabelledInputWidget):
     """
     A container for holding user parameters.  The default main
-    widget is a TansuWidget which can have the individual widgets
+    widget is a ShojiWidget which can have the individual widgets
     added to it
 
     Widgets:
-        TansuGroupInputWidget
-            | -- getInputWidget() (AbstractTansuGroupInputWidget)
+        ShojiGroupInputWidget
+            | -- getInputWidget() (AbstractShojiGroupInputWidget)
                     | -- model
-                    | -* (TansuInputWidgetItem)
+                    | -* (ShojiInputWidgetItem)
     """
     def __init__(
         self,
@@ -591,11 +591,11 @@ class TansuGroupInputWidget(LabelledInputWidget):
         note="None",
         direction=Qt.Vertical
     ):
-        class AbstractTansuInputWidget(TansuModelViewWidget):
+        class AbstractShojiInputWidget(ShojiModelViewWidget):
             def __init__(self, parent=None):
-                super(AbstractTansuInputWidget, self).__init__(parent)
-                self.model().setItemType(TansuInputWidgetItem)
-                self.setDelegateType(TansuModelViewWidget.DYNAMIC)
+                super(AbstractShojiInputWidget, self).__init__(parent)
+                self.model().setItemType(ShojiInputWidgetItem)
+                self.setDelegateType(ShojiModelViewWidget.DYNAMIC)
                 self.setHeaderPosition(attrs.WEST)
                 self.setMultiSelect(True)
                 self.setMultiSelectDirection(Qt.Vertical)
@@ -608,13 +608,13 @@ class TansuGroupInputWidget(LabelledInputWidget):
                 self.setDelegateTitleIsShown(False)
 
         # inherit
-        super(TansuGroupInputWidget, self).__init__(parent, name, direction=direction, widget_type=AbstractTansuInputWidget)
+        super(ShojiGroupInputWidget, self).__init__(parent, name, direction=direction, widget_type=AbstractShojiInputWidget)
 
         self.setIsSoloViewEnabled(False)
 
         # setup main widget
         self.getInputWidget().setDelegateType(
-            TansuModelViewWidget.DYNAMIC,
+            ShojiModelViewWidget.DYNAMIC,
             dynamic_widget=LabelledInputWidget,
             dynamic_function=self.updateGUI
         )
@@ -622,8 +622,8 @@ class TansuGroupInputWidget(LabelledInputWidget):
     @staticmethod
     def updateGUI(parent, widget, item):
         """
-        widget (TansuModelDelegateWidget)
-        item (TansuModelItem)
+        widget (ShojiModelDelegateWidget)
+        item (ShojiModelItem)
         """
         if item:
             # get attrs
@@ -694,7 +694,7 @@ class TansuGroupInputWidget(LabelledInputWidget):
             data['value'] = default_value
 
         # create item
-        user_input_index = self.getInputWidget().insertTansuWidget(index, column_data=data)
+        user_input_index = self.getInputWidget().insertShojiWidget(index, column_data=data)
         user_input_item = user_input_index.internalPointer()
 
         # setup new item
@@ -758,7 +758,7 @@ if __name__ == "__main__":
         return
 
 
-    widget = TansuGroupInputWidget(name="test")
+    widget = ShojiGroupInputWidget(name="test")
     inputs = ["cx", "cy", "fx", "fy", "radius"]  # , stops"""
     for i in inputs:
         widget.insertInputWidget(0, FloatInputWidget, i, asdf,

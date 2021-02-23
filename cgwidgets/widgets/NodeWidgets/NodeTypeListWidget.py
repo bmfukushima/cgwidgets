@@ -79,7 +79,7 @@ if __name__ == "__main__":
     import sys
     from qtpy.QtWidgets import QApplication, QLabel, QVBoxLayout
     from qtpy.QtGui import QCursor
-    from cgwidgets.widgets import TansuModelViewWidget
+    from cgwidgets.widgets import ShojiModelViewWidget
     app = QApplication(sys.argv)
 
     w = NodeTypeListWidget()

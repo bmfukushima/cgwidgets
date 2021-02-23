@@ -1,5 +1,5 @@
 """
-The TansuModelViewWidget ( which needs a better name, potentially "Tansu Widget" )
+The ShojiModelViewWidget ( which needs a better name, potentially "Shoji Widget" )
 is essentially a Tab Widget which replaces the header with either a ListView, or a
 TreeView containing its own internal model.  When the user selects an item in the view, the Delegate, will be updated
 with a widget provided by one of two modes.
@@ -13,17 +13,17 @@ with a widget provided by one of two modes.
 
 Header (ModelViewWidget):
     The header is what is what is usually called the "View" on the ModelView system.
-    However, due to how the TansuModelViewWidget works, header is a better term.  This
+    However, due to how the ShojiModelViewWidget works, header is a better term.  This
     header will display the View for the model, along with its own internal delegate
     system that will allow you to register widgets that will popup on Modifier+Key Combos.
     These delegates can be used for multiple purposes, such as setting up filtering of the
     view, item creation, etc.TREE
 
-Delegate (TansuView):
+Delegate (ShojiView):
     This is the area that displays the widgets when the user selects different items in the
     header.  If multi select is enabled, AND the user selects multiple items, the delegate
     will display ALL of the widgets to the user.  Any widget can become full screen by pressing
-    the ~ key (note that this key can also be set using TansuView.FULLSCREEN_HOTKEY class attr),
+    the ~ key (note that this key can also be set using ShojiView.FULLSCREEN_HOTKEY class attr),
     and can leave full screen by pressing the ESC key.  Pressing the ESC key harder will earn you
     epeen points for how awesome you are.  The recommended approach is to use both hands and slam
     them down on the ESC key for maximum effect.  Bonus points are earned if the key board is lifted
@@ -33,7 +33,7 @@ Delegate (TansuView):
         LOL | ROFL | LMAO | HAHAHA
 
 Hierachy
-    TansuModelViewWidget --> (QSplitter, iTansuDynamicWidget):
+    ShojiModelViewWidget --> (QSplitter, iShojiDynamicWidget):
         |-- QBoxLayout
             | -- headerWidget --> ModelViewWidget --> QSplitter
                     |-- view --> (AbstractDragDropListView | AbstractDragDropTreeView) --> QSplitter
@@ -42,9 +42,9 @@ Hierachy
                     |* delegate --> QWidget
 
             | -- Scroll Area
-                |-- DelegateWidget (TansuMainDelegateWidget --> TansuView)
+                |-- DelegateWidget (ShojiMainDelegateWidget --> ShojiView)
                         | -- _temp_proxy_widget (QWidget)
-                        | -* TansuModelDelegateWidget (AbstractGroupBox)
+                        | -* ShojiModelDelegateWidget (AbstractGroupBox)
                                 | -- Stacked/Dynamic Widget (main_widget)
 TODO:
     * custom model / items
@@ -59,9 +59,9 @@ from qtpy.QtWidgets import QApplication, QLabel, QLineEdit, QWidget, QVBoxLayout
 from qtpy.QtGui import QCursor
 
 from cgwidgets.widgets import (
-    TansuModelViewWidget, TansuModelItem, TansuModel,
+    ShojiModelViewWidget, ShojiModelItem, ShojiModel,
     ModelViewWidget, FloatInputWidget, LabelledInputWidget, StringInputWidget)
-from cgwidgets.views import TansuView, AbstractDragDropListView, AbstractDragDropTreeView
+from cgwidgets.views import ShojiView, AbstractDragDropListView, AbstractDragDropTreeView
 from cgwidgets.utils import attrs
 
 
@@ -69,7 +69,7 @@ app = QApplication(sys.argv)
 
 
 # CREATE MAIN WIDGET
-tansu_widget = TansuModelViewWidget()
+tansu_widget = ShojiModelViewWidget()
 
 # SETUP VIEW
 """
@@ -95,15 +95,15 @@ tansu_widget.setHeaderViewType(ModelViewWidget.TREE_VIEW)
 
 # SETUP CUSTOM MODEL
 def setupCustomModel():
-    class CustomModel(TansuModel):
+    class CustomModel(ShojiModel):
         def __init__(self, parent=None, root_item=None):
             super(CustomModel, self).__init__(parent, root_item=root_item)
 
-    class CustomModelItem(TansuModelItem):
+    class CustomModelItem(ShojiModelItem):
         def __init__(self, parent=None):
             super(CustomModelItem, self).__init__(parent)
 
-    model = TansuModel()
+    model = ShojiModel()
     item_type = CustomModelItem
     model.setItemType(item_type)
     tansu_widget.setModel(model)
@@ -123,30 +123,30 @@ tansu_widget.setHeaderData(['name', 'SINE.', "woowoo"])
 def setupAsStacked():
     # insert tabs
 
-    tansu_widget.insertTansuWidget(0, column_data={'name' : '<title> hello'},
+    tansu_widget.insertShojiWidget(0, column_data={'name' : '<title> hello'},
                                    widget=LabelledInputWidget(name='hello', widget_type=FloatInputWidget))
-    tansu_widget.insertTansuWidget(0, column_data={'name' : '<title> world'}, widget=QLabel('world'))
+    tansu_widget.insertShojiWidget(0, column_data={'name' : '<title> world'}, widget=QLabel('world'))
 
-    tansu_delegate = TansuView()
+    tansu_delegate = ShojiView()
     for char in 'SINE.':
         tansu_delegate.addWidget(StringInputWidget(char))
-    tansu_delegate_item = tansu_widget.insertTansuWidget(0, column_data={'name' : '<title> tansu'}, widget=tansu_delegate)
+    tansu_delegate_item = tansu_widget.insertShojiWidget(0, column_data={'name' : '<title> tansu'}, widget=tansu_delegate)
 
     # insert child tabs
     # insert child widgets
     for y in range(0, 2):
         widget = StringInputWidget(str("SINE."))
-        tansu_widget.insertTansuWidget(y, column_data={'name': str(y), 'one': 'datttaaa'}, widget=widget, parent=tansu_delegate_item)
+        tansu_widget.insertShojiWidget(y, column_data={'name': str(y), 'one': 'datttaaa'}, widget=widget, parent=tansu_delegate_item)
 
 def setupAsDynamic():
     class DynamicWidgetExample(QWidget):
         """
-        Dynamic widget to be used for the TansuModelViewWidget.  This widget will be shown
-        everytime an item is selected in the TansuModelViewWidget, and the updateGUI function
+        Dynamic widget to be used for the ShojiModelViewWidget.  This widget will be shown
+        everytime an item is selected in the ShojiModelViewWidget, and the updateGUI function
         will be run, every time an item is selected.
 
         Simple name of overloaded class to be used as a dynamic widget for
-        the TansuModelViewWidget.
+        the ShojiModelViewWidget.
         """
 
         def __init__(self, parent=None):
@@ -158,9 +158,9 @@ def setupAsDynamic():
         @staticmethod
         def updateGUI(parent, widget, item):
             """
-            parent (TansuModelViewWidget)
-            widget (TansuModelDelegateWidget)
-            item (TansuModelItem)
+            parent (ShojiModelViewWidget)
+            widget (ShojiModelDelegateWidget)
+            item (ShojiModelItem)
             self --> widget.getMainWidget()
             """
             if item:
@@ -173,7 +173,7 @@ def setupAsDynamic():
     class DynamicItemExample(FloatInputWidget):
         """
         Custom widget which has overloaded functions/widget to be
-        displayed in the Tansu
+        displayed in the Shoji
         """
         def __init__(self, parent=None):
             super(DynamicItemExample, self).__init__(parent)
@@ -181,9 +181,9 @@ def setupAsDynamic():
         @staticmethod
         def updateGUI(parent, widget, item):
             """
-            parent (TansuModelViewWidget)
-            widget (TansuModelDelegateWidget)
-            item (TansuModelItem)
+            parent (ShojiModelViewWidget)
+            widget (ShojiModelDelegateWidget)
+            item (ShojiModelItem)
             self --> widget.getMainWidget()
             """
             print("---- DYNAMIC ITEM ----")
@@ -193,7 +193,7 @@ def setupAsDynamic():
 
     # set all items to use this widget
     tansu_widget.setDelegateType(
-        TansuModelViewWidget.DYNAMIC,
+        ShojiModelViewWidget.DYNAMIC,
         dynamic_widget=DynamicWidgetExample,
         dynamic_function=DynamicWidgetExample.updateGUI
     )
@@ -201,16 +201,16 @@ def setupAsDynamic():
     # create items
     for x in range(3):
         name = '<title {}>'.format(str(x))
-        tansu_widget.insertTansuWidget(x, column_data={'name': name})
+        tansu_widget.insertShojiWidget(x, column_data={'name': name})
 
     # insert child tabs
     # insert child widgets
-    parent_item = tansu_widget.insertTansuWidget(0, column_data={'name': "PARENT"})
+    parent_item = tansu_widget.insertShojiWidget(0, column_data={'name': "PARENT"})
     for y in range(0, 2):
-        tansu_widget.insertTansuWidget(y, column_data={'name': str(y), 'one': 'datttaaa'}, parent=parent_item)
+        tansu_widget.insertShojiWidget(y, column_data={'name': str(y), 'one': 'datttaaa'}, parent=parent_item)
 
     # custom item
-    custom_index = tansu_widget.insertTansuWidget(0, column_data={'name': 'Custom Item Widget'})
+    custom_index = tansu_widget.insertShojiWidget(0, column_data={'name': 'Custom Item Widget'})
     custom_index.internalPointer().setDynamicWidgetBaseClass(DynamicItemExample)
     custom_index.internalPointer().setDynamicUpdateFunction(DynamicItemExample.updateGUI)
 
@@ -243,8 +243,8 @@ def testDrag(items, model):
     of the model.
 
     Args:
-        items (list): of TansuModelItems
-        model (TansuModel)
+        items (list): of ShojiModelItems
+        model (ShojiModel)
     """
     print("---- DRAG EVENT ----")
     print(items, model)
@@ -255,10 +255,10 @@ def testDrop(items, model, row, parent):
     in the model.
 
     Args:
-        items (list): of TansuModelItems
-        model (TansuModel):
+        items (list): of ShojiModelItems
+        model (ShojiModel):
         row (int): row item dropped at
-        parent (TansuModelItem): parent item that was dropped on
+        parent (ShojiModelItem): parent item that was dropped on
 
     """
     print("---- DROP EVENT ----")

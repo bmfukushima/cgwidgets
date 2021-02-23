@@ -12,10 +12,10 @@ from cgwidgets.views import (
 )
 from cgwidgets.utils import attrs, getWidgetAncestor
 from cgwidgets.settings.colors import iColor
-from cgwidgets.views import TansuView
+from cgwidgets.views import ShojiView
 
 
-class ModelViewWidget(TansuView):
+class ModelViewWidget(ShojiView):
     """
     View widget for the Abstract ModelViewDelegate in this lib
 
@@ -40,7 +40,7 @@ class ModelViewWidget(TansuView):
         textChangedEvent (item, old_value, new_value)
 
     Hierarchy:
-        TansuView --> QSplitter
+        ShojiView --> QSplitter
             |- view --> (AbstractDragDropListView | AbstractDragDropTreeView) --> QSplitter
                 |- model (AbstractDragDropModel)
                     |- (AbstractDragDropModelItems)
@@ -257,7 +257,7 @@ class ModelViewWidget(TansuView):
 
         Args:
             view_orientation (Qt.Orientation): The orientation that the view will
-                be displayed in.  Note that this is NOT this Tansu widgets
+                be displayed in.  Note that this is NOT this Shoji widgets
                 base orientation
                     Qt.Horizonal | Qt.Vertical
             view_position (attrs.DIRECTION):  When provided, will rearrange the
@@ -292,7 +292,7 @@ class ModelViewWidget(TansuView):
             _orientation = view_orientation
         self._view_position = view_position
         self._view_orientation = view_orientation
-        return TansuView.setOrientation(self, _orientation)
+        return ShojiView.setOrientation(self, _orientation)
 
     def setMultiSelect(self, enabled):
         self.view().setMultiSelect(enabled)
@@ -335,7 +335,7 @@ class ModelViewWidget(TansuView):
     def keyPressEvent(self, event):
         """
         # TODO TOGGLE DELEGATE KEY
-        # this is also maintained under... TansuMainDelegateWidget
+        # this is also maintained under... ShojiMainDelegateWidget
         """
 
         # get attrs
@@ -367,21 +367,21 @@ class ModelViewWidget(TansuView):
                         # focus model
                         self.setFocus()
 
-        # disable full screen ability of Tansu
-        if event.key() != TansuView.FULLSCREEN_HOTKEY:
-            return TansuView.keyPressEvent(self, event)
+        # disable full screen ability of Shoji
+        if event.key() != ShojiView.FULLSCREEN_HOTKEY:
+            return ShojiView.keyPressEvent(self, event)
 
 
-class ModelViewSearchWidget(TansuView):
+class ModelViewSearchWidget(ShojiView):
     """
     Input widget containing the controls to search for specific items in the model.
 
     This widget can be shown by hitting the CTRL+F combo'
 
     Hierarchy:
-        ModelViewSearchWidget --> TansuView
+        ModelViewSearchWidget --> ShojiView
             |- ModelViewSearchBox --> AbstractStringInputWidget
-            |- search_options --> TansuView
+            |- search_options --> ShojiView
                     |- select_flags --> (ModelViewSelectFlags --> AbstractListInputWidget)
                     |- match_flags --> (ModelViewSelectFlags --> AbstractListInputWidget)
     """
@@ -395,7 +395,7 @@ class ModelViewSearchWidget(TansuView):
         self.search_box = ModelViewSearchBox(self)
 
         # setup flag
-        self.flags_layout = TansuView(self, orientation=Qt.Horizontal)
+        self.flags_layout = ShojiView(self, orientation=Qt.Horizontal)
         self.select_flags = ModelViewSelectFlags(self)
         self.match_flags = ModelViewMatchFlags(self)
 

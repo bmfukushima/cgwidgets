@@ -4,7 +4,7 @@
 TODO:
     *   Add drag/drop
     *   Add multiple columns
-            rows --> TansuModelItem
+            rows --> ShojiModelItem
                                 | -- column list (holds data for each column of this row...)
 
 """
@@ -21,18 +21,18 @@ import sys
 from cgwidgets.views import AbstractDragDropModel
 
 # https://doc.qt.io/qt-5/model-view-programming.html#model-view-classes
-from cgwidgets.widgets.TansuWidget import (iTansuDynamicWidget)
+from cgwidgets.widgets.ShojiWidget import (iShojiDynamicWidget)
 
 from cgwidgets.views import AbstractDragDropModelItem
 
 
-class TansuModelItem(AbstractDragDropModelItem, iTansuDynamicWidget):
+class ShojiModelItem(AbstractDragDropModelItem, iShojiDynamicWidget):
     """
     Attributes:
         delegate_widget (QWidget): Widget to be shown when this item is
             selected
         dynamic_widget_base_class (QWidget): Widget to be shown when this item is
-            selected if the Tansu is in DYNAMIC mode.
+            selected if the Shoji is in DYNAMIC mode.
     """
     def __init__(self, parent=None):
         #self._data = data
@@ -67,14 +67,14 @@ class TansuModelItem(AbstractDragDropModelItem, iTansuDynamicWidget):
         self._delegate_widget = _delegate_widget
 
 
-class TansuModel(AbstractDragDropModel):
+class ShojiModel(AbstractDragDropModel):
     """
-    Abstract model that is used for the Tansu.  This supports lists, and
+    Abstract model that is used for the Shoji.  This supports lists, and
     trees.
 
     Attributes:
         item_type (Item): Data item to be stored on each index.  By default this
-            set to the TansuModelItem
+            set to the ShojiModelItem
 
     TODO:
         *   I dont think I need <header_type> anymore...
@@ -83,9 +83,9 @@ class TansuModel(AbstractDragDropModel):
     ITEM_WIDTH = 100
 
     def __init__(self, parent=None, root_item=None):
-        super(TansuModel, self).__init__(parent, root_item=root_item)
+        super(ShojiModel, self).__init__(parent, root_item=root_item)
         #self._header_type = ''
-        self.setItemType(TansuModelItem)
+        self.setItemType(ShojiModelItem)
 
 
 if __name__ == '__main__':
@@ -96,7 +96,7 @@ if __name__ == '__main__':
 
     #QTreeView()
 
-    model = TansuModel()
+    model = ShojiModel()
     for x in range(0, 4):
         model.insertNewIndex(x, str('node%s'%x))
     #model.insertRows(0, 3, QModelIndex())
@@ -105,7 +105,7 @@ if __name__ == '__main__':
 
     #parent_index = model.index(0, 1, QModelIndex())
     #parent_item = parent_index.internalPointer()
-    #TansuModelItem("child", parent_item)
+    #ShojiModelItem("child", parent_item)
 
     tree_view = QTreeView()
 

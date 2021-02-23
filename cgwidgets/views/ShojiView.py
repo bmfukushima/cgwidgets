@@ -2,7 +2,7 @@
 TODO:
     *   Full Screen mode
     *   Better Displays...
-            Has been added to TabTansu... add to this one?
+            Has been added to TabShoji... add to this one?
 
 """
 
@@ -17,7 +17,7 @@ from cgwidgets.settings.hover_display import installHoverDisplaySS, BACKGROUND_0
 from cgwidgets.utils import updateStyleSheet
 
 
-class TansuView(QSplitter):
+class ShojiView(QSplitter):
     """
     Splitter widget that has advanced functionality.  This serves as a base
     class for everything that will be used through this library.
@@ -53,7 +53,7 @@ class TansuView(QSplitter):
     FULLSCREEN_HOTKEY = 96
 
     def __init__(self, parent=None, orientation=Qt.Vertical):
-        super(TansuView, self).__init__(parent)
+        super(ShojiView, self).__init__(parent)
 
         # set colors
         self._rgba_handle = iColor["rgba_outline"]
@@ -69,7 +69,7 @@ class TansuView(QSplitter):
         self.setProperty("is_solo_view_enableable", True)
 
         self._is_solo_view = False
-        self._solo_view_hotkey = TansuView.FULLSCREEN_HOTKEY
+        self._solo_view_hotkey = ShojiView.FULLSCREEN_HOTKEY
         self._is_handle_static = False
         self.setProperty("is_handle_static", False)
         self._is_handle_visible = True
@@ -78,7 +78,7 @@ class TansuView(QSplitter):
 
         # set up handle defaults
         self._handle_margin_offset = 0
-        self.setHandleWidth(TansuView.HANDLE_WIDTH)
+        self.setHandleWidth(ShojiView.HANDLE_WIDTH)
         self.setHandleLength(-1)
 
         #self.updateStyleSheet()
@@ -119,7 +119,7 @@ class TansuView(QSplitter):
 
         This will be done, by setting all of the handle positions to a
         value relative to the handles index and the width/height of this
-        TansuView.
+        ShojiView.
 
         Note:
             Handle at 0 index is ALWAYs invisible
@@ -150,10 +150,10 @@ class TansuView(QSplitter):
         """
         if widget:
             if widget.parent():
-                if isinstance(widget.parent(), TansuView):
+                if isinstance(widget.parent(), ShojiView):
                     return widget.parent().indexOf(widget), widget
                 else:
-                    return TansuView.getIndexOfWidget(widget.parent())
+                    return ShojiView.getIndexOfWidget(widget.parent())
             else:
                 return None, None
 
@@ -417,7 +417,7 @@ class TansuView(QSplitter):
         widgets.
 
         If it is already taking up all of the space, it will look for the next
-        TansuView and set that one to take up the entire space.  It
+        ShojiView and set that one to take up the entire space.  It
         will continue doing this recursively both up/down until there it is
         either fully expanded or fully collapsed.
 
@@ -505,17 +505,17 @@ class TansuView(QSplitter):
         updateStyleSheet(self)
 
     def createHandle(self):
-        handle = TansuViewHandle(self.orientation(), self)
+        handle = ShojiViewHandle(self.orientation(), self)
         return handle
 
     def getAllHandles(self):
         """
-        Returns (list): of all handles in this TansuView
+        Returns (list): of all handles in this ShojiView
 
         """
         _handles = []
         for i, child in enumerate(self.children()):
-            if isinstance(child, TansuViewHandle):
+            if isinstance(child, ShojiViewHandle):
                 _handles.append(child)
         return _handles
 
@@ -657,9 +657,9 @@ class TansuView(QSplitter):
         self.updateStyleSheet()
 
 
-class TansuViewHandle(QSplitterHandle):
+class ShojiViewHandle(QSplitterHandle):
     def __init__(self, orientation, parent=None):
-        super(TansuViewHandle, self).__init__(orientation, parent)
+        super(ShojiViewHandle, self).__init__(orientation, parent)
 
     def mouseMoveEvent(self, event):
         if self.parent().isHandleStatic():
@@ -674,7 +674,7 @@ if __name__ == "__main__":
     from qtpy.QtGui import QCursor
     app = QApplication(sys.argv)
 
-    main_splitter = TansuView()
+    main_splitter = ShojiView()
     main_splitter.setOrientation(Qt.Vertical)
     main_splitter.setIsHandleVisible(False)
     main_splitter.setHandleLength(100)
@@ -685,7 +685,7 @@ if __name__ == "__main__":
     main_splitter.addWidget(QLabel('b'))
     main_splitter.addWidget(QLabel('c'))
     label.setStyleSheet("color: rgba(255,0,0,255)")
-    splitter1 = TansuView(orientation=Qt.Horizontal)
+    splitter1 = ShojiView(orientation=Qt.Horizontal)
     splitter1.setObjectName("embed")
     for x in range(3):
         l = QLabel(str(x))

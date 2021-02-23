@@ -10,7 +10,7 @@ from cgwidgets.widgets import (
     IntInputWidget,
     StringInputWidget,
     BooleanInputWidget,
-    TansuGroupInputWidget,
+    ShojiGroupInputWidget,
     ListInputWidget,
     LabelledInputWidget,
     FrameGroupInputWidget,
@@ -47,8 +47,8 @@ def tansuInputTest(item, widget, value):
     print(item, widget, value)
     # widget.setText(str(value))
 
-""" Setup Tansu Widget """
-tansu_group_widget = TansuGroupInputWidget(parent=None, name='TansuGroupInputWidget')
+""" Setup Shoji Widget """
+tansu_group_widget = ShojiGroupInputWidget(parent=None, name='ShojiGroupInputWidget')
 
 # add user inputs
 tansu_group_widget.insertInputWidget(0, FloatInputWidget, 'Float', tansuInputTest)

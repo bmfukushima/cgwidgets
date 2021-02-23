@@ -1,21 +1,21 @@
 """
-TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
+ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
     |-- QBoxLayout
-        | -- TansuHeader (BaseTansuWidget)
+        | -- ShojiHeader (BaseShojiWidget)
             TODO:
                 * View scroll bar needs to change locations
                 https://www.qtcentre.org/threads/23624-Scrollbar-on-the-left
                 from the sounds it it. This is going to be a proxy display type setup
-            | -- ViewWidget (TansuHeaderListView)
-                    ( TansuHeaderListView | TansuHeaderTableView | TansuHeaderTreeView )
+            | -- ViewWidget (ShojiHeaderListView)
+                    ( ShojiHeaderListView | ShojiHeaderTableView | ShojiHeaderTreeView )
             | -- TODO # widget is provided as a label right now
                     *  This still needs the API set up for the arbitrary widget
                     *  Display Mode ( On / Off / Hotkey popup )
 
         | -- Scroll Area
-            |-- DelegateWidget (TansuMainDelegateWidget --> TansuView)
+            |-- DelegateWidget (ShojiMainDelegateWidget --> ShojiView)
                     | -- _temp_proxy_widget (QWidget)
-                    | -* TansuModelDelegateWidget (AbstractGroupBox)
+                    | -* ShojiModelDelegateWidget (AbstractGroupBox)
                             | -- Stacked/Dynamic Widget (main_widget)
 """
 
@@ -27,24 +27,24 @@ from qtpy.QtGui import QCursor
 from cgwidgets.utils import getWidgetAncestor, attrs
 from cgwidgets.settings.colors import iColor
 from cgwidgets.widgets import AbstractFrameGroupInputWidget, ModelViewWidget
-from cgwidgets.views import TansuView
+from cgwidgets.views import ShojiView
 
-from cgwidgets.widgets.TansuWidget import (TansuModel, iTansuDynamicWidget)
+from cgwidgets.widgets.ShojiWidget import (ShojiModel, iShojiDynamicWidget)
 from cgwidgets.views import (AbstractDragDropAbstractView)
 
 
-class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
+class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
     """
     This is the designing portion of this editor.  This is where the TD
     will design a custom UI/hooks/handlers for the tool for the end user,
     which will be displayed in the ViewWidget
 
     Args:
-        direction (TansuModelViewWidget.DIRECTION): Determines where the tab
+        direction (ShojiModelViewWidget.DIRECTION): Determines where the tab
             bar should be placed.  The default value is NORTH
 
     Attributes:
-        delegate_type (TansuModelViewWidget.TYPE): What type of tab widget this should be,
+        delegate_type (ShojiModelViewWidget.TYPE): What type of tab widget this should be,
             options are STACKED | DYNAMIC
             see class attrs for more info...
         selected_labels_list (list): list of labels that are currently selected by the user
@@ -75,7 +75,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
     MULTI = False
     TYPE = STACKED
     def __init__(self, parent=None, direction=attrs.NORTH):
-        super(TansuModelViewWidget, self).__init__(parent)
+        super(ShojiModelViewWidget, self).__init__(parent)
         # etc attrs
         self.setHandleWidth(0)
         self._header_view_position = direction #just a temp set... for things
@@ -87,13 +87,13 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         self._delegate_header_direction = Qt.Vertical
 
         # setup model / view
-        self._model = TansuModel()
-        self._header_widget = TansuHeader(self)
+        self._model = ShojiModel()
+        self._header_widget = ShojiHeader(self)
         self._header_widget.setModel(self._model)
         self._header_widget.setItemSelectedEvent(self._header_widget.selectionChanged)
 
         # setup delegate
-        delegate_widget = TansuMainDelegateWidget()
+        delegate_widget = ShojiMainDelegateWidget()
         self.setDelegateWidget(delegate_widget)
         self._temp_proxy_widget = QWidget()
         self._temp_proxy_widget.setObjectName("proxy_widget")
@@ -111,9 +111,9 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         self.addWidget(self._header_widget)
 
         # set default attrs
-        self.setDelegateType(TansuModelViewWidget.TYPE)
+        self.setDelegateType(ShojiModelViewWidget.TYPE)
         self.setHeaderPosition(direction)
-        self.setMultiSelect(TansuModelViewWidget.MULTI)
+        self.setMultiSelect(ShojiModelViewWidget.MULTI)
 
         self.setHeaderWidgetToDefaultSize()
 
@@ -122,7 +122,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
     """ API """
     # TODO move all of these to HeaderItem...
 
-    def insertTansuWidget(self, row, column_data={}, parent=None, widget=None):
+    def insertShojiWidget(self, row, column_data={}, parent=None, widget=None):
         """
         Creates a new tab at  the specified index
 
@@ -148,9 +148,9 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         view_item.setColumnData(column_data)
 
         # add to layout if stacked
-        if self.getDelegateType() == TansuModelViewWidget.STACKED:
+        if self.getDelegateType() == ShojiModelViewWidget.STACKED:
             # create tab widget widget
-            view_delegate_widget = self.createTansuModelDelegateWidget(view_item, widget)
+            view_delegate_widget = self.createShojiModelDelegateWidget(view_item, widget)
             view_item.setDelegateWidget(view_delegate_widget)
 
             # insert tab widget
@@ -171,7 +171,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
 
     def rootItem(self):
         """
-        Returns (TansuModelViewItem): root item for the model
+        Returns (ShojiModelViewItem): root item for the model
         """
         model = self.model()
         root_item = model.getRootItem()
@@ -435,7 +435,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         elif self.headerPosition() == attrs.EAST:
             self.moveSplitter(self.width() - self.header_width, 1)
 
-    def createTansuModelDelegateWidget(self, item, widget):
+    def createShojiModelDelegateWidget(self, item, widget):
         """
         Creates a new tab widget widget...
         TODO:
@@ -445,7 +445,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         name = self.model().getItemName(item)
 
         # create delegate
-        display_widget = TansuModelDelegateWidget(self, name)
+        display_widget = ShojiModelDelegateWidget(self, name)
 
         # set up attrs
         display_widget.setMainWidget(widget)
@@ -482,7 +482,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         Updates/refreshes which widgets should be shown/hidden based off of
         the current models selection list
         """
-        if self.getDelegateType() == TansuModelViewWidget.STACKED:
+        if self.getDelegateType() == ShojiModelViewWidget.STACKED:
             self.toggleDelegateSpacerWidget()
             selection_model = self.headerWidget().selectionModel()
             widget_list = []
@@ -493,7 +493,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
             self.delegateWidget().isolateWidgets(widget_list)
 
         # update dynamic delagate
-        elif self.getDelegateType() == TansuModelViewWidget.DYNAMIC:
+        elif self.getDelegateType() == ShojiModelViewWidget.DYNAMIC:
             selection_model = self.headerWidget().selectionModel()
             for index in selection_model.selectedIndexes():
                 item = index.internalPointer()
@@ -503,7 +503,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
 
     def updateDelegateItem(self, item, selected, column=0):
         """
-        item (TansuModelItem)
+        item (ShojiModelItem)
         selected (bool): determines if this item has been selected
             or un selected.
         """
@@ -511,12 +511,12 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         # todo column registry.
         ## note that this is set so that it will not run for each column
         if column == 0:
-            if self.getDelegateType() == TansuModelViewWidget.STACKED:
+            if self.getDelegateType() == ShojiModelViewWidget.STACKED:
                 if item.delegateWidget():
                     self.__updateStackedDisplay(item, selected)
 
             # update dynamic widgets
-            if self.getDelegateType() == TansuModelViewWidget.DYNAMIC:
+            if self.getDelegateType() == ShojiModelViewWidget.DYNAMIC:
                 self.__updateDynamicDisplay(item, selected)
 
     def __updateStackedDisplay(self, item, selected):
@@ -563,7 +563,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
             dynamic_widget_class = self.getDynamicWidgetBaseClass()
 
         new_dynamic_widget = dynamic_widget_class()
-        new_widget = self.createTansuModelDelegateWidget(item, new_dynamic_widget)
+        new_widget = self.createShojiModelDelegateWidget(item, new_dynamic_widget)
         return new_widget
 
     def updateDynamicWidget(self, parent, widget, item, *args, **kwargs):
@@ -572,7 +572,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
 
         Args:
             widget (DynamicWidget) The dynamic widget that should be updated
-            item (TabTansuLabelWidget): The tab label that should be updated
+            item (TabShojiLabelWidget): The tab label that should be updated
         """
         # needs to pick which to update...
         if item.getDynamicUpdateFunction():
@@ -599,7 +599,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
                 attrs.SOUTH
             ]:
                 width = int( self.width() / num_items )
-                if TansuModel.ITEM_WIDTH < width:
+                if ShojiModel.ITEM_WIDTH < width:
                     model.item_width = width
                     self.updateStyleSheet()
         return QSplitter.resizeEvent(self, event)
@@ -618,7 +618,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         widget_pressed = qApp.widgetAt(pos)
         is_child_of_header = None
         if widget_pressed:
-            is_child_of_header = getWidgetAncestor(widget_pressed, TansuHeader)
+            is_child_of_header = getWidgetAncestor(widget_pressed, ShojiHeader)
         return True if is_child_of_header else False
 
     """ PROPERTIES """
@@ -648,16 +648,16 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         state.
 
         Args:
-            value (TansuModelViewWidget.TYPE): The type of tab menu that this
+            value (ShojiModelViewWidget.TYPE): The type of tab menu that this
                 widget should be set to
             dynamic_widget (QWidget): The dynamic widget to be displayed.
             dynamic_function (function): The function to be run when a label
                 is selected.
         """
         # update layout
-        if value == TansuModelViewWidget.STACKED:
+        if value == ShojiModelViewWidget.STACKED:
             pass
-        elif value == TansuModelViewWidget.DYNAMIC:
+        elif value == ShojiModelViewWidget.DYNAMIC:
             self.setDynamicWidgetBaseClass(dynamic_widget)
             self.setDynamicUpdateFunction(dynamic_function)
 
@@ -688,7 +688,7 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
             self.headerWidget().view(),
             style_sheet_args,
             header_position=self.headerPosition(),
-            outline_width=TansuModelViewWidget.OUTLINE_WIDTH
+            outline_width=ShojiModelViewWidget.OUTLINE_WIDTH
         )
         style_sheet_args['splitter_style_sheet'] = splitter_style_sheet
 
@@ -718,18 +718,18 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
 
 
 """ DELEGATE """
-class TansuMainDelegateWidget(TansuView):
+class ShojiMainDelegateWidget(ShojiView):
     """
     The main delegate view that will show all of the items widgets that
      the user currently has selected
     """
 
     def __init__(self, parent=None):
-        super(TansuMainDelegateWidget, self).__init__(parent)
+        super(ShojiMainDelegateWidget, self).__init__(parent)
         self.rgba_background = iColor["rgba_background_00"]
-        self.setToggleSoloViewEvent(self.resetTansuViewDisplay)
+        self.setToggleSoloViewEvent(self.resetShojiViewDisplay)
 
-    def resetTansuViewDisplay(self, enabled, widget):
+    def resetShojiViewDisplay(self, enabled, widget):
         """
 
         Args:
@@ -740,30 +740,30 @@ class TansuMainDelegateWidget(TansuView):
 
         """
         if not enabled:
-            tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
+            tab_tansu_widget = getWidgetAncestor(self, ShojiModelViewWidget)
             if tab_tansu_widget:
                 tab_tansu_widget.updateDelegateDisplay()
                 tab_tansu_widget.toggleDelegateSpacerWidget()
 
     def showEvent(self, event):
-        tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
+        tab_tansu_widget = getWidgetAncestor(self, ShojiModelViewWidget)
         if tab_tansu_widget:
             tab_tansu_widget.updateDelegateDisplay()
 
     def keyPressEvent(self, event):
         # preflight | suppress if over header
-        is_child_of_header = TansuModelViewWidget.isWidgetUnderCursorChildOfHeader()
-        tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
+        is_child_of_header = ShojiModelViewWidget.isWidgetUnderCursorChildOfHeader()
+        tab_tansu_widget = getWidgetAncestor(self, ShojiModelViewWidget)
         if is_child_of_header:
             return tab_tansu_widget.headerWidget().keyPressEvent(event)
         else:
-            return TansuView.keyPressEvent(self, event)
+            return ShojiView.keyPressEvent(self, event)
         # ModelViewWidget.keyPressEvent(tab_tansu_widget.headerWidget(), event)
 
         # Global escape
         # if event.key() == Qt.Key_Escape:
         #     pass
-            # tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
+            # tab_tansu_widget = getWidgetAncestor(self, ShojiModelViewWidget)
             # if tab_tansu_widget:
             #     tab_tansu_widget.updateDelegateDisplay()
             #     tab_tansu_widget.toggleDelegateSpacerWidget()
@@ -772,28 +772,28 @@ class TansuMainDelegateWidget(TansuView):
         #     """
         #     If this is another tansu/labelled input etc, it will bypass
         #     and use that widgets key press.  If it is over the main delegate,
-        #     it will register a TansuView press.
+        #     it will register a ShojiView press.
         #     """
         #     pos = QCursor.pos()
         #     widget_pressed = qApp.widgetAt(pos)
         #
-        #     if isinstance(widget_pressed, TansuModelDelegateWidget):
-        #         return TansuView.keyPressEvent(self, event)
+        #     if isinstance(widget_pressed, ShojiModelDelegateWidget):
+        #         return ShojiView.keyPressEvent(self, event)
         # else:
-        #     return TansuView.keyPressEvent(self, event)
+        #     return ShojiView.keyPressEvent(self, event)
 
 
-class TansuModelDelegateWidget(AbstractFrameGroupInputWidget):
+class ShojiModelDelegateWidget(AbstractFrameGroupInputWidget):
     """
     Attributes:
         main_widget (QWidget): the main display widget
-        item (TansuModelItem): The item from the model that is associated with
+        item (ShojiModelItem): The item from the model that is associated with
             this delegate
     """
     def __init__(self, parent=None, title=None):
-        super(TansuModelDelegateWidget, self).__init__(parent, title)
+        super(ShojiModelDelegateWidget, self).__init__(parent, title)
         self.setStyleSheet("""
-            TansuModelDelegateWidget{{background-color: rgba{background_color}}}
+            ShojiModelDelegateWidget{{background-color: rgba{background_color}}}
         """.format(
             background_color=iColor["rgba_gray_3"]
         ))
@@ -817,15 +817,15 @@ class TansuModelDelegateWidget(AbstractFrameGroupInputWidget):
 
 
 """ HEADER """
-class TansuHeader(ModelViewWidget):
+class ShojiHeader(ModelViewWidget):
     LIST_VIEW = 0
     TREE_VIEW = 1
     def __init__(self, parent=None):
-        super(TansuHeader, self).__init__(parent)
+        super(ShojiHeader, self).__init__(parent)
         self.setViewType(ModelViewWidget.LIST_VIEW)
 
     def showEvent(self, event):
-        tab_tansu_widget = getWidgetAncestor(self, TansuModelViewWidget)
+        tab_tansu_widget = getWidgetAncestor(self, ShojiModelViewWidget)
         if tab_tansu_widget:
             tab_tansu_widget.updateDelegateDisplay()
         ModelViewWidget.showEvent(self, event)
@@ -835,7 +835,7 @@ class TansuHeader(ModelViewWidget):
         return_val = super(self.__class__, self).dropEvent(event)
 
         # get main widget
-        main_widget = getWidgetAncestor(self, TansuModelViewWidget)
+        main_widget = getWidgetAncestor(self, ShojiModelViewWidget)
 
         # clear selection
         main_widget.delegateWidget().displayAllWidgets(False)
@@ -852,7 +852,7 @@ class TansuHeader(ModelViewWidget):
         # todo for some reason this double registers the selection even
 
         # when using dynamic tree widgets...
-        top_level_widget = getWidgetAncestor(self, TansuModelViewWidget)
+        top_level_widget = getWidgetAncestor(self, ShojiModelViewWidget)
         top_level_widget.toggleDelegateSpacerWidget()
 
         # update display
@@ -873,13 +873,13 @@ class TansuHeader(ModelViewWidget):
 
 
 """ EXAMPLE """
-class TabTansuDynamicWidgetExample(QWidget):
+class TabShojiDynamicWidgetExample(QWidget):
     """
     TODO:
         turn this into an interface for creating dynamic tab widgets
     """
     def __init__(self, parent=None):
-        super(TabTansuDynamicWidgetExample, self).__init__(parent)
+        super(TabShojiDynamicWidgetExample, self).__init__(parent)
         QVBoxLayout(self)
         self.label = QLabel('init')
         self.layout().addWidget(self.label)
@@ -887,8 +887,8 @@ class TabTansuDynamicWidgetExample(QWidget):
     @staticmethod
     def updateGUI(parent, widget, item):
         """
-        widget (TansuModelDelegateWidget)
-        item (TansuModelItem)
+        widget (ShojiModelDelegateWidget)
+        item (ShojiModelItem)
         """
         if item:
             widget.setTitle(item.name())
@@ -901,8 +901,8 @@ Need:
     QlineEdit
         --> Finished editing signal exposed
         --> Signal needs to receive
-                    TansuHeaderView
-                    MainTansu?
+                    ShojiHeaderView
+                    MainShoji?
 
 Search items
     Hotkey --> Popup LineEdit (s)
@@ -920,7 +920,7 @@ if __name__ == "__main__":
     from qtpy.QtWidgets import QApplication, QLabel, QVBoxLayout
     from qtpy.QtGui import QCursor
     app = QApplication(sys.argv)
-    # w = TansuHeader()
+    # w = ShojiHeader()
     # w.show()
 
 
@@ -931,7 +931,7 @@ if __name__ == "__main__":
             self.addWidget(QLabel('b'))
             self.addWidget(QLabel('c'))
 
-    w = TansuModelViewWidget()
+    w = ShojiModelViewWidget()
     #w.setHeaderPosition(attrs.WEST, attrs.SOUTH)
     #header_delegate_widget = QLabel("Custom")
     #w.setHeaderDelegateAlwaysOn(False)
@@ -942,14 +942,14 @@ if __name__ == "__main__":
     delegate_widget = QLabel("Q")
     w.addHeaderDelegateWidget([Qt.Key_Q], delegate_widget)
 
-    dw = TabTansuDynamicWidgetExample
+    dw = TabShojiDynamicWidgetExample
 
     for x in range(3):
         widget = QLabel(str(x))
-        parent_item = w.insertTansuWidget(x, column_data={'name':str(x), 'one':'test'}, widget=widget)
+        parent_item = w.insertShojiWidget(x, column_data={'name':str(x), 'one':'test'}, widget=widget)
 
     for y in range(0, 2):
-        w.insertTansuWidget(y, column_data={'name':str(y)}, widget=widget, parent=parent_item)
+        w.insertShojiWidget(y, column_data={'name':str(y)}, widget=widget, parent=parent_item)
 
     w.resize(500, 500)
     w.delegateWidget().setHandleLength(100)

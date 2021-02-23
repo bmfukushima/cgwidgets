@@ -1,7 +1,7 @@
 from qtpy.QtCore import Qt
 
-from cgwidgets.widgets import TansuModelViewWidget
-from cgwidgets.delegates import TansuView
+from cgwidgets.widgets import ShojiModelViewWidget
+from cgwidgets.delegates import ShojiView
 from cgwidgets.utils import attrs
 
 import sys
@@ -14,7 +14,7 @@ def testDrag(indexes):
     of the model.
 
     Args:
-        indexes (list): of TansuModelItems
+        indexes (list): of ShojiModelItems
     """
     print("---- DRAG EVENT ----")
     print(indexes)
@@ -25,8 +25,8 @@ def testDrop(row, indexes, parent):
     in the model.
 
     Args:
-        indexes (list): of TansuModelItems
-        parent (TansuModelItem): parent item that was dropped on
+        indexes (list): of ShojiModelItems
+        parent (ShojiModelItem): parent item that was dropped on
 
     """
     print("---- DROP EVENT ----")
@@ -51,11 +51,11 @@ def testSelect(item, enabled):
 
 app = QApplication(sys.argv)
 
-tansu_widget = TansuModelViewWidget()
+tansu_widget = ShojiModelViewWidget()
 tansu_widget.setHeaderData(['example'])
 tab_1 = QLabel('hello')
 tab_2 = QLabel('world')
-tab_3 = TansuView()
+tab_3 = ShojiView()
 tab_3.setObjectName("main")
 tab_3.addWidget(QLabel('a'))
 tab_3.addWidget(QLabel('b'))
@@ -68,9 +68,9 @@ tansu_widget.setMultiSelectDirection(Qt.Vertical)
 tansu_widget.delegateWidget().setHandleLength(100)
 
 # insert tabs
-tansu_widget.insertTansuWidget(0, column_data={'example' : '<title> hello'}, widget=tab_1)
-tansu_widget.insertTansuWidget(0, column_data={'example' : '<title> world'}, widget=tab_2)
-tansu_widget.insertTansuWidget(0, column_data={'example' : '<title> tansu'}, widget=tab_3)
+tansu_widget.insertShojiWidget(0, column_data={'example' : '<title> hello'}, widget=tab_1)
+tansu_widget.insertShojiWidget(0, column_data={'example' : '<title> world'}, widget=tab_2)
+tansu_widget.insertShojiWidget(0, column_data={'example' : '<title> tansu'}, widget=tab_3)
 
 # enable drag/drop
 tansu_widget.setHeaderItemIsDropEnabled(False)

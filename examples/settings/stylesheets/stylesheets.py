@@ -3,8 +3,8 @@ from qtpy.QtCore import Qt
 
 from cgwidgets.settings.colors import iColor
 from cgwidgets.settings import stylesheets, hover_display
-from cgwidgets.widgets import LabelledInputWidget, FloatInputWidget, TansuGroupInputWidget, FrameGroupInputWidget
-from cgwidgets.views import TansuView
+from cgwidgets.widgets import LabelledInputWidget, FloatInputWidget, ShojiGroupInputWidget, FrameGroupInputWidget
+from cgwidgets.views import ShojiView
 from cgwidgets.utils import getWidgetAncestor
 
 if __name__ == "__main__":
@@ -20,7 +20,7 @@ if __name__ == "__main__":
             self.setUseLadder(True, value_list=[0.0001, 0.001, 0.01, 0.1])
 
     # add user inputs
-    class RadialGradientInputWidget(TansuGroupInputWidget):
+    class RadialGradientInputWidget(ShojiGroupInputWidget):
         def __init__(self,
             parent=None,
             direction=Qt.Vertical
@@ -109,7 +109,7 @@ if __name__ == "__main__":
     view_widget.setStyleSheet(style_sheet)
 
     # # create main widget
-    main_widget = TansuView()
+    main_widget = ShojiView()
     main_widget.addWidget(radial_gradient_wigdet)
     main_widget.addWidget(view_widget)
 

@@ -5,7 +5,7 @@ instead of the primary ones if you want to do a per item override.
 """
 from qtpy.QtCore import Qt
 
-from cgwidgets.widgets import TansuModelViewWidget, FloatInputWidget
+from cgwidgets.widgets import ShojiModelViewWidget, FloatInputWidget
 from cgwidgets.utils import attrs
 
 import sys
@@ -15,17 +15,17 @@ from qtpy.QtGui import QCursor
 app = QApplication(sys.argv)
 
 """
-Dynamic widget to be used for the Tansu.  This widget will be shown
-everytime an item is selected in the Tansu, and the updateGUI function
+Dynamic widget to be used for the Shoji.  This widget will be shown
+everytime an item is selected in the Shoji, and the updateGUI function
 will be run, every time an item is selected.
 """
-class TabTansuDynamicWidgetExample(QWidget):
+class TabShojiDynamicWidgetExample(QWidget):
     """
     Simple example of overloaded class to be used as a dynamic widget for
-    the TansuModelViewWidget.
+    the ShojiModelViewWidget.
     """
     def __init__(self, parent=None):
-        super(TabTansuDynamicWidgetExample, self).__init__(parent)
+        super(TabShojiDynamicWidgetExample, self).__init__(parent)
         QVBoxLayout(self)
         self.label = QLabel('init')
         self.layout().addWidget(self.label)
@@ -33,8 +33,8 @@ class TabTansuDynamicWidgetExample(QWidget):
     @staticmethod
     def updateGUI(parent, widget, item):
         """
-        widget (TansuModelDelegateWidget)
-        item (TansuModelItem)
+        widget (ShojiModelDelegateWidget)
+        item (ShojiModelItem)
         """
         if item:
             print ('------------- SHOW EVENT ---------------')
@@ -45,7 +45,7 @@ class TabTansuDynamicWidgetExample(QWidget):
 
 """
 Custom widget which has overloaded functions/widget to be
-displayed in the Tansu
+displayed in the Shoji
 """
 class CustomDynamicWidget(FloatInputWidget):
     def __init__(self, parent=None):
@@ -54,9 +54,9 @@ class CustomDynamicWidget(FloatInputWidget):
     @staticmethod
     def updateGUI(parent, widget, item):
         """
-        parent (TansuModelViewWidget)
-        widget (TansuModelDelegateWidget)
-        item (TansuModelItem)
+        parent (ShojiModelViewWidget)
+        widget (ShojiModelDelegateWidget)
+        item (ShojiModelItem)
         self --> widget.getMainWidget()
         """
         print('custom event')
@@ -70,7 +70,7 @@ def testDrag(indexes):
     of the model.
 
     Args:
-        indexes (list): of TansuModelItems
+        indexes (list): of ShojiModelItems
     """
     print("---- DRAG EVENT ----")
     print(indexes)
@@ -81,8 +81,8 @@ def testDrop(row, indexes, parent):
     in the model.
 
     Args:
-        indexes (list): of TansuModelItems
-        parent (TansuModelItem): parent item that was dropped on
+        indexes (list): of ShojiModelItems
+        parent (ShojiModelItem): parent item that was dropped on
 
     """
     print("---- DROP EVENT ----")
@@ -96,21 +96,21 @@ def testEnable(item, enabled):
     print(item.columnData()['name'], enabled)
 
 # create tansu widget
-tansu_widget = TansuModelViewWidget()
+tansu_widget = ShojiModelViewWidget()
 
 # set dynamic
 tansu_widget.setDelegateType(
-    TansuModelViewWidget.DYNAMIC,
-    dynamic_widget=TabTansuDynamicWidgetExample,
-    dynamic_function=TabTansuDynamicWidgetExample.updateGUI
+    ShojiModelViewWidget.DYNAMIC,
+    dynamic_widget=TabShojiDynamicWidgetExample,
+    dynamic_function=TabShojiDynamicWidgetExample.updateGUI
 )
 
 for x in range(3):
     name = '<title {}>'.format(str(x))
-    tansu_widget.insertTansuWidget(x, column_data={'name':name})
+    tansu_widget.insertShojiWidget(x, column_data={'name':name})
 
 # # custom item
-# custom_index = tansu_widget.insertTansuWidget(0, column_data={'name': 'Custom Handlers'})
+# custom_index = tansu_widget.insertShojiWidget(0, column_data={'name': 'Custom Handlers'})
 # custom_index.internalPointer().setDynamicWidgetBaseClass(CustomDynamicWidget)
 # custom_index.internalPointer().setDynamicUpdateFunction(CustomDynamicWidget.updateGUI)
 
