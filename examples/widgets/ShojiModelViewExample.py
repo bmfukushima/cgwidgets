@@ -249,20 +249,16 @@ def testDrag(items, model):
     print("---- DRAG EVENT ----")
     print(items, model)
 
-def testDrop(items, model, row, parent):
-    """
-    Run when the user does a drop.  This is triggered on the dropMimeData funciton
-    in the model.
-
-    Args:
-        items (list): of ShojiModelItems
-        model (ShojiModel):
-        row (int): row item dropped at
-        parent (ShojiModelItem): parent item that was dropped on
-
-    """
-    print("---- DROP EVENT ----")
-    print(row, model, items, parent)
+def testDrop(data, items, model, row, parent):
+    print("""
+DROPPING -->
+    data --> {data}
+    row --> {row}
+    items --> {items}
+    model --> {model}
+    parent --> {parent}
+        """.format(data=data, row=row, model=model, items=items, parent=parent)
+          )
 
 def testEdit(item, old_value, new_value):
     print("---- EDIT EVENT ----")

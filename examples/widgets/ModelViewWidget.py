@@ -12,12 +12,19 @@ app = QApplication(sys.argv)
 def testDelete(item):
     print("DELETING --> -->", item.columnData()['name'])
 
-def testDrag(indexes):
-    print(indexes)
-    print("DRAGGING -->", indexes)
-
-def testDrop(row, indexes, parent):
-    print("DROPPING -->", row, indexes, parent)
+def testDrag(items, model):
+    print("DRAGGING -->", items, model)
+#data, indexes, self, row, parent_item
+def testDrop(data, items, model, row, parent):
+    print("""
+DROPPING -->
+    data --> {data}
+    row --> {row}
+    items --> {items}
+    model --> {model}
+    parent --> {parent}
+        """.format(data=data, row=row, model=model, items=items, parent=parent)
+          )
 
 def testEdit(item, old_value, new_value):
     print("EDITING -->", item, old_value, new_value)
@@ -58,10 +65,10 @@ main_widget.setItemDeleteEvent(testDelete)
 main_widget.setItemSelectedEvent(testSelect)
 #
 # set flags
-main_widget.setIsRootDropEnabled(False)
+main_widget.setIsRootDropEnabled(True)
 main_widget.setIsEditable(False)
-main_widget.setIsDragEnabled(False)
-main_widget.setIsDropEnabled(False)
+main_widget.setIsDragEnabled(True)
+main_widget.setIsDropEnabled(True)
 main_widget.setIsEnableable(True)
 main_widget.setIsDeleteEnabled(True)
 main_widget.setDelegateToggleEvent(testDelegateToggle)
