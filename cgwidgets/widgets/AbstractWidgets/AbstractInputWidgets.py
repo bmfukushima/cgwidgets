@@ -181,10 +181,6 @@ class AbstractInputLineEdit(QLineEdit, iAbstractInputWidget):
         self.setOrigValue(self.text())
         #self.setProperty("is_focused", True)
         return QLineEdit.focusInEvent(self, *args, **kwargs)
-    #
-    # def focusOutEvent(self, event):
-    #     self.setProperty("is_focused", False)
-    #     return QLineEdit.focusOutEvent(self, event)
 
     def mousePressEvent(self, event, *args, **kwargs):
         """
@@ -748,8 +744,13 @@ class AbstractButtonInputWidget(AbstractBooleanInputWidget):
         flag (arbitrary): flag to be returned to denote that this button is selected
         user_clicked_event (function): to run when the user clicks
         image:
+
+    Attributes:
+        flag (object): if toggleable, this will be the flag that is set.
+        is_toggleable (bool): determines if this widget can be toggle on/off
+
     """
-    def __init__(self, parent, user_clicked_event=None, title="CLICK ME", flag=None):
+    def __init__(self, parent, user_clicked_event=None, title="CLICK ME", flag=None, is_toggleable=False):
         super(AbstractButtonInputWidget, self).__init__(parent)
 
         # setup style
@@ -757,10 +758,23 @@ class AbstractButtonInputWidget(AbstractBooleanInputWidget):
         self.updateStyleSheet()
 
         # setup defaults
+        self.setIsToggleable(is_toggleable)
         self.setText(title)
         self.setFlag(flag)
         if user_clicked_event:
             self.setUserClickedEvent(user_clicked_event)
+
+    def isToggleable(self):
+        return self._is_toggleable
+
+    def setIsToggleable(self, enabled):
+        self._is_toggleable = enabled
+
+        # update selected property
+        if enabled:
+            self.setProperty("is_selected", False)
+        else:
+            self.setProperty("is_selected", None)
 
     def flag(self):
         return self._flag
@@ -780,13 +794,16 @@ class AbstractButtonInputWidget(AbstractBooleanInputWidget):
             mouse release event
         """
         # update selection
-        self.parent().updateButtonSelection(self)
-        self.userClickedEvent()
-        self.parent().setAllWidgetsToUniformSize()
+        if hasattr(self.parent(), "updateButtonSelection"):
+            self.parent().updateButtonSelection(self)
+            self.parent().setAllWidgetsToUniformSize()
 
         # update style
         self.setProperty("hover_display", False)
         updateStyleSheet(self)
+
+        # user events
+        self.userClickedEvent()
 
         # run user triggered event
         try:
@@ -794,7 +811,7 @@ class AbstractButtonInputWidget(AbstractBooleanInputWidget):
         except AttributeError:
             pass
 
-        print(self.parent().flags())
+        #print(self.parent().flags())
         #return AbstractBooleanInputWidget.mouseReleaseEvent(self, event)
 
 

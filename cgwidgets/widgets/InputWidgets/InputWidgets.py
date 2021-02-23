@@ -176,6 +176,11 @@ class OverlayInputWidget(AbstractOverlayInputWidget):
         super(OverlayInputWidget, self).__init__(parent, input_widget=input_widget, title=title)
 
 
+class ButtonInputWidget(AbstractButtonInputWidget):
+    def __init__(self, parent=None,  user_clicked_event=None, title=None, flag=None, is_toggleable=False):
+        super(ButtonInputWidget, self).__init__(parent, is_toggleable=is_toggleable, user_clicked_event=user_clicked_event, title=title, flag=flag)
+
+
 class FloatInputWidget(AbstractFloatInputWidget, iShojiGroupInput):
     def __init__(self, parent=None):
         super(FloatInputWidget, self).__init__(parent)
@@ -737,6 +742,9 @@ class MultiButtonInputWidget(AbstractMultiButtonInputWidget):
         super(MultiButtonInputWidget, self).__init__(parent, buttons, orientation)
 
 
+
+
+
 if __name__ == "__main__":
     import sys
     from qtpy.QtWidgets import QApplication, QWidget, QVBoxLayout
@@ -745,25 +753,29 @@ if __name__ == "__main__":
     import sys, inspect
 
     app = QApplication(sys.argv)
-    def userEvent(widget):
-        print("user input...", widget)
+    # def userEvent(widget):
+    #     print("user input...", widget)
+    #
+    #
+    # def asdf(item, widget, value):
+    #     return
+    #
+    #
+    # @staticmethod
+    # def liveEdit(item, widget, value):
+    #     return
+    #
+    #
+    # widget = ShojiGroupInputWidget(name="test")
+    # inputs = ["cx", "cy", "fx", "fy", "radius"]  # , stops"""
+    # for i in inputs:
+    #     widget.insertInputWidget(0, FloatInputWidget, i, asdf,
+    #                            user_live_update_event=asdf, default_value=0.5)
 
-
-    def asdf(item, widget, value):
-        return
-
-
-    @staticmethod
-    def liveEdit(item, widget, value):
-        return
-
-
-    widget = ShojiGroupInputWidget(name="test")
-    inputs = ["cx", "cy", "fx", "fy", "radius"]  # , stops"""
-    for i in inputs:
-        widget.insertInputWidget(0, FloatInputWidget, i, asdf,
-                               user_live_update_event=asdf, default_value=0.5)
-
+    def test(widget):
+        print("testing == ", widget)
+    widget = ButtonInputWidget(user_clicked_event=test, title="None", flag=False, is_toggleable=False)
+    widget.setIsToggleable(False)
     #test_labelled_embed = LabelledInputWidget(name="embed", widget_type=FloatInputWidget)
     #labelled_input = LabelledInputWidget(name="test", widget_type=test_labelled_embed)
 
