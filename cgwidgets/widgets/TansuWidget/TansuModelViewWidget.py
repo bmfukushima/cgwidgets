@@ -169,6 +169,14 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
                 selected_indexes.append(index)
         return selected_indexes
 
+    def rootItem(self):
+        """
+        Returns (TansuModelViewItem): root item for the model
+        """
+        model = self.model()
+        root_item = model.getRootItem()
+        return root_item
+
     """ HEADER EVENT SIGNALS"""
     def setHeaderItemDragDropMode(self, drag_drop_mode):
         """
@@ -285,6 +293,16 @@ class TansuModelViewWidget(QSplitter, iTansuDynamicWidget):
         self._model = model
         self._header_widget.setModel(model)
         self._header_widget.setItemSelectedEvent(self._header_widget.selectionChanged)
+
+    def clearModel(self, event_update=False):
+        """
+        Clears the entire model
+        Args:
+            update_event (bool): determines if user event should be
+                run on each item during the deletion process.
+        """
+        for child in reversed(self.rootItem().children()):
+            self.model().deleteItem(child, event_update=event_update)
 
     """ VIEW """
     def headerWidget(self):

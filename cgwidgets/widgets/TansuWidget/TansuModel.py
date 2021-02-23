@@ -21,9 +21,7 @@ import sys
 from cgwidgets.views import AbstractDragDropModel
 
 # https://doc.qt.io/qt-5/model-view-programming.html#model-view-classes
-from cgwidgets.widgets.TansuWidget import (
-    iTansuDynamicWidget
-)
+from cgwidgets.widgets.TansuWidget import (iTansuDynamicWidget)
 
 from cgwidgets.views import AbstractDragDropModelItem
 
