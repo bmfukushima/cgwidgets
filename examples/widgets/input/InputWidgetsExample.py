@@ -6,6 +6,7 @@ from qtpy.QtCore import Qt
 
 from cgwidgets.settings.colors import iColor
 from cgwidgets.widgets import (
+    ButtonInputWidget,
     FloatInputWidget,
     IntInputWidget,
     StringInputWidget,
@@ -80,6 +81,9 @@ for x in range(3):
     buttons.append(["button_" + str(x), flag, userEvent])
 multi_button_input_widget = MultiButtonInputWidget(buttons=buttons, orientation=Qt.Vertical)
 
+button_input_widget = ButtonInputWidget(user_clicked_event=userEvent, title="Button", flag=False, is_toggleable=False)
+
+
 normal_widget.layout().addWidget(float_input_widget)
 normal_widget.layout().addWidget(int_input_widget)
 normal_widget.layout().addWidget(boolean_input_widget)
@@ -88,6 +92,7 @@ normal_widget.layout().addWidget(list_input_widget)
 normal_widget.layout().addWidget(plain_text_input_widget)
 normal_widget.layout().addWidget(overlay_input_widget)
 normal_widget.layout().addWidget(multi_button_input_widget)
+normal_widget.layout().addWidget(button_input_widget)
 
 float_input_widget.setUserFinishedEditingEvent(test)
 int_input_widget.setUserFinishedEditingEvent(test)

@@ -742,9 +742,6 @@ class MultiButtonInputWidget(AbstractMultiButtonInputWidget):
         super(MultiButtonInputWidget, self).__init__(parent, buttons, orientation)
 
 
-
-
-
 if __name__ == "__main__":
     import sys
     from qtpy.QtWidgets import QApplication, QWidget, QVBoxLayout
