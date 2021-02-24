@@ -34,7 +34,7 @@ class NodeTreeEditor(QWidget):
         QVBoxLayout(self)
 
         # create node tree
-        self._node_tree = NodeTreeMainWidget(parent=self, node=self.node)
+        self._node_tree = NodeViewWidget(parent=self, node=self.node)
 
         # add tree to layout
         self.layout().addWidget(self.nodeTree())
@@ -54,9 +54,9 @@ class NodeTreeEditor(QWidget):
         self._node_type = _node_type
 
 
-class NodeTreeMainWidget(ShojiModelViewWidget):
+class NodeViewWidget(ShojiModelViewWidget):
     def __init__(self, parent=None, node=None):
-        super(NodeTreeMainWidget, self).__init__(parent)
+        super(NodeViewWidget, self).__init__(parent)
         self.node = node
 
         # setup view
@@ -306,7 +306,7 @@ if __name__ == "__main__":
     from cgwidgets.widgets import ShojiModelViewWidget
     app = QApplication(sys.argv)
 
-    w = NodeTreeMainWidget(None, None)
+    w = NodeViewWidget(None, None)
     w.resize(500, 500)
 
     w.show()
