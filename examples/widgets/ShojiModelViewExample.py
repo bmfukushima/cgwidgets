@@ -69,7 +69,7 @@ app = QApplication(sys.argv)
 
 
 # CREATE MAIN WIDGET
-tansu_widget = ShojiModelViewWidget()
+shoji_widget = ShojiModelViewWidget()
 
 # SETUP VIEW
 """
@@ -86,10 +86,10 @@ def setupCustomView():
             super(CustomView, self).__init__()
             pass
     view = CustomView()
-    tansu_widget.setHeaderViewWidget(view)
+    shoji_widget.setHeaderViewWidget(view)
 
-tansu_widget.setHeaderViewType(ModelViewWidget.TREE_VIEW)
-#tansu_widget.setHeaderViewType(ModelViewWidget.LIST_VIEW)
+shoji_widget.setHeaderViewType(ModelViewWidget.TREE_VIEW)
+#shoji_widget.setHeaderViewType(ModelViewWidget.LIST_VIEW)
 #setupCustomView()
 
 
@@ -106,7 +106,7 @@ def setupCustomModel():
     model = ShojiModel()
     item_type = CustomModelItem
     model.setItemType(item_type)
-    tansu_widget.setModel(model)
+    shoji_widget.setModel(model)
 
 setupCustomModel()
 
@@ -117,26 +117,26 @@ note:
     when providing column data, the key in the dict with the 0th
     index is required, and is the text displayed to the user by default
 """
-tansu_widget.setHeaderData(['name', 'SINE.', "woowoo"])
+shoji_widget.setHeaderData(['name', 'SINE.', "woowoo"])
 
 # CREATE ITEMS / TABS
 def setupAsStacked():
     # insert tabs
 
-    tansu_widget.insertShojiWidget(0, column_data={'name' : '<title> hello'},
+    shoji_widget.insertShojiWidget(0, column_data={'name' : '<title> hello'},
                                    widget=LabelledInputWidget(name='hello', widget_type=FloatInputWidget))
-    tansu_widget.insertShojiWidget(0, column_data={'name' : '<title> world'}, widget=QLabel('world'))
+    shoji_widget.insertShojiWidget(0, column_data={'name' : '<title> world'}, widget=QLabel('world'))
 
-    tansu_delegate = ShojiView()
+    shoji_delegate = ShojiView()
     for char in 'SINE.':
-        tansu_delegate.addWidget(StringInputWidget(char))
-    tansu_delegate_item = tansu_widget.insertShojiWidget(0, column_data={'name' : '<title> tansu'}, widget=tansu_delegate)
+        shoji_delegate.addWidget(StringInputWidget(char))
+    shoji_delegate_item = shoji_widget.insertShojiWidget(0, column_data={'name' : '<title> shoji'}, widget=shoji_delegate)
 
     # insert child tabs
     # insert child widgets
     for y in range(0, 2):
         widget = StringInputWidget(str("SINE."))
-        tansu_widget.insertShojiWidget(y, column_data={'name': str(y), 'one': 'datttaaa'}, widget=widget, parent=tansu_delegate_item)
+        shoji_widget.insertShojiWidget(y, column_data={'name': str(y), 'one': 'datttaaa'}, widget=widget, parent=shoji_delegate_item)
 
 def setupAsDynamic():
     class DynamicWidgetExample(QWidget):
@@ -192,7 +192,7 @@ def setupAsDynamic():
             this.setText('whatup')
 
     # set all items to use this widget
-    tansu_widget.setDelegateType(
+    shoji_widget.setDelegateType(
         ShojiModelViewWidget.DYNAMIC,
         dynamic_widget=DynamicWidgetExample,
         dynamic_function=DynamicWidgetExample.updateGUI
@@ -201,16 +201,16 @@ def setupAsDynamic():
     # create items
     for x in range(3):
         name = '<title {}>'.format(str(x))
-        tansu_widget.insertShojiWidget(x, column_data={'name': name})
+        shoji_widget.insertShojiWidget(x, column_data={'name': name})
 
     # insert child tabs
     # insert child widgets
-    parent_item = tansu_widget.insertShojiWidget(0, column_data={'name': "PARENT"})
+    parent_item = shoji_widget.insertShojiWidget(0, column_data={'name': "PARENT"})
     for y in range(0, 2):
-        tansu_widget.insertShojiWidget(y, column_data={'name': str(y), 'one': 'datttaaa'}, parent=parent_item)
+        shoji_widget.insertShojiWidget(y, column_data={'name': str(y), 'one': 'datttaaa'}, parent=parent_item)
 
     # custom item
-    custom_index = tansu_widget.insertShojiWidget(0, column_data={'name': 'Custom Item Widget'})
+    custom_index = shoji_widget.insertShojiWidget(0, column_data={'name': 'Custom Item Widget'})
     custom_index.internalPointer().setDynamicWidgetBaseClass(DynamicItemExample)
     custom_index.internalPointer().setDynamicUpdateFunction(DynamicItemExample.updateGUI)
 
@@ -218,20 +218,20 @@ setupAsStacked()
 #setupAsDynamic()
 
 # SET FLAGSLabelledInputWidget
-tansu_widget.setMultiSelect(True)
-tansu_widget.setMultiSelectDirection(Qt.Vertical)
-tansu_widget.delegateWidget().setHandleLength(100)
-tansu_widget.setHeaderPosition(attrs.WEST, attrs.SOUTH)
-tansu_widget.setDelegateTitleIsShown(True)
+shoji_widget.setMultiSelect(True)
+shoji_widget.setMultiSelectDirection(Qt.Vertical)
+shoji_widget.delegateWidget().setHandleLength(100)
+shoji_widget.setHeaderPosition(attrs.WEST, attrs.SOUTH)
+shoji_widget.setDelegateTitleIsShown(True)
 
 #####################################################
 # SET EVENT FLAGS
 #####################################################
-tansu_widget.setHeaderItemIsDropEnabled(True)
-tansu_widget.setHeaderItemIsDragEnabled(True)
-tansu_widget.setHeaderItemIsEditable(True)
-tansu_widget.setHeaderItemIsEnableable(True)
-tansu_widget.setHeaderItemIsDeleteEnabled(True)
+shoji_widget.setHeaderItemIsDropEnabled(True)
+shoji_widget.setHeaderItemIsDragEnabled(True)
+shoji_widget.setHeaderItemIsEditable(True)
+shoji_widget.setHeaderItemIsEnableable(True)
+shoji_widget.setHeaderItemIsDeleteEnabled(True)
 #select
 #toggle
 #####################################################
@@ -307,13 +307,13 @@ def testSelect(item, enabled, column=0):
         print(column, item.columnData(), enabled)
 
 
-tansu_widget.setHeaderItemEnabledEvent(testEnable)
-tansu_widget.setHeaderItemDeleteEvent(testDelete)
-tansu_widget.setHeaderDelegateToggleEvent(testDelegateToggle)
-tansu_widget.setHeaderItemDragStartEvent(testDrag)
-tansu_widget.setHeaderItemDropEvent(testDrop)
-tansu_widget.setHeaderItemTextChangedEvent(testEdit)
-tansu_widget.setHeaderItemSelectedEvent(testSelect)
+shoji_widget.setHeaderItemEnabledEvent(testEnable)
+shoji_widget.setHeaderItemDeleteEvent(testDelete)
+shoji_widget.setHeaderDelegateToggleEvent(testDelegateToggle)
+shoji_widget.setHeaderItemDragStartEvent(testDrag)
+shoji_widget.setHeaderItemDropEvent(testDrop)
+shoji_widget.setHeaderItemTextChangedEvent(testEdit)
+shoji_widget.setHeaderItemSelectedEvent(testSelect)
 
 #####################################################
 # Header Delegates
@@ -323,10 +323,10 @@ In the Tree/List view this is a widget that will pop up when
 the user presses a specific key/modifier combination
 """
 delegate_widget = QLabel("Q")
-tansu_widget.addHeaderDelegateWidget([Qt.Key_Q], delegate_widget, modifier=Qt.NoModifier, focus=False)
+shoji_widget.addHeaderDelegateWidget([Qt.Key_Q], delegate_widget, modifier=Qt.NoModifier, focus=False)
 
 # display widget
-tansu_widget.resize(500, 500)
-tansu_widget.show()
-tansu_widget.move(QCursor.pos())
+shoji_widget.resize(500, 500)
+shoji_widget.show()
+shoji_widget.move(QCursor.pos())
 sys.exit(app.exec_())

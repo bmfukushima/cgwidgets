@@ -37,47 +37,47 @@ class DisplayLabel(StringInputWidget):
         super(DisplayLabel, self).__init__(parent)
         self.setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
 
-# create tansu
-main_tansu_widget = ShojiView()
-embedded_tansu_01 = ShojiView(orientation=Qt.Horizontal)
-embedded_tansu_02 = ShojiView(orientation=Qt.Vertical)
+# create shoji
+main_shoji_widget = ShojiView()
+embedded_shoji_01 = ShojiView(orientation=Qt.Horizontal)
+embedded_shoji_02 = ShojiView(orientation=Qt.Vertical)
 
 # OPTIONAL | set handle length (if not set, by default this will be full length)
-main_tansu_widget.setHandleLength(100)
-main_tansu_widget.setHandleWidth(5)
-main_tansu_widget.setIsHandleStatic(False)
-main_tansu_widget.setIsSoloViewEnabled(True)
-main_tansu_widget.setOrientation(Qt.Vertical)
+main_shoji_widget.setHandleLength(100)
+main_shoji_widget.setHandleWidth(5)
+main_shoji_widget.setIsHandleStatic(False)
+main_shoji_widget.setIsSoloViewEnabled(True)
+main_shoji_widget.setOrientation(Qt.Vertical)
 
 # set up events
 def toggleSoloEvent(enabled, widget):
     print(enabled, widget)
 
-main_tansu_widget.setToggleSoloViewEvent(toggleSoloEvent)
+main_shoji_widget.setToggleSoloViewEvent(toggleSoloEvent)
 
 # add regular widgets
 for char in "SINE.":
     # main widget
     widget = DisplayLabel(char)
-    main_tansu_widget.addWidget(widget, is_soloable=False)
+    main_shoji_widget.addWidget(widget, is_soloable=False)
 
-    # embedded_tansu_02
+    # embedded_shoji_02
     l = DisplayLabel(str(char))
-    embedded_tansu_02.addWidget(l)
+    embedded_shoji_02.addWidget(l)
 
 # add embedded Shoji Views
 for x in range(3):
     l = DisplayLabel(str(x))
-    embedded_tansu_01.addWidget(l)
+    embedded_shoji_01.addWidget(l)
 
-embedded_tansu_01.addWidget(embedded_tansu_02)
+embedded_shoji_01.addWidget(embedded_shoji_02)
 
-# add tansu to tansu
-main_tansu_widget.addWidget(embedded_tansu_01)
+# add shoji to shoji
+main_shoji_widget.addWidget(embedded_shoji_01)
 
 # show widget
-main_tansu_widget.show()
-main_tansu_widget.move(QCursor.pos())
-main_tansu_widget.resize(512, 512)
+main_shoji_widget.show()
+main_shoji_widget.move(QCursor.pos())
+main_shoji_widget.resize(512, 512)
 sys.exit(app.exec_())
 

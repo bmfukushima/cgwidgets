@@ -42,24 +42,24 @@ def test(widget, value):
     print(widget, value)
     #widget.setText(str(value))
 
-def tansuInputTest(item, widget, value):
+def shojiInputTest(item, widget, value):
     print("---- TANSU input function ----")
     print('setting value to... ', value)
     print(item, widget, value)
     # widget.setText(str(value))
 
 """ Setup Shoji Widget """
-tansu_group_widget = ShojiGroupInputWidget(parent=None, name='ShojiGroupInputWidget')
+shoji_group_widget = ShojiGroupInputWidget(parent=None, name='ShojiGroupInputWidget')
 
 # add user inputs
-tansu_group_widget.insertInputWidget(0, FloatInputWidget, 'Float', tansuInputTest)
-tansu_group_widget.insertInputWidget(0, IntInputWidget, 'Int', tansuInputTest)
-tansu_group_widget.insertInputWidget(0, BooleanInputWidget, 'Boolean', tansuInputTest)
-tansu_group_widget.insertInputWidget(0, StringInputWidget, 'String', tansuInputTest)
-tansu_group_widget.insertInputWidget(0, ListInputWidget, 'List', tansuInputTest, data={'items_list':list_of_crap})
-tansu_group_widget.insertInputWidget(0, PlainTextInputWidget, 'Text', tansuInputTest)
+shoji_group_widget.insertInputWidget(0, FloatInputWidget, 'Float', shojiInputTest)
+shoji_group_widget.insertInputWidget(0, IntInputWidget, 'Int', shojiInputTest)
+shoji_group_widget.insertInputWidget(0, BooleanInputWidget, 'Boolean', shojiInputTest)
+shoji_group_widget.insertInputWidget(0, StringInputWidget, 'String', shojiInputTest)
+shoji_group_widget.insertInputWidget(0, ListInputWidget, 'List', shojiInputTest, data={'items_list':list_of_crap})
+shoji_group_widget.insertInputWidget(0, PlainTextInputWidget, 'Text', shojiInputTest)
 
-tansu_group_widget.display_background = False
+shoji_group_widget.display_background = False
 
 """ normal widgets """
 normal_widget = createGroupBox("Normal Widgets")
@@ -203,7 +203,7 @@ main_widget.setStyleSheet("""background-color: rgba{rgba_background_00}""".forma
 main_widget.addWidget(normal_widget)
 main_widget.addWidget(vertical_label_widget)
 main_widget.addWidget(horizontal_label_widget)
-main_widget.addWidget(tansu_group_widget)
+main_widget.addWidget(shoji_group_widget)
 main_widget.addWidget(frame_group_input_widget)
 
 main_widget.resize(500, 500)

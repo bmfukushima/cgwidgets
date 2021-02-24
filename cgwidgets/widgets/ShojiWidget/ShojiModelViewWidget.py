@@ -439,7 +439,7 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         """
         Creates a new tab widget widget...
         TODO:
-            Move to base tansu?
+            Move to base shoji?
         """
         # get attrs
         name = self.model().getItemName(item)
@@ -740,37 +740,37 @@ class ShojiMainDelegateWidget(ShojiView):
 
         """
         if not enabled:
-            tab_tansu_widget = getWidgetAncestor(self, ShojiModelViewWidget)
-            if tab_tansu_widget:
-                tab_tansu_widget.updateDelegateDisplay()
-                tab_tansu_widget.toggleDelegateSpacerWidget()
+            tab_shoji_widget = getWidgetAncestor(self, ShojiModelViewWidget)
+            if tab_shoji_widget:
+                tab_shoji_widget.updateDelegateDisplay()
+                tab_shoji_widget.toggleDelegateSpacerWidget()
 
     def showEvent(self, event):
-        tab_tansu_widget = getWidgetAncestor(self, ShojiModelViewWidget)
-        if tab_tansu_widget:
-            tab_tansu_widget.updateDelegateDisplay()
+        tab_shoji_widget = getWidgetAncestor(self, ShojiModelViewWidget)
+        if tab_shoji_widget:
+            tab_shoji_widget.updateDelegateDisplay()
 
     def keyPressEvent(self, event):
         # preflight | suppress if over header
         is_child_of_header = ShojiModelViewWidget.isWidgetUnderCursorChildOfHeader()
-        tab_tansu_widget = getWidgetAncestor(self, ShojiModelViewWidget)
+        tab_shoji_widget = getWidgetAncestor(self, ShojiModelViewWidget)
         if is_child_of_header:
-            return tab_tansu_widget.headerWidget().keyPressEvent(event)
+            return tab_shoji_widget.headerWidget().keyPressEvent(event)
         else:
             return ShojiView.keyPressEvent(self, event)
-        # ModelViewWidget.keyPressEvent(tab_tansu_widget.headerWidget(), event)
+        # ModelViewWidget.keyPressEvent(tab_shoji_widget.headerWidget(), event)
 
         # Global escape
         # if event.key() == Qt.Key_Escape:
         #     pass
-            # tab_tansu_widget = getWidgetAncestor(self, ShojiModelViewWidget)
-            # if tab_tansu_widget:
-            #     tab_tansu_widget.updateDelegateDisplay()
-            #     tab_tansu_widget.toggleDelegateSpacerWidget()
+            # tab_shoji_widget = getWidgetAncestor(self, ShojiModelViewWidget)
+            # if tab_shoji_widget:
+            #     tab_shoji_widget.updateDelegateDisplay()
+            #     tab_shoji_widget.toggleDelegateSpacerWidget()
         # Global override for conflicts
         # if event.key() == self.soloViewHotkey():
         #     """
-        #     If this is another tansu/labelled input etc, it will bypass
+        #     If this is another shoji/labelled input etc, it will bypass
         #     and use that widgets key press.  If it is over the main delegate,
         #     it will register a ShojiView press.
         #     """
@@ -825,9 +825,9 @@ class ShojiHeader(ModelViewWidget):
         self.setViewType(ModelViewWidget.LIST_VIEW)
 
     def showEvent(self, event):
-        tab_tansu_widget = getWidgetAncestor(self, ShojiModelViewWidget)
-        if tab_tansu_widget:
-            tab_tansu_widget.updateDelegateDisplay()
+        tab_shoji_widget = getWidgetAncestor(self, ShojiModelViewWidget)
+        if tab_shoji_widget:
+            tab_shoji_widget.updateDelegateDisplay()
         ModelViewWidget.showEvent(self, event)
 
     def dropEvent(self, event):

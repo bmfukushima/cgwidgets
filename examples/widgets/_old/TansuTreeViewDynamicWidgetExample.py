@@ -66,18 +66,18 @@ class CustomDynamicWidget(FloatInputWidget):
         this.setText('whatup')
 
 
-# create tansu widget
-tansu_widget = ShojiModelViewWidget()
+# create shoji widget
+shoji_widget = ShojiModelViewWidget()
 
 #view = ShojiHeaderTreeView()
 
 # setup header
-#tansu_widget.setHeaderViewWidget(view)
-tansu_widget.setHeaderPosition(attrs.WEST, header_view_position=attrs.SOUTH)
-tansu_widget.setHeaderData(['name', 'test', 'three'])
+#shoji_widget.setHeaderViewWidget(view)
+shoji_widget.setHeaderPosition(attrs.WEST, header_view_position=attrs.SOUTH)
+shoji_widget.setHeaderData(['name', 'test', 'three'])
 
 # set dynamic
-tansu_widget.setDelegateType(
+shoji_widget.setDelegateType(
     ShojiModelViewWidget.DYNAMIC,
     dynamic_widget=TabShojiDynamicWidgetExample,
     dynamic_function=TabShojiDynamicWidgetExample.updateGUI
@@ -85,27 +85,27 @@ tansu_widget.setDelegateType(
 
 for x in range(3):
     name = '<title {}>'.format(str(x))
-    tansu_widget.insertShojiWidget(x, column_data={'name':name})
+    shoji_widget.insertShojiWidget(x, column_data={'name':name})
 
 # custom item
-custom_index = tansu_widget.insertShojiWidget(0, column_data={'name': 'Custom Handlers', 'test':'test'})
+custom_index = shoji_widget.insertShojiWidget(0, column_data={'name': 'Custom Handlers', 'test':'test'})
 custom_index.internalPointer().setDynamicWidgetBaseClass(CustomDynamicWidget)
 custom_index.internalPointer().setDynamicUpdateFunction(CustomDynamicWidget.updateGUI)
 
 # set attrs
-tansu_widget.setHeaderPosition(attrs.WEST, header_view_position=attrs.SOUTH)
-tansu_widget.setMultiSelect(True)
-tansu_widget.setMultiSelectDirection(Qt.Vertical)
-#tansu_widget.setHeaderDelegateAlwaysOn(False)
-tansu_widget.delegateWidget().setHandleLength(100)
+shoji_widget.setHeaderPosition(attrs.WEST, header_view_position=attrs.SOUTH)
+shoji_widget.setMultiSelect(True)
+shoji_widget.setMultiSelectDirection(Qt.Vertical)
+#shoji_widget.setHeaderDelegateAlwaysOn(False)
+shoji_widget.delegateWidget().setHandleLength(100)
 
 # enable drag/drop
-tansu_widget.setHeaderItemIsDropEnabled(True)
-tansu_widget.setHeaderItemIsDragEnabled(True)
+shoji_widget.setHeaderItemIsDropEnabled(True)
+shoji_widget.setHeaderItemIsDragEnabled(True)
 
-tansu_widget.setDelegateTitleIsShown(False)
+shoji_widget.setDelegateTitleIsShown(False)
 # show view
-tansu_widget.resize(500, 500)
-tansu_widget.show()
-tansu_widget.move(QCursor.pos())
+shoji_widget.resize(500, 500)
+shoji_widget.show()
+shoji_widget.move(QCursor.pos())
 sys.exit(app.exec_())

@@ -51,8 +51,8 @@ def testSelect(item, enabled):
 
 app = QApplication(sys.argv)
 
-tansu_widget = ShojiModelViewWidget()
-tansu_widget.setHeaderData(['example'])
+shoji_widget = ShojiModelViewWidget()
+shoji_widget.setHeaderData(['example'])
 tab_1 = QLabel('hello')
 tab_2 = QLabel('world')
 tab_3 = ShojiView()
@@ -62,37 +62,37 @@ tab_3.addWidget(QLabel('b'))
 tab_3.addWidget(QLabel('c'))
 
 # set attrs
-tansu_widget.setHeaderPosition(attrs.WEST)
-#tansu_widget.setHeaderDelegateWidget(header_delegate_widget)
-tansu_widget.setMultiSelectDirection(Qt.Vertical)
-tansu_widget.delegateWidget().setHandleLength(100)
+shoji_widget.setHeaderPosition(attrs.WEST)
+#shoji_widget.setHeaderDelegateWidget(header_delegate_widget)
+shoji_widget.setMultiSelectDirection(Qt.Vertical)
+shoji_widget.delegateWidget().setHandleLength(100)
 
 # insert tabs
-tansu_widget.insertShojiWidget(0, column_data={'example' : '<title> hello'}, widget=tab_1)
-tansu_widget.insertShojiWidget(0, column_data={'example' : '<title> world'}, widget=tab_2)
-tansu_widget.insertShojiWidget(0, column_data={'example' : '<title> tansu'}, widget=tab_3)
+shoji_widget.insertShojiWidget(0, column_data={'example' : '<title> hello'}, widget=tab_1)
+shoji_widget.insertShojiWidget(0, column_data={'example' : '<title> world'}, widget=tab_2)
+shoji_widget.insertShojiWidget(0, column_data={'example' : '<title> shoji'}, widget=tab_3)
 
 # enable drag/drop
-tansu_widget.setHeaderItemIsDropEnabled(False)
-tansu_widget.setHeaderItemIsDragEnabled(True)
-tansu_widget.setHeaderItemIsEditable(True)
-tansu_widget.setHeaderItemIsEnableable(True)
-tansu_widget.setHeaderItemIsDeleteEnabled(True)
-tansu_widget.setHeaderItemEnabledEvent(testEnable)
-tansu_widget.setHeaderItemDeleteEvent(testDelete)
-tansu_widget.setHeaderDelegateToggleEvent(testToggle)
+shoji_widget.setHeaderItemIsDropEnabled(False)
+shoji_widget.setHeaderItemIsDragEnabled(True)
+shoji_widget.setHeaderItemIsEditable(True)
+shoji_widget.setHeaderItemIsEnableable(True)
+shoji_widget.setHeaderItemIsDeleteEnabled(True)
+shoji_widget.setHeaderItemEnabledEvent(testEnable)
+shoji_widget.setHeaderItemDeleteEvent(testDelete)
+shoji_widget.setHeaderDelegateToggleEvent(testToggle)
 
 # setup drag/drop events
-tansu_widget.setHeaderItemDragStartEvent(testDrag)
-tansu_widget.setHeaderItemDropEvent(testDrop)
-tansu_widget.setHeaderItemTextChangedEvent(testEdit)
-tansu_widget.setHeaderItemSelectedEvent(testSelect)
+shoji_widget.setHeaderItemDragStartEvent(testDrag)
+shoji_widget.setHeaderItemDropEvent(testDrop)
+shoji_widget.setHeaderItemTextChangedEvent(testEdit)
+shoji_widget.setHeaderItemSelectedEvent(testSelect)
 
-#print('model == ', tansu_widget.model())
-#tansu_widget.setDelegateTitleIsShown(False)
+#print('model == ', shoji_widget.model())
+#shoji_widget.setDelegateTitleIsShown(False)
 
 # display widget
-tansu_widget.resize(500, 500)
-tansu_widget.show()
-tansu_widget.move(QCursor.pos())
+shoji_widget.resize(500, 500)
+shoji_widget.show()
+shoji_widget.move(QCursor.pos())
 sys.exit(app.exec_())

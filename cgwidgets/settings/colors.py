@@ -8,7 +8,7 @@ TODO
         normals blue ( SELECTION )
     Gray's
         UI dark theme
-    rgba_outline / tansu
+    rgba_outline / shoji
         These will need to be updated
 
 """

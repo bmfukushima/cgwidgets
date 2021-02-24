@@ -712,7 +712,7 @@ class ShojiGroupInputWidget(LabelledInputWidget):
 
     # def keyPressEvent(self, event):
     #     return
-        # print('tansu group input?')
+        # print('shoji group input?')
         # if self.getInputWidget():
         #     return self.getInputWidget().keyPressEvent(event)
 

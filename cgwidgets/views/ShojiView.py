@@ -28,7 +28,7 @@ class ShojiView(QSplitter):
             entire space of this splitter.  The default hotkey for this is ~ but can be
             set with the setSoloViewHotkey() call.
         is_handle_static (bool): determines if the handles are adjustable or not.
-            This is mainly used for reusing the tansu view as bidirectional layout
+            This is mainly used for reusing the shoji view as bidirectional layout
         rgba_handle (rgba): color of the handle
         rgba_handle_hover (rgba): color of the handle when hovered over
         # not used... but I set them up anyways lol
@@ -223,7 +223,7 @@ class ShojiView(QSplitter):
 
         # Press solo view hotkey
         widget_soloable = self.getFirstSoloableWidget(widget_pressed)
-        # toggle solo view ( tansu view )
+        # toggle solo view ( shoji view )
         if event.modifiers() == Qt.AltModifier:
             if widget_soloable.parent():
                 widget_soloable = widget_soloable.parent()
@@ -353,13 +353,13 @@ class ShojiView(QSplitter):
         return QSplitter.insertWidget(self, index, widget)
 
     """ SOLO VIEW """
-    def setIsSoloView(self, tansu_view, _is_solo_view):
-        tansu_view._is_solo_view = _is_solo_view
-        tansu_view.setProperty('is_solo_view', _is_solo_view)
-        updateStyleSheet(tansu_view)
+    def setIsSoloView(self, shoji_view, _is_solo_view):
+        shoji_view._is_solo_view = _is_solo_view
+        shoji_view.setProperty('is_solo_view', _is_solo_view)
+        updateStyleSheet(shoji_view)
 
         # run solo view event
-        tansu_view.toggleSoloViewEvent(_is_solo_view, tansu_view)
+        shoji_view.toggleSoloViewEvent(_is_solo_view, shoji_view)
 
     def unsoloAll(self, widget):
         """
@@ -434,51 +434,51 @@ class ShojiView(QSplitter):
         if not current_widget: return
 
         #
-        current_tansu = current_widget.parent()
+        current_shoji = current_widget.parent()
 
-        # check to ensure tansu view has solo mode enabled
+        # check to ensure shoji view has solo mode enabled
         if hasattr(widget, "isSoloViewEnabled"):
-            if not current_tansu.isSoloViewEnabled():
-                if current_tansu.parent():
-                    return self.toggleIsSoloView(is_solo_view, widget=current_tansu.parent())
+            if not current_shoji.isSoloViewEnabled():
+                if current_shoji.parent():
+                    return self.toggleIsSoloView(is_solo_view, widget=current_shoji.parent())
                 else:
                     return
 
         # enter full screen
         if is_solo_view is True:
             # adjust parent widget
-            if current_tansu.isSoloView() is True:
-                current_index1, current_widget1 = self.getIndexOfWidget(current_tansu)
+            if current_shoji.isSoloView() is True:
+                current_index1, current_widget1 = self.getIndexOfWidget(current_shoji)
                 if current_widget1:
-                    parent_tansu = current_widget.parent()
-                    parent_tansu.toggleIsSoloView(True, current_tansu)
-                    self.setIsSoloView(parent_tansu, True)
-                    parent_tansu.setFocus()
+                    parent_shoji = current_widget.parent()
+                    parent_shoji.toggleIsSoloView(True, current_shoji)
+                    self.setIsSoloView(parent_shoji, True)
+                    parent_shoji.setFocus()
 
             # adjust current widget
-            elif current_tansu.isSoloView() is False:
-                current_tansu.displayAllWidgets(False)
+            elif current_shoji.isSoloView() is False:
+                current_shoji.displayAllWidgets(False)
                 current_widget.show()
-                self.setIsSoloView(current_tansu, True)
+                self.setIsSoloView(current_shoji, True)
                 current_widget.setFocus()
 
         # exit full screen
         else:
             # adjust current widget
-            if current_tansu.isSoloView() is True:
-                current_tansu.displayAllWidgets(True)
-                self.setIsSoloView(current_tansu, False)
+            if current_shoji.isSoloView() is True:
+                current_shoji.displayAllWidgets(True)
+                self.setIsSoloView(current_shoji, False)
                 current_widget.setFocus()
 
             # adjust parent widget
-            elif current_tansu.isSoloView() is False:
-                current_index1, current_widget1 = self.getIndexOfWidget(current_tansu)
+            elif current_shoji.isSoloView() is False:
+                current_index1, current_widget1 = self.getIndexOfWidget(current_shoji)
                 if current_widget1:
-                    parent_tansu = current_widget.parent()
-                    parent_tansu.toggleIsSoloView(False, current_tansu)
+                    parent_shoji = current_widget.parent()
+                    parent_shoji.toggleIsSoloView(False, current_shoji)
 
-                    self.setIsSoloView(parent_tansu, False)
-                    parent_tansu.setFocus()
+                    self.setIsSoloView(parent_shoji, False)
+                    parent_shoji.setFocus()
                     current_widget1.setFocus()
 
     def soloViewHotkey(self):

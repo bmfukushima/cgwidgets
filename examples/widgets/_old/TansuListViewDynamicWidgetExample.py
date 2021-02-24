@@ -95,11 +95,11 @@ def testEdit(item, old_value, new_value):
 def testEnable(item, enabled):
     print(item.columnData()['name'], enabled)
 
-# create tansu widget
-tansu_widget = ShojiModelViewWidget()
+# create shoji widget
+shoji_widget = ShojiModelViewWidget()
 
 # set dynamic
-tansu_widget.setDelegateType(
+shoji_widget.setDelegateType(
     ShojiModelViewWidget.DYNAMIC,
     dynamic_widget=TabShojiDynamicWidgetExample,
     dynamic_function=TabShojiDynamicWidgetExample.updateGUI
@@ -107,35 +107,35 @@ tansu_widget.setDelegateType(
 
 for x in range(3):
     name = '<title {}>'.format(str(x))
-    tansu_widget.insertShojiWidget(x, column_data={'name':name})
+    shoji_widget.insertShojiWidget(x, column_data={'name':name})
 
 # # custom item
-# custom_index = tansu_widget.insertShojiWidget(0, column_data={'name': 'Custom Handlers'})
+# custom_index = shoji_widget.insertShojiWidget(0, column_data={'name': 'Custom Handlers'})
 # custom_index.internalPointer().setDynamicWidgetBaseClass(CustomDynamicWidget)
 # custom_index.internalPointer().setDynamicUpdateFunction(CustomDynamicWidget.updateGUI)
 
 # set attrs
-# tansu_widget.setHeaderPosition(attrs.NORTH)
-# tansu_widget.setMultiSelect(True)
-# tansu_widget.setMultiSelectDirection(Qt.Vertical)
-# tansu_widget.delegateWidget().handle_length = 100
+# shoji_widget.setHeaderPosition(attrs.NORTH)
+# shoji_widget.setMultiSelect(True)
+# shoji_widget.setMultiSelectDirection(Qt.Vertical)
+# shoji_widget.delegateWidget().handle_length = 100
 #
 # # enable drag/drop
-# tansu_widget.setHeaderItemIsDropEnabled(False)
-# tansu_widget.setHeaderItemIsDragEnabled(True)
+# shoji_widget.setHeaderItemIsDropEnabled(False)
+# shoji_widget.setHeaderItemIsDragEnabled(True)
 #
 # # setup drag/drop events
-# tansu_widget.setHeaderItemDragStartEvent(testDrag)
-# tansu_widget.setHeaderItemDropEvent(testDrop)
-# tansu_widget.setHeaderItemTextChangedEvent(testEdit)
-# tansu_widget.setHeaderItemEnabledEvent(testEnable)
+# shoji_widget.setHeaderItemDragStartEvent(testDrag)
+# shoji_widget.setHeaderItemDropEvent(testDrop)
+# shoji_widget.setHeaderItemTextChangedEvent(testEdit)
+# shoji_widget.setHeaderItemEnabledEvent(testEnable)
 
 # set size / show
-tansu_widget.resize(500, 500)
+shoji_widget.resize(500, 500)
 
 delegate_widget = QLabel("Q")
-tansu_widget.addHeaderDelegateWidget([Qt.Key_Q], delegate_widget)
-tansu_widget.setDelegateTitleIsShown(True)
-tansu_widget.show()
-tansu_widget.move(QCursor.pos())
+shoji_widget.addHeaderDelegateWidget([Qt.Key_Q], delegate_widget)
+shoji_widget.setDelegateTitleIsShown(True)
+shoji_widget.show()
+shoji_widget.move(QCursor.pos())
 sys.exit(app.exec_())

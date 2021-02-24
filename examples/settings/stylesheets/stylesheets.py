@@ -43,17 +43,17 @@ if __name__ == "__main__":
                 self.insertInputWidget(0, FloatLadderInputWidget, i, self.asdf,
                                           user_live_update_event=self.liveEdit, default_value=0.5)
 
-            tansu_view = self.getInputWidget().delegateWidget()
-            tansu_view.setIsSoloViewEnabled(False)
-            tansu_view.setIsHandleStatic(True)
-            tansu_view.setHandleWidth(0)
-            tansu_view.setHandleLength(-1)
-            tansu_view.setHandleMarginOffset(0)
-            tansu_view.updateStyleSheet()
+            shoji_view = self.getInputWidget().delegateWidget()
+            shoji_view.setIsSoloViewEnabled(False)
+            shoji_view.setIsHandleStatic(True)
+            shoji_view.setHandleWidth(0)
+            shoji_view.setHandleLength(-1)
+            shoji_view.setHandleMarginOffset(0)
+            shoji_view.updateStyleSheet()
 
-            for index, child in enumerate(tansu_view.children()):
-                tansu_view.setStretchFactor(index, 0)
-            tansu_view.setStretchFactor(index, 1)
+            for index, child in enumerate(shoji_view.children()):
+                shoji_view.setStretchFactor(index, 0)
+            shoji_view.setStretchFactor(index, 1)
 
         @staticmethod
         def asdf(item, widget, value):
