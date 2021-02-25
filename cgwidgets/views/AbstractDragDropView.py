@@ -167,9 +167,8 @@ class AbstractDragDropAbstractView(object):
         self.model().setIsDeleteEnabled(enabled)
 
     """ SELECTION """
-    def setItemSelected(self, index, selected):
+    def setIndexSelected(self, index, selected):
         """
-
         Args:
             index (QModelIndex):
             selected (bool):
@@ -181,7 +180,6 @@ class AbstractDragDropAbstractView(object):
             self.selectionModel().select(index, QItemSelectionModel.Select)
         else:
             self.selectionModel().select(index, QItemSelectionModel.Deselect)
-
         return True
 
     def clearItemSelection(self):

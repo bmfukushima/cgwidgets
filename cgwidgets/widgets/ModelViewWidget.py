@@ -244,8 +244,8 @@ class ModelViewWidget(ShojiView):
     def setTextChangedEvent(self, function):
         self.model().setTextChangedEvent(function)
 
-    def setItemSelectedEvent(self, function):
-        self.model().setItemSelectedEvent(function)
+    def setIndexSelectedEvent(self, function):
+        self.model().setIndexSelectedEvent(function)
 
     """ FLAGS """
     def setOrientation(self, view_orientation, view_position=None):
@@ -441,7 +441,7 @@ class ModelViewSearchBox(AbstractStringInputWidget):
             view.setExpanded(index, expanded)
 
         for index in indexes:
-            view.setItemSelected(index, True)
+            view.setIndexSelected(index, True)
             view.recurseFromIndexToRoot(index, expandIndex, expanded=True)
 
     def keyPressEvent(self, event):
@@ -571,7 +571,7 @@ if __name__ == "__main__":
     main_widget.setTextChangedEvent(testEdit)
     main_widget.setItemEnabledEvent(testEnable)
     main_widget.setItemDeleteEvent(testDelete)
-    main_widget.setItemSelectedEvent(testSelect)
+    main_widget.setIndexSelectedEvent(testSelect)
     main_widget.setDelegateToggleEvent(testDelegateToggle)
     #
     # # set flags

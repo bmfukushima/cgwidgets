@@ -90,7 +90,7 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         self._model = ShojiModel()
         self._header_widget = ShojiHeader(self)
         self._header_widget.setModel(self._model)
-        self._header_widget.setItemSelectedEvent(self._header_widget.selectionChanged)
+        self._header_widget.setIndexSelectedEvent(self._header_widget.selectionChanged)
 
         # setup delegate
         delegate_widget = ShojiMainDelegateWidget()
@@ -121,6 +121,9 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
 
     """ API """
     # TODO move all of these to HeaderItem...
+
+    def setIndexSelected(self, index, selected):
+        self.headerViewWidget().setIndexSelected(index, selected)
 
     def insertShojiWidget(self, row, column_data={}, parent=None, widget=None):
         """
@@ -292,7 +295,7 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
     def setModel(self, model):
         self._model = model
         self._header_widget.setModel(model)
-        self._header_widget.setItemSelectedEvent(self._header_widget.selectionChanged)
+        self._header_widget.setIndexSelectedEvent(self._header_widget.selectionChanged)
 
     def clearModel(self, event_update=False):
         """
@@ -317,7 +320,7 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         self._header_widget = _header_widget
         _header_widget.setModel(self.model())
         self.setHeaderPosition(self.headerPosition(), self._header_delegate_position)
-        #self._header_widget.setItemSelectedEvent(self._header_widget.selectionChanged)
+        #self._header_widget.setIndexSelectedEvent(self._header_widget.selectionChanged)
 
     def headerViewWidget(self):
         return self.headerWidget().view()

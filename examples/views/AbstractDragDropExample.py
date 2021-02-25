@@ -63,7 +63,7 @@ model.setDropEvent(testDrop)
 model.setTextChangedEvent(testEdit)
 model.setItemEnabledEvent(testEnable)
 model.setItemDeleteEvent(testDelete)
-model.setItemSelectedEvent(testSelect)
+model.setIndexSelectedEvent(testSelect)
 
 # set flags
 tree_view.setIsRootDropEnabled(True)
@@ -76,7 +76,7 @@ tree_view.setIsDeleteEnabled(True)
 # set selection mode
 tree_view.setSelectionMode(QAbstractItemView.MultiSelection)
 
-#list_view.setItemSelected(index, True)
+#list_view.setIndexSelected(index, True)
 # show
 # tree_view.move(QCursor.pos())
 # tree_view.show()
@@ -106,7 +106,7 @@ def testSelectToggle():
     for index in indexes:
         item = index.internalPointer()
         print(item.columnData())
-        tree_view.setItemSelected(index, True)
+        tree_view.setIndexSelected(index, True)
     from cgwidgets.utils import updateStyleSheet
     #updateStyleSheet(tree_view)
 

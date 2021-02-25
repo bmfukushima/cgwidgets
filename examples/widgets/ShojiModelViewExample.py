@@ -218,7 +218,7 @@ setupAsStacked()
 #setupAsDynamic()
 
 # SET FLAGSLabelledInputWidget
-shoji_widget.setMultiSelect(True)
+shoji_widget.setMultiSelect(False)
 shoji_widget.setMultiSelectDirection(Qt.Vertical)
 shoji_widget.delegateWidget().setHandleLength(100)
 shoji_widget.setHeaderPosition(attrs.WEST, attrs.SOUTH)

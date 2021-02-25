@@ -62,7 +62,7 @@ main_widget.setDropEvent(testDrop)
 main_widget.setTextChangedEvent(testEdit)
 main_widget.setItemEnabledEvent(testEnable)
 main_widget.setItemDeleteEvent(testDelete)
-main_widget.setItemSelectedEvent(testSelect)
+main_widget.setIndexSelectedEvent(testSelect)
 #
 # set flags
 main_widget.setIsRootDropEnabled(True)
