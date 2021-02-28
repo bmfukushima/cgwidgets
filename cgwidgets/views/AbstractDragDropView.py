@@ -277,7 +277,11 @@ class AbstractDragDropAbstractView(object):
             context_menu.addAction(entry_name)
 
         # execute menu
-        action = context_menu.exec_(event.globalPos())
+        # Show/Execute menu
+        pos = event.globalPos()
+        context_menu.popup(pos)
+        action = context_menu.exec_(pos)
+        #action = context_menu.exec_(event.globalPos())
 
         # get selected items / items under cursor
         item_under_cursor = self.getIndexUnderCursor().internalPointer()

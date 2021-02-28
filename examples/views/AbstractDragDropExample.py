@@ -22,8 +22,8 @@ def testDrag(items, model):
     print(items)
     print("DRAGGING -->", items)
 
-def testDrop(items, model, row, parent):
-    print("DROPPING -->", row, items, parent)
+def testDrop(data, indexes, self, row, parent_item):
+    print("DROPPING -->", data, indexes, self, row, parent_item)
 
 def testEdit(item, old_value, new_value):
     print("EDITING -->", item, old_value, new_value)
