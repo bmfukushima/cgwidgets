@@ -85,7 +85,6 @@ tree_view.setSelectionMode(QAbstractItemView.MultiSelection)
 # new...
 ###########################################
 from qtpy.QtWidgets import QWidget, QVBoxLayout, QPushButton
-from qtpy.QtCore import QModelIndex
 
 def testSelectToggle():
     """    match(const
@@ -111,8 +110,8 @@ def testSelectToggle():
     #updateStyleSheet(tree_view)
 
 # add context menu
-def contextMenu(item_under_cursor, indexes):
-    print(item_under_cursor, indexes)
+def contextMenu(index, selected_indexes):
+    print(index, selected_indexes)
 
 tree_view.addContextMenuEvent('test', contextMenu)
 

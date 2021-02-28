@@ -76,8 +76,8 @@ main_widget.setDelegateToggleEvent(testDelegateToggle)
 main_widget.setMultiSelect(True)
 
 # add context menu
-def contextMenu(item_under_cursor, indexes):
-    print(item_under_cursor, indexes)
+def contextMenu(index, selected_indexes):
+    print(index, selected_indexes)
 
 main_widget.addContextMenuEvent('test', contextMenu)
 

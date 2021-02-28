@@ -326,8 +326,9 @@ delegate_widget = QLabel("Q")
 shoji_widget.addHeaderDelegateWidget([Qt.Key_Q], delegate_widget, modifier=Qt.NoModifier, focus=False)
 
 # add context menu
-def contextMenu(item_under_cursor, indexes):
-    print(item_under_cursor, indexes)
+def contextMenu(index, selected_indexes):
+    print(index, selected_indexes)
+    print(index.internalPointer())
 
 shoji_widget.addContextMenuEvent('test', contextMenu)
 

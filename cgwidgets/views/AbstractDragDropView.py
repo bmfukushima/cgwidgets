@@ -21,6 +21,7 @@ class AbstractDragDropAbstractView(object):
         self._proxy_model = None
         self._source_model = None
         self._context_menu_manifest = {}
+
         # setup style
         self.style = AbstractDragDropIndicator()
         self.setStyle(self.style)
@@ -272,24 +273,22 @@ class AbstractDragDropAbstractView(object):
     """ CONTEXT MENU """
     def contextMenuEvent(self, event):
         # populate menu entries
-        context_menu = QMenu(self)
+        context_menu = AbstractViewContextMenu(self)
         for entry_name in self.contextMenuManifest():
             context_menu.addAction(entry_name)
 
-        # execute menu
         # Show/Execute menu
         pos = event.globalPos()
         context_menu.popup(pos)
         action = context_menu.exec_(pos)
-        #action = context_menu.exec_(event.globalPos())
 
         # get selected items / items under cursor
-        item_under_cursor = self.getIndexUnderCursor().internalPointer()
-        indexes = self.selectionModel().selectedIndexes()
+        index_clicked = context_menu.item
+        selected_indexes = self.selectionModel().selectedIndexes()
 
         # do user defined event
         if action is not None:
-            self.contextMenuManifest()[action.text()](item_under_cursor, indexes)
+            self.contextMenuManifest()[action.text()](index_clicked, selected_indexes)
 
     def addContextMenuEvent(self, name, event):
         """
@@ -297,12 +296,10 @@ class AbstractDragDropAbstractView(object):
 
         Args:
             name (str): name of function to be displayed
-            event (function): takes one arg, which is the current item selected?
+            event (function): takes two args:
+                item_under_cursor (item): current item under cursor
+                indexes (list): of currently selected QModelIndexes
         """
-        # menu_item = {}
-        # print('adding ...', name, event)
-        # menu_item['name'] = name
-        # menu_item['event'] = event
         self.contextMenuManifest()[name] = event
 
     def contextMenuManifest(self):
@@ -463,6 +460,14 @@ class AbstractDragDropTreeView(QTreeView, AbstractDragDropAbstractView):
     def setFlow(self, _):
         pass
 
+
+class AbstractViewContextMenu(QMenu):
+    def __init__(self, parent=None):
+        super(AbstractViewContextMenu, self).__init__(parent)
+        self.item = None
+
+    def showEvent(self, event):
+        self.item = self.parent().getIndexUnderCursor()
 
 """ STYLES """
 class AbstractDragDropModelDelegate(QStyledItemDelegate):

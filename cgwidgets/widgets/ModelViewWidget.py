@@ -141,11 +141,12 @@ class ModelViewWidget(ShojiView):
 
         Args:
             name (str): name of function to be displayed
-            event (function): takes one arg, which is the current item selected?
+            event (function): takes two args:
+                item_under_cursor (item): current item under cursor
+                indexes (list): of currently selected QModelIndexes
         """
         if hasattr(self.view(), 'addContextMenuEvent'):
             self.view().addContextMenuEvent(name, event)
-            print('adding ...', name, event)
         else:
             print('view does not have function addContextMenuEvent')
 
