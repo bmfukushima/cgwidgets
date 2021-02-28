@@ -458,6 +458,20 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
 
         return display_widget
 
+    def addContextMenuEvent(self, name, event):
+        """
+        Adds an entry into the RMB popup menu.
+
+        Args:
+            name (str): name of function to be displayed
+            event (function): takes one arg, which is the current item selected?
+        """
+        if hasattr(self.headerViewWidget(), 'addContextMenuEvent'):
+            self.headerViewWidget().addContextMenuEvent(name, event)
+            print('adding ...', name, event)
+        else:
+            print('view does not have function addContextMenuEvent')
+
     """ DELEGATE """
     def delegateWidget(self):
         return self._delegate_widget

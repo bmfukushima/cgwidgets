@@ -1,6 +1,6 @@
 from qtpy.QtWidgets import (
     QListView, QAbstractItemView, QTreeView,
-    QProxyStyle, QStyledItemDelegate, QStyleOptionViewItem, QStyle
+    QProxyStyle, QStyledItemDelegate, QStyleOptionViewItem, QStyle, QMenu
 )
 from qtpy.QtCore import Qt, QPoint, QRect, QItemSelectionModel, QSortFilterProxyModel
 from qtpy.QtGui import QColor, QPen, QBrush, QCursor, QPolygonF, QPainterPath
@@ -12,11 +12,15 @@ from cgwidgets.settings.icons import icons
 
 """ VIEWS """
 class AbstractDragDropAbstractView(object):
+    """
+
+    """
     def __init__(self):
         # attrs
         #self._model = None
         self._proxy_model = None
         self._source_model = None
+        self._context_menu_manifest = {}
         # setup style
         self.style = AbstractDragDropIndicator()
         self.setStyle(self.style)
@@ -264,6 +268,41 @@ class AbstractDragDropAbstractView(object):
     def setExpanded(self, index, bool):
         """ override for list views """
         return QAbstractItemView.keyPressEvent(self, index, bool)
+
+    """ CONTEXT MENU """
+    def contextMenuEvent(self, event):
+        # populate menu entries
+        context_menu = QMenu(self)
+        for entry_name in self.contextMenuManifest():
+            context_menu.addAction(entry_name)
+
+        # execute menu
+        action = context_menu.exec_(event.globalPos())
+
+        # get selected items / items under cursor
+        item_under_cursor = self.getIndexUnderCursor().internalPointer()
+        indexes = self.selectionModel().selectedIndexes()
+
+        # do user defined event
+        if action is not None:
+            self.contextMenuManifest()[action.text()](item_under_cursor, indexes)
+
+    def addContextMenuEvent(self, name, event):
+        """
+        Adds an entry into the RMB popup menu.
+
+        Args:
+            name (str): name of function to be displayed
+            event (function): takes one arg, which is the current item selected?
+        """
+        # menu_item = {}
+        # print('adding ...', name, event)
+        # menu_item['name'] = name
+        # menu_item['event'] = event
+        self.contextMenuManifest()[name] = event
+
+    def contextMenuManifest(self):
+        return self._context_menu_manifest
 
 
 class AbstractDragDropListView(QListView, AbstractDragDropAbstractView):

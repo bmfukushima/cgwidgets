@@ -325,6 +325,13 @@ the user presses a specific key/modifier combination
 delegate_widget = QLabel("Q")
 shoji_widget.addHeaderDelegateWidget([Qt.Key_Q], delegate_widget, modifier=Qt.NoModifier, focus=False)
 
+# add context menu
+def contextMenu(item_under_cursor, indexes):
+    print(item_under_cursor, indexes)
+
+shoji_widget.addContextMenuEvent('test', contextMenu)
+
+
 # display widget
 shoji_widget.resize(500, 500)
 shoji_widget.show()

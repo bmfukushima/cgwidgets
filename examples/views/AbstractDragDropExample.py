@@ -110,6 +110,12 @@ def testSelectToggle():
     from cgwidgets.utils import updateStyleSheet
     #updateStyleSheet(tree_view)
 
+# add context menu
+def contextMenu(item_under_cursor, indexes):
+    print(item_under_cursor, indexes)
+
+tree_view.addContextMenuEvent('test', contextMenu)
+
 w = QWidget()
 button = QPushButton("SINE.")
 button.clicked.connect(testSelectToggle)

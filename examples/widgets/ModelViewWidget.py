@@ -38,7 +38,6 @@ def testSelect(item, enabled, column=0):
 def testDelegateToggle(enabled, event, widget):
     print("TOGGLING -{key}->".format(key=event.key()), widget, enabled)
 
-
 # create main Model View Widget
 main_widget = ModelViewWidget()
 main_widget.setViewType(ModelViewWidget.TREE_VIEW)
@@ -75,6 +74,12 @@ main_widget.setDelegateToggleEvent(testDelegateToggle)
 
 # set selection mode
 main_widget.setMultiSelect(True)
+
+# add context menu
+def contextMenu(item_under_cursor, indexes):
+    print(item_under_cursor, indexes)
+
+main_widget.addContextMenuEvent('test', contextMenu)
 
 main_widget.move(QCursor.pos())
 main_widget.show()

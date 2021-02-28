@@ -135,6 +135,20 @@ class ModelViewWidget(ShojiView):
 
         return view
 
+    def addContextMenuEvent(self, name, event):
+        """
+        Adds an entry into the RMB popup menu.
+
+        Args:
+            name (str): name of function to be displayed
+            event (function): takes one arg, which is the current item selected?
+        """
+        if hasattr(self.view(), 'addContextMenuEvent'):
+            self.view().addContextMenuEvent(name, event)
+            print('adding ...', name, event)
+        else:
+            print('view does not have function addContextMenuEvent')
+
     """ MODEL """
     def model(self):
         if hasattr(self, "_view"):
