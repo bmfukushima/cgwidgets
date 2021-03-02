@@ -27,7 +27,10 @@ from .InputWidgets.ColorInputWidget import ColorGradientDelegate as ColorGradien
 from .InputWidgets.ColorInputWidget import ColorInputWidget as ColorInputWidget
 
 """ NODE WIDGETS """
-from .NodeWidgets import NodeTypeListWidget
+try:
+    from .NodeWidgets import NodeTypeListWidget
+except ModuleNotFoundError:
+    pass
 # from .NodeTreeWidget import NodeViewWidget
 # old stuff
 from .LibraryWidget import LibraryWidget as LibraryWidget

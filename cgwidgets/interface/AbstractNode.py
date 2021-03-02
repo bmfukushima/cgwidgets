@@ -1,10 +1,9 @@
 import sys
 
 from qtpy.QtCore import QPoint
-
+print('============ name ===== > ', __name__)
 from cgwidgets.interface import AbstractNodeInterfaceAPI
 from cgwidgets.interface import AbstractPort, AbstractParameter
-
 dcc_path = sys.argv[0].lower()
 TRANSLATE = False
 for dcc in ['katana', 'nuke', 'houdini', 'mari']:

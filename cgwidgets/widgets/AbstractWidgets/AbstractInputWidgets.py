@@ -654,6 +654,7 @@ class AbstractMultiButtonInputWidget(ShojiView):
         self._buttons = {}
         self._is_multi_select = True
         self._current_buttons = []
+        self._is_toggleable = True
 
         #
         if buttons:
@@ -673,6 +674,12 @@ class AbstractMultiButtonInputWidget(ShojiView):
 
     def setIsMultiSelect(self, enabled):
         self._is_multi_select = enabled
+
+    def isToggleable(self):
+        return self._is_toggleable
+
+    def setIsToggleable(self, enabled):
+        self._is_toggleable = enabled
 
     """ BUTTONS """
     def updateButtonSelection(self, selected_button):
@@ -716,7 +723,7 @@ class AbstractMultiButtonInputWidget(ShojiView):
 
         self.update()
 
-    def addButton(self, title, flag, user_clicked_event, image=None):
+    def addButton(self, title, flag, user_clicked_event=None, image=None):
         """
         Adds a button to this widget
 
@@ -726,13 +733,15 @@ class AbstractMultiButtonInputWidget(ShojiView):
             user_clicked_event (function): to run when the user clicks
             image:
 
+        Returns (AbstractButtonInputWidget): newly created button
         Note:
             image is not currently setup.  This kwarg is merely a place holder.
         Todo: setup image
         """
-        button = AbstractButtonInputWidget(self, user_clicked_event=user_clicked_event, title=title, flag=flag)
+        button = AbstractButtonInputWidget(self, user_clicked_event=user_clicked_event, title=title, flag=flag, is_toggleable=self.isToggleable())
         self._buttons[title] = button
         self.addWidget(button)
+        return button
 
 
 class AbstractButtonInputWidget(AbstractBooleanInputWidget):
