@@ -640,7 +640,6 @@ class ShojiGroupInputWidget(LabelledInputWidget):
             # set attrs
             labelled_widget.setName(name)
             labelled_widget.setInputBaseClass(widget_constructor)
-            #labelled_widget.setIsSoloViewEnabled(False)
             input_widget = labelled_widget.getInputWidget()
 
             # update list inputs
@@ -709,12 +708,6 @@ class ShojiGroupInputWidget(LabelledInputWidget):
 
     def removeInputWidget(self, index):
         self.getInputWidget().removeTab(index)
-
-    # def keyPressEvent(self, event):
-    #     return
-        # print('shoji group input?')
-        # if self.getInputWidget():
-        #     return self.getInputWidget().keyPressEvent(event)
 
 
 class MultiButtonInputWidget(AbstractMultiButtonInputWidget):

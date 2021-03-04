@@ -339,6 +339,7 @@ def getWidgetAncestorByName(widget, widget_name):
         else:
             return None
 
+
 def getWidgetAncestorByObjectName(widget, widget_name):
     """
     Recursively searches up from the current widget
@@ -364,6 +365,7 @@ def getWidgetAncestorByObjectName(widget, widget_name):
             return getWidgetAncestorByObjectName(widget.parent(), widget_name)
         else:
             return None
+
 
 def getBottomLeftPos(widget):
     """
@@ -458,6 +460,15 @@ def getGlobalItemPos(item):
 
     return pos
 
+
+def centerWidgetOnCursor(widget):
+    pos = QCursor.pos()
+    widget.setGeometry(
+        pos.x() - (widget.geometry().width() * 0.5),
+        pos.y() - (widget.geometry().height() * 0.5),
+        widget.geometry().width(),
+        widget.geometry().height()
+    )
 
 def clearLayout(layout, start=None, end=None):
     """

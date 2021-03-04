@@ -693,7 +693,7 @@ class AbstractMultiButtonInputWidget(ShojiView):
             if button not in self.currentButtons():
                 button.setProperty("is_selected", False)
                 updateStyleSheet(button)
-        self.setAllWidgetsToUniformSize()
+        self.normalizeWidgetSizes()
 
     def currentButtons(self):
         return self._current_buttons
@@ -796,7 +796,8 @@ class AbstractButtonInputWidget(AbstractBooleanInputWidget):
         self._user_clicked_event = function
 
     def userClickedEvent(self):
-        self._user_clicked_event(self)
+        if hasattr(self, "_user_clicked_event"):
+            self._user_clicked_event(self)
 
     def mouseReleaseEvent(self, event):
         """ TODO this can probably be updated to use the AbstractBooleanInputWidget default
@@ -805,7 +806,7 @@ class AbstractButtonInputWidget(AbstractBooleanInputWidget):
         # update selection
         if hasattr(self.parent(), "updateButtonSelection"):
             self.parent().updateButtonSelection(self)
-            self.parent().setAllWidgetsToUniformSize()
+            self.parent().normalizeWidgetSizes()
 
         # update style
         self.setProperty("hover_display", False)

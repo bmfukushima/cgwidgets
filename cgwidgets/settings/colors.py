@@ -60,7 +60,7 @@ class Colors(dict):
         self["rgba_selected_hover"] = self["rgba_cyan_7"]
 
         """ accept / decline"""
-        self["rgba_accept"] = self["rgba_green_desat_5"]
+        self["rgba_accept"] = self["rgba_green_desat_6"]
         self["rgba_cancel"] = self["rgba_red_desat_6"]
         self["rgba_maybe"] =  self["rgba_yellow_5"]
         self["rgba_error"] =  self["rgba_red_7"]
@@ -85,7 +85,6 @@ class Colors(dict):
         instance (object): object whose class type should have this
             style sheet attached onto
         """
-
         args = {
             'type': type(current_instance).__name__,
             'rgba_background': iColor['rgba_background_00'],
@@ -96,7 +95,7 @@ class Colors(dict):
         args.update(updated_args)
         default_style_sheet = """
         {type}{{
-                background-color: rgba{rgba_background_00};
+                background-color: rgba{rgba_background};
                 color: rgba{rgba_text};
                 border: None;}}
         {additional_args}

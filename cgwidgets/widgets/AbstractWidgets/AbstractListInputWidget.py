@@ -630,6 +630,7 @@ if __name__ == "__main__":
     r = AbstractListInputWidget(item_list=[
         ['a', (255,0,0, 255)], ['b'], ['c'], ['aa'], ['bb'], ['cc'], ['b'], ['c'], ['aa'], ['bb'], ['cc']]
     )
+    r.setText("bb")
     r.display_item_colors = True
     e = CompleterPopup()
     l.addWidget(r)

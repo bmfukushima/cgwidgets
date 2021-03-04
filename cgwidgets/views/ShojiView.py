@@ -113,7 +113,7 @@ class ShojiView(QSplitter):
             if widget not in exclusion_list:
                 widget.setParent(None)
 
-    def setAllWidgetsToUniformSize(self):
+    def normalizeWidgetSizes(self):
         """
         Sets all of the widgets to a uniform size.
 
@@ -125,6 +125,8 @@ class ShojiView(QSplitter):
             Handle at 0 index is ALWAYs invisible
 
         """
+        self.show()
+
         num_handles = len(self.getAllHandles())
         # get offset
         if self.orientation() == Qt.Vertical:

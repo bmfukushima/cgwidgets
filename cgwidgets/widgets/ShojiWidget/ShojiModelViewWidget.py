@@ -122,6 +122,9 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
     """ API """
     # TODO move all of these to HeaderItem...
 
+    def normalizeWidgetSizes(self):
+        self.delegateWidget().normalizeWidgetSizes()
+
     def setIndexSelected(self, index, selected):
         self.headerViewWidget().setIndexSelected(index, selected)
 
