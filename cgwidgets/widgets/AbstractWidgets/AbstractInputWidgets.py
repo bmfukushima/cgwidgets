@@ -28,6 +28,7 @@ from cgwidgets.utils import (
 from cgwidgets.views import ShojiView, ShojiViewHandle
 from cgwidgets.settings.icons import icons
 from cgwidgets.settings.stylesheets import input_widget_ss
+from cgwidgets.settings.hover_display import BORDER_00, BORDER_01,installHoverDisplaySS
 
 
 class iAbstractInputWidget(object):
@@ -59,7 +60,7 @@ class iAbstractInputWidget(object):
         self.rgba_selected_hover = iColor["rgba_selected_hover"]
 
         # setup properties
-        self.setProperty("hover_display", True)
+        self.setProperty("input_hover", True)
 
         self.updateStyleSheet()
 
@@ -81,8 +82,20 @@ class iAbstractInputWidget(object):
         style_sheet = """
             {input_widget_ss}
         """.format(input_widget_ss=input_widget_ss.format(**style_sheet_args))
-
         self.setStyleSheet(style_sheet)
+
+        # add hover display
+        hover_type_flags = {
+            'focus':{'input_hover':True},
+            'hover_focus':{'input_hover':True},
+            'hover':{'input_hover':True},
+        }
+        installHoverDisplaySS(
+            self,
+            hover_type=BORDER_00,
+            hover_focus_type=BORDER_00,
+            focus_type=BORDER_00,
+            hover_type_flags=hover_type_flags)
 
     """ UTILS """
     def setValidateInputFunction(self, function):
@@ -543,7 +556,7 @@ class AbstractBooleanInputWidget(QLabel, iAbstractInputWidget):
     def __init__(self, parent=None, text=None, is_selected=False):
         super(AbstractBooleanInputWidget, self).__init__(parent)
         self.is_selected = is_selected
-        self.setProperty("hover_display", True)
+        self.setProperty("input_hover", True)
         if text:
             self.setText(text)
         self.updateStyleSheet()
@@ -552,7 +565,7 @@ class AbstractBooleanInputWidget(QLabel, iAbstractInputWidget):
 
     """ EVENTS """
     def enterEvent(self, event):
-        self.setProperty("hover_display", True)
+        self.setProperty("input_hover", True)
         updateStyleSheet(self)
         return QLabel.enterEvent(self, event)
 
@@ -565,7 +578,7 @@ class AbstractBooleanInputWidget(QLabel, iAbstractInputWidget):
         except AttributeError:
             pass
 
-        self.setProperty("hover_display", False)
+        self.setProperty("input_hover", False)
         updateStyleSheet(self)
 
         return QLabel.mouseReleaseEvent(self, event)
@@ -799,6 +812,7 @@ class AbstractButtonInputWidget(AbstractBooleanInputWidget):
         if hasattr(self, "_user_clicked_event"):
             self._user_clicked_event(self)
 
+    """ EVENTS """
     def mouseReleaseEvent(self, event):
         """ TODO this can probably be updated to use the AbstractBooleanInputWidget default
             mouse release event
@@ -809,7 +823,7 @@ class AbstractButtonInputWidget(AbstractBooleanInputWidget):
             self.parent().normalizeWidgetSizes()
 
         # update style
-        self.setProperty("hover_display", False)
+        #self.setProperty("input_hover", False)
         updateStyleSheet(self)
 
         # user events
@@ -823,6 +837,9 @@ class AbstractButtonInputWidget(AbstractBooleanInputWidget):
 
         #print(self.parent().flags())
         #return AbstractBooleanInputWidget.mouseReleaseEvent(self, event)
+    #
+    # def leaveEvent(self, event):
+    #     self.setProperty("input_hover", True)
 
 
 if __name__ == "__main__":

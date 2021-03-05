@@ -43,21 +43,23 @@ def test(widget, value):
     #widget.setText(str(value))
 
 def shojiInputTest(item, widget, value):
-    print("---- TANSU input function ----")
+    print("---- SHOJI input function ----")
     print('setting value to... ', value)
     print(item, widget, value)
     # widget.setText(str(value))
 
+def fail():
+    print("fail")
 """ Setup Shoji Widget """
 shoji_group_widget = ShojiGroupInputWidget(parent=None, name='ShojiGroupInputWidget')
 
 # add user inputs
-shoji_group_widget.insertInputWidget(0, FloatInputWidget, 'Float', shojiInputTest)
-shoji_group_widget.insertInputWidget(0, IntInputWidget, 'Int', shojiInputTest)
-shoji_group_widget.insertInputWidget(0, BooleanInputWidget, 'Boolean', shojiInputTest)
-shoji_group_widget.insertInputWidget(0, StringInputWidget, 'String', shojiInputTest)
-shoji_group_widget.insertInputWidget(0, ListInputWidget, 'List', shojiInputTest, data={'items_list':list_of_crap})
-shoji_group_widget.insertInputWidget(0, PlainTextInputWidget, 'Text', shojiInputTest)
+shoji_group_widget.insertInputWidget(0, FloatInputWidget, 'Float', fail)
+shoji_group_widget.insertInputWidget(0, IntInputWidget, 'Int', fail)
+shoji_group_widget.insertInputWidget(0, BooleanInputWidget, 'Boolean', fail)
+shoji_group_widget.insertInputWidget(0, StringInputWidget, 'String', fail)
+shoji_group_widget.insertInputWidget(0, ListInputWidget, 'List', fail, data={'items_list':list_of_crap})
+shoji_group_widget.insertInputWidget(0, PlainTextInputWidget, 'Text', fail)
 
 shoji_group_widget.display_background = False
 
@@ -205,10 +207,12 @@ main_widget.addWidget(vertical_label_widget)
 main_widget.addWidget(horizontal_label_widget)
 main_widget.addWidget(shoji_group_widget)
 main_widget.addWidget(frame_group_input_widget)
-
+#main_widget = shoji_group_widget
 main_widget.resize(500, 500)
 main_widget.show()
 main_widget.move(QCursor.pos())
+
+
 
 sys.exit(app.exec_())
 

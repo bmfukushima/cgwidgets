@@ -164,9 +164,44 @@ TEST.setHoverSS("""background: rgba(0,255,0,255);""")
 TEST.setHoverFocusSS("""background: rgba(0,0,255,255);""")
 
 BORDER_00 = HoverStyleSheet("BORDER_00")
-BORDER_00.setFocusSS("""border: 6px dotted rgba{rgba_background_00};""")
-BORDER_00.setHoverSS("""border: 6px dotted rgba{rgba_background_00};""")
-BORDER_00.setHoverFocusSS("""border: 6px dotted rgba{rgba_background_00};""")
+BORDER_00.setFocusSS("""
+    border-left: 2px dotted rgba{rgba_selected_hover};
+    border-right: 2px dotted rgba{rgba_selected_hover};
+    border-top: None;
+    border-bottom: None;
+    """)
+BORDER_00.setHoverSS("""
+    border-left: 2px dotted rgba{rgba_selected_hover};
+    border-right: 2px dotted rgba{rgba_selected_hover};
+    border-top: None;
+    border-bottom: None;
+""")
+BORDER_00.setHoverFocusSS("""
+    border-left: 2px dotted rgba{rgba_selected_hover};
+    border-right: 2px dotted rgba{rgba_selected_hover};
+    border-top: None;
+    border-bottom: None;
+""")
+
+BORDER_01 = HoverStyleSheet("BORDER_01")
+BORDER_01.setFocusSS("""
+    border-left: 2px solid rgba{rgba_selected_hover};
+    border-right: 2px solid rgba{rgba_selected_hover};
+    border-top: None;
+    border-bottom: None;
+    """)
+BORDER_01.setHoverSS("""
+    border-left: 2px solid rgba{rgba_selected_hover};
+    border-right: 2px solid rgba{rgba_selected_hover};
+    border-top: None;
+    border-bottom: None;
+""")
+BORDER_01.setHoverFocusSS("""
+    border-left: 2px solid rgba{rgba_selected_hover};
+    border-right: 2px solid rgba{rgba_selected_hover};
+    border-top: None;
+    border-bottom: None;
+""")
 
 BACKGROUND_00 = HoverStyleSheet("BACKGROUND_00")
 BACKGROUND_00.setFocusSS("""

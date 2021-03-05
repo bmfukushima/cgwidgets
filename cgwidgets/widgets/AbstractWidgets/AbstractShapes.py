@@ -355,7 +355,7 @@ class AbstractInputGroup(QFrame):
         self.layout().addWidget(self.group_box)
         self.group_box.display_background = False
 
-        self.setStyleSheet("background-color: rgba{rgba_background_00}".format(**iColor.style_sheet_args))
+        self.setStyleSheet("background-color: rgba{rgba_background_01}".format(**iColor.style_sheet_args))
 
     """ PROPERTIES """
     def isSelected(self):

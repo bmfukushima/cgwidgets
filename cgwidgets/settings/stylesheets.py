@@ -118,12 +118,21 @@ input_widget_ss ="""
     }}}}
 
     /* SELECTION */
+
     {{type}}[is_selected=true]{{{{
         background: {background_accept_radial}
         }}}}
     {{type}}[is_selected=false]{{{{
         background: {background_cancel_radial}
         }}}}
+    /*
+    {{type}}[is_selected=true][hover_display=false]{{{{
+        background: {background_accept_radial}
+        }}}}
+    {{type}}[is_selected=false][hover_display=false]{{{{
+        background: {background_cancel_radial}
+        }}}}
+
     {{type}}:focus{{{{
         background: {background_hover_radial}
         }}}}
@@ -133,6 +142,7 @@ input_widget_ss ="""
     {{type}}::hover:focus{{{{
             background: {background_hover_radial}
         }}}}
+    */
 """.format(
     background_hover_radial=background_hover_radial,
     background_cancel_radial=background_cancel_radial,
@@ -153,7 +163,6 @@ Kwargs:
 """
 scroll_bar_ss = """
 /* HORIZONTAL */
-
     /* BACKGROUND */
     QScrollBar:horizontal {{
         border: None;

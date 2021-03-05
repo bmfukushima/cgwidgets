@@ -12,7 +12,7 @@ from qtpy.QtGui import QCursor
 
 from cgwidgets.settings.colors import iColor
 from cgwidgets.settings.stylesheets import (splitter_handle_ss)
-from cgwidgets.settings.hover_display import installHoverDisplaySS, BACKGROUND_00, BORDER_00
+from cgwidgets.settings.hover_display import installHoverDisplaySS, BACKGROUND_00, BORDER_00, BORDER_01
 
 from cgwidgets.utils import updateStyleSheet
 
@@ -252,23 +252,6 @@ class ShojiView(QSplitter):
         if event.type() == QEvent.Leave:
             obj.setProperty("hover_display", False)
 
-        # if event.type() == QEvent.KeyPress:
-        #     print('eveent filter perss?')
-        #     if event.key() == self.soloViewHotkey():
-        #         self.__soloViewHotkeyPressed(event)
-        #         self.toggleSoloViewEvent(True, obj)
-        #         return True
-        #     elif event.key() == Qt.Key_Escape:
-        #         if event.modifiers() == Qt.AltModifier:
-        #             self.unsoloAll(self)
-        #         else:
-        #             self.toggleIsSoloView(False)
-        #         self.toggleSoloViewEvent(False, obj)
-        #         return True
-        #     #return True
-
-        # return QSplitter.eventFilter(self, obj, event)
-
         return False
 
     def enterEvent(self, event):
@@ -320,9 +303,9 @@ class ShojiView(QSplitter):
         }
         installHoverDisplaySS(
             widget,
-            hover_type=BORDER_00,
-            hover_focus_type=BORDER_00,
-            focus_type=BORDER_00,
+            hover_type=BORDER_01,
+            hover_focus_type=BORDER_01,
+            focus_type=BORDER_01,
             hover_type_flags=hover_type_flags)
 
     def isolateWidgets(self, widget_list):

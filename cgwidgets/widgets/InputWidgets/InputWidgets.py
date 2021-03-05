@@ -95,7 +95,7 @@ class iShojiGroupInput(object):
         self.setUserFinishedEditingEvent(self.updateUserInputItem)
 
     """ VIRTUAL EVENTS """
-    def __user_finished_editing_event(self, *args, **kwargs):
+    def __user_finished_editing_event(self, item, widget, value):
         pass
 
     def setUserFinishedEditingEvent(self, function):
@@ -108,12 +108,12 @@ class iShojiGroupInput(object):
         """
         self.__user_finished_editing_event = function
 
-    def userFinishedEditingEvent(self, *args, **kwargs):
+    def userFinishedEditingEvent(self, item, widget, value):
         """
         Internal event to run everytime the user triggers an update.  This
         will need to be called on every type of widget.
         """
-        self.__user_finished_editing_event(*args, **kwargs)
+        self.__user_finished_editing_event(item, widget, value)
 
     def __live_input_event(self, *args, **kwargs):
         pass
@@ -394,7 +394,9 @@ class LabelledInputWidget(ShojiView, AbstractInputGroupFrame):
         # setup style
         self.splitterMoved.connect(self.__splitterMoved)
 
+        # todo this blocks hover display...
         self.setIsSoloViewEnabled(False)
+        #self._input_widget.setProperty("hover_display", True)
 
     """ HANDLE GROUP FRAME MOVING"""
 
@@ -464,6 +466,9 @@ class LabelledInputWidget(ShojiView, AbstractInputGroupFrame):
         self._input_widget.setSizePolicy(
             QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding
         )
+        #self._input_widget.setProperty("hover_display", True)
+        #if self._input_widget has
+        #self.addHoverDisplay(self._input_widget)
 
     def getInputWidget(self):
         return self._input_widget
@@ -762,17 +767,14 @@ if __name__ == "__main__":
     #     widget.insertInputWidget(0, FloatInputWidget, i, asdf,
     #                            user_live_update_event=asdf, default_value=0.5)
 
-    def test(widget):
-        print("testing == ", widget)
-    widget = ButtonInputWidget(user_clicked_event=test, title="None", flag=False, is_toggleable=False)
-    widget.setIsToggleable(False)
-    #test_labelled_embed = LabelledInputWidget(name="embed", widget_type=FloatInputWidget)
+
+    test_labelled_embed = LabelledInputWidget(name="embed", widget_type=FloatInputWidget)
     #labelled_input = LabelledInputWidget(name="test", widget_type=test_labelled_embed)
 
-    widget.move(QCursor.pos())
-    widget.show()
-    #widget.resize(256, 256)
-    widget.resize(500, 500)
-    widget.show()
+    test_labelled_embed.move(QCursor.pos())
+    test_labelled_embed.show()
+    #test_labelled_embed.resize(256, 256)
+    test_labelled_embed.resize(500, 500)
+    test_labelled_embed.show()
     #w.move(QCursor.pos())
     sys.exit(app.exec_())
