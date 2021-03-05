@@ -45,114 +45,6 @@ from cgwidgets.utils import (
 from cgwidgets.settings.colors import iColor
 
 
-class ShojiInputWidgetItem(ShojiModelItem):
-    """
-    widgetConstructor (widget): widget to build as based class
-    value (str): current value set on this item
-
-    """
-    def getValue(self):
-        return self._value
-
-    def setValue(self, value):
-        self._value = value
-
-    """ Widget Type"""
-    def widgetConstructor(self):
-        return self._widget_constructor
-
-    def setWidgetConstructor(self, widget_constructor):
-        self._widget_constructor = widget_constructor
-
-    """ setup user input event """
-    def __userInputEvent(self, widget, value):
-        return
-
-    def setUserInputEvent(self, function):
-        self.__userInputEvent = function
-
-    def userInputEvent(self, widget, value):
-        self.__userInputEvent(self, widget, value)
-
-    def __userLiveInputEvent(self, widget, value):
-        return
-
-    def setUserLiveInputEvent(self, function):
-        self.__userLiveInputEvent = function
-
-    def userLiveInputEvent(self, widget, value):
-        self.__userLiveInputEvent(self, widget, value)
-
-
-class iShojiGroupInput(object):
-    """
-    Interface for group input objects.  This is added to all of the input
-    widget types so that they will be compatible with the GroupInputWidgets
-    user_input_event (function): function to be run when editing has completed
-    live_input_event (function); function to be run every time the text has changed
-    """
-    def __init__(self):
-        self.setUserFinishedEditingEvent(self.updateUserInputItem)
-
-    """ VIRTUAL EVENTS """
-    def __user_finished_editing_event(self, item, widget, value):
-        pass
-
-    def setUserFinishedEditingEvent(self, function):
-        """
-        Sets the function that should be triggered everytime
-        the user finishes editing this widget
-
-        This function should take two args
-        widget/item, value
-        """
-        self.__user_finished_editing_event = function
-
-    def userFinishedEditingEvent(self, item, widget, value):
-        """
-        Internal event to run everytime the user triggers an update.  This
-        will need to be called on every type of widget.
-        """
-        self.__user_finished_editing_event(item, widget, value)
-
-    def __live_input_event(self, *args, **kwargs):
-        pass
-
-    def setLiveInputEvent(self, function):
-        self.__live_input_event = function
-
-    def liveInputEvent(self, *args, **kwargs):
-        self.__live_input_event(*args, **kwargs)
-
-    """ TANSU UPDATE """
-    def updateUserInputItem(self, *args):
-        """
-        When the user inputs text, this will update the model item
-        """
-        # print('args')
-        # for arg in args:
-        #     print (arg)
-        try:
-            widget = getWidgetAncestor(self, ShojiModelDelegateWidget)
-            widget.item().columnData()['value'] = self.getInput()
-            widget.item().userInputEvent(args[0], self.getInput())
-            #widget.item().userInputEvent(self, self.getInput())
-        except AttributeError:
-            pass
-
-        # add user input event
-
-    @staticmethod
-    def updateDynamicWidget(parent, widget, item):
-        """
-        When the dynamic widget is created.  This will set
-        the display text to the user
-        """
-        #value = item.getArg('value')
-        value = item.columnData()['value']
-        widget.getMainWidget().getInputWidget().setText(str(value))
-
-
 class OverlayInputWidget(AbstractOverlayInputWidget):
     """
     Input widget with a display delegate overlaid.  This delegate will dissapear
@@ -181,32 +73,31 @@ class ButtonInputWidget(AbstractButtonInputWidget):
         super(ButtonInputWidget, self).__init__(parent, is_toggleable=is_toggleable, user_clicked_event=user_clicked_event, title=title, flag=flag)
 
 
-class FloatInputWidget(AbstractFloatInputWidget, iShojiGroupInput):
+class FloatInputWidget(AbstractFloatInputWidget):
     def __init__(self, parent=None):
         super(FloatInputWidget, self).__init__(parent)
         self.setDoMath(True)
 
 
-class IntInputWidget(AbstractIntInputWidget, iShojiGroupInput):
+class IntInputWidget(AbstractIntInputWidget):
     def __init__(self, parent=None):
         super(IntInputWidget, self).__init__(parent)
 
 
-class StringInputWidget(AbstractStringInputWidget, iShojiGroupInput):
+class StringInputWidget(AbstractStringInputWidget):
     def __init__(self, parent=None):
         super(StringInputWidget, self).__init__(parent)
 
 
-class PlainTextInputWidget(AbstractInputPlainText, iShojiGroupInput):
+class PlainTextInputWidget(AbstractInputPlainText):
     def __init__(self, parent=None):
         super(PlainTextInputWidget, self).__init__(parent)
 
 
-class BooleanInputWidget(AbstractBooleanInputWidget, iShojiGroupInput):
+class BooleanInputWidget(AbstractBooleanInputWidget):
     def __init__(self, parent=None, text=None, is_selected=False):
         super(BooleanInputWidget, self).__init__(parent, is_selected=is_selected, text=text)
         self.setUserFinishedEditingEvent(self.updateUserInputItem)
-        #self.setupStyleSheet()
 
     def updateUserInputItem(self, *args):
         """
@@ -214,35 +105,17 @@ class BooleanInputWidget(AbstractBooleanInputWidget, iShojiGroupInput):
         """
         try:
             widget = getWidgetAncestor(self, ShojiModelDelegateWidget)
-            widget.item().columnData()['value'] = self.is_clicked
-            self.is_clicked = self.is_clicked
+            widget.item().columnData()['value'] = self.is_selected
+            self.is_selected = self.is_selected
 
             # add user input event
-            widget.item().userInputEvent(self.is_clicked)
+            widget.item().userInputEvent(self, self.is_selected)
+
         except AttributeError:
             pass
 
-    # @staticmethod
-    # def updateDynamicWidget(parent, widget, item):
-    #     """
-    #     When the dynamic widget is created.  This will set
-    #     the display text to the user
-    #     # get default value
-    #     # this is because the default value is set as '' during the constructor in
-    #     # ShojiGroupInputWidget --> insertInputWidget
-    #     """
-    #     # get value
-    #     try:
-    #         value = item.columnData()['value']
-    #     except:
-    #         value = False
-    #
-    #     # toggle
-    #     widget.getMainWidget().getInputWidget().is_clicked = value
-    #     updateStyleSheet(widget.getMainWidget().getInputWidget())
 
-
-class ComboListInputWidget(AbstractComboListInputWidget, iShojiGroupInput):
+class ComboListInputWidget(AbstractComboListInputWidget):
     TYPE = "list"
     def __init__(self, parent=None):
         super(ComboListInputWidget, self).__init__(parent)
@@ -272,7 +145,7 @@ class ComboListInputWidget(AbstractComboListInputWidget, iShojiGroupInput):
         # print(widget, item)
 
 
-class ListInputWidget(AbstractListInputWidget, iShojiGroupInput):
+class ListInputWidget(AbstractListInputWidget):
     def __init__(self, parent=None, item_list=[]):
         super(ListInputWidget, self).__init__(parent)
         self.populate(item_list)
@@ -304,7 +177,7 @@ class ListInputWidget(AbstractListInputWidget, iShojiGroupInput):
     #     # print(widget, item)
 
 
-class FileBrowserInputWidget(AbstractListInputWidget, iShojiGroupInput):
+class FileBrowserInputWidget(AbstractListInputWidget):
     def __init__(self, parent=None):
         super(FileBrowserInputWidget, self).__init__(parent=parent)
 
@@ -580,139 +453,6 @@ class FrameGroupInputWidget(AbstractFrameGroupInputWidget):
     ):
         # inherit
         super(FrameGroupInputWidget, self).__init__(parent, name, note, direction)
-
-
-class ShojiGroupInputWidget(LabelledInputWidget):
-    """
-    A container for holding user parameters.  The default main
-    widget is a ShojiWidget which can have the individual widgets
-    added to it
-
-    Widgets:
-        ShojiGroupInputWidget
-            | -- getInputWidget() (AbstractShojiGroupInputWidget)
-                    | -- model
-                    | -* (ShojiInputWidgetItem)
-    """
-    def __init__(
-        self,
-        parent=None,
-        name="None",
-        note="None",
-        direction=Qt.Vertical
-    ):
-        class AbstractShojiInputWidget(ShojiModelViewWidget):
-            def __init__(self, parent=None):
-                super(AbstractShojiInputWidget, self).__init__(parent)
-                self.model().setItemType(ShojiInputWidgetItem)
-                self.setDelegateType(ShojiModelViewWidget.DYNAMIC)
-                self.setHeaderPosition(attrs.WEST)
-                self.setMultiSelect(True)
-                self.setMultiSelectDirection(Qt.Vertical)
-
-                # self.setHandleLength(50)
-                self.delegateWidget().setHandleLength(50)
-                self.setHeaderPosition(attrs.WEST, attrs.SOUTH)
-                self.updateStyleSheet()
-
-                self.setDelegateTitleIsShown(False)
-
-        # inherit
-        super(ShojiGroupInputWidget, self).__init__(parent, name, direction=direction, widget_type=AbstractShojiInputWidget)
-
-        self.setIsSoloViewEnabled(False)
-
-        # setup main widget
-        self.getInputWidget().setDelegateType(
-            ShojiModelViewWidget.DYNAMIC,
-            dynamic_widget=LabelledInputWidget,
-            dynamic_function=self.updateGUI
-        )
-
-    @staticmethod
-    def updateGUI(parent, widget, item):
-        """
-        widget (ShojiModelDelegateWidget)
-        item (ShojiModelItem)
-        """
-        if item:
-            # get attrs
-            name = parent.model().getItemName(item)
-            value = item.columnData()['value']
-            labelled_widget = widget.getMainWidget()
-            widget_constructor = item.widgetConstructor()
-
-            # set attrs
-            labelled_widget.setName(name)
-            labelled_widget.setInputBaseClass(widget_constructor)
-            input_widget = labelled_widget.getInputWidget()
-
-            # update list inputs
-            if isinstance(input_widget, ListInputWidget):
-                item_list = item.columnData()['items_list']
-                input_widget.populate(item_list)
-
-            # update boolean inputs
-            if isinstance(input_widget, BooleanInputWidget):
-                # toggle
-                widget.getMainWidget().getInputWidget().is_clicked = value
-                updateStyleSheet(widget.getMainWidget().getInputWidget())
-                return
-
-            # set input widgets current value from item
-            input_widget.setText(str(value))
-
-            #input_widget.setUserFinishedEditingEvent(item.userInputEvent)
-            input_widget.setLiveInputEvent(item.userLiveInputEvent)
-
-    def insertInputWidget(
-            self,
-            index,
-            widget,
-            name,
-            user_input_event,
-            user_live_update_event=None,
-            data=None,
-            display_data_type=False,
-            default_value=''
-        ):
-        """
-        Inserts a widget into the Main Widget
-
-        index (int)
-        widget (InputWidget)
-        name (str)
-        type (str):
-        display_data_type (bool): determines if the data type will be displayed in the title
-        user_input_event (function): should take two values widget, and value
-            widget: widget that is currently being manipulated
-            value: value being set
-        value (str): current value if any should be set.  Boolean types will
-            have this automatically overwritten to false in their constructor
-        """
-        # setup attrs
-        if not data:
-            data = {}
-
-        if display_data_type:
-            name = "{name}  |  {type}".format(name=name, type=widget.TYPE)
-
-        if not 'name' in data:
-            data['name'] = name
-        if not 'value' in data:
-            data['value'] = default_value
-
-        # create item
-        user_input_index = self.getInputWidget().insertShojiWidget(index, column_data=data)
-        user_input_item = user_input_index.internalPointer()
-
-        # setup new item
-        user_input_item.setWidgetConstructor(widget)
-        user_input_item.setUserInputEvent(user_input_event)
-        user_input_item.setUserLiveInputEvent(user_live_update_event)
-
-    def removeInputWidget(self, index):
-        self.getInputWidget().removeTab(index)
 
 
 class MultiButtonInputWidget(AbstractMultiButtonInputWidget):

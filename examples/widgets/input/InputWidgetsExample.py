@@ -54,12 +54,12 @@ def fail():
 shoji_group_widget = ShojiGroupInputWidget(parent=None, name='ShojiGroupInputWidget')
 
 # add user inputs
-shoji_group_widget.insertInputWidget(0, FloatInputWidget, 'Float', fail)
-shoji_group_widget.insertInputWidget(0, IntInputWidget, 'Int', fail)
-shoji_group_widget.insertInputWidget(0, BooleanInputWidget, 'Boolean', fail)
-shoji_group_widget.insertInputWidget(0, StringInputWidget, 'String', fail)
-shoji_group_widget.insertInputWidget(0, ListInputWidget, 'List', fail, data={'items_list':list_of_crap})
-shoji_group_widget.insertInputWidget(0, PlainTextInputWidget, 'Text', fail)
+shoji_group_widget.insertInputWidget(0, FloatInputWidget, 'Float', test)
+shoji_group_widget.insertInputWidget(0, IntInputWidget, 'Int', test)
+shoji_group_widget.insertInputWidget(0, BooleanInputWidget, 'Boolean', test)
+shoji_group_widget.insertInputWidget(0, StringInputWidget, 'String', test)
+shoji_group_widget.insertInputWidget(0, ListInputWidget, 'List', test, data={'items_list':list_of_crap})
+shoji_group_widget.insertInputWidget(0, PlainTextInputWidget, 'Text', test)
 
 shoji_group_widget.display_background = False
 
@@ -205,7 +205,7 @@ main_widget.setStyleSheet("""background-color: rgba{rgba_background_00}""".forma
 main_widget.addWidget(normal_widget)
 main_widget.addWidget(vertical_label_widget)
 main_widget.addWidget(horizontal_label_widget)
-main_widget.addWidget(shoji_group_widget)
+#main_widget.addWidget(shoji_group_widget)
 main_widget.addWidget(frame_group_input_widget)
 #main_widget = shoji_group_widget
 main_widget.resize(500, 500)

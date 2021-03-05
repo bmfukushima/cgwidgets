@@ -159,6 +159,37 @@ class iAbstractInputWidget(object):
             else:
                 self.setText(self.getOrigValue())
 
+    """ VIRTUAL EVENTS """
+
+    def __user_finished_editing_event(self, *args, **kwargs):
+        pass
+
+    def setUserFinishedEditingEvent(self, function):
+        """
+        Sets the function that should be triggered everytime
+        the user finishes editing this widget
+
+        This function should take two args
+        widget/item, value
+        """
+        self.__user_finished_editing_event = function
+
+    def userFinishedEditingEvent(self, *args, **kwargs):
+        """
+        Internal event to run everytime the user triggers an update.  This
+        will need to be called on every type of widget.
+        """
+        self.__user_finished_editing_event(*args, **kwargs)
+
+    def __live_input_event(self, *args, **kwargs):
+        pass
+
+    def setLiveInputEvent(self, function):
+        self.__live_input_event = function
+
+    def liveInputEvent(self, *args, **kwargs):
+        self.__live_input_event(*args, **kwargs)
+
     """ PROPERTIES """
     def appendKey(self, key):
         self.getKeyList().append(key)
