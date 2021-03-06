@@ -23,8 +23,7 @@ from .ShojiWidget import ShojiModelDelegateWidget as ShojiModelDelegateWidget
 from .InputWidgets import *
 
 # color widget
-from .InputWidgets.ColorInputWidget import ColorGradientDelegate as ColorGradientDelegate
-from .InputWidgets.ColorInputWidget import ColorInputWidget as ColorInputWidget
+#from .InputWidgets.ColorInputWidgets import ColorGradientDelegate, ColorInputWidget
 
 """ NODE WIDGETS """
 try:

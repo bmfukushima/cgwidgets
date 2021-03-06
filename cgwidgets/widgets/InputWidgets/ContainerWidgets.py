@@ -1,33 +1,40 @@
 """
 TODO
-    AbstractInputGroup / ShojiGroupInputWidget / LabelledInputWidget...
+    AbstractInputGroup / ShojiInputWidgetContainer / LabelledInputWidget...
         Why do I have like 90 versions of this...
 """
 
 import os
 
-
+from qtpy.QtWidgets import (QSizePolicy)
+from qtpy.QtCore import (QEvent, QDir)
+from qtpy.QtWidgets import (QFileSystemModel, QCompleter, QApplication)
 from qtpy.QtCore import Qt
 
+from cgwidgets.widgets import (
+    AbstractInputGroupFrame,
+    AbstractFrameInputWidgetContainer,
+    AbstractButtonInputWidgetContainer,
+)
 
 from cgwidgets.widgets import (
     ShojiModelViewWidget,
-    ShojiModelDelegateWidget,
     ShojiModelItem
 )
 from cgwidgets.views import ShojiView
 from cgwidgets.utils import (
-    getWidgetAncestor,
     updateStyleSheet,
     attrs,
+    getFontSize
 )
+
 try:
-    from .InputWidgets import LabelledInputWidget
+    from .InputWidgets import LabelledInputWidget, StringInputWidget, ListInputWidget, BooleanInputWidget
 except ImportError:
-    from InputWidgets import LabelledInputWidget
+    from InputWidgets import LabelledInputWidget, StringInputWidget, ListInputWidget, BooleanInputWidget
 
 
-class ShojiInputWidgetItem(ShojiModelItem):
+class ShojiInputWidgetContainerItem(ShojiModelItem):
     """
     widgetConstructor (widget): widget to build as based class
     value (str): current value set on this item
@@ -66,54 +73,17 @@ class ShojiInputWidgetItem(ShojiModelItem):
         self.__userLiveInputEvent(self, widget, value)
 
 
-class iShojiGroupInput(object):
-    """
-    Interface for group input objects.  This is added to all of the input
-    widget types so that they will be compatible with the GroupInputWidgets
-    user_input_event (function): function to be run when editing has completed
-    live_input_event (function); function to be run every time the text has changed
-    """
-    def __init__(self):
-        self.setUserFinishedEditingEvent(self.updateUserInputItem)
-
-    """ TANSU UPDATE """
-    def updateUserInputItem(self, *args):
-        """
-        When the user inputs text, this will update the model item
-        """
-        # print('args')
-        # for arg in args:
-        #     print (arg)
-        try:
-            widget = getWidgetAncestor(self, ShojiModelDelegateWidget)
-            widget.item().columnData()['value'] = self.getInput()
-            widget.item().userInputEvent(args[0], self.getInput())
-        except AttributeError:
-            pass
-        # add user input event
-
-    @staticmethod
-    def updateDynamicWidget(parent, widget, item):
-        """
-        When the dynamic widget is created.  This will set
-        the display text to the user
-        """
-        #value = item.getArg('value')
-        value = item.columnData()['value']
-        widget.getMainWidget().getInputWidget().setText(str(value))
-
-
-class ShojiGroupInputWidget(LabelledInputWidget):
+class ShojiInputWidgetContainer(LabelledInputWidget):
     """
     A container for holding user parameters.  The default main
     widget is a ShojiWidget which can have the individual widgets
     added to it
 
     Widgets:
-        ShojiGroupInputWidget
-            | -- getInputWidget() (AbstractShojiGroupInputWidget)
+        ShojiInputWidgetContainer
+            | -- getInputWidget() (AbstractShojiInputWidgetContainer)
                     | -- model
-                    | -* (ShojiInputWidgetItem)
+                    | -* (ShojiInputWidgetContainerItem)
     """
     def __init__(
         self,
@@ -125,7 +95,7 @@ class ShojiGroupInputWidget(LabelledInputWidget):
         class AbstractShojiInputWidget(ShojiModelViewWidget):
             def __init__(self, parent=None):
                 super(AbstractShojiInputWidget, self).__init__(parent)
-                self.model().setItemType(ShojiInputWidgetItem)
+                self.model().setItemType(ShojiInputWidgetContainerItem)
                 self.setDelegateType(ShojiModelViewWidget.DYNAMIC)
                 self.setHeaderPosition(attrs.WEST)
                 self.setMultiSelect(True)
@@ -139,7 +109,7 @@ class ShojiGroupInputWidget(LabelledInputWidget):
                 self.setDelegateTitleIsShown(False)
 
         # inherit
-        super(ShojiGroupInputWidget, self).__init__(parent, name, direction=direction, widget_type=AbstractShojiInputWidget)
+        super(ShojiInputWidgetContainer, self).__init__(parent, name, direction=direction, widget_type=AbstractShojiInputWidget)
 
         self.setIsSoloViewEnabled(False)
 
@@ -236,6 +206,44 @@ class ShojiGroupInputWidget(LabelledInputWidget):
         self.getInputWidget().removeTab(index)
 
 
+""" CONTAINERS """
+class FrameInputWidgetContainer(AbstractFrameInputWidgetContainer):
+    def __init__(
+        self,
+        parent=None,
+        name="None",
+        note="None",
+        direction=Qt.Horizontal
+    ):
+        # inherit
+        super(FrameInputWidgetContainer, self).__init__(parent, name, note, direction)
+        self.layout().setContentsMargins(0,0,0,0)
+
+class ButtonInputWidgetContainer(AbstractButtonInputWidgetContainer):
+    """
+    Provides a multi button input widget.
+
+    This widget should primarily be used for setting flags.
+
+    Colors
+    Hide Widget Handles?
+    Args:
+        buttons (list): of lists ["title", flag, virtualFunction]
+        buttons (list): of lists ["title", flag, virtualFunction]
+            The virtual  function needs to take one arg.  This arg
+            will return the widget that is created to display this
+            event
+
+    Attributes:
+        _buttons (dict): of clickable buttons
+            name: button
+        _current_buttons (List): of AbstractButtonInputWidget that are
+            currently selected by the user
+    """
+    def __init__(self, parent=None, buttons=None, orientation=Qt.Horizontal):
+        super(ButtonInputWidgetContainer, self).__init__(parent, buttons, orientation)
+
+
 if __name__ == "__main__":
     import sys
     from qtpy.QtWidgets import QApplication
@@ -245,7 +253,7 @@ if __name__ == "__main__":
     def test(widget, value):
         print(widget, value)
 
-    shoji_group_widget = ShojiGroupInputWidget(parent=None, name='ShojiGroupInputWidget')
+    shoji_group_widget = ShojiInputWidgetContainer(parent=None, name='ShojiInputWidgetContainer')
 
     # add user inputs
     from cgwidgets.widgets import ButtonInputWidget, FloatInputWidget, IntInputWidget, BooleanInputWidget, StringInputWidget, ListInputWidget, PlainTextInputWidget

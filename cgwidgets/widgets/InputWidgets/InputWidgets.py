@@ -1,6 +1,6 @@
 """
 TODO
-    AbstractInputGroup / ShojiGroupInputWidget / LabelledInputWidget...
+    AbstractInputGroup / ShojiInputWidgetContainer / LabelledInputWidget...
         Why do I have like 90 versions of this...
 """
 
@@ -14,7 +14,7 @@ from qtpy.QtCore import Qt
 from cgwidgets.widgets import (
     AbstractInputGroup,
     AbstractInputGroupFrame,
-    AbstractFrameGroupInputWidget,
+    AbstractFrameInputWidgetContainer,
     AbstractFloatInputWidget,
     AbstractIntInputWidget,
     AbstractStringInputWidget,
@@ -25,7 +25,7 @@ from cgwidgets.widgets import (
     AbstractComboListInputWidget,
     AbstractListInputWidget,
     AbstractInputPlainText,
-    AbstractMultiButtonInputWidget,
+    AbstractButtonInputWidgetContainer,
     AbstractButtonInputWidget
 )
 
@@ -177,45 +177,6 @@ class ListInputWidget(AbstractListInputWidget):
     #     # print(widget, item)
 
 
-class FileBrowserInputWidget(AbstractListInputWidget):
-    def __init__(self, parent=None):
-        super(FileBrowserInputWidget, self).__init__(parent=parent)
-
-        # setup model
-        self.model = QFileSystemModel()
-        self.model.setRootPath('/home/')
-        filters = self.model.filter()
-        self.model.setFilter(filters | QDir.Hidden)
-
-        # setup completer
-        completer = QCompleter(self.model, self)
-        self.setCompleter(completer)
-        installCompleterPopup(completer)
-
-        self.setCompleter(completer)
-        completer.setCaseSensitivity(Qt.CaseInsensitive)
-
-        self.autoCompleteList = []
-
-    def checkDirectory(self):
-        directory = str(self.text())
-        if os.path.isdir(directory):
-            self.model.setRootPath(str(self.text()))
-
-    def event(self, event, *args, **kwargs):
-        # I think this is the / key... lol
-        if (event.type() == QEvent.KeyRelease) and event.key() == 47:
-            self.checkDirectory()
-            #self.completer().popup().show()
-            self.completer().complete()
-
-        return AbstractListInputWidget.event(self, event, *args, **kwargs)
-# TODO move these under one architecture...
-# abstract input group
-# AbstractInputGroupBox
-# TODO Move to one architecture
-
-""" CONTAINERS """
 class LabelledInputWidget(ShojiView, AbstractInputGroupFrame):
     """
     A single input widget.  This inherits from the ShojiView,
@@ -290,9 +251,10 @@ class LabelledInputWidget(ShojiView, AbstractInputGroupFrame):
         Args:
             labelled_input_widget (LabelledInputWidgets)
         """
+        from .ContainerWidgets import FrameInputWidgetContainer
         parent = labelled_input_widget.parent()
         handles_list = []
-        if isinstance(parent, FrameGroupInputWidget):
+        if isinstance(parent, FrameInputWidgetContainer):
             widget_list = parent.getInputWidgets()
             for widget in widget_list:
                 handles_list.append(widget)
@@ -319,7 +281,7 @@ class LabelledInputWidget(ShojiView, AbstractInputGroupFrame):
         self.__splitter_event_is_paused = False
         # todo
         # how to handle ShojiGroups?
-        #ShojiGroupInputWidget
+        #ShojiInputWidgetContainer
 
     def getHandlePosition(self):
         """
@@ -443,41 +405,43 @@ class LabelledInputWidget(ShojiView, AbstractInputGroupFrame):
         return ShojiView.resizeEvent(self, event)
 
 
-class FrameGroupInputWidget(AbstractFrameGroupInputWidget):
-    def __init__(
-        self,
-        parent=None,
-        name="None",
-        note="None",
-        direction=Qt.Horizontal
-    ):
-        # inherit
-        super(FrameGroupInputWidget, self).__init__(parent, name, note, direction)
+class FileBrowserInputWidget(AbstractListInputWidget):
+    def __init__(self, parent=None):
+        super(FileBrowserInputWidget, self).__init__(parent=parent)
 
+        # setup model
+        self.model = QFileSystemModel()
+        self.model.setRootPath('/home/')
+        filters = self.model.filter()
+        self.model.setFilter(filters | QDir.Hidden)
 
-class MultiButtonInputWidget(AbstractMultiButtonInputWidget):
-    """
-    Provides a multi button input widget.
+        # setup completer
+        completer = QCompleter(self.model, self)
+        self.setCompleter(completer)
+        installCompleterPopup(completer)
 
-    This widget should primarily be used for setting flags.
+        self.setCompleter(completer)
+        completer.setCaseSensitivity(Qt.CaseInsensitive)
 
-    Colors
-    Hide Widget Handles?
-    Args:
-        buttons (list): of lists ["title", flag, virtualFunction]
-        buttons (list): of lists ["title", flag, virtualFunction]
-            The virtual  function needs to take one arg.  This arg
-            will return the widget that is created to display this
-            event
+        self.autoCompleteList = []
 
-    Attributes:
-        _buttons (dict): of clickable buttons
-            name: button
-        _current_buttons (List): of AbstractButtonInputWidget that are
-            currently selected by the user
-    """
-    def __init__(self, parent=None, buttons=None, orientation=Qt.Horizontal):
-        super(MultiButtonInputWidget, self).__init__(parent, buttons, orientation)
+    def checkDirectory(self):
+        directory = str(self.text())
+        if os.path.isdir(directory):
+            self.model.setRootPath(str(self.text()))
+
+    def event(self, event, *args, **kwargs):
+        # I think this is the / key... lol
+        if (event.type() == QEvent.KeyRelease) and event.key() == 47:
+            self.checkDirectory()
+            #self.completer().popup().show()
+            self.completer().complete()
+
+        return AbstractListInputWidget.event(self, event, *args, **kwargs)
+# TODO move these under one architecture...
+# abstract input group
+# AbstractInputGroupBox
+# TODO Move to one architecture
 
 
 if __name__ == "__main__":
@@ -501,7 +465,7 @@ if __name__ == "__main__":
     #     return
     #
     #
-    # widget = ShojiGroupInputWidget(name="test")
+    # widget = ShojiInputWidgetContainer(name="test")
     # inputs = ["cx", "cy", "fx", "fy", "radius"]  # , stops"""
     # for i in inputs:
     #     widget.insertInputWidget(0, FloatInputWidget, i, asdf,

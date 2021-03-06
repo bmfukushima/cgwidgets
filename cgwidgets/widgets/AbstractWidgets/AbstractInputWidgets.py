@@ -668,7 +668,7 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
         self.input_widget.setFocus()
 
 
-class AbstractMultiButtonInputWidget(ShojiView):
+class AbstractButtonInputWidgetContainer(ShojiView):
     """
     Provides a multi button input widget.
 
@@ -688,7 +688,7 @@ class AbstractMultiButtonInputWidget(ShojiView):
     """
     def __init__(self, parent=None, buttons=None, orientation=Qt.Horizontal):
         self._rgba_flag = iColor["rgba_selected_hover"]
-        super(AbstractMultiButtonInputWidget, self).__init__(parent, orientation)
+        super(AbstractButtonInputWidgetContainer, self).__init__(parent, orientation)
         self.setIsSoloViewEnabled(False)
         self.setIsHandleStatic(True)
         self.setHandleWidth(0)
@@ -790,7 +790,7 @@ class AbstractMultiButtonInputWidget(ShojiView):
 
 class AbstractButtonInputWidget(AbstractBooleanInputWidget):
     """
-    Toggleable button designed to work with the AbstractMultiButtonInputWidget.
+    Toggleable button designed to work with the AbstractButtonInputWidgetContainer.
 
     Args:
         title (str): display name
@@ -889,7 +889,7 @@ if __name__ == "__main__":
         flag = x
         buttons.append(["button_"+str(x), flag, userEvent])
 
-    widget = AbstractMultiButtonInputWidget(buttons=buttons, orientation=Qt.Horizontal)
+    widget = AbstractButtonInputWidgetContainer(buttons=buttons, orientation=Qt.Horizontal)
     # widget.setIsHandleVisible(False)
     # updateStyleSheet(widget)
 

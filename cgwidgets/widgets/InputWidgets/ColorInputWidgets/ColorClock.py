@@ -31,7 +31,7 @@ from cgwidgets.utils import (
 from cgwidgets.settings.colors import (
     iColor, getHSVRGBAFloatFromColor, updateColorFromArgValue,
 )
-from cgwidgets.widgets.InputWidgets.ColorInputWidget import (
+from cgwidgets.widgets.InputWidgets.ColorInputWidgets import (
     ColorHeaderWidgetItem, AbstractColorDelegate, AbstractColorView,
     ColorHeaderWidget
 )

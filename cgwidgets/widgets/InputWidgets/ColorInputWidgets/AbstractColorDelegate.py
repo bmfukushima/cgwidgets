@@ -9,7 +9,7 @@ from cgwidgets.utils import (
     getFontSize, installStickyAdjustDelegate
 )
 from cgwidgets.settings.colors import iColor, getHSVRGBAFloatFromColor
-from cgwidgets.widgets.InputWidgets.ColorInputWidget import ColorHeaderWidgetItem
+from cgwidgets.widgets.InputWidgets.ColorInputWidgets import ColorHeaderWidgetItem
 
 
 class AbstractColorDelegate(QWidget):

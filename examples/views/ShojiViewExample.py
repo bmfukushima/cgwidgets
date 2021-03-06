@@ -1,5 +1,5 @@
 """
-TANSU VIEW
+SHOJI VIEW
 
 The Shoji View is essentially a QSplitter that has the option to
 allow any widget inside of it to become full screen using the
@@ -24,7 +24,7 @@ NOTE:
         "Switch windows directly"
 """
 import sys
-from qtpy.QtWidgets import QApplication, QLabel
+from qtpy.QtWidgets import QApplication, QLabel, QWidget, QVBoxLayout
 from qtpy.QtGui import QCursor
 from qtpy.QtCore import Qt
 
@@ -37,47 +37,55 @@ class DisplayLabel(StringInputWidget):
         super(DisplayLabel, self).__init__(parent)
         self.setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
 
+
 # create shoji
-main_shoji_widget = ShojiView()
+main_widget = ShojiView()
 embedded_shoji_01 = ShojiView(orientation=Qt.Horizontal)
 embedded_shoji_02 = ShojiView(orientation=Qt.Vertical)
 
 # OPTIONAL | set handle length (if not set, by default this will be full length)
-main_shoji_widget.setHandleLength(100)
-main_shoji_widget.setHandleWidth(5)
-main_shoji_widget.setIsHandleStatic(False)
-main_shoji_widget.setIsSoloViewEnabled(True)
-main_shoji_widget.setOrientation(Qt.Vertical)
+main_widget.setHandleLength(100)
+main_widget.setHandleWidth(5)
+main_widget.setIsHandleStatic(False)
+main_widget.setIsSoloViewEnabled(True)
+main_widget.setOrientation(Qt.Vertical)
 
 # set up events
 def toggleSoloEvent(enabled, widget):
     print(enabled, widget)
 
-main_shoji_widget.setToggleSoloViewEvent(toggleSoloEvent)
+main_widget.setToggleSoloViewEvent(toggleSoloEvent)
 
 # add regular widgets
 for char in "SINE.":
     # main widget
     widget = DisplayLabel(char)
-    main_shoji_widget.addWidget(widget, is_soloable=False)
+    main_widget.addWidget(widget, is_soloable=False)
+    widget.setStyleSheet("background-color: rgba(255,0,0,255)")
+    widget.setContentsMargins(0,0,0,0)
 
     # embedded_shoji_02
     l = DisplayLabel(str(char))
+
     embedded_shoji_02.addWidget(l)
 
 # add embedded Shoji Views
 for x in range(3):
     l = DisplayLabel(str(x))
+
     embedded_shoji_01.addWidget(l)
 
 embedded_shoji_01.addWidget(embedded_shoji_02)
 
 # add shoji to shoji
-main_shoji_widget.addWidget(embedded_shoji_01)
+main_widget.addWidget(embedded_shoji_01)
 
 # show widget
-main_shoji_widget.show()
-main_shoji_widget.move(QCursor.pos())
-main_shoji_widget.resize(512, 512)
+
+main_widget.show()
+main_widget.move(QCursor.pos())
+main_widget.resize(512, 512)
+
+
 sys.exit(app.exec_())
 

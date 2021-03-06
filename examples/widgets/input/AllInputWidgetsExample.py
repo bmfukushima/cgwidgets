@@ -11,13 +11,13 @@ from cgwidgets.widgets import (
     IntInputWidget,
     StringInputWidget,
     BooleanInputWidget,
-    ShojiGroupInputWidget,
+    ShojiInputWidgetContainer,
     ListInputWidget,
     LabelledInputWidget,
-    FrameGroupInputWidget,
+    FrameInputWidgetContainer,
     OverlayInputWidget,
     PlainTextInputWidget,
-    MultiButtonInputWidget
+    ButtonInputWidgetContainer
 )
 
 app = QApplication(sys.argv)
@@ -51,7 +51,7 @@ def shojiInputTest(item, widget, value):
 def fail():
     print("fail")
 """ Setup Shoji Widget """
-shoji_group_widget = ShojiGroupInputWidget(parent=None, name='ShojiGroupInputWidget')
+shoji_group_widget = ShojiInputWidgetContainer(parent=None, name='ShojiInputWidgetContainer')
 
 # add user inputs
 shoji_group_widget.insertInputWidget(0, FloatInputWidget, 'Float', test)
@@ -81,9 +81,9 @@ buttons = []
 for x in range(3):
     flag = x
     buttons.append(["button_" + str(x), flag, userEvent])
-multi_button_input_widget = MultiButtonInputWidget(buttons=buttons, orientation=Qt.Vertical)
+multi_button_input_widget = ButtonInputWidgetContainer(buttons=buttons, orientation=Qt.Vertical)
 
-button_input_widget = ButtonInputWidget(user_clicked_event=userEvent, title="Button", flag=False, is_toggleable=False)
+button_input_widget = ButtonInputWidget(user_clicked_event=userEvent, title="Script Button", flag=False, is_toggleable=False)
 
 
 normal_widget.layout().addWidget(float_input_widget)
@@ -166,7 +166,7 @@ horizontal_label_widget = createLabeledWidgets("Frame Widgets ( Horizontal )", Q
 vertical_label_widget = createLabeledWidgets("Frame Widgets ( Vertical )", Qt.Vertical)
 
 """ Group Widget"""
-frame_group_input_widget = FrameGroupInputWidget(name='Frame Input Widgets', direction=Qt.Vertical)
+frame_group_input_widget = FrameInputWidgetContainer(name='Frame Input Widgets', direction=Qt.Vertical)
 
 # set header editable / Display
 frame_group_input_widget.setIsHeaderEditable(True)
@@ -205,9 +205,9 @@ main_widget.setStyleSheet("""background-color: rgba{rgba_background_00}""".forma
 main_widget.addWidget(normal_widget)
 main_widget.addWidget(vertical_label_widget)
 main_widget.addWidget(horizontal_label_widget)
-#main_widget.addWidget(shoji_group_widget)
+main_widget.addWidget(shoji_group_widget)
 main_widget.addWidget(frame_group_input_widget)
-#main_widget = shoji_group_widget
+
 main_widget.resize(500, 500)
 main_widget.show()
 main_widget.move(QCursor.pos())

@@ -26,7 +26,7 @@ from qtpy.QtGui import QCursor
 
 from cgwidgets.utils import getWidgetAncestor, attrs
 from cgwidgets.settings.colors import iColor
-from cgwidgets.widgets import AbstractFrameGroupInputWidget, ModelViewWidget
+from cgwidgets.widgets import AbstractFrameInputWidgetContainer, ModelViewWidget
 from cgwidgets.views import ShojiView
 
 from cgwidgets.widgets.ShojiWidget import (ShojiModel, iShojiDynamicWidget)
@@ -108,6 +108,9 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
 
         # TEMP
         scroll_area.setStyleSheet("QScrollArea{border:None}")
+        #scroll_area.setStyleSheet("border:None")
+        #scroll_area.setContentsMargins(0, 0, 0, 0)
+        #scroll_area.layout().setContentsMargins(0,0,0,0)
         self.addWidget(self._header_widget)
 
         # set default attrs
@@ -742,13 +745,20 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
 class ShojiMainDelegateWidget(ShojiView):
     """
     The main delegate view that will show all of the items widgets that
-     the user currently has selected
+    the user currently has selected
     """
 
     def __init__(self, parent=None):
         super(ShojiMainDelegateWidget, self).__init__(parent)
         self.rgba_background = iColor["rgba_background_00"]
         self.setToggleSoloViewEvent(self.resetShojiViewDisplay)
+
+        # # todo delete later
+        # self.setContentsMargins(0, 0, 0, 0)
+        # self.setStyleSheet("""
+        # ShojiMainDelegateWidget{
+        #     border: None;
+        # }""")
 
     def resetShojiViewDisplay(self, enabled, widget):
         """
@@ -804,7 +814,7 @@ class ShojiMainDelegateWidget(ShojiView):
         #     return ShojiView.keyPressEvent(self, event)
 
 
-class ShojiModelDelegateWidget(AbstractFrameGroupInputWidget):
+class ShojiModelDelegateWidget(AbstractFrameInputWidgetContainer):
     """
     Attributes:
         main_widget (QWidget): the main display widget
@@ -813,11 +823,13 @@ class ShojiModelDelegateWidget(AbstractFrameGroupInputWidget):
     """
     def __init__(self, parent=None, title=None):
         super(ShojiModelDelegateWidget, self).__init__(parent, title)
+
+        # todo (delete later, maybe... its actually doing stuff so chill)
+        self.layout().setContentsMargins(0, 0, 0, 0)
         self.setStyleSheet("""
-            ShojiModelDelegateWidget{{background-color: rgba{background_color}}}
-        """.format(
-            background_color=iColor["rgba_gray_3"]
-        ))
+        ShojiModelDelegateWidget{
+            border: None;
+        }""")
 
     def setMainWidget(self, widget):
         # remove old main widget if it exists
@@ -982,4 +994,5 @@ if __name__ == "__main__":
     # w.setHeaderItemIsEnableable(True)
     # w.setHeaderItemIsDeleteEnabled(False)
     w.move(QCursor.pos())
+
     sys.exit(app.exec_())

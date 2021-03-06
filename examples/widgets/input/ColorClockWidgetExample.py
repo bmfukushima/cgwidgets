@@ -18,7 +18,7 @@ from qtpy.QtCore import Qt
 from qtpy.QtGui import QCursor
 
 from cgwidgets.utils import attrs
-from cgwidgets.widgets.InputWidgets.ColorInputWidget import ColorClockDelegate
+from cgwidgets.widgets.InputWidgets.ColorInputWidgets import ColorClockDelegate
 
 # set up main widget
 app = QApplication(sys.argv)

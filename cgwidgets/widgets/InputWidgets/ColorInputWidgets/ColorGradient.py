@@ -17,7 +17,7 @@ from cgwidgets.utils.draw import DualColoredLineSegment
 from cgwidgets.settings.colors import (
     iColor, getHSVRGBAFloatFromColor)
 
-from cgwidgets.widgets.InputWidgets.ColorInputWidget import (
+from cgwidgets.widgets.InputWidgets.ColorInputWidgets import (
     ColorPickerItem1D, ColorHeaderWidget, ColorHeaderWidgetItem, AbstractColorDelegate
 )
 

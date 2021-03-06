@@ -570,18 +570,21 @@ class ShojiView(QSplitter):
         style_sheet_args.update({
             'splitter_handle_ss': splitter_handle_ss.format(**style_sheet_args)
         })
+        # TODO is_solo_view causing pixel issue
         style_sheet = """
         /* VIEW */
             {type}{{
                 background-color: rgba{rgba_background};
                 color: rgba{rgba_text};
             }}
+            /* TODO FIX THIS
             {type}[is_solo_view_enableable=true]{{
                 border: 2px solid rgba{rgba_background};
             }}
             {type}[is_solo_view=true]{{
                 border: 2px dotted rgba{rgba_flag}; 
             }}
+            */
 
         /* HANDLE */
             {splitter_handle_ss}

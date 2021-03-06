@@ -106,7 +106,7 @@ class AbstractInputGroupFrame(QFrame):
 
         # set up display
         self.setToolTip(note)
-        self.setupStyleSheet()
+        #self.setupStyleSheet()
         self.setDirection(direction)
 
     """ API """
@@ -148,16 +148,16 @@ class AbstractInputGroupFrame(QFrame):
         self.__headerTextChanged = function
 
     """ STYLE """
-    def setupStyleSheet(self):
-        style_sheet_args = iColor.style_sheet_args
-        style_sheet = """
-            QLabel{{color: rgba{rgba_text}}}
-            LabelledInputWidget{{background-color: rgba{rgba_gray_3}}}
-            FrameGroupInputWidget{{background-color: rgba{rgba_gray_3}}}
-        """.format(
-            **style_sheet_args
-        )
-        self.setStyleSheet(style_sheet)
+    # def setupStyleSheet(self):
+    #     style_sheet_args = iColor.style_sheet_args
+    #     style_sheet = """
+    #         QLabel{{color: rgba{rgba_text}}}
+    #         LabelledInputWidget{{background-color: rgba{rgba_gray_3}}}
+    #         FrameInputWidgetContainer{{background-color: rgba{rgba_gray_3}}}
+    #     """.format(
+    #         **style_sheet_args
+    #     )
+    #     self.setStyleSheet(style_sheet)
         # self._label.setStyleSheet(
         #     self._label.styleSheet() + 'color: rgba{rgba_text}'.format(
         #         rgba_text=iColor.rgba_text))
@@ -205,7 +205,7 @@ class AbstractInputGroupFrame(QFrame):
     #     self._label.setMinimumWidth(width)
 
 
-class AbstractFrameGroupInputWidget(AbstractInputGroupFrame):
+class AbstractFrameInputWidgetContainer(AbstractInputGroupFrame):
     """
     Stylized input group.  This has a base of a ShojiView,
     I'm not really sure why this is different than the InputGroupWidget...
@@ -218,7 +218,7 @@ class AbstractFrameGroupInputWidget(AbstractInputGroupFrame):
         direction=Qt.Horizontal
     ):
         # inherit
-        super(AbstractFrameGroupInputWidget, self).__init__(parent, name, note, direction)
+        super(AbstractFrameInputWidgetContainer, self).__init__(parent, name, note, direction)
 
         # setup default attrs
         self._is_header_shown = True
