@@ -31,38 +31,22 @@ list_of_crap = [
 ]
 l2 = [['a', (255, 0, 0, 255)], ['b'], ['c'], ['aa'], ['bb'], ['cc']]
 
-def createGroupBox(title):
-    group_box = QGroupBox()
-    group_box.setTitle(title)
-    group_box.setStyleSheet("color: rgba{rgba_text}".format(**iColor))
-    group_box_layout = QVBoxLayout(group_box)
-    return group_box
-
-def test(widget, value):
+def userEvent(widget, value):
     print("---- user input function ----")
     print('setting value to... ', value)
     print(widget, value)
     #widget.setText(str(value))
 
-def shojiInputTest(item, widget, value):
-    print("---- SHOJI input function ----")
-    print('setting value to... ', value)
-    print(item, widget, value)
-    # widget.setText(str(value))
-
-def fail():
-    print("fail")
-
 """ Shoji Input Widget Container """
 shoji_input_widget_container = ShojiInputWidgetContainer(parent=None, name='ShojiInputWidgetContainer')
 
 # add user inputs
-shoji_input_widget_container.insertInputWidget(0, FloatInputWidget, 'Float', test)
-shoji_input_widget_container.insertInputWidget(0, IntInputWidget, 'Int', test)
-shoji_input_widget_container.insertInputWidget(0, BooleanInputWidget, 'Boolean', test)
-shoji_input_widget_container.insertInputWidget(0, StringInputWidget, 'String', test)
-shoji_input_widget_container.insertInputWidget(0, ListInputWidget, 'List', test, data={'items_list':list_of_crap})
-shoji_input_widget_container.insertInputWidget(0, PlainTextInputWidget, 'Text', test)
+shoji_input_widget_container.insertInputWidget(0, FloatInputWidget, 'Float', userEvent)
+shoji_input_widget_container.insertInputWidget(0, IntInputWidget, 'Int', userEvent)
+shoji_input_widget_container.insertInputWidget(0, BooleanInputWidget, 'Boolean', userEvent)
+shoji_input_widget_container.insertInputWidget(0, StringInputWidget, 'String', userEvent)
+shoji_input_widget_container.insertInputWidget(0, ListInputWidget, 'List', userEvent, data={'items_list':list_of_crap})
+shoji_input_widget_container.insertInputWidget(0, PlainTextInputWidget, 'Text', userEvent)
 
 shoji_input_widget_container.display_background = False
 
@@ -103,7 +87,7 @@ for arg in label_widgets:
     input_widget.setDirection(Qt.Horizontal)
 
     # add to group layout
-    frame_input_widget_container.addInputWidget(input_widget, finished_editing_function=test)
+    frame_input_widget_container.addInputWidget(input_widget, finished_editing_function=userEvent)
 
     # list override
     if arg == "list":

@@ -12,11 +12,12 @@ be wrapped like:
     }}
 """
 
+from cgwidgets.utils import attrs
 from .colors import iColor
 from .stylesheets import convertDictToCSSFlags, background_radial
 
 """ UTILS """
-def compileSSArgs(widget, hover_type_flags, hover_type, focus_type, hover_focus_type):
+def compileSSArgs(widget, hover_type_flags, hover_object):
     """
     Compiles a dictionary for all of the kwargs that will be used in the Style Sheet.
 
@@ -62,17 +63,38 @@ def compileSSArgs(widget, hover_type_flags, hover_type, focus_type, hover_focus_
     })
 
     # add widget SS
+    print(hover_object.hoverSS())
     style_sheet_args.update({
         'type': type(widget).__name__,
-        'hover_ss': hover_type.hoverSS().format(**style_sheet_args),
-        'focus_ss': focus_type.focusSS().format(**style_sheet_args),
-        'hover_focus_ss': hover_focus_type.focusSS().format(**style_sheet_args)
+        'hover_ss': hover_object.hoverSS().format(**style_sheet_args),
+        'focus_ss': hover_object.focusSS().format(**style_sheet_args),
+        'hover_focus_ss': hover_object.focusSS().format(**style_sheet_args)
     })
 
     return style_sheet_args
 
 class HoverStyleSheet(object):
-    def __init__(self, name):
+    """
+    Attributes:
+        position (attrs.POSITION): the cardinal direction
+        color (RGBA): 255 RGBA color to be displayed
+        hover_style_type (HoverStyleSheet.HOVER_STYLE_TYPE)
+            BORDER | BACKGROUND | RADIAL
+                # todo finish setting up in __createStyleSheets
+                    add conditional for hover_style_type
+        border_style_type (HoverStyleSheet.BORDER_STYLE_TYPE): option to determine the border style type
+            solid | dotted | dashed...
+    """
+    # HOVER STYLE TYPE
+    BORDER = 1
+    BACKGROUND = 2
+    RADIAL = 4
+
+    # BORDER STYLE TYPE
+    SOLID = "solid"
+    DOTTED = "dotted"
+
+    def __init__(self):
         """
         Adds a hover display to a widget.  This makes it so that when
         a users cursor hovers over a widget that widget will show that
@@ -104,7 +126,11 @@ class HoverStyleSheet(object):
 
         Returns (StyleSheet): that has already been formatted
         """
-        self.name = name
+        #self.name = name
+        self._hover_style_type = HoverStyleSheet.BORDER
+        self._color = repr(iColor["rgba_selected_hover"])
+        self._position = None
+        self._border_style_type = HoverStyleSheet.SOLID
 
     def hoverSS(self):
         return self._hoverSS
@@ -157,70 +183,113 @@ class HoverStyleSheet(object):
         """
         self._focusSS = focusSS
 
-""" CREATE STYLE SHEETS """
-TEST = HoverStyleSheet("TEST")
-TEST.setFocusSS("""background: rgba(255,0,0,255);""")
-TEST.setHoverSS("""background: rgba(0,255,0,255);""")
-TEST.setHoverFocusSS("""background: rgba(0,0,255,255);""")
+    """ PROPERTIES """
+    def position(self):
+        return self._position
 
-BORDER_00 = HoverStyleSheet("BORDER_00")
-BORDER_00.setFocusSS("""
-    border-left: 2px dotted rgba{rgba_selected_hover};
-    border-right: 2px dotted rgba{rgba_selected_hover};
-    border-top: None;
-    border-bottom: None;
-    """)
-BORDER_00.setHoverSS("""
-    border-left: 2px dotted rgba{rgba_selected_hover};
-    border-right: 2px dotted rgba{rgba_selected_hover};
-    border-top: None;
-    border-bottom: None;
-""")
-BORDER_00.setHoverFocusSS("""
-    border-left: 2px dotted rgba{rgba_selected_hover};
-    border-right: 2px dotted rgba{rgba_selected_hover};
-    border-top: None;
-    border-bottom: None;
-""")
+    def setPosition(self, position):
+        self._position = position
+        self.__createStyleSheets(self.position())
 
-BORDER_01 = HoverStyleSheet("BORDER_01")
-BORDER_01.setFocusSS("""
-    border-left: 2px solid rgba{rgba_selected_hover};
-    border-right: 2px solid rgba{rgba_selected_hover};
-    border-top: None;
-    border-bottom: None;
-    """)
-BORDER_01.setHoverSS("""
-    border-left: 2px solid rgba{rgba_selected_hover};
-    border-right: 2px solid rgba{rgba_selected_hover};
-    border-top: None;
-    border-bottom: None;
-""")
-BORDER_01.setHoverFocusSS("""
-    border-left: 2px solid rgba{rgba_selected_hover};
-    border-right: 2px solid rgba{rgba_selected_hover};
-    border-top: None;
-    border-bottom: None;
-""")
+    def color(self):
+        return self._color
 
-BACKGROUND_00 = HoverStyleSheet("BACKGROUND_00")
-BACKGROUND_00.setFocusSS("""
-    border: 6px dotted rgba{rgba_invisible};
-    background: {background_hover_radial};""")
-BACKGROUND_00.setHoverSS("""
-    border: 6px dotted rgba{rgba_invisible};
-    background: {background_select_hover_radial};""")
-BACKGROUND_00.setHoverFocusSS("""
-    border: 6px dotted rgba{rgba_invisible};
-    background: {background_hover_radial};""")
+    def setColor(self, color):
+        self._color = repr(color)
+        self.__createStyleSheets(self.position())
 
+    def hoverStyleType(self):
+        return self._hover_style_type
+
+    def setHoverStyleType(self, hover_style_type):
+        self._hover_style_type = hover_style_type
+        self.__createStyleSheets(self.position())
+
+    def borderStyleType(self):
+        return self._border_style_type
+
+    def setBorderStyleType(self, border_style_type):
+        self._border_style_type = border_style_type
+        self.__createStyleSheets(self.position())
+
+    """ UTILS """
+    def __createStyleSheets(self, position=None):
+        """
+        Creates the style sheet body for the hover display.
+
+        Args:
+            position (attrs.POSITION): How this should be aligned,
+                if no value is provided, or set to None, this will
+                encompass the entire widget
+        """
+        style = ""
+        if not position:
+            style = """
+            border-left: 2px {border_style} rgba{color};
+            border-right: 2px {border_style} rgba{color};
+            border-top: 2px {border_style} rgba{color};
+            border-bottom: 2px {border_style} rgba{color};
+            """
+        # NORTH
+        if position == attrs.NORTH:
+            style = """
+            border-left: 2px {border_style} rgba{color};
+            border-right: 2px {border_style} rgba{color};
+            border-top: None;
+            border-bottom: 2px {border_style} rgba{color};
+            """
+
+        # SOUTH
+        if position == attrs.SOUTH:
+            style = """
+            border-left: 2px {border_style} rgba{color};
+            border-right: 2px {border_style} rgba{color};
+            border-top: 2px {border_style} rgba{color};
+            border-bottom: None;
+            """
+        if position == attrs.EAST:
+            style = """
+            border-left: 2px {border_style} rgba{color};
+            border-right: None
+            border-top: 2px {border_style} rgba{color};
+            border-bottom: 2px {border_style} rgba{color};
+            """
+        if position == attrs.WEST:
+            style = """
+            border-left: None;
+            border-right: 2px {border_style} rgba{color};
+            border-top: 2px {border_style} rgba{color};
+            border-bottom: 2px {border_style} rgba{color};
+            """
+
+        if position == attrs.VERTICAL:
+            style = """
+            border-left: 2px {border_style} rgba{color};
+            border-right: 2px {border_style} rgba{color};
+            border-top: None;
+            border-bottom: None;
+            """
+        if position == attrs.HORIZONTAL:
+            style = """
+            border-left: None;
+            border-right: None;
+            border-top: 2px {border_style} rgba{color};
+            border-bottom: 2px {border_style} rgba{color};
+            """
+
+        style = style.format(color=self.color(), border_style=self.borderStyleType())
+
+        self.setFocusSS(style)
+        self.setHoverSS(style)
+        self.setHoverFocusSS(style)
 
 """ CREATE MAIN STYLE SHEET """
+
 def installHoverDisplaySS(
         widget,
-        hover_type=TEST,
-        focus_type=TEST,
-        hover_focus_type=TEST,
+        position=None,
+        hover_style_type=HoverStyleSheet.BORDER,
+        color=iColor["rgba_selected_hover"],
         focus=True,
         hover=True,
         hover_focus=True,
@@ -238,14 +307,15 @@ def installHoverDisplaySS(
     Hover Select (Mouse pressed after hover)
     Selected No Hover
     Args:
-        widget:
-        edit_focus (bool): determines if the display property will be turned on/off
+        widget (QWidget):
+        position (attrs.POSITION): How hover display should be aligned
+            attrs ==> NORTH | EAST | SOUTH | WEST | VERTICAL | HORIZONTAL | None
+        style_type (HoverStyleSheet.TYPE):
+            BORDER | BACKGROUND | RADIAL
+        color (RGBA):
         focus (bool): determines if the display property will be turned on/off
         hover (bool): determines if the display property will be turned on/off
         hover_focus (bool): determines if the display property will be turned on/off
-        hover_type (hover_display.TYPE): which style sheet should be used
-        hover_focus_type (hover_display.TYPE): which style sheet should be used
-        focus_type (hover_display.TYPE): which style sheet should be used
         hover_type_flag (dict): of properties for each respective portion
             of the hover type
             {
@@ -258,7 +328,14 @@ def installHoverDisplaySS(
 
     """
 
-    style_sheet_args = compileSSArgs(widget, hover_type_flags, hover_type, focus_type, hover_focus_type)
+    # create hover object
+    hover_object = HoverStyleSheet()
+    hover_object.setPosition(position)
+    hover_object.setColor(color)
+    hover_object.setHoverStyleType(hover_style_type)
+
+    # compile style sheet args
+    style_sheet_args = compileSSArgs(widget, hover_type_flags, hover_object)
 
     style_sheet = "{widget_style_sheet}\n".format(widget_style_sheet=widget.styleSheet())
 
@@ -269,6 +346,7 @@ def installHoverDisplaySS(
                 {hover_ss}
             }}
             """.format(**style_sheet_args)
+
     # HOVER FOCUS
     if hover_focus:
         style_sheet += """

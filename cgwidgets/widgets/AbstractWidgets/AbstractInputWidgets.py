@@ -92,9 +92,6 @@ class iAbstractInputWidget(object):
         }
         installHoverDisplaySS(
             self,
-            hover_type=BORDER_00,
-            hover_focus_type=BORDER_00,
-            focus_type=BORDER_00,
             hover_type_flags=hover_type_flags)
 
     """ UTILS """

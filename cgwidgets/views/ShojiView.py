@@ -12,7 +12,7 @@ from qtpy.QtGui import QCursor
 
 from cgwidgets.settings.colors import iColor
 from cgwidgets.settings.stylesheets import (splitter_handle_ss)
-from cgwidgets.settings.hover_display import installHoverDisplaySS, BACKGROUND_00, BORDER_00, BORDER_01
+from cgwidgets.settings.hover_display import installHoverDisplaySS
 
 from cgwidgets.utils import updateStyleSheet
 
@@ -303,9 +303,6 @@ class ShojiView(QSplitter):
         }
         installHoverDisplaySS(
             widget,
-            hover_type=BORDER_01,
-            hover_focus_type=BORDER_01,
-            focus_type=BORDER_01,
             hover_type_flags=hover_type_flags)
 
     def isolateWidgets(self, widget_list):
