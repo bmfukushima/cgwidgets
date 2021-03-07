@@ -224,12 +224,13 @@ class HoverStyleSheet(object):
         """
         style = ""
         if not position:
-            style = """
-            border-left: 2px {border_style} rgba{color};
-            border-right: 2px {border_style} rgba{color};
-            border-top: 2px {border_style} rgba{color};
-            border-bottom: 2px {border_style} rgba{color};
-            """
+            if self.hoverStyleType() == HoverStyleSheet.BORDER:
+                style = """
+                border-left: 2px {border_style} rgba{color};
+                border-right: 2px {border_style} rgba{color};
+                border-top: 2px {border_style} rgba{color};
+                border-bottom: 2px {border_style} rgba{color};
+                """
         # NORTH
         if position == attrs.NORTH:
             style = """
@@ -362,5 +363,7 @@ def installHoverDisplaySS(
                 {focus_ss}
             }}
             """.format(**style_sheet_args)
+    # print("=========================================")
+    # print(style_sheet)
 
     widget.setStyleSheet(style_sheet)

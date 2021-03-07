@@ -28,7 +28,7 @@ from cgwidgets.utils import (
 from cgwidgets.views import ShojiView, ShojiViewHandle
 from cgwidgets.settings.icons import icons
 from cgwidgets.settings.stylesheets import input_widget_ss
-from cgwidgets.settings.hover_display import BORDER_00, BORDER_01,installHoverDisplaySS
+from cgwidgets.settings.hover_display import installHoverDisplaySS
 
 
 class iAbstractInputWidget(object):

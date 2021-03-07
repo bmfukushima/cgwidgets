@@ -698,13 +698,13 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         """
         self.setHandleWidth(0)
 
-        # splitter
-        splitter_style_sheet = """
-            QSplitter::handle {{
-                border: None;
-                color: rgba(255,0,0,255);
-            }}
-        """
+        # # splitter
+        # splitter_style_sheet = """
+        #     QSplitter::handle {{
+        #         border: None;
+        #         color: rgba(255,0,0,255);
+        #     }}
+        # """
 
         # create style sheet
         style_sheet_args = iColor.style_sheet_args
@@ -714,7 +714,7 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
             header_position=self.headerPosition(),
             outline_width=ShojiModelViewWidget.OUTLINE_WIDTH
         )
-        style_sheet_args['splitter_style_sheet'] = splitter_style_sheet
+        #style_sheet_args['splitter_style_sheet'] = splitter_style_sheet
 
         # apply style
         style_sheet = """
@@ -753,13 +753,6 @@ class ShojiMainDelegateWidget(ShojiView):
         self.rgba_background = iColor["rgba_background_00"]
         self.setToggleSoloViewEvent(self.resetShojiViewDisplay)
 
-        # # todo delete later
-        # self.setContentsMargins(0, 0, 0, 0)
-        # self.setStyleSheet("""
-        # ShojiMainDelegateWidget{
-        #     border: None;
-        # }""")
-
     def resetShojiViewDisplay(self, enabled, widget):
         """
 
@@ -789,29 +782,6 @@ class ShojiMainDelegateWidget(ShojiView):
             return tab_shoji_widget.headerWidget().keyPressEvent(event)
         else:
             return ShojiView.keyPressEvent(self, event)
-        # ModelViewWidget.keyPressEvent(tab_shoji_widget.headerWidget(), event)
-
-        # Global escape
-        # if event.key() == Qt.Key_Escape:
-        #     pass
-            # tab_shoji_widget = getWidgetAncestor(self, ShojiModelViewWidget)
-            # if tab_shoji_widget:
-            #     tab_shoji_widget.updateDelegateDisplay()
-            #     tab_shoji_widget.toggleDelegateSpacerWidget()
-        # Global override for conflicts
-        # if event.key() == self.soloViewHotkey():
-        #     """
-        #     If this is another shoji/labelled input etc, it will bypass
-        #     and use that widgets key press.  If it is over the main delegate,
-        #     it will register a ShojiView press.
-        #     """
-        #     pos = QCursor.pos()
-        #     widget_pressed = qApp.widgetAt(pos)
-        #
-        #     if isinstance(widget_pressed, ShojiModelDelegateWidget):
-        #         return ShojiView.keyPressEvent(self, event)
-        # else:
-        #     return ShojiView.keyPressEvent(self, event)
 
 
 class ShojiModelDelegateWidget(AbstractFrameInputWidgetContainer):

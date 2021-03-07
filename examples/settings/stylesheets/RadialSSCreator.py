@@ -34,8 +34,7 @@ if __name__ == "__main__":
             self.radius = 0.5
             self.stops = [
                 [0.5, "rgba_selected_hover"],
-                [0.75, "rgba_gray_0"],
-                [0.95, "rgba_red_3"]
+                [0.75, "rgba_gray_0"]
             ]
             inputs = ["cx", "cy", "fx", "fy", "radius"] #, stops"""
 
@@ -56,7 +55,7 @@ if __name__ == "__main__":
             shoji_view.setStretchFactor(index, 1)
 
         @staticmethod
-        def asdf(item, widget, value):
+        def asdf(widget, value):
             return
             #print('finished editing??!??!?')
             #print(widget, value)
