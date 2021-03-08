@@ -286,7 +286,7 @@ class ShojiView(QSplitter):
         self.updateStyleSheet()
 
     """ WIDGETS """
-    def __installHoverDisplay(self, widget):
+    def installHoverDisplay(self, widget):
         """
         Installs the hover display mechanisn on child widgets
         Args:
@@ -320,7 +320,7 @@ class ShojiView(QSplitter):
         else:
             self.setChildSoloable(self.isSoloViewEnabled(), widget)
 
-        self.__installHoverDisplay(widget)
+        self.installHoverDisplay(widget)
 
         return QSplitter.addWidget(self, widget)
 
@@ -330,7 +330,7 @@ class ShojiView(QSplitter):
         else:
             self.setChildSoloable(self.isSoloViewEnabled(), widget)
 
-        self.__installHoverDisplay(widget)
+        self.installHoverDisplay(widget)
 
         return QSplitter.insertWidget(self, index, widget)
 
@@ -562,29 +562,28 @@ class ShojiView(QSplitter):
             'rgba_text': repr(self.rgba_text),
             'handle_length_margin': self.getHandleLengthMargin(),
             'type': type(self).__name__,
-
         })
         style_sheet_args.update({
             'splitter_handle_ss': splitter_handle_ss.format(**style_sheet_args)
         })
         # TODO is_solo_view causing pixel issue
         style_sheet = """
-        /* VIEW */
-            {type}{{
-                background-color: rgba{rgba_background};
-                color: rgba{rgba_text};
-            }}
-            /* TODO FIX THIS
-            {type}[is_solo_view_enableable=true]{{
-                border: 2px solid rgba{rgba_background};
-            }}
-            {type}[is_solo_view=true]{{
-                border: 2px dotted rgba{rgba_flag}; 
-            }}
-            */
+/* VIEW */
+{type}{{
+    background-color: rgba{rgba_background};
+    color: rgba{rgba_text};
+}}
+/* TODO FIX THIS
+{type}[is_solo_view_enableable=true]{{
+    border: 2px solid rgba{rgba_background};
+}}
+{type}[is_solo_view=true]{{
+    border: 2px dotted rgba{rgba_flag}; 
+}}
+*/
 
-        /* HANDLE */
-            {splitter_handle_ss}
+/* HANDLE */
+{splitter_handle_ss}
         """.format(**style_sheet_args)
 
         # update hover display property

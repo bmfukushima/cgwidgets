@@ -27,9 +27,10 @@ Delegate (ShojiView):
     and can leave full screen by pressing the ESC key.  Pressing the ESC key harder will earn you
     epeen points for how awesome you are.  The recommended approach is to use both hands and slam
     them down on the ESC key for maximum effect.  Bonus points are earned if the key board is lifted
-    off the ground, other keys fly off the keyboard, and/or people stare at you as you yell FUUCCKKKKKK.
-    For those of you to dense to get it, this was a joke, if you didn't get that this was a joke, please
-    take a moment here to do one of the following:
+    off the desk, and/or keys fly off the keyboard, and/or people stare at you as you yell FUUCCKKKKKK
+    as you display your alpha status.  For those of you to dense to get it, this was a joke, if you
+    didn't get that this was a joke, please feel free to take a moment here to do one of the following
+    so that you feel like you fit in with everyone else:
         LOL | ROFL | LMAO | HAHAHA
 
 Hierachy
@@ -122,7 +123,7 @@ shoji_widget.setHeaderData(['name', 'SINE.', "woowoo"])
 # CREATE ITEMS / TABS
 def setupAsStacked():
     # insert tabs
-
+    shoji_widget.setDelegateType(ShojiModelViewWidget.STACKED)
     shoji_widget.insertShojiWidget(0, column_data={'name' : '<title> hello'},
                                    widget=LabelledInputWidget(name='hello', widget_type=FloatInputWidget))
     shoji_widget.insertShojiWidget(0, column_data={'name' : '<title> world'}, widget=QLabel('world'))
@@ -214,8 +215,8 @@ def setupAsDynamic():
     custom_index.internalPointer().setDynamicWidgetBaseClass(DynamicItemExample)
     custom_index.internalPointer().setDynamicUpdateFunction(DynamicItemExample.updateGUI)
 
-setupAsStacked()
-#setupAsDynamic()
+#setupAsStacked()
+setupAsDynamic()
 
 # SET FLAGSLabelledInputWidget
 shoji_widget.setMultiSelect(True)

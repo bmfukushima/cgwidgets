@@ -1,22 +1,14 @@
 """
-ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
-    |-- QBoxLayout
-        | -- ShojiHeader (BaseShojiWidget)
-            TODO:
-                * View scroll bar needs to change locations
-                https://www.qtcentre.org/threads/23624-Scrollbar-on-the-left
-                from the sounds it it. This is going to be a proxy display type setup
-            | -- ViewWidget (ShojiHeaderListView)
-                    ( ShojiHeaderListView | ShojiHeaderTableView | ShojiHeaderTreeView )
-            | -- TODO # widget is provided as a label right now
-                    *  This still needs the API set up for the arbitrary widget
-                    *  Display Mode ( On / Off / Hotkey popup )
 
-        | -- Scroll Area
-            |-- DelegateWidget (ShojiMainDelegateWidget --> ShojiView)
-                    | -- _temp_proxy_widget (QWidget)
-                    | -* ShojiModelDelegateWidget (AbstractGroupBox)
-                            | -- Stacked/Dynamic Widget (main_widget)
+
+TODO: Hover Display Style:
+        ShojiMainDelegateWidget --> installHoverDisplaySS
+        settings --> HoverDisplay
+            potentially change API to select which sides the border should be shown on?
+
+TODO: View scroll bar needs to change locations
+    https://www.qtcentre.org/threads/23624-Scrollbar-on-the-left
+    from the sounds it it. This is going to be a proxy display type setup
 """
 
 from qtpy.QtWidgets import (
@@ -26,6 +18,7 @@ from qtpy.QtGui import QCursor
 
 from cgwidgets.utils import getWidgetAncestor, attrs
 from cgwidgets.settings.colors import iColor
+from cgwidgets.settings.hover_display import installHoverDisplaySS
 from cgwidgets.widgets import AbstractFrameInputWidgetContainer, ModelViewWidget
 from cgwidgets.views import ShojiView
 
@@ -35,9 +28,10 @@ from cgwidgets.views import (AbstractDragDropAbstractView)
 
 class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
     """
-    This is the designing portion of this editor.  This is where the TD
-    will design a custom UI/hooks/handlers for the tool for the end user,
-    which will be displayed in the ViewWidget
+    The ShojiModelViewWidget ( which needs a better name, potentially "Shoji Widget" )
+    is essentially a Tab Widget which replaces the header with either a ListView, or a
+    TreeView containing its own internal model.  When the user selects an item in the view, the Delegate, will be updated
+    with a widget provided by one of two modes.
 
     Args:
         direction (ShojiModelViewWidget.DIRECTION): Determines where the tab
@@ -68,6 +62,17 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         label: refers to the small part at the top for selecting selections
         bar: refers to the bar at the top containing all of the aforementioned tabs
         widget: refers to the area that displays the GUI for each tab
+
+    Hierarchy:
+        |-- QBoxLayout
+            | -- ShojiHeader (BaseShojiWidget)
+            |    | -- ViewWidget (ShojiHeaderListView)
+            |            ( ShojiHeaderListView | ShojiHeaderTableView | ShojiHeaderTreeView )
+            | -- Scroll Area
+                |-- DelegateWidget (ShojiMainDelegateWidget --> ShojiView)
+                        | -- _temp_proxy_widget (QWidget)
+                        | -* ShojiModelDelegateWidget (AbstractGroupBox)
+                                | -- Stacked/Dynamic Widget (main_widget)
     """
     OUTLINE_WIDTH = 1
     STACKED = 'stacked'
@@ -698,14 +703,6 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         """
         self.setHandleWidth(0)
 
-        # # splitter
-        # splitter_style_sheet = """
-        #     QSplitter::handle {{
-        #         border: None;
-        #         color: rgba(255,0,0,255);
-        #     }}
-        # """
-
         # create style sheet
         style_sheet_args = iColor.style_sheet_args
         style_sheet_args = AbstractDragDropAbstractView.createAbstractStyleSheet(
@@ -714,7 +711,6 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
             header_position=self.headerPosition(),
             outline_width=ShojiModelViewWidget.OUTLINE_WIDTH
         )
-        #style_sheet_args['splitter_style_sheet'] = splitter_style_sheet
 
         # apply style
         style_sheet = """
@@ -722,6 +718,12 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         {splitter_style_sheet}
         """.format(**style_sheet_args)
         self.setStyleSheet(style_sheet)
+
+        # update hover display of children
+        for index in self.model().getAllIndexes():
+            widget = index.internalPointer().delegateWidget()
+            if widget:
+                self.delegateWidget().installHoverDisplay(widget)
 
     """ default view size"""
     @property
@@ -747,7 +749,6 @@ class ShojiMainDelegateWidget(ShojiView):
     The main delegate view that will show all of the items widgets that
     the user currently has selected
     """
-
     def __init__(self, parent=None):
         super(ShojiMainDelegateWidget, self).__init__(parent)
         self.rgba_background = iColor["rgba_background_00"]
@@ -773,6 +774,31 @@ class ShojiMainDelegateWidget(ShojiView):
         tab_shoji_widget = getWidgetAncestor(self, ShojiModelViewWidget)
         if tab_shoji_widget:
             tab_shoji_widget.updateDelegateDisplay()
+
+    def installHoverDisplay(self, widget):
+        """
+        Installs the hover display mechanisn on child widgets
+
+        Args:
+            widget (QWidget): child to have hover display installed on.
+
+        Note:
+            This overrides the default behavior from the ShojiView
+        """
+        widget.installEventFilter(self)
+        hover_type_flags = {
+            'focus':{'hover_display':True},
+            'hover_focus':{'hover_display':True},
+            'hover':{'hover_display':True},
+        }
+
+        tab_shoji_widget = getWidgetAncestor(self, ShojiModelViewWidget)
+        if tab_shoji_widget:
+            installHoverDisplaySS(
+                widget,
+                hover_type_flags=hover_type_flags,
+                position=tab_shoji_widget.headerPosition())
+
 
     def keyPressEvent(self, event):
         # preflight | suppress if over header

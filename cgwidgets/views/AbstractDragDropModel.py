@@ -403,6 +403,10 @@ class AbstractDragDropModel(QAbstractItemModel):
 
         return indexes
 
+    def getAllIndexes(self):
+        all_indexes = self.findItems(".*", match_type=Qt.MatchRegExp)
+        return all_indexes
+
     """ Create index/items"""
     def setItemType(self, item_type):
         self._item_type = item_type

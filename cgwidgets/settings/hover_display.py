@@ -63,12 +63,12 @@ def compileSSArgs(widget, hover_type_flags, hover_object):
     })
 
     # add widget SS
-    print(hover_object.hoverSS())
     style_sheet_args.update({
         'type': type(widget).__name__,
         'hover_ss': hover_object.hoverSS().format(**style_sheet_args),
         'focus_ss': hover_object.focusSS().format(**style_sheet_args),
-        'hover_focus_ss': hover_object.focusSS().format(**style_sheet_args)
+        'hover_focus_ss': hover_object.focusSS().format(**style_sheet_args),
+        'border_ss': hover_object.borderSS().format(**style_sheet_args)
     })
 
     return style_sheet_args
@@ -183,6 +183,23 @@ class HoverStyleSheet(object):
         """
         self._focusSS = focusSS
 
+    def borderSS(self):
+        return self._borderSS
+
+    def setBorderSS(self, borderSS):
+        """
+        Sets the style sheet to be used when hovering.  This style sheet should be only
+        the portion embedded within the {}
+            ie:
+                {type}::hover{hover_focus_properties}{{
+                    border: 6px dotted rgba{rgba_invisible};
+                    background: {background_select_hover_radial}
+                }}
+                would only need to include the indented portion
+
+        """
+        self._borderSS = borderSS
+
     """ PROPERTIES """
     def position(self):
         return self._position
@@ -278,11 +295,16 @@ class HoverStyleSheet(object):
             border-bottom: 2px {border_style} rgba{color};
             """
 
-        style = style.format(color=self.color(), border_style=self.borderStyleType())
+        # set border
+        border_style = style.format(color=iColor["rgba_invisible"], border_style=self.borderStyleType())
+        self.setBorderSS(border_style)
 
-        self.setFocusSS(style)
-        self.setHoverSS(style)
-        self.setHoverFocusSS(style)
+        # set focus
+        focus_style = style.format(color=self.color(), border_style=self.borderStyleType())
+        self.setFocusSS(focus_style)
+        self.setHoverSS(focus_style)
+        self.setHoverFocusSS(focus_style)
+
 
 """ CREATE MAIN STYLE SHEET """
 
@@ -339,30 +361,38 @@ def installHoverDisplaySS(
     style_sheet_args = compileSSArgs(widget, hover_type_flags, hover_object)
 
     style_sheet = "{widget_style_sheet}\n".format(widget_style_sheet=widget.styleSheet())
-
+    style_sheet += """
+/* Hover Display Border Padding */
+{type}{{
+    {border_ss}
+}}
+    """.format(**style_sheet_args)
     # HOVER
     if hover:
         style_sheet += """
-            {type}::hover{hover_properties}{{
-                {hover_ss}
-            }}
+/* Hover Display Hover */
+{type}::hover{hover_properties}{{
+    {hover_ss}
+}}
             """.format(**style_sheet_args)
 
     # HOVER FOCUS
     if hover_focus:
         style_sheet += """
-            {type}:hover:focus{hover_focus_properties}{{
-                {hover_focus_ss}
-            }}
-            """.format(**style_sheet_args)
+/* Hover Display Hover Focus */
+{type}:hover:focus{hover_focus_properties}{{
+    {hover_focus_ss}
+}}
+""".format(**style_sheet_args)
 
     # FOCUS
     if focus:
         style_sheet += """
-            {type}:focus{focus_properties}{{
-                {focus_ss}
-            }}
-            """.format(**style_sheet_args)
+/* Hover Display Hover */
+{type}:focus{focus_properties}{{
+    {focus_ss}
+}}
+""".format(**style_sheet_args)
     # print("=========================================")
     # print(style_sheet)
 
