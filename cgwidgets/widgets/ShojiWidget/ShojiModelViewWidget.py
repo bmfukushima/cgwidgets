@@ -792,13 +792,33 @@ class ShojiMainDelegateWidget(ShojiView):
             'hover_focus':{'hover_display':True},
             'hover':{'hover_display':True},
         }
-        # TODO Setup different handlers...
         tab_shoji_widget = getWidgetAncestor(self, ShojiModelViewWidget)
+
         if tab_shoji_widget:
+            # Setup border walls for each position / direction combo
+            position = tab_shoji_widget.headerPosition()
+            direction = self.orientation()
+            if direction == Qt.Vertical:
+                if position == attrs.EAST:
+                    border_walls = [attrs.NORTH, attrs.SOUTH, attrs.WEST]
+                if position == attrs.WEST:
+                    border_walls = [attrs.NORTH, attrs.SOUTH, attrs.EAST]
+                if position in [attrs.NORTH, attrs.SOUTH]:
+                    border_walls = [attrs.NORTH, attrs.SOUTH, attrs.EAST, attrs.WEST]
+
+            if direction == Qt.Horizontal:
+                if position == attrs.NORTH:
+                    border_walls = [attrs.EAST, attrs.WEST, attrs.SOUTH]
+                if position == attrs.SOUTH:
+                    border_walls = [attrs.EAST, attrs.WEST, attrs.NORTH]
+                if position in [attrs.EAST, attrs.WEST]:
+                    border_walls = [attrs.NORTH, attrs.SOUTH, attrs.EAST, attrs.WEST]
+
+            # install hover display
             installHoverDisplaySS(
                 widget,
                 hover_type_flags=hover_type_flags,
-                border_walls=[attrs.NORTH])
+                border_walls=border_walls)
 
     def keyPressEvent(self, event):
         # preflight | suppress if over header
