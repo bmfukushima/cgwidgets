@@ -13,8 +13,10 @@ be wrapped like:
 """
 
 from cgwidgets.utils import attrs
+
 from .colors import iColor
 from .stylesheets import convertDictToCSSFlags, background_radial
+
 
 """ UTILS """
 def compileSSArgs(widget, hover_type_flags, hover_object):
@@ -68,17 +70,95 @@ def compileSSArgs(widget, hover_type_flags, hover_object):
         'hover_ss': hover_object.hoverSS().format(**style_sheet_args),
         'focus_ss': hover_object.focusSS().format(**style_sheet_args),
         'hover_focus_ss': hover_object.focusSS().format(**style_sheet_args),
-        'border_ss': hover_object.borderSS().format(**style_sheet_args)
+        'border_ss': hover_object.defaultSS().format(**style_sheet_args)
     })
 
     return style_sheet_args
+
+class BorderStyleSheet(object):
+    """
+    Arbitray object for creating Border Style Sheets.
+
+    Attributes:
+        color (string): rgba 255
+            (255, 255, 255, 255)
+        style (BorderStyleSheet.STYLE):
+            SOLID | DOTTED
+        walls (tuple): of attr.DIRECTION
+            (attrs.NORTH, attrs.SOUTH, attrs.EAST, attrs.WEST)
+    """
+    # BORDER STYLE TYPE
+    SOLID = "solid"
+    DOTTED = "dotted"
+
+    def __init__(self):
+        self._style = BorderStyleSheet.SOLID
+        self._color = iColor["rgba_selected_hover"]
+        self._walls = (attrs.NORTH, attrs.SOUTH, attrs.EAST, attrs.WEST)
+
+    def walls(self):
+        return self._walls
+
+    def setWalls(self, walls):
+        self._walls = walls
+
+    def color(self):
+        return self._color
+
+    def setColor(self, color):
+        self._color = color
+
+    def style(self):
+        return self._style
+
+    def setStyle(self, style):
+        self._style = style
+
+    @staticmethod
+    def remapDirectionToStyleSheet(direction):
+        """
+        Remaps the direction from cgwidgets.attrs.POSITION to stylesheet
+        Args:
+            direction (attrs.POSITION):
+
+        Returns (str): attrs.DIRECTION of mapped value that will work in
+            a CSS StyleSheet
+        """
+        if direction == attrs.NORTH:
+            return "top"
+        if direction == attrs.SOUTH:
+            return "bottom"
+        if direction == attrs.EAST:
+            return "right"
+        if direction == attrs.WEST:
+            return "left"
+
+    def styleSheet(self):
+        """
+        Creates a style sheet body to create the border walls
+
+        Returns (string): Style Sheet
+        """
+        # create default attrs
+        all_walls = ['top', 'bottom', 'right', 'left']
+        style_sheet = ""
+
+        for wall in self.walls():
+            side = BorderStyleSheet.remapDirectionToStyleSheet(wall)
+            style_sheet += 'border-{side}: 2px {style} rgba{color};\n'.format(
+                side=side, style=self.style(), color=self.color())
+
+            all_walls.remove(side)
+
+        return style_sheet
+
 
 class HoverStyleSheet(object):
     """
     Attributes:
         position (attrs.POSITION): the cardinal direction
         color (RGBA): 255 RGBA color to be displayed
-        hover_style_type (HoverStyleSheet.HOVER_STYLE_TYPE)
+        hover_style_type (HoverStyleSheet.HOVER_STYLE_TYPE): what type of hover display should be shown
             BORDER | BACKGROUND | RADIAL
                 # todo finish setting up in __createStyleSheets
                     add conditional for hover_style_type
@@ -89,10 +169,6 @@ class HoverStyleSheet(object):
     BORDER = 1
     BACKGROUND = 2
     RADIAL = 4
-
-    # BORDER STYLE TYPE
-    SOLID = "solid"
-    DOTTED = "dotted"
 
     def __init__(self):
         """
@@ -130,8 +206,9 @@ class HoverStyleSheet(object):
         self._hover_style_type = HoverStyleSheet.BORDER
         self._color = repr(iColor["rgba_selected_hover"])
         self._position = None
-        self._border_style_type = HoverStyleSheet.SOLID
+        self._border_style_type = BorderStyleSheet.SOLID
 
+    """ STYLE SHEETS"""
     def hoverSS(self):
         return self._hoverSS
 
@@ -183,10 +260,10 @@ class HoverStyleSheet(object):
         """
         self._focusSS = focusSS
 
-    def borderSS(self):
-        return self._borderSS
+    def defaultSS(self):
+        return self._defaultSS
 
-    def setBorderSS(self, borderSS):
+    def setDefaultSS(self, defaultSS):
         """
         Sets the style sheet to be used when hovering.  This style sheet should be only
         the portion embedded within the {}
@@ -198,7 +275,7 @@ class HoverStyleSheet(object):
                 would only need to include the indented portion
 
         """
-        self._borderSS = borderSS
+        self._defaultSS = defaultSS
 
     """ PROPERTIES """
     def position(self):
@@ -206,111 +283,137 @@ class HoverStyleSheet(object):
 
     def setPosition(self, position):
         self._position = position
-        self.__createStyleSheets(self.position())
+        self.__createStyleSheets()
 
     def color(self):
         return self._color
 
     def setColor(self, color):
         self._color = repr(color)
-        self.__createStyleSheets(self.position())
+        self.__createStyleSheets()
 
     def hoverStyleType(self):
         return self._hover_style_type
 
     def setHoverStyleType(self, hover_style_type):
         self._hover_style_type = hover_style_type
-        self.__createStyleSheets(self.position())
+        if hover_style_type == HoverStyleSheet.BORDER:
+            self.setBorderWalls((attrs.NORTH, attrs.SOUTH, attrs.EAST, attrs.WEST))
+        self.__createStyleSheets()
+
+    """ BORDER """
+    def borderWalls(self):
+        return self._border_walls
+
+    def setBorderWalls(self, border_walls):
+        self._border_walls = border_walls
+        self.__createStyleSheets()
 
     def borderStyleType(self):
         return self._border_style_type
 
     def setBorderStyleType(self, border_style_type):
         self._border_style_type = border_style_type
-        self.__createStyleSheets(self.position())
+        self.__createStyleSheets()
 
     """ UTILS """
-    def __createStyleSheets(self, position=None):
+    def __createStyleSheets(self):
         """
         Creates the style sheet body for the hover display.
 
         Args:
-            position (attrs.POSITION): How this should be aligned,
-                if no value is provided, or set to None, this will
-                encompass the entire widget
+            walls (tuple): of attrs.POSITIONS that will have the border
+                displayed around them.  Valid options are:
+                    (attrs.NORTH, attrs.SOUTH, attrs.EAST, attrs.WEST)
+                Note: This option is only valid when the HoverStyleSheet.hoverStyleType
+                    is set to HoverStyleSheet.BORDER
         """
-        style = ""
-        if not position:
-            if self.hoverStyleType() == HoverStyleSheet.BORDER:
-                style = """
-                border-left: 2px {border_style} rgba{color};
-                border-right: 2px {border_style} rgba{color};
-                border-top: 2px {border_style} rgba{color};
-                border-bottom: 2px {border_style} rgba{color};
-                """
-        # NORTH
-        if position == attrs.NORTH:
-            style = """
-            border-left: 2px {border_style} rgba{color};
-            border-right: 2px {border_style} rgba{color};
-            border-top: None;
-            border-bottom: 2px {border_style} rgba{color};
-            """
+        if self.hoverStyleType() == HoverStyleSheet.BORDER:
+            # create border object
+            style_sheet_object = BorderStyleSheet()
+            style_sheet_object.setWalls(self.borderWalls())
+            style_sheet_object.setStyle(self.borderStyleType())
 
-        # SOUTH
-        if position == attrs.SOUTH:
-            style = """
-            border-left: 2px {border_style} rgba{color};
-            border-right: 2px {border_style} rgba{color};
-            border-top: 2px {border_style} rgba{color};
-            border-bottom: None;
-            """
-        if position == attrs.EAST:
-            style = """
-            border-left: 2px {border_style} rgba{color};
-            border-right: None
-            border-top: 2px {border_style} rgba{color};
-            border-bottom: 2px {border_style} rgba{color};
-            """
-        if position == attrs.WEST:
-            style = """
-            border-left: None;
-            border-right: 2px {border_style} rgba{color};
-            border-top: 2px {border_style} rgba{color};
-            border-bottom: 2px {border_style} rgba{color};
-            """
+            # set border
+            style_sheet_object.setColor(repr(iColor["rgba_invisible"]))
+            style_sheet_object.setStyle(self.borderStyleType())
+            self.setDefaultSS(style_sheet_object.styleSheet())
 
-        if position == attrs.VERTICAL:
-            style = """
-            border-left: 2px {border_style} rgba{color};
-            border-right: 2px {border_style} rgba{color};
-            border-top: None;
-            border-bottom: None;
-            """
-        if position == attrs.HORIZONTAL:
-            style = """
-            border-left: None;
-            border-right: None;
-            border-top: 2px {border_style} rgba{color};
-            border-bottom: 2px {border_style} rgba{color};
-            """
+            # set hover
+            style_sheet_object.setColor(self.color())
+            self.setFocusSS(style_sheet_object.styleSheet())
+            self.setHoverSS(style_sheet_object.styleSheet())
+            self.setHoverFocusSS(style_sheet_object.styleSheet())
 
-        # set border
-        border_style = style.format(color=iColor["rgba_invisible"], border_style=self.borderStyleType())
-        self.setBorderSS(border_style)
+        #style_sheet = style_sheet_object.styleSheet()
 
-        # set focus
-        focus_style = style.format(color=self.color(), border_style=self.borderStyleType())
-        self.setFocusSS(focus_style)
-        self.setHoverSS(focus_style)
-        self.setHoverFocusSS(focus_style)
+        # style = ""
+        # if not walls:
+        #     style = """
+        #     border-left: 2px {border_style} rgba{color};
+        #     border-right: 2px {border_style} rgba{color};
+        #     border-top: 2px {border_style} rgba{color};
+        #     border-bottom: 2px {border_style} rgba{color};
+        #     """
+        # # NORTH
+        # if walls == attrs.NORTH:
+        #     style = """
+        #     border-left: 2px {border_style} rgba{color};
+        #     border-right: 2px {border_style} rgba{color};
+        #     border-top: None;
+        #     border-bottom: 2px {border_style} rgba{color};
+        #     """
+        #
+        # # SOUTH
+        # if walls == attrs.SOUTH:
+        #     style = """
+        #     border-left: 2px {border_style} rgba{color};
+        #     border-right: 2px {border_style} rgba{color};
+        #     border-top: 2px {border_style} rgba{color};
+        #     border-bottom: None;
+        #     """
+        # if walls == attrs.EAST:
+        #     style = """
+        #     border-left: 2px {border_style} rgba{color};
+        #     border-right: None
+        #     border-top: 2px {border_style} rgba{color};
+        #     border-bottom: 2px {border_style} rgba{color};
+        #     """
+        # if walls == attrs.WEST:
+        #     style = """
+        #     border-left: None;
+        #     border-right: 2px {border_style} rgba{color};
+        #     border-top: 2px {border_style} rgba{color};
+        #     border-bottom: 2px {border_style} rgba{color};
+        #     """
+        #
+        # if walls == attrs.VERTICAL:
+        #     style = """
+        #     border-left: 2px {border_style} rgba{color};
+        #     border-right: 2px {border_style} rgba{color};
+        #     border-top: None;
+        #     border-bottom: None;
+        #     """
+        # if walls == attrs.HORIZONTAL:
+        #     style = """
+        #     border-left: None;
+        #     border-right: None;
+        #     border-top: 2px {border_style} rgba{color};
+        #     border-bottom: 2px {border_style} rgba{color};
+        #     """
+        #
+        # # set border
+        # border_style = style.format(color=iColor["rgba_invisible"], border_style=self.borderStyleType())
+        # self.setDefaultSS(border_style)
+        #
+        # # set focus
+        # focus_style = style.format(color=self.color(), border_style=self.borderStyleType())
 
 
 """ CREATE MAIN STYLE SHEET """
-
 def installHoverDisplaySS(
         widget,
-        position=None,
+        border_walls=(attrs.NORTH, attrs.SOUTH, attrs.EAST, attrs.WEST),
         hover_style_type=HoverStyleSheet.BORDER,
         color=iColor["rgba_selected_hover"],
         focus=True,
@@ -331,8 +434,8 @@ def installHoverDisplaySS(
     Selected No Hover
     Args:
         widget (QWidget):
-        position (attrs.POSITION): How hover display should be aligned
-            attrs ==> NORTH | EAST | SOUTH | WEST | VERTICAL | HORIZONTAL | None
+        border_walls (list): of attrs.DIRECTION that will have the border shown on
+            attrs.NORTH | attrs.SOUTH | attrs.EAST | attrs.WEST
         style_type (HoverStyleSheet.TYPE):
             BORDER | BACKGROUND | RADIAL
         color (RGBA):
@@ -353,9 +456,12 @@ def installHoverDisplaySS(
 
     # create hover object
     hover_object = HoverStyleSheet()
-    hover_object.setPosition(position)
-    hover_object.setColor(color)
     hover_object.setHoverStyleType(hover_style_type)
+    hover_object.setColor(color)
+
+    # setup border
+    if hover_style_type == HoverStyleSheet.BORDER:
+        hover_object.setBorderWalls(border_walls)
 
     # compile style sheet args
     style_sheet_args = compileSSArgs(widget, hover_type_flags, hover_object)
@@ -393,7 +499,6 @@ def installHoverDisplaySS(
     {focus_ss}
 }}
 """.format(**style_sheet_args)
-    # print("=========================================")
-    # print(style_sheet)
 
     widget.setStyleSheet(style_sheet)
+

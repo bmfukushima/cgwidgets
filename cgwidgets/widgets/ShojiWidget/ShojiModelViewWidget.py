@@ -5,6 +5,7 @@ TODO: Hover Display Style:
         ShojiMainDelegateWidget --> installHoverDisplaySS
         settings --> HoverDisplay
             potentially change API to select which sides the border should be shown on?
+            overriding default border... maybe just have a default hover border???
 
 TODO: View scroll bar needs to change locations
     https://www.qtcentre.org/threads/23624-Scrollbar-on-the-left
@@ -791,14 +792,13 @@ class ShojiMainDelegateWidget(ShojiView):
             'hover_focus':{'hover_display':True},
             'hover':{'hover_display':True},
         }
-
+        # TODO Setup different handlers...
         tab_shoji_widget = getWidgetAncestor(self, ShojiModelViewWidget)
         if tab_shoji_widget:
             installHoverDisplaySS(
                 widget,
                 hover_type_flags=hover_type_flags,
-                position=tab_shoji_widget.headerPosition())
-
+                border_walls=[attrs.NORTH])
 
     def keyPressEvent(self, event):
         # preflight | suppress if over header
