@@ -54,12 +54,13 @@ shoji_input_widget_container.display_background = False
 """ BUTTON INPUT WIDGET CONTAINER """
 def userEvent(widget):
     print("user input...", widget)
-buttons = []
-for x in range(3):
-    flag = x
-    buttons.append(["button_" + str(x), flag, userEvent])
-button_input_widget_container = ButtonInputWidgetContainer(buttons=buttons, orientation=Qt.Vertical)
 
+button_input_widget_container = ButtonInputWidgetContainer(orientation=Qt.Vertical)
+for flag in range(3):
+    if flag == 1:
+        button_input_widget_container.addButton("button_" + str(flag), flag, userEvent, True)
+    else:
+        button_input_widget_container.addButton("button_" + str(flag), flag, userEvent, False)
 
 """ FRAME INPUT WIDGET CONTAINER"""
 frame_input_widget_container = FrameInputWidgetContainer(name='Frame Input Widgets', direction=Qt.Vertical)

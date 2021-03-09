@@ -918,7 +918,13 @@ class ShojiHeader(ModelViewWidget):
 
         # custom input event | need this as we're overriding the models input
         top_level_widget.itemSelectedEvent(item, enabled, column)
-        #return ModelViewWidget.selectionChanged(self, selected, deselected)
+
+        # update full screen selection
+        if enabled:
+            if hasattr(top_level_widget, '_delegate_widget'):
+                delegate_widget = top_level_widget.delegateWidget()
+                delegate_widget.resetShojiViewDisplay(False, delegate_widget)
+                delegate_widget.setIsSoloView(delegate_widget, False)
 
 
 """ EXAMPLE """

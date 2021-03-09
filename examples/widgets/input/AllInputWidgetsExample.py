@@ -78,13 +78,13 @@ overlay_input_widget = OverlayInputWidget(input_widget=StringInputWidget(), titl
 def userEvent(widget):
     print("user input...", widget)
 
-multi_button_input_widget = ButtonInputWidgetContainer(orientation=Qt.Vertical)
-multi_button_input_widget.setIsMultiSelect(True)
+button_input_widget_container = ButtonInputWidgetContainer(orientation=Qt.Vertical)
+button_input_widget_container.setIsMultiSelect(True)
 for flag in range(3):
     if flag == 1:
-        multi_button_input_widget.addButton("button_" + str(flag), flag, userEvent, True)
+        button_input_widget_container.addButton("button_" + str(flag), flag, userEvent, True)
     else:
-        multi_button_input_widget.addButton("button_" + str(flag), flag, userEvent, False)
+        button_input_widget_container.addButton("button_" + str(flag), flag, userEvent, False)
 
 button_input_widget = ButtonInputWidget(user_clicked_event=userEvent, title="Script Button", flag=False, is_toggleable=False)
 
@@ -96,7 +96,7 @@ normal_widget.layout().addWidget(string_input_widget)
 normal_widget.layout().addWidget(list_input_widget)
 normal_widget.layout().addWidget(plain_text_input_widget)
 normal_widget.layout().addWidget(overlay_input_widget)
-normal_widget.layout().addWidget(multi_button_input_widget)
+normal_widget.layout().addWidget(button_input_widget_container)
 normal_widget.layout().addWidget(button_input_widget)
 
 float_input_widget.setUserFinishedEditingEvent(test)
