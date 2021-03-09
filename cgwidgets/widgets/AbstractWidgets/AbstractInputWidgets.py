@@ -669,13 +669,11 @@ class AbstractButtonInputWidgetContainer(ShojiView):
     """
     Provides a multi button input widget.
 
-    Colors
-    Hide Widget Handles?
-    Args:
-        buttons (list): of lists ["title": virtualFunction]
-            The virtual  function needs to take one arg.  This arg
-            will return the widget that is created to display this
-            event
+    This widget will align all of the widgets that are currently selected
+    higher up in the priority, ie insertWidget(0, widget), and those that
+    are not selected further down in the priority ie. insertWidget(-1, widget).
+
+    Note: that each of this widgets returns a flag
 
     Attributes:
         _buttons (dict): of clickable buttons
@@ -761,14 +759,13 @@ class AbstractButtonInputWidgetContainer(ShojiView):
             if enabled:
                 self._current_buttons.append(current_button)
                 self.insertWidget(len(self.currentButtons()) - 1, current_button)
-                print('add')
             
             # remove from list
             else:
                 if current_button in self._current_buttons:
                     self._current_buttons.remove(current_button)
                 self.insertWidget(len(self.currentButtons()), current_button)
-                print('remove')
+
         # single select
         else:
             self._current_buttons = [current_button]
@@ -804,10 +801,10 @@ class AbstractButtonInputWidgetContainer(ShojiView):
 
     """ EVENTS """
     def showEvent(self, event):
-        print("show?")
-        print(self._current_buttons)
+        """
+        Reorganizes widgets into correct order
+        """
         for button in self._current_buttons:
-            print(button)
             self.insertWidget(0, button)
         return ShojiView.showEvent(self, event)
 
