@@ -77,11 +77,14 @@ plain_text_input_widget = PlainTextInputWidget()
 overlay_input_widget = OverlayInputWidget(input_widget=StringInputWidget(), title="SINE.")
 def userEvent(widget):
     print("user input...", widget)
-buttons = []
-for x in range(3):
-    flag = x
-    buttons.append(["button_" + str(x), flag, userEvent])
-multi_button_input_widget = ButtonInputWidgetContainer(buttons=buttons, orientation=Qt.Vertical)
+
+multi_button_input_widget = ButtonInputWidgetContainer(orientation=Qt.Vertical)
+multi_button_input_widget.setIsMultiSelect(True)
+for flag in range(3):
+    if flag == 1:
+        multi_button_input_widget.addButton("button_" + str(flag), flag, userEvent, True)
+    else:
+        multi_button_input_widget.addButton("button_" + str(flag), flag, userEvent, False)
 
 button_input_widget = ButtonInputWidget(user_clicked_event=userEvent, title="Script Button", flag=False, is_toggleable=False)
 

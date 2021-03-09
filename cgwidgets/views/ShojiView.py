@@ -128,14 +128,15 @@ class ShojiView(QSplitter):
         self.show()
 
         num_handles = len(self.getAllHandles())
-        # get offset
-        if self.orientation() == Qt.Vertical:
-            offset = self.height() / (num_handles)
-        elif self.orientation() == Qt.Horizontal:
-            offset = self.width() / (num_handles)
+        if 0 < num_handles:
+            # get offset
+            if self.orientation() == Qt.Vertical:
+                offset = self.height() / (num_handles)
+            elif self.orientation() == Qt.Horizontal:
+                offset = self.width() / (num_handles)
 
-        for i in range(1, num_handles):
-            self.moveSplitter(int(offset * (i)) - 1, i)
+            for i in range(1, num_handles):
+                self.moveSplitter(int(offset * (i)) - 1, i)
 
     @staticmethod
     def getIndexOfWidget(widget):

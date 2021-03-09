@@ -683,7 +683,7 @@ class AbstractButtonInputWidgetContainer(ShojiView):
         _current_buttons (List): of AbstractButtonInputWidget that are
             currently selected by the user
     """
-    def __init__(self, parent=None, buttons=None, orientation=Qt.Horizontal):
+    def __init__(self, parent=None, orientation=Qt.Horizontal):
         self._rgba_flag = iColor["rgba_selected_hover"]
         super(AbstractButtonInputWidgetContainer, self).__init__(parent, orientation)
         self.setIsSoloViewEnabled(False)
@@ -696,11 +696,6 @@ class AbstractButtonInputWidgetContainer(ShojiView):
         self._is_multi_select = True
         self._current_buttons = []
         self._is_toggleable = True
-
-        #
-        if buttons:
-            for button in buttons:
-                self.addButton(*button)
 
         self.setIsHandleVisible(False)
 
@@ -723,11 +718,23 @@ class AbstractButtonInputWidgetContainer(ShojiView):
         self._is_toggleable = enabled
 
     """ BUTTONS """
-    def updateButtonSelection(self, selected_button):
-        if selected_button in self.currentButtons():
-            self.setButtonAsCurrent(selected_button, False)
+    def updateButtonSelection(self, selected_button, enabled=None):
+        """
+        Sets the button provided to either be enabled or disabled
+        Args:
+            selected_button (AbstractButtonInputWidget):
+            enabled (bool):
+
+        Returns:
+
+        """
+        if enabled is not None:
+            self.setButtonAsCurrent(selected_button, enabled)
         else:
-            self.setButtonAsCurrent(selected_button, True)
+            if selected_button in self.currentButtons():
+                self.setButtonAsCurrent(selected_button, False)
+            else:
+                self.setButtonAsCurrent(selected_button, True)
 
         # update display
         for button in self._buttons.values():
@@ -748,28 +755,38 @@ class AbstractButtonInputWidgetContainer(ShojiView):
             enabled (bool):
         """
         current_button.setParent(None)
+        # multi select
         if self.isMultiSelect():
+            # add to list
             if enabled:
                 self._current_buttons.append(current_button)
                 self.insertWidget(len(self.currentButtons()) - 1, current_button)
+                print('add')
+            
+            # remove from list
             else:
-                self._current_buttons.remove(current_button)
+                if current_button in self._current_buttons:
+                    self._current_buttons.remove(current_button)
                 self.insertWidget(len(self.currentButtons()), current_button)
+                print('remove')
+        # single select
         else:
             self._current_buttons = [current_button]
             self.insertWidget(0, current_button)
 
         # setup button style
-        current_button.is_selected = True
+        if enabled:
+            current_button.is_selected = True
 
         self.update()
 
-    def addButton(self, title, flag, user_clicked_event=None, image=None):
+    def addButton(self, title, flag, user_clicked_event=None, enabled=False, image=None):
         """
         Adds a button to this widget
 
         Args:
             title (str): display name
+            enabled (bool): determines the default status of the button
             flag (arbitrary): flag to be returned to denote that this button is selected
             user_clicked_event (function): to run when the user clicks
             image:
@@ -780,9 +797,19 @@ class AbstractButtonInputWidgetContainer(ShojiView):
         Todo: setup image
         """
         button = AbstractButtonInputWidget(self, user_clicked_event=user_clicked_event, title=title, flag=flag, is_toggleable=self.isToggleable())
+        self.updateButtonSelection(button, enabled)
         self._buttons[title] = button
         self.addWidget(button)
         return button
+
+    """ EVENTS """
+    def showEvent(self, event):
+        print("show?")
+        print(self._current_buttons)
+        for button in self._current_buttons:
+            print(button)
+            self.insertWidget(0, button)
+        return ShojiView.showEvent(self, event)
 
 
 class AbstractButtonInputWidget(AbstractBooleanInputWidget):
@@ -881,12 +908,15 @@ if __name__ == "__main__":
     def userEvent(widget):
         print("user input...", widget)
 
-    buttons = []
+    widget = AbstractButtonInputWidgetContainer(orientation=Qt.Horizontal)
+
+    widget.setIsMultiSelect(True)
     for x in range(3):
         flag = x
-        buttons.append(["button_"+str(x), flag, userEvent])
-
-    widget = AbstractButtonInputWidgetContainer(buttons=buttons, orientation=Qt.Horizontal)
+        if x == 1:
+            widget.addButton("button_"+str(x), flag, userEvent, True)
+        else:
+            widget.addButton("button_"+str(x), flag, userEvent, False)
     # widget.setIsHandleVisible(False)
     # updateStyleSheet(widget)
 

@@ -75,6 +75,7 @@ def compileSSArgs(widget, hover_type_flags, hover_object):
 
     return style_sheet_args
 
+
 class BorderStyleSheet(object):
     """
     Arbitray object for creating Border Style Sheets.

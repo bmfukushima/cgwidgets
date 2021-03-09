@@ -219,6 +219,7 @@ class FrameInputWidgetContainer(AbstractFrameInputWidgetContainer):
         super(FrameInputWidgetContainer, self).__init__(parent, name, note, direction)
         self.layout().setContentsMargins(0,0,0,0)
 
+
 class ButtonInputWidgetContainer(AbstractButtonInputWidgetContainer):
     """
     Provides a multi button input widget.
@@ -240,8 +241,8 @@ class ButtonInputWidgetContainer(AbstractButtonInputWidgetContainer):
         _current_buttons (List): of AbstractButtonInputWidget that are
             currently selected by the user
     """
-    def __init__(self, parent=None, buttons=None, orientation=Qt.Horizontal):
-        super(ButtonInputWidgetContainer, self).__init__(parent, buttons, orientation)
+    def __init__(self, parent=None, orientation=Qt.Horizontal):
+        super(ButtonInputWidgetContainer, self).__init__(parent, orientation)
 
 
 if __name__ == "__main__":
