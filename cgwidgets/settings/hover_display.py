@@ -11,6 +11,7 @@ be wrapped like:
                 {focus_ss}
     }}
 """
+import re
 
 from cgwidgets.utils import attrs
 
@@ -414,6 +415,7 @@ class HoverStyleSheet(object):
 """ CREATE MAIN STYLE SHEET """
 def installHoverDisplaySS(
         widget,
+        name="",
         border_walls=(attrs.NORTH, attrs.SOUTH, attrs.EAST, attrs.WEST),
         hover_style_type=HoverStyleSheet.BORDER,
         color=iColor["rgba_selected_hover"],
@@ -437,6 +439,7 @@ def installHoverDisplaySS(
         widget (QWidget):
         border_walls (list): of attrs.DIRECTION that will have the border shown on
             attrs.NORTH | attrs.SOUTH | attrs.EAST | attrs.WEST
+        name (str): unique name to cull
         style_type (HoverStyleSheet.TYPE):
             BORDER | BACKGROUND | RADIAL
         color (RGBA):
@@ -470,13 +473,13 @@ def installHoverDisplaySS(
     style_sheet = "{widget_style_sheet}".format(widget_style_sheet=widget.styleSheet())
 
     # remove previous hover display
-    import re
+
     style_sheet = re.sub(
-        "(\n/\* << HOVER DISPLAY START >> \*/ \n)([^\$]+)(\n/\* << HOVER DISPLAY END >> \*/ \n)",
+        "(\n/\* << HOVER {name} DISPLAY START >> \*/ \n)([^\$]+)(\n/\* << HOVER {name} DISPLAY END >> \*/ \n)".format(name=name),
         "",
         style_sheet)
     # START
-    style_sheet += "\n/* << HOVER DISPLAY START >> */ \n"
+    style_sheet += "\n/* << HOVER {name} DISPLAY START >> */ \n".format(name=name)
 
     # add border padding
     style_sheet += """
@@ -514,7 +517,7 @@ def installHoverDisplaySS(
 """.format(**style_sheet_args)
 
     # END
-    style_sheet += "\n/* << HOVER DISPLAY END >> */ \n"
+    style_sheet += "\n/* << HOVER {name} DISPLAY END >> */ \n".format(name=name)
 
     widget.setStyleSheet(style_sheet)
 

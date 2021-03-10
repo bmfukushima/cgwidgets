@@ -92,6 +92,7 @@ class iAbstractInputWidget(object):
         }
         installHoverDisplaySS(
             self,
+            name="INPUT WIDGETS",
             hover_type_flags=hover_type_flags)
 
     """ UTILS """

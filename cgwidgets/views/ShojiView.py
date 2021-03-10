@@ -305,6 +305,7 @@ class ShojiView(QSplitter):
         }
         installHoverDisplaySS(
             widget,
+            name="SHOJI VIEW",
             hover_type_flags=hover_type_flags)
 
     def isolateWidgets(self, widget_list):

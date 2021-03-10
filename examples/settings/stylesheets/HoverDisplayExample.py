@@ -20,6 +20,7 @@ for char in string.ascii_letters:
     widget = QLabel(char)
     installHoverDisplaySS(
         widget,
+        name="UNIQUE NAME"
         position=attrs.NORTH, # SOUTH | EAST | WEST | VERTICAL | HORIZONTAL | None
         hover_style_type=HoverStyleSheet.BORDER, # BACKGROUND | RADIAL
         color=iColor["rgba_selected_hover"], # (255, 255, 255, 255)

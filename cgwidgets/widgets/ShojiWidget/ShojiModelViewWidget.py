@@ -818,6 +818,7 @@ class ShojiMainDelegateWidget(ShojiView):
             # install hover display
             installHoverDisplaySS(
                 widget,
+                name="SHOJI VIEW",
                 hover_type_flags=hover_type_flags,
                 border_walls=border_walls)
 
