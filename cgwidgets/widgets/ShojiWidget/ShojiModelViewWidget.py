@@ -720,7 +720,7 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         for index in self.model().getAllIndexes():
             widget = index.internalPointer().delegateWidget()
             if widget:
-                print(self.delegateWidget())
+                # print(self.delegateWidget())
                 #widget.removeEventFilter(self.delegateWidget())
                 self.delegateWidget().installHoverDisplay(widget)
 
@@ -799,7 +799,6 @@ class ShojiMainDelegateWidget(ShojiView):
             position = tab_shoji_widget.headerPosition()
             #direction = self.orientation()
             direction = tab_shoji_widget.multiSelectDirection()
-            print(position , direction)
             if direction == Qt.Vertical:
                 if position == attrs.EAST:
                     border_walls = [attrs.NORTH, attrs.SOUTH, attrs.WEST]
