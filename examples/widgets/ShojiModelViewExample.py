@@ -215,14 +215,15 @@ def setupAsDynamic():
     custom_index.internalPointer().setDynamicWidgetBaseClass(DynamicItemExample)
     custom_index.internalPointer().setDynamicUpdateFunction(DynamicItemExample.updateGUI)
 
-#setupAsStacked()
-setupAsDynamic()
+setupAsStacked()
+#setupAsDynamic()
 
 # SET FLAGSLabelledInputWidget
 shoji_widget.setMultiSelect(True)
-shoji_widget.setMultiSelectDirection(Qt.Vertical)
+
 shoji_widget.delegateWidget().setHandleLength(100)
 shoji_widget.setHeaderPosition(attrs.WEST, attrs.SOUTH)
+shoji_widget.setMultiSelectDirection(Qt.Vertical)
 shoji_widget.setDelegateTitleIsShown(True)
 
 #####################################################

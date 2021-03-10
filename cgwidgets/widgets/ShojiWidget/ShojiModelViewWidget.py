@@ -1,6 +1,4 @@
 """
-
-
 TODO: Hover Display Style:
         ShojiMainDelegateWidget --> installHoverDisplaySS
         settings --> HoverDisplay
@@ -99,7 +97,7 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         self._header_widget.setIndexSelectedEvent(self._header_widget.selectionChanged)
 
         # setup delegate
-        delegate_widget = ShojiMainDelegateWidget()
+        delegate_widget = ShojiMainDelegateWidget(self)
         self.setDelegateWidget(delegate_widget)
         self._temp_proxy_widget = QWidget()
         self._temp_proxy_widget.setObjectName("proxy_widget")
@@ -111,12 +109,8 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         scroll_area.setWidget(delegate_widget)
         scroll_area.setWidgetResizable(True)
         self.addWidget(scroll_area)
-
-        # TEMP
         scroll_area.setStyleSheet("QScrollArea{border:None}")
-        #scroll_area.setStyleSheet("border:None")
-        #scroll_area.setContentsMargins(0, 0, 0, 0)
-        #scroll_area.layout().setContentsMargins(0,0,0,0)
+
         self.addWidget(self._header_widget)
 
         # set default attrs
@@ -173,7 +167,7 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
             view_delegate_widget.hide()
 
             # todo key event...
-            widget.installEventFilter(self)
+            # widget.installEventFilter(self)
 
         return new_index
 
@@ -316,8 +310,9 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
             update_event (bool): determines if user event should be
                 run on each item during the deletion process.
         """
-        for child in reversed(self.rootItem().children()):
-            self.model().deleteItem(child, event_update=event_update)
+        self.model().clearModel(event_update=event_update)
+        # for child in reversed(self.rootItem().children()):
+        #     self.model().deleteItem(child, event_update=event_update)
 
     """ VIEW """
     def headerWidget(self):
@@ -667,8 +662,9 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         orientation (Qt.ORIENTATION): ie Qt.Vertical or Qt.Horizontal
         """
         self.delegateWidget().setOrientation(orientation)
+        self.updateStyleSheet()
 
-    def getMultiSelectDirection(self):
+    def multiSelectDirection(self):
         return self.delegateWidget().orientation()
 
     """ type """
@@ -724,6 +720,8 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         for index in self.model().getAllIndexes():
             widget = index.internalPointer().delegateWidget()
             if widget:
+                print(self.delegateWidget())
+                #widget.removeEventFilter(self.delegateWidget())
                 self.delegateWidget().installHoverDisplay(widget)
 
     """ default view size"""
@@ -786,7 +784,8 @@ class ShojiMainDelegateWidget(ShojiView):
         Note:
             This overrides the default behavior from the ShojiView
         """
-        widget.installEventFilter(self)
+        # get attrs
+        # print('should do this?')
         hover_type_flags = {
             'focus':{'hover_display':True},
             'hover_focus':{'hover_display':True},
@@ -794,10 +793,13 @@ class ShojiMainDelegateWidget(ShojiView):
         }
         tab_shoji_widget = getWidgetAncestor(self, ShojiModelViewWidget)
 
+        # install hover display
         if tab_shoji_widget:
             # Setup border walls for each position / direction combo
             position = tab_shoji_widget.headerPosition()
-            direction = self.orientation()
+            #direction = self.orientation()
+            direction = tab_shoji_widget.multiSelectDirection()
+            print(position , direction)
             if direction == Qt.Vertical:
                 if position == attrs.EAST:
                     border_walls = [attrs.NORTH, attrs.SOUTH, attrs.WEST]
@@ -819,6 +821,44 @@ class ShojiMainDelegateWidget(ShojiView):
                 widget,
                 hover_type_flags=hover_type_flags,
                 border_walls=border_walls)
+
+        # install event filter
+        widget.installEventFilter(self)
+        return
+
+    def eventFilter(self, obj, event):
+        """
+        Events run on every child widget.
+
+        Handles the dynamic style sheet updates, and overrides
+        the solo view operator.
+
+        Note: This is copy/pasted from the ShojiView to be modified
+        """
+        # preflight
+        tab_shoji_widget = getWidgetAncestor(self, ShojiModelViewWidget)
+        if not tab_shoji_widget: return False
+
+        # setup hover display
+        view_widget = tab_shoji_widget.headerViewWidget()
+        selection = view_widget.selectionModel().selectedRows(0)
+
+        # obj.setProperty("hover_display", False)
+        # # hover properties
+        if event.type() == QEvent.Enter:
+            # print(obj, len(selection))
+            if 1 < len(selection):
+                # print('TRUE')
+                obj.setProperty("hover_display", True)
+            else:
+                # print('FALSE')
+                obj.setProperty("hover_display", False)
+
+        if event.type() == QEvent.Leave:
+            # print('leave?')
+            obj.setProperty("hover_display", False)
+
+        return False
 
     def keyPressEvent(self, event):
         # preflight | suppress if over header
@@ -986,35 +1026,40 @@ if __name__ == "__main__":
             self.addWidget(QLabel('b'))
             self.addWidget(QLabel('c'))
 
-    w = ShojiModelViewWidget()
+    shoji_widget = ShojiModelViewWidget()
     #w.setHeaderPosition(attrs.WEST, attrs.SOUTH)
     #header_delegate_widget = QLabel("Custom")
     #w.setHeaderDelegateAlwaysOn(False)
     #
-    # w.setMultiSelect(True)
-    # w.setMultiSelectDirection(Qt.Vertical)
-    # w.setHeaderItemDragDropMode(QAbstractItemView.InternalMove)
-    delegate_widget = QLabel("Q")
-    w.addHeaderDelegateWidget([Qt.Key_Q], delegate_widget)
+    shoji_widget.setMultiSelect(True)
+    #w.setOrientation(Qt.Horizontal)
+    # w.setHeaderPosition(attrs.NORTH)
+    # w.setMultiSelectDirection(Qt.Horizontal)
 
-    dw = TabShojiDynamicWidgetExample
+    # w.setHeaderItemDragDropMode(QAbstractItemView.InternalMove)
+    # delegate_widget = QLabel("Q")
+    # w.addHeaderDelegateWidget([Qt.Key_Q], delegate_widget)
+    #
+    # dw = TabShojiDynamicWidgetExample
 
     for x in range(3):
         widget = QLabel(str(x))
-        parent_item = w.insertShojiWidget(x, column_data={'name':str(x), 'one':'test'}, widget=widget)
+        parent_item = shoji_widget.insertShojiWidget(x, column_data={'name':str(x), 'one':'test'}, widget=widget)
 
     for y in range(0, 2):
-        w.insertShojiWidget(y, column_data={'name':str(y)}, widget=widget, parent=parent_item)
+        shoji_widget.insertShojiWidget(y, column_data={'name':str(y)}, widget=widget, parent=parent_item)
+    shoji_widget.setHeaderPosition(attrs.WEST, attrs.SOUTH)
+    shoji_widget.setMultiSelectDirection(Qt.Vertical)
 
-    w.resize(500, 500)
-    w.delegateWidget().setHandleLength(100)
+    shoji_widget.resize(500, 500)
+    shoji_widget.delegateWidget().setHandleLength(100)
 
-    w.show()
+    shoji_widget.show()
     # #w.headerWidget().model().setIsDragEnabled(False)
     # w.setHeaderItemIsDropEnabled(True)
     # w.setHeaderItemIsDragEnabled(True)
     # w.setHeaderItemIsEnableable(True)
     # w.setHeaderItemIsDeleteEnabled(False)
-    w.move(QCursor.pos())
+    shoji_widget.move(QCursor.pos())
 
     sys.exit(app.exec_())

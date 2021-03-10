@@ -27,6 +27,7 @@ class ShojiView(QSplitter):
             allows the user to press a hotkey to make a widget take up the
             entire space of this splitter.  The default hotkey for this is ~ but can be
             set with the setSoloViewHotkey() call.
+        is_solo_view_enabled (bool): determines if this Shoji can enter full screen mode.
         is_handle_static (bool): determines if the handles are adjustable or not.
             This is mainly used for reusing the shoji view as bidirectional layout
         rgba_handle (rgba): color of the handle
@@ -249,10 +250,10 @@ class ShojiView(QSplitter):
         """
         # hover properties
         if event.type() == QEvent.Enter:
-            obj.setProperty("hover_display", True)
+            if self.isSoloViewEnabled():
+                obj.setProperty("hover_display", True)
         if event.type() == QEvent.Leave:
             obj.setProperty("hover_display", False)
-
         return False
 
     def enterEvent(self, event):
@@ -664,7 +665,7 @@ if __name__ == "__main__":
     main_splitter.setIsHandleVisible(False)
     main_splitter.setHandleLength(100)
     main_splitter.setObjectName("main")
-
+    #main_splitter.setIsSoloViewEnabled(False)
     label = QLabel('a')
     main_splitter.addWidget(label)
     main_splitter.addWidget(QLabel('b'))

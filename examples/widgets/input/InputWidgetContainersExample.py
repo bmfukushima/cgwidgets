@@ -98,6 +98,7 @@ for arg in label_widgets:
 
 """ Main Widget"""
 main_widget = ShojiModelViewWidget()
+
 main_widget.setStyleSheet("""background-color: rgba{rgba_background_00}""".format(**iColor.style_sheet_args))
 main_widget.insertShojiWidget(0, column_data={'name':'Shoji Container'}, widget=shoji_input_widget_container)
 main_widget.insertShojiWidget(0, column_data={'name':'Button Container'}, widget=button_input_widget_container)

@@ -204,6 +204,16 @@ class AbstractDragDropModel(QAbstractItemModel):
         old_parent_item.children().remove(item)
         self.endRemoveRows()
 
+    def clearModel(self, event_update=False):
+        """
+        Clears the entire model
+        Args:
+            update_event (bool): determines if user event should be
+                run on each item during the deletion process.
+        """
+        for child in reversed(self.getRootItem().children()):
+            self.deleteItem(child, event_update=event_update)
+
     def rowCount(self, parent):
         """
         INPUTS: QModelIndex

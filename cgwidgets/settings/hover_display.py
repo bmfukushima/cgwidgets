@@ -467,13 +467,25 @@ def installHoverDisplaySS(
     # compile style sheet args
     style_sheet_args = compileSSArgs(widget, hover_type_flags, hover_object)
 
-    style_sheet = "{widget_style_sheet}\n".format(widget_style_sheet=widget.styleSheet())
+    style_sheet = "{widget_style_sheet}".format(widget_style_sheet=widget.styleSheet())
+
+    # remove previous hover display
+    import re
+    style_sheet = re.sub(
+        "(\n/\* << HOVER DISPLAY START >> \*/ \n)([^\$]+)(\n/\* << HOVER DISPLAY END >> \*/ \n)",
+        "",
+        style_sheet)
+    # START
+    style_sheet += "\n/* << HOVER DISPLAY START >> */ \n"
+
+    # add border padding
     style_sheet += """
 /* Hover Display Border Padding */
 {type}{{
     {border_ss}
 }}
     """.format(**style_sheet_args)
+
     # HOVER
     if hover:
         style_sheet += """
@@ -500,6 +512,9 @@ def installHoverDisplaySS(
     {focus_ss}
 }}
 """.format(**style_sheet_args)
+
+    # END
+    style_sheet += "\n/* << HOVER DISPLAY END >> */ \n"
 
     widget.setStyleSheet(style_sheet)
 
