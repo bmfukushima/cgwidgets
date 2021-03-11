@@ -15,7 +15,7 @@ from qtpy.QtWidgets import (
 from qtpy.QtCore import Qt, QModelIndex, QEvent
 from qtpy.QtGui import QCursor
 
-from cgwidgets.utils import getWidgetAncestor, attrs
+from cgwidgets.utils import getWidgetAncestor, attrs, updateStyleSheet
 from cgwidgets.settings.colors import iColor
 from cgwidgets.settings.hover_display import installHoverDisplaySS
 from cgwidgets.widgets import AbstractFrameInputWidgetContainer, ModelViewWidget
@@ -823,6 +823,7 @@ class ShojiMainDelegateWidget(ShojiView):
                 border_walls=border_walls)
 
         # install event filter
+        print('installing ', self, ' on ', widget)
         widget.installEventFilter(self)
         return
 
@@ -848,16 +849,16 @@ class ShojiMainDelegateWidget(ShojiView):
         if event.type() == QEvent.Enter:
             # print(obj, len(selection))
             if 1 < len(selection):
-                # print('TRUE')
                 obj.setProperty("hover_display", True)
+
             else:
-                # print('FALSE')
                 obj.setProperty("hover_display", False)
 
         if event.type() == QEvent.Leave:
-            # print('leave?')
             obj.setProperty("hover_display", False)
 
+        # return True
+        updateStyleSheet(obj)
         return False
 
     def keyPressEvent(self, event):

@@ -1,4 +1,28 @@
 """
+SHOJI VIEW
+
+The Shoji View is essentially a QSplitter that has the option to
+allow any widget inside of it to become full screen using the
+the hotkey set with setSoloViewHotkey(), by default this is set to
+tilda, "~", or 96 (note: right now 96 is hard coded as ~ seems to be
+hard to get Qt to register in their Key_KEY shit).  Using the ALT modifier
+when using multiple Shoji Views embedded inside each other will make
+the current Shoji View full screen, rather than the widget that it is
+hovering over.  The user can leave full screen by hitting the "ESC" key.
+
+Widgets can be added/inserted with the kwarg "is_soloable", to stop the
+widget from being able to be solo'd, or force it to be on in some
+scenerios.  This kwarg controls an attribute "not_soloable" on the child widget.
+Where if the attribute exists, the child will not be able to be solo'd, and if the
+attribute does not exist, the child will be soloable.
+
+NOTE:
+    On systems using GNOME such as Ubuntu 20.04, you may need to disable
+    the "Super/Alt+Tilda" system level hotkey which is normally set to
+        "Switch windows of an application"
+    Alt+Esc
+        "Switch windows directly"
+
 TODO:
     *   Full Screen mode
     *   Better Displays...
@@ -237,7 +261,7 @@ class ShojiView(QSplitter):
             # toggle solo view (individual widget )
             self.toggleIsSoloView(True, widget=widget_soloable)
 
-    def eventFilter(self, obj, event):
+    # def eventFilter(self, obj, event):
         """
         Events run on every child widget.
 
@@ -249,12 +273,12 @@ class ShojiView(QSplitter):
             event:
         """
         # hover properties
-        if event.type() == QEvent.Enter:
-            if self.isSoloViewEnabled():
-                obj.setProperty("hover_display", True)
-        if event.type() == QEvent.Leave:
-            obj.setProperty("hover_display", False)
-        return False
+        # if event.type() == QEvent.Enter:
+        #     if self.isSoloViewEnabled():
+        #         obj.setProperty("hover_display", True)
+        # if event.type() == QEvent.Leave:
+        #     obj.setProperty("hover_display", False)
+        # return False
 
     def enterEvent(self, event):
         self.setFocus()
@@ -297,7 +321,7 @@ class ShojiView(QSplitter):
         Returns:
 
         """
-        widget.installEventFilter(self)
+        # widget.installEventFilter(self)
         hover_type_flags = {
             'focus':{'hover_display':True},
             'hover_focus':{'hover_display':True},
@@ -590,11 +614,11 @@ class ShojiView(QSplitter):
         """.format(**style_sheet_args)
 
         # update hover display property
-        for child in self.children():
-            if child.property("is_soloable"):
-                child.setProperty("hover_display", True)
-            else:
-                child.setProperty("hover_display", False)
+        # for child in self.children():
+        #     if child.property("is_soloable"):
+        #         child.setProperty("hover_display", True)
+        #     else:
+        #         child.setProperty("hover_display", False)
 
         self.setStyleSheet(style_sheet)
 
