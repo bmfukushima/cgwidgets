@@ -201,13 +201,13 @@ class ShojiView(QSplitter):
         Args:
             widget (QWidget): widget to start searching from to be solo'd
         """
-        if hasattr(widget, "not_soloable"):
+        if widget.property("is_soloable"):
+            return widget
+        else:
             if widget.parent():
                 return self.getFirstSoloableWidget(widget.parent())
             else:
                 return None
-        else:
-            return widget
 
     """ VIRTUAL EVENTS """
     def setToggleSoloViewEvent(self, function):
@@ -259,6 +259,10 @@ class ShojiView(QSplitter):
 
         # Press solo view hotkey
         widget_soloable = self.getFirstSoloableWidget(widget_pressed)
+
+        # return if no soloable widget found
+        if not widget_soloable: return
+
         # toggle solo view ( shoji view )
         if event.modifiers() == Qt.AltModifier:
             if widget_soloable.parent():
@@ -331,9 +335,9 @@ class ShojiView(QSplitter):
         """
         # widget.installEventFilter(self)
         hover_type_flags = {
-            'focus':{'hover_display':True},
-            'hover_focus':{'hover_display':True},
-            'hover':{'hover_display':True},
+            'focus':{'hover_display':True, 'is_soloable':True},
+            'hover_focus':{'hover_display':True, 'is_soloable':True},
+            'hover':{'hover_display':True, 'is_soloable':True},
         }
         installHoverDisplaySS(
             widget,
@@ -351,8 +355,18 @@ class ShojiView(QSplitter):
         for widget in widget_list:
             widget.show()
 
-    # good use case for a decorator?
-    def addWidget(self, widget, is_soloable=None):
+    def __insertShojiWidget(self, widget, is_soloable):
+        """
+        Runs all the utility functions when a new widget is added.
+
+       This utility function is run everytime an addWidget or insertWidget
+       is called.  Its primary responsibility is to setup the hover display,
+       and the ability for a widget to be soloable
+        Args:
+            widget:
+            is_soloable:
+
+        """
         if is_soloable is not None:
             self.setChildSoloable(is_soloable, widget)
         else:
@@ -360,16 +374,13 @@ class ShojiView(QSplitter):
 
         self.installHoverDisplay(widget)
 
+    # good use case for a decorator?
+    def addWidget(self, widget, is_soloable=None):
+        self.__insertShojiWidget(widget, is_soloable)
         return QSplitter.addWidget(self, widget)
 
     def insertWidget(self, index, widget, is_soloable=None):
-        if is_soloable is not None:
-            self.setChildSoloable(is_soloable, widget)
-        else:
-            self.setChildSoloable(self.isSoloViewEnabled(), widget)
-
-        self.installHoverDisplay(widget)
-
+        self.__insertShojiWidget(widget, is_soloable)
         return QSplitter.insertWidget(self, index, widget)
 
     """ SOLO VIEW """
@@ -401,13 +412,7 @@ class ShojiView(QSplitter):
             enabled (bool):
             child (widget):
         """
-        if enabled:
-            if hasattr(child, "not_soloable"):
-                delattr(child, "not_soloable")
-            child.setProperty("hover_display", True)
-        else:
-            child.not_soloable = True
-            child.setProperty("hover_display", False)
+        child.setProperty('hover_display', True)
         child.setProperty('is_soloable', enabled)
 
     def isSoloViewEnabled(self):
@@ -690,80 +695,81 @@ class ShojiViewHandle(QSplitterHandle):
             return QSplitterHandle.mouseMoveEvent(self, event)
 
 
-# if __name__ == "__main__":
-#     import sys
-#     from qtpy.QtWidgets import QApplication, QLabel
-#     from qtpy.QtGui import QCursor
-#     app = QApplication(sys.argv)
+if __name__ == "__main__":
+    import sys
+    from qtpy.QtWidgets import QApplication, QLabel
+    from qtpy.QtGui import QCursor
+    app = QApplication(sys.argv)
+
+    main_splitter = ShojiView()
+    main_splitter.setOrientation(Qt.Vertical)
+    main_splitter.setIsHandleVisible(False)
+    main_splitter.setHandleLength(100)
+    main_splitter.setObjectName("main")
+    #main_splitter.setIsSoloViewEnabled(False)
+    label = QLabel('a')
+    main_splitter.addWidget(label)
+    main_splitter.addWidget(QLabel('b'))
+    main_splitter.addWidget(QLabel('c'))
+    #label.setStyleSheet("color: rgba(255,0,0,255)")
+    splitter1 = ShojiView(orientation=Qt.Horizontal)
+    splitter1.setObjectName("embed")
+    for x in range(3):
+        l = QLabel(str(x))
+        #l.setStyleSheet("color: rgba(255,0,0,255)")
+        splitter1.addWidget(l)
+    splitter1.setChildSoloable(False, l)
+    main_splitter.setChildSoloable(False, label)
+    main_splitter.addWidget(splitter1)
+
+
+    main_splitter.show()
+    #main_splitter.updateStyleSheet()
+    #splitter1.updateStyleSheet()
+    #main_splitter.setFixedSize(400, 400)
+    main_splitter.move(QCursor.pos())
+    sys.exit(app.exec_())
 #
-#     main_splitter = ShojiView()
-#     main_splitter.setOrientation(Qt.Vertical)
-#     main_splitter.setIsHandleVisible(False)
-#     main_splitter.setHandleLength(100)
-#     main_splitter.setObjectName("main")
-#     #main_splitter.setIsSoloViewEnabled(False)
-#     label = QLabel('a')
-#     main_splitter.addWidget(label)
-#     main_splitter.addWidget(QLabel('b'))
-#     main_splitter.addWidget(QLabel('c'))
-#     label.setStyleSheet("color: rgba(255,0,0,255)")
-#     splitter1 = ShojiView(orientation=Qt.Horizontal)
-#     splitter1.setObjectName("embed")
-#     for x in range(3):
-#         l = QLabel(str(x))
-#         l.setStyleSheet("color: rgba(255,0,0,255)")
-#         splitter1.addWidget(l)
+
+# import sys
+# from qtpy.QtWidgets import QApplication, QLabel
+# from qtpy.QtGui import QCursor
+# app = QApplication(sys.argv)
 #
-#     main_splitter.addWidget(splitter1)
+# import inspect
 #
 #
-#     main_splitter.show()
-#     #main_splitter.updateStyleSheet()
-#     #splitter1.updateStyleSheet()
-#     #main_splitter.setFixedSize(400, 400)
-#     main_splitter.move(QCursor.pos())
-#     sys.exit(app.exec_())
+# def is_relevant(obj):
+#     """Filter for the inspector to filter out non user defined functions/classes"""
+#     if hasattr(obj, '__name__') and obj.__name__ == 'type':
+#         return False
 #
-
-import sys
-from qtpy.QtWidgets import QApplication, QLabel
-from qtpy.QtGui import QCursor
-app = QApplication(sys.argv)
-
-import inspect
-
-
-def is_relevant(obj):
-    """Filter for the inspector to filter out non user defined functions/classes"""
-    if hasattr(obj, '__name__') and obj.__name__ == 'type':
-        return False
-
-    if inspect.isfunction(obj) or inspect.isclass(obj) or inspect.ismethod(obj):
-        return True
-
-
-def print_docs(module):
-    default = 'No doc string provided' # Default if there is no docstring, can be removed if you want
-    flag = True
-
-    for child in inspect.getmembers(module, is_relevant):
-        if not flag: print('\n\n\n')
-        flag = False # To avoid the newlines at top of output
-        doc = inspect.getdoc(child[1])
-        if not doc:
-            doc = default
-        print(child[0], doc, sep = '\n')
-
-        if inspect.isclass(child[1]):
-            for grandchild in inspect.getmembers(child[1], is_relevant):
-                doc = inspect.getdoc(grandchild[1])
-                if doc:
-                    doc = doc.replace('\n', '\n    ')
-                else:
-                    doc = default
-                print('\n    ' + grandchild[0], doc, sep = '\n    ')
-
-
+#     if inspect.isfunction(obj) or inspect.isclass(obj) or inspect.ismethod(obj):
+#         return True
+#
+#
+# def print_docs(module):
+#     default = 'No doc string provided' # Default if there is no docstring, can be removed if you want
+#     flag = True
+#
+#     for child in inspect.getmembers(module, is_relevant):
+#         if not flag: print('\n\n\n')
+#         flag = False # To avoid the newlines at top of output
+#         doc = inspect.getdoc(child[1])
+#         if not doc:
+#             doc = default
+#         print(child[0], doc, sep = '\n')
+#
+#         if inspect.isclass(child[1]):
+#             for grandchild in inspect.getmembers(child[1], is_relevant):
+#                 doc = inspect.getdoc(grandchild[1])
+#                 if doc:
+#                     doc = doc.replace('\n', '\n    ')
+#                 else:
+#                     doc = default
+#                 print('\n    ' + grandchild[0], doc, sep = '\n    ')
+#
+#
 
 #
 #print_docs(ShojiView)
