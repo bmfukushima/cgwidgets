@@ -797,7 +797,6 @@ class ShojiMainDelegateWidget(ShojiView):
         if tab_shoji_widget:
             # Setup border walls for each position / direction combo
             position = tab_shoji_widget.headerPosition()
-            #direction = self.orientation()
             direction = tab_shoji_widget.multiSelectDirection()
             if direction == Qt.Vertical:
                 if position == attrs.EAST:
@@ -823,7 +822,6 @@ class ShojiMainDelegateWidget(ShojiView):
                 border_walls=border_walls)
 
         # install event filter
-        print('installing ', self, ' on ', widget)
         widget.installEventFilter(self)
         return
 
