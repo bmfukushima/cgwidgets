@@ -16,6 +16,14 @@ scenerios.  This kwarg controls an attribute "not_soloable" on the child widget.
 Where if the attribute exists, the child will not be able to be solo'd, and if the
 attribute does not exist, the child will be soloable.
 
+HIERARCHY:
+
+SIGNALS:
+    Solo View Display: When a user hovers over a widget that can be solo'd a display pops
+    up.  This display is driven by a dynamic style sheet, with the properties "hover_display"
+    "is_soloable" (needs to be moved to style sheet...)
+
+
 NOTE:
     On systems using GNOME such as Ubuntu 20.04, you may need to disable
     the "Super/Alt+Tilda" system level hotkey which is normally set to
@@ -335,6 +343,9 @@ class ShojiView(QSplitter):
     def isolateWidgets(self, widget_list):
         """
         Shows only the widgets provided to the widget list
+
+        Args:
+            widget_list (list): of widgets to be displayed
         """
         self.displayAllWidgets(False)
         for widget in widget_list:
@@ -679,37 +690,96 @@ class ShojiViewHandle(QSplitterHandle):
             return QSplitterHandle.mouseMoveEvent(self, event)
 
 
-if __name__ == "__main__":
-    import sys
-    from qtpy.QtWidgets import QApplication, QLabel
-    from qtpy.QtGui import QCursor
-    app = QApplication(sys.argv)
+# if __name__ == "__main__":
+#     import sys
+#     from qtpy.QtWidgets import QApplication, QLabel
+#     from qtpy.QtGui import QCursor
+#     app = QApplication(sys.argv)
+#
+#     main_splitter = ShojiView()
+#     main_splitter.setOrientation(Qt.Vertical)
+#     main_splitter.setIsHandleVisible(False)
+#     main_splitter.setHandleLength(100)
+#     main_splitter.setObjectName("main")
+#     #main_splitter.setIsSoloViewEnabled(False)
+#     label = QLabel('a')
+#     main_splitter.addWidget(label)
+#     main_splitter.addWidget(QLabel('b'))
+#     main_splitter.addWidget(QLabel('c'))
+#     label.setStyleSheet("color: rgba(255,0,0,255)")
+#     splitter1 = ShojiView(orientation=Qt.Horizontal)
+#     splitter1.setObjectName("embed")
+#     for x in range(3):
+#         l = QLabel(str(x))
+#         l.setStyleSheet("color: rgba(255,0,0,255)")
+#         splitter1.addWidget(l)
+#
+#     main_splitter.addWidget(splitter1)
+#
+#
+#     main_splitter.show()
+#     #main_splitter.updateStyleSheet()
+#     #splitter1.updateStyleSheet()
+#     #main_splitter.setFixedSize(400, 400)
+#     main_splitter.move(QCursor.pos())
+#     sys.exit(app.exec_())
+#
 
-    main_splitter = ShojiView()
-    main_splitter.setOrientation(Qt.Vertical)
-    main_splitter.setIsHandleVisible(False)
-    main_splitter.setHandleLength(100)
-    main_splitter.setObjectName("main")
-    #main_splitter.setIsSoloViewEnabled(False)
-    label = QLabel('a')
-    main_splitter.addWidget(label)
-    main_splitter.addWidget(QLabel('b'))
-    main_splitter.addWidget(QLabel('c'))
-    label.setStyleSheet("color: rgba(255,0,0,255)")
-    splitter1 = ShojiView(orientation=Qt.Horizontal)
-    splitter1.setObjectName("embed")
-    for x in range(3):
-        l = QLabel(str(x))
-        l.setStyleSheet("color: rgba(255,0,0,255)")
-        splitter1.addWidget(l)
+import sys
+from qtpy.QtWidgets import QApplication, QLabel
+from qtpy.QtGui import QCursor
+app = QApplication(sys.argv)
 
-    main_splitter.addWidget(splitter1)
+import inspect
 
 
-    main_splitter.show()
-    #main_splitter.updateStyleSheet()
-    #splitter1.updateStyleSheet()
-    #main_splitter.setFixedSize(400, 400)
-    main_splitter.move(QCursor.pos())
-    sys.exit(app.exec_())
+def is_relevant(obj):
+    """Filter for the inspector to filter out non user defined functions/classes"""
+    if hasattr(obj, '__name__') and obj.__name__ == 'type':
+        return False
 
+    if inspect.isfunction(obj) or inspect.isclass(obj) or inspect.ismethod(obj):
+        return True
+
+
+def print_docs(module):
+    default = 'No doc string provided' # Default if there is no docstring, can be removed if you want
+    flag = True
+
+    for child in inspect.getmembers(module, is_relevant):
+        if not flag: print('\n\n\n')
+        flag = False # To avoid the newlines at top of output
+        doc = inspect.getdoc(child[1])
+        if not doc:
+            doc = default
+        print(child[0], doc, sep = '\n')
+
+        if inspect.isclass(child[1]):
+            for grandchild in inspect.getmembers(child[1], is_relevant):
+                doc = inspect.getdoc(grandchild[1])
+                if doc:
+                    doc = doc.replace('\n', '\n    ')
+                else:
+                    doc = default
+                print('\n    ' + grandchild[0], doc, sep = '\n    ')
+
+
+
+#
+#print_docs(ShojiView)
+# for child in inspect.getmembers(ShojiView, is_relevant)[:10]:
+#     module = inspect.getmodule(child[1])
+#     if module.__name__ == "__main__":
+#         print ('========================')
+#         name = child[0]
+#         doc_string = inspect.getdoc(child[1])
+#         args = inspect.getfullargspec(child[1])[0]
+#         args_string = ', '.join(args)
+#         #print(type(args), args)
+#         if doc_string:
+#             doc_string = "\t" + doc_string.replace('\n', '\n\t')
+#         else:
+#             doc_string = '\t ffs dude, do a better job'
+#         print ("{name} ({args})\n\t{doc}\n\n".format(name=name, args=args_string, doc=doc_string))
+#
+# sys.exit(app.exec_())
