@@ -1,7 +1,7 @@
 from qtpy.QtCore import Qt
 
 from cgwidgets.widgets import ShojiModelViewWidget
-from cgwidgets.delegates import ShojiView
+from cgwidgets.delegates import ShojiLayout
 from cgwidgets.utils import attrs
 
 import sys
@@ -55,7 +55,7 @@ shoji_widget = ShojiModelViewWidget()
 shoji_widget.setHeaderData(['example'])
 tab_1 = QLabel('hello')
 tab_2 = QLabel('world')
-tab_3 = ShojiView()
+tab_3 = ShojiLayout()
 tab_3.setObjectName("main")
 tab_3.addWidget(QLabel('a'))
 tab_3.addWidget(QLabel('b'))

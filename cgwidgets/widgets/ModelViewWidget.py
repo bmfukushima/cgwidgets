@@ -12,10 +12,10 @@ from cgwidgets.views import (
 )
 from cgwidgets.utils import attrs, getWidgetAncestor
 from cgwidgets.settings.colors import iColor
-from cgwidgets.views import ShojiView
+from cgwidgets.widgets import AbstractShojiLayout
 
 
-class ModelViewWidget(ShojiView):
+class ModelViewWidget(AbstractShojiLayout):
     """
     View widget for the Abstract ModelViewDelegate in this lib
 
@@ -40,7 +40,7 @@ class ModelViewWidget(ShojiView):
         textChangedEvent (item, old_value, new_value)
 
     Hierarchy:
-        ShojiView --> QSplitter
+        AbstractShojiLayout --> QSplitter
             |- view --> (AbstractDragDropListView | AbstractDragDropTreeView) --> QSplitter
                 |- model (AbstractDragDropModel)
                     |- (AbstractDragDropModelItems)
@@ -307,7 +307,7 @@ class ModelViewWidget(ShojiView):
             _orientation = view_orientation
         self._view_position = view_position
         self._view_orientation = view_orientation
-        return ShojiView.setOrientation(self, _orientation)
+        return AbstractShojiLayout.setOrientation(self, _orientation)
 
     def setMultiSelect(self, enabled):
         self.view().setMultiSelect(enabled)
@@ -383,20 +383,20 @@ class ModelViewWidget(ShojiView):
                         self.setFocus()
 
         # disable full screen ability of Shoji
-        if event.key() != ShojiView.FULLSCREEN_HOTKEY:
-            return ShojiView.keyPressEvent(self, event)
+        if event.key() != AbstractShojiLayout.FULLSCREEN_HOTKEY:
+            return AbstractShojiLayout.keyPressEvent(self, event)
 
 
-class ModelViewSearchWidget(ShojiView):
+class ModelViewSearchWidget(AbstractShojiLayout):
     """
     Input widget containing the controls to search for specific items in the model.
 
     This widget can be shown by hitting the CTRL+F combo'
 
     Hierarchy:
-        ModelViewSearchWidget --> ShojiView
+        ModelViewSearchWidget --> AbstractShojiLayout
             |- ModelViewSearchBox --> AbstractStringInputWidget
-            |- search_options --> ShojiView
+            |- search_options --> AbstractShojiLayout
                     |- select_flags --> (ModelViewSelectFlags --> AbstractListInputWidget)
                     |- match_flags --> (ModelViewSelectFlags --> AbstractListInputWidget)
     """
@@ -410,7 +410,7 @@ class ModelViewSearchWidget(ShojiView):
         self.search_box = ModelViewSearchBox(self)
 
         # setup flag
-        self.flags_layout = ShojiView(self, orientation=Qt.Horizontal)
+        self.flags_layout = AbstractShojiLayout(self, orientation=Qt.Horizontal)
         self.select_flags = ModelViewSelectFlags(self)
         self.match_flags = ModelViewMatchFlags(self)
 

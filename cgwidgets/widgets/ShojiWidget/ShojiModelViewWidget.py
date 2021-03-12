@@ -1,9 +1,13 @@
 """
+TODO: To many escapes
+    - When you press escape an even number of times, it will brick for some reason...
+    - probably something to do with escape handler just toggling, instead of explicitly
+    setting for a none condition?
+
 TODO: Hover Display Style:
         ShojiMainDelegateWidget --> installHoverDisplaySS
         settings --> HoverDisplay
-            potentially change API to select which sides the border should be shown on?
-            overriding default border... maybe just have a default hover border???
+        need to add default borders to input widgets and then pass through here
 
 TODO: View scroll bar needs to change locations
     https://www.qtcentre.org/threads/23624-Scrollbar-on-the-left
@@ -18,11 +22,24 @@ from qtpy.QtGui import QCursor
 from cgwidgets.utils import getWidgetAncestor, attrs, updateStyleSheet
 from cgwidgets.settings.colors import iColor
 from cgwidgets.settings.hover_display import installHoverDisplaySS
-from cgwidgets.widgets import AbstractFrameInputWidgetContainer, ModelViewWidget
-from cgwidgets.views import ShojiView
+from cgwidgets.widgets import (
+    AbstractFrameInputWidgetContainer,
+    ModelViewWidget,
+    AbstractShojiLayout,
+    AbstractShojiLayoutHandle)
 
 from cgwidgets.widgets.ShojiWidget import (ShojiModel, iShojiDynamicWidget)
 from cgwidgets.views import (AbstractDragDropAbstractView)
+
+
+class ShojiLayout(AbstractShojiLayout):
+    def __init__(self, parent=None, orientation=Qt.Vertical):
+        super(ShojiLayout, self).__init__(parent, orientation=orientation)
+
+
+class ShojiLayoutHandle(AbstractShojiLayoutHandle):
+    def __init__(self, orientation, parent=None):
+        super(ShojiLayoutHandle, self).__init__(orientation, parent)
 
 
 class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
@@ -68,7 +85,7 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
             |    | -- ViewWidget (ShojiHeaderListView)
             |            ( ShojiHeaderListView | ShojiHeaderTableView | ShojiHeaderTreeView )
             | -- Scroll Area
-                |-- DelegateWidget (ShojiMainDelegateWidget --> ShojiView)
+                |-- DelegateWidget (ShojiMainDelegateWidget --> ShojiLayout)
                         | -- _temp_proxy_widget (QWidget)
                         | -* ShojiModelDelegateWidget (AbstractGroupBox)
                                 | -- Stacked/Dynamic Widget (main_widget)
@@ -743,7 +760,7 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
 
 
 """ DELEGATE """
-class ShojiMainDelegateWidget(ShojiView):
+class ShojiMainDelegateWidget(ShojiLayout):
     """
     The main delegate view that will show all of the items widgets that
     the user currently has selected
@@ -751,11 +768,11 @@ class ShojiMainDelegateWidget(ShojiView):
     def __init__(self, parent=None):
         super(ShojiMainDelegateWidget, self).__init__(parent)
         self.rgba_background = iColor["rgba_background_00"]
-        self.setToggleSoloViewEvent(self.resetShojiViewDisplay)
+        self.setToggleSoloViewEvent(self.resetShojiLayoutDisplay)
 
-    def resetShojiViewDisplay(self, enabled, widget):
+    def resetShojiLayoutDisplay(self, enabled, widget):
         """
-
+        Resets the display of the Shoji View back to default
         Args:
             enabled:
             widget:
@@ -782,7 +799,7 @@ class ShojiMainDelegateWidget(ShojiView):
             widget (QWidget): child to have hover display installed on.
 
         Note:
-            This overrides the default behavior from the ShojiView
+            This overrides the default behavior from the ShojiLayout
         """
         # get attrs
         # print('should do this?')
@@ -832,7 +849,7 @@ class ShojiMainDelegateWidget(ShojiView):
         Handles the dynamic style sheet updates, and overrides
         the solo view operator.
 
-        Note: This is copy/pasted from the ShojiView to be modified
+        Note: This is copy/pasted from the ShojiLayout to be modified
         """
         # preflight
         tab_shoji_widget = getWidgetAncestor(self, ShojiModelViewWidget)
@@ -842,10 +859,8 @@ class ShojiMainDelegateWidget(ShojiView):
         view_widget = tab_shoji_widget.headerViewWidget()
         selection = view_widget.selectionModel().selectedRows(0)
 
-        # obj.setProperty("hover_display", False)
         # # hover properties
         if event.type() == QEvent.Enter:
-            # print(obj, len(selection))
             if 1 < len(selection):
                 obj.setProperty("hover_display", True)
 
@@ -866,7 +881,7 @@ class ShojiMainDelegateWidget(ShojiView):
         if is_child_of_header:
             return tab_shoji_widget.headerWidget().keyPressEvent(event)
         else:
-            return ShojiView.keyPressEvent(self, event)
+            return ShojiLayout.keyPressEvent(self, event)
 
 
 class ShojiModelDelegateWidget(AbstractFrameInputWidgetContainer):
@@ -962,7 +977,7 @@ class ShojiHeader(ModelViewWidget):
         if enabled:
             if hasattr(top_level_widget, '_delegate_widget'):
                 delegate_widget = top_level_widget.delegateWidget()
-                delegate_widget.resetShojiViewDisplay(False, delegate_widget)
+                delegate_widget.resetShojiLayoutDisplay(False, delegate_widget)
                 delegate_widget.setIsSoloView(delegate_widget, False)
 
 

@@ -16,6 +16,8 @@ from .ModelViewWidget import ModelViewWidget as ModelViewWidget
 from .ShojiWidget import ShojiModelItem as ShojiModelItem
 from .ShojiWidget import ShojiModel as ShojiModel
 
+from .ShojiWidget import ShojiLayout
+from .ShojiWidget import ShojiLayoutHandle
 from .ShojiWidget import ShojiModelViewWidget as ShojiModelViewWidget
 from .ShojiWidget import ShojiModelDelegateWidget as ShojiModelDelegateWidget
 

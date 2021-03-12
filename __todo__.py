@@ -2,7 +2,7 @@
 TODO:
     BUGS:
         Cannot have the following hierarchy
-            ShojiView --> ShojiViewer --> LabelledInputWidget --> Ladder
+            ShojiLayout --> ShojiLayouter --> LabelledInputWidget --> Ladder
             The invisible drag on the ladder for some reason gets bricked, and the invisible
             widget is displayed as a giant black square...
     CLEANUP:

@@ -4,7 +4,7 @@ from qtpy.QtCore import Qt
 from cgwidgets.settings.colors import iColor
 from cgwidgets.settings import stylesheets, hover_display
 from cgwidgets.widgets import LabelledInputWidget, FloatInputWidget, ShojiInputWidgetContainer, FrameInputWidgetContainer
-from cgwidgets.views import ShojiView
+from cgwidgets.views import ShojiLayout
 from cgwidgets.utils import getWidgetAncestor
 
 if __name__ == "__main__":
@@ -109,7 +109,7 @@ if __name__ == "__main__":
     view_widget.setStyleSheet(style_sheet)
 
     # # create main widget
-    main_widget = ShojiView()
+    main_widget = ShojiLayout()
     main_widget.addWidget(radial_gradient_wigdet)
     main_widget.addWidget(view_widget)
 

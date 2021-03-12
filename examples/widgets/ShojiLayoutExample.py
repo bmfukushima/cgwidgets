@@ -28,7 +28,7 @@ from qtpy.QtWidgets import QApplication, QLabel, QWidget, QVBoxLayout
 from qtpy.QtGui import QCursor
 from qtpy.QtCore import Qt
 
-from cgwidgets.views import ShojiView
+from cgwidgets.widgets import ShojiLayout
 from cgwidgets.widgets import StringInputWidget
 
 app = QApplication(sys.argv)
@@ -39,9 +39,9 @@ class DisplayLabel(StringInputWidget):
 
 
 # create shoji
-main_widget = ShojiView()
-embedded_shoji_01 = ShojiView(orientation=Qt.Horizontal)
-embedded_shoji_02 = ShojiView(orientation=Qt.Vertical)
+main_widget = ShojiLayout()
+embedded_shoji_01 = ShojiLayout(orientation=Qt.Horizontal)
+embedded_shoji_02 = ShojiLayout(orientation=Qt.Vertical)
 
 # OPTIONAL | set handle length (if not set, by default this will be full length)
 main_widget.setHandleLength(100)

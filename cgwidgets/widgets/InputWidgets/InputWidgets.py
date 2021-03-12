@@ -25,7 +25,6 @@ from cgwidgets.widgets import (
     AbstractComboListInputWidget,
     AbstractListInputWidget,
     AbstractInputPlainText,
-    AbstractButtonInputWidgetContainer,
     AbstractButtonInputWidget
 )
 
@@ -34,7 +33,7 @@ from cgwidgets.widgets import (
     ShojiModelDelegateWidget,
     ShojiModelItem
 )
-from cgwidgets.views import ShojiView
+from cgwidgets.widgets import ShojiLayout
 from cgwidgets.utils import (
     getWidgetAncestor,
     updateStyleSheet,
@@ -177,9 +176,9 @@ class ListInputWidget(AbstractListInputWidget):
     #     # print(widget, item)
 
 
-class LabelledInputWidget(ShojiView, AbstractInputGroupFrame):
+class LabelledInputWidget(ShojiLayout, AbstractInputGroupFrame):
     """
-    A single input widget.  This inherits from the ShojiView,
+    A single input widget.  This inherits from the ShojiLayout,
     to provide a slider for the user to expand/contract the editable area
     vs the view label.
 
@@ -397,12 +396,12 @@ class LabelledInputWidget(ShojiView, AbstractInputGroupFrame):
     def showEvent(self, event):
         super(LabelledInputWidget, self).showEvent(event)
         self.resetSliderPositionToDefault()
-        return ShojiView.showEvent(self, event)
+        return ShojiLayout.showEvent(self, event)
 
     def resizeEvent(self, event):
         super(LabelledInputWidget, self).resizeEvent(event)
         self.resetSliderPositionToDefault()
-        return ShojiView.resizeEvent(self, event)
+        return ShojiLayout.resizeEvent(self, event)
 
 
 class FileBrowserInputWidget(AbstractListInputWidget):

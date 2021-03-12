@@ -19,11 +19,11 @@ Header (ModelViewWidget):
     These delegates can be used for multiple purposes, such as setting up filtering of the
     view, item creation, etc.TREE
 
-Delegate (ShojiView):
+Delegate (ShojiLayout):
     This is the area that displays the widgets when the user selects different items in the
     header.  If multi select is enabled, AND the user selects multiple items, the delegate
     will display ALL of the widgets to the user.  Any widget can become full screen by pressing
-    the ~ key (note that this key can also be set using ShojiView.FULLSCREEN_HOTKEY class attr),
+    the ~ key (note that this key can also be set using ShojiLayout.FULLSCREEN_HOTKEY class attr),
     and can leave full screen by pressing the ESC key.  Pressing the ESC key harder will earn you
     epeen points for how awesome you are.  The recommended approach is to use both hands and slam
     them down on the ESC key for maximum effect.  Bonus points are earned if the key board is lifted
@@ -43,7 +43,7 @@ Hierachy
                     |* delegate --> QWidget
 
             | -- Scroll Area
-                |-- DelegateWidget (ShojiMainDelegateWidget --> ShojiView)
+                |-- DelegateWidget (ShojiMainDelegateWidget --> ShojiLayout)
                         | -- _temp_proxy_widget (QWidget)
                         | -* ShojiModelDelegateWidget (AbstractGroupBox)
                                 | -- Stacked/Dynamic Widget (main_widget)
@@ -62,7 +62,8 @@ from qtpy.QtGui import QCursor
 from cgwidgets.widgets import (
     ShojiModelViewWidget, ShojiModelItem, ShojiModel,
     ModelViewWidget, FloatInputWidget, LabelledInputWidget, StringInputWidget)
-from cgwidgets.views import ShojiView, AbstractDragDropListView, AbstractDragDropTreeView
+from cgwidgets.views import AbstractDragDropListView, AbstractDragDropTreeView
+from cgwidgets.widgets import ShojiLayout
 from cgwidgets.utils import attrs
 
 
@@ -128,7 +129,7 @@ def setupAsStacked():
                                    widget=LabelledInputWidget(name='hello', widget_type=FloatInputWidget))
     shoji_widget.insertShojiWidget(0, column_data={'name' : '<title> world'}, widget=QLabel('world'))
 
-    shoji_delegate = ShojiView()
+    shoji_delegate = ShojiLayout()
     for char in 'SINE.':
         shoji_delegate.addWidget(StringInputWidget(char))
     shoji_delegate_item = shoji_widget.insertShojiWidget(0, column_data={'name' : '<title> shoji'}, widget=shoji_delegate)

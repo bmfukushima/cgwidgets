@@ -8,6 +8,3 @@ from .AbstractDragDropView import AbstractDragDropIndicator
 from .AbstractDragDropView import AbstractDragDropAbstractView
 
 from .CompleterView import CompleterPopup
-
-from .ShojiView import ShojiView
-from .ShojiView import ShojiViewHandle

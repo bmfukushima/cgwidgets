@@ -1,5 +1,5 @@
 """
-SHOJI VIEW
+SHOJI LAYOUT
 
 The Shoji View is essentially a QSplitter that has the option to
 allow any widget inside of it to become full screen using the
@@ -49,7 +49,7 @@ from cgwidgets.settings.hover_display import installHoverDisplaySS
 from cgwidgets.utils import updateStyleSheet
 
 
-class ShojiView(QSplitter):
+class AbstractShojiLayout(QSplitter):
     """
     Splitter widget that has advanced functionality.  This serves as a base
     class for everything that will be used through this library.
@@ -86,7 +86,7 @@ class ShojiView(QSplitter):
     FULLSCREEN_HOTKEY = 96
 
     def __init__(self, parent=None, orientation=Qt.Vertical):
-        super(ShojiView, self).__init__(parent)
+        super(AbstractShojiLayout, self).__init__(parent)
 
         # set colors
         self._rgba_handle = iColor["rgba_outline"]
@@ -102,7 +102,7 @@ class ShojiView(QSplitter):
         self.setProperty("is_solo_view_enableable", True)
 
         self._is_solo_view = False
-        self._solo_view_hotkey = ShojiView.FULLSCREEN_HOTKEY
+        self._solo_view_hotkey = AbstractShojiLayout.FULLSCREEN_HOTKEY
         self._is_handle_static = False
         self.setProperty("is_handle_static", False)
         self._is_handle_visible = True
@@ -111,7 +111,7 @@ class ShojiView(QSplitter):
 
         # set up handle defaults
         self._handle_margin_offset = 0
-        self.setHandleWidth(ShojiView.HANDLE_WIDTH)
+        self.setHandleWidth(AbstractShojiLayout.HANDLE_WIDTH)
         self.setHandleLength(-1)
 
         #self.updateStyleSheet()
@@ -152,7 +152,7 @@ class ShojiView(QSplitter):
 
         This will be done, by setting all of the handle positions to a
         value relative to the handles index and the width/height of this
-        ShojiView.
+        AbstractShojiLayout.
 
         Note:
             Handle at 0 index is ALWAYs invisible
@@ -186,10 +186,10 @@ class ShojiView(QSplitter):
         """
         if widget:
             if widget.parent():
-                if isinstance(widget.parent(), ShojiView):
+                if isinstance(widget.parent(), AbstractShojiLayout):
                     return widget.parent().indexOf(widget), widget
                 else:
-                    return ShojiView.getIndexOfWidget(widget.parent())
+                    return AbstractShojiLayout.getIndexOfWidget(widget.parent())
             else:
                 return None, None
 
@@ -442,7 +442,7 @@ class ShojiView(QSplitter):
         widgets.
 
         If it is already taking up all of the space, it will look for the next
-        ShojiView and set that one to take up the entire space.  It
+        AbstractShojiLayout and set that one to take up the entire space.  It
         will continue doing this recursively both up/down until there it is
         either fully expanded or fully collapsed.
 
@@ -530,17 +530,17 @@ class ShojiView(QSplitter):
         updateStyleSheet(self)
 
     def createHandle(self):
-        handle = ShojiViewHandle(self.orientation(), self)
+        handle = AbstractShojiLayoutHandle(self.orientation(), self)
         return handle
 
     def getAllHandles(self):
         """
-        Returns (list): of all handles in this ShojiView
+        Returns (list): of all handles in this AbstractShojiLayout
 
         """
         _handles = []
         for i, child in enumerate(self.children()):
-            if isinstance(child, ShojiViewHandle):
+            if isinstance(child, AbstractShojiLayoutHandle):
                 _handles.append(child)
         return _handles
 
@@ -684,9 +684,9 @@ class ShojiView(QSplitter):
         self.updateStyleSheet()
 
 
-class ShojiViewHandle(QSplitterHandle):
+class AbstractShojiLayoutHandle(QSplitterHandle):
     def __init__(self, orientation, parent=None):
-        super(ShojiViewHandle, self).__init__(orientation, parent)
+        super(AbstractShojiLayoutHandle, self).__init__(orientation, parent)
 
     def mouseMoveEvent(self, event):
         if self.parent().isHandleStatic():
@@ -701,7 +701,7 @@ if __name__ == "__main__":
     from qtpy.QtGui import QCursor
     app = QApplication(sys.argv)
 
-    main_splitter = ShojiView()
+    main_splitter = AbstractShojiLayout()
     main_splitter.setOrientation(Qt.Vertical)
     main_splitter.setIsHandleVisible(False)
     main_splitter.setHandleLength(100)
@@ -712,7 +712,7 @@ if __name__ == "__main__":
     main_splitter.addWidget(QLabel('b'))
     main_splitter.addWidget(QLabel('c'))
     #label.setStyleSheet("color: rgba(255,0,0,255)")
-    splitter1 = ShojiView(orientation=Qt.Horizontal)
+    splitter1 = AbstractShojiLayout(orientation=Qt.Horizontal)
     splitter1.setObjectName("embed")
     for x in range(3):
         l = QLabel(str(x))
@@ -772,8 +772,8 @@ if __name__ == "__main__":
 #
 
 #
-#print_docs(ShojiView)
-# for child in inspect.getmembers(ShojiView, is_relevant)[:10]:
+#print_docs(AbstractShojiLayout)
+# for child in inspect.getmembers(AbstractShojiLayout, is_relevant)[:10]:
 #     module = inspect.getmodule(child[1])
 #     if module.__name__ == "__main__":
 #         print ('========================')

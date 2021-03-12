@@ -207,7 +207,7 @@ class AbstractInputGroupFrame(QFrame):
 
 class AbstractFrameInputWidgetContainer(AbstractInputGroupFrame):
     """
-    Stylized input group.  This has a base of a ShojiView,
+    Stylized input group.  This has a base of a ShojiLayout,
     I'm not really sure why this is different than the InputGroupWidget...
     """
     def __init__(
