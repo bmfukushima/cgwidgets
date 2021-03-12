@@ -230,7 +230,7 @@ shoji_widget.setDelegateTitleIsShown(True)
 #####################################################
 # SET EVENT FLAGS
 #####################################################
-shoji_widget.setHeaderItemIsDropEnabled(True)
+shoji_widget.setHeaderItemIsDropEnabled(False)
 shoji_widget.setHeaderItemIsDragEnabled(True)
 shoji_widget.setHeaderItemIsEditable(True)
 shoji_widget.setHeaderItemIsEnableable(True)

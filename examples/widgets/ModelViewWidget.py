@@ -40,7 +40,7 @@ def testDelegateToggle(enabled, event, widget):
 
 # create main Model View Widget
 main_widget = ModelViewWidget()
-main_widget.setViewType(ModelViewWidget.TREE_VIEW)
+main_widget.setPresetViewType(ModelViewWidget.TREE_VIEW)
 
 # create delegates
 delegate_widget = QLabel("F")
@@ -67,7 +67,7 @@ main_widget.setIndexSelectedEvent(testSelect)
 main_widget.setIsRootDropEnabled(True)
 main_widget.setIsEditable(False)
 main_widget.setIsDragEnabled(True)
-main_widget.setIsDropEnabled(True)
+main_widget.setIsDropEnabled(False)
 main_widget.setIsEnableable(True)
 main_widget.setIsDeleteEnabled(True)
 main_widget.setDelegateToggleEvent(testDelegateToggle)

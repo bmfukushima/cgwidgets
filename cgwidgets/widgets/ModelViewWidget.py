@@ -68,11 +68,11 @@ class ModelViewWidget(AbstractShojiLayout):
         self.setContentsMargins(0, 0, 0, 0)
 
         # setup view
-        self.setViewType(ModelViewWidget.LIST_VIEW)
+        self.setPresetViewType(ModelViewWidget.LIST_VIEW)
 
         # setup model
-        model = AbstractDragDropModel()
-        self.setModel(model)
+        # model = AbstractDragDropModel()
+        # self.setModel(model)
 
         # set up search bar
         self.search_widget = ModelViewSearchWidget(self)
@@ -93,15 +93,29 @@ class ModelViewWidget(AbstractShojiLayout):
     def view(self):
         return self._view
 
-    def setView(self, view):
+    def setView(self, view, view_type=None):
+        """
+
+        Args:
+            view (VIEW): to be set
+            view_type (ModelViewWidget.VIEW_TYPE): default preset view type to use
+                if this is set.  It will automagically setup drag/drop defaults for
+                LIST and TREE views.
+
+        Returns:
+
+        """
         if hasattr (self, "_view"):
             self._view.setParent(None)
 
         # setup model
         if self.model():
             view.setModel(self.model())
-            if isinstance(view, AbstractDragDropListView):
-                self.setIsDropEnabled(False)
+            # if isinstance(view, AbstractDragDropListView):
+            #     self.setIsDropEnabled(False)
+        else:
+            model = AbstractDragDropModel()
+            view.setModel(model)
 
         # setup attr
         self._view = view
@@ -114,7 +128,13 @@ class ModelViewWidget(AbstractShojiLayout):
         if hasattr(view, "setKeyPressEvent"):
             view.setKeyPressEvent(self.keyPressEvent)
 
-    def setViewType(self, view_type):
+        # setup default drop attrs
+        if view_type == ModelViewWidget.TREE_VIEW:
+            self.setIsDropEnabled(True)
+        if view_type == ModelViewWidget.LIST_VIEW:
+            self.setIsDropEnabled(False)
+
+    def setPresetViewType(self, view_type):
         """
         Sets the view to either a LIST or a TREE view
 
@@ -126,12 +146,11 @@ class ModelViewWidget(AbstractShojiLayout):
         """
         if view_type == ModelViewWidget.TREE_VIEW:
             view = AbstractDragDropTreeView()
-            self.view_type = AbstractDragDropTreeView
+
         if view_type == ModelViewWidget.LIST_VIEW:
             view = AbstractDragDropListView()
-            self.view_type = AbstractDragDropListView
 
-        self.setView(view)
+        self.setView(view, view_type=view_type)
 
         return view
 
@@ -524,7 +543,7 @@ if __name__ == "__main__":
         print("DRAGGING -->", items)
         print(items)
 
-    def testDrop(items, model, row, parent):
+    def testDrop(data, items, model, row, parent):
         print("DROPPING -->", row, items, parent)
 
     def testEdit(item, old_value, new_value):
@@ -540,7 +559,7 @@ if __name__ == "__main__":
         print('toggle joe')
 
     main_widget = ModelViewWidget()
-    main_widget.setViewType(ModelViewWidget.TREE_VIEW)
+    # main_widget.setPresetViewType(ModelViewWidget.TREE_VIEW)
     view = QTreeView()
     model = main_widget.model()
 
@@ -572,33 +591,33 @@ if __name__ == "__main__":
     l.addWidget(main_widget)
     l.addWidget(view)
 
-    # # create delegates
-    delegate_widget = QLabel("F")
-    main_widget.addDelegate([Qt.Key_F], delegate_widget)
-
-    delegate_widget = QLabel("Q")
-    main_widget.addDelegate([Qt.Key_Q], delegate_widget)
-
+    # # # create delegates
+    # delegate_widget = QLabel("F")
+    # main_widget.addDelegate([Qt.Key_F], delegate_widget)
     #
-    # # set model event
-    main_widget.setDragStartEvent(testDrag)
-    main_widget.setDropEvent(testDrop)
-    main_widget.setTextChangedEvent(testEdit)
-    main_widget.setItemEnabledEvent(testEnable)
-    main_widget.setItemDeleteEvent(testDelete)
-    main_widget.setIndexSelectedEvent(testSelect)
-    main_widget.setDelegateToggleEvent(testDelegateToggle)
+    # delegate_widget = QLabel("Q")
+    # main_widget.addDelegate([Qt.Key_Q], delegate_widget)
     #
-    # # set flags
-    main_widget.setIsRootDropEnabled(True)
-    main_widget.setIsEditable(True)
-    main_widget.setIsDragEnabled(True)
-    main_widget.setIsDropEnabled(True)
-    main_widget.setIsEnableable(True)
-    main_widget.setIsDeleteEnabled(True)
-
-    # set selection mode
-    main_widget.setMultiSelect(True)
+    # #
+    # # # set model event
+    # main_widget.setDragStartEvent(testDrag)
+    # main_widget.setDropEvent(testDrop)
+    # main_widget.setTextChangedEvent(testEdit)
+    # main_widget.setItemEnabledEvent(testEnable)
+    # main_widget.setItemDeleteEvent(testDelete)
+    # main_widget.setIndexSelectedEvent(testSelect)
+    # main_widget.setDelegateToggleEvent(testDelegateToggle)
+    # #
+    # # # set flags
+    # main_widget.setIsRootDropEnabled(True)
+    # main_widget.setIsEditable(True)
+    # main_widget.setIsDragEnabled(True)
+    # #main_widget.setIsDropEnabled(True)
+    # main_widget.setIsEnableable(True)
+    # main_widget.setIsDeleteEnabled(True)
+    #
+    # # set selection mode
+    # main_widget.setMultiSelect(True)
 
 
 

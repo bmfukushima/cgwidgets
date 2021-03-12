@@ -28,18 +28,8 @@ from cgwidgets.widgets import (
     AbstractShojiLayout,
     AbstractShojiLayoutHandle)
 
-from cgwidgets.widgets.ShojiWidget import (ShojiModel, iShojiDynamicWidget)
+from cgwidgets.widgets.ShojiWidget import (ShojiModel, iShojiDynamicWidget, ShojiModelItem)
 from cgwidgets.views import (AbstractDragDropAbstractView)
-
-
-class ShojiLayout(AbstractShojiLayout):
-    def __init__(self, parent=None, orientation=Qt.Vertical):
-        super(ShojiLayout, self).__init__(parent, orientation=orientation)
-
-
-class ShojiLayoutHandle(AbstractShojiLayoutHandle):
-    def __init__(self, orientation, parent=None):
-        super(ShojiLayoutHandle, self).__init__(orientation, parent)
 
 
 class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
@@ -108,8 +98,9 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         self._delegate_header_direction = Qt.Vertical
 
         # setup model / view
-        self._model = ShojiModel()
+        # self._model = ShojiModel()
         self._header_widget = ShojiHeader(self)
+        self._model = self.headerViewWidget().model()
         self._header_widget.setModel(self._model)
         self._header_widget.setIndexSelectedEvent(self._header_widget.selectionChanged)
 
@@ -317,6 +308,7 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
 
     def setModel(self, model):
         self._model = model
+        self._model.setItemType(ShojiModelItem)
         self._header_widget.setModel(model)
         self._header_widget.setIndexSelectedEvent(self._header_widget.selectionChanged)
 
@@ -354,9 +346,6 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         Sets the header widget to be a custom widget type
         Args:
             _header_view_widget (QWidget):
-
-        Returns:
-
         """
         # remove all header widget
         self.headerWidget().setView(_header_view_widget)
@@ -369,9 +358,8 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
             view_type (ModelViewWidget.VIEW_TYPE): the view type to be used.
                 ModelViewWidget.TREE_VIEW | ModelViewWidget.LIST_VIEW
         """
-        header_view = self.headerWidget().setViewType(view_type)
+        header_view = self.headerWidget().setPresetViewType(view_type)
         self.setHeaderViewWidget(header_view)
-        #self.setHeaderWidget(header_widget)
         self.headerWidget().setModel(self.model())
 
     def addHeaderDelegateWidget(self, input, widget, modifier=Qt.NoModifier, focus=False):
@@ -759,6 +747,17 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         self._header_height = _header_height
 
 
+""" LAYOUT """
+class ShojiLayout(AbstractShojiLayout):
+    def __init__(self, parent=None, orientation=Qt.Vertical):
+        super(ShojiLayout, self).__init__(parent, orientation=orientation)
+
+
+class ShojiLayoutHandle(AbstractShojiLayoutHandle):
+    def __init__(self, orientation, parent=None):
+        super(ShojiLayoutHandle, self).__init__(orientation, parent)
+
+
 """ DELEGATE """
 class ShojiMainDelegateWidget(ShojiLayout):
     """
@@ -925,7 +924,10 @@ class ShojiHeader(ModelViewWidget):
     TREE_VIEW = 1
     def __init__(self, parent=None):
         super(ShojiHeader, self).__init__(parent)
-        self.setViewType(ModelViewWidget.LIST_VIEW)
+        # self.setPresetViewType(ModelViewWidget.LIST_VIEW)
+        model = ShojiModel()
+        self.setModel(model)
+        self.setIsDropEnabled(False)
 
     def showEvent(self, event):
         tab_shoji_widget = getWidgetAncestor(self, ShojiModelViewWidget)
@@ -1045,7 +1047,7 @@ if __name__ == "__main__":
     #header_delegate_widget = QLabel("Custom")
     #w.setHeaderDelegateAlwaysOn(False)
     #
-    shoji_widget.setMultiSelect(True)
+    # shoji_widget.setMultiSelect(True)
     #w.setOrientation(Qt.Horizontal)
     # w.setHeaderPosition(attrs.NORTH)
     # w.setMultiSelectDirection(Qt.Horizontal)

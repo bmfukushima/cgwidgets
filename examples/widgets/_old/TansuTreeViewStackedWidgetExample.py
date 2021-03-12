@@ -47,7 +47,7 @@ shoji_widget.setHeaderItemIsDragEnabled(True)
 shoji_widget.setHeaderItemIsDropEnabled(True)
 shoji_widget.setHeaderItemIsEditable(False)
 
-#print(shoji_widget.headerWidget().setViewType(ModelViewWidget.TREE_VIEW))
+#print(shoji_widget.headerWidget().setPresetViewType(ModelViewWidget.TREE_VIEW))
 #shoji_widget.setHeaderViewType(ModelViewWidget.TREE_VIEW)
 
 # from qtpy.QtWidgets import QTreeView
