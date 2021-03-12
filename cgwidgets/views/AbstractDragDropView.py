@@ -473,6 +473,9 @@ class AbstractViewContextMenu(QMenu):
 class AbstractDragDropModelDelegate(QStyledItemDelegate):
     """
     Default item delegate that is used in the custom Drag/Drop model
+
+    Attributes:
+        delegate_widget (QWidget): constructor to be displayed when editor is shown
     """
     def __init__(self, parent=None):
         super(AbstractDragDropModelDelegate, self).__init__(parent)

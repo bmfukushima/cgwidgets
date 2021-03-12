@@ -446,17 +446,25 @@ class AbstractListInputWidget(AbstractStringInputWidget):
 
     """ EVENTS """
     def mouseReleaseEvent(self, event, *args, **kwargs):
+        self.showCompleter()
+        return QLineEdit.mouseReleaseEvent(self, event, *args, **kwargs)
+
+    def showCompleter(self, filter_results=True):
+        """
+        Displays the popup completer to the user
+        Args:
+            filter_results (bool): determines if the results should be filtered
+                based off of the users current input. The default value for this is True
+        """
         # update model (if enabled)
         if self.dynamic_update:
             self._updateModel()
 
-        # update the current proxy model based off the current text
-        self.filterCompletionResults()
+        # filter completion results
+        if filter_results:
+            self.filterCompletionResults()
 
-        # show completer
         self.completer().complete()
-
-        return QLineEdit.mouseReleaseEvent(self, event, *args, **kwargs)
 
     """ UTILS """
     def next_completion(self):

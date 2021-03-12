@@ -145,8 +145,8 @@ class AbstractDragDropModelItem(object):
 
 class AbstractDragDropModel(QAbstractItemModel):
     """
-    Abstract model that is used for the Shoji.  This supports tables, lists, and
-    trees.  However not yet...
+    Abstract model that is used for the Shoji.  This supports lists, and
+    trees.
     TODO:
         - multi column support
 
