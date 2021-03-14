@@ -12,6 +12,7 @@ Input Widgets
                 | -- AbstractIntInputWidget
     BooleanInputWidget (QLabel)
 """
+import re
 
 from qtpy.QtWidgets import (
     QLineEdit, QLabel, QPlainTextEdit, QStackedWidget, QApplication
@@ -473,7 +474,7 @@ class AbstractStringInputWidget(AbstractInputLineEdit):
     def validateInput(self):
         return True
 
-
+# TODO This needs overhaul... should be moved into overlay widget
 class AbstractLabelInputWidget(AbstractStringInputWidget):
     """
     Essentially a QLabel with a QLineEdit delegate on it.
@@ -580,6 +581,59 @@ class AbstractLabelInputWidget(AbstractStringInputWidget):
         return AbstractStringInputWidget.mousePressEvent(self, event)
 
 
+class AbstractLabelWidget(QLabel, iAbstractInputWidget):
+    """
+    Display label
+    """
+    TYPE = 'label'
+    def __init__(self, parent=None, text=None):
+        super(AbstractLabelWidget, self).__init__(parent)
+        self.setProperty("input_hover", True)
+        if text:
+            self.setText(text)
+        self.updateStyleSheet()
+
+        self.setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
+
+    def setImage(self, image_path):
+        """
+        sets a background image
+        Args:
+            image_path (str): path to image on disk
+
+        Returns:
+
+        """
+        self.removeImage()
+
+        style_sheet = """
+/* << BACKGROUND IMAGE START >> */
+border-image: url({image_path}) 0 0 0 0 stretch stretch;
+/* << BACKGROUND IMAGE END >> */""".format(image_path=image_path)
+
+        style_sheet += self.styleSheet()
+
+        self.setStyleSheet(style_sheet)
+        # print('============' * 5)
+        # print(style_sheet)
+        # from qtpy.QtGui import QPixmap
+        # pixmap = QPixmap()
+        # pixmap.load(image_path)
+        #
+        # self.overlayWidget().setPixmap(pixmap)
+
+    def removeImage(self):
+        style_sheet = self.styleSheet()
+
+        # todo update image
+        style_sheet = re.sub(
+            "(/\* << BACKGROUND IMAGE START >> \*/)([^\$]+)(/\* << BACKGROUND IMAGE END >> \*/)",
+            "",
+            style_sheet)
+
+        self.setStyleSheet(style_sheet)
+
+
 class AbstractBooleanInputWidget(QLabel, iAbstractInputWidget):
     TYPE = 'bool'
     def __init__(self, parent=None, text=None, is_selected=False):
@@ -626,44 +680,164 @@ class AbstractBooleanInputWidget(QLabel, iAbstractInputWidget):
 
 class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
     """
-    Input widget with a display delegate overlaid.  This delegate will dissapear
+    Input widget with a display delegate overlaid.  This delegate will disappear
     when the user first hover enters.
 
     Args:
-        input_widget (QWidget): Widget for user to input values into
+        display_mode (AbstractOverlayInputWidget.DISPLAYMODE): Trigger that will
+            determine if/when the editor is displayed to the user.
+        delegate_widget (QWidget): Widget for user to input values into
+        image (str): path on disk to image
         title (string): Text to display when the widget is shown
             for the first time.
 
     Attributes:
-        input_widget:
-        overlay_widget:
+        delegate_widget (QWidget): Editor widget that will be displayed when the user
+            triggers it with the DisplayMode
+        view_widget (AbstractLabelInputWidget): Label to be displayed when the user
+            is not hovered over the widget
+
+    Virtual Events:
+        hide_delegate_event (Virtual Event): runs when the editor is being closed
+        show_delegate_event (Virtual Event): runs when the editor is being opened
     """
+    # Display Modes
+    DISABLED = 1
+    ENTER = 2
+    RELEASE = 4
     def __init__(
             self,
             parent=None,
-            input_widget=None,
-            title=""
+            delegate_widget=None,
+            image=None,
+            title="",
+            display_mode=4
     ):
         super(AbstractOverlayInputWidget, self).__init__(parent)
 
         # create widgets
-        self.overlay_widget = AbstractLabelInputWidget(title)
-        if not input_widget:
-            input_widget = AbstractStringInputWidget(self)
-        self.input_widget = input_widget
+        self._view_widget = AbstractLabelWidget(self, title)
+
+        if not delegate_widget:
+            print('no delegate')
+            delegate_widget = AbstractStringInputWidget(self)
+        self._delegate_widget = delegate_widget
 
         # add widgets
-        self.addWidget(self.overlay_widget)
-        self.addWidget(self.input_widget)
+        self.addWidget(self._view_widget)
+        self.addWidget(self._delegate_widget)
 
         # setup style
-        #setAsTransparent(self.overlay_widget)
-        self.overlay_widget.setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
+        self.setDisplayMode(display_mode)
+
+        if image:
+            self.setImage(image)
+
+    """ WIDGETS """
+    def delegateWidget(self):
+
+        return self._delegate_widget
+
+    def setDelegateWidget(self, widget):
+        # remove old input widget
+        self._delegate_widget.setParent(None)
+
+        # add new input widget
+        self.addWidget(widget)
+
+        # setup attr
+        self._delegate_widget = widget
+        pass
+
+    def viewWidget(self):
+        return self._view_widget
+
+    def setViewWidget(self, view_widget):
+        self._view_widget = view_widget
+
+    """ DELEGATE DISPLAY """
+    def displayMode(self):
+        return self._display_mode
+
+    def setDisplayMode(self, display_mode):
+        """
+        Sets when the editor will be displayed to the user
+
+        Args:
+            display_mode (AbstractOverlayInputWidget.DISPLAYMODE): Trigger that will
+                determine if/when the editor is displayed to the user.
+        """
+        self._display_mode = display_mode
+
+    def showDelegate(self):
+        self.setCurrentIndex(1)
+        self.releaseMouse()
+
+        self.showDelegateEvent()
+
+    def hideDelegate(self):
+        self.setCurrentIndex(0)
+
+        self.hideDelegateEvent()
+
+    """ VIRTUAL FUNCTIONS """
+    def title(self):
+        return self.viewWidget().text()
+
+    def setTitle(self, title):
+        self.viewWidget().setText(title)
+
+    def setImage(self, image_path):
+        self.viewWidget().setImage(image_path)
+
+    def removeImage(self):
+        self.viewWidget().removeImage()
+
+    """ VIRTUAL EVENTS """
+    def _show_delegate_event(self):
+        pass
+
+    def setShowDelegateEvent(self, event):
+        self._show_delegate_event = event
+
+    def showDelegateEvent(self):
+        self._show_delegate_event()
+
+    def _hide_delegate_event(self):
+        pass
+
+    def setHideDelegateEvent(self, event):
+        self._hide_delegate_event = event
+
+    def hideDelegateEvent(self):
+        self._hide_delegate_event()
+
+    """ EVENTS """
+    def mouseReleaseEvent(self, event):
+        # enable editor
+        if self.displayMode() == AbstractOverlayInputWidget.RELEASE:
+            if self.currentIndex() == 0:
+                self.showDelegate()
+                self.delegateWidget().setFocus()
+
+        return QStackedWidget.mouseReleaseEvent(self, event)
 
     def enterEvent(self, event):
-        self.setCurrentIndex(1)
-        QStackedWidget.enterEvent(self, event)
-        self.input_widget.setFocus()
+        if self.currentIndex() == 0:
+            self.grabMouse()
+
+        # enable editor
+        if self.displayMode() == AbstractOverlayInputWidget.ENTER:
+            self.showDelegate()
+            QStackedWidget.enterEvent(self, event)
+            self.delegateWidget().setFocus()
+        return QStackedWidget.enterEvent(self, event)
+
+    def leaveEvent(self, event):
+        if self.currentIndex() == 1:
+            self.hideDelegate()
+        self.releaseMouse()
+        return QStackedWidget.leaveEvent(self, event)
 
 
 class AbstractButtonInputWidget(AbstractBooleanInputWidget):
@@ -759,26 +933,52 @@ if __name__ == "__main__":
     import sys, inspect
 
     app = QApplication(sys.argv)
-    def userEvent(widget):
-        print("user input...", widget)
 
-    widget = AbstractButtonInputWidgetContainer(orientation=Qt.Horizontal)
 
-    widget.setIsMultiSelect(True)
-    for x in range(3):
-        flag = x
-        if x == 1:
-            widget.addButton("button_"+str(x), flag, userEvent, True)
-        else:
-            widget.addButton("button_"+str(x), flag, userEvent, False)
-    # widget.setIsHandleVisible(False)
-    # updateStyleSheet(widget)
+    class CustomDynamicWidgetExample(AbstractOverlayInputWidget):
+        """
+        Custom dynamic widget example.  This is a base example of the OverlayInputWidget
+        as well.
+        """
 
-    widget.move(QCursor.pos())
-    widget.show()
-    widget.resize(256, 256)
-    widget.resize(500, 500)
-    widget.show()
+        def __init__(self, parent=None):
+            super(CustomDynamicWidgetExample, self).__init__(parent, title="Hello")
+            delegate_widget = AbstractFloatInputWidget(self)
+            self.setDelegateWidget(delegate_widget)
+
+            # todo update image
+            self.setImage("/home/brian/Pictures/test.png")
+
+            # self.setDisplayMode(AbstractOverlayInputWidget.ENTER)
+        # @staticmethod
+        # def updateGUI(parent, widget, item):
+        #     """
+        #     parent (ShojiModelViewWidget)
+        #     widget (ShojiModelDelegateWidget)
+        #     item (ShojiModelItem)
+        #     self --> widget.getMainWidget()
+        #     """
+        #     if item:
+        #         name = parent.model().getItemName(item)
+        #         widget.getMainWidget().setTitle(name)
+        #
+        #         # todo update image
+        #         widget.getMainWidget().setImage("/media/plt01/Downloads_web/awkward.png")
+        #         from cgwidgets.utils import updateStyleSheet
+        #         updateStyleSheet(widget)
+
+    delegate_widget = AbstractBooleanInputWidget(text="yolo")
+    main_widget = AbstractOverlayInputWidget(
+        title="title",
+        display_mode=AbstractOverlayInputWidget.RELEASE,
+        delegate_widget=delegate_widget,
+        image="/home/brian/Pictures/test.png")
+
+    # main_widget = CustomDynamicWidgetExample()
+    main_widget.move(QCursor.pos())
+    main_widget.show()
+    main_widget.resize(500, 500)
+    main_widget.show()
     #w.move(QCursor.pos())
     sys.exit(app.exec_())
     #

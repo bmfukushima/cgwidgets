@@ -10,7 +10,7 @@ from qtpy.QtWidgets import QApplication, QLabel, qApp
 from qtpy.QtGui import QCursor
 from qtpy.QtCore import QPoint
 
-from cgwidgets.widgets import ShojiModelViewWidget, ListInputWidget
+from cgwidgets.widgets import ShojiModelViewWidget, ListInputWidget, OverlayInputWidget
 from cgwidgets.views import AbstractDragDropListView, AbstractDragDropModelDelegate
 from cgwidgets.utils import getWidgetAncestor, centerWidgetOnCursor, attrs
 
@@ -25,6 +25,12 @@ class ShojiDelegateExample(ShojiModelViewWidget):
         # setup header
         events_view = CustomListView(self)
         self.setHeaderViewWidget(events_view)
+
+        # setup as dynamic
+        self.setDelegateType(
+            ShojiModelViewWidget.DYNAMIC,
+            CustomDynamicWidgetExample,
+            dynamic_function=CustomDynamicWidgetExample.updateGUI)
 
 
 class CustomListView(AbstractDragDropListView):
@@ -115,14 +121,15 @@ class CustomModelDelegate(AbstractDragDropModelDelegate):
 
     def delegateUpdate(self, widget, value):
         print("updating...", widget, value)
+
+        # update static widget
+        # static_widget = self._index.internalPointer().delegateWidget().getMainWidget()
+        # static_widget.setText(value)
+
+        # update dynamic widget
         main_widget = getWidgetAncestor(self._parent, ShojiDelegateExample)
-
-        item = self._index.internalPointer().columnData()['name'] = value
-        print(self._index.internalPointer().delegateWidget())
-        self._index.internalPointer().delegateWidget().setText(value)
-        #main_widget.main_widget.updateDelegateDisplay()
-
-        # update column data...
+        self._index.internalPointer().columnData()['name'] = value
+        main_widget.updateDelegateDisplay()
 
 
 class CustomDelegateEditor(ListInputWidget):
@@ -130,9 +137,41 @@ class CustomDelegateEditor(ListInputWidget):
         super(CustomModelDelegate, self).__init__(parent)
 
 
+class CustomDynamicWidgetExample(OverlayInputWidget):
+    """
+    Custom dynamic widget example.  This is a base example of the OverlayInputWidget
+    as well.
+    """
+    def __init__(self, parent=None):
+        super(CustomDynamicWidgetExample, self).__init__(parent, title="Hello")
+        input_widget = ListInputWidget(self, item_list=[[char] for char in string.ascii_lowercase])
+        self.setInputWidget(input_widget)
+
+        # todo update image
+        self.setImage("/media/plt01/Downloads_web/awkward.png")
+
+    @staticmethod
+    def updateGUI(parent, widget, item):
+        """
+        parent (ShojiModelViewWidget)
+        widget (ShojiModelDelegateWidget)
+        item (ShojiModelItem)
+        self --> widget.getMainWidget()
+        """
+        if item:
+            name = parent.model().getItemName(item)
+            widget.getMainWidget().setTitle(name)
+
+            # todo update image
+            widget.getMainWidget().setImage("/media/plt01/Downloads_web/awkward.png")
+            from cgwidgets.utils import updateStyleSheet
+            updateStyleSheet(widget)
+
+
 app = QApplication(sys.argv)
 
 main_widget = ShojiDelegateExample()
+main_widget.setMultiSelect(True)
 main_widget.setHeaderPosition(attrs.SOUTH, attrs.SOUTH)
 for char in "SINE.":
     main_widget.insertShojiWidget(0, column_data={'name':char}, widget=QLabel(char))
