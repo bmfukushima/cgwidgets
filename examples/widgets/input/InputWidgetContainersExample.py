@@ -63,6 +63,8 @@ for flag in range(3):
         button_input_widget_container.addButton("button_" + str(flag), flag, userEvent, False)
 
 """ FRAME INPUT WIDGET CONTAINER"""
+def frameUserEvent(widget, value):
+    print("user input...", widget, value)
 frame_input_widget_container = FrameInputWidgetContainer(name='Frame Input Widgets', direction=Qt.Vertical)
 
 # set header editable / Display
@@ -88,7 +90,7 @@ for arg in label_widgets:
     input_widget.setDirection(Qt.Horizontal)
 
     # add to group layout
-    frame_input_widget_container.addInputWidget(input_widget, finished_editing_function=userEvent)
+    frame_input_widget_container.addInputWidget(input_widget, finished_editing_function=frameUserEvent)
 
     # list override
     if arg == "list":

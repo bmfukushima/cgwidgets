@@ -109,50 +109,26 @@ def convertDictToCSSFlags(properties):
 
 input_widget_ss ="""
 /* DEFAULT */
-    {{type}}{{{{
-        border: 1px dotted rgba{{rgba_gray_4}};
-        border-radius: 10px;
-        background-color: rgba{{rgba_background}};
-        color: rgba{{rgba_text}};
-        selection-background-color: rgba{{rgba_selected_background}};
+{{type}}{{{{
+    border: 1px dotted rgba{{rgba_gray_4}};
+    border-radius: 10px;
+    background-color: rgba{{rgba_background}};
+    color: rgba{{rgba_text}};
+    selection-background-color: rgba{{rgba_selected_background}};
+}}}}
+
+/* SELECTION */
+{{type}}[is_selected=true]{{{{
+    background: {background_accept_radial}
     }}}}
-
-    /* SELECTION */
-
-    {{type}}[is_selected=true]{{{{
-        background: {background_accept_radial}
-        }}}}
-    {{type}}[is_selected=false]{{{{
-        background: {background_cancel_radial}
-        }}}}
-    /*
-    {{type}}[is_selected=true][hover_display=false]{{{{
-        background: {background_accept_radial}
-        }}}}
-    {{type}}[is_selected=false][hover_display=false]{{{{
-        background: {background_cancel_radial}
-        }}}}
-
-    {{type}}:focus{{{{
-        background: {background_hover_radial}
-        }}}}
-    {{type}}::hover{{{{
-        background: {background_select_hover_radial}
-        }}}}
-    {{type}}::hover:focus{{{{
-            background: {background_hover_radial}
-        }}}}
-    */
+{{type}}[is_selected=false]{{{{
+    background: {background_cancel_radial}
+    }}}}
 """.format(
     background_hover_radial=background_hover_radial,
     background_cancel_radial=background_cancel_radial,
     background_accept_radial=background_accept_radial,
     background_select_hover_radial=background_select_hover_radial)
-
-display_label_ss = """
-    background-color: rgba{rgba_background};
-    color: rgba{rgba_text};
-"""
 
 
 """

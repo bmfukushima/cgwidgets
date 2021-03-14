@@ -29,7 +29,7 @@ from cgwidgets.utils import (
 
 from cgwidgets.settings.icons import icons
 from cgwidgets.settings.stylesheets import input_widget_ss
-from cgwidgets.settings.hover_display import installHoverDisplaySS
+from cgwidgets.settings.hover_display import installHoverDisplaySS, removeHoverDisplay
 
 
 class iAbstractInputWidget(object):
@@ -591,7 +591,7 @@ class AbstractLabelWidget(QLabel, iAbstractInputWidget):
         self.setProperty("input_hover", True)
         if text:
             self.setText(text)
-        self.updateStyleSheet()
+        # self.updateStyleSheet()
 
         self.setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
 
@@ -608,14 +608,20 @@ class AbstractLabelWidget(QLabel, iAbstractInputWidget):
 
         style_sheet = """
 /* << BACKGROUND IMAGE START >> */
+border-radius: 10px;
+background-color: rgba{rgba_background};
+color: rgba{rgba_text};
 border-image: url({image_path}) 0 0 0 0 stretch stretch;
-/* << BACKGROUND IMAGE END >> */""".format(image_path=image_path)
+/* << BACKGROUND IMAGE END >> */""".format(
+            image_path=image_path,
+            rgba_background=iColor["rgba_background_00"],
+            rgba_text=iColor["rgba_text"])
 
         style_sheet += self.styleSheet()
 
         self.setStyleSheet(style_sheet)
-        # print('============' * 5)
-        # print(style_sheet)
+        #print('============' * 5)
+        #print(style_sheet)
         # from qtpy.QtGui import QPixmap
         # pixmap = QPixmap()
         # pixmap.load(image_path)
@@ -647,10 +653,10 @@ class AbstractBooleanInputWidget(QLabel, iAbstractInputWidget):
         self.setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
 
     """ EVENTS """
-    def enterEvent(self, event):
-        self.setProperty("input_hover", True)
-        updateStyleSheet(self)
-        return QLabel.enterEvent(self, event)
+    # def enterEvent(self, event):
+    #     self.setProperty("input_hover", True)
+    #     updateStyleSheet(self)
+    #     return QLabel.enterEvent(self, event)
 
     def mouseReleaseEvent(self, event):
         self.is_selected = not self.is_selected
@@ -661,8 +667,8 @@ class AbstractBooleanInputWidget(QLabel, iAbstractInputWidget):
         except AttributeError:
             pass
 
-        self.setProperty("input_hover", False)
-        updateStyleSheet(self)
+        # self.setProperty("input_hover", False)
+        # updateStyleSheet(self)
 
         return QLabel.mouseReleaseEvent(self, event)
 
@@ -733,6 +739,10 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
         if image:
             self.setImage(image)
 
+        # style_sheet = removeHoverDisplay(self.styleSheet(), "INPUT WIDGETS")
+        # self.setStyleSheet(style_sheet)
+        # self.viewWidget().updateStyleSheet()
+
     """ WIDGETS """
     def delegateWidget(self):
 
@@ -773,12 +783,22 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
         self.setCurrentIndex(1)
         self.releaseMouse()
 
+        # run user event
         self.showDelegateEvent()
+
+        # remove double hover
+        self.setProperty("input_hover", False)
+        updateStyleSheet(self)
 
     def hideDelegate(self):
         self.setCurrentIndex(0)
 
+        # run user event
         self.hideDelegateEvent()
+
+        # remove double hover
+        self.setProperty("input_hover", True)
+        updateStyleSheet(self)
 
     """ VIRTUAL FUNCTIONS """
     def title(self):
@@ -943,30 +963,8 @@ if __name__ == "__main__":
 
         def __init__(self, parent=None):
             super(CustomDynamicWidgetExample, self).__init__(parent, title="Hello")
-            delegate_widget = AbstractFloatInputWidget(self)
-            self.setDelegateWidget(delegate_widget)
 
-            # todo update image
-            self.setImage("/home/brian/Pictures/test.png")
-
-            # self.setDisplayMode(AbstractOverlayInputWidget.ENTER)
-        # @staticmethod
-        # def updateGUI(parent, widget, item):
-        #     """
-        #     parent (ShojiModelViewWidget)
-        #     widget (ShojiModelDelegateWidget)
-        #     item (ShojiModelItem)
-        #     self --> widget.getMainWidget()
-        #     """
-        #     if item:
-        #         name = parent.model().getItemName(item)
-        #         widget.getMainWidget().setTitle(name)
-        #
-        #         # todo update image
-        #         widget.getMainWidget().setImage("/media/plt01/Downloads_web/awkward.png")
-        #         from cgwidgets.utils import updateStyleSheet
-        #         updateStyleSheet(widget)
-
+    # Construct
     delegate_widget = AbstractBooleanInputWidget(text="yolo")
     main_widget = AbstractOverlayInputWidget(
         title="title",
@@ -979,6 +977,8 @@ if __name__ == "__main__":
     main_widget.show()
     main_widget.resize(500, 500)
     main_widget.show()
+    #print ('\n\n========================\n\n')
+    #print(main_widget.styleSheet())
     #w.move(QCursor.pos())
     sys.exit(app.exec_())
     #

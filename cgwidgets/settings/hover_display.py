@@ -409,11 +409,11 @@ def installHoverDisplaySS(
     style_sheet = "{widget_style_sheet}".format(widget_style_sheet=widget.styleSheet())
 
     # remove previous hover display
-
-    style_sheet = re.sub(
-        "(\n/\* << HOVER {name} DISPLAY START >> \*/ \n)([^\$]+)(\n/\* << HOVER {name} DISPLAY END >> \*/ \n)".format(name=name),
-        "",
-        style_sheet)
+    # style_sheet = re.sub(
+    #     "(\n/\* << HOVER {name} DISPLAY START >> \*/ \n)([^\$]+)(\n/\* << HOVER {name} DISPLAY END >> \*/ \n)".format(name=name),
+    #     "",
+    #     style_sheet)
+    style_sheet = removeHoverDisplay(style_sheet, name)
     # START
     style_sheet += "\n/* << HOVER {name} DISPLAY START >> */ \n".format(name=name)
 
@@ -456,4 +456,25 @@ def installHoverDisplaySS(
     style_sheet += "\n/* << HOVER {name} DISPLAY END >> */ \n".format(name=name)
 
     widget.setStyleSheet(style_sheet)
+
+def removeHoverDisplay(style_sheet, name):
+    """
+    Removes the hover display from a widget
+
+    Args:
+        style_sheet (StyleSheet): style sheet to have hover display removed from
+
+    Returns (StyleSheet):
+    """
+    #style_sheet = widget.styleSheet()
+
+    new_style_sheet = re.sub(
+        "(\n/\* << HOVER {name} DISPLAY START >> \*/ \n)([^\$]+)(\n/\* << HOVER {name} DISPLAY END >> \*/ \n)".format(name=name),
+        "",
+        style_sheet)
+    # print ('===================')
+    # print(new_style_sheet)
+    # print ('===================')
+    return new_style_sheet
+
 
