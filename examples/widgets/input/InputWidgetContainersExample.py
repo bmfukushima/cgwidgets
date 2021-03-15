@@ -67,7 +67,7 @@ for flag in range(3):
 """ FRAME INPUT WIDGET CONTAINER"""
 def frameUserEvent(widget, value):
     print("user input...", widget, value)
-frame_input_widget_container = FrameInputWidgetContainer(name='Frame Input Widgets', direction=Qt.Vertical)
+frame_input_widget_container = FrameInputWidgetContainer(title='Frame Input Widgets', direction=Qt.Vertical)
 
 # set header editable / Display
 frame_input_widget_container.setIsHeaderEditable(True)

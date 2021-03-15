@@ -169,7 +169,7 @@ horizontal_label_widget = createLabeledWidgets("Frame Widgets ( Horizontal )", Q
 vertical_label_widget = createLabeledWidgets("Frame Widgets ( Vertical )", Qt.Vertical)
 
 """ Group Widget"""
-frame_group_input_widget = FrameInputWidgetContainer(name='Frame Input Widgets', direction=Qt.Vertical)
+frame_group_input_widget = FrameInputWidgetContainer(title='Frame Input Widgets', direction=Qt.Vertical)
 
 # set header editable / Display
 frame_group_input_widget.setIsHeaderEditable(True)

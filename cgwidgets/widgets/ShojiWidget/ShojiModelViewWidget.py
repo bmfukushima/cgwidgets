@@ -459,7 +459,6 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         """
         # get attrs
         name = self.model().getItemName(item)
-        print('name ==== ', name)
         # create delegate
         display_widget = ShojiModelDelegateWidget(self, title=name)
 
@@ -890,7 +889,6 @@ class ShojiModelDelegateWidget(AbstractFrameInputWidgetContainer):
             this delegate
     """
     def __init__(self, parent=None, title=None):
-        print('title == ', title)
         super(ShojiModelDelegateWidget, self).__init__(parent, title=title)
 
         # # todo (delete later, maybe... its actually doing stuff so chill)

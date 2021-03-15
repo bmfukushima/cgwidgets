@@ -130,12 +130,12 @@ class ShojiInputWidgetContainer(LabelledInputWidget):
             # get attrs
             name = parent.model().getItemName(item)
             value = item.columnData()['value']
-            labelled_widget = widget.getMainWidget()
-            widget_constructor = item.widgetConstructor()
+            # labelled_widget = widget.getMainWidget()
+            # widget_constructor = item.widgetConstructor()
 
             # set attrs
             # todo fails here...
-            labelled_widget.setName(name)
+            # labelled_widget.setTitle(name)
             # labelled_widget.setInputBaseClass(widget_constructor)
             # input_widget = labelled_widget.getInputWidget()
             #
