@@ -86,7 +86,7 @@ class AbstractInputGroupFrame(QFrame):
     def __init__(
         self,
         parent=None,
-        name="None",
+        title="Name",
         note="None",
         direction=Qt.Horizontal
     ):
@@ -99,25 +99,51 @@ class AbstractInputGroupFrame(QFrame):
         self._is_header_shown = True
 
         # setup layout
-        from cgwidgets.widgets.AbstractWidgets.AbstractInputWidgets import AbstractLabelInputWidget
-        self._label = AbstractLabelInputWidget(self)
-        self._label.setUserFinishedEditingEvent(self.headerTextChanged)
-        self._label.setText(name)
+        from cgwidgets.widgets.AbstractWidgets.AbstractInputWidgets import (
+            AbstractOverlayInputWidget,
+            AbstractStringInputWidget)
+
+        delegate_widget = AbstractStringInputWidget(self)
+        header_widget = AbstractOverlayInputWidget(
+            self,
+            title=title,
+            display_mode=AbstractOverlayInputWidget.RELEASE,
+            delegate_widget=delegate_widget)
+        self.setHeaderWidget(header_widget)
 
         # set up display
         self.setToolTip(note)
-        #self.setupStyleSheet()
         self.setDirection(direction)
 
     """ API """
     def isHeaderEditable(self):
-        return self._label.isEditable()
+        from cgwidgets.widgets.AbstractWidgets.AbstractInputWidgets import AbstractOverlayInputWidget
+        if self.headerWidget.displayMode() != AbstractOverlayInputWidget.DISABLED:
+            return True
+        else:
+            return False
 
-    def setIsHeaderEditable(self, enabled):
+    def setIsHeaderEditable(self, enabled, display_mode=None):
         """
         Determines if the header can be edited or not
+
+        Args:
+            enabled (bool): determines if the header should be editable or not
+            display_mode (AbstractOverlayInputWidget.DISPLAY_MODE): determines what the display mode
+                should be.  By default, this is set to AbstractOverlayInputWidget.RELEASE
         """
-        self._label.setEditable(enabled)
+        from cgwidgets.widgets.AbstractWidgets.AbstractInputWidgets import AbstractOverlayInputWidget
+
+        # get display mode
+        if enabled:
+            if not display_mode:
+                display_mode = AbstractOverlayInputWidget.RELEASE
+
+        else:
+            display_mode = AbstractOverlayInputWidget.DISABLED
+
+        # set display mode
+        self.headerWidget().setDisplayMode(display_mode)
 
     def isHeaderShown(self):
         return self._is_header_shown
@@ -131,11 +157,24 @@ class AbstractInputGroupFrame(QFrame):
         """
         self._is_header_shown = enabled
         if enabled:
-            self._label.show()
+            self.headerWidget().show()
             self._separator.show()
         else:
-            self._label.hide()
+            self.headerWidget().hide()
             self._separator.hide()
+
+    """ HEADER WIDGET """
+    def headerWidget(self):
+        return self._header_widget
+
+    def setHeaderWidget(self, header_widget):
+        if hasattr(self, "_header_widget"):
+            self._header_widget.setParent(None)
+        self._header_widget = header_widget
+        self.layout().insertWidget(0, header_widget)
+
+    def label(self):
+        return self.headerWidget().viewWidget()
 
     """ VIRTUAL """
     def __headerTextChanged(self, widget, value):
@@ -148,37 +187,26 @@ class AbstractInputGroupFrame(QFrame):
         self.__headerTextChanged = function
 
     """ STYLE """
-    # def setupStyleSheet(self):
-    #     style_sheet_args = iColor.style_sheet_args
-    #     style_sheet = """
-    #         QLabel{{color: rgba{rgba_text}}}
-    #         LabelledInputWidget{{background-color: rgba{rgba_gray_3}}}
-    #         FrameInputWidgetContainer{{background-color: rgba{rgba_gray_3}}}
-    #     """.format(
-    #         **style_sheet_args
-    #     )
-    #     self.setStyleSheet(style_sheet)
-        # self._label.setStyleSheet(
-        #     self._label.styleSheet() + 'color: rgba{rgba_text}'.format(
-        #         rgba_text=iColor.rgba_text))
-
     def setToolTip(self, tool_tip):
-        self._label.setToolTip(tool_tip)
+        self.headerWidget().setToolTip(tool_tip)
 
     """ Set Direction of input"""
     def setDirection(self, direction):
         if direction == Qt.Vertical:
             # update alignment
-            self._label.setAlignment(Qt.AlignCenter)
+            # self.label().setAlignment(Qt.AlignCenter)
 
             # update label
-            self._label.setSizePolicy(
-                QSizePolicy.MinimumExpanding, QSizePolicy.Preferred
+            self.headerWidget().setSizePolicy(
+                QSizePolicy.MinimumExpanding, QSizePolicy.Fixed
             )
 
         elif direction == Qt.Horizontal:
+            # update alignment
+            # self.label().setAlignment(Qt.AlignLeft)
+
             # update label
-            self._label.setSizePolicy(
+            self.headerWidget().setSizePolicy(
                 QSizePolicy.Fixed, QSizePolicy.Preferred
             )
 
@@ -191,18 +219,11 @@ class AbstractInputGroupFrame(QFrame):
         self._separator_width = width
 
     """ PROPERTIES """
-    def setName(self, name):
-        self._label.setText(name)
+    def setTitle(self, title):
+        self.headerWidget().setTitle(title)
 
-    def getName(self):
-        return self._label.text()
-
-    # def labelWidth(self):
-    #     return self._label_width
-    #
-    # def setLabelWidth(self, width):
-    #     self._label_width = width
-    #     self._label.setMinimumWidth(width)
+    def getTitle(self):
+        return self.headerWidget().title()
 
 
 class AbstractFrameInputWidgetContainer(AbstractInputGroupFrame):
@@ -213,12 +234,12 @@ class AbstractFrameInputWidgetContainer(AbstractInputGroupFrame):
     def __init__(
         self,
         parent=None,
-        name="None",
+        title="None",
         note="None",
         direction=Qt.Horizontal
     ):
         # inherit
-        super(AbstractFrameInputWidgetContainer, self).__init__(parent, name, note, direction)
+        super(AbstractFrameInputWidgetContainer, self).__init__(parent, title, note, direction)
 
         # setup default attrs
         self._is_header_shown = True
@@ -227,12 +248,11 @@ class AbstractFrameInputWidgetContainer(AbstractInputGroupFrame):
         #self._separator = AbstractVLine(self)
 
         # add widgets to main layout
-        self.layout().insertWidget(0, self._label)
         #self.layout().addWidget(self._separator)
 
         # setup defaults
         self.setIsHeaderShown(True)
-        self.setIsHeaderEditable(False)
+        # self.setIsHeaderEditable(False)
 
     """ API """
     def addInputWidget(self, widget, finished_editing_function=None):
@@ -281,12 +301,11 @@ class AbstractFrameInputWidgetContainer(AbstractInputGroupFrame):
             self.updateSeparator(direction)
 
             # update alignment
-            self._label.setAlignment(Qt.AlignCenter)
             self.layout().setAlignment(Qt.AlignTop)
             self.layout().setSpacing(5)
 
             # update label
-            self._label.setSizePolicy(
+            self.label().setSizePolicy(
                 QSizePolicy.MinimumExpanding, QSizePolicy.Preferred
             )
 
@@ -302,7 +321,7 @@ class AbstractFrameInputWidgetContainer(AbstractInputGroupFrame):
             #self.layout().setSpacing(50)
 
             # update label
-            self._label.setSizePolicy(
+            self.label().setSizePolicy(
                 QSizePolicy.MinimumExpanding, QSizePolicy.Preferred
             )
 
@@ -546,13 +565,14 @@ class AbstractInputGroupBox(QGroupBox):
 if __name__ == "__main__":
     import sys
     from qtpy.QtWidgets import QApplication, QLabel
+    from cgwidgets.utils import centerWidgetOnCursor
     from qtpy.QtGui import QCursor
     app = QApplication(sys.argv)
-    widget = QWidget()
-    layout = QVBoxLayout(widget)
-    for x in range(2):
-        frame = AbstractVLine()
-        layout.addWidget(frame)
-    frame.hide()
+    widget = AbstractFrameInputWidgetContainer(title="test")
+    for x in range(0, 5):
+        temp = QLabel(str(x))
+        widget.addInputWidget(temp)
+
     widget.show()
+    centerWidgetOnCursor(widget)
     sys.exit(app.exec_())

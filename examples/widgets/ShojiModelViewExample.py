@@ -125,14 +125,14 @@ shoji_widget.setHeaderData(['name', 'SINE.', "woowoo"])
 def setupAsStacked():
     # insert tabs
     shoji_widget.setDelegateType(ShojiModelViewWidget.STACKED)
-    shoji_widget.insertShojiWidget(0, column_data={'name' : '<title> hello'},
+    shoji_widget.insertShojiWidget(0, column_data={'name': 'hello'},
                                    widget=LabelledInputWidget(name='hello', widget_type=FloatInputWidget))
-    shoji_widget.insertShojiWidget(0, column_data={'name' : '<title> world'}, widget=QLabel('world'))
+    shoji_widget.insertShojiWidget(0, column_data={'name': 'world'}, widget=QLabel('world'))
 
     shoji_delegate = ShojiLayout()
     for char in 'SINE.':
         shoji_delegate.addWidget(StringInputWidget(char))
-    shoji_delegate_item = shoji_widget.insertShojiWidget(0, column_data={'name' : '<title> shoji'}, widget=shoji_delegate)
+    shoji_delegate_item = shoji_widget.insertShojiWidget(0, column_data={'name': 'shoji'}, widget=shoji_delegate)
 
     # insert child tabs
     # insert child widgets
@@ -294,7 +294,7 @@ def testDelegateToggle(event, widget, enabled):
     print('---- TOGGLE EVENT ----')
     print (event, widget, enabled)
 
-def testSelect(item, enabled, column=0):
+def testSelect(item, enabled):
     """
     Handler that is run when the user selects an item in the view.
 
@@ -305,9 +305,9 @@ def testSelect(item, enabled, column=0):
         enabled:
         column:
     """
-    if column == 0:
-        print('---- SELECT EVENT ----')
-        print(column, item.columnData(), enabled)
+    #if column == 0:
+    print('---- SELECT EVENT ----')
+    print(item.columnData(), enabled)
 
 
 shoji_widget.setHeaderItemEnabledEvent(testEnable)

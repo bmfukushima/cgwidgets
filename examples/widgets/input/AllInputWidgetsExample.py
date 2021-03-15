@@ -74,7 +74,7 @@ boolean_input_widget = BooleanInputWidget(text="yellow")
 string_input_widget = StringInputWidget()
 list_input_widget = ListInputWidget(item_list=list_of_crap)
 plain_text_input_widget = PlainTextInputWidget()
-overlay_input_widget = OverlayInputWidget(input_widget=StringInputWidget(), title="SINE.")
+overlay_input_widget = OverlayInputWidget(delegate_widget=StringInputWidget(), title="SINE.")
 def userEvent(widget):
     print("user input...", widget)
 
@@ -208,7 +208,7 @@ main_widget.setStyleSheet("""background-color: rgba{rgba_background_00}""".forma
 main_widget.addWidget(normal_widget)
 main_widget.addWidget(vertical_label_widget)
 main_widget.addWidget(horizontal_label_widget)
-main_widget.addWidget(shoji_group_widget)
+# main_widget.addWidget(shoji_group_widget)
 main_widget.addWidget(frame_group_input_widget)
 
 main_widget.resize(500, 500)

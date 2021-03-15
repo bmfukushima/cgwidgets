@@ -41,10 +41,12 @@ def userEvent(widget, value):
 shoji_input_widget_container = ShojiInputWidgetContainer(parent=None, name='ShojiInputWidgetContainer')
 
 # add user inputs
-shoji_input_widget_container.insertInputWidget(0, FloatInputWidget, 'Float', userEvent)
-shoji_input_widget_container.insertInputWidget(0, IntInputWidget, 'Int', userEvent)
+
+
 shoji_input_widget_container.insertInputWidget(0, BooleanInputWidget, 'Boolean', userEvent)
 shoji_input_widget_container.insertInputWidget(0, StringInputWidget, 'String', userEvent)
+shoji_input_widget_container.insertInputWidget(0, IntInputWidget, 'Int', userEvent)
+shoji_input_widget_container.insertInputWidget(0, FloatInputWidget, 'Float', userEvent)
 shoji_input_widget_container.insertInputWidget(0, ListInputWidget, 'List', userEvent, data={'items_list':list_of_crap})
 shoji_input_widget_container.insertInputWidget(0, PlainTextInputWidget, 'Text', userEvent)
 

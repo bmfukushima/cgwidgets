@@ -61,10 +61,17 @@ class OverlayInputWidget(AbstractOverlayInputWidget):
     def __init__(
             self,
             parent=None,
-            input_widget=None,
-            title=""
+            delegate_widget=None,
+            image=None,
+            title="",
+            display_mode=4
     ):
-        super(OverlayInputWidget, self).__init__(parent, input_widget=input_widget, title=title)
+        super(OverlayInputWidget, self).__init__(
+            parent,
+            delegate_widget=delegate_widget,
+            image=image,
+            title=title,
+            display_mode=display_mode)
 
 
 class ButtonInputWidget(AbstractButtonInputWidget):
@@ -212,13 +219,13 @@ class LabelledInputWidget(ShojiLayout, AbstractInputGroupFrame):
         )
 
         # add widgets
-        self.addWidget(self._label)
+        # self.addWidget(self._label)
         self.addWidget(self._input_widget)
 
         # set size hints
         font_size = getFontSize(QApplication)
         self._input_widget.setMinimumSize(1, int(font_size*2.5))
-        self._label.setMinimumSize(font_size*2, int(font_size*2.5))
+        # self._label.setMinimumSize(font_size*2, int(font_size*2.5))
         #
         self.setStretchFactor(0, 0)
         self.setStretchFactor(1, 1)
@@ -250,7 +257,9 @@ class LabelledInputWidget(ShojiLayout, AbstractInputGroupFrame):
         Args:
             labelled_input_widget (LabelledInputWidgets)
         """
-        from .ContainerWidgets import FrameInputWidgetContainer
+        #from .ContainerWidgets import FrameInputWidgetContainer
+        from cgwidgets.widgets import FrameInputWidgetContainer
+        # from ContainerWidgets import FrameInputWidgetContainer
         parent = labelled_input_widget.parent()
         handles_list = []
         if isinstance(parent, FrameInputWidgetContainer):

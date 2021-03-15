@@ -1,7 +1,9 @@
 """
 TODO
-    AbstractInputGroup / ShojiInputWidgetContainer / LabelledInputWidget...
-        Why do I have like 90 versions of this...
+    ShojiInputWidgetContainer --> updateGUI --> labelled_widget.setInputBaseClass(widget_constructor)
+        - for some reason this is causing a seg fault?
+        - some widgets work, some widgets don't work, sometimes its the position
+            of the widget, sometimes its the click order?
 """
 
 import os
@@ -132,27 +134,28 @@ class ShojiInputWidgetContainer(LabelledInputWidget):
             widget_constructor = item.widgetConstructor()
 
             # set attrs
+            # todo fails here...
             labelled_widget.setName(name)
-            labelled_widget.setInputBaseClass(widget_constructor)
-            input_widget = labelled_widget.getInputWidget()
-
-            # update list inputs
-            if isinstance(input_widget, ListInputWidget):
-                item_list = item.columnData()['items_list']
-                input_widget.populate(item_list)
-
-            # update boolean inputs
-            if isinstance(input_widget, BooleanInputWidget):
-                # toggle
-                widget.getMainWidget().getInputWidget().is_clicked = value
-                updateStyleSheet(widget.getMainWidget().getInputWidget())
-                return
-
-            # set input widgets current value from item
-            input_widget.setText(str(value))
-
-            input_widget.setUserFinishedEditingEvent(item.userInputEvent)
-            input_widget.setLiveInputEvent(item.userLiveInputEvent)
+            # labelled_widget.setInputBaseClass(widget_constructor)
+            # input_widget = labelled_widget.getInputWidget()
+            #
+            # # update list inputs
+            # if isinstance(input_widget, ListInputWidget):
+            #     item_list = item.columnData()['items_list']
+            #     input_widget.populate(item_list)
+            #
+            # # update boolean inputs
+            # if isinstance(input_widget, BooleanInputWidget):
+            #     # toggle
+            #     widget.getMainWidget().getInputWidget().is_clicked = value
+            #     updateStyleSheet(widget.getMainWidget().getInputWidget())
+            #     return
+            #
+            # # set input widgets current value from item
+            # input_widget.setText(str(value))
+            #
+            # input_widget.setUserFinishedEditingEvent(item.userInputEvent)
+            # input_widget.setLiveInputEvent(item.userLiveInputEvent)
 
     def insertInputWidget(
             self,
@@ -193,9 +196,11 @@ class ShojiInputWidgetContainer(LabelledInputWidget):
 
         # create item
         user_input_index = self.getInputWidget().insertShojiWidget(index, column_data=data)
+
         user_input_item = user_input_index.internalPointer()
 
         # setup new item
+        # TODO SEGFAULT IS HERE
         user_input_item.setWidgetConstructor(widget)
         user_input_item.setUserInputEvent(user_input_event)
         user_input_item.setUserLiveInputEvent(user_live_update_event)
@@ -209,12 +214,12 @@ class FrameInputWidgetContainer(AbstractFrameInputWidgetContainer):
     def __init__(
         self,
         parent=None,
-        name="None",
+        title="None",
         note="None",
         direction=Qt.Horizontal
     ):
         # inherit
-        super(FrameInputWidgetContainer, self).__init__(parent, name, note, direction)
+        super(FrameInputWidgetContainer, self).__init__(parent, title, note, direction)
         self.layout().setContentsMargins(0,0,0,0)
 
 

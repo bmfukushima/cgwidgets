@@ -474,125 +474,26 @@ class AbstractStringInputWidget(AbstractInputLineEdit):
     def validateInput(self):
         return True
 
-# TODO This needs overhaul... should be moved into overlay widget
-class AbstractLabelInputWidget(AbstractStringInputWidget):
-    """
-    Essentially a QLabel with a QLineEdit delegate on it.
-
-    This line edit will automatically toggle the display state from read only
-    to editable depending on the focus.  It will be seen as a QLabel,
-    but has the handler that when clicked on is editable
-
-    Attributes:
-        isEditable (boolean): determines if this display can be edited or not
-            by clicking on it.
-    Virtual:
-        userFinishedEditingEvent (widget, value): when the user finishes editing.
-            This is a copy/paste from the iShojiGroupInput to set up the registry
-            for user input.
-    """
-    def __init__(self, parent=None):
-        super(AbstractLabelInputWidget, self).__init__(parent)
-        self.editingFinished.connect(self.disableDelegate)
-
-        # set up editable
-        self.__setReadOnly(True)
-        self.setEditable(False)
-
-        self.setupStyleSheet()
-
-    def setupStyleSheet(self):
-        style_sheet_args = iColor.style_sheet_args
-        style_sheet = """
-        /* MAIN */
-        AbstractLabelInputWidget{{
-            border: 1px solid rgba{rgba_background_00};
-            background-color: rgba{rgba_background_00};
-            color: rgba{rgba_text};
-            selection-background-color: rgba{rgba_selected};
-        }}
-        /* Border if widget can be editted */
-        AbstractLabelInputWidget[editable=true]{{
-            border: 1px solid rgba{rgba_background_01};
-        }}
-        /* Border during edit operation */
-        AbstractLabelInputWidget[readonly=false]{{
-            border: 1px solid rgba{rgba_selected};
-        }}
-        """.format(**style_sheet_args)
-        self.setStyleSheet(style_sheet)
-
-    """ API """
-    def isEditable(self):
-        return self._is_editable
-
-    def setEditable(self, enabled):
-        self._is_editable = enabled
-        self.setProperty('editable', enabled)
-
-    # TODO duplicate code
-    """ VIRTUAL (copy / paste from iShojiGroupInput"""
-    def __user_finished_editing_event(self, *args, **kwargs):
-        pass
-
-    def setUserFinishedEditingEvent(self, function):
-        """
-        Sets the function that should be triggered everytime
-        the user finishes editing this widget
-
-        This function should take two args
-        widget/item, value
-        """
-        self.__user_finished_editing_event = function
-
-    def userFinishedEditingEvent(self, *args, **kwargs):
-        """
-        Internal event to run everytime the user triggers an update.  This
-        will need to be called on every type of widget.
-        """
-        self.__user_finished_editing_event(*args, **kwargs)
-
-    def disableDelegate(self):
-        if self.isEditable():
-            self.__setReadOnly(True)
-
-    def __setReadOnly(self, enabled):
-        """
-        Overloading the setReadOnly with a wrapper
-
-        Args:
-            enabled (bool): determines if this widget is current set to read only
-                mode or edit mode.
-        """
-        self.setProperty('readonly', enabled)
-        self.setReadOnly(enabled)
-        updateStyleSheet(self)
-        pass
-
-    """ EVENTS """
-    def focusOutEvent(self, event):
-        if self.isEditable():
-            self.__setReadOnly(True)
-        return AbstractStringInputWidget.focusOutEvent(self, event)
-
-    def mousePressEvent(self, event):
-        if self.isEditable():
-            self.__setReadOnly(False)
-        return AbstractStringInputWidget.mousePressEvent(self, event)
-
 
 class AbstractLabelWidget(QLabel, iAbstractInputWidget):
     """
     Display label
     """
     TYPE = 'label'
+
     def __init__(self, parent=None, text=None):
         super(AbstractLabelWidget, self).__init__(parent)
-        self.setProperty("input_hover", True)
+
         if text:
             self.setText(text)
-        # self.updateStyleSheet()
 
+        # setup style
+
+        # remove hover display (overwritten by image)
+        style_sheet = removeHoverDisplay(self.styleSheet(), "INPUT WIDGETS")
+        self.setStyleSheet(style_sheet)
+
+        # set text alignment
         self.setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
 
     def setImage(self, image_path):
@@ -620,13 +521,6 @@ border-image: url({image_path}) 0 0 0 0 stretch stretch;
         style_sheet += self.styleSheet()
 
         self.setStyleSheet(style_sheet)
-        #print('============' * 5)
-        #print(style_sheet)
-        # from qtpy.QtGui import QPixmap
-        # pixmap = QPixmap()
-        # pixmap.load(image_path)
-        #
-        # self.overlayWidget().setPixmap(pixmap)
 
     def removeImage(self):
         style_sheet = self.styleSheet()
@@ -653,11 +547,6 @@ class AbstractBooleanInputWidget(QLabel, iAbstractInputWidget):
         self.setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
 
     """ EVENTS """
-    # def enterEvent(self, event):
-    #     self.setProperty("input_hover", True)
-    #     updateStyleSheet(self)
-    #     return QLabel.enterEvent(self, event)
-
     def mouseReleaseEvent(self, event):
         self.is_selected = not self.is_selected
 
@@ -666,9 +555,6 @@ class AbstractBooleanInputWidget(QLabel, iAbstractInputWidget):
             self.userFinishedEditingEvent(self, self.is_selected)
         except AttributeError:
             pass
-
-        # self.setProperty("input_hover", False)
-        # updateStyleSheet(self)
 
         return QLabel.mouseReleaseEvent(self, event)
 
@@ -722,16 +608,35 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
         super(AbstractOverlayInputWidget, self).__init__(parent)
 
         # create widgets
-        self._view_widget = AbstractLabelWidget(self, title)
+        class ViewWidget(AbstractLabelWidget):
+            def __init__(self, parent=None, title=""):
+                super(ViewWidget, self).__init__(parent, title)
+
+            """ EVENTS """
+
+            def mouseReleaseEvent(self, event):
+                # enable editor
+                if self.parent().displayMode() == AbstractOverlayInputWidget.RELEASE:
+                    if self.parent().currentIndex() == 0:
+                        self.parent().showDelegate()
+                        self.parent().delegateWidget().setFocus()
+
+                return QStackedWidget.mouseReleaseEvent(self, event)
+
+            def enterEvent(self, event):
+                # enable editor
+                if self.parent().displayMode() == AbstractOverlayInputWidget.ENTER:
+                    self.parent().showDelegate()
+                    QStackedWidget.enterEvent(self, event)
+                    self.parent().delegateWidget().setFocus()
+                return QStackedWidget.enterEvent(self, event)
+
+        view_widget = ViewWidget(self, title)
+        self.setViewWidget(view_widget)
 
         if not delegate_widget:
-            print('no delegate')
             delegate_widget = AbstractStringInputWidget(self)
-        self._delegate_widget = delegate_widget
-
-        # add widgets
-        self.addWidget(self._view_widget)
-        self.addWidget(self._delegate_widget)
+        self.setDelegateWidget(delegate_widget)
 
         # setup style
         self.setDisplayMode(display_mode)
@@ -750,20 +655,27 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
 
     def setDelegateWidget(self, widget):
         # remove old input widget
-        self._delegate_widget.setParent(None)
+        if hasattr(self, "_delegate_widget"):
+            self._delegate_widget.setParent(None)
 
         # add new input widget
         self.addWidget(widget)
 
         # setup attr
         self._delegate_widget = widget
-        pass
+
+        style_sheet = removeHoverDisplay(widget.styleSheet(), "INPUT WIDGETS")
+        widget.setStyleSheet(style_sheet)
 
     def viewWidget(self):
         return self._view_widget
 
     def setViewWidget(self, view_widget):
+        if hasattr(self, "_view_widget"):
+            self._view_widget.setParent(None)
         self._view_widget = view_widget
+        self.insertWidget(0, self._view_widget)
+        # self._view_widget.installEventFilter(self)
 
     """ DELEGATE DISPLAY """
     def displayMode(self):
@@ -779,6 +691,14 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
         """
         self._display_mode = display_mode
 
+        if display_mode == AbstractOverlayInputWidget.DISABLED:
+            style_sheet = removeHoverDisplay(self.styleSheet(), "INPUT WIDGETS")
+            self.setStyleSheet(style_sheet)
+
+        else:
+            self.updateStyleSheet()
+
+
     def showDelegate(self):
         self.setCurrentIndex(1)
         self.releaseMouse()
@@ -786,19 +706,11 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
         # run user event
         self.showDelegateEvent()
 
-        # remove double hover
-        self.setProperty("input_hover", False)
-        updateStyleSheet(self)
-
     def hideDelegate(self):
         self.setCurrentIndex(0)
 
         # run user event
         self.hideDelegateEvent()
-
-        # remove double hover
-        self.setProperty("input_hover", True)
-        updateStyleSheet(self)
 
     """ VIRTUAL FUNCTIONS """
     def title(self):
@@ -833,30 +745,10 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
         self._hide_delegate_event()
 
     """ EVENTS """
-    def mouseReleaseEvent(self, event):
-        # enable editor
-        if self.displayMode() == AbstractOverlayInputWidget.RELEASE:
-            if self.currentIndex() == 0:
-                self.showDelegate()
-                self.delegateWidget().setFocus()
-
-        return QStackedWidget.mouseReleaseEvent(self, event)
-
-    def enterEvent(self, event):
-        if self.currentIndex() == 0:
-            self.grabMouse()
-
-        # enable editor
-        if self.displayMode() == AbstractOverlayInputWidget.ENTER:
-            self.showDelegate()
-            QStackedWidget.enterEvent(self, event)
-            self.delegateWidget().setFocus()
-        return QStackedWidget.enterEvent(self, event)
-
     def leaveEvent(self, event):
         if self.currentIndex() == 1:
             self.hideDelegate()
-        self.releaseMouse()
+
         return QStackedWidget.leaveEvent(self, event)
 
 
@@ -966,13 +858,20 @@ if __name__ == "__main__":
 
     # Construct
     delegate_widget = AbstractBooleanInputWidget(text="yolo")
-    main_widget = AbstractOverlayInputWidget(
+    overlay_widget = AbstractOverlayInputWidget(
         title="title",
         display_mode=AbstractOverlayInputWidget.RELEASE,
         delegate_widget=delegate_widget,
         image="/home/brian/Pictures/test.png")
 
     # main_widget = CustomDynamicWidgetExample()
+    #overlay_widget.setDisplayMode(AbstractOverlayInputWidget.DISABLED)
+    #overlay_widget.setDisplayMode(AbstractOverlayInputWidget.ENTER)
+    main_widget = QWidget()
+    main_layout = QVBoxLayout(main_widget)
+    main_layout.addWidget(overlay_widget)
+    main_layout.addWidget(QLabel("klajdflasjkjfklasfjsl"))
+
     main_widget.move(QCursor.pos())
     main_widget.show()
     main_widget.resize(500, 500)

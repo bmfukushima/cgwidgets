@@ -218,11 +218,13 @@ class AbstractDragDropAbstractView(object):
     """ EVENTS """
     def selectionChanged(self, selected, deselected):
         for index in selected.indexes():
-            item = index.internalPointer()
-            self.model().itemSelectedEvent(item, True, column=index.column())
+            if index.column() == 0:
+                item = index.internalPointer()
+                self.model().itemSelectedEvent(item, True)
         for index in deselected.indexes():
-            item = index.internalPointer()
-            self.model().itemSelectedEvent(item, False, column=index.column())
+            if index.column() == 0:
+                item = index.internalPointer()
+                self.model().itemSelectedEvent(item, False)
 
     def enterEvent(self, event):
         self.setFocus()
@@ -237,22 +239,22 @@ class AbstractDragDropAbstractView(object):
         # Delete Item
         if self.model().isDeleteEnabled():
             if event.key() in [Qt.Key_Delete, Qt.Key_Backspace]:
-                indexes = self.selectionModel().selectedIndexes()
+                indexes = self.selectionModel().selectedRows(0)
                 #self.selectionModel().reset()
                 for index in indexes:
-                    if index.column() == 0:
-                        item = index.internalPointer()
-                        self.model().deleteItem(item, event_update=True)
+                    #if index.column() == 0:
+                    item = index.internalPointer()
+                    self.model().deleteItem(item, event_update=True)
 
         # Disable Item
         if self.model().isEnableable():
             if event.key() == Qt.Key_D:
-                indexes = self.selectionModel().selectedIndexes()
+                indexes = self.selectionModel().selectedRows(0)
                 for index in indexes:
-                    if index.column() == 0:
-                        item = index.internalPointer()
-                        enabled = False if item.isEnabled() else True
-                        self.model().setItemEnabled(item, enabled)
+                    #if index.column() == 0:
+                    item = index.internalPointer()
+                    enabled = False if item.isEnabled() else True
+                    self.model().setItemEnabled(item, enabled)
                 self.model().layoutChanged.emit()
 
         self.__keyPressEvent(event)
@@ -284,7 +286,7 @@ class AbstractDragDropAbstractView(object):
 
         # get selected items / items under cursor
         index_clicked = context_menu.item
-        selected_indexes = self.selectionModel().selectedIndexes()
+        selected_indexes = self.selectionModel().selectedRows(0)
 
         # do user defined event
         if action is not None:

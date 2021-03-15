@@ -180,10 +180,11 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         return new_index
 
     def getAllSelectedIndexes(self):
-        selected_indexes = []
-        for index in self.headerWidget().selectionModel().selectedIndexes():
-            if index.column() == 0:
-                selected_indexes.append(index)
+        # selected_indexes = []
+        # for index in self.headerWidget().selectionModel().selectedIndexes():
+        #     if index.column() == 0:
+        #         selected_indexes.append(index)
+        selected_indexes = self.headerWidget().selectionModel().selectedRows(0)
         return selected_indexes
 
     def rootItem(self):
@@ -458,9 +459,9 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         """
         # get attrs
         name = self.model().getItemName(item)
-
+        print('name ==== ', name)
         # create delegate
-        display_widget = ShojiModelDelegateWidget(self, name)
+        display_widget = ShojiModelDelegateWidget(self, title=name)
 
         # set up attrs
         display_widget.setMainWidget(widget)
@@ -516,7 +517,7 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
             self.toggleDelegateSpacerWidget()
             selection_model = self.headerWidget().selectionModel()
             widget_list = []
-            for index in selection_model.selectedIndexes():
+            for index in selection_model.selectedRows(0):
                 item = index.internalPointer()
                 widget = item.delegateWidget()
                 widget_list.append(widget)
@@ -527,11 +528,10 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
             selection_model = self.headerWidget().selectionModel()
             for index in selection_model.selectedIndexes():
                 item = index.internalPointer()
-                if index.column() == 0:
-                    self.updateDelegateItem(item, False, index.column())
-                    self.updateDelegateItem(item, True, index.column())
+                self.updateDelegateItem(item, False)
+                self.updateDelegateItem(item, True)
 
-    def updateDelegateItem(self, item, selected, column=0):
+    def updateDelegateItem(self, item, selected):
         """
         item (ShojiModelItem)
         selected (bool): determines if this item has been selected
@@ -540,14 +540,13 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         # update static widgets
         # todo column registry.
         ## note that this is set so that it will not run for each column
-        if column == 0:
-            if self.getDelegateType() == ShojiModelViewWidget.STACKED:
-                if item.delegateWidget():
-                    self.__updateStackedDisplay(item, selected)
+        if self.getDelegateType() == ShojiModelViewWidget.STACKED:
+            if item.delegateWidget():
+                self.__updateStackedDisplay(item, selected)
 
-            # update dynamic widgets
-            if self.getDelegateType() == ShojiModelViewWidget.DYNAMIC:
-                self.__updateDynamicDisplay(item, selected)
+        # update dynamic widgets
+        if self.getDelegateType() == ShojiModelViewWidget.DYNAMIC:
+            self.__updateDynamicDisplay(item, selected)
 
     def __updateStackedDisplay(self, item, selected):
         """
@@ -891,14 +890,12 @@ class ShojiModelDelegateWidget(AbstractFrameInputWidgetContainer):
             this delegate
     """
     def __init__(self, parent=None, title=None):
-        super(ShojiModelDelegateWidget, self).__init__(parent, title)
+        print('title == ', title)
+        super(ShojiModelDelegateWidget, self).__init__(parent, title=title)
 
-        # todo (delete later, maybe... its actually doing stuff so chill)
+        # # todo (delete later, maybe... its actually doing stuff so chill)
         self.layout().setContentsMargins(0, 0, 0, 0)
-        self.setStyleSheet("""
-        ShojiModelDelegateWidget{
-            border: None;
-        }""")
+
 
     def setMainWidget(self, widget):
         # remove old main widget if it exists
@@ -948,7 +945,7 @@ class ShojiHeader(ModelViewWidget):
 
         return return_val
 
-    def selectionChanged(self, item, enabled, column=0):
+    def selectionChanged(self, item, enabled):
         """
         Determines whether or not an items delegateWidget() should be
         displayed/updated/destroyed.
@@ -962,7 +959,7 @@ class ShojiHeader(ModelViewWidget):
 
         # update display
         top_level_widget._selection_item = enabled
-        top_level_widget.updateDelegateItem(item, enabled, column)
+        top_level_widget.updateDelegateItem(item, enabled)
 
         # update delegate background
         if hasattr(top_level_widget, '_delegate_widget'):
@@ -973,7 +970,7 @@ class ShojiHeader(ModelViewWidget):
                 top_level_widget.delegateWidget().rgba_background = iColor['rgba_background_01']
 
         # custom input event | need this as we're overriding the models input
-        top_level_widget.itemSelectedEvent(item, enabled, column)
+        top_level_widget.itemSelectedEvent(item, enabled)
 
         # update full screen selection
         if enabled:

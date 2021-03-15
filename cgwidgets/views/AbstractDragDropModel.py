@@ -754,7 +754,7 @@ class AbstractDragDropModel(QAbstractItemModel):
     def setIndexSelectedEvent(self, function):
         self.__itemSelectedEvent = function
 
-    def itemSelectedEvent(self, item, enabled, column=0):
+    def itemSelectedEvent(self, item, enabled):
         """
         When an item is selected, this event will run.
 
@@ -766,7 +766,7 @@ class AbstractDragDropModel(QAbstractItemModel):
             This will run through a for each loop and run for every single item in
             the current selection
         """
-        self.__itemSelectedEvent(item, enabled, column)
+        self.__itemSelectedEvent(item, enabled)
 
-    def __itemSelectedEvent(self, item, enabled, column=0):
+    def __itemSelectedEvent(self, item, enabled):
         pass
