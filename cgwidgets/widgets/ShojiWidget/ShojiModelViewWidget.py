@@ -525,10 +525,10 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         # update dynamic delagate
         elif self.getDelegateType() == ShojiModelViewWidget.DYNAMIC:
             selection_model = self.headerWidget().selectionModel()
-            for index in selection_model.selectedIndexes():
+            for index in selection_model.selectedRows(0):
                 item = index.internalPointer()
-                self.updateDelegateItem(item, False)
-                self.updateDelegateItem(item, True)
+                delegate_widget = item.delegateWidget()
+                self.updateDynamicWidget(self, delegate_widget, item)
 
     def updateDelegateItem(self, item, selected):
         """
@@ -573,8 +573,6 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
             self.delegateWidget().addWidget(dynamic_widget)
             item.setDelegateWidget(dynamic_widget)
             self.updateDynamicWidget(self, dynamic_widget, item)
-            # todo dynamic key event
-            #dynamic_widget.installEventFilter(self)
         else:
             # destroy widget
             try:
@@ -723,8 +721,6 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         for index in self.model().getAllIndexes():
             widget = index.internalPointer().delegateWidget()
             if widget:
-                # print(self.delegateWidget())
-                #widget.removeEventFilter(self.delegateWidget())
                 self.delegateWidget().installHoverDisplay(widget)
 
     """ default view size"""
@@ -893,7 +889,6 @@ class ShojiModelDelegateWidget(AbstractFrameInputWidgetContainer):
 
         # # todo (delete later, maybe... its actually doing stuff so chill)
         self.layout().setContentsMargins(0, 0, 0, 0)
-
 
     def setMainWidget(self, widget):
         # remove old main widget if it exists

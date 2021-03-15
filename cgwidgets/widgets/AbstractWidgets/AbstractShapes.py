@@ -103,12 +103,12 @@ class AbstractInputGroupFrame(QFrame):
             AbstractOverlayInputWidget,
             AbstractStringInputWidget)
 
-        delegate_widget = AbstractStringInputWidget(self)
+        editor_widget = AbstractStringInputWidget(self)
         header_widget = AbstractOverlayInputWidget(
             self,
             title=title,
             display_mode=AbstractOverlayInputWidget.RELEASE,
-            delegate_widget=delegate_widget)
+            editor_widget=editor_widget)
         self.setHeaderWidget(header_widget)
 
         # set up display

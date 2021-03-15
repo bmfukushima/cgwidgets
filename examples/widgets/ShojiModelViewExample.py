@@ -169,7 +169,7 @@ def setupAsDynamic():
                 print("---- DYNAMIC WIDGET ----")
                 print(parent, widget, item)
                 name = parent.model().getItemName(item)
-                widget.setName(name)
+                widget.setTitle(name)
                 widget.getMainWidget().label.setText(name)
 
     class DynamicItemExample(FloatInputWidget):
@@ -202,7 +202,7 @@ def setupAsDynamic():
 
     # create items
     for x in range(3):
-        name = '<title {}>'.format(str(x))
+        name = 'title {}'.format(str(x))
         shoji_widget.insertShojiWidget(x, column_data={'name': name})
 
     # insert child tabs
@@ -216,8 +216,8 @@ def setupAsDynamic():
     custom_index.internalPointer().setDynamicWidgetBaseClass(DynamicItemExample)
     custom_index.internalPointer().setDynamicUpdateFunction(DynamicItemExample.updateGUI)
 
-setupAsStacked()
-#setupAsDynamic()
+#setupAsStacked()
+setupAsDynamic()
 
 # SET FLAGSLabelledInputWidget
 shoji_widget.setMultiSelect(True)
@@ -266,6 +266,7 @@ DROPPING -->
 def testEdit(item, old_value, new_value):
     print("---- EDIT EVENT ----")
     print(item, old_value, new_value)
+    #updateDelegateDisplay
 
 def testEnable(item, enabled):
     print('---- ENABLE EVENT ----')

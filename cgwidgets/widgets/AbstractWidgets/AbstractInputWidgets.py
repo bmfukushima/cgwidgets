@@ -600,7 +600,7 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
     def __init__(
             self,
             parent=None,
-            delegate_widget=None,
+            editor_widget=None,
             image=None,
             title="",
             display_mode=4
@@ -619,24 +619,24 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
                 if self.parent().displayMode() == AbstractOverlayInputWidget.RELEASE:
                     if self.parent().currentIndex() == 0:
                         self.parent().showDelegate()
-                        self.parent().delegateWidget().setFocus()
+                        self.parent().editorWidget().setFocus()
 
-                return QStackedWidget.mouseReleaseEvent(self, event)
+                return AbstractLabelWidget.mouseReleaseEvent(self, event)
 
             def enterEvent(self, event):
                 # enable editor
                 if self.parent().displayMode() == AbstractOverlayInputWidget.ENTER:
                     self.parent().showDelegate()
-                    QStackedWidget.enterEvent(self, event)
-                    self.parent().delegateWidget().setFocus()
-                return QStackedWidget.enterEvent(self, event)
+                    AbstractLabelWidget.enterEvent(self, event)
+                    self.parent().editorWidget().setFocus()
+                return AbstractLabelWidget.enterEvent(self, event)
 
         view_widget = ViewWidget(self, title)
         self.setViewWidget(view_widget)
 
-        if not delegate_widget:
-            delegate_widget = AbstractStringInputWidget(self)
-        self.setDelegateWidget(delegate_widget)
+        if not editor_widget:
+            editor_widget = AbstractStringInputWidget(self)
+        self.setEditorWidget(editor_widget)
 
         # setup style
         self.setDisplayMode(display_mode)
@@ -649,20 +649,20 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
         # self.viewWidget().updateStyleSheet()
 
     """ WIDGETS """
-    def delegateWidget(self):
+    def editorWidget(self):
 
-        return self._delegate_widget
+        return self._editor_widget
 
-    def setDelegateWidget(self, widget):
+    def setEditorWidget(self, widget):
         # remove old input widget
-        if hasattr(self, "_delegate_widget"):
-            self._delegate_widget.setParent(None)
+        if hasattr(self, "_editor_widget"):
+            self._editor_widget.setParent(None)
 
         # add new input widget
         self.addWidget(widget)
 
         # setup attr
-        self._delegate_widget = widget
+        self._editor_widget = widget
 
         style_sheet = removeHoverDisplay(widget.styleSheet(), "INPUT WIDGETS")
         widget.setStyleSheet(style_sheet)
@@ -697,7 +697,6 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
 
         else:
             self.updateStyleSheet()
-
 
     def showDelegate(self):
         self.setCurrentIndex(1)
@@ -857,11 +856,11 @@ if __name__ == "__main__":
             super(CustomDynamicWidgetExample, self).__init__(parent, title="Hello")
 
     # Construct
-    delegate_widget = AbstractBooleanInputWidget(text="yolo")
+    editor_widget = AbstractBooleanInputWidget(text="yolo")
     overlay_widget = AbstractOverlayInputWidget(
         title="title",
         display_mode=AbstractOverlayInputWidget.RELEASE,
-        delegate_widget=delegate_widget,
+        editor_widget=editor_widget,
         image="/home/brian/Pictures/test.png")
 
     # main_widget = CustomDynamicWidgetExample()

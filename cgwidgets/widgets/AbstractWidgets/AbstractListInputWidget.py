@@ -447,7 +447,7 @@ class AbstractListInputWidget(AbstractStringInputWidget):
     """ EVENTS """
     def mouseReleaseEvent(self, event, *args, **kwargs):
         self.showCompleter()
-        return QLineEdit.mouseReleaseEvent(self, event, *args, **kwargs)
+        return AbstractStringInputWidget.mouseReleaseEvent(self, event, *args, **kwargs)
 
     def showCompleter(self, filter_results=True):
         """

@@ -130,32 +130,32 @@ class ShojiInputWidgetContainer(LabelledInputWidget):
             # get attrs
             name = parent.model().getItemName(item)
             value = item.columnData()['value']
-            # labelled_widget = widget.getMainWidget()
-            # widget_constructor = item.widgetConstructor()
+            labelled_widget = widget.getMainWidget()
+            widget_constructor = item.widgetConstructor()
 
             # set attrs
             # todo fails here...
-            # labelled_widget.setTitle(name)
-            # labelled_widget.setInputBaseClass(widget_constructor)
-            # input_widget = labelled_widget.getInputWidget()
-            #
-            # # update list inputs
-            # if isinstance(input_widget, ListInputWidget):
-            #     item_list = item.columnData()['items_list']
-            #     input_widget.populate(item_list)
-            #
-            # # update boolean inputs
-            # if isinstance(input_widget, BooleanInputWidget):
-            #     # toggle
-            #     widget.getMainWidget().getInputWidget().is_clicked = value
-            #     updateStyleSheet(widget.getMainWidget().getInputWidget())
-            #     return
-            #
-            # # set input widgets current value from item
-            # input_widget.setText(str(value))
-            #
-            # input_widget.setUserFinishedEditingEvent(item.userInputEvent)
-            # input_widget.setLiveInputEvent(item.userLiveInputEvent)
+            labelled_widget.setTitle(name)
+            labelled_widget.setInputBaseClass(widget_constructor)
+            input_widget = labelled_widget.getInputWidget()
+
+            # update list inputs
+            if isinstance(input_widget, ListInputWidget):
+                item_list = item.columnData()['items_list']
+                input_widget.populate(item_list)
+
+            # update boolean inputs
+            if isinstance(input_widget, BooleanInputWidget):
+                # toggle
+                widget.getMainWidget().getInputWidget().is_clicked = value
+                updateStyleSheet(widget.getMainWidget().getInputWidget())
+                return
+
+            # set input widgets current value from item
+            input_widget.setText(str(value))
+
+            input_widget.setUserFinishedEditingEvent(item.userInputEvent)
+            input_widget.setLiveInputEvent(item.userLiveInputEvent)
 
     def insertInputWidget(
             self,

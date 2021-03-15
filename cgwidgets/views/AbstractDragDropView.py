@@ -234,6 +234,8 @@ class AbstractDragDropAbstractView(object):
 
         # Clear Selection
         if event.key() == Qt.Key_Escape:
+            # from qtpy.QtWidgets import qApp
+            # if qApp.widgetAt(QCursor.pos()) == self:
             self.clearItemSelection()
 
         # Delete Item

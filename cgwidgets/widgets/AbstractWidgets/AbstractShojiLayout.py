@@ -300,7 +300,9 @@ class AbstractShojiLayout(QSplitter):
         """
         """
         # preflight
-        if not self.isSoloViewEnabled(): QSplitter.keyPressEvent(self, event)
+        if not self.isSoloViewEnabled():
+            return QSplitter.keyPressEvent(self, event)
+            # QSplitter.keyPressEvent(self, event)
 
         # solo view
         if event.key() == self.soloViewHotkey():

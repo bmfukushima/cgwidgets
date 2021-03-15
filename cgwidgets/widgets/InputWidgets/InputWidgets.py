@@ -61,14 +61,14 @@ class OverlayInputWidget(AbstractOverlayInputWidget):
     def __init__(
             self,
             parent=None,
-            delegate_widget=None,
+            editor_widget=None,
             image=None,
             title="",
             display_mode=4
     ):
         super(OverlayInputWidget, self).__init__(
             parent,
-            delegate_widget=delegate_widget,
+            editor_widget=editor_widget,
             image=image,
             title=title,
             display_mode=display_mode)
