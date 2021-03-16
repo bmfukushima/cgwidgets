@@ -12,7 +12,7 @@ from .AbstractWidgets import *
 """ MODEL VIEW WIDGET"""
 from .ModelViewWidget import ModelViewWidget as ModelViewWidget
 
-""" TANSU """
+""" SHOJI """
 from .ShojiWidget import ShojiModelItem as ShojiModelItem
 from .ShojiWidget import ShojiModel as ShojiModel
 

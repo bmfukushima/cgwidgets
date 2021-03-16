@@ -845,6 +845,9 @@ class ShojiMainDelegateWidget(ShojiLayout):
         Note: This is copy/pasted from the ShojiLayout to be modified
         """
         # preflight
+        if event.type() not in [QEvent.Enter, QEvent.Leave]: return False
+
+        # this is super expensive, like your mom
         tab_shoji_widget = getWidgetAncestor(self, ShojiModelViewWidget)
         if not tab_shoji_widget: return False
 
@@ -859,12 +862,13 @@ class ShojiMainDelegateWidget(ShojiLayout):
 
             else:
                 obj.setProperty("hover_display", False)
+            updateStyleSheet(obj)
 
         if event.type() == QEvent.Leave:
             obj.setProperty("hover_display", False)
-
+            updateStyleSheet(obj)
         # return True
-        updateStyleSheet(obj)
+
         return False
 
     def keyPressEvent(self, event):

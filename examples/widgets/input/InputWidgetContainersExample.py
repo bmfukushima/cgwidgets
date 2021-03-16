@@ -41,8 +41,6 @@ def userEvent(widget, value):
 shoji_input_widget_container = ShojiInputWidgetContainer(parent=None, name='ShojiInputWidgetContainer')
 
 # add user inputs
-
-
 shoji_input_widget_container.insertInputWidget(0, BooleanInputWidget, 'Boolean', userEvent)
 shoji_input_widget_container.insertInputWidget(0, StringInputWidget, 'String', userEvent)
 shoji_input_widget_container.insertInputWidget(0, IntInputWidget, 'Int', userEvent)
@@ -108,12 +106,14 @@ main_widget.insertShojiWidget(0, column_data={'name':'Shoji Container'}, widget=
 main_widget.insertShojiWidget(0, column_data={'name':'Button Container'}, widget=button_input_widget_container)
 main_widget.insertShojiWidget(0, column_data={'name':'Frame Container'}, widget=frame_input_widget_container)
 
-
+# from qtpy.QtWidgets import QLabel
+# main_widget = QSplitter()
+# #main_layout = QVBoxLayout(main_widget)
+# main_widget.addWidget(QLabel("test"))
+# main_widget.addWidget(shoji_input_widget_container)
 main_widget.resize(500, 500)
 main_widget.show()
 main_widget.move(QCursor.pos())
-
-
 
 sys.exit(app.exec_())
 

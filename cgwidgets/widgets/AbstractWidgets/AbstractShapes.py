@@ -10,8 +10,6 @@ from cgwidgets.utils import (
     updateStyleSheet, getFontSize
 )
 
-#
-
 
 class AbstractLine(QFrame):
     def __init__(self, parent=None):
@@ -99,16 +97,14 @@ class AbstractInputGroupFrame(QFrame):
         self._is_header_shown = True
 
         # setup layout
-        from cgwidgets.widgets.AbstractWidgets.AbstractInputWidgets import (
-            AbstractOverlayInputWidget,
-            AbstractStringInputWidget)
-
-        editor_widget = AbstractStringInputWidget(self)
+        from cgwidgets.widgets.AbstractWidgets.AbstractInputWidgets import AbstractStringInputWidget
+        from cgwidgets.widgets.AbstractWidgets.AbstractOverlayInputWidget import AbstractOverlayInputWidget
+        delegate_widget = AbstractStringInputWidget(self)
         header_widget = AbstractOverlayInputWidget(
             self,
             title=title,
             display_mode=AbstractOverlayInputWidget.RELEASE,
-            editor_widget=editor_widget)
+            delegate_widget=delegate_widget)
         self.setHeaderWidget(header_widget)
 
         # set up display
@@ -132,7 +128,7 @@ class AbstractInputGroupFrame(QFrame):
             display_mode (AbstractOverlayInputWidget.DISPLAY_MODE): determines what the display mode
                 should be.  By default, this is set to AbstractOverlayInputWidget.RELEASE
         """
-        from cgwidgets.widgets.AbstractWidgets.AbstractInputWidgets import AbstractOverlayInputWidget
+        from cgwidgets.widgets.AbstractWidgets.AbstractOverlayInputWidget import AbstractOverlayInputWidget
 
         # get display mode
         if enabled:

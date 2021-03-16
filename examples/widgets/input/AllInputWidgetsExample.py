@@ -42,26 +42,15 @@ def test(widget, value):
     print(widget, value)
     #widget.setText(str(value))
 
-def shojiInputTest(item, widget, value):
+def shojiInputTest(widget, value):
     print("---- SHOJI input function ----")
     print('setting value to... ', value)
-    print(item, widget, value)
+    print(widget, value)
     # widget.setText(str(value))
 
 def fail():
     print("fail")
-""" Setup Shoji Widget """
-shoji_group_widget = ShojiInputWidgetContainer(parent=None, name='ShojiInputWidgetContainer')
 
-# add user inputs
-shoji_group_widget.insertInputWidget(0, FloatInputWidget, 'Float', test)
-shoji_group_widget.insertInputWidget(0, IntInputWidget, 'Int', test)
-shoji_group_widget.insertInputWidget(0, BooleanInputWidget, 'Boolean', test)
-shoji_group_widget.insertInputWidget(0, StringInputWidget, 'String', test)
-shoji_group_widget.insertInputWidget(0, ListInputWidget, 'List', test, data={'items_list':list_of_crap})
-shoji_group_widget.insertInputWidget(0, PlainTextInputWidget, 'Text', test)
-
-shoji_group_widget.display_background = False
 
 """ normal widgets """
 normal_widget = createGroupBox("Normal Widgets")
@@ -201,15 +190,30 @@ for arg in label_widgets:
         input_widget.getInputWidget().populate(list_of_crap)
         input_widget.getInputWidget().display_item_colors = True
 
+""" Shoji Input Widget Container """
+shoji_input_widget_container = ShojiInputWidgetContainer(name='ShojiInputWidgetContainer')
+
+# add user inputs
+shoji_input_widget_container.insertInputWidget(0, BooleanInputWidget, 'Boolean', shojiInputTest)
+shoji_input_widget_container.insertInputWidget(0, StringInputWidget, 'String', shojiInputTest)
+shoji_input_widget_container.insertInputWidget(0, IntInputWidget, 'Int', shojiInputTest)
+shoji_input_widget_container.insertInputWidget(0, FloatInputWidget, 'Float', shojiInputTest)
+shoji_input_widget_container.insertInputWidget(0, ListInputWidget, 'List', shojiInputTest, data={'items_list':list_of_crap})
+shoji_input_widget_container.insertInputWidget(0, PlainTextInputWidget, 'Text', shojiInputTest)
+
+shoji_input_widget_container.display_background = False
 
 """ Main Widget"""
+
 main_widget = QSplitter()
 main_widget.setStyleSheet("""background-color: rgba{rgba_background_00}""".format(**iColor.style_sheet_args))
+
 main_widget.addWidget(normal_widget)
 main_widget.addWidget(vertical_label_widget)
 main_widget.addWidget(horizontal_label_widget)
-# main_widget.addWidget(shoji_group_widget)
+main_widget.addWidget(shoji_input_widget_container)
 main_widget.addWidget(frame_group_input_widget)
+
 
 main_widget.resize(500, 500)
 main_widget.show()
