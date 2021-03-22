@@ -146,6 +146,9 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
     def hideDelegate(self):
         self.setCurrentIndex(0)
 
+        # resize image
+        self.viewWidget().resizeImage()
+
         # run user event
         self.hideDelegateEvent()
 
@@ -156,14 +159,27 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
     def setTitle(self, title):
         self.viewWidget().setText(title)
 
+    def setTextColor(self, color):
+        """
+        Color to display the text as
+
+        Args:
+            color (RGBA): 255 Tuple
+        """
+        self.viewWidget().setTextColor(color)
+
     def setImage(self, image_path):
         self.viewWidget().setImage(image_path)
 
-    def removeImage(self):
-        self.viewWidget().removeImage()
+    def showImage(self, enabled):
+        self.viewWidget().showImage(enabled)
+
+    def setImageResizeMode(self, resize_mode):
+        self.viewWidget().setImageResizeMode(resize_mode)
+        self.viewWidget().resizeImage()
 
     """ VIRTUAL EVENTS """
-    def _show_delegate_event(self):
+    def _show_delegate_event(self, widget):
         pass
 
     def setShowDelegateEvent(self, event):
@@ -172,7 +188,7 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
     def showDelegateEvent(self):
         self._show_delegate_event(self)
 
-    def _hide_delegate_event(self):
+    def _hide_delegate_event(self, widget):
         pass
 
     def setHideDelegateEvent(self, event):
@@ -193,7 +209,7 @@ if __name__ == "__main__":
     from qtpy.QtWidgets import QApplication, QWidget, QVBoxLayout
     from qtpy.QtGui import QCursor
     from cgwidgets.widgets import AbstractBooleanInputWidget
-
+    from cgwidgets.settings.icons import icons
     import sys, inspect
 
     app = QApplication(sys.argv)
@@ -214,7 +230,7 @@ if __name__ == "__main__":
         title="title",
         display_mode=AbstractOverlayInputWidget.RELEASE,
         delegate_widget=delegate_widget,
-        image="/home/brian/Pictures/test.png")
+        image=icons["example_image_01"])
 
     # main_widget = CustomDynamicWidgetExample()
     #overlay_widget.setDisplayMode(AbstractOverlayInputWidget.DISABLED)
@@ -223,7 +239,6 @@ if __name__ == "__main__":
     main_layout = QVBoxLayout(main_widget)
     main_layout.addWidget(overlay_widget)
     main_layout.addWidget(QLabel("klajdflasjkjfklasfjsl"))
-
     main_widget.move(QCursor.pos())
     main_widget.show()
     main_widget.resize(500, 500)

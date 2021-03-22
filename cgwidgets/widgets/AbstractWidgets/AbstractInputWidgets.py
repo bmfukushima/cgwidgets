@@ -298,18 +298,54 @@ class AbstractStringInputWidget(AbstractInputLineEdit):
     def validateInput(self):
         return True
 
+from qtpy.QtWidgets import QWidget, QSizePolicy, QStackedLayout
+from qtpy.QtGui import QPixmap
+from cgwidgets.settings.icons import icons
 
-class AbstractLabelWidget(QLabel, iAbstractInputWidget):
+class AbstractLabelWidget(QWidget, iAbstractInputWidget):
     """
     Display label
+
+    Args:
+        text (str): text to be displayed as the title
+        image (str): path on disk to image
+
+    Hierarchy:
+        |-- QStackedLayout (StackAll)
+            |- imageWidget --> QLabel
+            |- textWidget --> QLabel
+
+    Signals:
+        resizeEvent --> timer --> resize image
+            When the widget is resized, the current pixmap will be scaled up/down to fit
+            the current pixmap.  When the user stops resizing, after a period of 500ms the
+            image will fully resize based off of the original size.
     """
+
     TYPE = 'label'
 
-    def __init__(self, parent=None, text=None):
+    def __init__(self, parent=None, text=None, image=None):
         super(AbstractLabelWidget, self).__init__(parent)
+        # setup layout
+        QStackedLayout(self)
+        self.layout().setStackingMode(QStackedLayout.StackAll)
+
+        # initialize widgets
+        self._image_widget = QLabel(self)
+        self.pixmap = QPixmap()
+        self._image_widget.setPixmap(self.pixmap)
+        self._text_widget = QLabel(self)
+
+        # setup default attrs
+        self._image_resize_mode = Qt.KeepAspectRatio
 
         if text:
             self.setText(text)
+            self.setTextColor(iColor["rgba_text"])
+
+        if image:
+            self.setImage(image)
+
 
         # setup style
 
@@ -318,44 +354,154 @@ class AbstractLabelWidget(QLabel, iAbstractInputWidget):
         self.setStyleSheet(style_sheet)
 
         # set text alignment
-        self.setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
+        self.textWidget().setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
+        self.imageWidget().setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
+
+        self.layout().addWidget(self.textWidget())
+        self.layout().addWidget(self.imageWidget())
+
+    """ TEXT """
+    def textWidget(self):
+        return self._text_widget
+
+    def setText(self, text):
+        """
+        Sets the display text of the widget
+        Args:
+            text (str):  text to be displayed
+        """
+        self.textWidget().setText(text)
+
+    def setTextColor(self, color):
+        """
+        Sets the color of the displayed text
+
+        Args:
+            color (RGBA): Tuple of RGBA(255) values
+        """
+        self.textWidget().setStyleSheet("color: rgba{color}".format(color=repr(color)))
+
+    """ IMAGE  """
+    def imageWidget(self):
+        return self._image_widget
 
     def setImage(self, image_path):
         """
-        sets a background image
+        Sets a background image
+
         Args:
             image_path (str): path to image on disk
-
-        Returns:
-
         """
-        self.removeImage()
+        self.setImagePath(image_path)
+        self.pixmap = QPixmap(image_path)
+        self.resizeImage()
+        # self.removeImage()
 
-        style_sheet = """
-/* << BACKGROUND IMAGE START >> */
-border-radius: 10px;
-background-color: rgba{rgba_background};
-color: rgba{rgba_text};
-border-image: url({image_path}) 0 0 0 0 stretch stretch;
-/* << BACKGROUND IMAGE END >> */""".format(
-            image_path=image_path,
-            rgba_background=iColor["rgba_background_00"],
-            rgba_text=iColor["rgba_text"])
+    def imagePath(self):
+        return self._image_path
 
-        style_sheet += self.styleSheet()
+    def setImagePath(self, image_path):
+        self._image_path = image_path
 
-        self.setStyleSheet(style_sheet)
+    def isImageVisible(self):
+        return self.imageWidget().isVisible()
 
-    def removeImage(self):
-        style_sheet = self.styleSheet()
+    def showImage(self, enabled):
+        """
+        Determines whether or not the background image will be displayed to the user
 
-        # todo update image
-        style_sheet = re.sub(
-            "(/\* << BACKGROUND IMAGE START >> \*/)([^\$]+)(/\* << BACKGROUND IMAGE END >> \*/)",
-            "",
-            style_sheet)
+        Args:
+            enabled (bool):
+        """
+        if enabled:
+            self.imageWidget().show()
+        if not enabled:
+            self.imageWidget().hide()
 
-        self.setStyleSheet(style_sheet)
+    def imageResizeMode(self):
+        return self._image_resize_mode
+
+    def setImageResizeMode(self, resize_mode):
+        """
+        Determines how the image should be resized.
+        Args:
+            resize_mode (Qt.RESIZE_MODE):  Qt.KeepAspectRatio | Qt.IgnoreAspectRatio
+        """
+        self._image_resize_mode = resize_mode
+
+    def resizeImage(self):
+        """
+        Main function for resizing the image.
+        """
+        self.imageWidget().setFixedSize(self.width(), self.height())
+        if not self.pixmap.isNull():
+            self.pixmap = self.pixmap.scaled(self.width(), self.height(), self.imageResizeMode())
+            self.imageWidget().setPixmap(self.pixmap)
+
+    """ EVENTS """
+    def time(self):
+        """
+        Util function for the timer event that is running while the user resizes.  This timer
+        is being run so that after the user finishes resizing, more updates can happen.
+        """
+        self.setImage(self.imagePath())
+        delattr(self, "_timer")
+
+    def resizeEvent(self, event):
+        """
+        After the user has finished resizing, after 1 second, this will fire an update
+        signal to have the display fully updated.
+        """
+        # preflight
+        if not hasattr(self, "_image_path"): return QWidget.resizeEvent(self, event)
+        if not self.isImageVisible(): return QWidget.resizeEvent(self, event)
+
+        # start _timer
+        from qtpy.QtCore import QTimer
+        if hasattr(self, "_timer"):
+            self._timer.stop()
+
+        self._timer = QTimer()
+        self._timer.timeout.connect(self.time)
+        self._timer.start(500)
+
+        # resize image
+        self.resizeImage()
+
+        return QWidget.resizeEvent(self, event)
+
+
+#         style_sheet = """
+# /* << BACKGROUND IMAGE START >> */
+# border-radius: 10px;
+# background-color: rgba{rgba_background};
+# color: rgba{rgba_text};
+# /*border-image: url({image_path}) 0 0 0 0 stretch repeat;*/
+# background-image: url({image_path} auto auto);
+# /* << BACKGROUND IMAGE END >> */""".format(
+#             image_path=image_path,
+#             rgba_background=iColor["rgba_background_00"],
+#             rgba_text=iColor["rgba_text"])
+#         #border-image: url({image_path}) 0 0 0 0 stretch stretch;
+#         style_sheet += self.styleSheet()
+#
+#         self.setStyleSheet(style_sheet)
+#
+#         # from qtpy.QtGui import QPixmap
+#         # from cgwidgets.settings.icons import icons
+#         # pixmap = QPixmap(icons["example_image_01"])
+#         # self.setPixmap(pixmap)
+
+    # def removeImage(self):
+    #     style_sheet = self.styleSheet()
+    #
+    #     # todo update image
+    #     style_sheet = re.sub(
+    #         "(/\* << BACKGROUND IMAGE START >> \*/)([^\$]+)(/\* << BACKGROUND IMAGE END >> \*/)",
+    #         "",
+    #         style_sheet)
+    #
+    #     self.setStyleSheet(style_sheet)
 
 
 class AbstractBooleanInputWidget(QLabel, iAbstractInputWidget):

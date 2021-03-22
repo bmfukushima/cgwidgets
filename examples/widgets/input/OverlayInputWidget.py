@@ -71,9 +71,6 @@ def createFrame(name, widget):
     frame_group_input_widget.addInputWidget(widget)
     return frame_group_input_widget
 
-# Create delegate widget
-delegate_widget = BooleanInputWidget(text="yolo")
-
 
 # Create Overlay Widgets
 
@@ -93,21 +90,31 @@ default_widget = createFrame("Default", overlay_widget_default)
 # with input args
 overlay_widget_args = OverlayInputWidget(
     title="Args",
-    display_mode=OverlayInputWidget.RELEASE,
-    delegate_widget=delegate_widget,
+    #display_mode=OverlayInputWidget.RELEASE,
+    delegate_widget=BooleanInputWidget(text="yolo"),
     image=icons["example_image_02"])
 
 args_widget = createFrame("Args", overlay_widget_args)
 
+
 # with setters
 overlay_widget_setters = OverlayInputWidget()
-overlay_widget_setters.setDisplayMode(OverlayInputWidget.ENTER)
+#overlay_widget_setters.setDisplayMode(OverlayInputWidget.ENTER)
 overlay_widget_setters.setTitle("Setters")
 overlay_widget_setters.setImage(icons["example_image_01"])
-overlay_widget_setters.setDelegateWidget(delegate_widget)
+
+# set delegate widget
+overlay_widget_setters.setDelegateWidget(BooleanInputWidget(text="yolo"))
+
+# set virtual events
 overlay_widget_setters.setHideDelegateEvent(hideDelegateEvent)
 overlay_widget_setters.setShowDelegateEvent(showDelegateEvent)
 
+#overlay_widget_setters.showImage(False)
+overlay_widget_setters.setImageResizeMode(Qt.IgnoreAspectRatio)
+overlay_widget_setters.setTextColor((0, 255, 0, 255))
+
+# create frame
 setters_widget = createFrame("Setters", overlay_widget_setters)
 
 
