@@ -26,6 +26,8 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
     Virtual Events:
         hide_delegate_event (Virtual Event): runs when the editor is being closed
         show_delegate_event (Virtual Event): runs when the editor is being opened
+
+        Note: These events both take one arg, which is the current instance of the AbstractOverlayInputWidget
     """
     # Display Modes
     DISABLED = 1
@@ -168,7 +170,7 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
         self._show_delegate_event = event
 
     def showDelegateEvent(self):
-        self._show_delegate_event()
+        self._show_delegate_event(self)
 
     def _hide_delegate_event(self):
         pass
@@ -177,13 +179,12 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
         self._hide_delegate_event = event
 
     def hideDelegateEvent(self):
-        self._hide_delegate_event()
+        self._hide_delegate_event(self)
 
     """ EVENTS """
     def leaveEvent(self, event):
         if self.currentIndex() == 1:
             self.hideDelegate()
-
         return QStackedWidget.leaveEvent(self, event)
 
 

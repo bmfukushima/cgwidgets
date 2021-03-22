@@ -8,7 +8,8 @@ class Icons(dict):
         self['path_branch_open'] = self._icons_dir + 'branch_open.png'
         self['path_branch_closed'] = self._icons_dir + 'branch_closed.png'
         self['gradient_background'] = self._icons_dir + 'gradient_background.png'
-
+        self['example_image_01'] = self._icons_dir + 'example_image_01.png'
+        self['example_image_02'] = self._icons_dir + 'example_image_02.png'
 
 icons = Icons()
 
