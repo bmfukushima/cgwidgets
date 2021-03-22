@@ -129,10 +129,21 @@ def setupAsStacked():
                                    widget=LabelledInputWidget(name='hello', widget_type=FloatInputWidget))
     shoji_widget.insertShojiWidget(0, column_data={'name': 'world'}, widget=QLabel('world'))
 
-    shoji_delegate = ShojiLayout()
+    # shoji model view widget
+    shoji_widget2 = ShojiModelViewWidget()
+    shoji_widget2.setMultiSelect(True)
+    for char in "SINE.":
+        shoji_widget2.insertShojiWidget(
+            0, column_data={'name': char},
+            widget=LabelledInputWidget(name=char, widget_type=FloatInputWidget))
+    shoji_widget.insertShojiWidget(0, column_data={'name':'Widget'}, widget=shoji_widget2)
+
+    # shoji layout
+    shoji_layout = ShojiLayout()
     for char in 'SINE.':
-        shoji_delegate.addWidget(StringInputWidget(char))
-    shoji_delegate_item = shoji_widget.insertShojiWidget(0, column_data={'name': 'shoji'}, widget=shoji_delegate)
+        shoji_layout.addWidget(StringInputWidget(char))
+
+    shoji_delegate_item = shoji_widget.insertShojiWidget(0, column_data={'name': 'Layout'}, widget=shoji_layout)
 
     # insert child tabs
     # insert child widgets
@@ -216,10 +227,116 @@ def setupAsDynamic():
     custom_index.internalPointer().setDynamicWidgetBaseClass(DynamicItemExample)
     custom_index.internalPointer().setDynamicUpdateFunction(DynamicItemExample.updateGUI)
 
-#setupAsStacked()
-setupAsDynamic()
+def setupAsDoubleDynamic():
+    class DynamicWidgetExample(QWidget):
+        """
+        Dynamic widget to be used for the ShojiModelViewWidget.  This widget will be shown
+        everytime an item is selected in the ShojiModelViewWidget, and the updateGUI function
+        will be run, every time an item is selected.
 
-# SET FLAGSLabelledInputWidget
+        Simple name of overloaded class to be used as a dynamic widget for
+        the ShojiModelViewWidget.
+        """
+
+        def __init__(self, parent=None):
+            super(DynamicWidgetExample, self).__init__(parent)
+            QVBoxLayout(self)
+            self.label = QLabel('init')
+            self.layout().addWidget(self.label)
+
+        @staticmethod
+        def updateGUI(parent, widget, item):
+            """
+            parent (ShojiModelViewWidget)
+            widget (ShojiModelDelegateWidget)
+            item (ShojiModelItem)
+            self --> widget.getMainWidget()
+            """
+            if item:
+                print("---- DYNAMIC WIDGET ----")
+                print(parent, widget, item)
+                name = parent.model().getItemName(item)
+                widget.setTitle(name)
+                widget.getMainWidget().label.setText(name)
+
+    class DynamicItemExample(ShojiModelViewWidget):
+        """
+        Custom widget which has overloaded functions/widget to be
+        displayed in the Shoji
+        """
+        def __init__(self, parent=None):
+            super(DynamicItemExample, self).__init__(parent)
+
+            self.setDelegateType(
+                ShojiModelViewWidget.DYNAMIC,
+                dynamic_widget=DynamicItemInputWidget,
+                dynamic_function=DynamicItemInputWidget.updateGUI
+            )
+            for x in range(3):
+                name = 'title {}'.format(str(x))
+                self.insertShojiWidget(x, column_data={'name': name})
+
+            self.setMultiSelect(True)
+        @staticmethod
+        def updateGUI(parent, widget, item):
+            """
+            parent (ShojiModelViewWidget)
+            widget (ShojiModelDelegateWidget)
+            item (ShojiModelItem)
+            self --> widget.getMainWidget()
+            """
+            if item:
+                print("---- DYNAMIC WIDGET ----")
+                print(parent, widget, item)
+                name = parent.model().getItemName(item)
+                widget.setTitle(name)
+                # widget.getMainWidget().label.setText(name)
+
+    class DynamicItemInputWidget(FloatInputWidget):
+        def __init__(self, parent=None):
+            super(DynamicItemInputWidget, self).__init__(parent)
+
+        @staticmethod
+        def updateGUI(parent, widget, item):
+            """
+            parent (ShojiModelViewWidget)
+            widget (ShojiModelDelegateWidget)
+            item (ShojiModelItem)
+            self --> widget.getMainWidget()
+            """
+            print("---- DYNAMIC ITEM ----")
+            print(parent, widget, item)
+            this = widget.getMainWidget()
+            this.setText('whatup')
+
+    # set all items to use this widget
+    shoji_widget.setDelegateType(
+        ShojiModelViewWidget.DYNAMIC,
+        dynamic_widget=DynamicWidgetExample,
+        dynamic_function=DynamicWidgetExample.updateGUI
+    )
+
+    # create items
+    for x in range(3):
+        name = 'title {}'.format(str(x))
+        shoji_widget.insertShojiWidget(x, column_data={'name': name})
+
+    # insert child tabs
+    # insert child widgets
+    parent_item = shoji_widget.insertShojiWidget(0, column_data={'name': "PARENT"})
+    for y in range(0, 2):
+        shoji_widget.insertShojiWidget(y, column_data={'name': str(y), 'one': 'datttaaa'}, parent=parent_item)
+
+    # custom item
+    custom_index = shoji_widget.insertShojiWidget(0, column_data={'name': 'Custom Item Widget'})
+    custom_index.internalPointer().setDynamicWidgetBaseClass(DynamicItemExample)
+    custom_index.internalPointer().setDynamicUpdateFunction(DynamicItemExample.updateGUI)
+
+#setupAsStacked()
+#setupAsDynamic()
+setupAsDoubleDynamic()
+
+# SET FLAGS
 shoji_widget.setMultiSelect(True)
 
 shoji_widget.delegateWidget().setHandleLength(100)
