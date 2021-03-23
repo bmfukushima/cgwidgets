@@ -21,7 +21,7 @@ from .AbstractListInputWidget import AbstractComboListInputWidget as AbstractCom
 from .AbstractListInputWidget import AbstractListInputWidget as AbstractListInputWidget
 from .AbstractInputWidgets import AbstractInputPlainText as AbstractInputPlainText
 
-from .AbstractOverlayInputWidget import AbstractOverlayInputWidget
+#from .AbstractOverlayInputWidget import AbstractOverlayInputWidget
 # from .AbstractO import AbstractOverlayInputWidget as AbstractOverlayInputWidget
 
 from .AbstractShojiLayout import AbstractShojiLayout, AbstractShojiLayoutHandle

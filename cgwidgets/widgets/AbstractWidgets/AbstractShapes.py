@@ -113,7 +113,7 @@ class AbstractInputGroupFrame(QFrame):
 
     """ API """
     def isHeaderEditable(self):
-        from cgwidgets.widgets.AbstractWidgets.AbstractInputWidgets import AbstractOverlayInputWidget
+        from cgwidgets.widgets import AbstractOverlayInputWidget
         if self.headerWidget.displayMode() != AbstractOverlayInputWidget.DISABLED:
             return True
         else:
