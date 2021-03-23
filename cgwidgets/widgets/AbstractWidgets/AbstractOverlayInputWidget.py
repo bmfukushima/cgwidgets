@@ -152,6 +152,8 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
         # run user event
         self.hideDelegateEvent()
 
+    # def __disableDisplay
+
     """ VIRTUAL FUNCTIONS """
     def title(self):
         return self.viewWidget().text()

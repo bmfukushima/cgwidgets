@@ -282,6 +282,7 @@ def setupAsDoubleDynamic():
                 self.insertShojiWidget(x, column_data={'name': name})
 
             self.setMultiSelect(True)
+
         @staticmethod
         def updateGUI(parent, widget, item):
             """
@@ -291,7 +292,7 @@ def setupAsDoubleDynamic():
             self --> widget.getMainWidget()
             """
             if item:
-                print("---- DYNAMIC WIDGET ----")
+                print("---- DOUBLE DYNAMIC WIDGET ----")
                 print(parent, widget, item)
                 name = parent.model().getItemName(item)
                 widget.setTitle(name)
@@ -338,9 +339,9 @@ def setupAsDoubleDynamic():
     custom_index.internalPointer().setDynamicUpdateFunction(DynamicItemExample.updateGUI)
 
 
-setupAsStacked()
+#setupAsStacked()
 #setupAsDynamic()
-#setupAsDoubleDynamic()
+setupAsDoubleDynamic()
 
 # SET FLAGS
 shoji_widget.setMultiSelect(True)

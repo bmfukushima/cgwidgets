@@ -134,7 +134,6 @@ class ShojiInputWidgetContainer(LabelledInputWidget):
             widget_constructor = item.widgetConstructor()
 
             # set attrs
-            # todo fails here...
             labelled_widget.setTitle(name)
             labelled_widget.setInputBaseClass(widget_constructor)
             input_widget = labelled_widget.getInputWidget()

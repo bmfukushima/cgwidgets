@@ -182,16 +182,27 @@ class ListInputWidget(AbstractListInputWidget):
     #     widget.getMainWidget().getInputWidget().setText(value)
     #     # print(widget, item)
 
-
-class LabelledInputWidget(ShojiLayout, AbstractInputGroupFrame):
+# , AbstractInputGroupFrame
+class LabelledInputWidget(ShojiLayout):
     """
     A single input widget.  This inherits from the ShojiLayout,
     to provide a slider for the user to expand/contract the editable area
     vs the view label.
 
+    Args:
+        name (str):
+        note (str):
+        direction (Qt.ORIENTATION):
+        widget_type (QWidget): Widget type to be constructed for as the delegate widget
+
+    Hierarchy:
+        |- ViewWidget --> AbstractOverlayInputWidget
+        |- DelegateWidget --> QWidget
+
     Note:
         Needs parent to be provided in order for the default size to be
         displayed correctly
+
     """
     def __init__(
         self,
@@ -202,9 +213,11 @@ class LabelledInputWidget(ShojiLayout, AbstractInputGroupFrame):
         widget_type=StringInputWidget
     ):
         super(LabelledInputWidget, self).__init__(parent, direction)
-        AbstractInputGroupFrame.__init__(self, parent, name, note, direction)
 
         # set up attrs
+        self._view_widget = AbstractOverlayInputWidget(title=name)
+        self._view_widget.setToolTip(note)
+
         self._input_widget = None #hack to make the setInputBaseClass update work
         self._default_label_length = 50
         self._separator_length = -1
@@ -219,7 +232,7 @@ class LabelledInputWidget(ShojiLayout, AbstractInputGroupFrame):
         )
 
         # add widgets
-        # self.addWidget(self._label)
+        self.addWidget(self._view_widget)
         self.addWidget(self._input_widget)
 
         # set size hints
@@ -299,6 +312,20 @@ class LabelledInputWidget(ShojiLayout, AbstractInputGroupFrame):
         """
         return
 
+    """ VIEW WIDGET """
+    def viewWidget(self):
+        return self._view_widget
+
+    def setViewWidget(self, _view_widget):
+        self._view_widget = _view_widget
+
+    def title(self):
+        return self.viewWidget().title()
+
+    def setTitle(self, title):
+        self.viewWidget().setTitle(title)
+
+    """ DELEGATE WIDGET """
     def setInputWidget(self, _input_widget):
         # remove previous input widget
         if self.getInputWidget():
@@ -337,6 +364,7 @@ class LabelledInputWidget(ShojiLayout, AbstractInputGroupFrame):
     def getInputBaseClass(self):
         return self._input_widget_base_class
 
+    """ SIZES """
     def setSeparatorLength(self, length):
         self.setHandleLength(length)
         self._separator_length = length
@@ -358,9 +386,6 @@ class LabelledInputWidget(ShojiLayout, AbstractInputGroupFrame):
         """
         # preflight
         if direction not in [Qt.Horizontal, Qt.Vertical]: return
-
-        # set direction
-        self.setOrientation(direction)
 
         # setup minimum sizes
         font_size = getFontSize(QApplication)
@@ -386,7 +411,7 @@ class LabelledInputWidget(ShojiLayout, AbstractInputGroupFrame):
             self.resetSliderPositionToDefault()
 
         # update label
-        return AbstractInputGroupFrame.setDirection(self, direction)
+        return ShojiLayout.setOrientation(self, direction)
 
     def defaultLabelLength(self):
         return self._default_label_length
