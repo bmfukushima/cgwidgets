@@ -47,11 +47,7 @@ Hierachy
                         | -- _temp_proxy_widget (QWidget)
                         | -* ShojiModelDelegateWidget (AbstractGroupBox)
                                 | -- Stacked/Dynamic Widget (main_widget)
-TODO:
-    * custom model / items
-    * add model/main widget to virtual events?
-        I don't think this is necessary...  Assuming that you can access the
-        main widget through some class attr.
+
 """
 import sys
 
@@ -65,6 +61,7 @@ from cgwidgets.widgets import (
 from cgwidgets.views import AbstractDragDropListView, AbstractDragDropTreeView
 from cgwidgets.widgets import ShojiLayout
 from cgwidgets.utils import attrs
+from cgwidgets.settings.icons import icons
 
 
 app = QApplication(sys.argv)
@@ -127,7 +124,15 @@ def setupAsStacked():
     shoji_widget.setDelegateType(ShojiModelViewWidget.STACKED)
     shoji_widget.insertShojiWidget(0, column_data={'name': 'hello'},
                                    widget=LabelledInputWidget(name='hello', widget_type=FloatInputWidget))
-    shoji_widget.insertShojiWidget(0, column_data={'name': 'world'}, widget=QLabel('world'))
+    image_path = icons["example_image_02"]
+    shoji_widget.insertShojiWidget(
+        0,
+        column_data={'name': 'world'},
+        widget=LabelledInputWidget(name='foobar', widget_type=FloatInputWidget),
+        display_overlay=True,
+        image_path=image_path,
+        text_color=(255, 255, 0, 255),
+        display_delegate_title=False)
 
     # shoji model view widget
     shoji_widget2 = ShojiModelViewWidget()
@@ -332,9 +337,10 @@ def setupAsDoubleDynamic():
     custom_index.internalPointer().setDynamicWidgetBaseClass(DynamicItemExample)
     custom_index.internalPointer().setDynamicUpdateFunction(DynamicItemExample.updateGUI)
 
-#setupAsStacked()
+
+setupAsStacked()
 #setupAsDynamic()
-setupAsDoubleDynamic()
+#setupAsDoubleDynamic()
 
 # SET FLAGS
 shoji_widget.setMultiSelect(True)

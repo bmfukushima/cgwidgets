@@ -84,22 +84,22 @@ def showDelegateEvent(widget):
     print(widget)
 
 # default
-overlay_widget_default = OverlayInputWidget()
+overlay_widget_default = OverlayInputWidget(title="Title")
 default_widget = createFrame("Default", overlay_widget_default)
 
 # with input args
 overlay_widget_args = OverlayInputWidget(
     title="Args",
-    #display_mode=OverlayInputWidget.RELEASE,
+    display_mode=OverlayInputWidget.RELEASE,
     delegate_widget=BooleanInputWidget(text="yolo"),
-    image=icons["example_image_02"])
+    image_path=icons["example_image_02"])
 
 args_widget = createFrame("Args", overlay_widget_args)
 
 
 # with setters
 overlay_widget_setters = OverlayInputWidget()
-#overlay_widget_setters.setDisplayMode(OverlayInputWidget.ENTER)
+overlay_widget_setters.setDisplayMode(OverlayInputWidget.ENTER)
 overlay_widget_setters.setTitle("Setters")
 overlay_widget_setters.setImage(icons["example_image_01"])
 

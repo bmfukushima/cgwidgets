@@ -24,6 +24,7 @@ from cgwidgets.settings.colors import iColor
 from cgwidgets.settings.hover_display import installHoverDisplaySS
 from cgwidgets.widgets import (
     AbstractFrameInputWidgetContainer,
+    AbstractOverlayInputWidget,
     ModelViewWidget,
     AbstractShojiLayout,
     AbstractShojiLayoutHandle)
@@ -75,10 +76,10 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
             |    | -- ViewWidget (ShojiHeaderListView)
             |            ( ShojiHeaderListView | ShojiHeaderTableView | ShojiHeaderTreeView )
             | -- Scroll Area
-                |-- DelegateWidget (ShojiMainDelegateWidget --> ShojiLayout)
+                |-- DelegateWidget (ShojiMainDelegateWidget --> AbstractOverlayInputWidget)
                         | -- _temp_proxy_widget (QWidget)
-                        | -* ShojiModelDelegateWidget (AbstractGroupBox)
-                                | -- Stacked/Dynamic Widget (main_widget)
+                        | -* ShojiModelDelegateWidget (AbstractOverlayInputWidget)
+                                | -- AbstractFrameInputWidgetContainer
     """
     OUTLINE_WIDTH = 1
     STACKED = 'stacked'
@@ -139,7 +140,10 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
     def setIndexSelected(self, index, selected):
         self.headerViewWidget().setIndexSelected(index, selected)
 
-    def insertShojiWidget(self, row, column_data={}, parent=None, widget=None):
+    def insertShojiWidget(
+        self, row, column_data={}, parent=None, widget=None,
+        image_path=None, display_overlay=None, text_color=None,
+        display_delegate_title=None):
         """
         Creates a new tab at  the specified index
 
@@ -154,6 +158,13 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
             row (int): index to insert widget at
             widget (QWidget): widget to be displayed at that index
 
+            image_path (str): path on disk to image to be displayed as overlaid image
+            display_overlay (bool): determines if an image/text should be overlaid over
+                the widget
+            text_color (RGBA): tuple255
+            display_delegate_title (bool): if set will override the global settings for if
+                the delgate title should be shown
+
         Returns (QModelIndex)
         """
         # create new model index
@@ -162,7 +173,13 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
 
         new_index = self.model().insertNewIndex(row, parent=parent)
         view_item = new_index.internalPointer()
+
+        # setup extra data
         view_item.setColumnData(column_data)
+        view_item.setImagePath(image_path)
+        view_item.setDisplayOverlay(display_overlay)
+        view_item.setTextColor(text_color)
+        view_item.setDisplayDelegateTitle(display_delegate_title)
 
         # add to layout if stacked
         if self.getDelegateType() == ShojiModelViewWidget.STACKED:
@@ -459,14 +476,30 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         """
         # get attrs
         name = self.model().getItemName(item)
+        image_path = item.imagePath()
+        display_overlay = item.displayOverlay()
+
         # create delegate
-        display_widget = ShojiModelDelegateWidget(self, title=name)
+        display_widget = ShojiModelDelegateWidget(
+            self, title=name, image_path=image_path, display_overlay=display_overlay)
 
         # set up attrs
         display_widget.setMainWidget(widget)
         display_widget.setItem(item)
-        display_widget.setIsHeaderShown(self.delegateTitleIsShown())
-        display_widget.setDirection(self.delegateHeaderDirection())
+
+        # text color
+        if item.textColor():
+            display_widget.setTextColor(item.textColor())
+
+        # display title
+        if item.displayDelegateTitle():
+            is_delegate_title_shown = item.displayDelegateTitle()
+        else:
+            is_delegate_title_shown = self.delegateTitleIsShown()
+        display_widget.delegateWidget().setIsHeaderShown(is_delegate_title_shown)
+
+        # set direction
+        display_widget.delegateWidget().setDirection(self.delegateHeaderDirection())
 
         return display_widget
 
@@ -553,7 +586,7 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         automatically show/hide widgets as needed
         """
         if selected:
-            item.delegateWidget().setIsHeaderShown(self.delegateTitleIsShown())
+            item.delegateWidget().delegateWidget().setIsHeaderShown(self.delegateTitleIsShown())
             item.delegateWidget().show()
         else:
             try:
@@ -881,18 +914,21 @@ class ShojiMainDelegateWidget(ShojiLayout):
             return ShojiLayout.keyPressEvent(self, event)
 
 
-class ShojiModelDelegateWidget(AbstractFrameInputWidgetContainer):
-    """
-    Attributes:
-        main_widget (QWidget): the main display widget
-        item (ShojiModelItem): The item from the model that is associated with
-            this delegate
-    """
-    def __init__(self, parent=None, title=None):
-        super(ShojiModelDelegateWidget, self).__init__(parent, title=title)
+class ShojiModelDelegateWidget(AbstractOverlayInputWidget):
+    def __init__(self, parent=None, title="Title", image_path=None, display_overlay=False):
+        super(ShojiModelDelegateWidget, self).__init__(parent, title=title, image_path=image_path)
 
-        # # todo (delete later, maybe... its actually doing stuff so chill)
-        self.layout().setContentsMargins(0, 0, 0, 0)
+        self.setDisplayMode(AbstractOverlayInputWidget.ENTER)
+
+        # setup delegate
+        delegate_widget = AbstractFrameInputWidgetContainer(self, title=title)
+        delegate_widget.layout().setContentsMargins(0, 0, 0, 0)
+        delegate_widget.setIsHeaderEditable(False)
+        self.setDelegateWidget(delegate_widget)
+
+        if not display_overlay:
+            self.setCurrentIndex(1)
+            self.setDisplayMode(AbstractOverlayInputWidget.DISABLED)
 
     def setMainWidget(self, widget):
         # remove old main widget if it exists
@@ -900,7 +936,7 @@ class ShojiModelDelegateWidget(AbstractFrameInputWidgetContainer):
             self._main_widget.setParent(None)
 
         self._main_widget = widget
-        self.layout().addWidget(self._main_widget)
+        self.delegateWidget().layout().addWidget(self._main_widget)
 
     def getMainWidget(self):
         return self._main_widget
@@ -910,6 +946,36 @@ class ShojiModelDelegateWidget(AbstractFrameInputWidgetContainer):
 
     def item(self):
         return self._item
+
+
+# class ShojiModelDelegateWidget(AbstractFrameInputWidgetContainer):
+#     """
+#     Attributes:
+#         main_widget (QWidget): the main display widget
+#         item (ShojiModelItem): The item from the model that is associated with
+#             this delegate
+#     """
+#     def __init__(self, parent=None, title=None):
+#         super(ShojiModelDelegateWidget, self).__init__(parent, title=title)
+#
+#         self.layout().setContentsMargins(0, 0, 0, 0)
+#
+#     def setMainWidget(self, widget):
+#         # remove old main widget if it exists
+#         if hasattr(self, '_main_widget'):
+#             self._main_widget.setParent(None)
+#
+#         self._main_widget = widget
+#         self.layout().addWidget(self._main_widget)
+#
+#     def getMainWidget(self):
+#         return self._main_widget
+#
+#     def setItem(self, item):
+#         self._item = item
+#
+#     def item(self):
+#         return self._item
 
 
 """ HEADER """

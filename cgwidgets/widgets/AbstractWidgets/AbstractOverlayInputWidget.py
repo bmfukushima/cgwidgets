@@ -37,7 +37,7 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
             self,
             parent=None,
             delegate_widget=None,
-            image=None,
+            image_path=None,
             title="",
             display_mode=4
     ):
@@ -79,8 +79,8 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
         # setup style
         self.setDisplayMode(display_mode)
 
-        if image:
-            self.setImage(image)
+        if image_path:
+            self.setImage(image_path)
 
         # style_sheet = removeHoverDisplay(self.styleSheet(), "INPUT WIDGETS")
         # self.setStyleSheet(style_sheet)
@@ -199,8 +199,9 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
 
     """ EVENTS """
     def leaveEvent(self, event):
-        if self.currentIndex() == 1:
-            self.hideDelegate()
+        if self.displayMode() != AbstractOverlayInputWidget.DISABLED:
+            if self.currentIndex() == 1:
+                self.hideDelegate()
         return QStackedWidget.leaveEvent(self, event)
 
 
@@ -230,7 +231,7 @@ if __name__ == "__main__":
         title="title",
         display_mode=AbstractOverlayInputWidget.RELEASE,
         delegate_widget=delegate_widget,
-        image=icons["example_image_01"])
+        image_path=icons["example_image_01"])
 
     # main_widget = CustomDynamicWidgetExample()
     #overlay_widget.setDisplayMode(AbstractOverlayInputWidget.DISABLED)

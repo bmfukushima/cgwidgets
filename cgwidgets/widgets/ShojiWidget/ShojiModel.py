@@ -33,6 +33,9 @@ class ShojiModelItem(AbstractDragDropModelItem, iShojiDynamicWidget):
             selected
         dynamic_widget_base_class (QWidget): Widget to be shown when this item is
             selected if the Shoji is in DYNAMIC mode.
+        image_path (str): path on disk to image to be displayed as overlay
+        display_overlay (bool) determines if the overlay for this should be dispalyed
+            or not.
     """
     def __init__(self, parent=None):
         #self._data = data
@@ -41,6 +44,11 @@ class ShojiModelItem(AbstractDragDropModelItem, iShojiDynamicWidget):
         self._parent = parent
         self._delegate_widget = None
         self._dynamicWidgetFunction = None
+
+        self._image_path = None
+        self._display_overlay = False
+        self._display_delegate_title = None
+        self._text_color = None
 
         self._test = True
         #self._is_selected = False
@@ -60,11 +68,36 @@ class ShojiModelItem(AbstractDragDropModelItem, iShojiDynamicWidget):
     def test(self, test):
         self._test = test
 
+    def textColor(self):
+        return self._text_color
+
+    def setTextColor(self, enabled):
+        self._text_color = enabled
+
+    def displayDelegateTitle(self):
+        return self._display_delegate_title
+
+    def setDisplayDelegateTitle(self, enabled):
+        self._display_delegate_title = enabled
+
+    def displayOverlay(self):
+        return self._display_overlay
+
+    def setDisplayOverlay(self, enabled):
+        self._display_overlay = enabled
+
+    def imagePath(self):
+        return self._image_path
+
+    def setImagePath(self, image_path):
+        self._image_path = image_path
+
     def delegateWidget(self):
         return self._delegate_widget
 
     def setDelegateWidget(self, _delegate_widget):
         self._delegate_widget = _delegate_widget
+
 
 
 class ShojiModel(AbstractDragDropModel):

@@ -62,14 +62,14 @@ class OverlayInputWidget(AbstractOverlayInputWidget):
             self,
             parent=None,
             delegate_widget=None,
-            image=None,
+            image_path=None,
             title="",
             display_mode=4
     ):
         super(OverlayInputWidget, self).__init__(
             parent,
             delegate_widget=delegate_widget,
-            image=image,
+            image_path=image_path,
             title=title,
             display_mode=display_mode)
 
