@@ -226,6 +226,7 @@ class LabelledInputWidget(AbstractLabelledInputWidget):
         name (str):
         note (str):
         direction (Qt.ORIENTATION):
+        default_label_length (int): default length to display labels when showing this widget
         widget_type (QWidget): Widget type to be constructed for as the delegate widget
 
     Hierarchy:
@@ -243,10 +244,17 @@ class LabelledInputWidget(AbstractLabelledInputWidget):
         name="None",
         note="None",
         direction=Qt.Horizontal,
+        default_label_length=50,
         widget_type=StringInputWidget
     ):
         super(LabelledInputWidget, self).__init__(
-            parent, name=name, note=note, direction=direction, widget_type=widget_type)
+            parent,
+            name=name,
+            note=note,
+            default_label_length=default_label_length,
+            direction=direction,
+            widget_type=widget_type
+        )
 
 
 class FileBrowserInputWidget(AbstractListInputWidget):

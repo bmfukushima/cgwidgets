@@ -21,6 +21,7 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
         name (str):
         note (str):
         direction (Qt.ORIENTATION):
+        default_label_length (int): default length to display labels when showing this widget
         widget_type (QWidget): Widget type to be constructed for as the delegate widget
 
     Hierarchy:
@@ -38,6 +39,7 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
         name="None",
         note="None",
         direction=Qt.Horizontal,
+        default_label_length=50,
         widget_type=AbstractStringInputWidget
     ):
         super(AbstractLabelledInputWidget, self).__init__(parent, direction)
@@ -47,7 +49,8 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
         self._view_widget.setToolTip(note)
 
         self._input_widget = None #hack to make the setInputBaseClass update work
-        self._default_label_length = 50
+
+        self._default_label_length = default_label_length
         self._separator_length = -1
         self._separator_width = 5
         self.__splitter_event_is_paused = False
@@ -77,6 +80,7 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
 
         # todo this blocks hover display...
         self.setIsSoloViewEnabled(False)
+        self.setDirection(direction)
         #self._input_widget.setProperty("hover_display", True)
 
     """ HANDLE GROUP FRAME MOVING"""
@@ -147,11 +151,11 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
     def setViewWidget(self, _view_widget):
         self._view_widget = _view_widget
 
-    def title(self):
+    def name(self):
         return self.viewWidget().title()
 
-    def setTitle(self, title):
-        self.viewWidget().setTitle(title)
+    def setName(self, name):
+        self.viewWidget().setTitle(name)
 
     """ DELEGATE WIDGET """
     def setInputWidget(self, _input_widget):
@@ -164,9 +168,6 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
         self._input_widget.setSizePolicy(
             QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding
         )
-        #self._input_widget.setProperty("hover_display", True)
-        #if self._input_widget has
-        #self.addHoverDisplay(self._input_widget)
 
     def getInputWidget(self):
         return self._input_widget
@@ -233,7 +234,7 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
         if update_defaults:
             if direction == Qt.Horizontal:
                 self.setDefaultLabelLength(50)
-                self.setSeparatorWidth(30)
+                self.setSeparatorWidth(0)
             elif direction == Qt.Vertical:
                 self.setDefaultLabelLength(30)
             self.resetSliderPositionToDefault()
