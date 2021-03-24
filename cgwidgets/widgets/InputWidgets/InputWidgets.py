@@ -245,7 +245,7 @@ class LabelledInputWidget(AbstractLabelledInputWidget):
         note="None",
         direction=Qt.Horizontal,
         default_label_length=50,
-        widget_type=StringInputWidget
+        delegate_widget=None
     ):
         super(LabelledInputWidget, self).__init__(
             parent,
@@ -253,7 +253,7 @@ class LabelledInputWidget(AbstractLabelledInputWidget):
             note=note,
             default_label_length=default_label_length,
             direction=direction,
-            widget_type=widget_type
+            delegate_widget=delegate_widget
         )
 
 
@@ -324,8 +324,8 @@ if __name__ == "__main__":
     #                            user_live_update_event=asdf, default_value=0.5)
 
 
-    test_labelled_embed = LabelledInputWidget(name="embed", widget_type=FloatInputWidget)
-    #labelled_input = LabelledInputWidget(name="test", widget_type=test_labelled_embed)
+    test_labelled_embed = LabelledInputWidget(name="embed", delegate_widget=FloatInputWidget())
+    #labelled_input = LabelledInputWidget(name="test", delegate_widget=test_labelled_embed)
 
     test_labelled_embed.move(QCursor.pos())
     test_labelled_embed.show()

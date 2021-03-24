@@ -1,4 +1,13 @@
+"""
+Add API for viewWidget
+    - editFinishedSignal
+    - setEditWidget
 
+Add API for default widget type..
+    can't build in constructor...
+
+base widget type?
+"""
 from qtpy.QtWidgets import (QSizePolicy)
 from qtpy.QtCore import (QEvent, QDir)
 from qtpy.QtWidgets import (QFileSystemModel, QCompleter, QApplication)
@@ -40,37 +49,39 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
         note="None",
         direction=Qt.Horizontal,
         default_label_length=50,
-        widget_type=AbstractStringInputWidget
+        delegate_widget=None
     ):
         super(AbstractLabelledInputWidget, self).__init__(parent, direction)
 
         # set up attrs
-        self._view_widget = AbstractOverlayInputWidget(title=name)
-        self._view_widget.setToolTip(note)
-
-        self._input_widget = None #hack to make the setInputBaseClass update work
-
         self._default_label_length = default_label_length
         self._separator_length = -1
         self._separator_width = 5
         self.__splitter_event_is_paused = False
-        self.setInputBaseClass(widget_type)
+        font_size = getFontSize(QApplication)
+
+        #self.setInputBaseClass(widget_type)
 
         # create base widget
-        self._input_widget = widget_type(self)
-        self._input_widget.setSizePolicy(
+        # self._input_widget = widget_type(self)
+        # setup view widget
+        self._view_widget = AbstractOverlayInputWidget(title=name)
+        self._view_widget.setToolTip(note)
+
+        # setup delegate widget
+        if not delegate_widget:
+            delegate_widget = AbstractStringInputWidget(self)
+        self._delegate_widget = delegate_widget #hack to make the setInputBaseClass update work
+        self._delegate_widget.setSizePolicy(
             QSizePolicy.MinimumExpanding, QSizePolicy.Preferred
         )
+        self._delegate_widget.setMinimumSize(1, int(font_size*2.5))
 
         # add widgets
         self.addWidget(self._view_widget)
-        self.addWidget(self._input_widget)
+        self.addWidget(self._delegate_widget)
 
         # set size hints
-        font_size = getFontSize(QApplication)
-        self._input_widget.setMinimumSize(1, int(font_size*2.5))
-        # self._label.setMinimumSize(font_size*2, int(font_size*2.5))
-        #
         self.setStretchFactor(0, 0)
         self.setStretchFactor(1, 1)
         self.resetSliderPositionToDefault()
@@ -81,7 +92,7 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
         # todo this blocks hover display...
         self.setIsSoloViewEnabled(False)
         self.setDirection(direction)
-        #self._input_widget.setProperty("hover_display", True)
+        #self._delegate_widget.setProperty("hover_display", True)
 
     """ HANDLE GROUP FRAME MOVING"""
 
@@ -158,40 +169,41 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
         self.viewWidget().setTitle(name)
 
     """ DELEGATE WIDGET """
-    def setInputWidget(self, _input_widget):
+    def setDelegateWidget(self, _delegate_widget):
         # remove previous input widget
-        if self.getInputWidget():
-            self.getInputWidget().setParent(None)
+        if self.delegateWidget():
+            self.delegateWidget().setParent(None)
 
         # create new input widget
-        self._input_widget = _input_widget
-        self._input_widget.setSizePolicy(
+        self._delegate_widget = _delegate_widget
+        self.addWidget(_delegate_widget)
+        self._delegate_widget.setSizePolicy(
             QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding
         )
 
-    def getInputWidget(self):
-        return self._input_widget
+    def delegateWidget(self):
+        return self._delegate_widget
 
-    def setInputBaseClass(self, _input_widget_base_class):
-
-        self._input_widget_base_class = _input_widget_base_class
-
-        if self.getInputWidget():
-            self.getInputWidget().setParent(None)
-
-            # create new input widget
-            self._input_widget = _input_widget_base_class(self)
-            self._input_widget.setMinimumSize(1, 1)
-            self._input_widget.setSizePolicy(
-                QSizePolicy.MinimumExpanding, QSizePolicy.Preferred
-            )
-            # reset splitter
-            self.addWidget(self._input_widget)
-            self._input_widget.show()
-            self.resetSliderPositionToDefault()
-
-    def getInputBaseClass(self):
-        return self._input_widget_base_class
+    # def setInputBaseClass(self, _input_widget_base_class):
+    #
+    #     self._input_widget_base_class = _input_widget_base_class
+    #
+    #     if self.delegateWidget():
+    #         self.delegateWidget().setParent(None)
+    #
+    #         # create new input widget
+    #         self._input_widget = _input_widget_base_class(self)
+    #         self._input_widget.setMinimumSize(1, 1)
+    #         self._input_widget.setSizePolicy(
+    #             QSizePolicy.MinimumExpanding, QSizePolicy.Preferred
+    #         )
+    #         # reset splitter
+    #         self.addWidget(self._input_widget)
+    #         self._input_widget.show()
+    #         self.resetSliderPositionToDefault()
+    #
+    # def getInputBaseClass(self):
+    #     return self._input_widget_base_class
 
     """ SIZES """
     def setSeparatorLength(self, length):
@@ -254,7 +266,7 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
         self.moveSplitter(self.defaultLabelLength(), 1)
 
     def setUserFinishedEditingEvent(self, function):
-        self._input_widget.setUserFinishedEditingEvent(function)
+        self.delegateWidget().setUserFinishedEditingEvent(function)
 
     def showEvent(self, event):
         super(AbstractLabelledInputWidget, self).showEvent(event)

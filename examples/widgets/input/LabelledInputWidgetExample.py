@@ -1,3 +1,7 @@
+"""
+The Labelled Input Widget provides a convenient way of mapping a name/title to an input widget.
+"""
+
 import sys
 from qtpy.QtWidgets import QApplication, QWidget, QHBoxLayout
 from qtpy.QtGui import QCursor
@@ -8,7 +12,6 @@ from cgwidgets.widgets import (
     FloatInputWidget,
     FrameInputWidgetContainer,
     BooleanInputWidget)
-from cgwidgets.utils import getWidgetAncestor
 
 app = QApplication(sys.argv)
 
@@ -40,7 +43,7 @@ class CustomLabelledInputWidget(LabelledInputWidget):
         note (str):
         direction (Qt.ORIENTATION):
         default_label_length (int): default length to display labels when showing this widget
-        widget_type (QWidget): Widget type to be constructed for as the delegate widget
+        delegate_widget (QWidget): Widget type to be constructed for as the delegate widget
 
     Hierarchy:
         |- ViewWidget --> AbstractOverlayInputWidget
@@ -58,7 +61,7 @@ class CustomLabelledInputWidget(LabelledInputWidget):
         note="None",
         direction=Qt.Horizontal,
         default_label_length=50,
-        widget_type=FloatInputWidget
+        delegate_widget=None
     ):
         super(CustomLabelledInputWidget, self).__init__(
             parent,
@@ -66,7 +69,7 @@ class CustomLabelledInputWidget(LabelledInputWidget):
             note=note,
             default_label_length=default_label_length,
             direction=direction,
-            widget_type=widget_type
+            delegate_widget=delegate_widget
         )
 
 # Args
@@ -75,14 +78,14 @@ args_labelled_widget = LabelledInputWidget(
     note="This is a note",
     direction=Qt.Vertical,
     default_label_length=50,
-    widget_type=FloatInputWidget)
+    delegate_widget=FloatInputWidget())
 args_widget = createFrame("Args", args_labelled_widget)
 
 # setters
 setters_labelled_widget = LabelledInputWidget()
 setters_labelled_widget.setName("Name")
 setters_labelled_widget.setDirection(Qt.Vertical)
-setters_labelled_widget.setInputBaseClass(BooleanInputWidget)
+setters_labelled_widget.setDelegateWidget(BooleanInputWidget())
 setters_labelled_widget.setDefaultLabelLength(125)
 
 setters_widget = createFrame("Setters", setters_labelled_widget)
