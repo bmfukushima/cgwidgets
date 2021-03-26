@@ -23,35 +23,7 @@ from cgwidgets.settings.icons import icons
 
 app = QApplication(sys.argv)
 
-# subclass
-class SubclassOverlayInputWidget(OverlayInputWidget):
-    """
-    Input widget with a display delegate overlaid.  This delegate will dissapear
-    when the user first hover enters.
 
-    Args:
-        input_widget (QWidget): Widget for user to input values into
-        title (string): Text to display when the widget is shown
-            for the first time.
-
-    Attributes:
-        input_widget:
-        overlay_widget:
-    """
-    def __init__(
-            self,
-            parent=None,
-            delegate_widget=None,
-            image=None,
-            title="",
-            display_mode=OverlayInputWidget.RELEASE
-    ):
-        super(SubclassOverlayInputWidget, self).__init__(
-            parent,
-            delegate_widget=delegate_widget,
-            image=image,
-            title=title,
-            display_mode=display_mode)
 
 # create containers
 def createFrame(name, widget):
@@ -83,6 +55,37 @@ def showDelegateEvent(widget, delegate_widget):
     print("---- SHOW ----")
     print(widget, delegate_widget)
 
+# subclass
+class SubclassOverlayInputWidget(OverlayInputWidget):
+    """
+    Input widget with a display delegate overlaid.  This delegate will dissapear
+    when the user first hover enters.
+
+    Args:
+        input_widget (QWidget): Widget for user to input values into
+        title (string): Text to display when the widget is shown
+            for the first time.
+
+    Attributes:
+        input_widget:
+        overlay_widget:
+    """
+    def __init__(
+            self,
+            parent=None,
+            delegate_widget=None,
+            image=None,
+            title="",
+            display_mode=OverlayInputWidget.RELEASE
+    ):
+        super(SubclassOverlayInputWidget, self).__init__(
+            parent,
+            delegate_widget=delegate_widget,
+            image=image,
+            title=title,
+            display_mode=display_mode)
+
+
 # default
 overlay_widget_default = OverlayInputWidget(title="Title")
 default_widget = createFrame("Default", overlay_widget_default)
@@ -95,7 +98,6 @@ overlay_widget_args = OverlayInputWidget(
     image_path=icons["example_image_02"])
 
 args_widget = createFrame("Args", overlay_widget_args)
-
 
 # with setters
 overlay_widget_setters = OverlayInputWidget()

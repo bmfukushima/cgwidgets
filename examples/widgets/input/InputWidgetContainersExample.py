@@ -84,7 +84,7 @@ label_widgets = {
 for arg in label_widgets:
     # create widget
     widget_type = label_widgets[arg]
-    input_widget = LabelledInputWidget(name=arg, widget_type=widget_type)
+    input_widget = LabelledInputWidget(name=arg, delegate_constructor=widget_type)
 
     # set widget orientation
     input_widget.setDirection(Qt.Horizontal)

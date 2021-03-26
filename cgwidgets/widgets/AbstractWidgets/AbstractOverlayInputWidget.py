@@ -49,8 +49,6 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
             display_mode=4
     ):
         super(AbstractOverlayInputWidget, self).__init__(parent)
-        # import widgets (avoid circular imports...)
-        # from cgwidgets.widgets import AbstractLabelWidget, AbstractStringInputWidget
 
         # create widgets
         class ViewWidget(AbstractLabelWidget):

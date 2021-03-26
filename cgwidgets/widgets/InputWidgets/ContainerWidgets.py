@@ -219,7 +219,7 @@ class FrameInputWidgetContainer(AbstractFrameInputWidgetContainer):
     ):
         # inherit
         super(FrameInputWidgetContainer, self).__init__(parent, title, note, direction)
-        self.layout().setContentsMargins(0,0,0,0)
+        self.layout().setContentsMargins(0, 0, 0, 0)
 
 
 class ButtonInputWidgetContainer(ShojiLayout):

@@ -37,7 +37,7 @@ class iAbstractInputWidget(object):
         self._key_list = []
         self._orig_value = None
         self._updating = False
-
+        self._is_frozen = False
         # set up style
         self.rgba_border = iColor["rgba_outline"]
         self.rgba_background = iColor["rgba_background_00"]
@@ -51,6 +51,7 @@ class iAbstractInputWidget(object):
 
         font_size = getFontSize(QApplication)
         self.setMinimumSize(font_size*2, font_size*2)
+
 
     def updateStyleSheet(self):
         style_sheet_args = iColor.style_sheet_args
@@ -114,6 +115,8 @@ class iAbstractInputWidget(object):
         if the input is valid, and then if it is, do something with that value
         if it isn't then it will return it to the previous value.
         """
+        # preflight
+        if self.isFrozen(): return
         is_valid = self.checkInput()
 
         if is_valid:
@@ -131,7 +134,7 @@ class iAbstractInputWidget(object):
         This will run when the value is changed.  This is to do Continuous manipulations
         """
         is_valid = self.checkInput()
-        if self._updating is True:
+        if self._updating is True and not self.isFrozen():
             if is_valid:
                 try:
                     self.setText(self.getInput())
@@ -191,3 +194,9 @@ class iAbstractInputWidget(object):
 
     def getOrigValue(self):
         return self._orig_value
+
+    def isFrozen(self):
+        return self._is_frozen
+
+    def setIsFrozen(self, is_frozen):
+        self._is_frozen = is_frozen

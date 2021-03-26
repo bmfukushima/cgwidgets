@@ -123,12 +123,12 @@ def setupAsStacked():
     # insert tabs
     shoji_widget.setDelegateType(ShojiModelViewWidget.STACKED)
     shoji_widget.insertShojiWidget(0, column_data={'name': 'hello'},
-                                   widget=LabelledInputWidget(name='hello', widget_type=FloatInputWidget))
+                                   widget=LabelledInputWidget(name='hello', delegate_widget=FloatInputWidget()))
     image_path = icons["example_image_02"]
     shoji_widget.insertShojiWidget(
         0,
         column_data={'name': 'world'},
-        widget=LabelledInputWidget(name='foobar', widget_type=FloatInputWidget),
+        widget=LabelledInputWidget(name='foobar', delegate_widget=FloatInputWidget()),
         display_overlay=True,
         image_path=image_path,
         text_color=(255, 255, 0, 255),
@@ -140,7 +140,7 @@ def setupAsStacked():
     for char in "SINE.":
         shoji_widget2.insertShojiWidget(
             0, column_data={'name': char},
-            widget=LabelledInputWidget(name=char, widget_type=FloatInputWidget))
+            widget=LabelledInputWidget(name=char, delegate_widget=FloatInputWidget()))
     shoji_widget.insertShojiWidget(0, column_data={'name':'Widget'}, widget=shoji_widget2)
 
     # shoji layout
@@ -339,9 +339,9 @@ def setupAsDoubleDynamic():
     custom_index.internalPointer().setDynamicUpdateFunction(DynamicItemExample.updateGUI)
 
 
-#setupAsStacked()
+setupAsStacked()
 #setupAsDynamic()
-setupAsDoubleDynamic()
+#setupAsDoubleDynamic()
 
 # SET FLAGS
 shoji_widget.setMultiSelect(True)

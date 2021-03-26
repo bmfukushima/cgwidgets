@@ -1,9 +1,10 @@
 """
-TODO: To many escapes
-    - When you press escape an even number of times, it will brick for some reason...
-    - probably something to do with escape handler just toggling, instead of explicitly
-    setting for a none condition?
-
+TODO: To many updates...
+        ShojiHeader --> selectionChanged
+            sets the item, the resets the display which causes this to update 3 times
+                1.) set item
+                2.) Clear display
+                3.) Solo item
 TODO: Hover Display Style:
         ShojiMainDelegateWidget --> installHoverDisplaySS
         settings --> HoverDisplay
@@ -12,6 +13,8 @@ TODO: Hover Display Style:
 TODO: View scroll bar needs to change locations
     https://www.qtcentre.org/threads/23624-Scrollbar-on-the-left
     from the sounds it it. This is going to be a proxy display type setup
+
+
 """
 
 from qtpy.QtWidgets import (
@@ -610,6 +613,7 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
             # destroy widget
             try:
                 item.delegateWidget().setParent(None)
+                # item.delegateWidget().deleteLater()
             except AttributeError:
                 pass
 
@@ -1022,7 +1026,7 @@ class ShojiHeader(ModelViewWidget):
 
         # update display
         top_level_widget._selection_item = enabled
-        top_level_widget.updateDelegateItem(item, enabled)
+
 
         # update delegate background
         if hasattr(top_level_widget, '_delegate_widget'):
@@ -1033,9 +1037,11 @@ class ShojiHeader(ModelViewWidget):
                 top_level_widget.delegateWidget().rgba_background = iColor['rgba_background_01']
 
         # custom input event | need this as we're overriding the models input
+        top_level_widget.updateDelegateItem(item, enabled)
         top_level_widget.itemSelectedEvent(item, enabled)
-
+        # Todo causing multiple selection bug...
         # update full screen selection
+        # selected
         if enabled:
             if hasattr(top_level_widget, '_delegate_widget'):
                 delegate_widget = top_level_widget.delegateWidget()
@@ -1061,9 +1067,10 @@ class TabShojiDynamicWidgetExample(QWidget):
         widget (ShojiModelDelegateWidget)
         item (ShojiModelItem)
         """
-        if item:
-            widget.setTitle(item.name())
-            widget.getMainWidget().label.setText(item.name())
+        print('update gui')
+        # if item:
+        #     widget.setTitle(item.name())
+        #     widget.getMainWidget().label.setText(item.name())
 
 
 """
@@ -1103,6 +1110,7 @@ if __name__ == "__main__":
             self.addWidget(QLabel('c'))
 
     shoji_widget = ShojiModelViewWidget()
+    shoji_widget.setDelegateType(ShojiModelViewWidget.DYNAMIC,TabShojiDynamicWidgetExample, TabShojiDynamicWidgetExample.updateGUI)
     #w.setHeaderPosition(attrs.WEST, attrs.SOUTH)
     #header_delegate_widget = QLabel("Custom")
     #w.setHeaderDelegateAlwaysOn(False)

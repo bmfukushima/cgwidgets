@@ -8,9 +8,8 @@ from .InputWidgets import LabelledInputWidget
 from .InputWidgets import PlainTextInputWidget
 from .InputWidgets import OverlayInputWidget
 from .InputWidgets import ButtonInputWidget
-
 from .InputWidgets import ListInputWidget as ListInputWidget
-from .InputWidgets import ComboListInputWidget as ComboListInputWidget
+
 from .FileBrowserInputWidget import FileBrowserInputWidget as FileBrowserInputWidget
 
 # container widgets
