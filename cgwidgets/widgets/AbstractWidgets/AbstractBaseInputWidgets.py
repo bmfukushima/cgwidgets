@@ -12,24 +12,20 @@ Input Widgets
                 | -- AbstractIntInputWidget
     BooleanInputWidget (QLabel)
 """
-import re
-
+from qtpy.QtGui import QPixmap
 from qtpy.QtWidgets import (
-    QLineEdit, QLabel, QPlainTextEdit, QStackedWidget, QApplication
+    QLineEdit, QLabel, QPlainTextEdit, QWidget, QStackedLayout
 )
 from qtpy.QtCore import Qt, QEvent
-
 
 from cgwidgets.settings.colors import iColor
 from cgwidgets.settings.keylist import NUMERICAL_INPUT_KEYS, MATH_KEYS
 from cgwidgets.utils import (
-    installLadderDelegate, getFontSize, checkIfValueInRange,
-    checkNegative, setAsTransparent, updateStyleSheet
+    installLadderDelegate, checkIfValueInRange,
+    checkNegative, updateStyleSheet
 )
 
-from cgwidgets.settings.icons import icons
-from cgwidgets.settings.stylesheets import input_widget_ss
-from cgwidgets.settings.hover_display import installHoverDisplaySS, removeHoverDisplay
+from cgwidgets.settings.hover_display import removeHoverDisplay
 from cgwidgets.widgets.AbstractWidgets.AbstractInputInterface import iAbstractInputWidget
 
 
@@ -298,9 +294,6 @@ class AbstractStringInputWidget(AbstractInputLineEdit):
     def validateInput(self):
         return True
 
-from qtpy.QtWidgets import QWidget, QSizePolicy, QStackedLayout
-from qtpy.QtGui import QPixmap
-from cgwidgets.settings.icons import icons
 
 class AbstractLabelWidget(QWidget, iAbstractInputWidget):
     """
@@ -469,39 +462,6 @@ class AbstractLabelWidget(QWidget, iAbstractInputWidget):
         self.resizeImage()
 
         return QWidget.resizeEvent(self, event)
-
-
-#         style_sheet = """
-# /* << BACKGROUND IMAGE START >> */
-# border-radius: 10px;
-# background-color: rgba{rgba_background};
-# color: rgba{rgba_text};
-# /*border-image: url({image_path}) 0 0 0 0 stretch repeat;*/
-# background-image: url({image_path} auto auto);
-# /* << BACKGROUND IMAGE END >> */""".format(
-#             image_path=image_path,
-#             rgba_background=iColor["rgba_background_00"],
-#             rgba_text=iColor["rgba_text"])
-#         #border-image: url({image_path}) 0 0 0 0 stretch stretch;
-#         style_sheet += self.styleSheet()
-#
-#         self.setStyleSheet(style_sheet)
-#
-#         # from qtpy.QtGui import QPixmap
-#         # from cgwidgets.settings.icons import icons
-#         # pixmap = QPixmap(icons["example_image_01"])
-#         # self.setPixmap(pixmap)
-
-    # def removeImage(self):
-    #     style_sheet = self.styleSheet()
-    #
-    #     # todo update image
-    #     style_sheet = re.sub(
-    #         "(/\* << BACKGROUND IMAGE START >> \*/)([^\$]+)(/\* << BACKGROUND IMAGE END >> \*/)",
-    #         "",
-    #         style_sheet)
-    #
-    #     self.setStyleSheet(style_sheet)
 
 
 class AbstractBooleanInputWidget(QLabel, iAbstractInputWidget):

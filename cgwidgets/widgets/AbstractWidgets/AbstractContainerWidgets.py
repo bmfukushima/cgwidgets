@@ -97,7 +97,7 @@ class AbstractInputGroupFrame(QFrame):
         self._is_header_shown = True
 
         # setup layout
-        from cgwidgets.widgets.AbstractWidgets.AbstractInputWidgets import AbstractStringInputWidget
+        from cgwidgets.widgets.AbstractWidgets.AbstractBaseInputWidgets import AbstractStringInputWidget
         from cgwidgets.widgets.AbstractWidgets.AbstractOverlayInputWidget import AbstractOverlayInputWidget
         delegate_widget = AbstractStringInputWidget(self)
         header_widget = AbstractOverlayInputWidget(
@@ -256,7 +256,7 @@ class AbstractFrameInputWidgetContainer(AbstractInputGroupFrame):
             widget.setUserFinishedEditingEvent(finished_editing_function)
         self.layout().addWidget(widget)
 
-    def getInputWidgets(self):
+    def delegateWidgets(self):
         input_widgets = []
         # todo FAIL
         # this might fail due to separator hiding/parenting?

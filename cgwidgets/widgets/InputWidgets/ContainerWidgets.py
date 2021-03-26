@@ -81,7 +81,7 @@ class ShojiInputWidgetContainer(LabelledInputWidget):
 
     Widgets:
         ShojiInputWidgetContainer
-            | -- getInputWidget() (AbstractShojiInputWidgetContainer)
+            | -- delegateWidget() (AbstractShojiInputWidgetContainer)
                     | -- model
                     | -* (ShojiInputWidgetContainerItem)
     """
@@ -109,12 +109,12 @@ class ShojiInputWidgetContainer(LabelledInputWidget):
                 self.setDelegateTitleIsShown(False)
 
         # inherit
-        super(ShojiInputWidgetContainer, self).__init__(parent, name, direction=direction, widget_type=AbstractShojiInputWidget)
+        super(ShojiInputWidgetContainer, self).__init__(parent, name, direction=direction, delegate_constructor=AbstractShojiInputWidget)
 
         self.setIsSoloViewEnabled(False)
 
         # setup main widget
-        self.getInputWidget().setDelegateType(
+        self.delegateWidget().setDelegateType(
             ShojiModelViewWidget.DYNAMIC,
             dynamic_widget=LabelledInputWidget,
             dynamic_function=self.updateGUI
@@ -136,7 +136,7 @@ class ShojiInputWidgetContainer(LabelledInputWidget):
             # set attrs
             labelled_widget.setTitle(name)
             labelled_widget.setInputBaseClass(widget_constructor)
-            input_widget = labelled_widget.getInputWidget()
+            input_widget = labelled_widget.delegateWidget()
 
             # update list inputs
             if isinstance(input_widget, ListInputWidget):
@@ -146,8 +146,8 @@ class ShojiInputWidgetContainer(LabelledInputWidget):
             # update boolean inputs
             if isinstance(input_widget, BooleanInputWidget):
                 # toggle
-                widget.getMainWidget().getInputWidget().is_clicked = value
-                updateStyleSheet(widget.getMainWidget().getInputWidget())
+                widget.getMainWidget().delegateWidget().is_clicked = value
+                updateStyleSheet(widget.getMainWidget().delegateWidget())
                 return
 
             # set input widgets current value from item
@@ -194,7 +194,7 @@ class ShojiInputWidgetContainer(LabelledInputWidget):
             data['value'] = default_value
 
         # create item
-        user_input_index = self.getInputWidget().insertShojiWidget(index, column_data=data)
+        user_input_index = self.delegateWidget().insertShojiWidget(index, column_data=data)
 
         user_input_item = user_input_index.internalPointer()
 
@@ -205,7 +205,7 @@ class ShojiInputWidgetContainer(LabelledInputWidget):
         user_input_item.setUserLiveInputEvent(user_live_update_event)
 
     def removeInputWidget(self, index):
-        self.getInputWidget().removeTab(index)
+        self.delegateWidget().removeTab(index)
 
 
 """ CONTAINERS """

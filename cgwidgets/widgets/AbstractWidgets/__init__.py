@@ -1,25 +1,24 @@
 """ IMPORT SHAPES """
-from .AbstractShapes import AbstractLine as AbstractLine
-from .AbstractShapes import AbstractHLine as AbstractHLine
-from .AbstractShapes import AbstractVLine as AbstractVLine
-from .AbstractShapes import AbstractInputGroupBox as AbstractInputGroupBox
-from .AbstractShapes import AbstractInputGroup as AbstractInputGroup
-from .AbstractShapes import AbstractInputGroupFrame
-from .AbstractShapes import AbstractFrameInputWidgetContainer
+from .AbstractContainerWidgets import AbstractLine as AbstractLine
+from .AbstractContainerWidgets import AbstractHLine as AbstractHLine
+from .AbstractContainerWidgets import AbstractVLine as AbstractVLine
+from .AbstractContainerWidgets import AbstractInputGroupBox as AbstractInputGroupBox
+from .AbstractContainerWidgets import AbstractInputGroup as AbstractInputGroup
+from .AbstractContainerWidgets import AbstractInputGroupFrame
+from .AbstractContainerWidgets import AbstractFrameInputWidgetContainer
 
 """ USER INPUT WIDGETS"""
-#from .AbstractInputWidgets import iAbstractInputWidget
-#from .AbstractInputInterface import iAbstractInputWidget
 
-from .AbstractInputWidgets import AbstractFloatInputWidget as AbstractFloatInputWidget
-from .AbstractInputWidgets import AbstractIntInputWidget as AbstractIntInputWidget
-from .AbstractInputWidgets import AbstractStringInputWidget as AbstractStringInputWidget
-from .AbstractInputWidgets import AbstractBooleanInputWidget as AbstractBooleanInputWidget
-from .AbstractInputWidgets import AbstractButtonInputWidget
-from .AbstractInputWidgets import AbstractLabelWidget
+
+from .AbstractBaseInputWidgets import AbstractFloatInputWidget as AbstractFloatInputWidget
+from .AbstractBaseInputWidgets import AbstractIntInputWidget as AbstractIntInputWidget
+from .AbstractBaseInputWidgets import AbstractStringInputWidget as AbstractStringInputWidget
+from .AbstractBaseInputWidgets import AbstractBooleanInputWidget as AbstractBooleanInputWidget
+from .AbstractBaseInputWidgets import AbstractButtonInputWidget
+from .AbstractBaseInputWidgets import AbstractLabelWidget
 from .AbstractListInputWidget import AbstractComboListInputWidget as AbstractComboListInputWidget
 from .AbstractListInputWidget import AbstractListInputWidget as AbstractListInputWidget
-from .AbstractInputWidgets import AbstractInputPlainText as AbstractInputPlainText
+from .AbstractBaseInputWidgets import AbstractInputPlainText as AbstractInputPlainText
 
 #from .AbstractOverlayInputWidget import AbstractOverlayInputWidget
 # from .AbstractO import AbstractOverlayInputWidget as AbstractOverlayInputWidget

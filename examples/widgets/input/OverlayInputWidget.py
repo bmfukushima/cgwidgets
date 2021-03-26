@@ -75,13 +75,13 @@ def createFrame(name, widget):
 # Create Overlay Widgets
 
 # create event functions
-def hideDelegateEvent(widget):
+def hideDelegateEvent(widget, delegate_widget):
     print('---- HIDE ----')
-    print(widget)
+    print(widget, delegate_widget)
 
-def showDelegateEvent(widget):
+def showDelegateEvent(widget, delegate_widget):
     print("---- SHOW ----")
-    print(widget)
+    print(widget, delegate_widget)
 
 # default
 overlay_widget_default = OverlayInputWidget(title="Title")
@@ -104,7 +104,11 @@ overlay_widget_setters.setTitle("Setters")
 overlay_widget_setters.setImage(icons["example_image_01"])
 
 # set delegate widget
-overlay_widget_setters.setDelegateWidget(BooleanInputWidget(text="yolo"))
+def userFinishedEditing(widget, value):
+    print(widget, value)
+overlay_widget_setters.setDelegateWidget(
+    BooleanInputWidget(text="yolo"), user_finished_editing_event=userFinishedEditing)
+
 
 # set virtual events
 overlay_widget_setters.setHideDelegateEvent(hideDelegateEvent)

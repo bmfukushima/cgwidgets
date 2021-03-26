@@ -1,19 +1,15 @@
 """
 Add API for viewWidget
     - editFinishedSignal
-    - setEditWidget
+    - setViewDelegateWidget
 
-Add API for default widget type..
-    can't build in constructor...
-
-base widget type?
 """
 from qtpy.QtWidgets import (QSizePolicy)
 from qtpy.QtCore import (QEvent, QDir)
 from qtpy.QtWidgets import (QFileSystemModel, QCompleter, QApplication)
 from qtpy.QtCore import Qt
 
-from cgwidgets.widgets.AbstractWidgets.AbstractInputWidgets import AbstractStringInputWidget
+from cgwidgets.widgets.AbstractWidgets.AbstractBaseInputWidgets import AbstractStringInputWidget
 from cgwidgets.widgets.AbstractWidgets.AbstractOverlayInputWidget import AbstractOverlayInputWidget
 from cgwidgets.widgets.AbstractWidgets.AbstractShojiLayout import AbstractShojiLayout
 
@@ -31,6 +27,9 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
         note (str):
         direction (Qt.ORIENTATION):
         default_label_length (int): default length to display labels when showing this widget
+        delegate_widget (QWidget): instance of widget to use as delegate
+        delegate_constructor (QWidget): constructor to use as delegate widget.  This will automatically
+            be overwritten by the delegate_widget if it is provided.
         widget_type (QWidget): Widget type to be constructed for as the delegate widget
 
     Hierarchy:
@@ -46,10 +45,12 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
         self,
         parent=None,
         name="None",
-        note="None",
+        note=None,
+        image_path=None,
         direction=Qt.Horizontal,
         default_label_length=50,
-        delegate_widget=None
+        delegate_widget=None,
+        delegate_constructor=None
     ):
         super(AbstractLabelledInputWidget, self).__init__(parent, direction)
 
@@ -60,17 +61,20 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
         self.__splitter_event_is_paused = False
         font_size = getFontSize(QApplication)
 
-        #self.setInputBaseClass(widget_type)
-
-        # create base widget
-        # self._input_widget = widget_type(self)
-        # setup view widget
+        # create view widget
         self._view_widget = AbstractOverlayInputWidget(title=name)
-        self._view_widget.setToolTip(note)
+        if note:
+            self._view_widget.setToolTip(note)
+        if image_path:
+            self.viewWidget().setImage(image_path)
 
         # setup delegate widget
-        if not delegate_widget:
+        if not delegate_widget and not delegate_constructor:
             delegate_widget = AbstractStringInputWidget(self)
+
+        if not delegate_widget and delegate_constructor:
+            delegate_widget = delegate_constructor(self)
+
         self._delegate_widget = delegate_widget #hack to make the setInputBaseClass update work
         self._delegate_widget.setSizePolicy(
             QSizePolicy.MinimumExpanding, QSizePolicy.Preferred
@@ -119,7 +123,7 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
         parent = labelled_input_widget.parent()
         handles_list = []
         if isinstance(parent, FrameInputWidgetContainer):
-            widget_list = parent.getInputWidgets()
+            widget_list = parent.delegateWidgets()
             for widget in widget_list:
                 handles_list.append(widget)
 
@@ -167,6 +171,12 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
 
     def setName(self, name):
         self.viewWidget().setTitle(name)
+
+    def image(self):
+        return self.viewWidget().title()
+
+    def setImage(self, image_path):
+        self.viewWidget().setImage(image_path)
 
     """ DELEGATE WIDGET """
     def setDelegateWidget(self, _delegate_widget):

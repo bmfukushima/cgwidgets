@@ -42,7 +42,7 @@ if __name__ == "__main__":
                 self.insertInputWidget(0, FloatLadderInputWidget, i, self.asdf,
                                           user_live_update_event=self.liveEdit, default_value=0.5)
 
-            shoji_view = self.getInputWidget().delegateWidget()
+            shoji_view = self.delegateWidget().delegateWidget()
             shoji_view.setIsSoloViewEnabled(False)
             shoji_view.setIsHandleStatic(True)
             shoji_view.setHandleWidth(0)

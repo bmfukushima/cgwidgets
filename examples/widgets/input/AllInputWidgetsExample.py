@@ -125,8 +125,8 @@ def createLabeledWidgets(title, direction=Qt.Horizontal):
 
     for arg in label_widgets:
         # create widget
-        widget_type = label_widgets[arg]
-        input_widget = LabelledInputWidget(name=arg, widget_type=widget_type)
+        delegate_widget = label_widgets[arg]()
+        input_widget = LabelledInputWidget(name=arg, delegate_widget=delegate_widget)
 
         # set widget orientation
         input_widget.setDirection(direction)
@@ -148,8 +148,8 @@ def createLabeledWidgets(title, direction=Qt.Horizontal):
 
         # list override
         if arg == "list":
-            input_widget.getInputWidget().populate(list_of_crap)
-            input_widget.getInputWidget().display_item_colors = True
+            input_widget.delegateWidget().populate(list_of_crap)
+            input_widget.delegateWidget().display_item_colors = True
 
     return group_label_widget
 
@@ -176,8 +176,8 @@ label_widgets = {
 
 for arg in label_widgets:
     # create widget
-    widget_type = label_widgets[arg]
-    input_widget = LabelledInputWidget(name=arg, widget_type=widget_type)
+    delegate_widget = label_widgets[arg]()
+    input_widget = LabelledInputWidget(name=arg, delegate_widget=delegate_widget)
 
     # set widget orientation
     input_widget.setDirection(Qt.Horizontal)
@@ -187,8 +187,8 @@ for arg in label_widgets:
 
     # list override
     if arg == "list":
-        input_widget.getInputWidget().populate(list_of_crap)
-        input_widget.getInputWidget().display_item_colors = True
+        input_widget.delegateWidget().populate(list_of_crap)
+        input_widget.delegateWidget().display_item_colors = True
 
 """ Shoji Input Widget Container """
 shoji_input_widget_container = ShojiInputWidgetContainer(name='ShojiInputWidgetContainer')

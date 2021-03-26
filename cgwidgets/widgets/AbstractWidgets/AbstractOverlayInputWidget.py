@@ -1,9 +1,12 @@
 
 from qtpy.QtWidgets import (QLabel, QStackedWidget)
+from qtpy.QtCore import QEvent
 
 from cgwidgets.settings.hover_display import installHoverDisplaySS, removeHoverDisplay
 from cgwidgets.widgets.AbstractWidgets.AbstractInputInterface import iAbstractInputWidget
+from cgwidgets.widgets import AbstractLabelWidget, AbstractStringInputWidget
 
+#
 class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
     """
     Input widget with a display delegate overlaid.  This delegate will disappear
@@ -28,6 +31,10 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
         show_delegate_event (Virtual Event): runs when the editor is being opened
 
         Note: These events both take one arg, which is the current instance of the AbstractOverlayInputWidget
+
+    Signals:
+        userFinishedEditing:
+            self --> userFinishedEditing --> delegateWidget --> userFinishedEditing
     """
     # Display Modes
     DISABLED = 1
@@ -43,7 +50,7 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
     ):
         super(AbstractOverlayInputWidget, self).__init__(parent)
         # import widgets (avoid circular imports...)
-        from cgwidgets.widgets import AbstractLabelWidget, AbstractStringInputWidget
+        # from cgwidgets.widgets import AbstractLabelWidget, AbstractStringInputWidget
 
         # create widgets
         class ViewWidget(AbstractLabelWidget):
@@ -75,6 +82,7 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
         if not delegate_widget:
             delegate_widget = AbstractStringInputWidget(self)
         self.setDelegateWidget(delegate_widget)
+        delegate_widget.setUserFinishedEditingEvent(self.userFinishedEditingEventWrapper)
 
         # setup style
         self.setDisplayMode(display_mode)
@@ -91,7 +99,16 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
 
         return self._delegate_widget
 
-    def setDelegateWidget(self, widget):
+    def setDelegateWidget(self, widget, user_finished_editing_event=None):
+        """
+
+        Args:
+            widget:
+            user_finished_editing_event (function):
+
+        Returns:
+
+        """
         # remove old input widget
         if hasattr(self, "_delegate_widget"):
             self._delegate_widget.setParent(None)
@@ -104,6 +121,12 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
 
         style_sheet = removeHoverDisplay(widget.styleSheet(), "INPUT WIDGETS")
         widget.setStyleSheet(style_sheet)
+
+        # install user finished editing
+        if user_finished_editing_event:
+            if hasattr(widget, "setUserFinishedEditingEvent"):
+                self._user_finished_editing_event = user_finished_editing_event
+                widget.setUserFinishedEditingEvent(self.userFinishedEditingEventWrapper)
 
     def viewWidget(self):
         return self._view_widget
@@ -152,7 +175,12 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
         # run user event
         self.hideDelegateEvent()
 
-    # def __disableDisplay
+    """ User Finished Editing"""
+    def userFinishedEditingEventWrapper(self, *args, **kwargs):
+        if self.displayMode() != AbstractOverlayInputWidget.DISABLED:
+            self.hideDelegate()
+        if hasattr(self, "_user_finished_editing_event"):
+            self._user_finished_editing_event(*args, **kwargs)
 
     """ VIRTUAL FUNCTIONS """
     def title(self):
@@ -181,23 +209,23 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
         self.viewWidget().resizeImage()
 
     """ VIRTUAL EVENTS """
-    def _show_delegate_event(self, widget):
+    def _show_delegate_event(self, widget, delegate_widget):
         pass
 
     def setShowDelegateEvent(self, event):
         self._show_delegate_event = event
 
     def showDelegateEvent(self):
-        self._show_delegate_event(self)
+        self._show_delegate_event(self, self.delegateWidget())
 
-    def _hide_delegate_event(self, widget):
+    def _hide_delegate_event(self, widget, delegate_widget):
         pass
 
     def setHideDelegateEvent(self, event):
         self._hide_delegate_event = event
 
     def hideDelegateEvent(self):
-        self._hide_delegate_event(self)
+        self._hide_delegate_event(self, self.delegateWidget())
 
     """ EVENTS """
     def leaveEvent(self, event):
@@ -232,7 +260,6 @@ if __name__ == "__main__":
     overlay_widget = AbstractOverlayInputWidget(
         title="title",
         display_mode=AbstractOverlayInputWidget.RELEASE,
-        delegate_widget=delegate_widget,
         image_path=icons["example_image_01"])
 
     # main_widget = CustomDynamicWidgetExample()

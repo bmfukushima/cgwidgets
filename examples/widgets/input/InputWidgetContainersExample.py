@@ -94,8 +94,8 @@ for arg in label_widgets:
 
     # list override
     if arg == "list":
-        input_widget.getInputWidget().populate(list_of_crap)
-        input_widget.getInputWidget().display_item_colors = True
+        input_widget.delegateWidget().populate(list_of_crap)
+        input_widget.delegateWidget().display_item_colors = True
 
 
 """ Main Widget"""

@@ -45,36 +45,6 @@ from cgwidgets.utils import (
 from cgwidgets.settings.colors import iColor
 
 
-class OverlayInputWidget(AbstractOverlayInputWidget):
-    """
-    Input widget with a display delegate overlaid.  This delegate will dissapear
-    when the user first hover enters.
-
-    Args:
-        input_widget (QWidget): Widget for user to input values into
-        title (string): Text to display when the widget is shown
-            for the first time.
-
-    Attributes:
-        input_widget:
-        overlay_widget:
-    """
-    def __init__(
-            self,
-            parent=None,
-            delegate_widget=None,
-            image_path=None,
-            title="",
-            display_mode=4
-    ):
-        super(OverlayInputWidget, self).__init__(
-            parent,
-            delegate_widget=delegate_widget,
-            image_path=image_path,
-            title=title,
-            display_mode=display_mode)
-
-
 class ButtonInputWidget(AbstractButtonInputWidget):
     def __init__(self, parent=None,  user_clicked_event=None, title=None, flag=None, is_toggleable=False):
         super(ButtonInputWidget, self).__init__(parent, is_toggleable=is_toggleable, user_clicked_event=user_clicked_event, title=title, flag=flag)
@@ -148,7 +118,7 @@ class ComboListInputWidget(AbstractComboListInputWidget):
     @staticmethod
     def updateDynamicWidget(parent, widget, item):
         item_list = item.getArg('items_list')
-        widget.getMainWidget().getInputWidget().populate(item_list)
+        widget.getMainWidget().delegateWidget().populate(item_list)
         # print(widget, item)
 
 
@@ -173,47 +143,6 @@ class ListInputWidget(AbstractListInputWidget):
 
         except AttributeError:
             pass
-
-    # @staticmethod
-    # def updateDynamicWidget(parent, widget, item):
-    #     item_list = item.columnData()['items_list']
-    #     value = item.columnData()['value']
-    #
-    #     widget.getMainWidget().getInputWidget().populate(item_list)
-    #     widget.getMainWidget().getInputWidget().setText(value)
-    #     # print(widget, item)
-
-
-class ListInputWidget(AbstractListInputWidget):
-    def __init__(self, parent=None, item_list=[]):
-        super(ListInputWidget, self).__init__(parent)
-        self.populate(item_list)
-        self.setUserFinishedEditingEvent(self.updateUserInputItem)
-        #self.editingFinished.connect(self.userFinishedEditing)
-
-    def userFinishedEditing(self):
-        #self.userFinishedEditingEvent(self, self.currentText())
-        return AbstractListInputWidget.userFinishedEditing(self)
-
-    def updateUserInputItem(self, *args):
-        try:
-            widget = getWidgetAncestor(self, ShojiModelDelegateWidget)
-            widget.item().columnData()['value'] = self.text()
-
-            # add user input event
-            widget.item().userInputEvent(self.text())
-
-        except AttributeError:
-            pass
-
-    # @staticmethod
-    # def updateDynamicWidget(parent, widget, item):
-    #     item_list = item.columnData()['items_list']
-    #     value = item.columnData()['value']
-    #
-    #     widget.getMainWidget().getInputWidget().populate(item_list)
-    #     widget.getMainWidget().getInputWidget().setText(value)
-    #     # print(widget, item)
 
 
 class LabelledInputWidget(AbstractLabelledInputWidget):
@@ -245,7 +174,8 @@ class LabelledInputWidget(AbstractLabelledInputWidget):
         note="None",
         direction=Qt.Horizontal,
         default_label_length=50,
-        delegate_widget=None
+        delegate_widget=None,
+        delegate_constructor=None
     ):
         super(LabelledInputWidget, self).__init__(
             parent,
@@ -253,8 +183,39 @@ class LabelledInputWidget(AbstractLabelledInputWidget):
             note=note,
             default_label_length=default_label_length,
             direction=direction,
-            delegate_widget=delegate_widget
+            delegate_widget=delegate_widget,
+            delegate_constructor=delegate_constructor
         )
+
+
+class OverlayInputWidget(AbstractOverlayInputWidget):
+    """
+    Input widget with a display delegate overlaid.  This delegate will dissapear
+    when the user first hover enters.
+
+    Args:
+        input_widget (QWidget): Widget for user to input values into
+        title (string): Text to display when the widget is shown
+            for the first time.
+
+    Attributes:
+        input_widget:
+        overlay_widget:
+    """
+    def __init__(
+            self,
+            parent=None,
+            delegate_widget=None,
+            image_path=None,
+            title="",
+            display_mode=4
+    ):
+        super(OverlayInputWidget, self).__init__(
+            parent,
+            delegate_widget=delegate_widget,
+            image_path=image_path,
+            title=title,
+            display_mode=display_mode)
 
 
 class FileBrowserInputWidget(AbstractListInputWidget):
