@@ -1,4 +1,4 @@
-
+from qtpy import API_NAME
 from qtpy.QtWidgets import (QLabel, QStackedWidget)
 from qtpy.QtCore import QEvent
 
@@ -49,7 +49,8 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
             display_mode=4
     ):
         super(AbstractOverlayInputWidget, self).__init__(parent)
-
+        if API_NAME == "PySide2":
+            iAbstractInputWidget.__init__(self) #pyside2 forces us to do this import
         # create widgets
         class ViewWidget(AbstractLabelWidget):
             def __init__(self, parent=None, title=""):

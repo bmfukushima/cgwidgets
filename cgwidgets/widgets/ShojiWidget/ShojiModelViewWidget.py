@@ -17,7 +17,7 @@ TODO: View scroll bar needs to change locations
 """
 
 from qtpy.QtWidgets import (
-    QWidget, QAbstractItemView, QScrollArea, QSplitter, qApp)
+    QWidget, QAbstractItemView, QScrollArea, QSplitter, QApplication)#, qApp)
 from qtpy.QtCore import Qt, QModelIndex, QEvent
 from qtpy.QtGui import QCursor
 
@@ -677,7 +677,8 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
 
         """
         pos = QCursor.pos()
-        widget_pressed = qApp.widgetAt(pos)
+        #widget_pressed = qApp.widgetAt(pos)
+        widget_pressed = QApplication.instance().widgetAt(pos)
         is_child_of_header = None
         if widget_pressed:
             is_child_of_header = getWidgetAncestor(widget_pressed, ShojiHeader)

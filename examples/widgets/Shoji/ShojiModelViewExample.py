@@ -49,8 +49,8 @@ Hierachy
                                 | -- Stacked/Dynamic Widget (main_widget)
 
 """
-import sys
-
+import sys, os
+os.environ['QT_API'] = 'pyside2'
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QApplication, QLabel, QLineEdit, QWidget, QVBoxLayout
 from qtpy.QtGui import QCursor

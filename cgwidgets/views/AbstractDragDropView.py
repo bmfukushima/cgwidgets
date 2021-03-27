@@ -1,5 +1,5 @@
 from qtpy.QtWidgets import (
-    QListView, QAbstractItemView, QTreeView,
+    QListView, QAbstractItemView, QTreeView, QApplication,
     QProxyStyle, QStyledItemDelegate, QStyleOptionViewItem, QStyle, QMenu
 )
 from qtpy.QtCore import Qt, QPoint, QRect, QItemSelectionModel, QSortFilterProxyModel

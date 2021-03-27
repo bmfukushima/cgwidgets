@@ -52,7 +52,6 @@ class iAbstractInputWidget(object):
         font_size = getFontSize(QApplication)
         self.setMinimumSize(font_size*2, font_size*2)
 
-
     def updateStyleSheet(self):
         style_sheet_args = iColor.style_sheet_args
         style_sheet_args.update({

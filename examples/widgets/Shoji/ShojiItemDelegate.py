@@ -20,7 +20,7 @@ TODO: SEGFAULT
 
 import string
 import sys
-from qtpy.QtWidgets import QApplication, QLabel, qApp
+from qtpy.QtWidgets import QApplication, QLabel, QApplication#, qApp
 from qtpy.QtGui import QCursor
 from qtpy.QtCore import QPoint
 

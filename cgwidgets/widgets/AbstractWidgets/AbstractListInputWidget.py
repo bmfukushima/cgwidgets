@@ -444,7 +444,7 @@ class AbstractListInputWidget(AbstractStringInputWidget):
         if not self.filter_results: return
         # filter results
         if self.text() != '':
-            self.completer().setCaseSensitivity(False)
+            self.completer().setCaseSensitivity(Qt.CaseInsensitive)
             self.completer().setCompletionMode(QCompleter.PopupCompletion)
         else:
             self.completer().setCompletionMode(QCompleter.UnfilteredPopupCompletion)
@@ -659,8 +659,9 @@ if __name__ == "__main__":
     def userFinishedEditing(widget, value):
         print('---- FINISH EVENT ----')
         print(widget, value)
-        from qtpy.QtWidgets import qApp
-        qApp.processEvents()
+
+        #qApp.processEvents()
+        QApplication.instance().processEvents()
         widget.setText('')
 
     w = QWidget()

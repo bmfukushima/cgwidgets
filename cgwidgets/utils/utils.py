@@ -132,7 +132,8 @@ def getJSONData(json_file):
 
 def getWidgetUnderCursor():
     pos = QCursor.pos()
-    widget = qApp.widgetAt(pos)
+    widget = QApplication.instance().widgetAt(pos)
+    #widget = qApp.widgetAt(pos)
     return widget
 
 

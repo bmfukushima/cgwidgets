@@ -38,7 +38,7 @@ TODO:
 
 """
 
-from qtpy.QtWidgets import QSplitter, QSplitterHandle, qApp
+from qtpy.QtWidgets import QSplitter, QSplitterHandle, QApplication #, qApp
 from qtpy.QtCore import Qt, QEvent
 from qtpy.QtGui import QCursor
 
@@ -251,7 +251,8 @@ class AbstractShojiLayout(QSplitter):
         """
         # preflight
         pos = QCursor.pos()
-        widget_pressed = qApp.widgetAt(pos)
+        #widget_pressed = qApp.widgetAt(pos)
+        widget_pressed = QApplication.instance().widgetAt(pos)
 
         # bypass handles
         if isinstance(widget_pressed, QSplitterHandle):
@@ -454,7 +455,8 @@ class AbstractShojiLayout(QSplitter):
 
         # pre flight
         if not widget:
-            widget = qApp.widgetAt(QCursor.pos())
+            #widget = qApp.widgetAt(QCursor.pos())
+            widget = QApplication.instance().widgetAt(QCursor.pos())
         if not widget:
             return
         current_index, current_widget = self.getIndexOfWidget(widget)

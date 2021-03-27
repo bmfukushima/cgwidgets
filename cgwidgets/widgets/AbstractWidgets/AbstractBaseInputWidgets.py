@@ -12,6 +12,9 @@ Input Widgets
                 | -- AbstractIntInputWidget
     BooleanInputWidget (QLabel)
 """
+
+from qtpy import API_NAME
+
 from qtpy.QtGui import QPixmap
 from qtpy.QtWidgets import (
     QLineEdit, QLabel, QPlainTextEdit, QWidget, QStackedLayout
@@ -32,6 +35,10 @@ from cgwidgets.widgets.AbstractWidgets.AbstractInputInterface import iAbstractIn
 class AbstractInputLineEdit(QLineEdit, iAbstractInputWidget):
     def __init__(self, parent=None):
         super(AbstractInputLineEdit, self).__init__(parent)
+        # print(API_NAME, type(API_NAME))
+        if API_NAME == "PySide2":
+            iAbstractInputWidget.__init__(self) #pyside2 forces us to do this import
+
         # set up signals
         self.editingFinished.connect(self.userFinishedEditing)
         self.textChanged.connect(self.userContinuousEditing)
@@ -58,6 +65,8 @@ class AbstractInputPlainText(QPlainTextEdit, iAbstractInputWidget):
     TYPE = "text"
     def __init__(self, parent=None):
         super(AbstractInputPlainText, self).__init__()
+        if API_NAME == "PySide2":
+            iAbstractInputWidget.__init__(self) #pyside2 forces us to do this import
         self.setMinimumSize(10, 10)
 
     def text(self):
@@ -319,6 +328,8 @@ class AbstractLabelWidget(QWidget, iAbstractInputWidget):
 
     def __init__(self, parent=None, text=None, image=None):
         super(AbstractLabelWidget, self).__init__(parent)
+        if API_NAME == "PySide2":
+            iAbstractInputWidget.__init__(self) #pyside2 forces us to do this import
         # setup layout
         QStackedLayout(self)
         self.layout().setStackingMode(QStackedLayout.StackAll)
@@ -468,6 +479,8 @@ class AbstractBooleanInputWidget(QLabel, iAbstractInputWidget):
     TYPE = 'bool'
     def __init__(self, parent=None, text=None, is_selected=False):
         super(AbstractBooleanInputWidget, self).__init__(parent)
+        if API_NAME == "PySide2":
+            iAbstractInputWidget.__init__(self) #pyside2 forces us to do this import
         self.is_selected = is_selected
         self.setProperty("input_hover", True)
         if text:
