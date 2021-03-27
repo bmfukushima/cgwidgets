@@ -4,7 +4,6 @@ TODO: To many updates...
             sets the item, the resets the display which causes this to update 3 times
                 1.) set item
                 2.) Clear display
-                3.) Solo item
 TODO: Hover Display Style:
         ShojiMainDelegateWidget --> installHoverDisplaySS
         settings --> HoverDisplay
@@ -1019,14 +1018,13 @@ class ShojiHeader(ModelViewWidget):
         """
 
         # todo for some reason this double registers the selection even
-
         # when using dynamic tree widgets...
         top_level_widget = getWidgetAncestor(self, ShojiModelViewWidget)
         top_level_widget.toggleDelegateSpacerWidget()
 
         # update display
         top_level_widget._selection_item = enabled
-
+        top_level_widget.updateDelegateItem(item, enabled)
 
         # update delegate background
         if hasattr(top_level_widget, '_delegate_widget'):
@@ -1037,7 +1035,7 @@ class ShojiHeader(ModelViewWidget):
                 top_level_widget.delegateWidget().rgba_background = iColor['rgba_background_01']
 
         # custom input event | need this as we're overriding the models input
-        top_level_widget.updateDelegateItem(item, enabled)
+
         top_level_widget.itemSelectedEvent(item, enabled)
         # Todo causing multiple selection bug...
         # update full screen selection

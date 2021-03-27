@@ -21,6 +21,7 @@ from cgwidgets.widgets import (
     AbstractStringInputWidget,
     AbstractBooleanInputWidget,
     AbstractOverlayInputWidget,
+    AbstractLabelWidget,
     AbstractVLine,
     AbstractHLine,
     AbstractListInputWidget,
@@ -91,34 +92,9 @@ class BooleanInputWidget(AbstractBooleanInputWidget):
             pass
 
 
-# class ComboListInputWidget(AbstractComboListInputWidget):
-#     TYPE = "list"
-#     def __init__(self, parent=None):
-#         super(ComboListInputWidget, self).__init__(parent)
-#         self.setUserFinishedEditingEvent(self.updateUserInputItem)
-#         #self.editingFinished.connect(self.userFinishedEditing)
-#
-#     def userFinishedEditing(self):
-#         #self.userFinishedEditingEvent(self, self.currentText())
-#         return AbstractComboListInputWidget.userFinishedEditing(self)
-#
-#     def updateUserInputItem(self, *args):
-#         try:
-#             widget = getWidgetAncestor(self, ShojiModelDelegateWidget)
-#             widget.item().setValue(self.currentText())
-#
-#             # add user input event
-#             widget.item().userInputEvent(self.currentText())
-#
-#         except AttributeError:
-#
-#             pass
-#
-#     @staticmethod
-#     def updateDynamicWidget(parent, widget, item):
-#         item_list = item.getArg('items_list')
-#         widget.getMainWidget().delegateWidget().populate(item_list)
-#         # print(widget, item)
+class LabelWidget(AbstractLabelWidget):
+    def __init__(self, parent=None, text=None, image=None):
+        super(LabelWidget, self).__init__(parent=parent, text=text, image=image)
 
 
 class ListInputWidget(AbstractListInputWidget):

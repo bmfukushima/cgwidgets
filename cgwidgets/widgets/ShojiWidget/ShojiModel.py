@@ -99,7 +99,6 @@ class ShojiModelItem(AbstractDragDropModelItem, iShojiDynamicWidget):
         self._delegate_widget = _delegate_widget
 
 
-
 class ShojiModel(AbstractDragDropModel):
     """
     Abstract model that is used for the Shoji.  This supports lists, and

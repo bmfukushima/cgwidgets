@@ -20,6 +20,8 @@ from cgwidgets.widgets import (
     ButtonInputWidgetContainer
 )
 
+from __CreateFrame__ import createFrame
+
 app = QApplication(sys.argv)
 
 list_of_crap = [
@@ -28,13 +30,6 @@ list_of_crap = [
     ['aba'], ['bcb'], ['cdc'], ['ded'], ['efe']
 ]
 l2 = [['a', (255, 0, 0, 255)], ['b'], ['c'], ['aa'], ['bb'], ['cc']]
-
-def createGroupBox(title):
-    group_box = QGroupBox()
-    group_box.setTitle(title)
-    group_box.setStyleSheet("color: rgba{rgba_text}".format(**iColor))
-    group_box_layout = QVBoxLayout(group_box)
-    return group_box
 
 def test(widget, value):
     print("---- user input function ----")
@@ -53,7 +48,7 @@ def fail():
 
 
 """ normal widgets """
-normal_widget = createGroupBox("Normal Widgets")
+normal_widget = createFrame("Normal Widgets")
 
 float_input_widget = FloatInputWidget()
 float_input_widget.setUseLadder(True)
@@ -121,7 +116,7 @@ def createLabeledWidgets(title, direction=Qt.Horizontal):
     }
 
     """ Label widgets"""
-    group_label_widget = createGroupBox(title)
+    group_label_widget = createFrame(title)
 
     for arg in label_widgets:
         # create widget

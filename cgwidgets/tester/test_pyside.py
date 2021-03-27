@@ -5,6 +5,8 @@ os.environ['QT_API'] = 'pyside2'
 
 import qtpy
 
+
+
 from qtpy.QtWidgets import QApplication
 
 #from cgwidgets.tester.__test__ import mainFunction
