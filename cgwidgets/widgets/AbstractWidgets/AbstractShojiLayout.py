@@ -94,6 +94,15 @@ class AbstractShojiLayout(QSplitter):
         self._rgba_flag = iColor["rgba_selected"]
         self._rgba_background = iColor["rgba_background_00"]
         self._rgba_text = iColor["rgba_text"]
+        self._base_style_sheet = """
+{type}{{
+    background-color: rgba{rgba_background};
+    color: rgba{rgba_text};
+}}""".format(
+            rgba_background=repr(self.rgba_background),
+            rgba_text=repr(self.rgba_text),
+            type=type(self).__name__,
+        )
 
         # set default attrs
         self._current_index = None
@@ -113,6 +122,7 @@ class AbstractShojiLayout(QSplitter):
         self._handle_margin_offset = 0
         self.setHandleWidth(AbstractShojiLayout.HANDLE_WIDTH)
         self.setHandleLength(-1)
+
 
         #self.updateStyleSheet()
 
@@ -587,6 +597,12 @@ class AbstractShojiLayout(QSplitter):
         return margins
 
     """ COLORS """
+    def baseStyleSheet(self):
+        return self._base_style_sheet
+
+    def setBaseStyleSheet(self, _base_style_sheet):
+        self._base_style_sheet = _base_style_sheet
+
     def updateStyleSheet(self):
         """
         Sets the color of the handle based off of the two provided
@@ -611,23 +627,14 @@ class AbstractShojiLayout(QSplitter):
             'type': type(self).__name__,
         })
         style_sheet_args.update({
-            'splitter_handle_ss': splitter_handle_ss.format(**style_sheet_args)
+            'splitter_handle_ss': splitter_handle_ss.format(**style_sheet_args),
+            'base_style_sheet': self.baseStyleSheet()
         })
         # TODO is_solo_view causing pixel issue
         style_sheet = """
 /* VIEW */
-{type}{{
-    background-color: rgba{rgba_background};
-    color: rgba{rgba_text};
-}}
-/* TODO FIX THIS
-{type}[is_solo_view_enableable=true]{{
-    border: 2px solid rgba{rgba_background};
-}}
-{type}[is_solo_view=true]{{
-    border: 2px dotted rgba{rgba_flag}; 
-}}
-*/
+
+{base_style_sheet}
 
 /* HANDLE */
 {splitter_handle_ss}
@@ -703,6 +710,8 @@ if __name__ == "__main__":
     import sys
     from qtpy.QtWidgets import QApplication, QLabel
     from qtpy.QtGui import QCursor
+
+    from cgwidgets.settings.hover_display import installHoverDisplaySS
     app = QApplication(sys.argv)
 
     main_splitter = AbstractShojiLayout()
@@ -715,8 +724,9 @@ if __name__ == "__main__":
     main_splitter.addWidget(label)
     main_splitter.addWidget(QLabel('b'))
     main_splitter.addWidget(QLabel('c'))
-    #label.setStyleSheet("color: rgba(255,0,0,255)")
+    main_splitter.setStyleSheet("border: 5px solid rgba(0,255,0,255)")
     splitter1 = AbstractShojiLayout(orientation=Qt.Horizontal)
+    installHoverDisplaySS(splitter1, "TEST")
     splitter1.setObjectName("embed")
     for x in range(3):
         l = QLabel(str(x))

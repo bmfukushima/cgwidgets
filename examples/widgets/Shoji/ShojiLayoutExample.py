@@ -43,6 +43,19 @@ main_widget = ShojiLayout()
 embedded_shoji_01 = ShojiLayout(orientation=Qt.Horizontal)
 embedded_shoji_02 = ShojiLayout(orientation=Qt.Vertical)
 
+# set custom base setyle sheet
+base_style_sheet = """
+{type}{{
+    background-color: rgba(0,255,0,255);
+    color: rgba(128,128,128,255);
+    border: 2px solid rgba(255,0,0,255);
+}}""".format(
+            type=type(main_widget).__name__,
+        )
+main_widget.setBaseStyleSheet(base_style_sheet)
+
+
+
 # OPTIONAL | set handle length (if not set, by default this will be full length)
 main_widget.setHandleLength(100)
 main_widget.setHandleWidth(5)
@@ -61,7 +74,7 @@ for char in "SINE.":
     # main widget
     widget = DisplayLabel(char)
     main_widget.addWidget(widget, is_soloable=False)
-    widget.setStyleSheet("background-color: rgba(255,0,0,255)")
+    #widget.setStyleSheet("background-color: rgba(255,0,0,255)")
     widget.setContentsMargins(0,0,0,0)
 
     # embedded_shoji_02

@@ -952,36 +952,6 @@ class ShojiModelDelegateWidget(AbstractOverlayInputWidget):
         return self._item
 
 
-# class ShojiModelDelegateWidget(AbstractFrameInputWidgetContainer):
-#     """
-#     Attributes:
-#         main_widget (QWidget): the main display widget
-#         item (ShojiModelItem): The item from the model that is associated with
-#             this delegate
-#     """
-#     def __init__(self, parent=None, title=None):
-#         super(ShojiModelDelegateWidget, self).__init__(parent, title=title)
-#
-#         self.layout().setContentsMargins(0, 0, 0, 0)
-#
-#     def setMainWidget(self, widget):
-#         # remove old main widget if it exists
-#         if hasattr(self, '_main_widget'):
-#             self._main_widget.setParent(None)
-#
-#         self._main_widget = widget
-#         self.layout().addWidget(self._main_widget)
-#
-#     def getMainWidget(self):
-#         return self._main_widget
-#
-#     def setItem(self, item):
-#         self._item = item
-#
-#     def item(self):
-#         return self._item
-
-
 """ HEADER """
 class ShojiHeader(ModelViewWidget):
     LIST_VIEW = 0

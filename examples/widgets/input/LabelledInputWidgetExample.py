@@ -15,6 +15,7 @@ from cgwidgets.widgets import (
 
 from cgwidgets.settings.colors import iColor
 from cgwidgets.settings.icons import icons
+from cgwidgets.settings.hover_display import installHoverDisplaySS
 from __CreateFrame__ import createFrame
 
 app = QApplication(sys.argv)
@@ -65,6 +66,11 @@ class CustomLabelledInputWidget(LabelledInputWidget):
             delegate_constructor=delegate_constructor
         )
 
+        self.setStyleSheet("""
+        background-color: rgba(0,255,0,255);
+        border: 5px rgba(255,0,255,255);
+        """)
+
 # Args
 args_labelled_widget = LabelledInputWidget(
     name="Args",
@@ -82,6 +88,7 @@ setters_labelled_widget.setName("Name")
 setters_labelled_widget.setDirection(Qt.Vertical)
 setters_labelled_widget.setDelegateWidget(BooleanInputWidget())
 setters_labelled_widget.setDefaultLabelLength(75)
+#installHoverDisplaySS(setters_labelled_widget, "TEST")
 
 # Setters view widget
 """
@@ -95,7 +102,6 @@ def hideViewDelegateEvent(widget, delegate_widget):
     print('---- HIDE VIEW DELEGATE EVENT ----')
     print(widget, delegate_widget.text())
 setters_view_widget.setHideDelegateEvent(hideViewDelegateEvent)
-
 setters_widget = createFrame("Setters", setters_labelled_widget)
 
 # subclass

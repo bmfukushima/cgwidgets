@@ -130,10 +130,18 @@ def getJSONData(json_file):
     return datastore
 
 
-def getWidgetUnderCursor():
-    pos = QCursor.pos()
+def getWidgetUnderCursor(pos=None):
+    """
+    Returns the current widget that is directly under the cursor
+
+    Args:
+        pos (QPos):
+
+    Returns (QWidget):
+    """
+    if not pos:
+        pos = QCursor.pos()
     widget = QApplication.instance().widgetAt(pos)
-    #widget = qApp.widgetAt(pos)
     return widget
 
 
@@ -292,6 +300,26 @@ def getMainWidget(widget, name):
             return getMainWidget(widget.parent(), name)
         except AttributeError:
             print("this is has no parents...")
+
+
+def isWidgetDescendantOf(widget, parent):
+    """
+    Determines if a widget is a descendant of another widget
+    Args:
+        widget (QWidget): widget to start searching from
+        parent (QWidget): widget to check if it is an ancestor of
+
+    Returns:
+
+    """
+    if widget:
+        if widget == parent:
+            return True
+        else:
+            if widget.parent():
+                return isWidgetDescendantOf(widget.parent(), parent)
+            else:
+                return False
 
 
 def getWidgetAncestor(widget, instance_type):
@@ -470,6 +498,7 @@ def centerWidgetOnCursor(widget):
         widget.geometry().width(),
         widget.geometry().height()
     )
+
 
 def clearLayout(layout, start=None, end=None):
     """
