@@ -1,8 +1,6 @@
 """
 Todo:
     * show event overlapping oddly
-    * Hotkeys for to quickly switch between widgets?
-        1, 2, 3, 4, 5
     * add / remove widgets dynamically?
         Add a delegate?
     * add special handler for only 1, 2, 3+ widgets
@@ -48,8 +46,9 @@ class AbstractPiPWidget(QWidget):
         |    |- PiPMainViewer (QWidget)
         |- MiniViewer (QWidget)
             |- QBoxLayout
-                |-* PiPMiniViewerWidget --> AbstractLabelledInputWidget
-                        |- QWidget
+                |-* PiPMiniViewerWidget --> QWidget
+                        |- QVBoxLayout
+                        |- AbstractLabelledInputWidget
 
     Signals:
         Swap (Enter):
@@ -60,8 +59,11 @@ class AbstractPiPWidget(QWidget):
                 - unfreeze swapping
         Swap (Key Press):
             AbstractPiPWidget --> keyPressEvent --> setCurrentWidget
+        HotSwap (Key Press 1-5):
+            AbstractPiPWidget --> keyPressEvent --> setCurrentWidget
         Toggle previous widget
             AbstractPiPWidget --> keyPressEvent --> swapWidgets
+
     """
 
     ENTER = 0
@@ -230,6 +232,7 @@ class AbstractPiPWidget(QWidget):
         return QWidget.resizeEvent(self, event)
 
     def keyPressEvent(self, event):
+        # swap between this and previous
         if event.key() == 96:
             # pre flight
             widget = getWidgetUnderCursor()
@@ -249,6 +252,24 @@ class AbstractPiPWidget(QWidget):
                     self.setCurrentWidget(swap_widget)
                     return QWidget.keyPressEvent(self, event)
 
+        # hotkey swapping
+        if event.key() in [Qt.Key_1, Qt.Key_2, Qt.Key_3, Qt.Key_4, Qt.Key_5]:
+            try:
+                if event.key() == Qt.Key_1:
+                    widget = self.mini_viewer.layout().itemAt(0).widget()
+                if event.key() == Qt.Key_2:
+                    widget = self.mini_viewer.layout().itemAt(1).widget()
+                if event.key() == Qt.Key_3:
+                    widget = self.mini_viewer.layout().itemAt(2).widget()
+                if event.key() == Qt.Key_4:
+                    widget = self.mini_viewer.layout().itemAt(3).widget()
+                if event.key() == Qt.Key_5:
+                    widget = self.mini_viewer.layout().itemAt(4).widget()
+                self.setCurrentWidget(widget)
+
+            except AttributeError:
+                # not enough widgets
+                pass
         return QWidget.keyPressEvent(self, event)
 
 
@@ -330,8 +351,8 @@ class PiPMiniViewer(QWidget):
         self.layout().removeWidget(widget)
         widget.removeEventFilter(self)
 
-    def widgets(self):
-        self.layout().children()
+    # def widgets(self):
+    #     self.layout().children()
 
 
 class PiPMiniViewerWidget(QWidget):
@@ -372,6 +393,8 @@ if __name__ == '__main__':
     widget.setDirection(attrs.SOUTH)
     for x in range(4):
         child = QLabel(str(x))
+        child.setAlignment(Qt.AlignCenter)
+        child.setStyleSheet("color: rgba(255,255,255,255);")
         widget.addWidget(child)
     widget.show()
     widget.showWidgetNames(False)
