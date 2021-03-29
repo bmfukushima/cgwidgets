@@ -34,8 +34,8 @@ class AbstractPiPWidget(QWidget):
     Attributes:
         current_widget (QWidget): the widget that is currently set as the main display
         direction (attrs.DIRECTION): what side the mini viewer will be displayed on.
-        pip_size (float): fractional percentage of the amount of space that the mini viewer
-            will take up in relation to the overall size of the widget.
+        pip_size ((float, float)):  fractional percentage of the amount of space that
+            the mini viewer will take up in relation to the overall size of the widget.
         swap_mode (PiPWidget.SWAP): when the widget will be swapped
         swap_key (Qt.KEY): When the swap_mode is set to KEY_PRESS, this key will trigger the
             popup
@@ -124,6 +124,9 @@ class AbstractPiPWidget(QWidget):
         return self._pip_size
 
     def setPiPSize(self, pip_size):
+        if isinstance(pip_size, float):
+            pip_size = (pip_size, pip_size)
+
         self._pip_size = pip_size
         self.resizeMiniViewer()
 
@@ -198,28 +201,56 @@ class AbstractPiPWidget(QWidget):
         """
         w = self.width()
         h = self.height()
-        pip_offset = 1 - self.pipSize()
-        # set position
-        if self.direction() in [attrs.EAST, attrs.WEST]:
+        num_widgets = self.mini_viewer.layout().count()
+
+        if num_widgets == 0:
+            xpos = 0
+            ypos = 0
             height = h
-            width = w * self.pipSize()
-
-            if self.direction() == attrs.EAST:
-                ypos = 0
-                xpos = 0
-            if self.direction() == attrs.WEST:
-                ypos = 0
-                xpos = w * pip_offset
-
-        if self.direction() in [attrs.NORTH, attrs.SOUTH]:
-            height = h * self.pipSize()
             width = w
-            if self.direction() == attrs.SOUTH:
-                xpos = 0
-                ypos = h * pip_offset
-            if self.direction() == attrs.NORTH:
-                xpos = 0
-                ypos = 0
+
+        if num_widgets == 1:
+            height = h * self.pipSize()[1]
+            width = w * self.pipSize()[0]
+            if self.direction() in [attrs.EAST, attrs.WEST]:
+
+                if self.direction() == attrs.EAST:
+                    ypos = 0
+                    xpos = w * (1 - self.pipSize()[0])
+                if self.direction() == attrs.WEST:
+                    ypos = h * (1 - self.pipSize()[1])
+                    xpos = 0
+
+            if self.direction() in [attrs.NORTH, attrs.SOUTH]:
+                if self.direction() == attrs.SOUTH:
+                    xpos = w * (1 - self.pipSize()[0])
+                    ypos = h * (1 - self.pipSize()[1])
+                if self.direction() == attrs.NORTH:
+                    xpos = 0
+                    ypos = 0
+
+        if 1 < num_widgets:
+            pip_offset = 1 - self.pipSize()[0]
+            # set position
+            if self.direction() in [attrs.EAST, attrs.WEST]:
+                height = h
+                width = w * self.pipSize()[0]
+                if self.direction() == attrs.EAST:
+                    ypos = 0
+                    xpos = w * pip_offset
+                if self.direction() == attrs.WEST:
+                    ypos = 0
+                    xpos = 0
+
+            if self.direction() in [attrs.NORTH, attrs.SOUTH]:
+                height = h * self.pipSize()[1]
+                width = w
+                if self.direction() == attrs.NORTH:
+                    xpos = 0
+                    ypos = 0
+                if self.direction() == attrs.SOUTH:
+                    xpos = 0
+                    ypos = h * pip_offset
 
         # move/resize mini viewer
         self.mini_viewer.move(int(xpos), int(ypos))
@@ -390,7 +421,8 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
 
     widget = AbstractPiPWidget()
-    widget.setDirection(attrs.SOUTH)
+    widget.setPiPSize((0.5, 0.5))
+    widget.setDirection(attrs.WEST)
     for x in range(4):
         child = QLabel(str(x))
         child.setAlignment(Qt.AlignCenter)
