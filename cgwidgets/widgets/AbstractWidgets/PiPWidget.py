@@ -16,13 +16,15 @@ from qtpy.QtWidgets import (
 from qtpy.QtCore import QEvent, Qt, QPoint
 from qtpy.QtGui import QCursor
 
+from cgwidgets.views import AbstractDragDropModelItem
 from cgwidgets.utils import attrs, getWidgetUnderCursor, isWidgetDescendantOf, getWidgetAncestor
 from cgwidgets.settings.hover_display import installHoverDisplaySS, removeHoverDisplay
 from cgwidgets.settings.colors import iColor
 
 from cgwidgets.widgets.AbstractWidgets.AbstractLabelledInputWidget import AbstractLabelledInputWidget
 from cgwidgets.widgets.AbstractWidgets.AbstractOverlayInputWidget import AbstractOverlayInputWidget
-from cgwidgets.widgets import ModelViewWidget
+from cgwidgets.widgets import ModelViewWidget, AbstractListInputWidget
+
 
 class AbstractPiPWidget(QSplitter):
     """
@@ -79,22 +81,55 @@ The PiPWidget is designed to display multiple widgets simultaneously to the user
             PiPMainWidget --> keyPressEvent --> setCurrentWidget
         Toggle previous widget
             PiPMainWidget --> keyPressEvent --> swapWidgets
+        Create New Widget -->
+        Delete Widget -->
     """
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, widget_types=None):
         super(AbstractPiPWidget, self).__init__(parent)
+        # setup default attrs
         self.setOrientation(Qt.Horizontal)
+        if not widget_types:
+            widget_types = []
 
+        # create widgets
         self._main_widget = PiPMainWidget(self)
-        self._organizer_widget = PiPOrganizerWidget(self)
-        for x in range(0, 4):
-            index = self._organizer_widget.model().insertNewIndex(x, name=str('node%s' % x))
-            for i, char in enumerate('abc'):
-                self._organizer_widget.model().insertNewIndex(i, name=char, parent=index)
+        self._organizer_widget = PiPOrganizerWidget(self, widget_types)
 
         self.addWidget(self._main_widget)
         self.addWidget(self._organizer_widget)
 
     """"""
+    def widgets(self):
+        return [index.internalPointer().widget() for index in self.organizerWidget().model().getAllIndexes() if hasattr(index.internalPointer(), "_widget")]
+
+    def createNewWidget(self, widget, name=""):
+        if 0 < len(self.widgets()):
+            mini_widget = self.miniViewerWidget().createNewWidget(widget, name=name)
+        else:
+            mini_widget = PiPMiniViewerWidget(self, direction=Qt.Vertical, delegate_widget=widget, name=name)
+            self.mainWidget().setCurrentWidget(mini_widget)
+
+        # create new index
+        index = self.organizerWidget().model().insertNewIndex(0, name=name)
+        mini_widget.setIndex(0)
+        item = index.internalPointer()
+        item.setWidget(mini_widget)
+        # update indexes
+        self.updateWidgetIndexes()
+
+        self.mainWidget().resizeMiniViewer()
+        return mini_widget
+
+    def updateWidgetIndexes(self):
+        """
+        Runs through all of the widgets and resets their indexes.
+
+        This will need to be done every time a new widget is added
+        """
+        for index in self.organizerWidget().model().getAllIndexes():
+            item = index.internalPointer()
+            if hasattr(item, "_widget"):
+                item.widget().setIndex(index.row())
 
     """ WIDGETS """
     def mainWidget(self):
@@ -110,9 +145,6 @@ The PiPWidget is designed to display multiple widgets simultaneously to the user
         return self._organizer_widget
 
     """ VIRTUAL FUNCTIONS (MAIN WIDGET)"""
-    def createNewWidget(self, widget, name):
-        self.mainWidget().addWidget(widget, name)
-
     def direction(self):
         return self.mainWidget().direction()
 
@@ -140,6 +172,10 @@ The PiPWidget is designed to display multiple widgets simultaneously to the user
 
     def showWidgetNames(self, enabled):
         self.mainWidget().showWidgetNames(enabled)
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_A:
+            self.updateWidgetIndexes()
 
 
 class PiPMainWidget(QWidget):
@@ -285,32 +321,23 @@ class PiPMainWidget(QWidget):
         self.mini_viewer.setFixedSize(int(width), int(height))
         self.mini_viewer.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
+    def areWidgetNamesShown(self):
+        return self._are_widget_names_shown
+
     def showWidgetNames(self, enabled):
-        for widget in self.widgets():
+        self._are_widget_names_shown = enabled
+        for widget in self.parent().widgets():
             if enabled:
                 widget.main_widget.viewWidget().show()
             else:
                 widget.main_widget.viewWidget().hide()
-                pass
 
     """ WIDGETS """
-    def addWidget(self, widget, name=""):
-        if 0 < len(self.widgets()):
-            mini_widget = self.mini_viewer.createNewWidget(widget, name=name)
-        else:
-            mini_widget = PiPMiniViewerWidget(self, direction=Qt.Vertical, delegate_widget=widget, name=name)
-            self.setCurrentWidget(mini_widget)
-
-        self.widgets().append(mini_widget)
-        self.resizeMiniViewer()
 
     def removeWidget(self, widget):
-        self.widgets().remove(widget)
+        #self.widgets().remove(widget)
         widget.setParent(None)
         widget.deleteLater()
-
-    def widgets(self):
-        return self._widgets
 
     def currentWidget(self):
         return self._current_widget
@@ -370,12 +397,11 @@ class PiPMainWidget(QWidget):
                 return QWidget.keyPressEvent(self, event)
 
             # set widget under cursor as current
-            is_descendant_of_mini_viewer = isWidgetDescendantOf(widget, self.mini_viewer)
-            if is_descendant_of_mini_viewer:
-                if self.swapMode() == PiPMainWidget.KEY_PRESS:
-                    swap_widget = getWidgetAncestor(widget, PiPMiniViewerWidget)
-                    self.setCurrentWidget(swap_widget)
-                    return QWidget.keyPressEvent(self, event)
+            is_descendant_of_main_widget = isWidgetDescendantOf(widget, self)
+            if is_descendant_of_main_widget:
+                swap_widget = getWidgetAncestor(widget, PiPMiniViewerWidget)
+                self.setCurrentWidget(swap_widget)
+                return QWidget.keyPressEvent(self, event)
 
         # hotkey swapping
         if event.key() in [Qt.Key_1, Qt.Key_2, Qt.Key_3, Qt.Key_4, Qt.Key_5]:
@@ -396,9 +422,16 @@ class PiPMainWidget(QWidget):
                 # not enough widgets
                 pass
 
+        # hide PiP
         if event.key() == Qt.Key_Space:
             self.mini_viewer.hide()
             return
+
+        # escape
+        if event.key() == Qt.Key_Escape:
+            obj = getWidgetUnderCursor(QCursor.pos())
+            widget = getWidgetAncestor(obj, PiPMiniViewerWidget)
+            self.mini_viewer.closeEnlargedView(widget)
         return QWidget.keyPressEvent(self, event)
 
     def keyReleaseEvent(self, event):
@@ -526,36 +559,46 @@ class PiPMiniViewer(QWidget):
                     event.accept()
 
         elif event.type() in [QEvent.Drop, QEvent.DragLeave, QEvent.Leave]:
-            widget_under_cursor = getWidgetUnderCursor(QCursor.pos())
-            under_mini_viewer = isWidgetDescendantOf(widget_under_cursor, self)
-            # avoid exit recursion when exiting over existing widgets
-            if self._is_exiting:
-                if hasattr(self, "_entered_object"):
-                    if self._enlarged_object == obj:
-                        self._is_frozen = False
-                        self._is_exiting = False
-                        delattr(self, "_temp")
-                        return True
-                    if self._entered_object == obj:
-                        self._is_frozen = False
-                        self._is_exiting = False
-                        self._temp = True
-                        return True
-
-            # exiting
-            if not self._is_frozen:
-                self._is_frozen = True
-                self.addWidget(obj)
-                # self.show()
-
-                if under_mini_viewer:
-                    self._is_exiting = True
-                    self._enlarged_object = obj
-                    self._entered_object = getWidgetAncestor(widget_under_cursor, PiPMiniViewerWidget)
-                else:
-                    self._is_frozen = False
-
+            self.closeEnlargedView(obj)
         return False
+
+    def closeEnlargedView(self, obj):
+        """
+        Closes the enlarged viewer, and returns it back to normal PiP mode
+
+        Args:
+            obj:
+
+        Returns:
+        """
+        widget_under_cursor = getWidgetUnderCursor(QCursor.pos())
+        under_mini_viewer = isWidgetDescendantOf(widget_under_cursor, self)
+        # avoid exit recursion when exiting over existing widgets
+        if self._is_exiting:
+            if hasattr(self, "_entered_object"):
+                if self._enlarged_object == obj:
+                    self._is_frozen = False
+                    self._is_exiting = False
+                    delattr(self, "_temp")
+                    return True
+                if self._entered_object == obj:
+                    self._is_frozen = False
+                    self._is_exiting = False
+                    self._temp = True
+                    return True
+
+        # exiting
+        if not self._is_frozen:
+            self._is_frozen = True
+            self.addWidget(obj)
+            # self.show()
+
+            if under_mini_viewer:
+                self._is_exiting = True
+                self._enlarged_object = obj
+                self._entered_object = getWidgetAncestor(widget_under_cursor, PiPMiniViewerWidget)
+            else:
+                self._is_frozen = False
 
     """ DIRECTION """
     def setDirection(self, direction):
@@ -563,8 +606,7 @@ class PiPMiniViewer(QWidget):
 
     """ WIDGETS """
     def addWidget(self, widget):
-        self.layout().insertWidget(0, widget)
-        #self.layout().addWidget(widget)
+        self.layout().insertWidget(widget.index(), widget)
         widget.installEventFilter(self)
 
         # installHoverDisplaySS(
@@ -582,10 +624,8 @@ class PiPMiniViewer(QWidget):
         Returns (PiPMiniViewerWidget):
         """
         mini_widget = PiPMiniViewerWidget(self, direction=Qt.Vertical, delegate_widget=widget, name=name)
-
-        self.layout().addWidget(mini_widget)
+        self.layout().insertWidget(0, mini_widget)
         mini_widget.installEventFilter(self)
-
         return mini_widget
 
     def removeWidget(self, widget):
@@ -594,6 +634,12 @@ class PiPMiniViewer(QWidget):
 
 
 class PiPMiniViewerWidget(QWidget):
+    """
+    One PiP Widget that is displayed in the PiPMiniViewer
+
+    Attributes:
+        index (int): current index in model
+    """
     def __init__(
         self,
         parent=None,
@@ -605,7 +651,7 @@ class PiPMiniViewerWidget(QWidget):
         QVBoxLayout(self)
         self.main_widget = AbstractLabelledInputWidget(self, name=name, direction=direction, delegate_widget=delegate_widget)
         self.layout().addWidget(self.main_widget)
-
+        self.layout().setContentsMargins(0, 0, 0, 0)
         base_style_sheet = """
         {type}{{
             background-color: rgba{rgba_background};
@@ -622,21 +668,87 @@ class PiPMiniViewerWidget(QWidget):
         self.setAcceptDrops(True)
         # installHoverDisplaySS(self, "TEST")
 
+    def index(self):
+        return self._index
+
+    def setIndex(self, index):
+        self._index = index
+
+""" Create Widgets"""
+
+class PiPModelItem(AbstractDragDropModelItem):
+    def __init__(self, parent=None):
+        super(PiPModelItem, self).__init__(parent)
+
+    def widget(self):
+        return self._widget
+
+    def setWidget(self, widget):
+        self._widget = widget
 
 class PiPOrganizerWidget(ModelViewWidget):
-    def __init__(self, parent=None):
+    """
+    This widget is in charge of creating/destroying PiP items, along with
+    holding the order that the items should be displayed in.
+
+    Attributes:
+        widget_types (dict): of widget names / constructors
+            {"name": constructor,
+            "QLabel": QLabel,
+            "QPushButton":QPushButton}
+
+    Signals:
+        Create New Widget -->
+        Delete Widget -->
+    """
+    def __init__(self, parent=None, widget_types=None):
         super(PiPOrganizerWidget, self).__init__(parent)
+        self._widget_types = widget_types
+        self._creator_widget = AbstractListInputWidget(self)
+        self._creator_widget.setUserFinishedEditingEvent(self.createNewWidget)
+        self.setItemDeleteEvent(self.deleteWidget)
+
+        widget_types = [[key] for key in widget_types.keys()]
+        self._creator_widget.populate(widget_types)
+        self.addDelegate([Qt.Key_Q], self._creator_widget)
+        self.model().setItemType(PiPModelItem)
+
+    def deleteWidget(self, item):
+        item.widget().setParent(None)
+        item.widget().deleteLater()
+
+    def createNewWidget(self, widget, value):
+        # preflight
+        if value not in widget_types.keys(): return
+        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+
+        # get constructor
+        constructor = self.widgetTypes()[value]
+        widget_type = constructor(self)
+        main_widget.createNewWidget(widget_type, name=str(value))
+
+        # reset widget
+        widget.setText('')
+        widget.hide()
+
+    def widgetTypes(self):
+        return self._widget_types
+
+    def setWidgetTypes(self, widget_types):
+        self._widget_types = widget_types
 
 
 if __name__ == '__main__':
     import sys
-    from qtpy.QtWidgets import (QApplication, QHBoxLayout, QListWidget, QAbstractItemView)
+    from qtpy.QtWidgets import (QApplication, QHBoxLayout, QListWidget, QAbstractItemView, QPushButton)
     from cgwidgets.utils import centerWidgetOnCursor
     app = QApplication(sys.argv)
 
     # PiP Widget
-    pip_widget = AbstractPiPWidget()
-    for x in range(5):
+    widget_types = {"QLabel": QLabel, "QPushButton":QPushButton}
+    pip_widget = AbstractPiPWidget(widget_types=widget_types)
+
+    for x in ("SINE."):
         child = QLabel(str(x))
         child.setAlignment(Qt.AlignCenter)
         child.setStyleSheet("color: rgba(255,255,255,255);")
