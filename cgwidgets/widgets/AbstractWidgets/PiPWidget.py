@@ -80,6 +80,8 @@ The PiPWidget is designed to display multiple widgets simultaneously to the user
             PiPMainWidget --> keyPressEvent --> setCurrentWidget
         Toggle previous widget
             PiPMainWidget --> keyPressEvent --> swapWidgets
+        Toggle Organizer Widget (Q):
+            keyPressEvent --> toggleOrganizerVisibility
         Create New Widget -->
         Delete Widget -->
     """
@@ -104,11 +106,14 @@ The PiPWidget is designed to display multiple widgets simultaneously to the user
         self.addWidget(self._organizer_widget)
 
     """"""
+    def numWidgets(self):
+        return len(self.widgets())
+
     def widgets(self):
         return [index.internalPointer().widget() for index in self.organizerWidget().model().getAllIndexes() if hasattr(index.internalPointer(), "_widget")]
 
     def createNewWidget(self, widget, name=""):
-        if 0 < len(self.widgets()):
+        if 0 < self.numWidgets():
             mini_widget = self.miniViewerWidget().createNewWidget(widget, name=name)
         else:
             mini_widget = PiPMiniViewerWidget(self, direction=Qt.Vertical, delegate_widget=widget, name=name)
@@ -163,7 +168,6 @@ The PiPWidget is designed to display multiple widgets simultaneously to the user
         self.mainWidget().setSwapKey(key)
 
     def pipScale(self):
-
         return self.mainWidget().pipScale()
 
     def setPiPScale(self, pip_scale):
@@ -178,22 +182,33 @@ The PiPWidget is designed to display multiple widgets simultaneously to the user
     def showWidgetNames(self, enabled):
         self.mainWidget().showWidgetNames(enabled)
 
+    def currentWidget(self):
+        return self.mainWidget().currentWidget()
+
+    def setCurrentWidget(self, current_widget):
+        self.mainWidget().setCurrentWidget(current_widget)
+
+    def previousWidget(self):
+        return self.mainWidget().previousWidget()
+
+    def setPreviousWidget(self, previous_widget):
+        self.mainWidget().setPreviousWidget(previous_widget)
+
     """ ORGANIZER / CREATOR """
     def isOrganizerVisible(self):
         return self._is_organizer_visible
 
-    def toggleOrganizerWidget(self):
+    def toggleOrganizerVisibility(self):
         self._is_organizer_visible = not self.isOrganizerVisible()
         if self.isOrganizerVisible():
             self.organizerWidget().show()
         else:
             self.organizerWidget().hide()
 
-
     """ EVENTS """
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Q:
-            self.toggleOrganizerWidget()
+            self.toggleOrganizerVisibility()
 
         return QWidget.keyPressEvent(self, event)
 
@@ -353,7 +368,6 @@ class PiPMainWidget(QWidget):
                 widget.main_widget.viewWidget().hide()
 
     """ WIDGETS """
-
     def removeWidget(self, widget):
         #self.widgets().remove(widget)
         widget.setParent(None)
@@ -734,6 +748,42 @@ class PiPOrganizerWidget(ModelViewWidget):
         self.model().setItemType(PiPModelItem)
 
     def deleteWidget(self, item):
+        """
+        When an item is deleted, the corresponding widget is removed from the PiPViewer.
+
+        If the item deleted is the currently viewed item, the previously viewed item will
+        automatically be set as the currently viewed item, and if that doesn't exist,
+        it will set it to the first widget it can find.
+
+        Args:
+            item (to be deleted):
+        """
+        # get widget
+        widget = item.widget()
+
+        # get current widget
+        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+        if 2 < main_widget.numWidgets():
+            current_widget = main_widget.currentWidget()
+            if widget == current_widget:
+                # get first useable widget
+                first_widget = main_widget.widgets()[0]
+                if first_widget == widget:
+                    first_widget = main_widget.widgets()[1]
+
+                # set current widget
+                if main_widget.previousWidget():
+                    main_widget.setCurrentWidget(main_widget.previousWidget())
+                else:
+                    main_widget.setCurrentWidget(first_widget)
+
+                # remove previous widget
+                main_widget.setPreviousWidget(None)
+
+                # if previous widget set to previous widget
+                # else set to 0th widget
+
+        # delete widget
         item.widget().setParent(None)
         item.widget().deleteLater()
 
@@ -777,7 +827,7 @@ if __name__ == '__main__':
     pip_widget.setPiPScale((0.2, 0.2))
     pip_widget.setEnlargedScale(0.75)
     pip_widget.setDirection(attrs.EAST)
-    pip_widget.showWidgetNames(False)
+    #pip_widget.showWidgetNames(False)
 
     #
 
