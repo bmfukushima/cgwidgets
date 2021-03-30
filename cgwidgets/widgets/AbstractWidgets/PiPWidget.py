@@ -1,14 +1,13 @@
 """
 Todo:
-    * PiPMiniViewer --> eventFilter
-        - exit over miniViewer
-        - enter not covering mini viewer
-    * add / remove widgets dynamically?
-        Add a delegate?
+    * Overall cleanup / organization
+    * Expose settings to user?
+    * Organizer...
+        - Rename
+        - Settup API
     * PiPMiniViewerWidget --> Borders... styles not working???
         - base style sheet added to ShojiLayout...
             in general the shoji layout needs to be more flexible
-    * Widgets stay in same order...
 
 """
 from qtpy.QtWidgets import (
@@ -46,7 +45,7 @@ The PiPWidget is designed to display multiple widgets simultaneously to the user
 
     Hierarchy:
         |- PiPMainWidget --> QWidget
-        |    |- QVBoxLayout
+        |    |- QHBoxLayout
         |    |    |- PiPMainViewer --> QWidget
         |    |- MiniViewer (QWidget)
         |        |- QBoxLayout
@@ -92,9 +91,15 @@ The PiPWidget is designed to display multiple widgets simultaneously to the user
             widget_types = []
 
         # create widgets
+        # create main pip widget
         self._main_widget = PiPMainWidget(self)
-        self._organizer_widget = PiPOrganizerWidget(self, widget_types)
 
+        # setup organizer widget
+        self._organizer_widget = PiPOrganizerWidget(self, widget_types)
+        self._is_organizer_visible = False
+        self._organizer_widget.hide()
+
+        # add widgets
         self.addWidget(self._main_widget)
         self.addWidget(self._organizer_widget)
 
@@ -173,9 +178,24 @@ The PiPWidget is designed to display multiple widgets simultaneously to the user
     def showWidgetNames(self, enabled):
         self.mainWidget().showWidgetNames(enabled)
 
+    """ ORGANIZER / CREATOR """
+    def isOrganizerVisible(self):
+        return self._is_organizer_visible
+
+    def toggleOrganizerWidget(self):
+        self._is_organizer_visible = not self.isOrganizerVisible()
+        if self.isOrganizerVisible():
+            self.organizerWidget().show()
+        else:
+            self.organizerWidget().hide()
+
+
+    """ EVENTS """
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key_A:
-            self.updateWidgetIndexes()
+        if event.key() == Qt.Key_Q:
+            self.toggleOrganizerWidget()
+
+        return QWidget.keyPressEvent(self, event)
 
 
 class PiPMainWidget(QWidget):
@@ -675,7 +695,6 @@ class PiPMiniViewerWidget(QWidget):
         self._index = index
 
 """ Create Widgets"""
-
 class PiPModelItem(AbstractDragDropModelItem):
     def __init__(self, parent=None):
         super(PiPModelItem, self).__init__(parent)
@@ -685,6 +704,7 @@ class PiPModelItem(AbstractDragDropModelItem):
 
     def setWidget(self, widget):
         self._widget = widget
+
 
 class PiPOrganizerWidget(ModelViewWidget):
     """
