@@ -368,6 +368,9 @@ class AbstractLabelWidget(QWidget, iAbstractInputWidget):
     def textWidget(self):
         return self._text_widget
 
+    def text(self):
+        return self.textWidget().text()
+
     def setText(self, text):
         """
         Sets the display text of the widget

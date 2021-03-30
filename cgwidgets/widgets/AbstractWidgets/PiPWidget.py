@@ -1,18 +1,20 @@
 """
 Todo:
-    * show event overlapping oddly
+    * PiPMiniViewer --> eventFilter
+        - exit over miniViewer
+        - enter not covering mini viewer
     * add / remove widgets dynamically?
         Add a delegate?
-    * add special handler for only 1, 2, 3+ widgets
-        AbstractPiPWidget --> resizeMiniViewer
     * PiPMiniViewerWidget --> Borders... styles not working???
         - base style sheet added to ShojiLayout...
             in general the shoji layout needs to be more flexible
-"""
+    * Widgets stay in same order...
 
+"""
 from qtpy.QtWidgets import (
-    QStackedLayout, QWidget, QBoxLayout, QVBoxLayout, QLabel)
-from qtpy.QtCore import QEvent, Qt
+    QStackedLayout, QWidget, QBoxLayout, QVBoxLayout, QLabel, QSizePolicy, QSplitter)
+from qtpy.QtCore import QEvent, Qt, QPoint
+from qtpy.QtGui import QCursor
 
 from cgwidgets.utils import attrs, getWidgetUnderCursor, isWidgetDescendantOf, getWidgetAncestor
 from cgwidgets.settings.hover_display import installHoverDisplaySS, removeHoverDisplay
@@ -20,8 +22,127 @@ from cgwidgets.settings.colors import iColor
 
 from cgwidgets.widgets.AbstractWidgets.AbstractLabelledInputWidget import AbstractLabelledInputWidget
 from cgwidgets.widgets.AbstractWidgets.AbstractOverlayInputWidget import AbstractOverlayInputWidget
+from cgwidgets.widgets import ModelViewWidget
 
-class AbstractPiPWidget(QWidget):
+class AbstractPiPWidget(QSplitter):
+    """
+The PiPWidget is designed to display multiple widgets simultaneously to the user.
+
+    Similar to the function that was provided to TV's in the mid 1970's.  This widget is
+    designed to allow the user to create multiple hot swappable widgets inside of the same
+    widget.
+
+    Args:
+
+    Attributes:
+        current_widget (QWidget): the widget that is currently set as the main display
+        direction (attrs.DIRECTION): what side the mini viewer will be displayed on.
+        pip_scale ((float, float)):  fractional percentage of the amount of space that
+            the mini viewer will take up in relation to the overall size of the widget.
+        swap_key (Qt.KEY): this key will trigger the popup
+        widgets (list): of widgets
+
+    Hierarchy:
+        |- PiPMainWidget --> QWidget
+        |    |- QVBoxLayout
+        |    |    |- PiPMainViewer --> QWidget
+        |    |- MiniViewer (QWidget)
+        |        |- QBoxLayout
+        |            |-* PiPMiniViewerWidget --> QWidget
+        |                    |- QVBoxLayout
+        |                    |- AbstractLabelledInputWidget
+        |- OrganizerWidget --> ModelViewWidget
+
+    Signals:
+        Swap (Enter):
+            Upon user cursor entering a widget, that widget becomes the main widget
+
+            PiPMiniViewer --> EventFilter --> EnterEvent
+                - swap widget
+                - freeze swapping (avoid recursion)
+            PiPMiniViewer --> LeaveEvent
+                - unfreeze swapping
+        Swap (Key Press):
+            Upon user key press on widget, that widget becomces the main widget
+            PiPMainWidget --> keyPressEvent --> setCurrentWidget
+        Swap Previous (Key Press)
+            Press ~, main widget is swapped with previous main widget
+            PiPMainWidget --> keyPressEvent --> setCurrentWidget
+        Quick Drag ( Drag Enter ):
+            Upon user drag enter, the mini widget becomes large to allow easier dropping
+            PiPMiniViewer --> EventFilter --> Drag Enter
+                                          --> Enter
+                                          --> Drop
+                                          --> Drag Leave
+                                          --> Leave
+        HotSwap (Key Press 1-5):
+            PiPMainWidget --> keyPressEvent --> setCurrentWidget
+        Toggle previous widget
+            PiPMainWidget --> keyPressEvent --> swapWidgets
+    """
+    def __init__(self, parent=None):
+        super(AbstractPiPWidget, self).__init__(parent)
+        self.setOrientation(Qt.Horizontal)
+
+        self._main_widget = PiPMainWidget(self)
+        self._organizer_widget = PiPOrganizerWidget(self)
+        for x in range(0, 4):
+            index = self._organizer_widget.model().insertNewIndex(x, name=str('node%s' % x))
+            for i, char in enumerate('abc'):
+                self._organizer_widget.model().insertNewIndex(i, name=char, parent=index)
+
+        self.addWidget(self._main_widget)
+        self.addWidget(self._organizer_widget)
+
+    """"""
+
+    """ WIDGETS """
+    def mainWidget(self):
+        return self._main_widget
+
+    def miniViewerWidget(self):
+        return self._main_widget.mini_viewer
+
+    def mainViewerWidget(self):
+        return self._main_widget.main_viewer
+
+    def organizerWidget(self):
+        return self._organizer_widget
+
+    """ VIRTUAL FUNCTIONS (MAIN WIDGET)"""
+    def createNewWidget(self, widget, name):
+        self.mainWidget().addWidget(widget, name)
+
+    def direction(self):
+        return self.mainWidget().direction()
+
+    def setDirection(self, direction):
+        self.mainWidget().setDirection(direction)
+
+    def swapKey(self):
+        return self.mainWidget().swapKey()
+
+    def setSwapKey(self, key):
+        self.mainWidget().setSwapKey(key)
+
+    def pipScale(self):
+
+        return self.mainWidget().pipScale()
+
+    def setPiPScale(self, pip_scale):
+        self.mainWidget().setPiPScale(pip_scale)
+
+    def enlargedScale(self):
+        return self.mainWidget().enlargedScale()
+
+    def setEnlargedScale(self, _enlarged_scale):
+        self.mainWidget().setEnlargedScale(_enlarged_scale)
+
+    def showWidgetNames(self, enabled):
+        self.mainWidget().showWidgetNames(enabled)
+
+
+class PiPMainWidget(QWidget):
     """
     The PiPWidget is designed to display multiple widgets simultaneously to the user.
 
@@ -34,68 +155,40 @@ class AbstractPiPWidget(QWidget):
     Attributes:
         current_widget (QWidget): the widget that is currently set as the main display
         direction (attrs.DIRECTION): what side the mini viewer will be displayed on.
-        pip_size ((float, float)):  fractional percentage of the amount of space that
+        pip_scale ((float, float)):  fractional percentage of the amount of space that
             the mini viewer will take up in relation to the overall size of the widget.
-        swap_mode (PiPWidget.SWAP): when the widget will be swapped
-        swap_key (Qt.KEY): When the swap_mode is set to KEY_PRESS, this key will trigger the
-            popup
+        swap_key (Qt.KEY): this key will trigger the popup
         widgets (list): of widgets
-
-    Hierarchy:
-        |- QVBoxLayout
-        |    |- PiPMainViewer (QWidget)
-        |- MiniViewer (QWidget)
-            |- QBoxLayout
-                |-* PiPMiniViewerWidget --> QWidget
-                        |- QVBoxLayout
-                        |- AbstractLabelledInputWidget
-
-    Signals:
-        Swap (Enter):
-            PiPMiniViewer --> EventFilter --> EnterEvent
-                - swap widget
-                - freeze swapping (avoid recursion)
-            PiPMiniViewer --> LeaveEvent
-                - unfreeze swapping
-        Swap (Key Press):
-            AbstractPiPWidget --> keyPressEvent --> setCurrentWidget
-        HotSwap (Key Press 1-5):
-            AbstractPiPWidget --> keyPressEvent --> setCurrentWidget
-        Toggle previous widget
-            AbstractPiPWidget --> keyPressEvent --> swapWidgets
 
     """
 
-    ENTER = 0
-    KEY_PRESS = 1
-
-    def __init__(self, parent=None, swap_mode=None):
-        super(AbstractPiPWidget, self).__init__(parent)
+    def __init__(self, parent=None):
+        super(PiPMainWidget, self).__init__(parent)
 
         # setup attrs
         self._widgets = []
         self._current_widget = None
         self._previous_widget = None
-        self._pip_size = 0.35
+        self._pip_scale = (0.35, 0.35)
+        self._enlarged_scale = 0.55
         self._direction = attrs.SOUTH
         self._swap_key = 96
-        if not swap_mode:
-            swap_mode = AbstractPiPWidget.KEY_PRESS
 
         # create widgets
         self.main_viewer = PiPMainViewer(self)
-        self.mini_viewer = PiPMiniViewer(self, swap_mode=swap_mode)
-        # self.mini_viewer.setStyleSheet("background-color: rgba(0,255,0,255)")
+        self.mini_viewer = PiPMiniViewer(self)
 
         # create layout
         """
         Not using a stacked layout as the enter/leave events get borked
         """
         #QStackedLayout(self)
-        QVBoxLayout(self)
-        #self.layout().setStackingMode(QStackedLayout.StackAll)
-        self.layout().addWidget(self.main_viewer)
+        QHBoxLayout(self)
+        self.layout().setContentsMargins(0, 0, 0, 0)
+        self.layout().setSpacing(0)
+
         #self.layout().addWidget(self.mini_viewer)
+        self.layout().addWidget(self.main_viewer)
 
     """ UTILS (SWAP) """
     def swapWidgets(self):
@@ -107,12 +200,6 @@ class AbstractPiPWidget(QWidget):
         if self.previousWidget():
             self.setCurrentWidget(self.previousWidget())
 
-    def swapMode(self):
-        return self.mini_viewer.swapMode()
-
-    def setSwapMode(self, swap_mode):
-        self.mini_viewer.setSwapMode(swap_mode)
-
     def swapKey(self):
         return self._swap_key
 
@@ -120,15 +207,83 @@ class AbstractPiPWidget(QWidget):
         self._swap_key = key
 
     """ UTILS """
-    def pipSize(self):
-        return self._pip_size
+    def pipScale(self):
+        return self._pip_scale
 
-    def setPiPSize(self, pip_size):
-        if isinstance(pip_size, float):
-            pip_size = (pip_size, pip_size)
+    def setPiPScale(self, pip_scale):
+        if isinstance(pip_scale, float):
+            pip_scale = (pip_scale, pip_scale)
 
-        self._pip_size = pip_size
+        self._pip_scale = pip_scale
         self.resizeMiniViewer()
+
+    def enlargedScale(self):
+        return self._enlarged_scale
+
+    def setEnlargedScale(self, _enlarged_scale):
+        self._enlarged_scale = _enlarged_scale
+
+    def resizeMiniViewer(self):
+        """
+        Main function for resizing the mini viewer
+        """
+        w = self.main_viewer.width()
+        h = self.main_viewer.height()
+        num_widgets = self.mini_viewer.layout().count()
+
+        if num_widgets == 0:
+            xpos = 0
+            ypos = 0
+            height = h
+            width = w
+
+        if num_widgets == 1:
+            height = h * self.pipScale()[1]
+            width = w * self.pipScale()[0]
+            if self.direction() in [attrs.EAST, attrs.WEST]:
+
+                if self.direction() == attrs.EAST:
+                    ypos = 0
+                    xpos = w * (1 - self.pipScale()[0])
+                if self.direction() == attrs.WEST:
+                    ypos = h * (1 - self.pipScale()[1])
+                    xpos = 0
+
+            if self.direction() in [attrs.NORTH, attrs.SOUTH]:
+                if self.direction() == attrs.SOUTH:
+                    xpos = w * (1 - self.pipScale()[0])
+                    ypos = h * (1 - self.pipScale()[1])
+                if self.direction() == attrs.NORTH:
+                    xpos = 0
+                    ypos = 0
+
+        if 1 < num_widgets:
+            pip_offset = 1 - self.pipScale()[0]
+            # set position
+            if self.direction() in [attrs.EAST, attrs.WEST]:
+                height = h
+                width = w * self.pipScale()[0]
+                if self.direction() == attrs.EAST:
+                    ypos = 0
+                    xpos = w * pip_offset
+                if self.direction() == attrs.WEST:
+                    ypos = 0
+                    xpos = 0
+
+            if self.direction() in [attrs.NORTH, attrs.SOUTH]:
+                height = h * self.pipScale()[1]
+                width = w
+                if self.direction() == attrs.NORTH:
+                    xpos = 0
+                    ypos = 0
+                if self.direction() == attrs.SOUTH:
+                    xpos = 0
+                    ypos = h * pip_offset
+
+        # move/resize mini viewer
+        self.mini_viewer.move(int(xpos), int(ypos))
+        self.mini_viewer.setFixedSize(int(width), int(height))
+        self.mini_viewer.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
     def showWidgetNames(self, enabled):
         for widget in self.widgets():
@@ -195,67 +350,6 @@ class AbstractPiPWidget(QWidget):
         elif direction in [attrs.NORTH, attrs.SOUTH]:
             self.mini_viewer.setDirection(QBoxLayout.LeftToRight)
 
-    def resizeMiniViewer(self):
-        """
-        Main function for resizing the mini viewer
-        """
-        w = self.width()
-        h = self.height()
-        num_widgets = self.mini_viewer.layout().count()
-
-        if num_widgets == 0:
-            xpos = 0
-            ypos = 0
-            height = h
-            width = w
-
-        if num_widgets == 1:
-            height = h * self.pipSize()[1]
-            width = w * self.pipSize()[0]
-            if self.direction() in [attrs.EAST, attrs.WEST]:
-
-                if self.direction() == attrs.EAST:
-                    ypos = 0
-                    xpos = w * (1 - self.pipSize()[0])
-                if self.direction() == attrs.WEST:
-                    ypos = h * (1 - self.pipSize()[1])
-                    xpos = 0
-
-            if self.direction() in [attrs.NORTH, attrs.SOUTH]:
-                if self.direction() == attrs.SOUTH:
-                    xpos = w * (1 - self.pipSize()[0])
-                    ypos = h * (1 - self.pipSize()[1])
-                if self.direction() == attrs.NORTH:
-                    xpos = 0
-                    ypos = 0
-
-        if 1 < num_widgets:
-            pip_offset = 1 - self.pipSize()[0]
-            # set position
-            if self.direction() in [attrs.EAST, attrs.WEST]:
-                height = h
-                width = w * self.pipSize()[0]
-                if self.direction() == attrs.EAST:
-                    ypos = 0
-                    xpos = w * pip_offset
-                if self.direction() == attrs.WEST:
-                    ypos = 0
-                    xpos = 0
-
-            if self.direction() in [attrs.NORTH, attrs.SOUTH]:
-                height = h * self.pipSize()[1]
-                width = w
-                if self.direction() == attrs.NORTH:
-                    xpos = 0
-                    ypos = 0
-                if self.direction() == attrs.SOUTH:
-                    xpos = 0
-                    ypos = h * pip_offset
-
-        # move/resize mini viewer
-        self.mini_viewer.move(int(xpos), int(ypos))
-        self.mini_viewer.resize(int(width), int(height))
-
     """ EVENTS """
     def resizeEvent(self, event):
         self.resizeMiniViewer()
@@ -278,7 +372,7 @@ class AbstractPiPWidget(QWidget):
             # set widget under cursor as current
             is_descendant_of_mini_viewer = isWidgetDescendantOf(widget, self.mini_viewer)
             if is_descendant_of_mini_viewer:
-                if self.swapMode() == AbstractPiPWidget.KEY_PRESS:
+                if self.swapMode() == PiPMainWidget.KEY_PRESS:
                     swap_widget = getWidgetAncestor(widget, PiPMiniViewerWidget)
                     self.setCurrentWidget(swap_widget)
                     return QWidget.keyPressEvent(self, event)
@@ -301,52 +395,167 @@ class AbstractPiPWidget(QWidget):
             except AttributeError:
                 # not enough widgets
                 pass
+
+        if event.key() == Qt.Key_Space:
+            self.mini_viewer.hide()
+            return
         return QWidget.keyPressEvent(self, event)
+
+    def keyReleaseEvent(self, event):
+        if event.key() == Qt.Key_Space:
+            self.mini_viewer.show()
+            return
+        return QWidget.keyReleaseEvent(self, event)
 
 
 class PiPMainViewer(QWidget):
     def __init__(self, parent=None):
         super(PiPMainViewer, self).__init__(parent)
         QVBoxLayout(self)
+        self.layout().setContentsMargins(0, 0, 0, 0)
 
     def setWidget(self, widget):
         self.layout().addWidget(widget)
+        # self.layout().setContentsMargins(0, 0, 0, 0)
+        # self.setContentsMargins(0, 0, 0, 0)
+        widget.layout().setContentsMargins(0, 0, 0, 0)
 
 
 class PiPMiniViewer(QWidget):
-    def __init__(self, parent=None, swap_mode=None):
+    def __init__(self, parent=None):
         super(PiPMiniViewer, self).__init__(parent)
-        QBoxLayout(QBoxLayout.LeftToRight, self)
+        #QBoxLayout(QBoxLayout.LeftToRight, self)
+        QVBoxLayout(self)
+        self.layout().setContentsMargins(0, 0, 0, 0)
 
-        if not swap_mode:
-            swap_mode = AbstractPiPWidget.KEY_PRESS
-        self._swap_mode = swap_mode
         self._widgets = []
         self._is_frozen = False
-
-    def swapMode(self):
-        return self._swap_mode
-
-    def setSwapMode(self, swap_mode):
-        self._swap_mode = swap_mode
+        self._is_exiting = False
+        self._temp = False
 
     """ EVENTS """
     def eventFilter(self, obj, event):
-        # set up PiP Swap on ENTER
-        if event.type() in [QEvent.DragEnter, QEvent.Enter]:
-            if not self._is_frozen:
-                if self.swapMode() == AbstractPiPWidget.ENTER:
-                    from cgwidgets.utils import getWidgetAncestor
-                    main_widget = getWidgetAncestor(self, AbstractPiPWidget)
-                    main_widget.setCurrentWidget(obj)
-                    self._is_frozen = True
-        return False
+        """
 
-    def leaveEvent(self, event):
-        # enable swapping again
-        if self.swapMode() == AbstractPiPWidget.ENTER:
-            self._is_frozen = False
-        return QWidget.leaveEvent(self, event)
+        Args:
+            obj:
+            event:
+
+        Returns:
+
+        Note:
+            _is_frozen (bool): flag to determine if the UI should be frozen for updates
+            _temp (bool): flag to determine if this is exiting into a widget that will be moved,
+                and then another widget will be in its place.
+            _enlarged_object (PiPMiniViewerWidget): when exiting, this is the current object that has
+                been enlarged for use.
+            _entered_object (PiPMiniViewerWidget): when exiting, this is the object that is under the cursor
+                if the user exits into the MiniViewerWidget
+
+        """
+        if event.type() in [QEvent.DragEnter, QEvent.Enter]:
+            # catch a double exit.
+            """
+            If the user exits on the first widget, or a widget that will be the enlarged widget,
+            it will recurse back and enlarge itself.  This will block that recursion
+            """
+            if hasattr(self, "_temp") and hasattr(self, "_enlarged_object"):
+                if self._enlarged_object == obj:
+                    self._is_exiting = True
+                    return True
+            # enlarge widget
+            if not self._is_frozen:
+                main_widget = getWidgetAncestor(self, PiPMainWidget)
+                # freeze
+                self._is_frozen = True
+
+                # set/get attrs
+                scale = main_widget.enlargedScale()
+                negative_space = 1 - scale
+                half_neg_space = negative_space * 0.5
+                # self.hide()
+
+                # reparent widget
+                obj.setParent(main_widget)
+
+                # get widget position / size
+                if main_widget.direction() == attrs.EAST:
+                    xpos = int(main_widget.width() * (negative_space - half_neg_space))
+                    ypos = int(main_widget.height() * half_neg_space)
+                if main_widget.direction() == attrs.WEST:
+                    xpos = 0
+                    ypos = int(main_widget.height() * half_neg_space)
+                if main_widget.direction() == attrs.NORTH:
+                    xpos = int(main_widget.width() * half_neg_space)
+                    ypos = 0
+                if main_widget.direction() == attrs.SOUTH:
+                    xpos = int(main_widget.width() * half_neg_space)
+                    ypos = int(main_widget.height() * (negative_space - half_neg_space))
+                # show widget
+                obj.show()
+
+                # move / resize
+                obj.move(xpos, ypos)
+                if main_widget.direction() in [attrs.SOUTH, attrs.NORTH]:
+                    obj.resize(int(main_widget.width() * scale), int(main_widget.height() * (scale + half_neg_space)))
+                if main_widget.direction() in [attrs.EAST, attrs.WEST]:
+                    obj.resize(int(main_widget.width() * (scale + half_neg_space)), int(main_widget.height() * scale))
+
+                # move cursor
+                if main_widget.direction() in [attrs.NORTH, attrs.WEST]:
+                    QCursor.setPos(self.mapToGlobal(
+                        QPoint(
+                            xpos + int(main_widget.width() * scale * 0.5),
+                            ypos + int(main_widget.height() * scale * 0.5))))
+                if main_widget.direction() == attrs.SOUTH:
+                    QCursor.setPos(self.mapToGlobal(
+                        QPoint(
+                            xpos + int(main_widget.width() * scale * 0.5),
+                            ypos - int(main_widget.height() * scale * 0.5))))
+                if main_widget.direction() == attrs.EAST:
+                    QCursor.setPos(self.mapToGlobal(
+                        QPoint(
+                            xpos - int(main_widget.width() * scale * 0.5),
+                            ypos + int(main_widget.height() * scale * 0.5))))
+
+                # unfreeze
+                self._is_frozen = False
+
+                # # drag enter
+                if event.type() == QEvent.DragEnter:
+                    event.accept()
+
+        elif event.type() in [QEvent.Drop, QEvent.DragLeave, QEvent.Leave]:
+            widget_under_cursor = getWidgetUnderCursor(QCursor.pos())
+            under_mini_viewer = isWidgetDescendantOf(widget_under_cursor, self)
+            # avoid exit recursion when exiting over existing widgets
+            if self._is_exiting:
+                if hasattr(self, "_entered_object"):
+                    if self._enlarged_object == obj:
+                        self._is_frozen = False
+                        self._is_exiting = False
+                        delattr(self, "_temp")
+                        return True
+                    if self._entered_object == obj:
+                        self._is_frozen = False
+                        self._is_exiting = False
+                        self._temp = True
+                        return True
+
+            # exiting
+            if not self._is_frozen:
+                self._is_frozen = True
+                self.addWidget(obj)
+                # self.show()
+
+                if under_mini_viewer:
+                    self._is_exiting = True
+                    self._enlarged_object = obj
+                    self._entered_object = getWidgetAncestor(widget_under_cursor, PiPMiniViewerWidget)
+                else:
+                    self._is_frozen = False
+
+        return False
 
     """ DIRECTION """
     def setDirection(self, direction):
@@ -354,7 +563,8 @@ class PiPMiniViewer(QWidget):
 
     """ WIDGETS """
     def addWidget(self, widget):
-        self.layout().addWidget(widget)
+        self.layout().insertWidget(0, widget)
+        #self.layout().addWidget(widget)
         widget.installEventFilter(self)
 
         # installHoverDisplaySS(
@@ -382,9 +592,6 @@ class PiPMiniViewer(QWidget):
         self.layout().removeWidget(widget)
         widget.removeEventFilter(self)
 
-    # def widgets(self):
-    #     self.layout().children()
-
 
 class PiPMiniViewerWidget(QWidget):
     def __init__(
@@ -411,25 +618,52 @@ class PiPMiniViewerWidget(QWidget):
             type=type(self.main_widget).__name__,
         )
         self.main_widget.setBaseStyleSheet(base_style_sheet)
+
+        self.setAcceptDrops(True)
         # installHoverDisplaySS(self, "TEST")
+
+
+class PiPOrganizerWidget(ModelViewWidget):
+    def __init__(self, parent=None):
+        super(PiPOrganizerWidget, self).__init__(parent)
 
 
 if __name__ == '__main__':
     import sys
-    from qtpy.QtWidgets import (QApplication)
+    from qtpy.QtWidgets import (QApplication, QHBoxLayout, QListWidget, QAbstractItemView)
     from cgwidgets.utils import centerWidgetOnCursor
     app = QApplication(sys.argv)
 
-    widget = AbstractPiPWidget()
-    widget.setPiPSize((0.5, 0.5))
-    widget.setDirection(attrs.WEST)
-    for x in range(4):
+    # PiP Widget
+    pip_widget = AbstractPiPWidget()
+    for x in range(5):
         child = QLabel(str(x))
         child.setAlignment(Qt.AlignCenter)
         child.setStyleSheet("color: rgba(255,255,255,255);")
-        widget.addWidget(child)
-    widget.show()
-    widget.showWidgetNames(False)
-    centerWidgetOnCursor(widget)
-    widget.resize(512, 512)
+        pip_widget.createNewWidget(child, name=str(x))
+
+    pip_widget.setPiPScale((0.2, 0.2))
+    pip_widget.setEnlargedScale(0.75)
+    pip_widget.setDirection(attrs.EAST)
+    pip_widget.showWidgetNames(False)
+
+    #
+
+    # Drag/Drop Widget
+    # drag_drop_widget = QListWidget()
+    # drag_drop_widget.setDragDropMode(QAbstractItemView.DragDrop)
+    # drag_drop_widget.addItems(['a', 'b', 'c', 'd'])
+    # drag_drop_widget.setFixedWidth(100)
+
+    # Main Widget
+    main_widget = QWidget()
+
+    main_layout = QHBoxLayout(main_widget)
+    main_layout.setContentsMargins(0, 0, 0, 0)
+    main_layout.addWidget(pip_widget)
+    #main_layout.addWidget(drag_drop_widget)
+
+    main_widget.show()
+    centerWidgetOnCursor(main_widget)
+    main_widget.resize(512, 512)
     sys.exit(app.exec_())

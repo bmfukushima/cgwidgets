@@ -260,7 +260,8 @@ if __name__ == "__main__":
         title="title",
         display_mode=AbstractOverlayInputWidget.RELEASE,
         image_path=icons["example_image_01"])
-
+    print(overlay_widget.viewWidget())
+    print(overlay_widget.title())
     # main_widget = CustomDynamicWidgetExample()
     #overlay_widget.setDisplayMode(AbstractOverlayInputWidget.DISABLED)
     #overlay_widget.setDisplayMode(AbstractOverlayInputWidget.ENTER)
