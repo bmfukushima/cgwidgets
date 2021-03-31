@@ -8,8 +8,11 @@ THE IMPORT ORDER MATTERS!!
 
 """ IMPORT ABSTRACT WIDGETS """
 from .AbstractWidgets import *
+from .AbstractWidgets.AbstractPiPWidget import AbstractPiPWidget
+from .AbstractWidgets.AbstractModelViewWidget import AbstractModelViewWidget
 from .AbstractWidgets.AbstractLabelledInputWidget import AbstractLabelledInputWidget
 from .AbstractWidgets.AbstractOverlayInputWidget import AbstractOverlayInputWidget
+
 
 """ MODEL VIEW WIDGET"""
 from .ModelViewWidget import ModelViewWidget as ModelViewWidget

@@ -20,9 +20,6 @@ from .AbstractBaseInputWidgets import AbstractLabelWidget
 from .AbstractListInputWidget import AbstractListInputWidget as AbstractListInputWidget
 from .AbstractBaseInputWidgets import AbstractInputPlainText as AbstractInputPlainText
 
-#from .AbstractOverlayInputWidget import AbstractOverlayInputWidget
-# from .AbstractO import AbstractOverlayInputWidget as AbstractOverlayInputWidget
-
 from .AbstractShojiLayout import AbstractShojiLayout, AbstractShojiLayoutHandle
 
 

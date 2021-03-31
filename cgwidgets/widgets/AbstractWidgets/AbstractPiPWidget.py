@@ -1,10 +1,12 @@
 """
 Todo:
     * Overall cleanup / organization
+        mainWidget --> AbstractPiPWidget?
     * Expose settings to user?
     * Organizer...
-        - Rename
         - Settup API
+        - Save/Load JSON's
+            - how does this even work...
     * PiPMiniViewerWidget --> Borders... styles not working???
         - base style sheet added to ShojiLayout...
             in general the shoji layout needs to be more flexible
@@ -22,7 +24,8 @@ from cgwidgets.settings.colors import iColor
 
 from cgwidgets.widgets.AbstractWidgets.AbstractLabelledInputWidget import AbstractLabelledInputWidget
 from cgwidgets.widgets.AbstractWidgets.AbstractOverlayInputWidget import AbstractOverlayInputWidget
-from cgwidgets.widgets import ModelViewWidget, AbstractListInputWidget
+from cgwidgets.widgets.AbstractWidgets.AbstractModelViewWidget import AbstractModelViewWidget
+from cgwidgets.widgets import AbstractListInputWidget
 
 
 class AbstractPiPWidget(QSplitter):
@@ -104,6 +107,8 @@ The PiPWidget is designed to display multiple widgets simultaneously to the user
         # add widgets
         self.addWidget(self._main_widget)
         self.addWidget(self._organizer_widget)
+
+        self.setSizes((100, 10))
 
     """"""
     def numWidgets(self):
@@ -199,6 +204,11 @@ The PiPWidget is designed to display multiple widgets simultaneously to the user
         return self._is_organizer_visible
 
     def toggleOrganizerVisibility(self):
+        """
+        Toggles whether or not the organizer widget is visible to the user
+
+        Note: This is currently hard coded to "Q"
+        """
         self._is_organizer_visible = not self.isOrganizerVisible()
         if self.isOrganizerVisible():
             self.organizerWidget().show()
@@ -720,7 +730,7 @@ class PiPModelItem(AbstractDragDropModelItem):
         self._widget = widget
 
 
-class PiPOrganizerWidget(ModelViewWidget):
+class PiPOrganizerWidget(AbstractModelViewWidget):
     """
     This widget is in charge of creating/destroying PiP items, along with
     holding the order that the items should be displayed in.
@@ -736,16 +746,54 @@ class PiPOrganizerWidget(ModelViewWidget):
         Delete Widget -->
     """
     def __init__(self, parent=None, widget_types=None):
-        super(PiPOrganizerWidget, self).__init__(parent)
+        super(PiPOrganizerWidget, self).__init__(parent=parent)
+        # setup default attrs
         self._widget_types = widget_types
-        self._creator_widget = AbstractListInputWidget(self)
-        self._creator_widget.setUserFinishedEditingEvent(self.createNewWidget)
-        self.setItemDeleteEvent(self.deleteWidget)
+        self.model().setItemType(PiPModelItem)
 
+        # create popup widget creator
+        self._creator_widget = AbstractListInputWidget(self)
+
+        # populate creator widget
         widget_types = [[key] for key in widget_types.keys()]
         self._creator_widget.populate(widget_types)
         self.addDelegate([Qt.Key_Q], self._creator_widget)
-        self.model().setItemType(PiPModelItem)
+
+        # install events
+        self._creator_widget.setUserFinishedEditingEvent(self.createNewWidget)
+        self.setItemDeleteEvent(self.deleteWidget)
+        self.setTextChangedEvent(self.editWidget)
+        self.setDropEvent(self.itemReordered)
+
+    def widgetTypes(self):
+        return self._widget_types
+
+    def setWidgetTypes(self, widget_types):
+        self._widget_types = widget_types
+
+    """ EVENTS """
+    def itemReordered(self, data, items, model, row, parent):
+        """
+        When an item is drag/dropped, this will update the widget indexes, and reinsert
+        the widget into the mini viewer if it is not currently the active widget.
+        """
+        # get default attrs
+        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+        mini_viewer = main_widget.miniViewerWidget()
+        widget = items[0].widget()
+
+        # if in mini viewer
+        # reset parent and insert back into mini viewer
+        if widget.parent() == mini_viewer:
+            widget.setParent(None)
+            widget.setIndex(row)
+            mini_viewer.addWidget(widget)
+
+        # update all widget indexes
+        main_widget.updateWidgetIndexes()
+
+    def editWidget(self, item, old_value, new_value):
+        item.widget().main_widget.setName(new_value)
 
     def deleteWidget(self, item):
         """
@@ -801,11 +849,6 @@ class PiPOrganizerWidget(ModelViewWidget):
         widget.setText('')
         widget.hide()
 
-    def widgetTypes(self):
-        return self._widget_types
-
-    def setWidgetTypes(self, widget_types):
-        self._widget_types = widget_types
 
 
 if __name__ == '__main__':
