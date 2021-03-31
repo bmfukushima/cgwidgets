@@ -1,6 +1,7 @@
 import json
 import re
 import math
+import os
 
 from collections import OrderedDict
 
@@ -128,6 +129,19 @@ def getJSONData(json_file):
         with open(json_file, 'r') as f:
             datastore = json.load(f, object_pairs_hook=OrderedDict)
     return datastore
+
+
+def getDefaultSavePath():
+    """
+    Gets the default save path located at $HOME/.cgwidgets
+
+    Returns (str): $HOME/.cgwidgets
+    """
+    save_dir = os.environ["HOME"] + '/.cgwidgets'
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+
+    return save_dir
 
 
 def getWidgetUnderCursor(pos=None):

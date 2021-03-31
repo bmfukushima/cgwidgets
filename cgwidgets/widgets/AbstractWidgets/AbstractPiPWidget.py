@@ -12,25 +12,27 @@ Todo:
             in general the shoji layout needs to be more flexible
 
 """
+import json
+
 from qtpy.QtWidgets import (
-    QStackedLayout, QWidget, QBoxLayout, QVBoxLayout, QLabel, QSizePolicy, QSplitter)
+    QStackedLayout, QWidget, QBoxLayout, QVBoxLayout, QLabel, QSizePolicy, QSplitter, QHBoxLayout)
 from qtpy.QtCore import QEvent, Qt, QPoint
 from qtpy.QtGui import QCursor
 
 from cgwidgets.views import AbstractDragDropModelItem
-from cgwidgets.utils import attrs, getWidgetUnderCursor, isWidgetDescendantOf, getWidgetAncestor
+from cgwidgets.utils import attrs, getWidgetUnderCursor, isWidgetDescendantOf, getWidgetAncestor, getDefaultSavePath
 from cgwidgets.settings.hover_display import installHoverDisplaySS, removeHoverDisplay
 from cgwidgets.settings.colors import iColor
 
 from cgwidgets.widgets.AbstractWidgets.AbstractLabelledInputWidget import AbstractLabelledInputWidget
 from cgwidgets.widgets.AbstractWidgets.AbstractOverlayInputWidget import AbstractOverlayInputWidget
 from cgwidgets.widgets.AbstractWidgets.AbstractModelViewWidget import AbstractModelViewWidget
-from cgwidgets.widgets import AbstractListInputWidget
+from cgwidgets.widgets import AbstractListInputWidget, AbstractButtonInputWidget, AbstractStringInputWidget
 
 
 class AbstractPiPWidget(QSplitter):
     """
-The PiPWidget is designed to display multiple widgets simultaneously to the user.
+    The PiPWidget is designed to display multiple widgets simultaneously to the user.
 
     Similar to the function that was provided to TV's in the mid 1970's.  This widget is
     designed to allow the user to create multiple hot swappable widgets inside of the same
@@ -117,7 +119,19 @@ The PiPWidget is designed to display multiple widgets simultaneously to the user
     def widgets(self):
         return [index.internalPointer().widget() for index in self.organizerWidget().model().getAllIndexes() if hasattr(index.internalPointer(), "_widget")]
 
-    def createNewWidget(self, widget, name=""):
+    def items(self):
+        return [index.internalPointer() for index in self.organizerWidget().model().getAllIndexes() if hasattr(index.internalPointer(), "_widget")]
+
+    def createNewWidget(self, widget, constructor_code, name=""):
+        """
+
+        Args:
+            widget:
+            name:
+
+        Returns:
+
+        """
         if 0 < self.numWidgets():
             mini_widget = self.miniViewerWidget().createNewWidget(widget, name=name)
         else:
@@ -129,6 +143,7 @@ The PiPWidget is designed to display multiple widgets simultaneously to the user
         mini_widget.setIndex(0)
         item = index.internalPointer()
         item.setWidget(mini_widget)
+        item.setConstructorCode(constructor_code)
         # update indexes
         self.updateWidgetIndexes()
 
@@ -158,6 +173,10 @@ The PiPWidget is designed to display multiple widgets simultaneously to the user
 
     def organizerWidget(self):
         return self._organizer_widget
+
+    """ SAVE (VIRTUAL) """
+    def setSavePath(self, file_path):
+        self.organizerWidget().saveWidget().setSaveFilePath(file_path)
 
     """ VIRTUAL FUNCTIONS (MAIN WIDGET)"""
     def direction(self):
@@ -729,6 +748,12 @@ class PiPModelItem(AbstractDragDropModelItem):
     def setWidget(self, widget):
         self._widget = widget
 
+    def constructorCode(self):
+        return self._constructor_code
+
+    def setConstructorCode(self, constructor_code):
+        self._constructor_code = constructor_code
+
 
 class PiPOrganizerWidget(AbstractModelViewWidget):
     """
@@ -751,6 +776,11 @@ class PiPOrganizerWidget(AbstractModelViewWidget):
         self._widget_types = widget_types
         self.model().setItemType(PiPModelItem)
 
+        # create save widget
+        self._save_widget = PiPOrganizerSaveWidget(self)
+        self.addDelegate([Qt.Key_S], self._save_widget)
+        self._save_widget.show()
+
         # create popup widget creator
         self._creator_widget = AbstractListInputWidget(self)
 
@@ -764,6 +794,12 @@ class PiPOrganizerWidget(AbstractModelViewWidget):
         self.setItemDeleteEvent(self.deleteWidget)
         self.setTextChangedEvent(self.editWidget)
         self.setDropEvent(self.itemReordered)
+
+    def saveWidget(self):
+        return self._save_widget
+
+    def creatorWidget(self):
+        return self._creator_widget
 
     def widgetTypes(self):
         return self._widget_types
@@ -837,35 +873,124 @@ class PiPOrganizerWidget(AbstractModelViewWidget):
 
     def createNewWidget(self, widget, value):
         # preflight
-        if value not in widget_types.keys(): return
+        if value not in self.widgetTypes().keys(): return
         main_widget = getWidgetAncestor(self, AbstractPiPWidget)
 
         # get constructor
-        constructor = self.widgetTypes()[value]
+        loc = {}
+        exec(self.widgetTypes()[value], globals(), loc)
+        constructor = loc['constructor']
+
         widget_type = constructor(self)
-        main_widget.createNewWidget(widget_type, name=str(value))
+        main_widget.createNewWidget(widget_type, self.widgetTypes()[value], name=str(value))
 
         # reset widget
         widget.setText('')
         widget.hide()
 
 
+class PiPOrganizerSaveWidget(QWidget):
+    """
+    constructor is a required arg in the constructor code
+    {PiPName: [
+        {"widget name": "constructor code"},
+        {"widget name": "constructor code"},
+        {"widget name": "constructor code"},]
+    }
+    """
+    def __init__(self, parent=None):
+        super(PiPOrganizerSaveWidget, self).__init__(parent)
+        QVBoxLayout(self)
+        # todo name needs to be a list delegate and load all of the current names
+        name_list = AbstractListInputWidget(self)
+        name_list.dynamic_update = True
+        name_list.setCleanItemsFunction(self.getAllPiPWidgetsNames)
+        self._name_widget = AbstractLabelledInputWidget(name="Name", delegate_widget=name_list)
+        self._save_button = AbstractButtonInputWidget(self, title="Save")
+
+        self.layout().addWidget(self._name_widget)
+        self.layout().addWidget(self._save_button)
+
+        self._file_path = getDefaultSavePath() + '/.PiPWidgets.json'
+        # dcc name
+        # pip name
+        self._save_button.setUserClickedEvent(self.savePiPWidget)
+
+    def getAllPiPWidgetsNames(self):
+        widgets_list = [[name] for name in list(self.loadPiPWidgets().keys())]
+
+        return widgets_list
+
+    def loadPiPWidgets(self):
+        from cgwidgets.utils import getJSONData
+        return getJSONData(self.saveFilePath())
+
+    def savePiPWidget(self, this):
+        """
+        When the "Save" button is pressed, this will save the current PiPWidget to the master
+        PiPDictionary located at self.saveFilePath()
+
+        Args:
+            this (AbstractButtonInputWidget): being pressed
+
+        Returns:
+
+        """
+        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+        main_widget.items()
+        name = self._name_widget.delegateWidget().text()
+        pip_widgets = self.loadPiPWidgets()
+
+        # create pip save dict
+        #pip_save_file = {}
+        from collections import OrderedDict
+        pip_widgets[name] = OrderedDict()
+        for item in main_widget.items():
+            item_name = item.columnData()['name']
+            item_code = item.constructorCode()
+            pip_widgets[name][item_name] = item_code
+
+        # save pip file
+        if self.saveFilePath():
+            # Writing JSON data
+            with open(self.saveFilePath(), 'w') as f:
+                json.dump(pip_widgets, f)
+
+        print('saving to... ', self.saveFilePath())
+        print(pip_widgets)
+
+
+    def saveFilePath(self):
+        return self._file_path
+
+    def setSaveFilePath(self, file_path):
+        self._file_path = file_path
+
 
 if __name__ == '__main__':
     import sys
-    from qtpy.QtWidgets import (QApplication, QHBoxLayout, QListWidget, QAbstractItemView, QPushButton)
+    from qtpy.QtWidgets import (QApplication, QListWidget, QAbstractItemView, QPushButton)
     from cgwidgets.utils import centerWidgetOnCursor
     app = QApplication(sys.argv)
 
     # PiP Widget
-    widget_types = {"QLabel": QLabel, "QPushButton":QPushButton}
+    widget_types = {
+        "QLabel": """
+from qtpy.QtWidgets import QLabel
+constructor = QLabel""",
+        "QPushButton":"""
+from qtpy.QtWidgets import QPushButton
+constructor = QPushButton"""
+    }
     pip_widget = AbstractPiPWidget(widget_types=widget_types)
 
     for x in ("SINE."):
         child = QLabel(str(x))
         child.setAlignment(Qt.AlignCenter)
         child.setStyleSheet("color: rgba(255,255,255,255);")
-        pip_widget.createNewWidget(child, name=str(x))
+        pip_widget.createNewWidget(child, """
+from qtpy.QtWidgets import QLabel
+constructor = QLabel""", name=str(x))
 
     pip_widget.setPiPScale((0.2, 0.2))
     pip_widget.setEnlargedScale(0.75)
@@ -891,4 +1016,5 @@ if __name__ == '__main__':
     main_widget.show()
     centerWidgetOnCursor(main_widget)
     main_widget.resize(512, 512)
+
     sys.exit(app.exec_())
