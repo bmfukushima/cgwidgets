@@ -1,5 +1,11 @@
 """
 Todo:
+    * keyPressEvent... does not register until 2 widgets or so??
+        in general shitty registry...
+    * show organizer...
+        - exit mini view... somehow swaps?
+            registry is wrong?
+        - west calculation also fucked on that...
     * Overall cleanup / organization
         mainWidget --> AbstractPiPWidget?
     * Expose settings to user?
@@ -27,7 +33,7 @@ from cgwidgets.settings.colors import iColor
 from cgwidgets.widgets.AbstractWidgets.AbstractLabelledInputWidget import AbstractLabelledInputWidget
 from cgwidgets.widgets.AbstractWidgets.AbstractOverlayInputWidget import AbstractOverlayInputWidget
 from cgwidgets.widgets.AbstractWidgets.AbstractModelViewWidget import AbstractModelViewWidget
-from cgwidgets.widgets import AbstractListInputWidget, AbstractButtonInputWidget, AbstractStringInputWidget
+from cgwidgets.widgets import AbstractListInputWidget, AbstractButtonInputWidget, AbstractStringInputWidget, AbstractLabelWidget
 
 
 class AbstractPiPWidget(QSplitter):
@@ -110,6 +116,17 @@ class AbstractPiPWidget(QSplitter):
         self.addWidget(self._main_widget)
         self.addWidget(self._organizer_widget)
 
+        self.setFocus()
+        # fuck = QLabel("fuck")
+        # you = QLabel("you")
+        # self.addWidget(fuck)
+        # self.addWidget(you)
+        # create temp widget
+        # self._temp = QLabel('lkjasdf')
+        # #self.createNewWidget(self._temp, None)
+        # self.insertWidget(0, self._temp)
+        #self.setStyleSheet("background-color:rgba(255,0,0,255);")
+        self.setFocus()
         self.setSizes((100, 10))
 
     """"""
@@ -228,6 +245,13 @@ class AbstractPiPWidget(QSplitter):
 
         Note: This is currently hard coded to "Q"
         """
+
+        # if self.miniViewerWidget()._is_frozen:
+        if self.miniViewerWidget().isEnlarged():
+            obj = getWidgetUnderCursor(QCursor.pos())
+            widget = getWidgetAncestor(obj, PiPMiniViewerWidget)
+            self.miniViewerWidget().closeEnlargedView(widget)
+
         self._is_organizer_visible = not self.isOrganizerVisible()
         if self.isOrganizerVisible():
             self.organizerWidget().show()
@@ -236,10 +260,11 @@ class AbstractPiPWidget(QSplitter):
 
     """ EVENTS """
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Q:
+        if event.key() == Qt.Key_A:
             self.toggleOrganizerVisibility()
+            return
 
-        return QWidget.keyPressEvent(self, event)
+        return QSplitter.keyPressEvent(self, event)
 
 
 class PiPMainWidget(QWidget):
@@ -289,6 +314,8 @@ class PiPMainWidget(QWidget):
 
         #self.layout().addWidget(self.mini_viewer)
         self.layout().addWidget(self.main_viewer)
+
+        self.setStyleSheet("background-color:rgba(255,0,255,255);")
 
     """ UTILS (SWAP) """
     def swapWidgets(self):
@@ -341,7 +368,6 @@ class PiPMainWidget(QWidget):
             height = h * self.pipScale()[1]
             width = w * self.pipScale()[0]
             if self.direction() in [attrs.EAST, attrs.WEST]:
-
                 if self.direction() == attrs.EAST:
                     ypos = 0
                     xpos = w * (1 - self.pipScale()[0])
@@ -447,6 +473,7 @@ class PiPMainWidget(QWidget):
         return QWidget.resizeEvent(self, event)
 
     def keyPressEvent(self, event):
+
         # swap between this and previous
         if event.key() == 96:
             # pre flight
@@ -464,6 +491,7 @@ class PiPMainWidget(QWidget):
             if is_descendant_of_main_widget:
                 swap_widget = getWidgetAncestor(widget, PiPMiniViewerWidget)
                 self.setCurrentWidget(swap_widget)
+                self.mini_viewer.setIsEnlarged(False)
                 return QWidget.keyPressEvent(self, event)
 
         # hotkey swapping
@@ -492,9 +520,12 @@ class PiPMainWidget(QWidget):
 
         # escape
         if event.key() == Qt.Key_Escape:
-            obj = getWidgetUnderCursor(QCursor.pos())
-            widget = getWidgetAncestor(obj, PiPMiniViewerWidget)
-            self.mini_viewer.closeEnlargedView(widget)
+            if self.mini_viewer.isEnlarged():
+                obj = getWidgetUnderCursor(QCursor.pos())
+                widget = getWidgetAncestor(obj, PiPMiniViewerWidget)
+                self.mini_viewer.closeEnlargedView(widget)
+                # self.mini_viewer.setIsEnlarged(False)
+
         return QWidget.keyPressEvent(self, event)
 
     def keyReleaseEvent(self, event):
@@ -527,7 +558,14 @@ class PiPMiniViewer(QWidget):
         self._widgets = []
         self._is_frozen = False
         self._is_exiting = False
+        self._is_enlarged = False
         self._temp = False
+
+    def isEnlarged(self):
+        return self._is_enlarged
+
+    def setIsEnlarged(self, enabled):
+        self._is_enlarged = enabled
 
     """ EVENTS """
     def eventFilter(self, obj, event):
@@ -562,6 +600,7 @@ class PiPMiniViewer(QWidget):
             # enlarge widget
             if not self._is_frozen:
                 main_widget = getWidgetAncestor(self, PiPMainWidget)
+                self.setIsEnlarged(True)
                 # freeze
                 self._is_frozen = True
 
@@ -569,6 +608,7 @@ class PiPMiniViewer(QWidget):
                 scale = main_widget.enlargedScale()
                 negative_space = 1 - scale
                 half_neg_space = negative_space * 0.5
+                num_widgets = main_widget.parent().numWidgets()
                 # self.hide()
 
                 # reparent widget
@@ -599,15 +639,31 @@ class PiPMiniViewer(QWidget):
 
                 # move cursor
                 if main_widget.direction() in [attrs.NORTH, attrs.WEST]:
-                    QCursor.setPos(self.mapToGlobal(
-                        QPoint(
-                            xpos + int(main_widget.width() * scale * 0.5),
-                            ypos + int(main_widget.height() * scale * 0.5))))
+                    if num_widgets == 2 and main_widget.direction() == attrs.WEST:
+                        QCursor.setPos(self.mapToGlobal(
+                            QPoint(
+                                xpos + int(main_widget.width() * scale * 0.5),
+                                ypos - int(main_widget.height() * scale * 0.5))))
+                    if 2 < num_widgets:
+                        QCursor.setPos(self.mapToGlobal(
+                            QPoint(
+                                xpos + int(main_widget.width() * scale * 0.5),
+                                ypos + int(main_widget.height() * scale * 0.5))))
+
                 if main_widget.direction() == attrs.SOUTH:
-                    QCursor.setPos(self.mapToGlobal(
-                        QPoint(
-                            xpos + int(main_widget.width() * scale * 0.5),
-                            ypos - int(main_widget.height() * scale * 0.5))))
+                    # if only one mini viewer widget
+                    if num_widgets == 2:
+                        QCursor.setPos(self.mapToGlobal(
+                            QPoint(
+                                xpos - int(main_widget.width() * scale * 0.5),
+                                ypos - int(main_widget.height() * scale * 0.5))))
+                    # if more than one mini viewer widget
+                    if 2 < num_widgets:
+                        QCursor.setPos(self.mapToGlobal(
+                            QPoint(
+                                xpos + int(main_widget.width() * scale * 0.5),
+                                ypos - int(main_widget.height() * scale * 0.5))))
+
                 if main_widget.direction() == attrs.EAST:
                     QCursor.setPos(self.mapToGlobal(
                         QPoint(
@@ -638,7 +694,7 @@ class PiPMiniViewer(QWidget):
         under_mini_viewer = isWidgetDescendantOf(widget_under_cursor, self)
         # avoid exit recursion when exiting over existing widgets
         if self._is_exiting:
-            if hasattr(self, "_entered_object"):
+            if hasattr(self, "_entered_object") and hasattr(self, "_temp"):
                 if self._enlarged_object == obj:
                     self._is_frozen = False
                     self._is_exiting = False
@@ -654,7 +710,6 @@ class PiPMiniViewer(QWidget):
         if not self._is_frozen:
             self._is_frozen = True
             self.addWidget(obj)
-            # self.show()
 
             if under_mini_viewer:
                 self._is_exiting = True
@@ -662,6 +717,8 @@ class PiPMiniViewer(QWidget):
                 self._entered_object = getWidgetAncestor(widget_under_cursor, PiPMiniViewerWidget)
             else:
                 self._is_frozen = False
+
+            self.setIsEnlarged(False)
 
     """ DIRECTION """
     def setDirection(self, direction):
@@ -714,7 +771,7 @@ class PiPMiniViewerWidget(QWidget):
         QVBoxLayout(self)
         self.main_widget = AbstractLabelledInputWidget(self, name=name, direction=direction, delegate_widget=delegate_widget)
         self.layout().addWidget(self.main_widget)
-        self.layout().setContentsMargins(0, 0, 0, 0)
+        # self.layout().setContentsMargins(0, 0, 0, 0)
         base_style_sheet = """
         {type}{{
             background-color: rgba{rgba_background};
@@ -984,7 +1041,7 @@ constructor = QPushButton"""
     }
     pip_widget = AbstractPiPWidget(widget_types=widget_types)
 
-    for x in ("SINE."):
+    for x in ("SINE"):
         child = QLabel(str(x))
         child.setAlignment(Qt.AlignCenter)
         child.setStyleSheet("color: rgba(255,255,255,255);")
@@ -994,7 +1051,7 @@ constructor = QLabel""", name=str(x))
 
     pip_widget.setPiPScale((0.2, 0.2))
     pip_widget.setEnlargedScale(0.75)
-    pip_widget.setDirection(attrs.EAST)
+    pip_widget.setDirection(attrs.WEST)
     #pip_widget.showWidgetNames(False)
 
     #
