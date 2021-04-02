@@ -283,10 +283,6 @@ class AbstractDragDropModel(QAbstractItemModel):
         if role == Qt.SizeHintRole:
             return QSize(self.item_width, self.item_height)
 
-
-        # if role == Qt.BackgroundRole:
-        #     return None
-
     def setData(self, index, value, role=Qt.EditRole):
         """
         INPUTS: QModelIndex, QVariant, int (flag)

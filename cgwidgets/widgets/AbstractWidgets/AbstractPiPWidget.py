@@ -95,11 +95,20 @@ class AbstractPiPWidget(QSplitter):
             keyPressEvent --> toggleOrganizerVisibility
         Create New Widget -->
         Delete Widget -->
+        TempWidgets
+            Temp widgets will be created and destroyed when the total number of widgets is
+            less than the minimum number needed to properly displayed the PiPWidget (2).
+            These widgets will then act as place holders for the display, which cannot
+            be removed.
+                createTempWidget()
+                tempWidgets()
+                removeTempWidget()
     """
     def __init__(self, parent=None, widget_types=None):
         super(AbstractPiPWidget, self).__init__(parent)
         # setup default attrs
         self.setOrientation(Qt.Horizontal)
+        self._temp_widgets = []
         if not widget_types:
             widget_types = []
 
@@ -116,20 +125,11 @@ class AbstractPiPWidget(QSplitter):
         self.addWidget(self._main_widget)
         self.addWidget(self._organizer_widget)
 
-        self.setFocus()
-        # fuck = QLabel("fuck")
-        # you = QLabel("you")
-        # self.addWidget(fuck)
-        # self.addWidget(you)
         # create temp widget
-        # self._temp = QLabel('lkjasdf')
-        # #self.createNewWidget(self._temp, None)
-        # self.insertWidget(0, self._temp)
-        #self.setStyleSheet("background-color:rgba(255,0,0,255);")
-        self.setFocus()
-        self.setSizes((100, 10))
+        self.createTempWidget()
+        self.createTempWidget()
 
-    """"""
+    """ UTILS """
     def numWidgets(self):
         return len(self.widgets())
 
@@ -139,6 +139,20 @@ class AbstractPiPWidget(QSplitter):
     def items(self):
         return [index.internalPointer() for index in self.organizerWidget().model().getAllIndexes() if hasattr(index.internalPointer(), "_widget")]
 
+    """ WIDGETS (DISPLAY)"""
+    def mainWidget(self):
+        return self._main_widget
+
+    def miniViewerWidget(self):
+        return self._main_widget.mini_viewer
+
+    def mainViewerWidget(self):
+        return self._main_widget.main_viewer
+
+    def organizerWidget(self):
+        return self._organizer_widget
+
+    """ WIDGETS """
     def createNewWidget(self, widget, constructor_code, name=""):
         """
 
@@ -156,6 +170,7 @@ class AbstractPiPWidget(QSplitter):
             self.mainWidget().setCurrentWidget(mini_widget)
 
         # create new index
+        # if create_index:
         index = self.organizerWidget().model().insertNewIndex(0, name=name)
         mini_widget.setIndex(0)
         item = index.internalPointer()
@@ -164,8 +179,15 @@ class AbstractPiPWidget(QSplitter):
         # update indexes
         self.updateWidgetIndexes()
 
+        # # destroy temp widgets
+        if 2 < self.numWidgets():
+            if name != "":
+                self.removeTempWidget()
+        #
+        # print (self.tempWidgets())
+
         self.mainWidget().resizeMiniViewer()
-        return mini_widget
+        return index
 
     def updateWidgetIndexes(self):
         """
@@ -178,18 +200,27 @@ class AbstractPiPWidget(QSplitter):
             if hasattr(item, "_widget"):
                 item.widget().setIndex(index.row())
 
-    """ WIDGETS """
-    def mainWidget(self):
-        return self._main_widget
+    # """ WIDGETS (TEMP)"""
+    def createTempWidget(self):
+        constructor_code = """
+        from qtpy.QtWidgets import QLabel
+        constructor = QLabel """
+        text = """
+        (A): Open widget organizer, to create new widgets, save widgets, etc """
+        index = self.createNewWidget(AbstractLabelWidget(self, text), constructor_code, "")
+        item = index.internalPointer()
+        item.setIsSelectable(False)
+        item.setIsDragEnabled(False)
+        item.setIsEnabled(False)
 
-    def miniViewerWidget(self):
-        return self._main_widget.mini_viewer
-
-    def mainViewerWidget(self):
-        return self._main_widget.main_viewer
-
-    def organizerWidget(self):
-        return self._organizer_widget
+    def removeTempWidget(self):
+        """
+        Removes the first temp widget from the tempWidgets list
+        """
+        model = self.organizerWidget().model()
+        indexes = model.findItems("", match_type=Qt.MatchExactly)
+        if 0 < len(indexes):
+            model.deleteItem(indexes[0].internalPointer(), event_update=True)
 
     """ SAVE (VIRTUAL) """
     def setSavePath(self, file_path):
@@ -359,10 +390,14 @@ class PiPMainWidget(QWidget):
         num_widgets = self.mini_viewer.layout().count()
 
         if num_widgets == 0:
-            xpos = 0
-            ypos = 0
-            height = h
-            width = w
+            self.mini_viewer.hide()
+            return
+        else:
+            self.mini_viewer.show()
+            # xpos = 0
+            # ypos = 0
+            # height = h
+            # width = w
 
         if num_widgets == 1:
             height = h * self.pipScale()[1]
@@ -473,7 +508,6 @@ class PiPMainWidget(QWidget):
         return QWidget.resizeEvent(self, event)
 
     def keyPressEvent(self, event):
-
         # swap between this and previous
         if event.key() == 96:
             # pre flight
@@ -543,8 +577,6 @@ class PiPMainViewer(QWidget):
 
     def setWidget(self, widget):
         self.layout().addWidget(widget)
-        # self.layout().setContentsMargins(0, 0, 0, 0)
-        # self.setContentsMargins(0, 0, 0, 0)
         widget.layout().setContentsMargins(0, 0, 0, 0)
 
 
@@ -769,6 +801,8 @@ class PiPMiniViewerWidget(QWidget):
     ):
         super(PiPMiniViewerWidget, self).__init__(parent)
         QVBoxLayout(self)
+        self._index = 0
+
         self.main_widget = AbstractLabelledInputWidget(self, name=name, direction=direction, delegate_widget=delegate_widget)
         self.layout().addWidget(self.main_widget)
         # self.layout().setContentsMargins(0, 0, 0, 0)
@@ -812,6 +846,36 @@ class PiPModelItem(AbstractDragDropModelItem):
         self._constructor_code = constructor_code
 
 
+# from cgwidgets.views import AbstractDragDropModel
+#
+# class PiPOrganizerModel(AbstractDragDropModel):
+#     def __init__(self, parent=None):
+#         super(PiPOrganizerModel, self).__init__(parent)
+#
+#     def data(self, index, role):
+#         # todo somehow hide?
+#         print('0')
+#         if role == Qt.DisplayRole or role == Qt.EditRole:
+#             print('1')
+#             item = index.internalPointer()
+#             for i in range(self.columnCount(item)):
+#                 print('2')
+#                 if index.column() == i:
+#                     print('3')
+#                     try:
+#                         return_val = item.columnData()[self._header_data[i]]
+#                     except KeyError:
+#                         return_val = None
+#
+#                     if return_val == "":
+#                         return "INVALID"
+#                     print('return val === ' , return_val, type(return_val))
+#                     return return_val
+#
+#         #
+#         return AbstractDragDropModel.data(self, index, role)
+
+from qtpy.QtCore import QSortFilterProxyModel
 class PiPOrganizerWidget(AbstractModelViewWidget):
     """
     This widget is in charge of creating/destroying PiP items, along with
@@ -831,6 +895,10 @@ class PiPOrganizerWidget(AbstractModelViewWidget):
         super(PiPOrganizerWidget, self).__init__(parent=parent)
         # setup default attrs
         self._widget_types = widget_types
+
+        # setup model
+        # model = PiPOrganizerModel(self)
+        # self.setModel(model)
         self.model().setItemType(PiPModelItem)
 
         # create save widget
@@ -851,6 +919,23 @@ class PiPOrganizerWidget(AbstractModelViewWidget):
         self.setItemDeleteEvent(self.deleteWidget)
         self.setTextChangedEvent(self.editWidget)
         self.setDropEvent(self.itemReordered)
+
+        # self.setSourceModel(self.model())
+        # self._proxy_model = QSortFilterProxyModel()
+        # self._proxy_model.setSourceModel(self.model())
+        # self.setModel(self._proxy_model)
+
+    def proxyModel(self):
+        return self._proxy_model
+
+    def setProxyModel(self, proxy_model):
+        self._proxy_model = proxy_model
+
+    def sourceModel(self):
+        return self._source_model
+
+    def setSourceModel(self, source_model):
+        self._source_model = source_model
 
     def saveWidget(self):
         return self._save_widget
@@ -904,29 +989,33 @@ class PiPOrganizerWidget(AbstractModelViewWidget):
 
         # get current widget
         main_widget = getWidgetAncestor(self, AbstractPiPWidget)
-        if 2 < main_widget.numWidgets():
-            current_widget = main_widget.currentWidget()
-            if widget == current_widget:
-                # get first useable widget
-                first_widget = main_widget.widgets()[0]
-                if first_widget == widget:
-                    first_widget = main_widget.widgets()[1]
 
-                # set current widget
-                if main_widget.previousWidget():
-                    main_widget.setCurrentWidget(main_widget.previousWidget())
-                else:
-                    main_widget.setCurrentWidget(first_widget)
+        # if current widget
+        current_widget = main_widget.currentWidget()
+        if widget == current_widget:
+            # get first useable widget
+            first_widget = main_widget.widgets()[0]
+            if first_widget == widget:
+                first_widget = main_widget.widgets()[1]
 
-                # remove previous widget
-                main_widget.setPreviousWidget(None)
+            # set current widget
+            if main_widget.previousWidget():
+                main_widget.setCurrentWidget(main_widget.previousWidget())
+            else:
+                main_widget.setCurrentWidget(first_widget)
 
-                # if previous widget set to previous widget
-                # else set to 0th widget
+            # remove previous widget
+            main_widget.setPreviousWidget(None)
+
+        # create temp widget
+        if main_widget.numWidgets() < 3:
+            main_widget.createTempWidget()
 
         # delete widget
         item.widget().setParent(None)
         item.widget().deleteLater()
+        # resize
+        main_widget.mainWidget().resizeMiniViewer()
 
     def createNewWidget(self, widget, value):
         # preflight
@@ -939,7 +1028,8 @@ class PiPOrganizerWidget(AbstractModelViewWidget):
         constructor = loc['constructor']
 
         widget_type = constructor(self)
-        main_widget.createNewWidget(widget_type, self.widgetTypes()[value], name=str(value))
+        index = main_widget.createNewWidget(widget_type, self.widgetTypes()[value], name=str(value))
+        widget = index.internalPointer().widget()
 
         # reset widget
         widget.setText('')
@@ -1041,13 +1131,13 @@ constructor = QPushButton"""
     }
     pip_widget = AbstractPiPWidget(widget_types=widget_types)
 
-    for x in ("SINE"):
-        child = QLabel(str(x))
-        child.setAlignment(Qt.AlignCenter)
-        child.setStyleSheet("color: rgba(255,255,255,255);")
-        pip_widget.createNewWidget(child, """
-from qtpy.QtWidgets import QLabel
-constructor = QLabel""", name=str(x))
+#     for x in ("SINE"):
+#         child = QLabel(str(x))
+#         child.setAlignment(Qt.AlignCenter)
+#         child.setStyleSheet("color: rgba(255,255,255,255);")
+#         pip_widget.createNewWidget(child, """
+# from qtpy.QtWidgets import QLabel
+# constructor = QLabel""", name=str(x))
 
     pip_widget.setPiPScale((0.2, 0.2))
     pip_widget.setEnlargedScale(0.75)
