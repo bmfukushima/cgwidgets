@@ -6,6 +6,7 @@ from .AbstractContainerWidgets import AbstractInputGroupBox as AbstractInputGrou
 from .AbstractContainerWidgets import AbstractInputGroup as AbstractInputGroup
 from .AbstractContainerWidgets import AbstractInputGroupFrame
 from .AbstractContainerWidgets import AbstractFrameInputWidgetContainer
+from .AbstractContainerWidgets import AbstractButtonInputWidgetContainer
 
 """ USER INPUT WIDGETS"""
 

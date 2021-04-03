@@ -16,7 +16,7 @@ from qtpy.QtCore import Qt
 from cgwidgets.widgets import (
     AbstractInputGroupFrame,
     AbstractFrameInputWidgetContainer,
-    AbstractButtonInputWidget)
+    AbstractButtonInputWidgetContainer)
 
 from cgwidgets.widgets import (
     ShojiModelViewWidget,
@@ -222,7 +222,7 @@ class FrameInputWidgetContainer(AbstractFrameInputWidgetContainer):
         self.layout().setContentsMargins(0, 0, 0, 0)
 
 
-class ButtonInputWidgetContainer(ShojiLayout):
+class ButtonInputWidgetContainer(AbstractButtonInputWidgetContainer):
     """
     Provides a multi button input widget.
 
@@ -240,136 +240,7 @@ class ButtonInputWidgetContainer(ShojiLayout):
     """
 
     def __init__(self, parent=None, orientation=Qt.Horizontal):
-        self._rgba_flag = iColor["rgba_selected_hover"]
         super(ButtonInputWidgetContainer, self).__init__(parent, orientation)
-        self.setIsSoloViewEnabled(False)
-        self.setIsHandleStatic(True)
-        self.setHandleWidth(0)
-        self.setHandleLength(-1)
-
-        #
-        self._buttons = {}
-        self._is_multi_select = True
-        self._current_buttons = []
-        self._is_toggleable = True
-
-        self.setIsHandleVisible(False)
-
-    """ GET FLAGS """
-
-    def flags(self):
-        buttons = self.currentButtons()
-        return [button.flag() for button in buttons]
-
-    """ PROPERTIES """
-
-    def isMultiSelect(self):
-        return self._is_multi_select
-
-    def setIsMultiSelect(self, enabled):
-        self._is_multi_select = enabled
-
-    def isToggleable(self):
-        return self._is_toggleable
-
-    def setIsToggleable(self, enabled):
-        self._is_toggleable = enabled
-
-    """ BUTTONS """
-
-    def updateButtonSelection(self, selected_button, enabled=None):
-        """
-        Sets the button provided to either be enabled or disabled
-        Args:
-            selected_button (AbstractButtonInputWidget):
-            enabled (bool):
-
-        Returns:
-
-        """
-        if enabled is not None:
-            self.setButtonAsCurrent(selected_button, enabled)
-        else:
-            if selected_button in self.currentButtons():
-                self.setButtonAsCurrent(selected_button, False)
-            else:
-                self.setButtonAsCurrent(selected_button, True)
-
-        # update display
-        for button in self._buttons.values():
-            if button not in self.currentButtons():
-                button.setProperty("is_selected", False)
-                updateStyleSheet(button)
-        self.normalizeWidgetSizes()
-
-    def currentButtons(self):
-        return self._current_buttons
-
-    def setButtonAsCurrent(self, current_button, enabled):
-        """
-        Sets the button provided as enabled/disabled.
-
-        Args:
-            current_button (AbstractButtonInputWidget): to enable/disable
-            enabled (bool):
-        """
-        current_button.setParent(None)
-        # multi select
-        if self.isMultiSelect():
-            # add to list
-            if enabled:
-                self._current_buttons.append(current_button)
-                self.insertWidget(len(self.currentButtons()) - 1, current_button)
-
-            # remove from list
-            else:
-                if current_button in self._current_buttons:
-                    self._current_buttons.remove(current_button)
-                self.insertWidget(len(self.currentButtons()), current_button)
-
-        # single select
-        else:
-            self._current_buttons = [current_button]
-            self.insertWidget(0, current_button)
-
-        # setup button style
-        if enabled:
-            current_button.is_selected = True
-
-        self.update()
-
-    def addButton(self, title, flag, user_clicked_event=None, enabled=False, image=None):
-        """
-        Adds a button to this widget
-
-        Args:
-            title (str): display name
-            enabled (bool): determines the default status of the button
-            flag (arbitrary): flag to be returned to denote that this button is selected
-            user_clicked_event (function): to run when the user clicks
-            image:
-
-        Returns (AbstractButtonInputWidget): newly created button
-        Note:
-            image is not currently setup.  This kwarg is merely a place holder.
-        Todo: setup image
-        """
-        button = AbstractButtonInputWidget(self, user_clicked_event=user_clicked_event, title=title, flag=flag,
-                                           is_toggleable=self.isToggleable())
-        self.updateButtonSelection(button, enabled)
-        self._buttons[title] = button
-        self.addWidget(button)
-        return button
-
-    """ EVENTS """
-
-    def showEvent(self, event):
-        """
-        Reorganizes widgets into correct order
-        """
-        for button in self._current_buttons:
-            self.insertWidget(0, button)
-        return ShojiLayout.showEvent(self, event)
 
 
 if __name__ == "__main__":

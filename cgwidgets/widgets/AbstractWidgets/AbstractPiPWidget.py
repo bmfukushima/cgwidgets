@@ -1,11 +1,5 @@
 """
 Todo:
-    * keyPressEvent... does not register until 2 widgets or so??
-        in general shitty registry...
-    * show organizer...
-        - exit mini view... somehow swaps?
-            registry is wrong?
-        - west calculation also fucked on that...
     * Overall cleanup / organization
         mainWidget --> AbstractPiPWidget?
     * Expose settings to user?
@@ -33,7 +27,12 @@ from cgwidgets.settings.colors import iColor
 from cgwidgets.widgets.AbstractWidgets.AbstractLabelledInputWidget import AbstractLabelledInputWidget
 from cgwidgets.widgets.AbstractWidgets.AbstractOverlayInputWidget import AbstractOverlayInputWidget
 from cgwidgets.widgets.AbstractWidgets.AbstractModelViewWidget import AbstractModelViewWidget
-from cgwidgets.widgets import AbstractListInputWidget, AbstractButtonInputWidget, AbstractStringInputWidget, AbstractLabelWidget
+from cgwidgets.widgets import (
+    AbstractListInputWidget,
+    AbstractButtonInputWidget,
+    AbstractStringInputWidget,
+    AbstractLabelWidget,
+    AbstractButtonInputWidgetContainer)
 
 
 class AbstractPiPWidget(QSplitter):
@@ -103,6 +102,11 @@ class AbstractPiPWidget(QSplitter):
                 createTempWidget()
                 tempWidgets()
                 removeTempWidget()
+
+        PanelCreatorWidget:
+            show (c):
+                keyPressEvent --> toggleCreatorVisibility --> show
+            hide (esc)
     """
     def __init__(self, parent=None, widget_types=None):
         super(AbstractPiPWidget, self).__init__(parent)
@@ -117,7 +121,7 @@ class AbstractPiPWidget(QSplitter):
         self._main_widget = PiPMainWidget(self, widget_types)
 
         # setup organizer widget
-        self._organizer_widget = PiPOrganizerWidget(self)
+        self._organizer_widget = PiPLocalOrganizerWidget(self)
         self._is_organizer_visible = False
         self._organizer_widget.hide()
 
@@ -176,12 +180,15 @@ class AbstractPiPWidget(QSplitter):
             self.mainWidget().setCurrentWidget(mini_widget)
 
         # create new index
-        # if create_index:
         index = self.organizerWidget().model().insertNewIndex(0, name=name)
-        mini_widget.setIndex(0)
+
         item = index.internalPointer()
         item.setWidget(mini_widget)
         item.setConstructorCode(constructor_code)
+
+        mini_widget.setIndex(0)
+        mini_widget.setItem(item)
+
         # update indexes
         self.updateWidgetIndexes()
 
@@ -257,8 +264,8 @@ class AbstractPiPWidget(QSplitter):
     def setEnlargedScale(self, _enlarged_scale):
         self.mainWidget().setEnlargedScale(_enlarged_scale)
 
-    def showWidgetNames(self, enabled):
-        self.mainWidget().showWidgetNames(enabled)
+    def showWidgetDisplayNames(self, enabled):
+        self.mainWidget().showWidgetDisplayNames(enabled)
 
     def currentWidget(self):
         return self.mainWidget().currentWidget()
@@ -322,10 +329,6 @@ class AbstractPiPWidget(QSplitter):
             if self.isPanelCreatorVisible():
                 self.panelCreatorWidget().show()
                 self.panelCreatorWidget().setFocus()
-        # else:
-        #     #self.panelCreatorWidget().clearFocus()
-        #     self.panelCreatorWidget().hide()
-        #     self.setFocus()
 
     """ EVENTS """
     def keyPressEvent(self, event):
@@ -376,7 +379,7 @@ class PiPMainWidget(QWidget):
         # create widgets
         self.main_viewer = PiPMainViewer(self)
         self.mini_viewer = PiPMiniViewer(self)
-        self.panel_creator_widget = PiPCreateNewPanelWidget(self, widget_types=widget_types)
+        self.panel_creator_widget = PiPPanelCreatorWidget(self, widget_types=widget_types)
         self.panel_creator_widget.hide()
 
         # create layout
@@ -391,8 +394,6 @@ class PiPMainWidget(QWidget):
         #self.layout().addWidget(self.mini_viewer)
         self.layout().addWidget(self.main_viewer)
         self.layout().addWidget(self.panel_creator_widget)
-
-        self.setStyleSheet("background-color:rgba(255,0,255,255);")
 
     """ UTILS (SWAP) """
     def swapWidgets(self):
@@ -495,7 +496,7 @@ class PiPMainWidget(QWidget):
     def areWidgetNamesShown(self):
         return self._are_widget_names_shown
 
-    def showWidgetNames(self, enabled):
+    def showWidgetDisplayNames(self, enabled):
         self._are_widget_names_shown = enabled
         for widget in self.parent().widgets():
             if enabled:
@@ -838,6 +839,7 @@ class PiPMiniViewerWidget(QWidget):
 
     Attributes:
         index (int): current index in model
+        item (PiPModelItem)
     """
     def __init__(
         self,
@@ -851,6 +853,8 @@ class PiPMiniViewerWidget(QWidget):
         self._index = 0
 
         self.main_widget = AbstractLabelledInputWidget(self, name=name, direction=direction, delegate_widget=delegate_widget)
+        self.main_widget.viewWidget().delegateWidget().setUserFinishedEditingEvent(self.updateItemDisplayName)
+
         self.layout().addWidget(self.main_widget)
         # self.layout().setContentsMargins(0, 0, 0, 0)
         base_style_sheet = """
@@ -869,13 +873,60 @@ class PiPMiniViewerWidget(QWidget):
         self.setAcceptDrops(True)
         # installHoverDisplaySS(self, "TEST")
 
+    def updateItemDisplayName(self, widget, value):
+        """
+        Updates the display name of this label
+        Args:
+            widget:
+            value:
+        """
+        from qtpy.QtCore import QModelIndex
+        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+        self.item().columnData()['name'] = value
+        self.main_widget.viewWidget().hideDelegate()
+        self.main_widget.setName(value)
+
+    def item(self):
+        return self._item
+
+    def setItem(self, item):
+        self._item = item
+
     def index(self):
         return self._index
 
     def setIndex(self, index):
         self._index = index
 
-""" Create Widgets"""
+
+""" PLACE HOLDER"""
+class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
+    """
+    This widget will read all of the AbstractPiPWidgets that the user has created.
+
+    The user can then select an item from this list to have their gui updated.
+
+    Todo:
+        populate model
+        dynamic updates
+        Allow grouping?
+        Custom model item?
+    """
+    def __init__(self, parent=None, widget_types=None):
+        super(PiPGlobalOrganizerWidget, self).__init__(parent=parent)
+
+
+class PiPDisplayWidgets(AbstractButtonInputWidgetContainer):
+    """
+    This widget will display all of the optional tabs that the user can display.
+        PiPGlobalOrganizerWidget | PiPLocalOrganizerWidget | Settings
+
+    """
+    def __init__(self, parent=None, orientation=Qt.Horizontal):
+        super(AbstractButtonInputWidgetContainer, self).__init__(parent, orientation)
+
+
+""" Create Widgets """
 class PiPModelItem(AbstractDragDropModelItem):
     def __init__(self, parent=None):
         super(PiPModelItem, self).__init__(parent)
@@ -893,7 +944,7 @@ class PiPModelItem(AbstractDragDropModelItem):
         self._constructor_code = constructor_code
 
 
-class PiPOrganizerWidget(AbstractModelViewWidget):
+class PiPLocalOrganizerWidget(AbstractModelViewWidget):
     """
     This widget is in charge of creating/destroying PiP items, along with
     holding the order that the items should be displayed in.
@@ -909,7 +960,7 @@ class PiPOrganizerWidget(AbstractModelViewWidget):
         Delete Widget -->
     """
     def __init__(self, parent=None, widget_types=None):
-        super(PiPOrganizerWidget, self).__init__(parent=parent)
+        super(PiPLocalOrganizerWidget, self).__init__(parent=parent)
         # setup default attrs
         self._widget_types = widget_types
 
@@ -1107,9 +1158,9 @@ class PiPOrganizerSaveWidget(QWidget):
         self._file_path = file_path
 
 
-class PiPCreateNewPanelWidget(AbstractListInputWidget):
+class PiPPanelCreatorWidget(AbstractListInputWidget):
     def __init__(self, parent=None, widget_types=None):
-        super(PiPCreateNewPanelWidget, self).__init__(parent)
+        super(PiPPanelCreatorWidget, self).__init__(parent)
 
         self._widget_types = widget_types
         self.populate([[key] for key in widget_types.keys()])
@@ -1143,6 +1194,10 @@ class PiPCreateNewPanelWidget(AbstractListInputWidget):
         self.clearFocus()
 
     """ EVENTS """
+    def focusOutEvent(self, event):
+        self.hide()
+        return AbstractListInputWidget.focusOutEvent(self, event)
+
     def showEvent(self, event):
         main_widget = getWidgetAncestor(self, AbstractPiPWidget)
         main_widget.setIsPanelCreatorVisible(True)
@@ -1192,7 +1247,7 @@ constructor = QPushButton"""
     pip_widget.setPiPScale((0.2, 0.2))
     pip_widget.setEnlargedScale(0.75)
     pip_widget.setDirection(attrs.WEST)
-    #pip_widget.showWidgetNames(False)
+    #pip_widget.showWidgetDisplayNames(False)
 
     #
 
