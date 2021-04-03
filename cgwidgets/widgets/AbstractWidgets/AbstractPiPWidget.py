@@ -114,12 +114,15 @@ class AbstractPiPWidget(QSplitter):
 
         # create widgets
         # create main pip widget
-        self._main_widget = PiPMainWidget(self)
+        self._main_widget = PiPMainWidget(self, widget_types)
 
         # setup organizer widget
-        self._organizer_widget = PiPOrganizerWidget(self, widget_types)
+        self._organizer_widget = PiPOrganizerWidget(self)
         self._is_organizer_visible = False
         self._organizer_widget.hide()
+
+        # setup creator widget visibility
+        self._is_panel_creator_visible = False
 
         # add widgets
         self.addWidget(self._main_widget)
@@ -144,13 +147,16 @@ class AbstractPiPWidget(QSplitter):
         return self._main_widget
 
     def miniViewerWidget(self):
-        return self._main_widget.mini_viewer
+        return self.mainWidget().mini_viewer
 
     def mainViewerWidget(self):
-        return self._main_widget.main_viewer
+        return self.mainWidget().main_viewer
 
     def organizerWidget(self):
         return self._organizer_widget
+
+    def panelCreatorWidget(self):
+        return self.mainWidget().panel_creator_widget
 
     """ WIDGETS """
     def createNewWidget(self, widget, constructor_code, name=""):
@@ -270,6 +276,9 @@ class AbstractPiPWidget(QSplitter):
     def isOrganizerVisible(self):
         return self._is_organizer_visible
 
+    def setIsOrganizerVisible(self, visible):
+        self._is_organizer_visible = visible
+
     def toggleOrganizerVisibility(self):
         """
         Toggles whether or not the organizer widget is visible to the user
@@ -289,11 +298,43 @@ class AbstractPiPWidget(QSplitter):
         else:
             self.organizerWidget().hide()
 
+    def isPanelCreatorVisible(self):
+        return self._is_panel_creator_visible
+
+    def setIsPanelCreatorVisible(self, visible):
+        self._is_panel_creator_visible = visible
+
+    def toggleCreatorVisibility(self):
+        """
+        Toggles whether or not the organizer widget is visible to the user
+
+        Note: This is currently hard coded to "Q"
+        """
+
+        # if self.miniViewerWidget()._is_frozen:
+        if not self.isPanelCreatorVisible():
+            if self.miniViewerWidget().isEnlarged():
+                obj = getWidgetUnderCursor(QCursor.pos())
+                widget = getWidgetAncestor(obj, PiPMiniViewerWidget)
+                self.miniViewerWidget().closeEnlargedView(widget)
+
+            self._is_panel_creator_visible = not self.isPanelCreatorVisible()
+            if self.isPanelCreatorVisible():
+                self.panelCreatorWidget().show()
+                self.panelCreatorWidget().setFocus()
+        # else:
+        #     #self.panelCreatorWidget().clearFocus()
+        #     self.panelCreatorWidget().hide()
+        #     self.setFocus()
+
     """ EVENTS """
     def keyPressEvent(self, event):
+        print('abstract')
         if event.key() == Qt.Key_A:
             self.toggleOrganizerVisibility()
-            return
+
+        if event.key() == Qt.Key_C:
+            self.toggleCreatorVisibility()
 
         return QSplitter.keyPressEvent(self, event)
 
@@ -318,11 +359,13 @@ class PiPMainWidget(QWidget):
 
     """
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, widget_types=None):
         super(PiPMainWidget, self).__init__(parent)
 
         # setup attrs
         self._widgets = []
+        if not widget_types:
+            widget_types = []
         self._current_widget = None
         self._previous_widget = None
         self._pip_scale = (0.35, 0.35)
@@ -333,18 +376,21 @@ class PiPMainWidget(QWidget):
         # create widgets
         self.main_viewer = PiPMainViewer(self)
         self.mini_viewer = PiPMiniViewer(self)
+        self.panel_creator_widget = PiPCreateNewPanelWidget(self, widget_types=widget_types)
+        self.panel_creator_widget.hide()
 
         # create layout
         """
         Not using a stacked layout as the enter/leave events get borked
         """
         #QStackedLayout(self)
-        QHBoxLayout(self)
+        QVBoxLayout(self)
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.layout().setSpacing(0)
 
         #self.layout().addWidget(self.mini_viewer)
         self.layout().addWidget(self.main_viewer)
+        self.layout().addWidget(self.panel_creator_widget)
 
         self.setStyleSheet("background-color:rgba(255,0,255,255);")
 
@@ -508,6 +554,7 @@ class PiPMainWidget(QWidget):
         return QWidget.resizeEvent(self, event)
 
     def keyPressEvent(self, event):
+        print('main')
         # swap between this and previous
         if event.key() == 96:
             # pre flight
@@ -585,7 +632,7 @@ class PiPMiniViewer(QWidget):
         super(PiPMiniViewer, self).__init__(parent)
         #QBoxLayout(QBoxLayout.LeftToRight, self)
         QVBoxLayout(self)
-        self.layout().setContentsMargins(0, 0, 0, 0)
+        # self.layout().setContentsMargins(0, 0, 0, 0)
 
         self._widgets = []
         self._is_frozen = False
@@ -846,36 +893,6 @@ class PiPModelItem(AbstractDragDropModelItem):
         self._constructor_code = constructor_code
 
 
-# from cgwidgets.views import AbstractDragDropModel
-#
-# class PiPOrganizerModel(AbstractDragDropModel):
-#     def __init__(self, parent=None):
-#         super(PiPOrganizerModel, self).__init__(parent)
-#
-#     def data(self, index, role):
-#         # todo somehow hide?
-#         print('0')
-#         if role == Qt.DisplayRole or role == Qt.EditRole:
-#             print('1')
-#             item = index.internalPointer()
-#             for i in range(self.columnCount(item)):
-#                 print('2')
-#                 if index.column() == i:
-#                     print('3')
-#                     try:
-#                         return_val = item.columnData()[self._header_data[i]]
-#                     except KeyError:
-#                         return_val = None
-#
-#                     if return_val == "":
-#                         return "INVALID"
-#                     print('return val === ' , return_val, type(return_val))
-#                     return return_val
-#
-#         #
-#         return AbstractDragDropModel.data(self, index, role)
-
-from qtpy.QtCore import QSortFilterProxyModel
 class PiPOrganizerWidget(AbstractModelViewWidget):
     """
     This widget is in charge of creating/destroying PiP items, along with
@@ -906,24 +923,10 @@ class PiPOrganizerWidget(AbstractModelViewWidget):
         self.addDelegate([Qt.Key_S], self._save_widget)
         self._save_widget.show()
 
-        # create popup widget creator
-        self._creator_widget = AbstractListInputWidget(self)
-
-        # populate creator widget
-        widget_types = [[key] for key in widget_types.keys()]
-        self._creator_widget.populate(widget_types)
-        self.addDelegate([Qt.Key_Q], self._creator_widget)
-
         # install events
-        self._creator_widget.setUserFinishedEditingEvent(self.createNewWidget)
         self.setItemDeleteEvent(self.deleteWidget)
         self.setTextChangedEvent(self.editWidget)
         self.setDropEvent(self.itemReordered)
-
-        # self.setSourceModel(self.model())
-        # self._proxy_model = QSortFilterProxyModel()
-        # self._proxy_model.setSourceModel(self.model())
-        # self.setModel(self._proxy_model)
 
     def proxyModel(self):
         return self._proxy_model
@@ -939,15 +942,6 @@ class PiPOrganizerWidget(AbstractModelViewWidget):
 
     def saveWidget(self):
         return self._save_widget
-
-    def creatorWidget(self):
-        return self._creator_widget
-
-    def widgetTypes(self):
-        return self._widget_types
-
-    def setWidgetTypes(self, widget_types):
-        self._widget_types = widget_types
 
     """ EVENTS """
     def itemReordered(self, data, items, model, row, parent):
@@ -1017,23 +1011,23 @@ class PiPOrganizerWidget(AbstractModelViewWidget):
         # resize
         main_widget.mainWidget().resizeMiniViewer()
 
-    def createNewWidget(self, widget, value):
-        # preflight
-        if value not in self.widgetTypes().keys(): return
+    """ EVENTS """
+    def showEvent(self, event):
         main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+        main_widget.setIsOrganizerVisible(True)
+        self.setFocus()
+        AbstractModelViewWidget.showEvent(self, event)
 
-        # get constructor
-        loc = {}
-        exec(self.widgetTypes()[value], globals(), loc)
-        constructor = loc['constructor']
+    def hideEvent(self, event):
+        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+        main_widget.setIsOrganizerVisible(False)
+        main_widget.setFocus()
+        AbstractModelViewWidget.hideEvent(self, event)
 
-        widget_type = constructor(self)
-        index = main_widget.createNewWidget(widget_type, self.widgetTypes()[value], name=str(value))
-        widget = index.internalPointer().widget()
-
-        # reset widget
-        widget.setText('')
-        widget.hide()
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Escape:
+            self.hide()
+        return AbstractModelViewWidget.keyPressEvent(self, event)
 
 
 class PiPOrganizerSaveWidget(QWidget):
@@ -1106,12 +1100,68 @@ class PiPOrganizerSaveWidget(QWidget):
         print('saving to... ', self.saveFilePath())
         print(pip_widgets)
 
-
     def saveFilePath(self):
         return self._file_path
 
     def setSaveFilePath(self, file_path):
         self._file_path = file_path
+
+
+class PiPCreateNewPanelWidget(AbstractListInputWidget):
+    def __init__(self, parent=None, widget_types=None):
+        super(PiPCreateNewPanelWidget, self).__init__(parent)
+
+        self._widget_types = widget_types
+        self.populate([[key] for key in widget_types.keys()])
+        #self.setUserFinishedEditingEvent(self.createNewWidget)
+
+    def widgetTypes(self):
+        return self._widget_types
+
+    def setWidgetTypes(self, widget_types):
+        self._widget_types = widget_types
+
+    def createNewWidget(self):
+        # preflight
+        value = self.text()
+
+        if value not in self.widgetTypes().keys(): return
+        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+
+        # get constructor
+        loc = {}
+        exec(self.widgetTypes()[value], globals(), loc)
+        constructor = loc['constructor']
+
+        widget_type = constructor(self)
+        main_widget.createNewWidget(widget_type, self.widgetTypes()[value], name=str(value))
+        # widget = index.internalPointer().widget()
+
+        # reset widget
+        self.setText('')
+        self.hide()
+        self.clearFocus()
+
+    """ EVENTS """
+    def showEvent(self, event):
+        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+        main_widget.setIsPanelCreatorVisible(True)
+        self.setFocus()
+        AbstractListInputWidget.showEvent(self, event)
+
+    def hideEvent(self, event):
+        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+        main_widget.setIsPanelCreatorVisible(False)
+        main_widget.setFocus()
+        AbstractListInputWidget.hideEvent(self, event)
+
+    def keyPressEvent(self, event):
+        from cgwidgets.settings import keylist
+        if event.key() in keylist.ACCEPT_KEYS:
+            self.createNewWidget()
+        if event.key() == Qt.Key_Escape:
+            self.hide()
+        return AbstractListInputWidget.keyPressEvent(self, event)
 
 
 if __name__ == '__main__':
