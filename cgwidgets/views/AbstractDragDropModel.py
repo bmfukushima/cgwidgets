@@ -429,12 +429,13 @@ class AbstractDragDropModel(QAbstractItemModel):
 
         return new_item
 
-    def insertNewIndex(self, row, name="None", parent=QModelIndex()):
+    def insertNewIndex(self, row, name="None", column_data=None, parent=QModelIndex()):
         """
 
         Args:
             row (int):
             name (str):
+            column_data (dict):
             parent (QModelIndex):
 
         Returns (QModelIndex):
@@ -452,7 +453,11 @@ class AbstractDragDropModel(QAbstractItemModel):
         # get new index/item created
         new_index = self.index(row, 1, parent)
         view_item = new_index.internalPointer()
-        view_item.setColumnData({"name":name})
+
+        # set column data
+        if not column_data:
+            column_data = {"name":name}
+        view_item.setColumnData(column_data)
 
         return new_index
 

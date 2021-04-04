@@ -13,6 +13,8 @@ Todo:
 
 """
 import json
+from collections import OrderedDict
+import os
 
 from qtpy.QtWidgets import (
     QStackedLayout, QWidget, QBoxLayout, QVBoxLayout, QLabel, QSizePolicy, QSplitter, QHBoxLayout)
@@ -20,13 +22,16 @@ from qtpy.QtCore import QEvent, Qt, QPoint
 from qtpy.QtGui import QCursor
 
 from cgwidgets.views import AbstractDragDropModelItem
-from cgwidgets.utils import attrs, getWidgetUnderCursor, isWidgetDescendantOf, getWidgetAncestor, getDefaultSavePath
+from cgwidgets.utils import attrs, getWidgetUnderCursor, isWidgetDescendantOf, getWidgetAncestor, getDefaultSavePath, getJSONData
+
 from cgwidgets.settings.hover_display import installHoverDisplaySS, removeHoverDisplay
 from cgwidgets.settings.colors import iColor
+from cgwidgets.settings import keylist
 
 from cgwidgets.widgets.AbstractWidgets.AbstractLabelledInputWidget import AbstractLabelledInputWidget
 from cgwidgets.widgets.AbstractWidgets.AbstractOverlayInputWidget import AbstractOverlayInputWidget
 from cgwidgets.widgets.AbstractWidgets.AbstractModelViewWidget import AbstractModelViewWidget
+from cgwidgets.widgets.AbstractWidgets.AbstractShojiLayout import AbstractShojiLayout
 from cgwidgets.widgets import (
     AbstractListInputWidget,
     AbstractButtonInputWidget,
@@ -35,7 +40,7 @@ from cgwidgets.widgets import (
     AbstractButtonInputWidgetContainer)
 
 
-class AbstractPiPWidget(QSplitter):
+class AbstractPiPWidget(AbstractShojiLayout):
     """
     The PiPWidget is designed to display multiple widgets simultaneously to the user.
 
@@ -95,7 +100,7 @@ class AbstractPiPWidget(QSplitter):
         Toggle previous widget
             PiPMainWidget --> keyPressEvent --> swapWidgets
         Toggle Organizer Widget (Q):
-            keyPressEvent --> toggleOrganizerVisibility
+            keyPressEvent --> toggleLocalOrganizerVisibility
         Create New Widget -->
         Delete Widget -->
         TempWidgets
@@ -124,17 +129,22 @@ class AbstractPiPWidget(QSplitter):
         # create main pip widget
         self._main_widget = PiPMainWidget(self, widget_types)
 
-        # setup organizer widget
-        self._organizer_widget = PiPLocalOrganizerWidget(self)
-        self._is_organizer_visible = False
-        self._organizer_widget.hide()
+        # setup local organizer widget
+        self._local_organizer_widget = PiPLocalOrganizerWidget(self)
+        self._is_local_organizer_visible = False
+        self._local_organizer_widget.hide()
+
+        # setup global organizer widget
+        self._global_organizer_widget = PiPGlobalOrganizerWidget(self)
+        self._is_global_organizer_visible = False
+        #self._global_organizer_widget.hide()
 
         # setup creator widget visibility
         self._is_panel_creator_visible = False
 
         # add widgets
         self.addWidget(self._main_widget)
-        self.addWidget(self._organizer_widget)
+        self.addWidget(self._local_organizer_widget)
 
         # create temp widget
         self.createTempWidget()
@@ -145,10 +155,10 @@ class AbstractPiPWidget(QSplitter):
         return len(self.widgets())
 
     def widgets(self):
-        return [index.internalPointer().widget() for index in self.organizerWidget().model().getAllIndexes() if hasattr(index.internalPointer(), "_widget")]
+        return [index.internalPointer().widget() for index in self.localOrganizerWidget().model().getAllIndexes() if hasattr(index.internalPointer(), "_widget")]
 
     def items(self):
-        return [index.internalPointer() for index in self.organizerWidget().model().getAllIndexes() if hasattr(index.internalPointer(), "_widget")]
+        return [index.internalPointer() for index in self.localOrganizerWidget().model().getAllIndexes() if hasattr(index.internalPointer(), "_widget")]
 
     """ WIDGETS (DISPLAY)"""
     def mainWidget(self):
@@ -160,14 +170,17 @@ class AbstractPiPWidget(QSplitter):
     def mainViewerWidget(self):
         return self.mainWidget().main_viewer
 
-    def organizerWidget(self):
-        return self._organizer_widget
+    def localOrganizerWidget(self):
+        return self._local_organizer_widget
+
+    def globalOrganizerWidget(self):
+        return self._global_organizer_widget
 
     def panelCreatorWidget(self):
         return self.mainWidget().panel_creator_widget
 
     """ WIDGETS """
-    def createNewWidget(self, widget, constructor_code, name=""):
+    def createNewWidget(self, constructor_code, name=""):
         """
 
         Args:
@@ -177,6 +190,14 @@ class AbstractPiPWidget(QSplitter):
         Returns:
 
         """
+
+        # create widget from constructor code
+        loc = {}
+        loc['self'] = self
+        exec(constructor_code, globals(), loc)
+        widget = loc['widget']
+
+        # insert widget into layout
         if 0 < self.numWidgets():
             mini_widget = self.miniViewerWidget().createNewWidget(widget, name=name)
         else:
@@ -184,7 +205,7 @@ class AbstractPiPWidget(QSplitter):
             self.mainWidget().setCurrentWidget(mini_widget)
 
         # create new index
-        index = self.organizerWidget().model().insertNewIndex(0, name=name)
+        index = self.localOrganizerWidget().model().insertNewIndex(0, name=name)
 
         item = index.internalPointer()
         item.setWidget(mini_widget)
@@ -212,23 +233,30 @@ class AbstractPiPWidget(QSplitter):
 
         This will need to be done every time a new widget is added
         """
-        for index in self.organizerWidget().model().getAllIndexes():
+        for index in self.localOrganizerWidget().model().getAllIndexes():
             item = index.internalPointer()
             if hasattr(item, "_widget"):
                 item.widget().setIndex(index.row())
 
-    # """ WIDGETS (TEMP)"""
+    def removeAllWidgets(self):
+        """ Clears all of the widgets from the current AbstractPiPWidget"""
+        for item in self.localOrganizerWidget().model().getRootItem().children():
+            item.widget().setParent(None)
+            item.widget().deleteLater()
+        self.localOrganizerWidget().model().clearModel()
+
+    """ WIDGETS (TEMP)"""
     def createTempWidget(self):
         constructor_code = """
-        from qtpy.QtWidgets import QLabel
-        constructor = QLabel """
-        text = """
+from cgwidgets.widgets import AbstractLabelWidget
+text = \"\"\"
 Press (A)
-Open widget organizer, to create new widgets, save widgets, etc """
-        # create widget
-        text_widget = AbstractLabelWidget(self, text)
-        text_widget.setWordWrap(True)
-        index = self.createNewWidget(text_widget, constructor_code, "")
+Open widget organizer, to create new widgets, save widgets, etc \"\"\"
+widget = AbstractLabelWidget(self, text)
+widget.setWordWrap(True)
+        """
+
+        index = self.createNewWidget(constructor_code, "")
 
         # setup item
         item = index.internalPointer()
@@ -243,14 +271,14 @@ Open widget organizer, to create new widgets, save widgets, etc """
         """
         Removes the first temp widget from the tempWidgets list
         """
-        model = self.organizerWidget().model()
+        model = self.localOrganizerWidget().model()
         indexes = model.findItems("", match_type=Qt.MatchExactly)
         if 0 < len(indexes):
             model.deleteItem(indexes[0].internalPointer(), event_update=True)
 
     """ SAVE (VIRTUAL) """
     def setSavePath(self, file_path):
-        self.organizerWidget().saveWidget().setSaveFilePath(file_path)
+        self.localOrganizerWidget().saveWidget().setSaveFilePath(file_path)
 
     """ VIRTUAL FUNCTIONS (MAIN WIDGET)"""
     def direction(self):
@@ -293,13 +321,13 @@ Open widget organizer, to create new widgets, save widgets, etc """
         self.mainWidget().setPreviousWidget(previous_widget)
 
     """ ORGANIZER / CREATOR """
-    def isOrganizerVisible(self):
-        return self._is_organizer_visible
+    def isLocalOrganizerVisible(self):
+        return self._is_local_organizer_visible
 
-    def setIsOrganizerVisible(self, visible):
-        self._is_organizer_visible = visible
+    def setIsLocalOrganizerVisible(self, visible):
+        self._is_local_organizer_visible = visible
 
-    def toggleOrganizerVisibility(self):
+    def toggleLocalOrganizerVisibility(self):
         """
         Toggles whether or not the organizer widget is visible to the user
 
@@ -312,11 +340,36 @@ Open widget organizer, to create new widgets, save widgets, etc """
             widget = getWidgetAncestor(obj, PiPMiniViewerWidget)
             self.miniViewerWidget().closeEnlargedView(widget)
 
-        self._is_organizer_visible = not self.isOrganizerVisible()
-        if self.isOrganizerVisible():
-            self.organizerWidget().show()
+        self._is_local_organizer_visible = not self.isLocalOrganizerVisible()
+        if self.isLocalOrganizerVisible():
+            self.localOrganizerWidget().show()
         else:
-            self.organizerWidget().hide()
+            self.localOrganizerWidget().hide()
+
+    def isGlobalOrganizerVisible(self):
+        return self._is_global_organizer_visible
+
+    def setIsGlobalOrganizerVisible(self, visible):
+        self._is_global_organizer_visible = visible
+
+    def toggleGlobalOrganizerVisibility(self):
+        """
+        Toggles whether or not the organizer widget is visible to the user
+
+        Note: This is currently hard coded to "Q"
+        """
+
+        # if self.miniViewerWidget()._is_frozen:
+        if self.miniViewerWidget().isEnlarged():
+            obj = getWidgetUnderCursor(QCursor.pos())
+            widget = getWidgetAncestor(obj, PiPMiniViewerWidget)
+            self.miniViewerWidget().closeEnlargedView(widget)
+
+        self._is_global_organizer_visible = not self.isGlobalOrganizerVisible()
+        if self.isGlobalOrganizerVisible():
+            self.globalOrganizerWidget().show()
+        else:
+            self.globalOrganizerWidget().hide()
 
     def isPanelCreatorVisible(self):
         return self._is_panel_creator_visible
@@ -347,7 +400,10 @@ Open widget organizer, to create new widgets, save widgets, etc """
     def keyPressEvent(self, event):
         print('abstract')
         if event.key() == Qt.Key_A:
-            self.toggleOrganizerVisibility()
+            self.toggleGlobalOrganizerVisibility()
+
+        if event.key() == Qt.Key_F:
+            self.toggleLocalOrganizerVisibility()
 
         if event.key() == Qt.Key_C:
             self.toggleCreatorVisibility()
@@ -855,7 +911,7 @@ class PiPMiniViewerWidget(QWidget):
 
     Attributes:
         index (int): current index in model
-        item (PiPModelItem)
+        item (PiPLocalOrganizerItem)
     """
     def __init__(
         self,
@@ -896,8 +952,6 @@ class PiPMiniViewerWidget(QWidget):
             widget:
             value:
         """
-        from qtpy.QtCore import QModelIndex
-        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
         self.item().columnData()['name'] = value
         self.main_widget.viewWidget().hideDelegate()
         self.main_widget.setName(value)
@@ -916,6 +970,27 @@ class PiPMiniViewerWidget(QWidget):
 
 
 """ PLACE HOLDER"""
+class PiPGlobalOrganizerItem(AbstractDragDropModelItem):
+    """
+
+    Attributes:
+        widgetsList (list): of widgets in the format
+            [{"widget_name", "constructor_code"},
+            {"widget_name", "constructor_code"},
+            {"widget_name", "constructor_code"},
+            ]
+    """
+    def __init__(self, parent=None):
+        super(PiPGlobalOrganizerItem, self).__init__(parent=parent)
+
+
+    def widgetsList(self):
+        return self._widgets
+
+    def setWidgetsList(self, widgets):
+        self._widgets = widgets
+
+
 class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
     """
     This widget will read all of the AbstractPiPWidgets that the user has created.
@@ -930,6 +1005,66 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
     """
     def __init__(self, parent=None, widget_types=None):
         super(PiPGlobalOrganizerWidget, self).__init__(parent=parent)
+
+        self.model().setItemType(PiPGlobalOrganizerItem)
+
+        # create save widget
+        self._save_widget = PiPOrganizerSaveWidget(self)
+        self.addDelegate([], self._save_widget)
+        self._save_widget.show()
+
+        # populate
+        self.populate()
+
+        self.setIndexSelectedEvent(self.loadPiPWidgetFromSelection)
+
+    def populate(self):
+        pip_widgets = self.loadPiPWidgets()
+        for widget_name in pip_widgets.keys():
+            index = self.model().insertNewIndex(0, name=widget_name)
+            item = index.internalPointer()
+            item.setWidgetsList(pip_widgets[widget_name])
+
+    def loadPiPWidgetFromSelection(self, item, enabled):
+        """
+        When an item is selected, this will update the AbstractPiPWidget to the item
+        that has been selected
+        Args:
+            item (PiPGlobalOrganizerItem):
+            enabled (bool):
+        """
+        if enabled:
+            pip_name = item.columnData()['name']
+            widgets = item.widgetsList()
+
+            main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+
+            # clear pip view
+            main_widget.removeAllWidgets()
+
+            # populate pip view
+            for widget_name, constructor_code in widgets.items():
+                main_widget.createNewWidget(constructor_code, name=widget_name)
+
+            # todo resize not working when single widget...
+            # main_widget.mainWidget().resizeMiniViewer()
+
+    def getAllPiPWidgetsNames(self):
+        return self.saveWidget().getAllPiPWidgetsNames()
+
+    def loadPiPWidgets(self):
+        return self.saveWidget().loadPiPWidgets()
+
+    """ SAVE """
+    def saveWidget(self):
+        return self._save_widget
+
+    """ SAVE (VIRTUAL) """
+    def saveFilePath(self):
+        return self.saveWidget().saveFilePath()
+
+    def setSaveFilePath(self, file_path):
+        self.saveWidget().setSaveFilePath(file_path)
 
 
 class PiPDisplayFlagsWidget(AbstractButtonInputWidgetContainer):
@@ -949,18 +1084,19 @@ class PiPDisplayFlagsWidget(AbstractButtonInputWidgetContainer):
         local_organizer = self.addButton("Local Organizer", "local")
         local_organizer.setUserFinishedEditingEvent(self.toggleLocalOrganizerWidget)
 
-
-
     def toggleGlobalOrganizerWidget(self, widget, value):
-        print(widget, value)
+        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+        main_widget.toggleGlobalOrganizerVisibility()
 
     def toggleLocalOrganizerWidget(self, widget, value):
-        print(widget, value)
+        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+        main_widget.toggleLocalOrganizerVisibility()
+
 
 """ Create Widgets """
-class PiPModelItem(AbstractDragDropModelItem):
+class PiPLocalOrganizerItem(AbstractDragDropModelItem):
     def __init__(self, parent=None):
-        super(PiPModelItem, self).__init__(parent)
+        super(PiPLocalOrganizerItem, self).__init__(parent)
 
     def widget(self):
         return self._widget
@@ -977,8 +1113,9 @@ class PiPModelItem(AbstractDragDropModelItem):
 
 class PiPLocalOrganizerWidget(AbstractModelViewWidget):
     """
-    This widget is in charge of creating/destroying PiP items, along with
-    holding the order that the items should be displayed in.
+    This widget is in charge of organizing widgets that will be visible in the AbstractPiPWidget
+        Abilities include:
+            Delete | Rename | Reorder
 
     Attributes:
         widget_types (dict): of widget names / constructors
@@ -990,40 +1127,16 @@ class PiPLocalOrganizerWidget(AbstractModelViewWidget):
         Create New Widget -->
         Delete Widget -->
     """
-    def __init__(self, parent=None, widget_types=None):
+    def __init__(self, parent=None):
         super(PiPLocalOrganizerWidget, self).__init__(parent=parent)
-        # setup default attrs
-        self._widget_types = widget_types
 
         # setup model
-        # model = PiPOrganizerModel(self)
-        # self.setModel(model)
-        self.model().setItemType(PiPModelItem)
-
-        # create save widget
-        self._save_widget = PiPOrganizerSaveWidget(self)
-        self.addDelegate([Qt.Key_S], self._save_widget)
-        self._save_widget.show()
+        self.model().setItemType(PiPLocalOrganizerItem)
 
         # install events
         self.setItemDeleteEvent(self.deleteWidget)
         self.setTextChangedEvent(self.editWidget)
         self.setDropEvent(self.itemReordered)
-
-    def proxyModel(self):
-        return self._proxy_model
-
-    def setProxyModel(self, proxy_model):
-        self._proxy_model = proxy_model
-
-    def sourceModel(self):
-        return self._source_model
-
-    def setSourceModel(self, source_model):
-        self._source_model = source_model
-
-    def saveWidget(self):
-        return self._save_widget
 
     """ EVENTS """
     def itemReordered(self, data, items, model, row, parent):
@@ -1088,21 +1201,24 @@ class PiPLocalOrganizerWidget(AbstractModelViewWidget):
             main_widget.createTempWidget()
 
         # delete widget
+        # if item.widget():
         item.widget().setParent(None)
         item.widget().deleteLater()
         # resize
         main_widget.mainWidget().resizeMiniViewer()
 
+        # print("removing widget -->", item.columnData()['name'])
+
     """ EVENTS """
     def showEvent(self, event):
         main_widget = getWidgetAncestor(self, AbstractPiPWidget)
-        main_widget.setIsOrganizerVisible(True)
+        main_widget.setIsLocalOrganizerVisible(True)
         self.setFocus()
         AbstractModelViewWidget.showEvent(self, event)
 
     def hideEvent(self, event):
         main_widget = getWidgetAncestor(self, AbstractPiPWidget)
-        main_widget.setIsOrganizerVisible(False)
+        main_widget.setIsLocalOrganizerVisible(False)
         main_widget.setFocus()
         AbstractModelViewWidget.hideEvent(self, event)
 
@@ -1118,7 +1234,11 @@ class PiPOrganizerSaveWidget(QWidget):
     {PiPName: [
         {"widget name": "constructor code"},
         {"widget name": "constructor code"},
-        {"widget name": "constructor code"},]
+        {"widget name": "constructor code"}],
+    PiPName: [
+        {"widget name": "constructor code"},
+        {"widget name": "constructor code"},
+        {"widget name": "constructor code"}]
     }
     """
     def __init__(self, parent=None):
@@ -1134,10 +1254,27 @@ class PiPOrganizerSaveWidget(QWidget):
         self.layout().addWidget(self._name_widget)
         self.layout().addWidget(self._save_button)
 
+        # setup save file path
         self._file_path = getDefaultSavePath() + '/.PiPWidgets.json'
+
+        # if doesnt exist create empty JSON
+        if not os.path.exists(self.saveFilePath()):
+            # Writing JSON data
+            with open(self.saveFilePath(), 'w') as f:
+                json.dump({}, f)
+
         # dcc name
         # pip name
         self._save_button.setUserClickedEvent(self.savePiPWidget)
+
+    def nameWidget(self):
+        return self._name_widget
+
+    def nameList(self):
+        return self._name_list
+
+    def name(self):
+        return self._name_widget.delegateWidget().text()
 
     def getAllPiPWidgetsNames(self):
         widgets_list = [[name] for name in list(self.loadPiPWidgets().keys())]
@@ -1145,7 +1282,17 @@ class PiPOrganizerSaveWidget(QWidget):
         return widgets_list
 
     def loadPiPWidgets(self):
-        from cgwidgets.utils import getJSONData
+        """
+        Loads all of the PiPWidgets as JSON Data
+
+
+        Returns (dict):
+            {PiPName: [
+                {"widget name": "constructor code"},
+                {"widget name": "constructor code"},
+                {"widget name": "constructor code"},]
+            }
+        """
         return getJSONData(self.saveFilePath())
 
     def savePiPWidget(self, this):
@@ -1166,7 +1313,7 @@ class PiPOrganizerSaveWidget(QWidget):
 
         # create pip save dict
         #pip_save_file = {}
-        from collections import OrderedDict
+
         pip_widgets[name] = OrderedDict()
         for item in main_widget.items():
             item_name = item.columnData()['name']
@@ -1183,6 +1330,9 @@ class PiPOrganizerSaveWidget(QWidget):
         print(pip_widgets)
 
     def saveFilePath(self):
+        """ Returns the current save path for cgwigdets. The default is
+                $HOME/.cgwidgets/.PiPWidgets.json
+        """
         return self._file_path
 
     def setSaveFilePath(self, file_path):
@@ -1211,12 +1361,12 @@ class PiPPanelCreatorWidget(AbstractListInputWidget):
         main_widget = getWidgetAncestor(self, AbstractPiPWidget)
 
         # get constructor
-        loc = {}
-        exec(self.widgetTypes()[value], globals(), loc)
-        constructor = loc['constructor']
-
-        widget_type = constructor(self)
-        main_widget.createNewWidget(widget_type, self.widgetTypes()[value], name=str(value))
+        # loc = {}
+        # exec(self.widgetTypes()[value], globals(), loc)
+        # constructor = loc['constructor']
+        #
+        # widget_type = constructor(self)
+        main_widget.createNewWidget(self.widgetTypes()[value], name=str(value))
         # widget = index.internalPointer().widget()
 
         # reset widget
@@ -1242,7 +1392,7 @@ class PiPPanelCreatorWidget(AbstractListInputWidget):
         AbstractListInputWidget.hideEvent(self, event)
 
     def keyPressEvent(self, event):
-        from cgwidgets.settings import keylist
+
         if event.key() in keylist.ACCEPT_KEYS:
             self.createNewWidget()
         if event.key() == Qt.Key_Escape:
@@ -1260,10 +1410,10 @@ if __name__ == '__main__':
     widget_types = {
         "QLabel": """
 from qtpy.QtWidgets import QLabel
-constructor = QLabel""",
+widget = QLabel(\"TEST\") """,
         "QPushButton":"""
 from qtpy.QtWidgets import QPushButton
-constructor = QPushButton"""
+widget = QPushButton(\"TESTBUTTON\") """
     }
     pip_widget = AbstractPiPWidget(widget_types=widget_types)
 
