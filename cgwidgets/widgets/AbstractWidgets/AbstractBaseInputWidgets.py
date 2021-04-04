@@ -388,6 +388,9 @@ class AbstractLabelWidget(QWidget, iAbstractInputWidget):
         """
         self.textWidget().setStyleSheet("color: rgba{color}".format(color=repr(color)))
 
+    def setWordWrap(self, enabled):
+        self.textWidget().setWordWrap(enabled)
+
     """ IMAGE  """
     def imageWidget(self):
         return self._image_widget
@@ -531,7 +534,7 @@ class AbstractButtonInputWidget(AbstractBooleanInputWidget):
         is_toggleable (bool): determines if this widget can be toggle on/off
 
     """
-    def __init__(self, parent, user_clicked_event=None, title="CLICK ME", flag=None, is_toggleable=False):
+    def __init__(self, parent=None, user_clicked_event=None, title="CLICK ME", flag=None, is_toggleable=False):
         super(AbstractButtonInputWidget, self).__init__(parent)
 
         # setup style
@@ -576,6 +579,10 @@ class AbstractButtonInputWidget(AbstractBooleanInputWidget):
         """ TODO this can probably be updated to use the AbstractBooleanInputWidget default
             mouse release event
         """
+        # run user triggered event
+        if self.isToggleable():
+            self.is_selected = not self.is_selected
+
         # update selection
         if hasattr(self.parent(), "updateButtonSelection"):
             self.parent().updateButtonSelection(self)
@@ -586,19 +593,17 @@ class AbstractButtonInputWidget(AbstractBooleanInputWidget):
         updateStyleSheet(self)
 
         # user events
+
+        # user press event
         self.userClickedEvent()
 
-        # run user triggered event
+        # editing event
         try:
             self.userFinishedEditingEvent(self, self.is_selected)
         except AttributeError:
             pass
 
-        #print(self.parent().flags())
-        #return AbstractBooleanInputWidget.mouseReleaseEvent(self, event)
-    #
-    # def leaveEvent(self, event):
-    #     self.setProperty("input_hover", True)
+        # return AbstractBooleanInputWidget.mouseReleaseEvent(self, event)
 
 
 if __name__ == "__main__":
@@ -611,29 +616,12 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
 
 
-    class CustomDynamicWidgetExample(AbstractOverlayInputWidget):
-        """
-        Custom dynamic widget example.  This is a base example of the OverlayInputWidget
-        as well.
-        """
-
-        def __init__(self, parent=None):
-            super(CustomDynamicWidgetExample, self).__init__(parent, title="Hello")
-
     # Construct
-    delegate_widget = AbstractBooleanInputWidget(text="yolo")
-    overlay_widget = AbstractOverlayInputWidget(
-        title="title",
-        display_mode=AbstractOverlayInputWidget.RELEASE,
-        delegate_widget=delegate_widget,
-        image="/home/brian/Pictures/test.png")
+    delegate_widget = AbstractButtonInputWidget(title="yolo", is_toggleable=True)
 
-    # main_widget = CustomDynamicWidgetExample()
-    #overlay_widget.setDisplayMode(AbstractOverlayInputWidget.DISABLED)
-    #overlay_widget.setDisplayMode(AbstractOverlayInputWidget.ENTER)
     main_widget = QWidget()
     main_layout = QVBoxLayout(main_widget)
-    main_layout.addWidget(overlay_widget)
+    main_layout.addWidget(delegate_widget)
     main_layout.addWidget(QLabel("klajdflasjkjfklasfjsl"))
 
     main_widget.move(QCursor.pos())

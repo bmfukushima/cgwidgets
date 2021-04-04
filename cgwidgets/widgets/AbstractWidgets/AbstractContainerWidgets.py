@@ -717,7 +717,9 @@ if __name__ == "__main__":
     from qtpy.QtGui import QCursor
     app = QApplication(sys.argv)
     widget = AbstractButtonInputWidgetContainer()
-    widget.addButton('test', None)
+    for x in range(0, 5):
+        widget.addButton(str(x), str(x))
+    widget.setIsToggleable(False)
     # for x in range(0, 5):
     #     temp = QLabel(str(x))
     #     widget.addInputWidget(temp)

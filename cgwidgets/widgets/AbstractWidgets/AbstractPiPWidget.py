@@ -55,14 +55,18 @@ class AbstractPiPWidget(QSplitter):
 
     Hierarchy:
         |- PiPMainWidget --> QWidget
-        |    |- QHBoxLayout
+        |    |- QVBoxLayout
+        |    |    |- PiPDisplayFlagsWidget --> AbstractButtonInputWidgetContainer
         |    |    |- PiPMainViewer --> QWidget
+        |    |    |- PiPPanelCreatorWidget --> AbstractListInputWidget
         |    |- MiniViewer (QWidget)
         |        |- QBoxLayout
         |            |-* PiPMiniViewerWidget --> QWidget
         |                    |- QVBoxLayout
         |                    |- AbstractLabelledInputWidget
-        |- OrganizerWidget --> ModelViewWidget
+        |- LocalOrganizerWidget --> AbstractModelViewWidget
+        |- CreatorWidget (Extended...)
+        |- GlobalOrganizerWidget --> AbstractModelViewWidget
 
     Signals:
         Swap (Enter):
@@ -219,12 +223,21 @@ class AbstractPiPWidget(QSplitter):
         from qtpy.QtWidgets import QLabel
         constructor = QLabel """
         text = """
-        (A): Open widget organizer, to create new widgets, save widgets, etc """
-        index = self.createNewWidget(AbstractLabelWidget(self, text), constructor_code, "")
+Press (A)
+Open widget organizer, to create new widgets, save widgets, etc """
+        # create widget
+        text_widget = AbstractLabelWidget(self, text)
+        text_widget.setWordWrap(True)
+        index = self.createNewWidget(text_widget, constructor_code, "")
+
+        # setup item
         item = index.internalPointer()
         item.setIsSelectable(False)
         item.setIsDragEnabled(False)
         item.setIsEnabled(False)
+
+        # setup widget
+        item.widget().main_widget.viewWidget().setDisplayMode(AbstractOverlayInputWidget.DISABLED)
 
     def removeTempWidget(self):
         """
@@ -382,6 +395,8 @@ class PiPMainWidget(QWidget):
         self.panel_creator_widget = PiPPanelCreatorWidget(self, widget_types=widget_types)
         self.panel_creator_widget.hide()
 
+        self._display_flags_widget = PiPDisplayFlagsWidget(self)
+        # self._display_flags_widget.hide()
         # create layout
         """
         Not using a stacked layout as the enter/leave events get borked
@@ -392,6 +407,7 @@ class PiPMainWidget(QWidget):
         self.layout().setSpacing(0)
 
         #self.layout().addWidget(self.mini_viewer)
+        self.layout().addWidget(self._display_flags_widget)
         self.layout().addWidget(self.main_viewer)
         self.layout().addWidget(self.panel_creator_widget)
 
@@ -916,15 +932,30 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
         super(PiPGlobalOrganizerWidget, self).__init__(parent=parent)
 
 
-class PiPDisplayWidgets(AbstractButtonInputWidgetContainer):
+class PiPDisplayFlagsWidget(AbstractButtonInputWidgetContainer):
     """
     This widget will display all of the optional tabs that the user can display.
         PiPGlobalOrganizerWidget | PiPLocalOrganizerWidget | Settings
 
     """
     def __init__(self, parent=None, orientation=Qt.Horizontal):
-        super(AbstractButtonInputWidgetContainer, self).__init__(parent, orientation)
+        super(PiPDisplayFlagsWidget, self).__init__(parent, orientation)
+        #
+        self.setIsMultiSelect(True)
 
+        global_organizer = self.addButton("Global Organizer", "global")
+        global_organizer.setUserFinishedEditingEvent(self.toggleGlobalOrganizerWidget)
+
+        local_organizer = self.addButton("Local Organizer", "local")
+        local_organizer.setUserFinishedEditingEvent(self.toggleLocalOrganizerWidget)
+
+
+
+    def toggleGlobalOrganizerWidget(self, widget, value):
+        print(widget, value)
+
+    def toggleLocalOrganizerWidget(self, widget, value):
+        print(widget, value)
 
 """ Create Widgets """
 class PiPModelItem(AbstractDragDropModelItem):
