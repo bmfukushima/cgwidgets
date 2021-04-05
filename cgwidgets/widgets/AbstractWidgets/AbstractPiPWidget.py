@@ -1,7 +1,6 @@
 """
 Todo:
-    * PiPGlobalOrganizerWidget --> loadPiPWidgetFromSelection --> Resize Mini Viewer
-        When only 1, its not loading correctly... or atleast resizing =|
+    * Minimum sizing/offsets?
     * Overall cleanup / organization
         mainWidget --> AbstractPiPWidget?
     * Expose settings to user?
@@ -147,6 +146,11 @@ class AbstractPiPWidget(AbstractShojiLayout):
         # add widgets
         self.addWidget(self._main_widget)
         self.addWidget(self._local_organizer_widget)
+
+        # Disable Shoji full screen stuff...
+        self.setChildSoloable(False, self.mainWidget())
+        self.setChildSoloable(False, self.localOrganizerWidget())
+        self.setChildSoloable(False, self.globalOrganizerWidget())
 
         # create temp widget
         self.createTempWidget()
@@ -444,6 +448,7 @@ class PiPMainWidget(QWidget):
         self._previous_widget = None
         self._pip_scale = (0.35, 0.35)
         self._enlarged_scale = 0.55
+        self._mini_viewer_min_size = (100, 100)
         self._direction = attrs.SOUTH
         self._swap_key = 96
 
@@ -455,6 +460,7 @@ class PiPMainWidget(QWidget):
         self.panel_creator_widget.hide()
 
         self._display_flags_widget = PiPDisplayFlagsWidget(self)
+        self._display_flags_widget.hide()
         # self._display_flags_widget.hide()
         # create layout
         """
@@ -503,73 +509,121 @@ class PiPMainWidget(QWidget):
     def setEnlargedScale(self, _enlarged_scale):
         self._enlarged_scale = _enlarged_scale
 
+    def miniViewerMinSize(self):
+        return self._mini_viewer_min_size
+
+    def setMiniViewerMinimumSize(self, size):
+        """
+        Sets the minimum size the mini viewer can go to
+
+        Args:
+            size (tuple): (x, y)
+
+        """
+        self._mini_viewer_min_size = size
+        self.mini_viewer.setMinimumSize(size)
+
     def resizeMiniViewer(self):
         """
         Main function for resizing the mini viewer
-        """
-        # print("=========================== resize")
-        w = self.width()
-        h = self.height()
-        padding = 0
 
+        The core of this function is to set the
+            xpos | ypos | width | height
+        of the mini viewer, based off of the number of widgets, and its current location on screen.
+        """
+
+        # get attrs
         main_widget = getWidgetAncestor(self, AbstractPiPWidget)
         num_widgets = main_widget.numWidgets()
-        if num_widgets < 2 :
-            self.mini_viewer.hide()
-            return
-        else:
-            self.mini_viewer.show()
 
+        # preflight
+        if num_widgets < 2: return
+
+        # get xpos, ypos, width, height
+
+        # special case for only one widget
         if num_widgets == 2:
-            height = h * self.pipScale()[1] + padding
-            width = w * self.pipScale()[0] + padding
+            # get height / width
+            width = self.width() * self.pipScale()[0]
+            height = self.height() * self.pipScale()[1]
+
+            # check for min size
+            if width < self.miniViewerMinSize()[0]:
+                width = self.miniViewerMinSize()[0]
+            if height < self.miniViewerMinSize()[1]:
+                height = self.miniViewerMinSize()[1]
+
             if self.direction() in [attrs.EAST, attrs.WEST]:
+                # NORTH EAST
                 if self.direction() == attrs.EAST:
                     ypos = 0
-                    xpos = w * (1 - self.pipScale()[0]) - padding
+                    xpos = self.width() * (1 - self.pipScale()[0])
+                    # check minimums
+                    if (self.width() - xpos) < self.miniViewerMinSize()[0]:
+                        xpos = self.width() - self.miniViewerMinSize()[0]
+
+                # SOUTH WEST
                 if self.direction() == attrs.WEST:
-                    ypos = h * (1 - self.pipScale()[1])- padding
+                    ypos = self.height() * (1 - self.pipScale()[1])
                     xpos = 0
+                    if (self.height() - ypos) < self.miniViewerMinSize()[1]:
+                        ypos = self.height() - self.miniViewerMinSize()[1]
 
             if self.direction() in [attrs.NORTH, attrs.SOUTH]:
+                # SOUTH EAST
                 if self.direction() == attrs.SOUTH:
-                    xpos = w * (1 - self.pipScale()[0]) - padding
-                    ypos = h * (1 - self.pipScale()[1]) - padding
+                    xpos = self.width() * (1 - self.pipScale()[0])
+                    ypos = self.height() * (1 - self.pipScale()[1])
+
+                    # check minimums
+                    if (self.width() - xpos) < self.miniViewerMinSize()[0]:
+                        xpos = self.width() - self.miniViewerMinSize()[0]
+
+                    if (self.height() - ypos) < self.miniViewerMinSize()[1]:
+                        ypos = self.height() - self.miniViewerMinSize()[1]
+
+                # NORTH WEST
                 if self.direction() == attrs.NORTH:
                     xpos = 0
                     ypos = 0
 
+        # more than one widget
         if 2 < num_widgets:
             pip_offset = 1 - self.pipScale()[0]
-            # set position
+
+            # get xpos/ypos/height/width
             if self.direction() in [attrs.EAST, attrs.WEST]:
-                height = h
-                width = w * self.pipScale()[0] + padding
+                height = self.height()
+                width = self.width() * self.pipScale()[0]
                 if self.direction() == attrs.EAST:
                     ypos = 0
-                    xpos = w * pip_offset
+                    xpos = self.width() * pip_offset
+                    # check minimum size...
+                    if (self.width() - xpos) < self.miniViewerMinSize()[0]:
+                        xpos = self.width() - self.miniViewerMinSize()[0]
+                        width = self.miniViewerMinSize()[0]
+
                 if self.direction() == attrs.WEST:
                     ypos = 0
                     xpos = 0
 
             if self.direction() in [attrs.NORTH, attrs.SOUTH]:
-                height = h * self.pipScale()[1] + padding
-                width = w
+                height = self.height() * self.pipScale()[1]
+                width = self.width()
                 if self.direction() == attrs.NORTH:
                     xpos = 0
                     ypos = 0
                 if self.direction() == attrs.SOUTH:
                     xpos = 0
-                    ypos = h * pip_offset
+                    ypos = self.height() * pip_offset
+                    # check minimum size...
+                    if (self.height() - ypos) < self.miniViewerMinSize()[1]:
+                        ypos = self.height() - self.miniViewerMinSize()[1]
+                        height = self.miniViewerMinSize()[1]
 
         # move/resize mini viewer
-        # print(int(xpos), int(ypos), int(width), int(height))
-        # need to accomodate border padding / contents margins?
         self.mini_viewer.move(int(xpos), int(ypos))
-        #self.mini_viewer.setFixedSize(int(width) + 50, int(height))
         self.mini_viewer.resize(int(width), int(height))
-        self.mini_viewer.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
-        #self.mini_viewer.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
     def areWidgetNamesShown(self):
         return self._are_widget_names_shown
@@ -713,13 +767,21 @@ class PiPMainViewer(QWidget):
 
 
 class PiPMiniViewer(QWidget):
+    """
+    Widget that contains all of the PiPWidgets.
+
+    This widget is an overlay of the MainWidget, and sits at a parallel hierarchy to the PiPMainViewer
+
+    Attributes:
+        is_enlarged (bool): if this widget currently has a widget enlarged by a user hover entering over it.
+    """
     def __init__(self, parent=None):
         super(PiPMiniViewer, self).__init__(parent)
         self.setStyleSheet("background-color: rgba(0,255,0,255)")
 
         #QBoxLayout(QBoxLayout.LeftToRight, self)
         QVBoxLayout(self)
-        # self.layout().setContentsMargins(0, 0, 0, 0)
+        self.layout().setContentsMargins(10, 10, 10, 10)
 
         # self.setMinimumSize(100, 100)
         self._widgets = []
@@ -728,11 +790,104 @@ class PiPMiniViewer(QWidget):
         self._is_enlarged = False
         self._temp = False
 
+        self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+
     def isEnlarged(self):
         return self._is_enlarged
 
     def setIsEnlarged(self, enabled):
         self._is_enlarged = enabled
+
+    def enlargeWidget(self, widget):
+        main_widget = getWidgetAncestor(self, PiPMainWidget)
+        self.setIsEnlarged(True)
+        # freeze
+        self._is_frozen = True
+
+        # set/get attrs
+        scale = main_widget.enlargedScale()
+        negative_space = 1 - scale
+        half_neg_space = negative_space * 0.5
+        num_widgets = main_widget.parent().numWidgets()
+
+        # reparent widget
+        widget.setParent(main_widget)
+
+        # get widget position / size
+        if main_widget.direction() in [attrs.EAST, attrs.WEST]:
+            offset = int(self.width() * 0.75)
+            ypos = int(main_widget.height() * half_neg_space)
+            widget.resize(
+                int(main_widget.width() * (scale + half_neg_space)) - offset,
+                int(main_widget.height() * scale))
+
+            if main_widget.direction() == attrs.EAST:
+                xpos = int(main_widget.width() * (negative_space - half_neg_space))
+
+            if main_widget.direction() == attrs.WEST:
+                xpos = 0 + offset
+
+        if main_widget.direction() in [attrs.NORTH, attrs.SOUTH]:
+            offset = int(self.height() * 0.75)
+            xpos = int(main_widget.width() * half_neg_space)
+            widget.resize(
+                int(main_widget.width() * scale),
+                int(main_widget.height() * (scale + half_neg_space)) - offset)
+
+            if main_widget.direction() == attrs.NORTH:
+                ypos = 0 + offset
+            if main_widget.direction() == attrs.SOUTH:
+                ypos = int(main_widget.height() * (negative_space - half_neg_space))
+
+        # check minimums??
+
+        # show widget
+        widget.show()
+
+        # move
+        widget.move(xpos, ypos)
+
+        # move cursor
+        if main_widget.direction() in [attrs.NORTH, attrs.WEST]:
+            if 2 < num_widgets:
+                QCursor.setPos(self.mapToGlobal(
+                    QPoint(
+                        xpos + int(main_widget.width() * scale * 0.5),
+                        ypos + int(main_widget.height() * scale * 0.5))))
+
+            if num_widgets == 2 and main_widget.direction() == attrs.WEST:
+                QCursor.setPos(self.mapToGlobal(
+                    QPoint(
+                        xpos + int(main_widget.width() * scale * 0.5),
+                        ypos - int(main_widget.height() * scale * 0.5))))
+            if num_widgets == 2 and main_widget.direction() == attrs.NORTH:
+                QCursor.setPos(self.mapToGlobal(
+                    QPoint(
+                        xpos + int(main_widget.width() * scale * 0.5),
+                        ypos + int(main_widget.height() * scale * 0.5))))
+
+        if main_widget.direction() == attrs.SOUTH:
+            # if only one mini viewer widget
+            if num_widgets == 2:
+                QCursor.setPos(self.mapToGlobal(
+                    QPoint(
+                        xpos - int(main_widget.width() * scale * 0.5),
+                        ypos - int(main_widget.height() * scale * 0.5))))
+            # if more than one mini viewer widget
+            if 2 < num_widgets:
+                QCursor.setPos(self.mapToGlobal(
+                    QPoint(
+                        xpos + int(main_widget.width() * scale * 0.5),
+                        ypos - int(main_widget.height() * scale * 0.5))))
+
+        if main_widget.direction() == attrs.EAST:
+            QCursor.setPos(self.mapToGlobal(
+                QPoint(
+                    xpos - int(main_widget.width() * scale * 0.5),
+                    ypos + int(main_widget.height() * scale * 0.5))))
+
+        # unfreeze
+        self._is_frozen = False
 
     """ EVENTS """
     def eventFilter(self, obj, event):
@@ -763,93 +918,7 @@ class PiPMiniViewer(QWidget):
 
             # enlarge widget
             if not self._is_frozen:
-                main_widget = getWidgetAncestor(self, PiPMainWidget)
-                self.setIsEnlarged(True)
-                # freeze
-                self._is_frozen = True
-
-                # set/get attrs
-                scale = main_widget.enlargedScale()
-                negative_space = 1 - scale
-                half_neg_space = negative_space * 0.5
-                num_widgets = main_widget.parent().numWidgets()
-
-                # reparent widget
-                obj.setParent(main_widget)
-
-                # get widget position / size
-                if main_widget.direction() in [attrs.EAST, attrs.WEST]:
-                    offset = int(self.width() * 0.75)
-                    ypos = int(main_widget.height() * half_neg_space)
-                    obj.resize(
-                        int(main_widget.width() * (scale + half_neg_space)) - offset,
-                        int(main_widget.height() * scale))
-
-                    if main_widget.direction() == attrs.EAST:
-                        xpos = int(main_widget.width() * (negative_space - half_neg_space))
-                    if main_widget.direction() == attrs.WEST:
-                        xpos = 0 + offset
-
-                if main_widget.direction() in [attrs.NORTH, attrs.SOUTH]:
-                    offset = int(self.height() * 0.75)
-                    xpos = int(main_widget.width() * half_neg_space)
-                    obj.resize(
-                        int(main_widget.width() * scale),
-                        int(main_widget.height() * (scale + half_neg_space)) - offset)
-
-                    if main_widget.direction() == attrs.NORTH:
-                        ypos = 0 + offset
-                    if main_widget.direction() == attrs.SOUTH:
-                        ypos = int(main_widget.height() * (negative_space - half_neg_space))
-
-                # show widget
-                obj.show()
-
-                # move
-                obj.move(xpos, ypos)
-
-                # move cursor
-                if main_widget.direction() in [attrs.NORTH, attrs.WEST]:
-                    if 2 < num_widgets:
-                        QCursor.setPos(self.mapToGlobal(
-                            QPoint(
-                                xpos + int(main_widget.width() * scale * 0.5),
-                                ypos + int(main_widget.height() * scale * 0.5))))
-
-                    if num_widgets == 2 and main_widget.direction() == attrs.WEST:
-                        QCursor.setPos(self.mapToGlobal(
-                            QPoint(
-                                xpos + int(main_widget.width() * scale * 0.5),
-                                ypos - int(main_widget.height() * scale * 0.5))))
-                    if num_widgets == 2 and main_widget.direction() == attrs.NORTH:
-                        QCursor.setPos(self.mapToGlobal(
-                            QPoint(
-                                xpos + int(main_widget.width() * scale * 0.5),
-                                ypos + int(main_widget.height() * scale * 0.5))))
-
-                if main_widget.direction() == attrs.SOUTH:
-                    # if only one mini viewer widget
-                    if num_widgets == 2:
-                        QCursor.setPos(self.mapToGlobal(
-                            QPoint(
-                                xpos - int(main_widget.width() * scale * 0.5),
-                                ypos - int(main_widget.height() * scale * 0.5))))
-                    # if more than one mini viewer widget
-                    if 2 < num_widgets:
-                        QCursor.setPos(self.mapToGlobal(
-                            QPoint(
-                                xpos + int(main_widget.width() * scale * 0.5),
-                                ypos - int(main_widget.height() * scale * 0.5))))
-
-                if main_widget.direction() == attrs.EAST:
-                    QCursor.setPos(self.mapToGlobal(
-                        QPoint(
-                            xpos - int(main_widget.width() * scale * 0.5),
-                            ypos + int(main_widget.height() * scale * 0.5))))
-
-                # unfreeze
-                self._is_frozen = False
-
+                self.enlargeWidget(obj)
                 # # drag enter
                 if event.type() == QEvent.DragEnter:
                     event.accept()
@@ -934,7 +1003,7 @@ class PiPMiniViewerWidget(QWidget):
         self.main_widget.viewWidget().delegateWidget().setUserFinishedEditingEvent(self.updateItemDisplayName)
 
         self.layout().addWidget(self.main_widget)
-        # self.layout().setContentsMargins(0, 0, 0, 0)
+        self.layout().setContentsMargins(0, 0, 0, 0)
         base_style_sheet = """
         {type}{{
             background-color: rgba{rgba_background};
@@ -949,6 +1018,8 @@ class PiPMiniViewerWidget(QWidget):
         self.main_widget.setBaseStyleSheet(base_style_sheet)
 
         self.setAcceptDrops(True)
+
+        #self.setMinimumSize(80, 80)
         # installHoverDisplaySS(self, "TEST")
 
     def updateItemDisplayName(self, widget, value):
@@ -975,7 +1046,33 @@ class PiPMiniViewerWidget(QWidget):
         self._index = index
 
 
-""" PLACE HOLDER"""
+class PiPDisplayFlagsWidget(AbstractButtonInputWidgetContainer):
+    """
+    This widget will display all of the optional tabs that the user can display.
+        PiPGlobalOrganizerWidget | PiPLocalOrganizerWidget | Settings
+
+    """
+    def __init__(self, parent=None, orientation=Qt.Horizontal):
+        super(PiPDisplayFlagsWidget, self).__init__(parent, orientation)
+        #
+        self.setIsMultiSelect(True)
+
+        global_organizer = self.addButton("Global Organizer", "global")
+        global_organizer.setUserFinishedEditingEvent(self.toggleGlobalOrganizerWidget)
+
+        local_organizer = self.addButton("Local Organizer", "local")
+        local_organizer.setUserFinishedEditingEvent(self.toggleLocalOrganizerWidget)
+
+    def toggleGlobalOrganizerWidget(self, widget, value):
+        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+        main_widget.toggleGlobalOrganizerVisibility()
+
+    def toggleLocalOrganizerWidget(self, widget, value):
+        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+        main_widget.toggleLocalOrganizerVisibility()
+
+
+""" ORGANIZER (GLOBAL) """
 class PiPGlobalOrganizerItem(AbstractDragDropModelItem):
     """
 
@@ -1073,33 +1170,7 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
         self.saveWidget().setSaveFilePath(file_path)
 
 
-class PiPDisplayFlagsWidget(AbstractButtonInputWidgetContainer):
-    """
-    This widget will display all of the optional tabs that the user can display.
-        PiPGlobalOrganizerWidget | PiPLocalOrganizerWidget | Settings
-
-    """
-    def __init__(self, parent=None, orientation=Qt.Horizontal):
-        super(PiPDisplayFlagsWidget, self).__init__(parent, orientation)
-        #
-        self.setIsMultiSelect(True)
-
-        global_organizer = self.addButton("Global Organizer", "global")
-        global_organizer.setUserFinishedEditingEvent(self.toggleGlobalOrganizerWidget)
-
-        local_organizer = self.addButton("Local Organizer", "local")
-        local_organizer.setUserFinishedEditingEvent(self.toggleLocalOrganizerWidget)
-
-    def toggleGlobalOrganizerWidget(self, widget, value):
-        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
-        main_widget.toggleGlobalOrganizerVisibility()
-
-    def toggleLocalOrganizerWidget(self, widget, value):
-        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
-        main_widget.toggleLocalOrganizerVisibility()
-
-
-""" Create Widgets """
+""" ORGANIZER (LOCAL) """
 class PiPLocalOrganizerItem(AbstractDragDropModelItem):
     def __init__(self, parent=None):
         super(PiPLocalOrganizerItem, self).__init__(parent)
@@ -1431,9 +1502,9 @@ widget = QPushButton(\"TESTBUTTON\") """
 # from qtpy.QtWidgets import QLabel
 # constructor = QLabel""", name=str(x))
 
-    pip_widget.setPiPScale((0.2, 0.2))
+    pip_widget.setPiPScale((0.5, 0.5))
     pip_widget.setEnlargedScale(0.75)
-    pip_widget.setDirection(attrs.SOUTH)
+    pip_widget.setDirection(attrs.EAST)
     #pip_widget.showWidgetDisplayNames(False)
 
     #
