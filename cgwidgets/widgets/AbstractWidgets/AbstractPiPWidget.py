@@ -813,78 +813,74 @@ class PiPMiniViewer(QWidget):
         # reparent widget
         widget.setParent(main_widget)
 
-        # get widget position / size
-        if main_widget.direction() in [attrs.EAST, attrs.WEST]:
-            offset = int(self.width() * 0.75)
-            ypos = int(main_widget.height() * half_neg_space)
-            widget.resize(
-                int(main_widget.width() * (scale + half_neg_space)) - offset,
-                int(main_widget.height() * scale))
+        # special case for only one mini viewer widget
+        if num_widgets == 2:
+            xoffset = int(main_widget.width() * negative_space)
+            yoffset = int(main_widget.width() * negative_space)
+            width = int(main_widget.width() - xoffset)
+            height = int(main_widget.height() - yoffset)
 
-            if main_widget.direction() == attrs.EAST:
-                xpos = int(main_widget.width() * (negative_space - half_neg_space))
-
-            if main_widget.direction() == attrs.WEST:
-                xpos = 0 + offset
-
-        if main_widget.direction() in [attrs.NORTH, attrs.SOUTH]:
-            offset = int(self.height() * 0.75)
-            xpos = int(main_widget.width() * half_neg_space)
-            widget.resize(
-                int(main_widget.width() * scale),
-                int(main_widget.height() * (scale + half_neg_space)) - offset)
-
+            # NORTH WEST
             if main_widget.direction() == attrs.NORTH:
-                ypos = 0 + offset
+                xpos = 0
+                ypos = 0
+            # SOUTH EAST
             if main_widget.direction() == attrs.SOUTH:
-                ypos = int(main_widget.height() * (negative_space - half_neg_space))
+                xpos = xoffset
+                ypos = yoffset
+            # NORTH EAST
+            if main_widget.direction() == attrs.EAST:
+                xpos = xoffset
+                ypos = 0
+            # SOUTH WEST
+            if main_widget.direction() == attrs.WEST:
+                xpos = 0
+                ypos = yoffset
 
-        # check minimums??
+        # if there are 2 or more mini viewer widgets
+        if 2 < num_widgets:
 
-        # show widget
+            # get widget position / size
+            if main_widget.direction() in [attrs.EAST, attrs.WEST]:
+                xoffset = int(main_widget.width() * negative_space)
+                yoffset = int(main_widget.width() * negative_space)
+
+                height = int(main_widget.height() - (yoffset * 2))
+                ypos = int(yoffset)
+
+                if main_widget.direction() == attrs.EAST:
+                    width = int(main_widget.width() - xoffset - self.width() + self.layout().contentsMargins().right())
+                    xpos = int(xoffset)
+
+                if main_widget.direction() == attrs.WEST:
+                    width = int(main_widget.width() - xoffset - self.width())
+                    xpos = self.width() - self.layout().contentsMargins().left()
+
+            if main_widget.direction() in [attrs.NORTH, attrs.SOUTH]:
+                offset = int(self.height() * 0.75)
+                xpos = int(main_widget.width() * half_neg_space)
+                width = int(main_widget.width() * scale)
+                height = int(main_widget.height() * (scale + half_neg_space) - offset)
+
+                if main_widget.direction() == attrs.NORTH:
+                    ypos = 0 + offset
+                if main_widget.direction() == attrs.SOUTH:
+                    ypos = int(main_widget.height() * (negative_space - half_neg_space))
+
+        # show enlarged widget
         widget.show()
 
-        # move
+        # move / resize enlarged widget
+        widget.resize(width, height)
         widget.move(xpos, ypos)
 
-        # move cursor
-        if main_widget.direction() in [attrs.NORTH, attrs.WEST]:
-            if 2 < num_widgets:
-                QCursor.setPos(self.mapToGlobal(
-                    QPoint(
-                        xpos + int(main_widget.width() * scale * 0.5),
-                        ypos + int(main_widget.height() * scale * 0.5))))
-
-            if num_widgets == 2 and main_widget.direction() == attrs.WEST:
-                QCursor.setPos(self.mapToGlobal(
-                    QPoint(
-                        xpos + int(main_widget.width() * scale * 0.5),
-                        ypos - int(main_widget.height() * scale * 0.5))))
-            if num_widgets == 2 and main_widget.direction() == attrs.NORTH:
-                QCursor.setPos(self.mapToGlobal(
-                    QPoint(
-                        xpos + int(main_widget.width() * scale * 0.5),
-                        ypos + int(main_widget.height() * scale * 0.5))))
-
-        if main_widget.direction() == attrs.SOUTH:
-            # if only one mini viewer widget
-            if num_widgets == 2:
-                QCursor.setPos(self.mapToGlobal(
-                    QPoint(
-                        xpos - int(main_widget.width() * scale * 0.5),
-                        ypos - int(main_widget.height() * scale * 0.5))))
-            # if more than one mini viewer widget
-            if 2 < num_widgets:
-                QCursor.setPos(self.mapToGlobal(
-                    QPoint(
-                        xpos + int(main_widget.width() * scale * 0.5),
-                        ypos - int(main_widget.height() * scale * 0.5))))
-
-        if main_widget.direction() == attrs.EAST:
-            QCursor.setPos(self.mapToGlobal(
-                QPoint(
-                    xpos - int(main_widget.width() * scale * 0.5),
-                    ypos + int(main_widget.height() * scale * 0.5))))
+        # move cursor to center of enlarged widget
+        xcursor = xpos + int(width * 0.5)
+        ycursor = ypos + int(height * 0.5)
+        QCursor.setPos(main_widget.mapToGlobal(
+            QPoint(
+                xcursor,
+                ycursor)))
 
         # unfreeze
         self._is_frozen = False
@@ -1504,7 +1500,7 @@ widget = QPushButton(\"TESTBUTTON\") """
 
     pip_widget.setPiPScale((0.5, 0.5))
     pip_widget.setEnlargedScale(0.75)
-    pip_widget.setDirection(attrs.EAST)
+    pip_widget.setDirection(attrs.WEST)
     #pip_widget.showWidgetDisplayNames(False)
 
     #
