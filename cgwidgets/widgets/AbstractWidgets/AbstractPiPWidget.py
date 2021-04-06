@@ -1062,6 +1062,7 @@ class PiPMiniViewerWidget(QWidget):
         self._index = index
 
 
+""" DISPLAY WIDGETS """
 class PiPDisplayFlagsWidget(AbstractButtonInputWidgetContainer):
     """
     This widget will display all of the optional tabs that the user can display.
@@ -1094,6 +1095,10 @@ class SettingsWidget(AbstractFrameInputWidgetContainer):
     The user settings for the PiP Widget.
 
     This will be stored during the Save operation on the master PiPWidget file.
+
+    Attributes:
+        widgets (dict): a dictionary of all of the GUI widgets
+            {"widget name": widget}
     """
     DEFAULT_SETTINGS = {
         "PiP Scale": {
@@ -1119,9 +1124,6 @@ class SettingsWidget(AbstractFrameInputWidgetContainer):
             "code": """
 main_widget.setDirection(value)
 main_widget.mainWidget().resizeMiniViewer()"""}
-        # self._mini_viewer_min_size = (100, 100)
-        # self._swap_key = 96
-
     }
 
     def __init__(self, parent=None):
@@ -1134,8 +1136,13 @@ main_widget.mainWidget().resizeMiniViewer()"""}
         self._settings = SettingsWidget.DEFAULT_SETTINGS
 
         # create all settings widgets
+        self._widgets = {}
         for name, setting in self.settings().items():
-            self.createSettingWidget(name, setting)
+            input_widget = self.createSettingWidget(name, setting)
+            self.widgets()[name] = input_widget
+
+    def widgets(self):
+        return self._widgets
 
     def createSettingWidget(self, name, setting):
         """
@@ -1169,6 +1176,8 @@ main_widget.mainWidget().resizeMiniViewer()"""}
         # add entry into this widget
         self.addInputWidget(input_widget, finished_editing_function=self.userUpdate)
 
+        return input_widget
+
     def userUpdate(self, widget, value):
         """
         When the user updates a setting, this function will send the signal and call the setting setter.
@@ -1194,7 +1203,8 @@ main_widget.mainWidget().resizeMiniViewer()"""}
 
         """
         # get attrs
-        code = self.settings()[name]['code']
+        setting = self.settings()[name]
+        code = setting['code']
         main_widget = getWidgetAncestor(self, AbstractPiPWidget)
 
         # prepare local scope
@@ -1211,11 +1221,29 @@ main_widget.mainWidget().resizeMiniViewer()"""}
         # run update
         exec(code, globals(), loc)
 
+        # update local settings dictionary
+        self.settings()[name]["value"] = value
+
     def getSetting(self, name):
         """
         returns the value of one setting
         """
         pass
+
+    def loadSettings(self, settings):
+        """
+        Loads the settings from a previously stored dictionary
+
+        Args:
+            settings (dict): from self.settings()
+        """
+        # set settings
+        for name, value in settings.items():
+            # update settings
+            self.setSetting(name, value)
+
+            # update display settings
+            self.widgets()[name].delegateWidget().setText(str(value))
 
     def settings(self):
         """
@@ -1224,6 +1252,7 @@ main_widget.mainWidget().resizeMiniViewer()"""}
 
         """
         return self._settings
+
 
 """ ORGANIZER (GLOBAL) """
 class PiPGlobalOrganizerItem(AbstractDragDropModelItem):
@@ -1239,6 +1268,11 @@ class PiPGlobalOrganizerItem(AbstractDragDropModelItem):
     def __init__(self, parent=None):
         super(PiPGlobalOrganizerItem, self).__init__(parent=parent)
 
+    def settings(self):
+        return self._settings
+
+    def setSettings(self, _settings):
+        self._settings = _settings
 
     def widgetsList(self):
         return self._widgets
@@ -1276,10 +1310,11 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
 
     def populate(self):
         pip_widgets = self.loadPiPWidgets()
-        for widget_name in pip_widgets.keys():
+        for widget_name in sorted(pip_widgets.keys()):
             index = self.model().insertNewIndex(0, name=widget_name)
             item = index.internalPointer()
-            item.setWidgetsList(pip_widgets[widget_name])
+            item.setWidgetsList(pip_widgets[widget_name]["widgets"])
+            item.setSettings(pip_widgets[widget_name]["settings"])
 
     def loadPiPWidgetFromSelection(self, item, enabled):
         """
@@ -1290,7 +1325,6 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
             enabled (bool):
         """
         if enabled:
-            pip_name = item.columnData()['name']
             widgets = item.widgetsList()
 
             main_widget = getWidgetAncestor(self, AbstractPiPWidget)
@@ -1299,11 +1333,15 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
             main_widget.removeAllWidgets()
 
             # populate pip view
+            # load widgets
             for widget_name, constructor_code in widgets.items():
                 main_widget.createNewWidget(constructor_code, name=widget_name)
 
-            # todo resize not working when single widget...
-            # main_widget.mainWidget().resizeMiniViewer()
+            # load settings
+            main_widget.settingsWidget().loadSettings(item.settings())
+
+            # reset previous widget
+            main_widget.mainWidget().setPreviousWidget(None)
 
     def getAllPiPWidgetsNames(self):
         return self.saveWidget().getAllPiPWidgetsNames()
@@ -1461,10 +1499,11 @@ class PiPLocalOrganizerWidget(AbstractModelViewWidget):
 class PiPOrganizerSaveWidget(QWidget):
     """
     constructor is a required arg in the constructor code
-    {PiPName: [
+    {PiPName: {"widgets": [
         {"widget name": "constructor code"},
         {"widget name": "constructor code"},
         {"widget name": "constructor code"}],
+        "settings": {"setting name": "value"}]
     PiPName: [
         {"widget name": "constructor code"},
         {"widget name": "constructor code"},
@@ -1493,8 +1532,7 @@ class PiPOrganizerSaveWidget(QWidget):
             with open(self.saveFilePath(), 'w') as f:
                 json.dump({}, f)
 
-        # dcc name
-        # pip name
+        # setup save event
         self._save_button.setUserClickedEvent(self.savePiPWidget)
 
     def nameWidget(self):
@@ -1542,13 +1580,21 @@ class PiPOrganizerSaveWidget(QWidget):
         pip_widgets = self.loadPiPWidgets()
 
         # create pip save dict
-        #pip_save_file = {}
-
         pip_widgets[name] = OrderedDict()
+
+        # store widgets in dict
+        pip_widgets[name]["widgets"] = OrderedDict()
         for item in main_widget.items():
             item_name = item.columnData()['name']
             item_code = item.constructorCode()
-            pip_widgets[name][item_name] = item_code
+            pip_widgets[name]["widgets"][item_name] = item_code
+
+        # store settings in dict
+        settings = {}
+        for setting in main_widget.settingsWidget().settings().keys():
+            settings[setting] = main_widget.settingsWidget().settings()[setting]["value"]
+
+        pip_widgets[name]["settings"] = settings
 
         # save pip file
         if self.saveFilePath():
