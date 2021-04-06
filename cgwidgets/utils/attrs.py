@@ -20,3 +20,10 @@ HSV_LIST = [HUE, SATURATION, VALUE]
 # ALIGNMENT
 VERTICAL = 'vertical'
 HORIZONTAL = 'horizontal'
+
+# BASE WIDGET TYPES
+FLOAT = 'float'
+INTEGER = 'integer'
+STRING = 'string'
+LIST = 'list'
+BOOLEAN = 'boolean'

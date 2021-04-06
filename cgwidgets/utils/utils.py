@@ -555,7 +555,6 @@ def setAsTool(widget):
             | Qt.FramelessWindowHint
             )
 
-
 def setAsTransparent(widget):
     widget.setAttribute(Qt.WA_NoSystemBackground)
     widget.setWindowFlags(

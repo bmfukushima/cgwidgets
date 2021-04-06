@@ -34,7 +34,7 @@ import logging
 
 from qtpy.QtCore import QEvent, Qt, QPoint, QRectF
 from qtpy.QtWidgets import (
-    QWidget, QApplication, QGraphicsItem, QFrame
+    QWidget, QApplication, QGraphicsItem, QWidget
 )
 from qtpy.QtGui import QCursor
 
@@ -287,7 +287,7 @@ class StickyValueAdjustItemDelegate(QGraphicsItem, iStickyValueAdjustDelegate):
         # return False
 
 
-class StickyDragWindowWidget(QFrame, iStickyValueAdjustDelegate):
+class StickyDragWindowWidget(QWidget, iStickyValueAdjustDelegate):
     """
     Main window that is shown when the user enters a sticky drag event...
     This will be invisible to the user.
@@ -463,16 +463,16 @@ AttributeError: 'StickyValueAdjustWidgetDelegate' object has no attribute '_iSti
 
         # update value
         self.__setValue()
-        return QFrame.leaveEvent(self, event, *args, **kwargs)
+        return QWidget.leaveEvent(self, event, *args, **kwargs)
 
     def mouseMoveEvent(self, event, *args, **kwargs):
         self.__setValue()
-        QFrame.mouseMoveEvent(self, event, *args, **kwargs)
+        QWidget.mouseMoveEvent(self, event, *args, **kwargs)
 
     def mousePressEvent(self, event):
         self.__deactivateStickyDrag()
         self.deactivationEvent(self.activeObject(), self.activationObject(), event)
-        return QFrame.mousePressEvent(self, event)
+        return QWidget.mousePressEvent(self, event)
 
     def showEvent(self, event):
         offset = 100
@@ -481,7 +481,9 @@ AttributeError: 'StickyValueAdjustWidgetDelegate' object has no attribute '_iSti
         self.setFixedSize(width, height)
         self.move(offset, offset)
         #self.setStyleSheet("background-color: rgba(255,0,0,255)")
-        return QFrame.showEvent(self, event)
+
+
+        return QWidget.showEvent(self, event)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape:

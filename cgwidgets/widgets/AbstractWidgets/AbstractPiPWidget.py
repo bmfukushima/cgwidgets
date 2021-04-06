@@ -33,9 +33,12 @@ from cgwidgets.widgets.AbstractWidgets.AbstractLabelledInputWidget import Abstra
 from cgwidgets.widgets.AbstractWidgets.AbstractOverlayInputWidget import AbstractOverlayInputWidget
 from cgwidgets.widgets.AbstractWidgets.AbstractModelViewWidget import AbstractModelViewWidget
 from cgwidgets.widgets.AbstractWidgets.AbstractShojiLayout import AbstractShojiLayout
+
 from cgwidgets.widgets import (
+    AbstractFrameInputWidgetContainer,
     AbstractListInputWidget,
     AbstractButtonInputWidget,
+    AbstractFloatInputWidget,
     AbstractStringInputWidget,
     AbstractLabelWidget,
     AbstractButtonInputWidgetContainer)
@@ -73,6 +76,7 @@ class AbstractPiPWidget(AbstractShojiLayout):
         |- LocalOrganizerWidget --> AbstractModelViewWidget
         |- CreatorWidget (Extended...)
         |- GlobalOrganizerWidget --> AbstractModelViewWidget
+        |- SettingsWidget --> FrameInputWidgetContainer
 
     Signals:
         Swap (Enter):
@@ -138,19 +142,26 @@ class AbstractPiPWidget(AbstractShojiLayout):
         # setup global organizer widget
         self._global_organizer_widget = PiPGlobalOrganizerWidget(self)
         self._is_global_organizer_visible = False
-        #self._global_organizer_widget.hide()
+        self._global_organizer_widget.hide()
+
+        self._settings_widget = SettingsWidget(self)
+        self._is_settings_widget_visible = False
 
         # setup creator widget visibility
         self._is_panel_creator_visible = False
 
         # add widgets
         self.addWidget(self._main_widget)
+        self.addWidget(self._settings_widget)
+        self.addWidget(self._global_organizer_widget)
         self.addWidget(self._local_organizer_widget)
+        self.addWidget(self._settings_widget)
 
         # Disable Shoji full screen stuff...
         self.setChildSoloable(False, self.mainWidget())
         self.setChildSoloable(False, self.localOrganizerWidget())
         self.setChildSoloable(False, self.globalOrganizerWidget())
+        self.setChildSoloable(False, self.settingsWidget())
 
         # create temp widget
         self.createTempWidget()
@@ -184,6 +195,9 @@ class AbstractPiPWidget(AbstractShojiLayout):
 
     def panelCreatorWidget(self):
         return self.mainWidget().panel_creator_widget
+
+    def settingsWidget(self):
+        return self._settings_widget
 
     """ WIDGETS """
     def createNewWidget(self, constructor_code, name=""):
@@ -256,8 +270,15 @@ class AbstractPiPWidget(AbstractShojiLayout):
         constructor_code = """
 from cgwidgets.widgets import AbstractLabelWidget
 text = \"\"\"
-Press (A)
-Open widget organizer, to create new widgets, save widgets, etc \"\"\"
+Press ( F )
+Open widget organizer
+
+Press ( A )
+To Load/Save a PiPWidget
+
+Press ( C )
+To create new PiPWidget
+\"\"\"
 widget = AbstractLabelWidget(self, text)
 widget.setWordWrap(True)
         """
@@ -779,7 +800,6 @@ class PiPMiniViewer(QWidget):
         super(PiPMiniViewer, self).__init__(parent)
         self.setStyleSheet("background-color: rgba(0,255,0,255)")
 
-        #QBoxLayout(QBoxLayout.LeftToRight, self)
         QVBoxLayout(self)
         self.layout().setContentsMargins(10, 10, 10, 10)
 
@@ -1067,6 +1087,143 @@ class PiPDisplayFlagsWidget(AbstractButtonInputWidgetContainer):
         main_widget = getWidgetAncestor(self, AbstractPiPWidget)
         main_widget.toggleLocalOrganizerVisibility()
 
+
+""" SETTINGS """
+class SettingsWidget(AbstractFrameInputWidgetContainer):
+    """
+    The user settings for the PiP Widget.
+
+    This will be stored during the Save operation on the master PiPWidget file.
+    """
+    DEFAULT_SETTINGS = {
+        "PiP Scale": {
+            "type": attrs.FLOAT,
+            "value": 0.5,
+            "value_list": [0.01, 0.025, 0.05, 0.1],
+            "range": [True, 0.1, 1],
+            "code": """main_widget.setPiPScale(value)"""},
+        "Enlarged Scale": {
+            "type": attrs.FLOAT,
+            "value": 0.5,
+            "value_list": [0.01, 0.025, 0.05, 0.1],
+            "range": [True, 0.1, 0.9],
+            "code": """main_widget.setEnlargedScale(value)"""},
+        "Display Titles": {
+            "type": attrs.BOOLEAN,
+            "value": True,
+            "code": """main_widget.showWidgetDisplayNames(value)"""},
+        "Direction": {
+            "type": attrs.LIST,
+            "value": attrs.SOUTH,
+            "items": [[attrs.NORTH], [attrs.SOUTH], [attrs.EAST], [attrs.WEST]],
+            "code": """
+main_widget.setDirection(value)
+main_widget.mainWidget().resizeMiniViewer()"""}
+        # self._mini_viewer_min_size = (100, 100)
+        # self._swap_key = 96
+
+    }
+
+    def __init__(self, parent=None):
+        # inherit
+        super(AbstractFrameInputWidgetContainer, self).__init__(parent, title="Settings", direction=Qt.Vertical)
+        self.layout().setContentsMargins(0, 0, 0, 0)
+        self.setIsHeaderEditable(False)
+
+        # create settings dictionary
+        self._settings = SettingsWidget.DEFAULT_SETTINGS
+
+        # create all settings widgets
+        for name, setting in self.settings().items():
+            self.createSettingWidget(name, setting)
+
+    def createSettingWidget(self, name, setting):
+        """
+        Creates a new setting widget for the values provided
+        Args:
+            name (str):
+            default_value (str):
+
+        """
+        from cgwidgets.widgets import AbstractBooleanInputWidget
+        # create the user input widget
+        if setting['type'] == attrs.FLOAT:
+            delegate_widget = AbstractFloatInputWidget(self)
+            delegate_widget.setRange(*setting['range'])
+            delegate_widget.setText(str(setting['value']))
+            delegate_widget.setUseLadder(True, value_list=setting['value_list'])
+            delegate_widget.setLiveInputEvent(self.userUpdate)
+
+        elif setting['type'] == attrs.BOOLEAN:
+            delegate_widget = AbstractBooleanInputWidget(self)
+            delegate_widget.is_selected = setting["value"]
+
+        elif setting['type'] == attrs.LIST:
+            delegate_widget = AbstractListInputWidget(self, item_list=setting['items'])
+            delegate_widget.setText(setting["value"])
+            # delegate_widget.setUserFinishedEditingEvent(self.userUpdate)
+
+        input_widget = AbstractLabelledInputWidget(name=name, delegate_widget=delegate_widget)
+        input_widget.setDefaultLabelLength(125)
+
+        # add entry into this widget
+        self.addInputWidget(input_widget, finished_editing_function=self.userUpdate)
+
+    def userUpdate(self, widget, value):
+        """
+        When the user updates a setting, this function will send the signal and call the setting setter.
+
+        Args:
+            widget (AbstractFloatInputWidget):
+            value (str):
+
+        Returns:
+        """
+        # get attrs
+        name = widget.parent().name()
+        self.setSetting(name, value)
+
+    def setSetting(self, name, value):
+        """
+        Sets the setting value
+        Args:
+            name (str): of setting to update
+            value (str): new value of setting
+
+        Returns:
+
+        """
+        # get attrs
+        code = self.settings()[name]['code']
+        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+
+        # prepare local scope
+        loc = {}
+        loc['self'] = self
+        loc['main_widget'] = main_widget
+        loc['value'] = value
+        try:
+            loc['value'] = float(value)
+        except ValueError:
+            # cannot convert to float
+            pass
+
+        # run update
+        exec(code, globals(), loc)
+
+    def getSetting(self, name):
+        """
+        returns the value of one setting
+        """
+        pass
+
+    def settings(self):
+        """
+        Returns a dictionary of key pair values representing all of the settings.
+        Returns:
+
+        """
+        return self._settings
 
 """ ORGANIZER (GLOBAL) """
 class PiPGlobalOrganizerItem(AbstractDragDropModelItem):
@@ -1434,11 +1591,6 @@ class PiPPanelCreatorWidget(AbstractListInputWidget):
         main_widget = getWidgetAncestor(self, AbstractPiPWidget)
 
         # get constructor
-        # loc = {}
-        # exec(self.widgetTypes()[value], globals(), loc)
-        # constructor = loc['constructor']
-        #
-        # widget_type = constructor(self)
         main_widget.createNewWidget(self.widgetTypes()[value], name=str(value))
         # widget = index.internalPointer().widget()
 
@@ -1498,7 +1650,7 @@ widget = QPushButton(\"TESTBUTTON\") """
 # from qtpy.QtWidgets import QLabel
 # constructor = QLabel""", name=str(x))
 
-    pip_widget.setPiPScale((0.5, 0.5))
+    pip_widget.setPiPScale((0.25, 0.25))
     pip_widget.setEnlargedScale(0.75)
     pip_widget.setDirection(attrs.WEST)
     #pip_widget.showWidgetDisplayNames(False)
