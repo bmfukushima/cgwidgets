@@ -1,10 +1,15 @@
 """
 TODO:
     BUGS:
-        Cannot have the following hierarchy
-            ShojiLayout --> ShojiLayouter --> LabelledInputWidget --> Ladder
-            The invisible drag on the ladder for some reason gets bricked, and the invisible
-            widget is displayed as a giant black square...
+        DragDelegate...
+            Cannot have the following hierarchy
+                ShojiLayout --> ShojiLayouter --> LabelledInputWidget --> Ladder
+                The invisible drag on the ladder for some reason gets bricked, and the invisible
+                widget is displayed as a giant black square...
+            AbstractPiPWidget also bjorking...
+                DragDelegate appeares to be somehow showning the new widget???
+
+
     CLEANUP:
         settings
             import settings.module

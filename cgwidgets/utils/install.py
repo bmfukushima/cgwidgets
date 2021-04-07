@@ -228,11 +228,9 @@ def installStickyAdjustDelegate(
     elif object_type == 'item':
         main_application_widget = active_object.scene().views()[0].window()
 
+    # create invisible drag window
     if not hasattr(main_application_widget, '_sticky_drag_window_widget'):
-        #main_application_widget._sticky_drag_window_widget = StickyDragWindowWidget(main_application_widget)
-        main_application_widget._sticky_drag_window_widget = StickyDragWindowWidget()
-        main_application_widget._sticky_drag_window_widget.hide()
-        #setAsTool(main_application_widget)
+        main_application_widget._sticky_drag_window_widget = StickyDragWindowWidget(main_application_widget)
 
     drag_widget = main_application_widget._sticky_drag_window_widget
     drag_widget._magnitude_type = magnitude_type

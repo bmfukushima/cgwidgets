@@ -193,6 +193,8 @@ class iStickyValueAdjustDelegate(object):
         self.__activateStickyDrag(drag_widget)
 
         # show invisible widget ( yeah I know how it sounds )
+        drag_widget.setParent(None)
+        # setAsTool(drag_widget)
         drag_widget.show()
 
         # user activation event
@@ -481,7 +483,6 @@ AttributeError: 'StickyValueAdjustWidgetDelegate' object has no attribute '_iSti
         self.setFixedSize(width, height)
         self.move(offset, offset)
         #self.setStyleSheet("background-color: rgba(255,0,0,255)")
-
 
         return QWidget.showEvent(self, event)
 
