@@ -181,6 +181,7 @@ def setupAsDynamic():
             item (ShojiModelItem)
             self --> widget.getMainWidget()
             """
+            print('update?')
             if item:
                 print("---- DYNAMIC WIDGET ----")
                 print(parent, widget, item)
@@ -339,8 +340,8 @@ def setupAsDoubleDynamic():
     custom_index.internalPointer().setDynamicUpdateFunction(DynamicItemExample.updateGUI)
 
 
-setupAsStacked()
-#setupAsDynamic()
+# setupAsStacked()
+setupAsDynamic()
 #setupAsDoubleDynamic()
 
 # SET FLAGS
@@ -454,11 +455,11 @@ delegate_widget = QLabel("Q")
 shoji_widget.addHeaderDelegateWidget([Qt.Key_Q], delegate_widget, modifier=Qt.NoModifier, focus=False)
 
 # add context menu
-def contextMenu(index, selected_indexes):
-    print(index, selected_indexes)
-    print(index.internalPointer())
-
-shoji_widget.addContextMenuEvent('test', contextMenu)
+# def contextMenu(index, selected_indexes):
+#     print(index, selected_indexes)
+#     print(index.internalPointer())
+#
+# shoji_widget.addContextMenuEvent('test', contextMenu)
 
 
 # display widget
