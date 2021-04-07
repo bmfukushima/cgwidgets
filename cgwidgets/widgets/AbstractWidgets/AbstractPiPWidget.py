@@ -1,13 +1,7 @@
 """
 Todo:
-    * Minimum sizing/offsets?
     * Overall cleanup / organization
         mainWidget --> AbstractPiPWidget?
-    * Expose settings to user?
-    * Organizer...
-        - Settup API
-        - Save/Load JSON's
-            - how does this even work...
     * PiPMiniViewerWidget --> Borders... styles not working???
         - base style sheet added to ShojiLayout...
             in general the shoji layout needs to be more flexible
@@ -1089,6 +1083,62 @@ class PiPDisplayFlagsWidget(AbstractButtonInputWidgetContainer):
         main_widget.toggleLocalOrganizerVisibility()
 
 
+class PiPPanelCreatorWidget(AbstractListInputWidget):
+    def __init__(self, parent=None, widget_types=None):
+        super(PiPPanelCreatorWidget, self).__init__(parent)
+
+        self._widget_types = widget_types
+        self.populate([[key] for key in widget_types.keys()])
+        #self.setUserFinishedEditingEvent(self.createNewWidget)
+
+    def widgetTypes(self):
+        return self._widget_types
+
+    def setWidgetTypes(self, widget_types):
+        self._widget_types = widget_types
+
+    def createNewWidget(self):
+        # preflight
+        value = self.text()
+
+        if value not in self.widgetTypes().keys(): return
+        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+
+        # get constructor
+        main_widget.createNewWidget(self.widgetTypes()[value], name=str(value))
+        # widget = index.internalPointer().widget()
+
+        # reset widget
+        self.setText('')
+        self.hide()
+        self.clearFocus()
+
+    """ EVENTS """
+    def focusOutEvent(self, event):
+        self.hide()
+        return AbstractListInputWidget.focusOutEvent(self, event)
+
+    def showEvent(self, event):
+        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+        main_widget.setIsPanelCreatorVisible(True)
+        self.setFocus()
+        AbstractListInputWidget.showEvent(self, event)
+
+    def hideEvent(self, event):
+        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+        main_widget.setIsPanelCreatorVisible(False)
+        main_widget.setFocus()
+        AbstractListInputWidget.hideEvent(self, event)
+
+    def keyPressEvent(self, event):
+
+        if event.key() in keylist.ACCEPT_KEYS:
+            self.createNewWidget()
+        if event.key() == Qt.Key_Escape:
+            self.hide()
+        return AbstractListInputWidget.keyPressEvent(self, event)
+
+
 """ SETTINGS """
 class SettingsWidget(AbstractFrameInputWidgetContainer):
     """
@@ -1106,13 +1156,13 @@ class SettingsWidget(AbstractFrameInputWidgetContainer):
             "value": 0.5,
             "value_list": [0.01, 0.025, 0.05, 0.1],
             "range": [True, 0.1, 1],
-            "code": """main_widget.setPiPScale(value)"""},
+            "code": """main_widget.setPiPScale(float(value))"""},
         "Enlarged Scale": {
             "type": attrs.FLOAT,
             "value": 0.5,
             "value_list": [0.01, 0.025, 0.05, 0.1],
             "range": [True, 0.1, 0.9],
-            "code": """main_widget.setEnlargedScale(value)"""},
+            "code": """main_widget.setEnlargedScale(float(value))"""},
         "Display Titles": {
             "type": attrs.BOOLEAN,
             "value": True,
@@ -1212,11 +1262,6 @@ main_widget.mainWidget().resizeMiniViewer()"""}
         loc['self'] = self
         loc['main_widget'] = main_widget
         loc['value'] = value
-        try:
-            loc['value'] = float(value)
-        except ValueError:
-            # cannot convert to float
-            pass
 
         # run update
         exec(code, globals(), loc)
@@ -1239,11 +1284,20 @@ main_widget.mainWidget().resizeMiniViewer()"""}
         """
         # set settings
         for name, value in settings.items():
-            # update settings
+            # convert values
+            # if type(value) == float:
+            #     value = str(value)
+
+            # update widget settings
             self.setSetting(name, value)
 
             # update display settings
-            self.widgets()[name].delegateWidget().setText(str(value))
+            if type(value) == bool:
+                self.widgets()[name].delegateWidget().is_selected = value
+            else:
+                if type(value) == float:
+                    value = str(value)
+                self.widgets()[name].delegateWidget().setText(str(value))
 
     def settings(self):
         """
@@ -1299,7 +1353,7 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
         self.model().setItemType(PiPGlobalOrganizerItem)
 
         # create save widget
-        self._save_widget = PiPOrganizerSaveWidget(self)
+        self._save_widget = PiPSaveWidget(self)
         self.addDelegate([], self._save_widget)
         self._save_widget.show()
 
@@ -1309,7 +1363,7 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
         self.setIndexSelectedEvent(self.loadPiPWidgetFromSelection)
 
     def populate(self):
-        pip_widgets = self.loadPiPWidgets()
+        pip_widgets = self.getPiPWidgetsJSON()
         for widget_name in sorted(pip_widgets.keys()):
             index = self.model().insertNewIndex(0, name=widget_name)
             item = index.internalPointer()
@@ -1325,29 +1379,13 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
             enabled (bool):
         """
         if enabled:
-            widgets = item.widgetsList()
-
-            main_widget = getWidgetAncestor(self, AbstractPiPWidget)
-
-            # clear pip view
-            main_widget.removeAllWidgets()
-
-            # populate pip view
-            # load widgets
-            for widget_name, constructor_code in widgets.items():
-                main_widget.createNewWidget(constructor_code, name=widget_name)
-
-            # load settings
-            main_widget.settingsWidget().loadSettings(item.settings())
-
-            # reset previous widget
-            main_widget.mainWidget().setPreviousWidget(None)
+            self.saveWidget().loadPiPWidgetFromItem(item)
 
     def getAllPiPWidgetsNames(self):
         return self.saveWidget().getAllPiPWidgetsNames()
 
-    def loadPiPWidgets(self):
-        return self.saveWidget().loadPiPWidgets()
+    def getPiPWidgetsJSON(self):
+        return self.saveWidget().getPiPWidgetsJSON()
 
     """ SAVE """
     def saveWidget(self):
@@ -1359,6 +1397,162 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
 
     def setSaveFilePath(self, file_path):
         self.saveWidget().setSaveFilePath(file_path)
+
+
+class PiPSaveWidget(QWidget):
+    """
+    constructor is a required arg in the constructor code
+
+    Signals:
+        save
+            user_button_press --> savePiPWidget --> getPiPWidgetsJSON
+        load
+
+    {PiPName: {"widgets": [
+        {"widget name": "constructor code"},
+        {"widget name": "constructor code"},
+        {"widget name": "constructor code"}],
+        "settings": {"setting name": "value"}]
+    PiPName: [
+        {"widget name": "constructor code"},
+        {"widget name": "constructor code"},
+        {"widget name": "constructor code"}]
+    }
+    """
+    def __init__(self, parent=None):
+        super(PiPSaveWidget, self).__init__(parent)
+        QVBoxLayout(self)
+        # todo name needs to be a list delegate and load all of the current names
+        name_list = AbstractListInputWidget(self)
+        name_list.dynamic_update = True
+        name_list.setCleanItemsFunction(self.getAllPiPWidgetsNames)
+        self._name_widget = AbstractLabelledInputWidget(name="Name", delegate_widget=name_list)
+        self._save_button = AbstractButtonInputWidget(self, title="Save")
+
+        self.layout().addWidget(self._name_widget)
+        self.layout().addWidget(self._save_button)
+
+        # setup save file path
+        self._file_path = getDefaultSavePath() + '/.PiPWidgets.json'
+
+        # if doesnt exist create empty JSON
+        if not os.path.exists(self.saveFilePath()):
+            # Writing JSON data
+            with open(self.saveFilePath(), 'w') as f:
+                json.dump({}, f)
+
+        # setup save event
+        self._save_button.setUserClickedEvent(self.savePiPWidget)
+
+    """ NAMES """
+    def nameWidget(self):
+        return self._name_widget
+
+    def nameList(self):
+        return self._name_list
+
+    def name(self):
+        return self._name_widget.delegateWidget().text()
+
+    def getAllPiPWidgetsNames(self):
+        widgets_list = [[name] for name in list(self.getPiPWidgetsJSON().keys())]
+
+        return widgets_list
+
+    """ LOAD """
+    def loadPiPWidgetFromItem(self, item):
+        """
+        Updates them main display to the meta data of the PiPWidget that was selected
+
+        Args:
+            item (PiPGlobalOrganizerItem): selected
+
+        Returns:
+
+        """
+        widgets = item.widgetsList()
+
+        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+
+        # clear pip view
+        main_widget.removeAllWidgets()
+
+        # populate pip view
+        # load widgets
+        for widget_name, constructor_code in widgets.items():
+            main_widget.createNewWidget(constructor_code, name=widget_name)
+
+        # load settings
+        main_widget.settingsWidget().loadSettings(item.settings())
+
+        # reset previous widget
+        main_widget.mainWidget().setPreviousWidget(None)
+
+    def getPiPWidgetsJSON(self):
+        """
+        Loads all of the PiPWidgets as JSON Data
+
+
+        Returns (dict):
+            {PiPName: [
+                {"widget name": "constructor code"},
+                {"widget name": "constructor code"},
+                {"widget name": "constructor code"},]
+            }
+        """
+        return getJSONData(self.saveFilePath())
+
+    """ SAVE """
+    def savePiPWidget(self, this):
+        """
+        When the "Save" button is pressed, this will save the current PiPWidget to the master
+        PiPDictionary located at self.saveFilePath()
+
+        Args:
+            this (AbstractButtonInputWidget): being pressed
+
+        Returns:
+
+        """
+        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+        main_widget.items()
+        name = self.nameWidget().delegateWidget().text()
+        pip_widgets = self.getPiPWidgetsJSON()
+
+        # create pip save dict
+        pip_widgets[name] = OrderedDict()
+
+        # store widgets in dict
+        pip_widgets[name]["widgets"] = OrderedDict()
+        for item in main_widget.items():
+            item_name = item.columnData()['name']
+            item_code = item.constructorCode()
+            pip_widgets[name]["widgets"][item_name] = item_code
+
+        # store settings in dict
+        settings = {}
+        for setting in main_widget.settingsWidget().settings().keys():
+            settings[setting] = main_widget.settingsWidget().settings()[setting]["value"]
+
+        pip_widgets[name]["settings"] = settings
+
+        # save pip file
+        if self.saveFilePath():
+            # Writing JSON data
+            with open(self.saveFilePath(), 'w') as f:
+                json.dump(pip_widgets, f)
+
+        print('saving to... ', self.saveFilePath())
+        print(pip_widgets)
+
+    def saveFilePath(self):
+        """ Returns the current save path for cgwigdets. The default is
+                $HOME/.cgwidgets/.PiPWidgets.json
+        """
+        return self._file_path
+
+    def setSaveFilePath(self, file_path):
+        self._file_path = file_path
 
 
 """ ORGANIZER (LOCAL) """
@@ -1494,181 +1688,6 @@ class PiPLocalOrganizerWidget(AbstractModelViewWidget):
         if event.key() == Qt.Key_Escape:
             self.hide()
         return AbstractModelViewWidget.keyPressEvent(self, event)
-
-
-class PiPOrganizerSaveWidget(QWidget):
-    """
-    constructor is a required arg in the constructor code
-    {PiPName: {"widgets": [
-        {"widget name": "constructor code"},
-        {"widget name": "constructor code"},
-        {"widget name": "constructor code"}],
-        "settings": {"setting name": "value"}]
-    PiPName: [
-        {"widget name": "constructor code"},
-        {"widget name": "constructor code"},
-        {"widget name": "constructor code"}]
-    }
-    """
-    def __init__(self, parent=None):
-        super(PiPOrganizerSaveWidget, self).__init__(parent)
-        QVBoxLayout(self)
-        # todo name needs to be a list delegate and load all of the current names
-        name_list = AbstractListInputWidget(self)
-        name_list.dynamic_update = True
-        name_list.setCleanItemsFunction(self.getAllPiPWidgetsNames)
-        self._name_widget = AbstractLabelledInputWidget(name="Name", delegate_widget=name_list)
-        self._save_button = AbstractButtonInputWidget(self, title="Save")
-
-        self.layout().addWidget(self._name_widget)
-        self.layout().addWidget(self._save_button)
-
-        # setup save file path
-        self._file_path = getDefaultSavePath() + '/.PiPWidgets.json'
-
-        # if doesnt exist create empty JSON
-        if not os.path.exists(self.saveFilePath()):
-            # Writing JSON data
-            with open(self.saveFilePath(), 'w') as f:
-                json.dump({}, f)
-
-        # setup save event
-        self._save_button.setUserClickedEvent(self.savePiPWidget)
-
-    def nameWidget(self):
-        return self._name_widget
-
-    def nameList(self):
-        return self._name_list
-
-    def name(self):
-        return self._name_widget.delegateWidget().text()
-
-    def getAllPiPWidgetsNames(self):
-        widgets_list = [[name] for name in list(self.loadPiPWidgets().keys())]
-
-        return widgets_list
-
-    def loadPiPWidgets(self):
-        """
-        Loads all of the PiPWidgets as JSON Data
-
-
-        Returns (dict):
-            {PiPName: [
-                {"widget name": "constructor code"},
-                {"widget name": "constructor code"},
-                {"widget name": "constructor code"},]
-            }
-        """
-        return getJSONData(self.saveFilePath())
-
-    def savePiPWidget(self, this):
-        """
-        When the "Save" button is pressed, this will save the current PiPWidget to the master
-        PiPDictionary located at self.saveFilePath()
-
-        Args:
-            this (AbstractButtonInputWidget): being pressed
-
-        Returns:
-
-        """
-        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
-        main_widget.items()
-        name = self._name_widget.delegateWidget().text()
-        pip_widgets = self.loadPiPWidgets()
-
-        # create pip save dict
-        pip_widgets[name] = OrderedDict()
-
-        # store widgets in dict
-        pip_widgets[name]["widgets"] = OrderedDict()
-        for item in main_widget.items():
-            item_name = item.columnData()['name']
-            item_code = item.constructorCode()
-            pip_widgets[name]["widgets"][item_name] = item_code
-
-        # store settings in dict
-        settings = {}
-        for setting in main_widget.settingsWidget().settings().keys():
-            settings[setting] = main_widget.settingsWidget().settings()[setting]["value"]
-
-        pip_widgets[name]["settings"] = settings
-
-        # save pip file
-        if self.saveFilePath():
-            # Writing JSON data
-            with open(self.saveFilePath(), 'w') as f:
-                json.dump(pip_widgets, f)
-
-        print('saving to... ', self.saveFilePath())
-        print(pip_widgets)
-
-    def saveFilePath(self):
-        """ Returns the current save path for cgwigdets. The default is
-                $HOME/.cgwidgets/.PiPWidgets.json
-        """
-        return self._file_path
-
-    def setSaveFilePath(self, file_path):
-        self._file_path = file_path
-
-
-class PiPPanelCreatorWidget(AbstractListInputWidget):
-    def __init__(self, parent=None, widget_types=None):
-        super(PiPPanelCreatorWidget, self).__init__(parent)
-
-        self._widget_types = widget_types
-        self.populate([[key] for key in widget_types.keys()])
-        #self.setUserFinishedEditingEvent(self.createNewWidget)
-
-    def widgetTypes(self):
-        return self._widget_types
-
-    def setWidgetTypes(self, widget_types):
-        self._widget_types = widget_types
-
-    def createNewWidget(self):
-        # preflight
-        value = self.text()
-
-        if value not in self.widgetTypes().keys(): return
-        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
-
-        # get constructor
-        main_widget.createNewWidget(self.widgetTypes()[value], name=str(value))
-        # widget = index.internalPointer().widget()
-
-        # reset widget
-        self.setText('')
-        self.hide()
-        self.clearFocus()
-
-    """ EVENTS """
-    def focusOutEvent(self, event):
-        self.hide()
-        return AbstractListInputWidget.focusOutEvent(self, event)
-
-    def showEvent(self, event):
-        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
-        main_widget.setIsPanelCreatorVisible(True)
-        self.setFocus()
-        AbstractListInputWidget.showEvent(self, event)
-
-    def hideEvent(self, event):
-        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
-        main_widget.setIsPanelCreatorVisible(False)
-        main_widget.setFocus()
-        AbstractListInputWidget.hideEvent(self, event)
-
-    def keyPressEvent(self, event):
-
-        if event.key() in keylist.ACCEPT_KEYS:
-            self.createNewWidget()
-        if event.key() == Qt.Key_Escape:
-            self.hide()
-        return AbstractListInputWidget.keyPressEvent(self, event)
 
 
 if __name__ == '__main__':
