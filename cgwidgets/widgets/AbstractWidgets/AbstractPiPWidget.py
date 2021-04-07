@@ -1221,6 +1221,7 @@ main_widget.mainWidget().resizeMiniViewer()"""}
             # delegate_widget.setUserFinishedEditingEvent(self.userUpdate)
 
         input_widget = AbstractLabelledInputWidget(name=name, delegate_widget=delegate_widget)
+        input_widget.viewWidget().setDisplayMode(AbstractOverlayInputWidget.DISABLED)
         input_widget.setDefaultLabelLength(125)
 
         # add entry into this widget
