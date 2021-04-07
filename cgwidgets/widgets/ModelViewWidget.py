@@ -1,5 +1,6 @@
 import sys
-
+import os
+os.environ['QT_API'] = 'pyside2'
 from cgwidgets.widgets import AbstractModelViewWidget
 
 class ModelViewWidget(AbstractModelViewWidget):
@@ -30,13 +31,14 @@ if __name__ == "__main__":
     def testEnable(item, enabled):
         print("ENABLING -->", item.columnData()['name'], enabled)
     #
-    def testSelect(item, enabled, column):
+    def testSelect(item, enabled):
         print("SELECTING -->", item.columnData()['name'], enabled)
     #
     def testDelegateToggle(event, widget, enabled):
         print('toggle joe')
 
     main_widget = ModelViewWidget()
+
     # main_widget.setPresetViewType(ModelViewWidget.TREE_VIEW)
     view = QTreeView()
     model = main_widget.model()
@@ -47,22 +49,12 @@ if __name__ == "__main__":
         index = main_widget.model().insertNewIndex(x, name=str('node%s'%x))
         for i, char in enumerate('no0'):
             main_widget.model().insertNewIndex(i, name=char*3, parent=index)
+
+    main_widget.setIndexSelectedEvent(testSelect)
     # test filter
     # TODO FILTER TEST
     view.setModel(model)
-    #proxy_model.setSourceModel(model)
-    #view.setModel(proxy_model)
 
-    # syntax = QRegExp.PatternSyntax(
-    #     self.filterSyntaxComboBox.itemData(z
-    #         self.filterSyntaxComboBox.currentIndex()))
-    # caseSensitivity = (
-    #         self.filterCaseSensitivityCheckBox.isChecked()
-    #         and Qt.CaseSensitive or Qt.CaseInsensitive)
-    # regExp = QRegExp("node0")
-    #regExp = QRegExp("a")
-    #proxy_model.setFilterRegExp(regExp)
-    #main_widget.model().setFilterRegExp(regExp)
 
     w = QWidget()
     l = QVBoxLayout(w)

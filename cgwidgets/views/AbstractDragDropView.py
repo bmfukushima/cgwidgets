@@ -1,3 +1,5 @@
+from qtpy import API_NAME
+
 from qtpy.QtWidgets import (
     QListView, QAbstractItemView, QTreeView, QApplication,
     QProxyStyle, QStyledItemDelegate, QStyleOptionViewItem, QStyle, QMenu
@@ -216,15 +218,15 @@ class AbstractDragDropAbstractView(object):
             return
 
     """ EVENTS """
-    def selectionChanged(self, selected, deselected):
-        for index in selected.indexes():
-            if index.column() == 0:
-                item = index.internalPointer()
-                self.model().itemSelectedEvent(item, True)
-        for index in deselected.indexes():
-            if index.column() == 0:
-                item = index.internalPointer()
-                self.model().itemSelectedEvent(item, False)
+    # def selectionChanged(self, selected, deselected):
+    #     for index in selected.indexes():
+    #         if index.column() == 0:
+    #             item = index.internalPointer()
+    #             self.model().itemSelectedEvent(item, True)
+    #     for index in deselected.indexes():
+    #         if index.column() == 0:
+    #             item = index.internalPointer()
+    #             self.model().itemSelectedEvent(item, False)
 
     def enterEvent(self, event):
         self.setFocus()
@@ -313,26 +315,10 @@ class AbstractDragDropAbstractView(object):
 class AbstractDragDropListView(QListView, AbstractDragDropAbstractView):
     def __init__(self, parent=None):
         super(AbstractDragDropListView, self).__init__(parent)
+        if API_NAME == "PySide2":
+            AbstractDragDropAbstractView.__init__(self)
         self.setEditTriggers(QAbstractItemView.DoubleClicked)
         self._isDropEnabled = False
-
-    # def model(self):
-    #     #return self.model()
-    #     return self._source_model
-    #
-    # def proxyModel(self):
-    #     return self._proxy_model
-    #
-    # def setProxyModel(self, source_model, proxy_model=None):
-    #     # todo FILTER
-    #     if not proxy_model:
-    #         proxy_model = QSortFilterProxyModel()
-    #
-    #     self._source_model = source_model
-    #     self._proxy_model = proxy_model
-    #
-    #     self._proxy_model.setSourceModel(source_model)
-    #     self.setModel(self._proxy_model)
 
     def createStyleSheet(self, header_position, style_sheet_args):
         """
@@ -410,10 +396,22 @@ class AbstractDragDropListView(QListView, AbstractDragDropAbstractView):
         #
         return style_sheet
 
+    def selectionChanged(self, selected, deselected):
+        for index in selected.indexes():
+            if index.column() == 0:
+                item = index.internalPointer()
+                self.model().itemSelectedEvent(item, True)
+        for index in deselected.indexes():
+            if index.column() == 0:
+                item = index.internalPointer()
+                self.model().itemSelectedEvent(item, False)
+
 
 class AbstractDragDropTreeView(QTreeView, AbstractDragDropAbstractView):
     def __init__(self, parent=None):
         super(AbstractDragDropTreeView, self).__init__(parent)
+        if API_NAME == "PySide2":
+            AbstractDragDropAbstractView.__init__(self)
 
     """ """
     def setHeaderData(self, _header_data):
@@ -463,6 +461,16 @@ class AbstractDragDropTreeView(QTreeView, AbstractDragDropAbstractView):
 
     def setFlow(self, _):
         pass
+
+    def selectionChanged(self, selected, deselected):
+        for index in selected.indexes():
+            if index.column() == 0:
+                item = index.internalPointer()
+                self.model().itemSelectedEvent(item, True)
+        for index in deselected.indexes():
+            if index.column() == 0:
+                item = index.internalPointer()
+                self.model().itemSelectedEvent(item, False)
 
 
 class AbstractViewContextMenu(QMenu):

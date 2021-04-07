@@ -15,6 +15,7 @@ TODO: View scroll bar needs to change locations
 
 
 """
+from qtpy import API_NAME
 
 from qtpy.QtWidgets import (
     QWidget, QAbstractItemView, QScrollArea, QSplitter, QApplication)#, qApp)
@@ -90,6 +91,9 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
     TYPE = STACKED
     def __init__(self, parent=None, direction=attrs.NORTH):
         super(ShojiModelViewWidget, self).__init__(parent)
+        if API_NAME == "PySide2":
+            iShojiDynamicWidget.__init__(self)
+
         # etc attrs
         self.setHandleWidth(0)
         self._header_view_position = direction #just a temp set... for things
@@ -256,9 +260,10 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
             event (QEvent)
             enabled (bool)
         """
+        # self.model().itemSelectedEvent(function)
         self.itemSelectedEvent = function
 
-    def itemSelectedEvent(self, item, enabled, column=0):
+    def itemSelectedEvent(self, item, enabled):
         pass
 
     def setHeaderDelegateToggleEvent(self, function):
@@ -575,6 +580,7 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         # todo column registry.
         ## note that this is set so that it will not run for each column
         if self.getDelegateType() == ShojiModelViewWidget.STACKED:
+
             if item.delegateWidget():
                 self.__updateStackedDisplay(item, selected)
 
@@ -588,6 +594,7 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         automatically show/hide widgets as needed
         """
         if selected:
+            print('select')
             item.delegateWidget().delegateWidget().setIsHeaderShown(self.delegateTitleIsShown())
             item.delegateWidget().show()
         else:
@@ -601,7 +608,6 @@ class ShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         If the delegate display type is set to DYNAMIC, this will
         automatically dynamically create/destroy widgets as needed.
         """
-
         if selected:
             # create dynamic widget
             dynamic_widget = self.createNewDynamicWidget(item)
@@ -1079,7 +1085,7 @@ if __name__ == "__main__":
             self.addWidget(QLabel('c'))
 
     shoji_widget = ShojiModelViewWidget()
-    shoji_widget.setDelegateType(ShojiModelViewWidget.DYNAMIC,TabShojiDynamicWidgetExample, TabShojiDynamicWidgetExample.updateGUI)
+    shoji_widget.setDelegateType(ShojiModelViewWidget.DYNAMIC, TabShojiDynamicWidgetExample, TabShojiDynamicWidgetExample.updateGUI)
     #w.setHeaderPosition(attrs.WEST, attrs.SOUTH)
     #header_delegate_widget = QLabel("Custom")
     #w.setHeaderDelegateAlwaysOn(False)

@@ -752,7 +752,7 @@ class AbstractDragDropModel(QAbstractItemModel):
     def __textChangedEvent(self, item, old_value, new_value):
         pass
 
-    def setIndexSelectedEvent(self, function):
+    def setItemSelectedEvent(self, function):
         self.__itemSelectedEvent = function
 
     def itemSelectedEvent(self, item, enabled):

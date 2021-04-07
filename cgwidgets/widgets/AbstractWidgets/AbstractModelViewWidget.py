@@ -1,4 +1,6 @@
 import sys
+import os
+os.environ['QT_API'] = 'pyside2'
 
 from qtpy.QtWidgets import (QApplication, QLabel, QCompleter, QTreeView, QWidget, QVBoxLayout)
 from qtpy.QtCore import Qt
@@ -279,7 +281,7 @@ class AbstractModelViewWidget(AbstractShojiLayout):
         self.model().setTextChangedEvent(function)
 
     def setIndexSelectedEvent(self, function):
-        self.model().setIndexSelectedEvent(function)
+        self.model().setItemSelectedEvent(function)
 
     """ FLAGS """
     def setOrientation(self, view_orientation, view_position=None):
@@ -552,13 +554,14 @@ if __name__ == "__main__":
     def testEnable(item, enabled):
         print("ENABLING -->", item.columnData()['name'], enabled)
     #
-    def testSelect(item, enabled, column):
+    def testSelect(item, enabled):
         print("SELECTING -->", item.columnData()['name'], enabled)
     #
     def testDelegateToggle(event, widget, enabled):
         print('toggle joe')
 
     main_widget = AbstractModelViewWidget()
+    main_widget.setIndexSelectedEvent(testSelect)
     # main_widget.setPresetViewType(AbstractModelViewWidget.TREE_VIEW)
     view = QTreeView()
     model = main_widget.model()

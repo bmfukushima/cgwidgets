@@ -1,5 +1,6 @@
 import sys
-
+import os
+os.environ['QT_API'] = 'pyside2'
 from qtpy.QtWidgets import QApplication, QLabel
 from qtpy.QtGui import QCursor
 from qtpy.QtCore import Qt
@@ -32,7 +33,7 @@ def testEdit(item, old_value, new_value):
 def testEnable(item, enabled):
     print("ENABLING -->", item.columnData()['name'], enabled)
 
-def testSelect(item, enabled, column=0):
+def testSelect(item, enabled):
     print("SELECTING -->", item.columnData()['name'], enabled)
 
 def testDelegateToggle(enabled, event, widget):
@@ -40,7 +41,7 @@ def testDelegateToggle(enabled, event, widget):
 
 # create main Model View Widget
 main_widget = ModelViewWidget()
-main_widget.setPresetViewType(ModelViewWidget.TREE_VIEW)
+# main_widget.setPresetViewType(ModelViewWidget.TREE_VIEW)
 
 # create delegates
 delegate_widget = QLabel("F")
