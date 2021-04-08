@@ -2,9 +2,7 @@
 Todo:
     * Overall cleanup / organization
         mainWidget --> AbstractPiPWidget?
-    * PiPMiniViewerWidget --> Borders... styles not working???
-        - base style sheet added to ShojiLayout...
-            in general the shoji layout needs to be more flexible
+
 
 """
 import json
@@ -27,6 +25,7 @@ from cgwidgets.widgets.AbstractWidgets.AbstractLabelledInputWidget import Abstra
 from cgwidgets.widgets.AbstractWidgets.AbstractOverlayInputWidget import AbstractOverlayInputWidget
 from cgwidgets.widgets.AbstractWidgets.AbstractModelViewWidget import AbstractModelViewWidget
 from cgwidgets.widgets.AbstractWidgets.AbstractShojiLayout import AbstractShojiLayout
+from cgwidgets.widgets.AbstractWidgets.AbstractShojiWidget.AbstractShojiModelViewWidget import AbstractShojiModelViewWidget
 
 from cgwidgets.widgets import (
     AbstractFrameInputWidgetContainer,

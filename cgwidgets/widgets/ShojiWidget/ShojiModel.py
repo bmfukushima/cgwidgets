@@ -1,32 +1,10 @@
-# https://doc.qt.io/qt-5/model-view-programming.html#model-view-classes
-
-"""
-TODO:
-    *   Add drag/drop
-    *   Add multiple columns
-            rows --> ShojiModelItem
-                                | -- column list (holds data for each column of this row...)
-
-"""
-
-from qtpy.QtCore import (
-    Qt, QModelIndex, QAbstractItemModel, QSize, QMimeData, QByteArray,
-    QDataStream, QIODevice)
-from qtpy.QtGui import (
-    QBrush, QColor
-)
-
 import sys
 
-from cgwidgets.views import AbstractDragDropModel
-
 # https://doc.qt.io/qt-5/model-view-programming.html#model-view-classes
-from cgwidgets.widgets.ShojiWidget import (iShojiDynamicWidget)
-
-from cgwidgets.views import AbstractDragDropModelItem
+from cgwidgets.widgets import AbstractShojiModel, AbstractShojiModelItem
 
 
-class ShojiModelItem(AbstractDragDropModelItem, iShojiDynamicWidget):
+class ShojiModelItem(AbstractShojiModelItem):
     """
     Attributes:
         delegate_widget (QWidget): Widget to be shown when this item is
@@ -38,68 +16,10 @@ class ShojiModelItem(AbstractDragDropModelItem, iShojiDynamicWidget):
             or not.
     """
     def __init__(self, parent=None):
-        #self._data = data
-        self._column_data = {}
-        self._children = []
-        self._parent = parent
-        self._delegate_widget = None
-        self._dynamicWidgetFunction = None
-
-        self._image_path = None
-        self._display_overlay = False
-        self._display_delegate_title = None
-        self._text_color = None
-
-        self._test = True
-        #self._is_selected = False
-        self._is_enabled = True
-        self._isSelectable = True
-        self._isDragEnabled = True
-        self._isDropEnabled = True
-        self._isEditable = True
-        if parent is not None:
-            parent.addChild(self)
-
-    @property
-    def test(self):
-        return self._test
-
-    @test.setter
-    def test(self, test):
-        self._test = test
-
-    def textColor(self):
-        return self._text_color
-
-    def setTextColor(self, enabled):
-        self._text_color = enabled
-
-    def displayDelegateTitle(self):
-        return self._display_delegate_title
-
-    def setDisplayDelegateTitle(self, enabled):
-        self._display_delegate_title = enabled
-
-    def displayOverlay(self):
-        return self._display_overlay
-
-    def setDisplayOverlay(self, enabled):
-        self._display_overlay = enabled
-
-    def imagePath(self):
-        return self._image_path
-
-    def setImagePath(self, image_path):
-        self._image_path = image_path
-
-    def delegateWidget(self):
-        return self._delegate_widget
-
-    def setDelegateWidget(self, _delegate_widget):
-        self._delegate_widget = _delegate_widget
+        super(ShojiModelItem, self).__init__(parent)
 
 
-class ShojiModel(AbstractDragDropModel):
+class ShojiModel(AbstractShojiModel):
     """
     Abstract model that is used for the Shoji.  This supports lists, and
     trees.
@@ -107,17 +27,9 @@ class ShojiModel(AbstractDragDropModel):
     Attributes:
         item_type (Item): Data item to be stored on each index.  By default this
             set to the ShojiModelItem
-
-    TODO:
-        *   I dont think I need <header_type> anymore...
     """
-    ITEM_HEIGHT = 35
-    ITEM_WIDTH = 100
-
     def __init__(self, parent=None, root_item=None):
         super(ShojiModel, self).__init__(parent, root_item=root_item)
-        #self._header_type = ''
-        self.setItemType(ShojiModelItem)
 
 
 if __name__ == '__main__':

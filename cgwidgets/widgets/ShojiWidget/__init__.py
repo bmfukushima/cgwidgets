@@ -1,5 +1,3 @@
-from .iShojiDynamicWidget import iShojiDynamicWidget as iShojiDynamicWidget
-
 from .ShojiModel import ShojiModelItem as ShojiModelItem
 from .ShojiModel import ShojiModel as ShojiModel
 
