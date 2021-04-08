@@ -2,7 +2,7 @@ import sys
 import os
 os.environ['QT_API'] = 'pyside2'
 
-from qtpy.QtWidgets import (QApplication, QLabel, QCompleter, QTreeView, QWidget, QVBoxLayout)
+from qtpy.QtWidgets import (QSplitterHandle, QApplication, QLabel, QCompleter, QTreeView, QWidget, QVBoxLayout)
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QCursor
 
@@ -403,9 +403,29 @@ class AbstractModelViewWidget(AbstractShojiLayout):
                         # focus model
                         self.setFocus()
 
-        # disable full screen ability of Shoji
-        if event.key() != AbstractShojiLayout.FULLSCREEN_HOTKEY:
-            return AbstractShojiLayout.keyPressEvent(self, event)
+        # full screen
+        """copy / paste from AbstractShojiLayout.__soloViewHotkeyPressed
+        this is essentially just overriding to automagically full screen
+        the parent with Alt+~ instead of the base of ~"""
+        if event.key() == AbstractShojiLayout.FULLSCREEN_HOTKEY:
+            # preflight
+            pos = QCursor.pos()
+
+            widget_pressed = QApplication.instance().widgetAt(pos)
+
+            # bypass handles
+            if isinstance(widget_pressed, QSplitterHandle):
+                return
+            # Press solo view hotkey
+            widget_soloable = self.getFirstSoloableWidget(widget_pressed)
+
+            # return if no soloable widget found
+            if not widget_soloable: return
+
+            # toggle solo view ( shoji view )
+            if widget_soloable.parent():
+                widget_soloable = widget_soloable.parent()
+                self.toggleIsSoloView(True, widget=widget_soloable)
 
 
 class ModelViewSearchWidget(AbstractShojiLayout):

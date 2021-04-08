@@ -218,16 +218,6 @@ class AbstractDragDropAbstractView(object):
             return
 
     """ EVENTS """
-    # def selectionChanged(self, selected, deselected):
-    #     for index in selected.indexes():
-    #         if index.column() == 0:
-    #             item = index.internalPointer()
-    #             self.model().itemSelectedEvent(item, True)
-    #     for index in deselected.indexes():
-    #         if index.column() == 0:
-    #             item = index.internalPointer()
-    #             self.model().itemSelectedEvent(item, False)
-
     def enterEvent(self, event):
         self.setFocus()
         return QAbstractItemView.enterEvent(self, event)

@@ -284,25 +284,6 @@ class AbstractShojiLayout(QSplitter):
             # toggle solo view (individual widget )
             self.toggleIsSoloView(True, widget=widget_soloable)
 
-    # def eventFilter(self, obj, event):
-        """
-        Events run on every child widget.
-
-        Handles the dynamic style sheet updates, and overrides
-        the solo view operator.
-
-        Args:
-            obj (QWidget):
-            event:
-        """
-        # hover properties
-        # if event.type() == QEvent.Enter:
-        #     if self.isSoloViewEnabled():
-        #         obj.setProperty("hover_display", True)
-        # if event.type() == QEvent.Leave:
-        #     obj.setProperty("hover_display", False)
-        # return False
-
     def enterEvent(self, event):
         self.setFocus()
         return QSplitter.enterEvent(self, event)

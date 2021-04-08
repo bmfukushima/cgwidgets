@@ -461,6 +461,11 @@ def contextMenu(index, selected_indexes):
 shoji_widget.addContextMenuEvent('test', contextMenu)
 
 
+# select index on show
+indexes = shoji_widget.model().findItems("hello", Qt.MatchExactly)
+for index in indexes:
+    shoji_widget.setIndexSelected(index, True)
+
 # display widget
 shoji_widget.resize(500, 500)
 shoji_widget.show()

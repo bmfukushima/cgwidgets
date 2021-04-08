@@ -37,7 +37,7 @@ from cgwidgets.widgets import (
     AbstractButtonInputWidgetContainer)
 
 
-class AbstractPiPWidget(AbstractShojiLayout):
+class AbstractPiPWidget(AbstractShojiModelViewWidget):
     """
     The PiPWidget is designed to display multiple widgets simultaneously to the user.
 
@@ -58,7 +58,6 @@ class AbstractPiPWidget(AbstractShojiLayout):
     Hierarchy:
         |- PiPMainWidget --> QWidget
         |    |- QVBoxLayout
-        |    |    |- PiPDisplayFlagsWidget --> AbstractButtonInputWidgetContainer
         |    |    |- PiPMainViewer --> QWidget
         |    |    |- PiPPanelCreatorWidget --> AbstractListInputWidget
         |    |- MiniViewer (QWidget)
@@ -118,47 +117,45 @@ class AbstractPiPWidget(AbstractShojiLayout):
     def __init__(self, parent=None, widget_types=None):
         super(AbstractPiPWidget, self).__init__(parent)
         # setup default attrs
-        self.setOrientation(Qt.Horizontal)
+        self.setHeaderPosition(attrs.NORTH)
+        self.setMultiSelectDirection(Qt.Horizontal)
+        self.setMultiSelect(True)
+        self.setHeaderItemIsEditable(False)
+        self.setHeaderItemIsDragEnabled(False)
         self._temp_widgets = []
         if not widget_types:
             widget_types = []
 
-        # create widgets
+        """ create widgets """
         # create main pip widget
         self._main_widget = PiPMainWidget(self, widget_types)
 
         # setup local organizer widget
         self._local_organizer_widget = PiPLocalOrganizerWidget(self)
         self._is_local_organizer_visible = False
-        self._local_organizer_widget.hide()
 
         # setup global organizer widget
         self._global_organizer_widget = PiPGlobalOrganizerWidget(self)
         self._is_global_organizer_visible = False
-        self._global_organizer_widget.hide()
 
+        # settings widget
         self._settings_widget = SettingsWidget(self)
-        self._is_settings_widget_visible = False
+        self._is_settings_visible = False
 
-        # setup creator widget visibility
-        self._is_panel_creator_visible = False
-
-        # add widgets
-        self.addWidget(self._main_widget)
-        self.addWidget(self._settings_widget)
-        self.addWidget(self._global_organizer_widget)
-        self.addWidget(self._local_organizer_widget)
-        self.addWidget(self._settings_widget)
-
-        # Disable Shoji full screen stuff...
-        self.setChildSoloable(False, self.mainWidget())
-        self.setChildSoloable(False, self.localOrganizerWidget())
-        self.setChildSoloable(False, self.globalOrganizerWidget())
-        self.setChildSoloable(False, self.settingsWidget())
+        self.insertShojiWidget(0, column_data={'name': 'Settings'}, widget=self._settings_widget)
+        self.insertShojiWidget(0, column_data={'name': 'Organizer'}, widget=self._global_organizer_widget)
+        self.insertShojiWidget(0, column_data={'name': 'Views'}, widget=self._local_organizer_widget)
+        self.insertShojiWidget(0, column_data={'name': 'PiP'}, widget=self._main_widget)
 
         # create temp widget
         self.createTempWidget()
         self.createTempWidget()
+
+    def showEvent(self, event):
+        indexes = self.model().findItems("PiP", Qt.MatchExactly)
+        for index in indexes:
+            self.setIndexSelected(index, True)
+        return AbstractShojiModelViewWidget.showEvent(self, event)
 
     """ UTILS """
     def numWidgets(self):
@@ -341,6 +338,11 @@ widget.setWordWrap(True)
         self.mainWidget().setPreviousWidget(previous_widget)
 
     """ ORGANIZER / CREATOR """
+    def toggleItemVisibility(self, item_name, visibility):
+        indexes = self.model().findItems(item_name, Qt.MatchExactly)
+        for index in indexes:
+            self.setIndexSelected(index, visibility)
+
     def isLocalOrganizerVisible(self):
         return self._is_local_organizer_visible
 
@@ -360,11 +362,9 @@ widget.setWordWrap(True)
             widget = getWidgetAncestor(obj, PiPMiniViewerWidget)
             self.miniViewerWidget().closeEnlargedView(widget)
 
+        # toggle visibility
         self._is_local_organizer_visible = not self.isLocalOrganizerVisible()
-        if self.isLocalOrganizerVisible():
-            self.localOrganizerWidget().show()
-        else:
-            self.localOrganizerWidget().hide()
+        self.toggleItemVisibility("Views", self.isLocalOrganizerVisible())
 
     def isGlobalOrganizerVisible(self):
         return self._is_global_organizer_visible
@@ -385,50 +385,41 @@ widget.setWordWrap(True)
             widget = getWidgetAncestor(obj, PiPMiniViewerWidget)
             self.miniViewerWidget().closeEnlargedView(widget)
 
+        # toggle visibility
         self._is_global_organizer_visible = not self.isGlobalOrganizerVisible()
-        if self.isGlobalOrganizerVisible():
-            self.globalOrganizerWidget().show()
-        else:
-            self.globalOrganizerWidget().hide()
+        self.toggleItemVisibility("Organizer", self.isGlobalOrganizerVisible())
 
-    def isPanelCreatorVisible(self):
-        return self._is_panel_creator_visible
+    def isSettingsVisible(self):
+        return self._is_settings_visible
 
-    def setIsPanelCreatorVisible(self, visible):
-        self._is_panel_creator_visible = visible
+    def setIsSettingsVisible(self, visible):
+        self._is_settings_visible = visible
 
-    def toggleCreatorVisibility(self):
+    def toggleSettingsVisibility(self):
         """
         Toggles whether or not the organizer widget is visible to the user
 
         Note: This is currently hard coded to "Q"
         """
 
-        # if self.miniViewerWidget()._is_frozen:
-        if not self.isPanelCreatorVisible():
-            if self.miniViewerWidget().isEnlarged():
-                obj = getWidgetUnderCursor(QCursor.pos())
-                widget = getWidgetAncestor(obj, PiPMiniViewerWidget)
-                self.miniViewerWidget().closeEnlargedView(widget)
+        if self.miniViewerWidget().isEnlarged():
+            obj = getWidgetUnderCursor(QCursor.pos())
+            widget = getWidgetAncestor(obj, PiPMiniViewerWidget)
+            self.miniViewerWidget().closeEnlargedView(widget)
 
-            self._is_panel_creator_visible = not self.isPanelCreatorVisible()
-            if self.isPanelCreatorVisible():
-                self.panelCreatorWidget().show()
-                self.panelCreatorWidget().setFocus()
+        # toggle visibility
+        self._is_settings_visible = not self.isSettingsVisible()
+        self.toggleItemVisibility("Settings", self.isSettingsVisible())
 
     """ EVENTS """
     def keyPressEvent(self, event):
-        print('abstract')
-        if event.key() == Qt.Key_A:
-            self.toggleGlobalOrganizerVisibility()
-
         if event.key() == Qt.Key_F:
             self.toggleLocalOrganizerVisibility()
-
-        if event.key() == Qt.Key_C:
-            self.toggleCreatorVisibility()
-
-        return QSplitter.keyPressEvent(self, event)
+        if event.key() == Qt.Key_G:
+            self.toggleGlobalOrganizerVisibility()
+        if event.key() == Qt.Key_S:
+            self.toggleSettingsVisibility()
+        return AbstractShojiModelViewWidget.keyPressEvent(self, event)
 
 
 class PiPMainWidget(QWidget):
@@ -470,11 +461,8 @@ class PiPMainWidget(QWidget):
         self.main_viewer = PiPMainViewer(self)
         # self.main_viewer.setStyleSheet("background-color: rgba(255,255,0,255);")
         self.mini_viewer = PiPMiniViewer(self)
-        self.panel_creator_widget = PiPPanelCreatorWidget(self, widget_types=widget_types)
-        self.panel_creator_widget.hide()
 
-        self._display_flags_widget = PiPDisplayFlagsWidget(self)
-        self._display_flags_widget.hide()
+
         # self._display_flags_widget.hide()
         # create layout
         """
@@ -485,10 +473,8 @@ class PiPMainWidget(QWidget):
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.layout().setSpacing(0)
 
-        #self.layout().addWidget(self.mini_viewer)
-        self.layout().addWidget(self._display_flags_widget)
         self.layout().addWidget(self.main_viewer)
-        self.layout().addWidget(self.panel_creator_widget)
+        #self.layout().addWidget(self.panel_creator_widget)
 
     """ UTILS (SWAP) """
     def swapWidgets(self):
@@ -644,7 +630,7 @@ class PiPMainWidget(QWidget):
 
     def showWidgetDisplayNames(self, enabled):
         self._are_widget_names_shown = enabled
-        for widget in self.parent().widgets():
+        for widget in getWidgetAncestor(self, AbstractPiPWidget).widgets():
             if enabled:
                 widget.main_widget.viewWidget().show()
             else:
@@ -701,7 +687,6 @@ class PiPMainWidget(QWidget):
         return QWidget.resizeEvent(self, event)
 
     def keyPressEvent(self, event):
-        print('main')
         # swap between this and previous
         if event.key() == 96:
             # pre flight
@@ -821,7 +806,7 @@ class PiPMiniViewer(QWidget):
         scale = main_widget.enlargedScale()
         negative_space = 1 - scale
         half_neg_space = negative_space * 0.5
-        num_widgets = main_widget.parent().numWidgets()
+        num_widgets = getWidgetAncestor(widget, AbstractPiPWidget).numWidgets()
 
         # reparent widget
         widget.setParent(main_widget)
@@ -1055,89 +1040,6 @@ class PiPMiniViewerWidget(QWidget):
         self._index = index
 
 
-""" DISPLAY WIDGETS """
-class PiPDisplayFlagsWidget(AbstractButtonInputWidgetContainer):
-    """
-    This widget will display all of the optional tabs that the user can display.
-        PiPGlobalOrganizerWidget | PiPLocalOrganizerWidget | Settings
-
-    """
-    def __init__(self, parent=None, orientation=Qt.Horizontal):
-        super(PiPDisplayFlagsWidget, self).__init__(parent, orientation)
-        #
-        self.setIsMultiSelect(True)
-
-        global_organizer = self.addButton("Global Organizer", "global")
-        global_organizer.setUserFinishedEditingEvent(self.toggleGlobalOrganizerWidget)
-
-        local_organizer = self.addButton("Local Organizer", "local")
-        local_organizer.setUserFinishedEditingEvent(self.toggleLocalOrganizerWidget)
-
-    def toggleGlobalOrganizerWidget(self, widget, value):
-        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
-        main_widget.toggleGlobalOrganizerVisibility()
-
-    def toggleLocalOrganizerWidget(self, widget, value):
-        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
-        main_widget.toggleLocalOrganizerVisibility()
-
-
-class PiPPanelCreatorWidget(AbstractListInputWidget):
-    def __init__(self, parent=None, widget_types=None):
-        super(PiPPanelCreatorWidget, self).__init__(parent)
-
-        self._widget_types = widget_types
-        self.populate([[key] for key in widget_types.keys()])
-        #self.setUserFinishedEditingEvent(self.createNewWidget)
-
-    def widgetTypes(self):
-        return self._widget_types
-
-    def setWidgetTypes(self, widget_types):
-        self._widget_types = widget_types
-
-    def createNewWidget(self):
-        # preflight
-        value = self.text()
-
-        if value not in self.widgetTypes().keys(): return
-        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
-
-        # get constructor
-        main_widget.createNewWidget(self.widgetTypes()[value], name=str(value))
-        # widget = index.internalPointer().widget()
-
-        # reset widget
-        self.setText('')
-        self.hide()
-        self.clearFocus()
-
-    """ EVENTS """
-    def focusOutEvent(self, event):
-        self.hide()
-        return AbstractListInputWidget.focusOutEvent(self, event)
-
-    def showEvent(self, event):
-        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
-        main_widget.setIsPanelCreatorVisible(True)
-        self.setFocus()
-        AbstractListInputWidget.showEvent(self, event)
-
-    def hideEvent(self, event):
-        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
-        main_widget.setIsPanelCreatorVisible(False)
-        main_widget.setFocus()
-        AbstractListInputWidget.hideEvent(self, event)
-
-    def keyPressEvent(self, event):
-
-        if event.key() in keylist.ACCEPT_KEYS:
-            self.createNewWidget()
-        if event.key() == Qt.Key_Escape:
-            self.hide()
-        return AbstractListInputWidget.keyPressEvent(self, event)
-
-
 """ SETTINGS """
 class SettingsWidget(AbstractFrameInputWidgetContainer):
     """
@@ -1307,6 +1209,17 @@ main_widget.mainWidget().resizeMiniViewer()"""}
         """
         return self._settings
 
+    """ EVENTS """
+    def showEvent(self, event):
+        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+        main_widget.setIsSettingsVisible(True)
+        AbstractModelViewWidget.showEvent(self, event)
+
+    def hideEvent(self, event):
+        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+        main_widget.setIsSettingsVisible(False)
+        main_widget.setFocus()
+        AbstractModelViewWidget.hideEvent(self, event)
 
 """ ORGANIZER (GLOBAL) """
 class PiPGlobalOrganizerItem(AbstractDragDropModelItem):
@@ -1397,6 +1310,18 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
 
     def setSaveFilePath(self, file_path):
         self.saveWidget().setSaveFilePath(file_path)
+
+    """ EVENTS """
+    def showEvent(self, event):
+        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+        main_widget.setIsGlobalOrganizerVisible(True)
+        AbstractModelViewWidget.showEvent(self, event)
+
+    def hideEvent(self, event):
+        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+        main_widget.setIsGlobalOrganizerVisible(False)
+        main_widget.setFocus()
+        AbstractModelViewWidget.hideEvent(self, event)
 
 
 class PiPSaveWidget(QWidget):
@@ -1600,6 +1525,11 @@ class PiPLocalOrganizerWidget(AbstractModelViewWidget):
         self.setTextChangedEvent(self.editWidget)
         self.setDropEvent(self.itemReordered)
 
+        # panel creator widget
+        self.panel_creator_widget = PiPPanelCreatorWidget(self, widget_types=widget_types)
+        self.addDelegate([Qt.Key_C], self.panel_creator_widget, modifier=Qt.AltModifier, focus=True)
+        self.panel_creator_widget.show()
+
     """ EVENTS """
     def itemReordered(self, data, items, model, row, parent):
         """
@@ -1675,7 +1605,6 @@ class PiPLocalOrganizerWidget(AbstractModelViewWidget):
     def showEvent(self, event):
         main_widget = getWidgetAncestor(self, AbstractPiPWidget)
         main_widget.setIsLocalOrganizerVisible(True)
-        self.setFocus()
         AbstractModelViewWidget.showEvent(self, event)
 
     def hideEvent(self, event):
@@ -1684,11 +1613,40 @@ class PiPLocalOrganizerWidget(AbstractModelViewWidget):
         main_widget.setFocus()
         AbstractModelViewWidget.hideEvent(self, event)
 
-    def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Escape:
-            self.hide()
-        return AbstractModelViewWidget.keyPressEvent(self, event)
 
+class PiPPanelCreatorWidget(AbstractListInputWidget):
+    def __init__(self, parent=None, widget_types=None):
+        super(PiPPanelCreatorWidget, self).__init__(parent)
+
+        self._widget_types = widget_types
+        self.populate([[key] for key in widget_types.keys()])
+        #self.setUserFinishedEditingEvent(self.createNewWidget)
+
+    def widgetTypes(self):
+        return self._widget_types
+
+    def setWidgetTypes(self, widget_types):
+        self._widget_types = widget_types
+
+    def createNewWidget(self):
+        # preflight
+        value = self.text()
+
+        if value not in self.widgetTypes().keys(): return
+        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+
+        # get constructor
+        main_widget.createNewWidget(self.widgetTypes()[value], name=str(value))
+
+        # reset widget
+        self.setText('')
+        self.setFocus()
+
+    def keyPressEvent(self, event):
+        if event.key() in keylist.ACCEPT_KEYS:
+            self.createNewWidget()
+
+        return AbstractListInputWidget.keyPressEvent(self, event)
 
 if __name__ == '__main__':
     import sys
