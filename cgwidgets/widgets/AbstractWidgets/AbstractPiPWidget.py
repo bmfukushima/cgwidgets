@@ -2,6 +2,12 @@
 Todo:
     * Overall cleanup / organization
         mainWidget --> AbstractPiPWidget?
+    * Globals
+        - Repopulate
+            - clear
+            - populate
+        - Rename
+        - Delete
 
 
 """
@@ -1650,6 +1656,11 @@ class PiPPanelCreatorWidget(AbstractListInputWidget):
 
 if __name__ == '__main__':
     import sys
+    import os
+
+    os.environ['QT_API'] = 'pyside2'
+    from qtpy import API_NAME
+
     from qtpy.QtWidgets import (QApplication, QListWidget, QAbstractItemView, QPushButton)
     from cgwidgets.utils import centerWidgetOnCursor
     app = QApplication(sys.argv)

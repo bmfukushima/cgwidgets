@@ -1,6 +1,5 @@
 import sys
 import os
-os.environ['QT_API'] = 'pyside2'
 
 from qtpy.QtWidgets import (QSplitterHandle, QApplication, QLabel, QCompleter, QTreeView, QWidget, QVBoxLayout)
 from qtpy.QtCore import Qt

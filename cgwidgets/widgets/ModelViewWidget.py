@@ -1,6 +1,4 @@
 import sys
-import os
-os.environ['QT_API'] = 'pyside2'
 from cgwidgets.widgets import AbstractModelViewWidget
 
 class ModelViewWidget(AbstractModelViewWidget):

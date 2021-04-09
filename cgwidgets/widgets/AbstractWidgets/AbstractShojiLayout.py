@@ -285,7 +285,9 @@ class AbstractShojiLayout(QSplitter):
             self.toggleIsSoloView(True, widget=widget_soloable)
 
     def enterEvent(self, event):
-        self.setFocus()
+        focused_widget = QApplication.focusWidget()
+        if not hasattr(focused_widget, "_is_base_widget"):
+            self.setFocus()
         return QSplitter.enterEvent(self, event)
 
     def keyPressEvent(self, event):

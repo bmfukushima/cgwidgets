@@ -22,6 +22,9 @@ VERTICAL = 'vertical'
 HORIZONTAL = 'horizontal'
 
 # BASE WIDGET TYPES
+"""
+widget._is_base_widget
+will get all widgets that inherit from the iAbstractInputWidget"""
 FLOAT = 'float'
 INTEGER = 'integer'
 STRING = 'string'
