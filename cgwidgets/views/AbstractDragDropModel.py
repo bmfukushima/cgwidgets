@@ -191,14 +191,28 @@ class AbstractDragDropModel(QAbstractItemModel):
         self.itemEnabledEvent(item, enabled)
 
     def deleteItem(self, item, event_update=False):
+        """
+        When an item is deleted this function will be called.
+
+        Cancel event...
+        If event_update is TRUE, and the itemDeleteEvent returns TRUE
+        then this will return, and not delete the item.
+
+        Args:
+            item (AbstractDragDropModelItem): Item to be deleted
+            event_update (bool): if True the user event will be run
+                if the user event returns TRUE then the item will NOT
+                be deleted... kinda counter intuitive, but w/e I don't
+                feel like rewriting everything
+
+        Returns:
+
+        """
         # run deletion event
         if event_update:
-            should_continue = self.itemDeleteEvent(item)
-            # if user cancelled from Warning Dialogue
-            # if not should_continue:
-            #     print('breaking???')
-            #     return
+            self.itemDeleteEvent(item)
 
+        print('delete event??')
         # get old parents
         old_parent_item = item.parent()
         old_parent_index = self.getParentIndexFromItem(item)

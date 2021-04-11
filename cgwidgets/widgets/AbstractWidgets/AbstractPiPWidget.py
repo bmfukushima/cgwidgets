@@ -1285,6 +1285,10 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
         self.setItemDeleteEvent(self.deleteItemEvent)
         self.setIndexSelectedEvent(self.loadPiPWidgetFromSelection)
 
+        # setup deletion warning
+        delete_warning_widget = AbstractLabelWidget(text="Are you sure you want to delete this?\n You cannot undo it...")
+        self.setDeleteWarningWidget(delete_warning_widget)
+
     def populate(self):
         pip_widgets = self.getPiPWidgetsJSON()
         for widget_name in sorted(pip_widgets.keys()):
@@ -1333,28 +1337,17 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
         Returns:
 
         """
-        def deleteItem(widget):
-            # remove from JSON
-            pip_widgets = widget.getPiPWidgetsJSON()
-            name = item.columnData()['name']
-            del pip_widgets[name]
+        # remove from JSON
+        pip_widgets = self.getPiPWidgetsJSON()
+        name = item.columnData()['name']
+        del pip_widgets[name]
 
-            # save json PiP File
-            save_widget = widget.saveWidget()
-            if save_widget.saveFilePath():
-                # Writing JSON data
-                with open(save_widget.saveFilePath(), 'w') as f:
-                    json.dump(pip_widgets, f)
-
-        def dontDeleteItem(widget):
-            return
-
-        # warning dialogue
-        display_widget = AbstractLabelWidget(text="Are you sure you want to delete this?\n You cannot undo it...")
-        showWarningDialogue(self, display_widget, deleteItem, dontDeleteItem)
-
-        return True
-
+        # save json PiP File
+        save_widget = self.saveWidget()
+        if save_widget.saveFilePath():
+            # Writing JSON data
+            with open(save_widget.saveFilePath(), 'w') as f:
+                json.dump(pip_widgets, f)
 
     def acceptEvent(self, widget):
         print("accepted!", widget)

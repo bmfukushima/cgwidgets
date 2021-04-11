@@ -5,7 +5,7 @@ from qtpy.QtWidgets import QApplication, QLabel
 from qtpy.QtGui import QCursor
 from qtpy.QtCore import Qt
 
-from cgwidgets.widgets import ModelViewWidget
+from cgwidgets.widgets import ModelViewWidget, AbstractLabelWidget
 
 app = QApplication(sys.argv)
 
@@ -41,7 +41,10 @@ def testDelegateToggle(enabled, event, widget):
 
 # create main Model View Widget
 main_widget = ModelViewWidget()
-# main_widget.setPresetViewType(ModelViewWidget.TREE_VIEW)
+
+# setup deletion warning
+delete_warning_widget = AbstractLabelWidget(text="Are you sure you want to delete this?\n You cannot undo it...")
+main_widget.setDeleteWarningWidget(delete_warning_widget)
 
 # create delegates
 delegate_widget = QLabel("F")

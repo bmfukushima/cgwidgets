@@ -170,6 +170,9 @@ class AbstractModelViewWidget(AbstractShojiLayout):
         else:
             print('view does not have function addContextMenuEvent')
 
+    def setDeleteWarningWidget(self, widget):
+        self.view().setDeleteWarningWidget(widget)
+
     """ MODEL """
     def model(self):
         if hasattr(self, "_view"):
