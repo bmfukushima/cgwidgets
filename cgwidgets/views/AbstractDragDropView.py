@@ -4,7 +4,7 @@ from qtpy.QtWidgets import (
     QListView, QAbstractItemView, QTreeView, QApplication,
     QProxyStyle, QStyledItemDelegate, QStyleOptionViewItem, QStyle, QMenu
 )
-from qtpy.QtCore import Qt, QPoint, QRect, QItemSelectionModel, QSortFilterProxyModel
+from qtpy.QtCore import Qt, QPoint, QPointF, QRect, QItemSelectionModel, QSortFilterProxyModel
 from qtpy.QtGui import QColor, QPen, QBrush, QCursor, QPolygonF, QPainterPath
 
 from cgwidgets.utils import attrs, showWarningDialogue
@@ -738,8 +738,8 @@ class AbstractDragDropIndicator(QProxyStyle):
             path.addPolygon(l_indicator)
             path.addPolygon(r_indicator)
             painter.fillPath(path, brush)
-
-        # drop on
+        #
+        # # drop on
         else:
             indicator_rect = QRect((width / 2), y_pos, widget.width() - (width / 2), option.rect.height())
             painter.drawRoundedRect(indicator_rect, 1, 1)
@@ -851,7 +851,13 @@ class AbstractDragDropIndicator(QProxyStyle):
                 [-size, size],
                 [0, 0]
             ]
-        triangle = QPolygonF(map(lambda p: QPoint(*p), triangle_point_list))
+
+        # fixed this...
+        if API_NAME == "PySide2":
+            triangle = QPolygonF([QPointF(point[0], point[1]) for point in triangle_point_list])
+        else:
+             triangle = QPolygonF(map(lambda p: QPoint(*p), triangle_point_list))
+
         return triangle
 
 
