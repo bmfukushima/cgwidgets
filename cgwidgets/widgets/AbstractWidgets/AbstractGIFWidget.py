@@ -1,7 +1,7 @@
 from qtpy.QtWidgets import (QWidget, QSizePolicy,QLabel, QVBoxLayout)
 from qtpy.QtGui import (QMovie)
 from qtpy.QtCore import (Qt, QByteArray, QSize)
-
+from cgwidgets.settings.colors import iColor
 
 class AbstractGIFWidget(QWidget):
     """
@@ -20,7 +20,7 @@ class AbstractGIFWidget(QWidget):
         super(AbstractGIFWidget, self).__init__(parent)
 
         QVBoxLayout(self)
-        self.layout().setAlignment(Qt.AlignTop)
+        self.layout().setAlignment(Qt.AlignCenter)
         self.hover_color = repr(hover_color)
         self.style_sheet = self.styleSheet()
 
@@ -29,9 +29,9 @@ class AbstractGIFWidget(QWidget):
         self.layout().addWidget(self.movie_widget)
 
         self.movie_widget.movie = QMovie(gif_file, QByteArray(), self.movie_widget)
-        self.movie_widget.movie.setScaledSize(QSize(100, 300))
-        self.movie_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.movie_widget.setAlignment(Qt.AlignTop)
+        self.movie_widget.movie.setScaledSize(QSize(self.height()/3, self.height()))
+        # self.movie_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        # self.movie_widget.setAlignment(Qt.AlignCenter)
 
         # start movie
         self.movie_widget.movie.setCacheMode(QMovie.CacheAll)
@@ -45,15 +45,11 @@ class AbstractGIFWidget(QWidget):
         this is caching the values into the stylesheet.  Rather
         than dynamically calling them =\
         """
-        self.movie.setStyleSheet(
+        self.setStyleSheet(
             """
-            QLabel::hover{
-                border-color: rgba%s;
-            }
-            """ % (
-                    self.hover_color
-                )
-            )
+            border: 5px solid;
+            border-color: rgba{border_color};
+            """.format(border_color=self.hover_color))
 
     """ EVENTS """
     def setMousePressEvent(self, event):
@@ -72,11 +68,8 @@ class AbstractGIFWidget(QWidget):
         self.setStyleSheet(
             """
             border: 5px solid;
-            border-color: rgba%s;
-            """ % (
-                    self.hover_color
-                )
-            )
+            border-color: rgba{border_color};
+            """.format(border_color=self.hover_color))
         return QWidget.enterEvent(self, *args, **kwargs)
 
     def leaveEvent(self, *args, **kwargs):

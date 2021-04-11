@@ -193,7 +193,11 @@ class AbstractDragDropModel(QAbstractItemModel):
     def deleteItem(self, item, event_update=False):
         # run deletion event
         if event_update:
-            self.itemDeleteEvent(item)
+            should_continue = self.itemDeleteEvent(item)
+            # if user cancelled from Warning Dialogue
+            # if not should_continue:
+            #     print('breaking???')
+            #     return
 
         # get old parents
         old_parent_item = item.parent()

@@ -21,7 +21,7 @@ from qtpy.QtCore import QEvent, Qt, QPoint
 from qtpy.QtGui import QCursor
 
 from cgwidgets.views import AbstractDragDropModelItem
-from cgwidgets.utils import attrs, getWidgetUnderCursor, isWidgetDescendantOf, getWidgetAncestor, getDefaultSavePath, getJSONData
+from cgwidgets.utils import attrs, getWidgetUnderCursor, isWidgetDescendantOf, getWidgetAncestor, getDefaultSavePath, getJSONData, showWarningDialogue
 
 from cgwidgets.settings.hover_display import installHoverDisplaySS, removeHoverDisplay
 from cgwidgets.settings.colors import iColor
@@ -33,6 +33,7 @@ from cgwidgets.widgets.AbstractWidgets.AbstractModelViewWidget import AbstractMo
 from cgwidgets.widgets.AbstractWidgets.AbstractShojiLayout import AbstractShojiLayout
 from cgwidgets.widgets.AbstractWidgets.AbstractShojiWidget.AbstractShojiModelViewWidget import AbstractShojiModelViewWidget
 from cgwidgets.widgets import AbstractWarningWidget
+
 
 from cgwidgets.widgets import (
     AbstractFrameInputWidgetContainer,
@@ -1332,19 +1333,34 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
         Returns:
 
         """
-        # remove from JSON
-        pip_widgets = self.getPiPWidgetsJSON()
-        name = item.columnData()['name']
-        del pip_widgets[name]
+        def deleteItem(widget):
+            # remove from JSON
+            pip_widgets = widget.getPiPWidgetsJSON()
+            name = item.columnData()['name']
+            del pip_widgets[name]
+
+            # save json PiP File
+            save_widget = widget.saveWidget()
+            if save_widget.saveFilePath():
+                # Writing JSON data
+                with open(save_widget.saveFilePath(), 'w') as f:
+                    json.dump(pip_widgets, f)
+
+        def dontDeleteItem(widget):
+            return
 
         # warning dialogue
+        display_widget = AbstractLabelWidget(text="Are you sure you want to delete this?\n You cannot undo it...")
+        showWarningDialogue(self, display_widget, deleteItem, dontDeleteItem)
 
-        # save json PiP File
-        save_widget = self.saveWidget()
-        if save_widget.saveFilePath():
-            # Writing JSON data
-            with open(save_widget.saveFilePath(), 'w') as f:
-                json.dump(pip_widgets, f)
+        return True
+
+
+    def acceptEvent(self, widget):
+        print("accepted!", widget)
+
+    def cancelEvent(self, widget):
+        print("Firefly!!", widget)
 
     def showEvent(self, event):
         main_widget = getWidgetAncestor(self, AbstractPiPWidget)

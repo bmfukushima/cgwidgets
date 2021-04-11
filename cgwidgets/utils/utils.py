@@ -504,6 +504,15 @@ def getGlobalItemPos(item):
     return pos
 
 
+def centerCursorOnWidget(widget):
+    pos = widget.pos()
+    height = widget.height()
+    width = widget.width()
+    xpos = pos.x() + (width * 0.5)
+    ypos = pos.y() + (height * 0.5)
+    QCursor.setPos(QPoint(xpos, ypos))
+
+
 def centerWidgetOnCursor(widget):
     pos = QCursor.pos()
     widget.setGeometry(
@@ -555,6 +564,41 @@ def clearLayout(layout, start=None, end=None):
             widget.setParent(None)
         except AttributeError:
             pass
+
+
+def showWarningDialogue(widget, warning_display_widget, accept_event, cancel_event, width=1080, height=512):
+    """
+    Displays a warning widget to the user at the center of the screen
+
+    Args:
+        widget (QWidget): That widget that is launching the warning dialogue.  Note that this
+            widget will be the same arg that will be provided to the accept_event,
+            and cancel_event virtual functions
+        warning_display_widget (QWidget): Widget to be displayed at the center of the warning box
+        accept_event (function): Function that will be run when the user clicks the happy dog
+            args (widget)
+        cancel_event (function): Function that will be run when the user clicks the sad dog
+            args (widget)
+        width (int): width of the warning box
+        height (int): height of the warning box
+
+    Returns:
+
+    """
+    from cgwidgets.widgets import AbstractWarningWidget
+
+    # create warning widget
+    widget.__warning_widget = AbstractWarningWidget(widget=widget, display_widget=warning_display_widget)
+
+    # connect user events
+    widget.__warning_widget.setAcceptEvent(accept_event)
+    widget.__warning_widget.setCancelEvent(cancel_event)
+
+    # show widget
+    widget.__warning_widget.show()
+    centerCursorOnWidget(widget.__warning_widget)
+
+    return widget.__warning_widget
 
 
 def setAsTool(widget):

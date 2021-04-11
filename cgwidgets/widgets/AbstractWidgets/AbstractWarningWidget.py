@@ -4,7 +4,7 @@ from qtpy.QtCore import Qt
 from cgwidgets.settings.colors import iColor
 from cgwidgets.settings.icons import icons
 from cgwidgets.utils import setAsTool, centerWidgetOnScreen
-from cgwidgets.widgets import AbstractLabelWidget
+from cgwidgets.widgets import AbstractLabelWidget, AbstractButtonInputWidget
 from cgwidgets.widgets.AbstractWidgets.AbstractGIFWidget import AbstractGIFWidget
 
 class AbstractWarningWidget(QWidget):
@@ -17,7 +17,10 @@ class AbstractWarningWidget(QWidget):
     to the left/right of the widget, or with the esc / enter/return keys.
 
     Args:
-        central_widget (QWidget): Central widget to be displayed
+        width (int): of widget, only valid if resize TRUE
+        height (int): of widget, only valid if resize TRUE
+        resize_on_show (bool): if True will resize the widget to the height/width dimensions provided
+        display_widget (QWidget): Central widget to be displayed
             to the user.  Can also be set with setCentralWidget.
         button_width (int): The width of the accept/cancel buttons.
         widget (QWidget): Widget that is calling the WarningWidget
@@ -27,11 +30,11 @@ class AbstractWarningWidget(QWidget):
             current event registered with setAcceptEvent.
         cancel_button (QPushButton): When pressed, cancels the
             current event registered with setCancelEvent.
-        central_widget (QWidget): The central widget to be displayed
+        display_widget (QWidget): The central widget to be displayed
             to the user.
     """
 
-    def __init__(self, parent=None, central_widget=None, button_width=None, widget=None):
+    def __init__(self, parent=None, display_widget=None, button_width=100, width=1080, height=512, resize_on_show=True, widget=None):
         super(AbstractWarningWidget, self).__init__(parent)
         #self.main_widget = getMainWidget(self)
 
@@ -39,49 +42,50 @@ class AbstractWarningWidget(QWidget):
         QHBoxLayout(self)
         setAsTool(self)
 
-        # set widget
+        # setup default attrs
+        if not button_width:
+            self.setButtonWidth(100)
+
+        self.display_height = height
+        self.display_width = width
+        self.resize_on_show = resize_on_show
         self._widget = widget
 
         # create text layout
-        if not central_widget:
-            text = "Provide central_widget kwarg to constructor \n or \n use setCentralWidget to display a widget here..."
-            self.central_widget = AbstractLabelWidget(parent=self, text=text)
+        if not display_widget:
+            text = "Provide display_widget kwarg to constructor \n or \n use setCentralWidget to display a widget here..."
+            display_widget = AbstractLabelWidget(parent=self, text=text)
+        self._display_widget = display_widget
 
-        # create accept / cancel widgets
-        """
-        self.accept_button = QPushButton('=>')
-        self.cancel_button = QPushButton('<=')
-        self.accept_button.clicked.connect(self.acceptPressed)
-        self.cancel_button.clicked.connect(self.cancelPressed)
-        """
+        # create widgets
         accept_gif = icons["ACCEPT_GIF"]
         cancel_gif = icons["CANCEL_GIF"]
         self.accept_button = AbstractGIFWidget(accept_gif, hover_color=iColor["rgba_accept"])
         self.cancel_button = AbstractGIFWidget(cancel_gif, hover_color=iColor["rgba_cancel"])
 
-        # setup accept / cancel widgets
-        size_policy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
+        # setup style
+        size_policy = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
         self.accept_button.setSizePolicy(size_policy)
         self.cancel_button.setSizePolicy(size_policy)
 
+        self.accept_button.layout().setContentsMargins(0, 0, 0, 0)
+        self.cancel_button.layout().setContentsMargins(0, 0, 0, 0)
+        self.displayWidget().setContentsMargins(0, 0, 0, 0)
+        self.layout().setContentsMargins(0, 0, 0, 0)
+        self.layout().setSpacing(0)
+
+        # setup events
         self.accept_button.setMousePressEvent(self.acceptEvent)
         self.cancel_button.setMousePressEvent(self.cancelEvent)
 
+        # setup helpful tips
         self.setupButtonTooltips()
 
         # set up main layout
         self.layout().addWidget(self.cancel_button, 1)
-        self.layout().addWidget(self.central_widget)
+        self.layout().addWidget(self._display_widget)
         self.layout().addWidget(self.accept_button, 1)
-
         self.layout().setAlignment(Qt.AlignTop)
-
-        # set default button size
-        if not button_width:
-            self.setButtonWidth(100)
-
-        self.updateStyleSheet()
 
     def setupButtonTooltips(self):
         """
@@ -121,12 +125,13 @@ You can also hit <ESCAPE> to go back...
     def updateStyleSheet(self):
         style_sheet = """
 {type}{{
-    background-color: rgba{rgba_background_00}
+    background-color: rgba{rgba_background_00};
 }}
         """.format(
             type=type(self).__name__,
             rgba_background_00=iColor["rgba_background_00"]
         )
+
         self.setStyleSheet(style_sheet)
 
     """ PROPERTIES """
@@ -136,13 +141,13 @@ You can also hit <ESCAPE> to go back...
     def setWidget(self, widget):
         self._widget = widget
 
-    def setCentralWidget(self, central_widget):
-        self.layout().itemAt(1).widget().setParent(None)
-        self.layout().insertWidget(1, central_widget)
-        self.central_widget = central_widget
+    def displayWidget(self):
+        return self._display_widget
 
-    def getCentralWidget(self):
-        return self.central_widget
+    def setDisplayWidget(self, display_widget):
+        self.layout().itemAt(1).widget().setParent(None)
+        self.layout().insertWidget(1, display_widget)
+        self._display_widget = display_widget
 
     """ EVENTS (VIRTUAL) """
     def _accept_event(self, widget):
@@ -167,8 +172,9 @@ You can also hit <ESCAPE> to go back...
 
     """ EVENTS """
     def showEvent(self, event):
-        centerWidgetOnScreen(self)
+        centerWidgetOnScreen(self, height=self.display_height, width=self.display_width, resize=self.resize_on_show)
         self.setFocus()
+        self.updateStyleSheet()
         return QWidget.showEvent(self, event)
 
     def keyPressEvent(self, event):
@@ -185,35 +191,24 @@ if __name__ == '__main__':
     from cgwidgets.utils import centerWidgetOnCursor
     app = QApplication(sys.argv)
 
-    warning_widget = AbstractWarningWidget()
+    class warningShowButton(AbstractButtonInputWidget):
+        def __init__(self, parent=None):
+            super(warningShowButton, self).__init__(parent)
+            self.setUserClickedEvent(self.showWarningDialogue)
 
-    def acceptEvent(widget):
-        print("accepted!")
+        def showWarningDialogue(self, widget):
+            from cgwidgets.utils import showWarningDialogue, centerCursorOnWidget
+            display_widget = AbstractLabelWidget(text="SINE.")
+            warning_widget = showWarningDialogue(self, display_widget, self.acceptEvent, self.cancelEvent)
 
-    def cancelEvent(widget):
-        print("Firefly!!")
+        def acceptEvent(self, widget):
+            print("accepted!", widget)
 
-    warning_widget.setAcceptEvent(acceptEvent)
-    warning_widget.setCancelEvent(cancelEvent)
+        def cancelEvent(self, widget):
+            print("Firefly!!", widget)
 
-
-    """ Setup Main Display """
-    def showPushButton():
-        warning_widget = AbstractWarningWidget()
-
-        def acceptEvent(widget):
-            print("accepted!")
-
-        def cancelEvent(widget):
-            print("Firefly!!")
-
-        warning_widget.setAcceptEvent(acceptEvent)
-        warning_widget.setCancelEvent(cancelEvent)
-
-        warning_widget.show()
-
-    show_warning_button = QPushButton("show warning")
-    show_warning_button.clicked.connect(showPushButton)
+    show_warning_button = warningShowButton()
+    #show_warning_button.clicked.connect(showWarningDialogue)
     test_label = AbstractLabelWidget(text="test")
     main_widget = QWidget()
     main_layout = QVBoxLayout(main_widget)
