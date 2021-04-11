@@ -9,9 +9,8 @@ THE IMPORT ORDER MATTERS!!
 """ IMPORT ABSTRACT WIDGETS """
 from .AbstractWidgets import *
 
-
-
 from .AbstractWidgets.AbstractModelViewWidget import AbstractModelViewWidget
+from .AbstractWidgets.AbstractWarningWidget import AbstractWarningWidget
 from .AbstractWidgets.AbstractLabelledInputWidget import AbstractLabelledInputWidget
 from .AbstractWidgets.AbstractOverlayInputWidget import AbstractOverlayInputWidget
 from .AbstractWidgets.AbstractShojiWidget import *

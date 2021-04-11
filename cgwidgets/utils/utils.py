@@ -514,6 +514,25 @@ def centerWidgetOnCursor(widget):
     )
 
 
+def centerWidgetOnScreen(widget, width=1080, height=512, resize=False):
+    """
+    Centers a widget on the screen
+    Args:
+        widget (QWidget): to be centered/resizesd
+        width (int): of widget, only valid if resize TRUE
+        height (int): of widget, only valid if resize TRUE
+        resize (bool): if True will resize the widget to the height/width dimensions provided
+    """
+    screen_resolution = QApplication.desktop().screenGeometry()
+
+    xpos = (screen_resolution.width() * 0.5) - (width * 0.5)
+    ypos = (screen_resolution.height() * 0.5) - (height * 0.5)
+
+    if resize:
+        widget.setFixedSize(width, height)
+    widget.move(int(xpos), int(ypos))
+
+
 def clearLayout(layout, start=None, end=None):
     """
     removes all widgets from the layout provided

@@ -323,7 +323,6 @@ class AbstractLabelWidget(QWidget, iAbstractInputWidget):
             the current pixmap.  When the user stops resizing, after a period of 500ms the
             image will fully resize based off of the original size.
     """
-
     TYPE = 'label'
 
     def __init__(self, parent=None, text=None, image=None):
@@ -342,21 +341,20 @@ class AbstractLabelWidget(QWidget, iAbstractInputWidget):
 
         # setup default attrs
         self._image_resize_mode = Qt.KeepAspectRatio
+        self._text_color = iColor["rgba_text"]
+        self._text_background_color = iColor["rgba_background_00"]
 
         if text:
             self.setText(text)
-            self.setTextColor(iColor["rgba_text"])
 
         if image:
             self.setImage(image)
 
-
         # setup style
-
-        # remove hover display (overwritten by image)
+        """remove hover display (overwritten by image)"""
         style_sheet = removeHoverDisplay(self.styleSheet(), "INPUT WIDGETS")
         self.setStyleSheet(style_sheet)
-
+        self.updateTextColor()
         # set text alignment
         self.textWidget().setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
         self.imageWidget().setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
@@ -379,6 +377,16 @@ class AbstractLabelWidget(QWidget, iAbstractInputWidget):
         """
         self.textWidget().setText(text)
 
+    def updateTextColor(self):
+        style_sheet = """
+        color: rgba{color};
+        background-color: rgba{background_color};
+        """.format(color=self.textColor(), background_color=self.textBackgroundColor())
+        self.textWidget().setStyleSheet(style_sheet)
+
+    def textColor(self):
+        return self._text_color
+
     def setTextColor(self, color):
         """
         Sets the color of the displayed text
@@ -386,7 +394,21 @@ class AbstractLabelWidget(QWidget, iAbstractInputWidget):
         Args:
             color (RGBA): Tuple of RGBA(255) values
         """
-        self.textWidget().setStyleSheet("color: rgba{color}".format(color=repr(color)))
+        self._text_color = color
+        self.updateTextColor()
+
+    def textBackgroundColor(self):
+        return self._text_background_color
+
+    def setTextBackgroundColor(self, color):
+        """
+        Sets the color of the displayed text_background
+
+        Args:
+            color (RGBA): Tuple of RGBA(255) values
+        """
+        self._text_background_color = color
+        self.updateTextColor()
 
     def setWordWrap(self, enabled):
         self.textWidget().setWordWrap(enabled)
@@ -618,11 +640,15 @@ if __name__ == "__main__":
 
     # Construct
     delegate_widget = AbstractButtonInputWidget(title="yolo", is_toggleable=True)
+    label_test = AbstractLabelWidget(text="test")
 
+    string_test = AbstractStringInputWidget()
     main_widget = QWidget()
     main_layout = QVBoxLayout(main_widget)
     main_layout.addWidget(delegate_widget)
     main_layout.addWidget(QLabel("klajdflasjkjfklasfjsl"))
+    main_layout.addWidget(label_test)
+    main_layout.addWidget(string_test)
 
     main_widget.move(QCursor.pos())
     main_widget.show()

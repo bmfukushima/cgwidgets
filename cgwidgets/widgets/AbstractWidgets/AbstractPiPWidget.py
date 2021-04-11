@@ -32,6 +32,7 @@ from cgwidgets.widgets.AbstractWidgets.AbstractOverlayInputWidget import Abstrac
 from cgwidgets.widgets.AbstractWidgets.AbstractModelViewWidget import AbstractModelViewWidget
 from cgwidgets.widgets.AbstractWidgets.AbstractShojiLayout import AbstractShojiLayout
 from cgwidgets.widgets.AbstractWidgets.AbstractShojiWidget.AbstractShojiModelViewWidget import AbstractShojiModelViewWidget
+from cgwidgets.widgets import AbstractWarningWidget
 
 from cgwidgets.widgets import (
     AbstractFrameInputWidgetContainer,
@@ -1227,6 +1228,7 @@ main_widget.mainWidget().resizeMiniViewer()"""}
         main_widget.setFocus()
         AbstractModelViewWidget.hideEvent(self, event)
 
+
 """ ORGANIZER (GLOBAL) """
 class PiPGlobalOrganizerItem(AbstractDragDropModelItem):
     """
@@ -1279,6 +1281,7 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
         # populate
         self.populate()
 
+        self.setItemDeleteEvent(self.deleteItemEvent)
         self.setIndexSelectedEvent(self.loadPiPWidgetFromSelection)
 
     def populate(self):
@@ -1318,6 +1321,31 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
         self.saveWidget().setSaveFilePath(file_path)
 
     """ EVENTS """
+    def deleteItemEvent(self, item):
+        """
+        When the user deletes an item, this will remove the index and the entry
+        into the saved PiPFile
+
+        Args:
+            item (PiPGlobalOrganizerItem): currently selected by the user to be deleted
+
+        Returns:
+
+        """
+        # remove from JSON
+        pip_widgets = self.getPiPWidgetsJSON()
+        name = item.columnData()['name']
+        del pip_widgets[name]
+
+        # warning dialogue
+
+        # save json PiP File
+        save_widget = self.saveWidget()
+        if save_widget.saveFilePath():
+            # Writing JSON data
+            with open(save_widget.saveFilePath(), 'w') as f:
+                json.dump(pip_widgets, f)
+
     def showEvent(self, event):
         main_widget = getWidgetAncestor(self, AbstractPiPWidget)
         main_widget.setIsGlobalOrganizerVisible(True)
@@ -1474,7 +1502,8 @@ class PiPSaveWidget(QWidget):
                 json.dump(pip_widgets, f)
 
         print('saving to... ', self.saveFilePath())
-        print(pip_widgets)
+        for key in pip_widgets.keys():
+            print(key)
 
     def saveFilePath(self):
         """ Returns the current save path for cgwigdets. The default is
@@ -1653,6 +1682,7 @@ class PiPPanelCreatorWidget(AbstractListInputWidget):
             self.createNewWidget()
 
         return AbstractListInputWidget.keyPressEvent(self, event)
+
 
 if __name__ == '__main__':
     import sys
