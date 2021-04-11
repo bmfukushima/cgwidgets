@@ -212,7 +212,6 @@ class AbstractDragDropModel(QAbstractItemModel):
         if event_update:
             self.itemDeleteEvent(item)
 
-        print('delete event??')
         # get old parents
         old_parent_item = item.parent()
         old_parent_index = self.getParentIndexFromItem(item)

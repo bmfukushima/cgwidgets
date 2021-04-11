@@ -588,17 +588,18 @@ def showWarningDialogue(widget, warning_display_widget, accept_event, cancel_eve
     from cgwidgets.widgets import AbstractWarningWidget
 
     # create warning widget
-    widget.__warning_widget = AbstractWarningWidget(widget=widget, display_widget=warning_display_widget)
+    widget._warning_widget = AbstractWarningWidget(widget=widget, display_widget=warning_display_widget)
 
     # connect user events
-    widget.__warning_widget.setAcceptEvent(accept_event)
-    widget.__warning_widget.setCancelEvent(cancel_event)
+    widget._warning_widget.setAcceptEvent(accept_event)
+    widget._warning_widget.setCancelEvent(cancel_event)
 
-    # show widget
-    widget.__warning_widget.show()
-    centerCursorOnWidget(widget.__warning_widget)
+    # show widget._warning_widget
+    widget._warning_widget.show()
+    centerCursorOnWidget(widget._warning_widget)
+    # widget._warning_widget.setFocus()
 
-    return widget.__warning_widget
+    return widget._warning_widget
 
 
 def setAsTool(widget):
@@ -614,6 +615,24 @@ def setAsTool(widget):
         widget.setWindowFlags(
             widget.windowFlags()
             | Qt.Tool
+            | Qt.NoDropShadowWindowHint
+            | Qt.FramelessWindowHint
+            )
+
+
+def setAsWindow(widget):
+    import platform
+    if platform.system() == 'Windows':
+        widget.setWindowFlags(
+            widget.windowFlags()
+            | Qt.Window
+            | Qt.NoDropShadowWindowHint
+            | Qt.WindowStaysOnTopHint
+            )
+    elif platform.system() == 'Linux':
+        widget.setWindowFlags(
+            widget.windowFlags()
+            | Qt.Window
             | Qt.NoDropShadowWindowHint
             | Qt.FramelessWindowHint
             )

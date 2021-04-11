@@ -3,9 +3,10 @@ from qtpy.QtCore import Qt
 
 from cgwidgets.settings.colors import iColor
 from cgwidgets.settings.icons import icons
-from cgwidgets.utils import setAsTool, centerWidgetOnScreen
+from cgwidgets.utils import setAsWindow, centerWidgetOnScreen
 from cgwidgets.widgets import AbstractLabelWidget, AbstractButtonInputWidget
 from cgwidgets.widgets.AbstractWidgets.AbstractGIFWidget import AbstractGIFWidget
+
 
 class AbstractWarningWidget(QWidget):
     """
@@ -40,7 +41,7 @@ class AbstractWarningWidget(QWidget):
 
         # Create main layout
         QHBoxLayout(self)
-        setAsTool(self)
+        setAsWindow(self)
 
         # setup default attrs
         if not button_width:
@@ -171,9 +172,12 @@ You can also hit <ESCAPE> to go back...
         self._cancel_event = cancel_event
 
     """ EVENTS """
+    def leaveEvent(self, event):
+        self.cancelEvent()
+        QWidget.leaveEvent(self, event)
+
     def showEvent(self, event):
         centerWidgetOnScreen(self, height=self.display_height, width=self.display_width, resize=self.resize_on_show)
-        self.setFocus()
         self.updateStyleSheet()
         return QWidget.showEvent(self, event)
 
@@ -188,26 +192,22 @@ You can also hit <ESCAPE> to go back...
 if __name__ == '__main__':
     import sys
     from qtpy.QtWidgets import QApplication, QVBoxLayout, QPushButton
-    from cgwidgets.utils import centerWidgetOnCursor
+    from cgwidgets.utils import centerWidgetOnCursor, showWarningDialogue
     app = QApplication(sys.argv)
 
-    class warningShowButton(AbstractButtonInputWidget):
-        def __init__(self, parent=None):
-            super(warningShowButton, self).__init__(parent)
-            self.setUserClickedEvent(self.showWarningDialogue)
+    def accept(widget):
+        print('accept')
 
-        def showWarningDialogue(self, widget):
-            from cgwidgets.utils import showWarningDialogue, centerCursorOnWidget
-            display_widget = AbstractLabelWidget(text="SINE.")
-            warning_widget = showWarningDialogue(self, display_widget, self.acceptEvent, self.cancelEvent)
+    def cancel(widget):
+        print("cancel")
 
-        def acceptEvent(self, widget):
-            print("accepted!", widget)
+    def showWarningDialogueA(widget):
+        display_widget = AbstractLabelWidget(text="SINE.")
+        showWarningDialogue(widget, display_widget, accept, cancel)
 
-        def cancelEvent(self, widget):
-            print("Firefly!!", widget)
+    show_warning_button = AbstractButtonInputWidget()
+    show_warning_button.setUserClickedEvent(showWarningDialogueA)
 
-    show_warning_button = warningShowButton()
     #show_warning_button.clicked.connect(showWarningDialogue)
     test_label = AbstractLabelWidget(text="test")
     main_widget = QWidget()
@@ -217,6 +217,7 @@ if __name__ == '__main__':
 
     main_widget.show()
     centerWidgetOnCursor(main_widget)
+
     main_widget.resize(512, 512)
 
     sys.exit(app.exec_())
