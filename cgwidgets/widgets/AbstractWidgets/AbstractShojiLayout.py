@@ -45,8 +45,7 @@ from qtpy.QtGui import QCursor
 from cgwidgets.settings.colors import iColor
 from cgwidgets.settings.stylesheets import (splitter_handle_ss)
 from cgwidgets.settings.hover_display import installHoverDisplaySS
-
-from cgwidgets.utils import updateStyleSheet
+from cgwidgets.utils import updateStyleSheet, getWidgetUnderCursor
 
 
 class AbstractShojiLayout(QSplitter):
@@ -285,9 +284,31 @@ class AbstractShojiLayout(QSplitter):
             self.toggleIsSoloView(True, widget=widget_soloable)
 
     def enterEvent(self, event):
+        """
+        Attempting to suppress signals from the base widgets
+        so that they don't lose focus while doing random shit
+
+        Args:
+            event:
+
+        Returns:
+
+        """
         focused_widget = QApplication.focusWidget()
-        if not hasattr(focused_widget, "_is_base_widget"):
+        widget_under_cursor = getWidgetUnderCursor()
+
+        # not sure if this works, but we're leaving it here for good luck
+        if hasattr(focused_widget, "_is_base_widget"):
+            event.ignore()
+
+        # this seems to work
+        """ check widget under cursor"""
+        if hasattr(widget_under_cursor, "_is_base_widget"):
+            event.ignore()
+            widget_under_cursor.setFocus()
+        else:
             self.setFocus()
+
         return QSplitter.enterEvent(self, event)
 
     def keyPressEvent(self, event):

@@ -22,7 +22,7 @@ from qtpy.QtWidgets import (
 from qtpy.QtCore import Qt, QEvent
 
 from cgwidgets.settings.colors import iColor
-from cgwidgets.settings.keylist import NUMERICAL_INPUT_KEYS, MATH_KEYS
+from cgwidgets.settings.keylist import NUMERICAL_INPUT_KEYS, MATH_KEYS, ACCEPT_KEYS
 from cgwidgets.utils import (
     installLadderDelegate, checkIfValueInRange,
     checkNegative, updateStyleSheet
@@ -51,6 +51,11 @@ class AbstractInputLineEdit(QLineEdit, iAbstractInputWidget):
         self.setOrigValue(self.text())
         #self.setProperty("is_focused", True)
         return QLineEdit.focusInEvent(self, *args, **kwargs)
+
+    def keyPressEvent(self, event):
+        if event.key() in ACCEPT_KEYS:
+            self.userFinishedEditing()
+        return QLineEdit.keyPressEvent(self, event)
 
     def mousePressEvent(self, event, *args, **kwargs):
         """

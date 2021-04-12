@@ -1389,14 +1389,16 @@ class PiPSaveWidget(QWidget):
         super(PiPSaveWidget, self).__init__(parent)
         QVBoxLayout(self)
         # todo name needs to be a list delegate and load all of the current names
-        name_list = AbstractListInputWidget(self)
-        name_list.dynamic_update = True
-        name_list.setCleanItemsFunction(self.getAllPiPWidgetsNames)
-        self._name_widget = AbstractLabelledInputWidget(name="Name", delegate_widget=name_list)
-        self._save_button = AbstractButtonInputWidget(self, title="Save")
+        self._name_list = AbstractListInputWidget(self)
+        self._name_list.dynamic_update = True
+        self._name_list.setCleanItemsFunction(self.getAllPiPWidgetsNames)
+        self._name_list.setUserFinishedEditingEvent(self.updateSaveButtonText)
+
+        self._name_widget = AbstractLabelledInputWidget(name="Name", delegate_widget=self._name_list)
+        self._save_button_widget = AbstractButtonInputWidget(self, title="UPDATE")
 
         self.layout().addWidget(self._name_widget)
-        self.layout().addWidget(self._save_button)
+        self.layout().addWidget(self._save_button_widget)
 
         # setup save file path
         self._file_path = getDefaultSavePath() + '/.PiPWidgets.json'
@@ -1408,12 +1410,16 @@ class PiPSaveWidget(QWidget):
                 json.dump({}, f)
 
         # setup save event
-        self._save_button.setUserClickedEvent(self.savePiPWidget)
+        self._save_button_widget.setUserClickedEvent(self.savePiPWidget)
 
-    """ NAMES """
+    """ WIDGETS """
+    def saveButtonWidget(self):
+        return self._save_button_widget
+
     def nameWidget(self):
         return self._name_widget
 
+    """ NAMES """
     def nameList(self):
         return self._name_list
 
@@ -1469,6 +1475,12 @@ class PiPSaveWidget(QWidget):
         return getJSONData(self.saveFilePath())
 
     """ SAVE """
+    def updateSaveButtonText(self, *args):
+        if not self.name():
+            self.saveButtonWidget().setText('UPDATE')
+        else:
+            self.saveButtonWidget().setText("SAVE")
+
     def savePiPWidget(self, this):
         """
         When the "Save" button is pressed, this will save the current PiPWidget to the master
@@ -1480,7 +1492,7 @@ class PiPSaveWidget(QWidget):
         Returns:
 
         """
-        print("saving???")
+
         main_widget = getWidgetAncestor(self, AbstractPiPWidget)
         main_widget.items()
         name = self.nameWidget().delegateWidget().text()
