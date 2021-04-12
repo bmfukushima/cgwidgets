@@ -216,10 +216,8 @@ class AbstractPiPWidget(AbstractShojiModelViewWidget):
         widget = loc['widget']
 
         # insert widget into layout
-        if 0 < self.numWidgets():
-            mini_widget = self.miniViewerWidget().createNewWidget(widget, name=name)
-        else:
-            mini_widget = PiPMiniViewerWidget(self, direction=Qt.Vertical, delegate_widget=widget, name=name)
+        mini_widget = self.miniViewerWidget().createNewWidget(widget, name=name)
+        if self.numWidgets() < 1:
             self.mainWidget().setCurrentWidget(mini_widget)
 
         # create new index
@@ -998,9 +996,8 @@ class PiPMiniViewerWidget(QWidget):
     ):
         super(PiPMiniViewerWidget, self).__init__(parent)
         QVBoxLayout(self)
-        # self.setStyleSheet("background-color: rgba(255,0,0,255)")
-        self._index = 0
 
+        self._index = 0
         self.main_widget = AbstractLabelledInputWidget(self, name=name, direction=direction, delegate_widget=delegate_widget)
         self.main_widget.viewWidget().delegateWidget().setUserFinishedEditingEvent(self.updateItemDisplayName)
 
@@ -1292,10 +1289,17 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
     def populate(self):
         pip_widgets = self.getPiPWidgetsJSON()
         for widget_name in sorted(pip_widgets.keys()):
-            index = self.model().insertNewIndex(0, name=widget_name)
-            item = index.internalPointer()
-            item.setWidgetsList(pip_widgets[widget_name]["widgets"])
-            item.setSettings(pip_widgets[widget_name]["settings"])
+            self.createNewPiPIndex(widget_name, pip_widgets[widget_name]["widgets"], pip_widgets[widget_name]["settings"])
+            # index = self.model().insertNewIndex(0, name=widget_name)
+            # item = index.internalPointer()
+            # item.setWidgetsList(pip_widgets[widget_name]["widgets"])
+            # item.setSettings(pip_widgets[widget_name]["settings"])
+
+    def createNewPiPIndex(self, widget_name, widgets, settings):
+        index = self.model().insertNewIndex(0, name=widget_name)
+        item = index.internalPointer()
+        item.setWidgetsList(widgets)
+        item.setSettings(settings)
 
     def loadPiPWidgetFromSelection(self, item, enabled):
         """
@@ -1348,12 +1352,6 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
             # Writing JSON data
             with open(save_widget.saveFilePath(), 'w') as f:
                 json.dump(pip_widgets, f)
-
-    def acceptEvent(self, widget):
-        print("accepted!", widget)
-
-    def cancelEvent(self, widget):
-        print("Firefly!!", widget)
 
     def showEvent(self, event):
         main_widget = getWidgetAncestor(self, AbstractPiPWidget)
@@ -1482,6 +1480,7 @@ class PiPSaveWidget(QWidget):
         Returns:
 
         """
+        print("saving???")
         main_widget = getWidgetAncestor(self, AbstractPiPWidget)
         main_widget.items()
         name = self.nameWidget().delegateWidget().text()
@@ -1509,6 +1508,10 @@ class PiPSaveWidget(QWidget):
             # Writing JSON data
             with open(self.saveFilePath(), 'w') as f:
                 json.dump(pip_widgets, f)
+
+        # create new index
+        print('saving... ', pip_widgets[name])
+        main_widget.globalOrganizerWidget().createNewPiPIndex(name, pip_widgets[name]["widgets"], pip_widgets[name]["settings"])
 
         print('saving to... ', self.saveFilePath())
         for key in pip_widgets.keys():

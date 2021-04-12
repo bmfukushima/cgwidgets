@@ -611,7 +611,6 @@ class AbstractButtonInputWidget(AbstractBooleanInputWidget):
             self.parent().normalizeWidgetSizes()
 
         # update style
-        #self.setProperty("input_hover", False)
         updateStyleSheet(self)
 
         # user events
