@@ -430,6 +430,12 @@ class AbstractDragDropModel(QAbstractItemModel):
         all_indexes = self.findItems(".*", match_type=Qt.MatchRegExp)
         return list(set(all_indexes))
 
+    def getRootItem(self):
+        return self._root_item
+
+    def setRootItem(self, root_item):
+        self._root_item = root_item
+
     """ Create index/items"""
     def setItemType(self, item_type):
         self._item_type = item_type
@@ -512,12 +518,6 @@ class AbstractDragDropModel(QAbstractItemModel):
         self.endRemoveRows()
 
         return success
-
-    def getRootItem(self):
-        return self._root_item
-
-    def setRootItem(self, root_item):
-        self._root_item = root_item
 
     """ PROPERTIES """
     @property

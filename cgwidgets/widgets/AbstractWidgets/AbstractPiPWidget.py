@@ -2,12 +2,8 @@
 Todo:
     * Overall cleanup / organization
         mainWidget --> AbstractPiPWidget?
-    * Globals
-        - Repopulate
-            - clear
-            - populate
-        - Rename
-        - Delete
+    * Save/Update
+        Order of views is backwards/inverting...
 
 
 """
@@ -173,7 +169,9 @@ class AbstractPiPWidget(AbstractShojiModelViewWidget):
         return [index.internalPointer().widget() for index in self.localOrganizerWidget().model().getAllIndexes() if hasattr(index.internalPointer(), "_widget")]
 
     def items(self):
-        return [index.internalPointer() for index in self.localOrganizerWidget().model().getAllIndexes() if hasattr(index.internalPointer(), "_widget")]
+        model = self.localOrganizerWidget().model()
+        root_item = model.getRootItem()
+        return root_item.children()
 
     """ WIDGETS (DISPLAY)"""
     def mainWidget(self):
@@ -1456,6 +1454,8 @@ class PiPSaveWidget(QWidget):
 
         """
         widgets = item.widgetsList()
+        reversed_widgets = OrderedDict(reversed(list(widgets.items())))
+        # print(widgets)
 
         main_widget = getWidgetAncestor(self, AbstractPiPWidget)
 
@@ -1464,7 +1464,7 @@ class PiPSaveWidget(QWidget):
 
         # populate pip view
         # load widgets
-        for widget_name, constructor_code in widgets.items():
+        for widget_name, constructor_code in reversed_widgets.items():
             main_widget.createNewWidget(constructor_code, name=widget_name)
 
         # load settings
