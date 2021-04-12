@@ -208,7 +208,8 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         # for index in self.headerWidget().selectionModel().selectedIndexes():
         #     if index.column() == 0:
         #         selected_indexes.append(index)
-        selected_indexes = self.headerWidget().selectionModel().selectedRows(0)
+        selected_indexes = self.headerWidget().getAllSelectedIndexes()
+        #
         return selected_indexes
 
     def rootItem(self):

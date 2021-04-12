@@ -1290,13 +1290,9 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
         pip_widgets = self.getPiPWidgetsJSON()
         for widget_name in sorted(pip_widgets.keys()):
             self.createNewPiPIndex(widget_name, pip_widgets[widget_name]["widgets"], pip_widgets[widget_name]["settings"])
-            # index = self.model().insertNewIndex(0, name=widget_name)
-            # item = index.internalPointer()
-            # item.setWidgetsList(pip_widgets[widget_name]["widgets"])
-            # item.setSettings(pip_widgets[widget_name]["settings"])
 
-    def createNewPiPIndex(self, widget_name, widgets, settings):
-        index = self.model().insertNewIndex(0, name=widget_name)
+    def createNewPiPIndex(self, widget_name, widgets, settings, index=0):
+        index = self.model().insertNewIndex(index, name=widget_name)
         item = index.internalPointer()
         item.setWidgetsList(widgets)
         item.setSettings(settings)
@@ -1371,32 +1367,41 @@ class PiPSaveWidget(QWidget):
 
     Signals:
         save
-            user_button_press --> savePiPWidget --> getPiPWidgetsJSON
+            user_button_press --> savePiPWidgetToFile --> getPiPWidgetsJSON
         load
 
-    {PiPName: {"widgets": [
-        {"widget name": "constructor code"},
-        {"widget name": "constructor code"},
-        {"widget name": "constructor code"}],
-        "settings": {"setting name": "value"}]
-    PiPName: [
-        {"widget name": "constructor code"},
-        {"widget name": "constructor code"},
-        {"widget name": "constructor code"}]
+    {
+    PiPName: {
+        "widgets": [
+            {"widget name": "constructor code"},
+            {"widget name": "constructor code"},
+            {"widget name": "constructor code"}],
+        "settings": {"setting name": "value"}
+        }
+    PiPName: {
+        "widgets": [
+            {"widget name": "constructor code"},
+            {"widget name": "constructor code"},
+            {"widget name": "constructor code"}],
+        "settings": {"setting name": "value"}
+        }
     }
     """
     def __init__(self, parent=None):
         super(PiPSaveWidget, self).__init__(parent)
         QVBoxLayout(self)
-        # todo name needs to be a list delegate and load all of the current names
+
+        # create name list widget
         self._name_list = AbstractListInputWidget(self)
         self._name_list.dynamic_update = True
         self._name_list.setCleanItemsFunction(self.getAllPiPWidgetsNames)
         self._name_list.setUserFinishedEditingEvent(self.updateSaveButtonText)
 
+        # create name widget
         self._name_widget = AbstractLabelledInputWidget(name="Name", delegate_widget=self._name_list)
         self._save_button_widget = AbstractButtonInputWidget(self, title="UPDATE")
 
+        # setup layout
         self.layout().addWidget(self._name_widget)
         self.layout().addWidget(self._save_button_widget)
 
@@ -1410,7 +1415,7 @@ class PiPSaveWidget(QWidget):
                 json.dump({}, f)
 
         # setup save event
-        self._save_button_widget.setUserClickedEvent(self.savePiPWidget)
+        self._save_button_widget.setUserClickedEvent(self.save)
 
     """ WIDGETS """
     def saveButtonWidget(self):
@@ -1427,9 +1432,17 @@ class PiPSaveWidget(QWidget):
         return self._name_widget.delegateWidget().text()
 
     def getAllPiPWidgetsNames(self):
+        """
+        Used for the Name List to populate it.
+
+        Returns (list): of lists
+        """
         widgets_list = [[name] for name in list(self.getPiPWidgetsJSON().keys())]
 
         return widgets_list
+
+    def getAllPiPWidgetsNamesAsList(self):
+        return list(self.getPiPWidgetsJSON().keys())
 
     """ LOAD """
     def loadPiPWidgetFromItem(self, item):
@@ -1474,60 +1487,105 @@ class PiPSaveWidget(QWidget):
         """
         return getJSONData(self.saveFilePath())
 
-    """ SAVE """
+    """ SAVE (UTILS)"""
     def updateSaveButtonText(self, *args):
         if not self.name():
             self.saveButtonWidget().setText('UPDATE')
         else:
             self.saveButtonWidget().setText("SAVE")
 
-    def savePiPWidget(self, this):
+    def getPiPWidgetItemDict(self):
         """
-        When the "Save" button is pressed, this will save the current PiPWidget to the master
-        PiPDictionary located at self.saveFilePath()
-
-        Args:
-            this (AbstractButtonInputWidget): being pressed
-
-        Returns:
-
+        Gets the dictionary for a singular PiPWidget to be saved as entry in the
+        master PiPFile located at saveFilePath
+        Returns (OrderedDict):
+            "PiPName": {
+                "widgets": [
+                    {"widget name": "constructor code"},
+                    {"widget name": "constructor code"},
+                    {"widget name": "constructor code"}],
+                "settings": {"setting name": "value"}
+            }
         """
-
         main_widget = getWidgetAncestor(self, AbstractPiPWidget)
-        main_widget.items()
-        name = self.nameWidget().delegateWidget().text()
-        pip_widgets = self.getPiPWidgetsJSON()
 
         # create pip save dict
-        pip_widgets[name] = OrderedDict()
+        item_dict = OrderedDict()
 
         # store widgets in dict
-        pip_widgets[name]["widgets"] = OrderedDict()
+        item_dict["widgets"] = OrderedDict()
         for item in main_widget.items():
             item_name = item.columnData()['name']
             item_code = item.constructorCode()
-            pip_widgets[name]["widgets"][item_name] = item_code
+            item_dict["widgets"][item_name] = item_code
 
         # store settings in dict
         settings = {}
         for setting in main_widget.settingsWidget().settings().keys():
             settings[setting] = main_widget.settingsWidget().settings()[setting]["value"]
 
-        pip_widgets[name]["settings"] = settings
+        item_dict["settings"] = settings
 
-        # save pip file
+        return item_dict
+
+    def dumpDataToJSON(self, data):
         if self.saveFilePath():
             # Writing JSON data
             with open(self.saveFilePath(), 'w') as f:
-                json.dump(pip_widgets, f)
+                json.dump(data, f)
+    """ SAVE """
+    def save(self, this):
+        """
+        When the user clicks the save Button, depending on the current name
+        this will choose to either SAVE or UPDATE the PiPFile
+
+        Args:
+            this (AbstractButtonInputWidget): being pressed
+        """
+        if self.saveButtonWidget().text() == "UPDATE":
+            self.updatePiPFile()
+        elif self.saveButtonWidget().text() == "SAVE":
+            _exists = False
+            row = 0
+            name = self.nameWidget().delegateWidget().text()
+
+            # get row
+            if name in self.getAllPiPWidgetsNamesAsList():
+                _exists = True
+                main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+                indexes = main_widget.globalOrganizerWidget().model().findItems(name)
+                for index in indexes:
+                    item = index.internalPointer()
+                    row = index.row()
+
+            self.savePiPWidgetToFile(index=row)
+
+            if _exists:
+              main_widget.globalOrganizerWidget().deleteItem(item)
+
+    def savePiPWidgetToFile(self, index=0):
+        """
+        When the "Save" button is pressed, this will save the current PiPWidget to the master
+        PiPDictionary located at self.saveFilePath()
+
+        Returns:
+        """
+
+        name = self.nameWidget().delegateWidget().text()
+        pip_widgets = self.getPiPWidgetsJSON()
+
+        # save pip file
+        pip_widgets[name] = self.getPiPWidgetItemDict()
+        self.dumpDataToJSON(pip_widgets)
 
         # create new index
-        print('saving... ', pip_widgets[name])
-        main_widget.globalOrganizerWidget().createNewPiPIndex(name, pip_widgets[name]["widgets"], pip_widgets[name]["settings"])
+        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+        main_widget.globalOrganizerWidget().createNewPiPIndex(name, pip_widgets[name]["widgets"], pip_widgets[name]["settings"], index=index)
 
+        # reset text
+        self.nameWidget().delegateWidget().setText('')
+        self.updateSaveButtonText()
         print('saving to... ', self.saveFilePath())
-        for key in pip_widgets.keys():
-            print(key)
 
     def saveFilePath(self):
         """ Returns the current save path for cgwigdets. The default is
@@ -1537,6 +1595,26 @@ class PiPSaveWidget(QWidget):
 
     def setSaveFilePath(self, file_path):
         self._file_path = file_path
+
+    """ UPDATE """
+    def updatePiPFile(self):
+        """
+        Updates the currently selected PiPWidget if the user has made changes.
+        This will only work, if the current text is empty in the name widget.
+        """
+        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+        selected_indexes = main_widget.globalOrganizerWidget().getAllSelectedIndexes()
+
+        # get name
+        name = None
+        for index in selected_indexes:
+            item = index.internalPointer()
+            name = item.columnData()['name']
+
+        if name:
+            self.nameWidget().delegateWidget().setText(name)
+            self.savePiPWidgetToFile(index=index.row())
+            main_widget.globalOrganizerWidget().deleteItem(item)
 
 
 """ ORGANIZER (LOCAL) """

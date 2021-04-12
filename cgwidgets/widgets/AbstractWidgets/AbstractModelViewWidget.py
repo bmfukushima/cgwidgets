@@ -170,8 +170,12 @@ class AbstractModelViewWidget(AbstractShojiLayout):
         else:
             print('view does not have function addContextMenuEvent')
 
+    """ DELETE """
     def setDeleteWarningWidget(self, widget):
         self.view().setDeleteWarningWidget(widget)
+
+    def deleteItem(self, item, event_update=False):
+        self.model().deleteItem(item, event_update=event_update)
 
     """ MODEL """
     def model(self):
@@ -186,6 +190,14 @@ class AbstractModelViewWidget(AbstractShojiLayout):
     """ SELECTION """
     def selectionModel(self):
         return self.view().selectionModel()
+
+    def getAllSelectedIndexes(self):
+        # selected_indexes = []
+        # for index in self.headerWidget().selectionModel().selectedIndexes():
+        #     if index.column() == 0:
+        #         selected_indexes.append(index)
+        selected_indexes = self.selectionModel().selectedRows(0)
+        return selected_indexes
 
     """ DELEGATE """
     def delegateInputManifest(self):
