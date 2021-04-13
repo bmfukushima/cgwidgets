@@ -2,8 +2,9 @@
 Todo:
     * Overall cleanup / organization
         mainWidget --> AbstractPiPWidget?
-    * Save/Update
-        Order of views is backwards/inverting...
+    * Docs / Cleanup
+        Help Tab...
+    * Full Test in Katana...
 
 
 """
@@ -132,10 +133,10 @@ class AbstractPiPWidget(AbstractShojiModelViewWidget):
 
         """ create widgets """
         # create main pip widget
-        self._main_widget = PiPMainWidget(self, widget_types)
+        self._main_widget = PiPMainWidget(self)
 
         # setup local organizer widget
-        self._local_organizer_widget = PiPLocalOrganizerWidget(self)
+        self._local_organizer_widget = PiPLocalOrganizerWidget(self, widget_types)
         self._is_local_organizer_visible = False
 
         # setup global organizer widget
@@ -446,28 +447,22 @@ class PiPMainWidget(QWidget):
 
     """
 
-    def __init__(self, parent=None, widget_types=None):
+    def __init__(self, parent=None):
         super(PiPMainWidget, self).__init__(parent)
 
         # setup attrs
-        self._widgets = []
-        if not widget_types:
-            widget_types = []
         self._current_widget = None
         self._previous_widget = None
         self._pip_scale = (0.35, 0.35)
         self._enlarged_scale = 0.55
         self._mini_viewer_min_size = (100, 100)
         self._direction = attrs.SOUTH
-        self._swap_key = 96
+        self._swap_key = Qt.Key_Q
 
         # create widgets
         self.main_viewer = PiPMainViewer(self)
-        # self.main_viewer.setStyleSheet("background-color: rgba(255,255,0,255);")
         self.mini_viewer = PiPMiniViewer(self)
 
-
-        # self._display_flags_widget.hide()
         # create layout
         """
         Not using a stacked layout as the enter/leave events get borked
@@ -692,7 +687,7 @@ class PiPMainWidget(QWidget):
 
     def keyPressEvent(self, event):
         # swap between this and previous
-        if event.key() == 96:
+        if event.key() == self.swapKey():
             # pre flight
             widget = getWidgetUnderCursor()
             if widget == self.mini_viewer: return
@@ -755,7 +750,6 @@ class PiPMainWidget(QWidget):
 class PiPMainViewer(QWidget):
     def __init__(self, parent=None):
         super(PiPMainViewer, self).__init__(parent)
-        self.setStyleSheet("background-color: rgba(0,0,255,255)")
 
         QVBoxLayout(self)
         self.layout().setContentsMargins(0, 0, 0, 0)
@@ -780,7 +774,6 @@ class PiPMiniViewer(QWidget):
     """
     def __init__(self, parent=None):
         super(PiPMiniViewer, self).__init__(parent)
-        self.setStyleSheet("background-color: rgba(0,255,0,255)")
 
         QVBoxLayout(self)
         self.layout().setContentsMargins(10, 10, 10, 10)
@@ -1216,13 +1209,13 @@ main_widget.mainWidget().resizeMiniViewer()"""}
     def showEvent(self, event):
         main_widget = getWidgetAncestor(self, AbstractPiPWidget)
         main_widget.setIsSettingsVisible(True)
-        AbstractModelViewWidget.showEvent(self, event)
+        AbstractFrameInputWidgetContainer.showEvent(self, event)
 
     def hideEvent(self, event):
         main_widget = getWidgetAncestor(self, AbstractPiPWidget)
         main_widget.setIsSettingsVisible(False)
         main_widget.setFocus()
-        AbstractModelViewWidget.hideEvent(self, event)
+        AbstractFrameInputWidgetContainer.hideEvent(self, event)
 
 
 """ ORGANIZER (GLOBAL) """
@@ -1651,7 +1644,7 @@ class PiPLocalOrganizerWidget(AbstractModelViewWidget):
         Create New Widget -->
         Delete Widget -->
     """
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, widget_types=None):
         super(PiPLocalOrganizerWidget, self).__init__(parent=parent)
 
         # setup model
@@ -1663,6 +1656,9 @@ class PiPLocalOrganizerWidget(AbstractModelViewWidget):
         self.setDropEvent(self.itemReordered)
 
         # panel creator widget
+        if not widget_types:
+            widget_types = {}
+
         self.panel_creator_widget = PiPPanelCreatorWidget(self, widget_types=widget_types)
         self.addDelegate([Qt.Key_C], self.panel_creator_widget, modifier=Qt.AltModifier, focus=True)
         self.panel_creator_widget.show()
@@ -1798,7 +1794,7 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
 
     # PiP Widget
-    widget_types = {
+    widget_typesa = {
         "QLabel": """
 from qtpy.QtWidgets import QLabel
 widget = QLabel(\"TEST\") """,
@@ -1806,15 +1802,7 @@ widget = QLabel(\"TEST\") """,
 from qtpy.QtWidgets import QPushButton
 widget = QPushButton(\"TESTBUTTON\") """
     }
-    pip_widget = AbstractPiPWidget(widget_types=widget_types)
-
-#     for x in ("SINE"):
-#         child = QLabel(str(x))
-#         child.setAlignment(Qt.AlignCenter)
-#         child.setStyleSheet("color: rgba(255,255,255,255);")
-#         pip_widget.createNewWidget(child, """
-# from qtpy.QtWidgets import QLabel
-# constructor = QLabel""", name=str(x))
+    pip_widget = AbstractPiPWidget(widget_types=widget_typesa)
 
     pip_widget.setPiPScale((0.25, 0.25))
     pip_widget.setEnlargedScale(0.75)

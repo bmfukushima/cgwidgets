@@ -28,6 +28,9 @@ from .ShojiWidget import ShojiLayoutHandle
 from .ShojiWidget import ShojiModelViewWidget as ShojiModelViewWidget
 from .ShojiWidget import ShojiModelDelegateWidget as ShojiModelDelegateWidget
 
+""" PiP """
+from .PiPWidget import PiPWidget
+
 """ INPUT WIDGETS """
 from .InputWidgets import *
 
