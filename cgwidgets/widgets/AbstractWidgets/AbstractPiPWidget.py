@@ -1244,6 +1244,16 @@ class PiPGlobalOrganizerItem(AbstractDragDropModelItem):
     def __init__(self, parent=None):
         super(PiPGlobalOrganizerItem, self).__init__(parent=parent)
         self._file_path = None
+        self._is_locked = False
+
+    def isLocked(self):
+        return self._is_locked
+
+    def setIsLocked(self, _is_locked):
+        self._is_locked = _is_locked
+
+        self.setIsDropEnabled(False)
+        self.setIsDragEnabled(False)
 
     def filePath(self):
         return self._file_path
@@ -1295,12 +1305,16 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
         # populate
         self.populate()
 
+        # setup events
         self.setItemDeleteEvent(self.deleteItemEvent)
         self.setIndexSelectedEvent(self.loadPiPWidgetFromSelection)
 
         # setup deletion warning
         delete_warning_widget = AbstractLabelWidget(text="Are you sure you want to delete this?\n You cannot undo it...")
         self.setDeleteWarningWidget(delete_warning_widget)
+
+        # set flags
+        self.setIsRootDropEnabled(False)
 
     def populate(self):
         # get all data
@@ -1344,8 +1358,8 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
         # setup flags
         container_item.setIsDragEnabled(False)
         if locked:
+            container_item.setIsLocked(True)
             container_item.setIsSelectable(False)
-            container_item.setIsDropEnabled(False)
 
         return container_index
 
@@ -1370,6 +1384,9 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
 
         # set flags
         item.setIsDropEnabled(False)
+        if index.parent().internalPointer().isLocked():
+            item.setIsLocked(True)
+            item.setIsEditable(False)
 
     """ SAVE ( VIRTUAL ) """
     def getAllPiPWidgetsNames(self):
@@ -1384,16 +1401,15 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
     def currentSaveFilePath(self):
         return self.saveWidget().currentSaveFilePath()
 
-    """ SAVE """
-    def saveWidget(self):
-        return self._save_widget
-
-    """ SAVE (VIRTUAL) """
     def saveData(self):
         return self.saveWidget().saveData()
 
     def setSaveData(self, file_paths):
         self.saveWidget().setSaveData(file_paths)
+
+    """ SAVE """
+    def saveWidget(self):
+        return self._save_widget
 
     """ EVENTS """
     def loadPiPWidgetFromSelection(self, item, enabled):
@@ -1451,22 +1467,33 @@ class PiPSaveWidget(QWidget):
             user_button_press --> savePiPWidgetToFile --> getAllPiPData
         load
 
-    {
-    PiPName: {
-        "widgets": [
-            {"widget name": "constructor code"},
-            {"widget name": "constructor code"},
-            {"widget name": "constructor code"}],
-        "settings": {"setting name": "value"}
+    Data Structure (Resources):
+        getAllPiPData
+            {PiPName: {
+                file_path: str,
+                locked: bool
+                data: {PiPData}},
+            PiPName2: {
+                file_path: str,
+                locked: bool,
+                data: {PiPData}}
+            }
+
+    Data Structure (PiPWidget):
+        {"PiPName": {
+            "widgets": [
+                {"widget name": "constructor code"},
+                {"widget name": "constructor code"},
+                {"widget name": "constructor code"}],
+            "settings": {"setting name": "value"}},
+        "PiPName2": {
+            "widgets": [
+                {"widget name": "constructor code"},
+                {"widget name": "constructor code"},
+                {"widget name": "constructor code"}],
+            "settings": {"setting name": "value"}}
         }
-    PiPName: {
-        "widgets": [
-            {"widget name": "constructor code"},
-            {"widget name": "constructor code"},
-            {"widget name": "constructor code"}],
-        "settings": {"setting name": "value"}
-        }
-    }
+
     """
     def __init__(self, parent=None):
         super(PiPSaveWidget, self).__init__(parent)
@@ -1524,16 +1551,34 @@ class PiPSaveWidget(QWidget):
 
     def getAllPiPWidgetsNames(self):
         """
-        Used for the Name List to populate it.
-
-        Returns (list): of lists
+        returns a list for populating the names list
         """
-        widgets_list = [[name] for name in list(self.getAllPiPData().keys())]
+        widgets_list = [[name] for name in self.getAllPiPWidgetsNamesAsList()]
 
         return widgets_list
 
     def getAllPiPWidgetsNamesAsList(self):
-        return list(self.getAllPiPData().keys())
+        """
+        Returns a list of all of the current PiP Widgets in the current container
+        that the user is looking at.
+
+        If there is no selection, this will return a list of ALL the PiP Widgets
+        """
+        widgets_list = []
+
+        # Display Child PiPWidgets of Selection
+        if self.currentSaveFilePath():
+            for name in self.currentPiPFileData().keys():
+                widgets_list.append(name)
+
+        # Display ALL PiPWidgets
+        else:
+            for key, data in self.getAllPiPData().items():
+                data = getJSONData(data['file_path'])
+                for name in data.keys():
+                    widgets_list.append(name)
+
+        return widgets_list
 
     """ LOAD """
     def loadPiPWidgetFromItem(self, item):
@@ -1571,18 +1616,17 @@ class PiPSaveWidget(QWidget):
         Loads all of the PiPData as JSON Data from ALL of the PiP resource locations
 
         Returns (dict):
-            {PiPName : {
-                data :{ PiPName: [
-                    {"widget name": "constructor code"},
-                    {"widget name": "constructor code"},
-                    {"widget name": "constructor code"},]}},
+            {PiPName: {
+                file_path: str,
                 locked: bool
-            PiPName : {
-                PiPName: [
-                    {"widget name": "constructor code"},
-                    {"widget name": "constructor code"},
-                    {"widget name": "constructor code"},]}
+                data: {PiPData}},
+            PiPName2: {
+                file_path: str,
+                locked: bool,
+                data: {PiPData}}
             }
+
+        Note: see class notes for PiPData data structure
         """
         pip_data = {}
         for pip_file_name, data in self.saveData().items():
@@ -1669,7 +1713,20 @@ class PiPSaveWidget(QWidget):
     def currentPiPFileData(self):
         """
         Gets the current PiPFiles data
-        Returns:
+        Returns (dict):
+        {"PiPName": {
+            "widgets": [
+                {"widget name": "constructor code"},
+                {"widget name": "constructor code"},
+                {"widget name": "constructor code"}],
+            "settings": {"setting name": "value"}},
+        "PiPName2": {
+            "widgets": [
+                {"widget name": "constructor code"},
+                {"widget name": "constructor code"},
+                {"widget name": "constructor code"}],
+            "settings": {"setting name": "value"}}
+        }
         """
         return getJSONData(self.currentSaveFilePath())
 
@@ -1761,7 +1818,6 @@ class PiPSaveWidget(QWidget):
 
     def setSaveData(self, _file_data):
         self._file_data = _file_data
-
 
 
 """ ORGANIZER (LOCAL) """
