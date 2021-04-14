@@ -5,6 +5,17 @@ Todo:
     * Docs / Cleanup
         Help Tab...
     * Full Test in Katana...
+        How to get hotkeys working... in stupid stuff...
+    * Global save hierarchy...
+        currently hard coded in SaveWidget
+        self._file_data = {
+            "Default": {
+                "file_path": getDefaultSavePath() + '/.PiPWidgets.json',
+                "locked": True},
+            "User": {
+                "file_path": getDefaultSavePath() + '/.PiPWidgets_02.json',
+                "locked": False}
+        }
 
 
 """
@@ -687,10 +698,10 @@ class PiPMainWidget(QWidget):
 
         return QWidget.resizeEvent(self, event)
 
-    def eventFilter(self, obj, event):
-        if event.type() == QEvent.KeyPress:
-            print("press me???")
-        return False
+    # def eventFilter(self, obj, event):
+    #     if event.type() == QEvent.KeyPress:
+    #         print("press me???")
+    #     return False
 
     def keyPressEvent(self, event):
         print('key press')
@@ -1251,7 +1262,7 @@ class PiPGlobalOrganizerItem(AbstractDragDropModelItem):
 
     def setIsLocked(self, _is_locked):
         self._is_locked = _is_locked
-
+        self.setIsEditable(False)
         self.setIsDropEnabled(False)
         self.setIsDragEnabled(False)
 
@@ -1359,7 +1370,7 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
         container_item.setIsDragEnabled(False)
         if locked:
             container_item.setIsLocked(True)
-            container_item.setIsSelectable(False)
+            #container_item.setIsSelectable(False)
 
         return container_index
 
@@ -1386,7 +1397,7 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
         item.setIsDropEnabled(False)
         if index.parent().internalPointer().isLocked():
             item.setIsLocked(True)
-            item.setIsEditable(False)
+            #item.setIsEditable(False)
 
     """ SAVE ( VIRTUAL ) """
     def getAllPiPWidgetsNames(self):
