@@ -8,7 +8,7 @@ Todo:
         How to get hotkeys working... in stupid stuff...
     * Global save hierarchy...
         currently hard coded in SaveWidget
-        self._file_data = {
+        self._save_data = {
             "Default": {
                 "file_path": getDefaultSavePath() + '/.PiPWidgets.json',
                 "locked": True},
@@ -40,7 +40,6 @@ from cgwidgets.widgets.AbstractWidgets.AbstractOverlayInputWidget import Abstrac
 from cgwidgets.widgets.AbstractWidgets.AbstractModelViewWidget import AbstractModelViewWidget
 from cgwidgets.widgets.AbstractWidgets.AbstractShojiLayout import AbstractShojiLayout
 from cgwidgets.widgets.AbstractWidgets.AbstractShojiWidget.AbstractShojiModelViewWidget import AbstractShojiModelViewWidget
-from cgwidgets.widgets import AbstractWarningWidget
 
 
 from cgwidgets.widgets import (
@@ -130,7 +129,7 @@ class AbstractPiPWidget(AbstractShojiModelViewWidget):
                 keyPressEvent --> toggleCreatorVisibility --> show
             hide (esc)
     """
-    def __init__(self, parent=None, widget_types=None):
+    def __init__(self, parent=None, save_data=None, widget_types=None):
         super(AbstractPiPWidget, self).__init__(parent)
         # setup default attrs
         self.setHeaderPosition(attrs.NORTH)
@@ -151,7 +150,7 @@ class AbstractPiPWidget(AbstractShojiModelViewWidget):
         self._is_local_organizer_visible = False
 
         # setup global organizer widget
-        self._global_organizer_widget = PiPGlobalOrganizerWidget(self)
+        self._global_organizer_widget = PiPGlobalOrganizerWidget(self, save_data=save_data)
         self._is_global_organizer_visible = False
 
         # settings widget
@@ -468,7 +467,7 @@ class PiPMainWidget(QWidget):
         self._enlarged_scale = 0.55
         self._mini_viewer_min_size = (100, 100)
         self._direction = attrs.SOUTH
-        self._swap_key = Qt.Key_Q
+        self._swap_key = Qt.Key_Space
 
         # create widgets
         self.main_viewer = PiPMainViewer(self)
@@ -745,7 +744,7 @@ class PiPMainWidget(QWidget):
                 pass
 
         # hide PiP
-        if event.key() == Qt.Key_Space:
+        if event.key() == Qt.Key_Q:
             self.mini_viewer.hide()
             return
 
@@ -760,7 +759,7 @@ class PiPMainWidget(QWidget):
         return QWidget.keyPressEvent(self, event)
 
     def keyReleaseEvent(self, event):
-        if event.key() == Qt.Key_Space:
+        if event.key() == Qt.Key_Q:
             self.mini_viewer.show()
             return
         return QWidget.keyReleaseEvent(self, event)
@@ -1262,9 +1261,10 @@ class PiPGlobalOrganizerItem(AbstractDragDropModelItem):
 
     def setIsLocked(self, _is_locked):
         self._is_locked = _is_locked
-        self.setIsEditable(False)
+
         self.setIsDropEnabled(False)
-        self.setIsDragEnabled(False)
+        self.setIsEditable(not _is_locked)
+        self.setDeleteOnDrop(not _is_locked)
 
     def filePath(self):
         return self._file_path
@@ -1303,13 +1303,13 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
         Allow grouping?
         Custom model item?
     """
-    def __init__(self, parent=None, widget_types=None):
+    def __init__(self, parent=None, save_data=None):
         super(PiPGlobalOrganizerWidget, self).__init__(parent=parent)
         self.setPresetViewType(AbstractModelViewWidget.TREE_VIEW)
         self.model().setItemType(PiPGlobalOrganizerItem)
 
         # create save widget
-        self._save_widget = PiPSaveWidget(self)
+        self._save_widget = PiPSaveWidget(self, save_data=save_data)
         self.addDelegate([], self._save_widget)
         self._save_widget.show()
 
@@ -1319,6 +1319,7 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
         # setup events
         self.setItemDeleteEvent(self.deleteItemEvent)
         self.setIndexSelectedEvent(self.loadPiPWidgetFromSelection)
+        self.setDropEvent(self.duplicateItemOnDrop)
 
         # setup deletion warning
         delete_warning_widget = AbstractLabelWidget(text="Are you sure you want to delete this?\n You cannot undo it...")
@@ -1370,7 +1371,6 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
         container_item.setIsDragEnabled(False)
         if locked:
             container_item.setIsLocked(True)
-            #container_item.setIsSelectable(False)
 
         return container_index
 
@@ -1457,6 +1457,13 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
             save_widget = self.saveWidget()
             save_widget.dumpPiPDataToJSON(self.currentSaveFilePath(), pip_data)
 
+    def duplicateItemOnDrop(self, data, items, model, row, parent):
+        for item in items:
+            if not item.deleteOnDrop():
+                item.setIsLocked(False)
+                print('duplicate?')
+        pass
+
     def showEvent(self, event):
         main_widget = getWidgetAncestor(self, AbstractPiPWidget)
         main_widget.setIsGlobalOrganizerVisible(True)
@@ -1490,7 +1497,7 @@ class PiPSaveWidget(QWidget):
                 data: {PiPData}}
             }
 
-    Data Structure (PiPWidget):
+    Data Structure (PiPData):
         {"PiPName": {
             "widgets": [
                 {"widget name": "constructor code"},
@@ -1506,7 +1513,7 @@ class PiPSaveWidget(QWidget):
         }
 
     """
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, save_data=None):
         super(PiPSaveWidget, self).__init__(parent)
         QVBoxLayout(self)
 
@@ -1524,18 +1531,16 @@ class PiPSaveWidget(QWidget):
         self.layout().addWidget(self._name_widget)
         self.layout().addWidget(self._save_button_widget)
 
-        # setup save file path
-        self._file_data = {
-            "Default": {
-                "file_path": getDefaultSavePath() + '/.PiPWidgets.json',
-                "locked": True},
-            "User": {
-                "file_path": getDefaultSavePath() + '/.PiPWidgets_02.json',
-                "locked": False}
-        }
+        # setup save data
+        if not save_data:
+            save_data = {
+                "Default": {
+                    "file_path": getDefaultSavePath() + '/.PiPWidgets.json',
+                    "locked": True}
+            }
+        self._save_data = save_data
 
         # if doesnt exist create empty JSON
-
         for path, data in self.saveData().items():
             file_path = data['file_path']
             if not os.path.exists(file_path):
@@ -1822,13 +1827,19 @@ class PiPSaveWidget(QWidget):
             main_widget.globalOrganizerWidget().deleteItem(item)
 
     def saveData(self):
-        """ Returns the current save path for cgwigdets. The default is
-                $HOME/.cgwidgets/.PiPWidgets.json
+        """Returns the current save data
+        "Default": {
+            "file_path": getDefaultSavePath() + '/.PiPWidgets.json',
+            "locked": True},
+        "User": {
+            "file_path": getDefaultSavePath() + '/.PiPWidgets_02.json',
+            "locked": False}. The default is
+        $HOME/.cgwidgets/.PiPWidgets.json
         """
-        return self._file_data
+        return self._save_data
 
-    def setSaveData(self, _file_data):
-        self._file_data = _file_data
+    def setSaveData(self, _save_data):
+        self._save_data = _save_data
 
 
 """ ORGANIZER (LOCAL) """
@@ -2015,7 +2026,15 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
 
     # PiP Widget
-    widget_typesa = {
+    save_data = {
+        "Foo": {
+            "file_path": getDefaultSavePath() + '/.PiPWidgets.json',
+            "locked": True},
+        "Bar": {
+            "file_path": getDefaultSavePath() + '/.PiPWidgets_02.json',
+            "locked": False}
+    }
+    widget_types = {
         "QLabel": """
 from qtpy.QtWidgets import QLabel
 widget = QLabel(\"TEST\") """,
@@ -2023,7 +2042,7 @@ widget = QLabel(\"TEST\") """,
 from qtpy.QtWidgets import QPushButton
 widget = QPushButton(\"TESTBUTTON\") """
     }
-    pip_widget = AbstractPiPWidget(widget_types=widget_typesa)
+    pip_widget = AbstractPiPWidget(save_data=save_data, widget_types=widget_types)
 
     pip_widget.setPiPScale((0.25, 0.25))
     pip_widget.setEnlargedScale(0.75)

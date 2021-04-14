@@ -1,4 +1,5 @@
 # https://doc.qt.io/qt-5/model-view-programming.html#model-view-classes
+import copy
 from qtpy.QtWidgets import (
     QStyledItemDelegate, QApplication, QWidget, QStyle, QStyleOptionViewItem)
 from qtpy.QtCore import (
@@ -39,7 +40,7 @@ class AbstractDragDropModelItem(object):
         self._isDragEnabled = True
         self._isDropEnabled = True
         self._isEditable = True
-
+        self._delete_on_drop = None
         # default parent
         if parent is not None:
             parent.addChild(self)
@@ -108,6 +109,12 @@ class AbstractDragDropModelItem(object):
         return output
 
     """ DRAG / DROP PROPERTIES """
+    def deleteOnDrop(self):
+        return self._delete_on_drop
+
+    def setDeleteOnDrop(self, _delete_on_drop):
+        self._delete_on_drop = _delete_on_drop
+
     def isEnabled(self):
         return self._is_enabled
 
@@ -184,6 +191,7 @@ class AbstractDragDropModel(QAbstractItemModel):
 
         #
         self._dropping = False
+        self._delete_item_on_drop = True
 
     """ UTILS """
     def setItemEnabled(self, item, enabled):
@@ -249,6 +257,12 @@ class AbstractDragDropModel(QAbstractItemModel):
        OUTPUT: int
        """
         return len(self._header_data)
+
+    def deleteItemOnDrop(self):
+        return self._delete_item_on_drop
+
+    def setDeleteItemOnDrop(self, enabled):
+        self._delete_item_on_drop = enabled
 
     def data(self, index, role):
         """
@@ -670,6 +684,7 @@ class AbstractDragDropModel(QAbstractItemModel):
 
         # iterate through index list
         indexes = self.indexes
+        new_items = []
         for item in indexes:
             # drop on item
             if row < 0:
@@ -679,18 +694,27 @@ class AbstractDragDropModel(QAbstractItemModel):
             else:
                 # apply offset if dropping below the current location (due to deletion)
                 if row > item.row():
-                    row -= 1
+                    if self.deleteItemOnDrop():
+                        row -= 1
 
             # remove item
-            self.deleteItem(item, event_update=False)
+            if item.deleteOnDrop():
+                self.deleteItem(item, event_update=False)
+            elif item.deleteOnDrop() is None and self.deleteItemOnDrop():
+                self.deleteItem(item, event_update=False)
+
+            # create a new item
+            new_item = copy.deepcopy(item)
+            new_items.append(new_item)
 
             # insert item
             self.beginInsertRows(parent, row, row + 1)
-            parent_item.insertChild(row, item)
+            parent_item.insertChild(row, new_item)
             self.endInsertRows()
 
         # run virtual function
-        self.dropEvent(data, indexes, self, row, parent_item)
+        self.dropEvent(data, new_items, self, row, parent_item)
+
         #self.layoutChanged.emit()
         return False
 
