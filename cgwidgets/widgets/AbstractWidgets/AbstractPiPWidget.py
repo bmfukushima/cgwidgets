@@ -1261,7 +1261,7 @@ class PiPGlobalOrganizerItem(AbstractDragDropModelItem):
 
     def setIsLocked(self, _is_locked):
         self._is_locked = _is_locked
-
+        #
         self.setIsDropEnabled(False)
         self.setIsEditable(not _is_locked)
         self.setDeleteOnDrop(not _is_locked)
@@ -1399,6 +1399,8 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
             item.setIsLocked(True)
             #item.setIsEditable(False)
 
+        return item
+
     """ SAVE ( VIRTUAL ) """
     def getAllPiPWidgetsNames(self):
         return self.saveWidget().getAllPiPWidgetsNames()
@@ -1461,8 +1463,7 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
         for item in items:
             if not item.deleteOnDrop():
                 item.setIsLocked(False)
-                print('duplicate?')
-        pass
+                item.setDeleteOnDrop(True)
 
     def showEvent(self, event):
         main_widget = getWidgetAncestor(self, AbstractPiPWidget)
@@ -1768,18 +1769,38 @@ class PiPSaveWidget(QWidget):
             name = self.nameWidget().delegateWidget().text()
 
             # get row
+            """ If the PiP Widget exists, this will get the row so that
+            a new item can be created, and then destroy the old one"""
             if name in self.getAllPiPWidgetsNamesAsList():
                 _exists = True
                 main_widget = getWidgetAncestor(self, AbstractPiPWidget)
-                indexes = main_widget.globalOrganizerWidget().model().findItems(name)
-                for index in indexes:
-                    item = index.internalPointer()
-                    row = index.row()
 
+                # get parent of current index to search from
+                selected_indexes = main_widget.globalOrganizerWidget().getAllSelectedIndexes()
+                if 0 < len(selected_indexes):
+                    selected_index = selected_indexes[0]
+                    selected_item = selected_index.internalPointer()
+                    if selected_item.itemType() == PiPGlobalOrganizerItem.GROUP:
+                        parent_index = selected_index
+                    elif selected_item.itemType() == PiPGlobalOrganizerItem.PIP:
+                        parent_index = selected_index.parent()
+
+                    # find row
+                    indexes = main_widget.globalOrganizerWidget().model().findItems(name, index=parent_index)
+                    for index in indexes:
+                        item = index.internalPointer()
+                        row = index.row()
+                else:
+                    print("Select something...")
+                print('row === ', row)
+
+
+            # create new widget
             self.savePiPWidgetToFile(index=row)
 
+            # remove old widget
             if _exists:
-              main_widget.globalOrganizerWidget().deleteItem(item)
+                main_widget.globalOrganizerWidget().deleteItem(item)
 
     def savePiPWidgetToFile(self, index=0):
         """
@@ -1799,12 +1820,17 @@ class PiPSaveWidget(QWidget):
         # create new index
         main_widget = getWidgetAncestor(self, AbstractPiPWidget)
         parent_index = main_widget.globalOrganizerWidget().getAllSelectedIndexes()[0].parent()
-        main_widget.globalOrganizerWidget().createNewPiPIndex(
+        item = main_widget.globalOrganizerWidget().createNewPiPIndex(
             name, pip_data[name]["widgets"], pip_data[name]["settings"], parent_index, index=index)
 
         # reset text
         self.nameWidget().delegateWidget().setText('')
         self.updateSaveButtonText()
+
+        # set selection... doesnt work...
+        index = main_widget.globalOrganizerWidget().model().getIndexFromItem(item)
+        main_widget.globalOrganizerWidget().view().clearSelection()
+        main_widget.globalOrganizerWidget().view().setIndexSelected(index, True)
         print('saving to... ', self.saveData())
 
     def updatePiPFile(self):

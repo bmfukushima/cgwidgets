@@ -694,7 +694,7 @@ class AbstractDragDropModel(QAbstractItemModel):
             else:
                 # apply offset if dropping below the current location (due to deletion)
                 if row > item.row():
-                    if self.deleteItemOnDrop():
+                    if self.deleteItemOnDrop() or item.deleteOnDrop():
                         row -= 1
 
             # remove item
@@ -702,6 +702,8 @@ class AbstractDragDropModel(QAbstractItemModel):
                 self.deleteItem(item, event_update=False)
             elif item.deleteOnDrop() is None and self.deleteItemOnDrop():
                 self.deleteItem(item, event_update=False)
+            else:
+                row += 1
 
             # create a new item
             new_item = copy.deepcopy(item)

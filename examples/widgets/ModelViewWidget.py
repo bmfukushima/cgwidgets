@@ -59,6 +59,14 @@ for x in range(0, 4):
     for i, char in enumerate('abc'):
         main_widget.model().insertNewIndex(i, name=char, parent=index)
 
+# set delete on drop...
+""" This will make it so that when an item is dropped, it can be duplicated
+
+setting the item will override the models settings.
+"""
+index.internalPointer().setDeleteOnDrop(False)
+main_widget.model().setDeleteItemOnDrop(True)
+
 # set model event
 main_widget.setDragStartEvent(testDrag)
 main_widget.setDropEvent(testDrop)
