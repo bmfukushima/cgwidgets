@@ -180,6 +180,12 @@ class AbstractPiPWidget(AbstractShojiModelViewWidget):
         return [index.internalPointer().widget() for index in self.localOrganizerWidget().model().getAllIndexes() if hasattr(index.internalPointer(), "_widget")]
 
     def items(self):
+        """
+        Gets all of the items (widgets) from the local organizer
+
+        Returns (list)
+        """
+
         model = self.localOrganizerWidget().model()
         root_item = model.getRootItem()
         return root_item.children()
@@ -1463,7 +1469,6 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
         for item in items:
             if not item.deleteOnDrop():
                 item.setIsLocked(False)
-                item.setDeleteOnDrop(True)
 
     def showEvent(self, event):
         main_widget = getWidgetAncestor(self, AbstractPiPWidget)
@@ -1610,7 +1615,6 @@ class PiPSaveWidget(QWidget):
         """
         widgets = item.widgetsList()
         reversed_widgets = OrderedDict(reversed(list(widgets.items())))
-        # print(widgets)
 
         main_widget = getWidgetAncestor(self, AbstractPiPWidget)
 
@@ -1755,14 +1759,20 @@ class PiPSaveWidget(QWidget):
 
         Args:
             this (AbstractButtonInputWidget): being pressed
+            _exists (bool): determines if the item should be deleted or not
         """
         file_path = self.currentSaveFilePath()
 
         # preflight
         if not file_path: return
+        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
 
+        # update
         if self.saveButtonWidget().text() == "UPDATE":
-            self.updatePiPFile()
+            _exists = True
+            new_item, orig_item = self.updatePiPFile()
+
+        # save
         elif self.saveButtonWidget().text() == "SAVE":
             _exists = False
             row = 0
@@ -1773,7 +1783,6 @@ class PiPSaveWidget(QWidget):
             a new item can be created, and then destroy the old one"""
             if name in self.getAllPiPWidgetsNamesAsList():
                 _exists = True
-                main_widget = getWidgetAncestor(self, AbstractPiPWidget)
 
                 # get parent of current index to search from
                 selected_indexes = main_widget.globalOrganizerWidget().getAllSelectedIndexes()
@@ -1788,19 +1797,22 @@ class PiPSaveWidget(QWidget):
                     # find row
                     indexes = main_widget.globalOrganizerWidget().model().findItems(name, index=parent_index)
                     for index in indexes:
-                        item = index.internalPointer()
+                        orig_item = index.internalPointer()
                         row = index.row()
                 else:
                     print("Select something...")
-                print('row === ', row)
-
 
             # create new widget
-            self.savePiPWidgetToFile(index=row)
+            new_item = self.savePiPWidgetToFile(index=row)
 
-            # remove old widget
-            if _exists:
-                main_widget.globalOrganizerWidget().deleteItem(item)
+        # remove old widget
+        if _exists:
+            main_widget.globalOrganizerWidget().deleteItem(orig_item)
+
+        # reselect index
+        index = main_widget.globalOrganizerWidget().model().getIndexFromItem(new_item)
+        main_widget.globalOrganizerWidget().view().clearItemSelection()
+        main_widget.globalOrganizerWidget().view().setIndexSelected(index, True)
 
     def savePiPWidgetToFile(self, index=0):
         """
@@ -1827,11 +1839,8 @@ class PiPSaveWidget(QWidget):
         self.nameWidget().delegateWidget().setText('')
         self.updateSaveButtonText()
 
-        # set selection... doesnt work...
-        index = main_widget.globalOrganizerWidget().model().getIndexFromItem(item)
-        main_widget.globalOrganizerWidget().view().clearSelection()
-        main_widget.globalOrganizerWidget().view().setIndexSelected(index, True)
         print('saving to... ', self.saveData())
+        return item
 
     def updatePiPFile(self):
         """
@@ -1844,13 +1853,15 @@ class PiPSaveWidget(QWidget):
         # get name
         name = None
         for index in selected_indexes:
-            item = index.internalPointer()
-            name = item.columnData()['name']
+            orig_item = index.internalPointer()
+            name = orig_item.columnData()['name']
 
         if name:
             self.nameWidget().delegateWidget().setText(name)
-            self.savePiPWidgetToFile(index=index.row())
-            main_widget.globalOrganizerWidget().deleteItem(item)
+            new_item = self.savePiPWidgetToFile(index=index.row())
+            # main_widget.globalOrganizerWidget().deleteItem(item)
+
+        return new_item, orig_item
 
     def saveData(self):
         """Returns the current save data
