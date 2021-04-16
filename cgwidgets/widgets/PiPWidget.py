@@ -79,8 +79,8 @@ class PiPWidget(AbstractPiPWidget):
             hide (esc)
     """
 
-    def __init__(self, parent=None, widget_types=None):
-        super(PiPWidget, self).__init__(parent, widget_types=widget_types)
+    def __init__(self, parent=None, widget_types=None, save_data=None):
+        super(PiPWidget, self).__init__(parent, widget_types=widget_types, save_data=save_data)
         #, widget_types=widget_types
 
 

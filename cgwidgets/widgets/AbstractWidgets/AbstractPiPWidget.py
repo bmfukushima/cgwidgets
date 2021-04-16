@@ -157,6 +157,10 @@ class AbstractPiPWidget(AbstractShojiModelViewWidget):
         self._settings_widget = SettingsWidget(self)
         self._is_settings_visible = False
 
+        # help widget
+        self._help_widget = PiPHelpWidget(self)
+
+        self.insertShojiWidget(0, column_data={'name': 'Help'}, widget=self._help_widget)
         self.insertShojiWidget(0, column_data={'name': 'Settings'}, widget=self._settings_widget)
         self.insertShojiWidget(0, column_data={'name': 'Organizer'}, widget=self._global_organizer_widget)
         self.insertShojiWidget(0, column_data={'name': 'Views'}, widget=self._local_organizer_widget)
@@ -434,12 +438,13 @@ widget.setWordWrap(True)
 
     """ EVENTS """
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key_F:
-            self.toggleLocalOrganizerVisibility()
-        if event.key() == Qt.Key_G:
-            self.toggleGlobalOrganizerVisibility()
-        if event.key() == Qt.Key_S:
-            self.toggleSettingsVisibility()
+        # these are registering???
+        # if event.key() == Qt.Key_F:
+        #     self.toggleLocalOrganizerVisibility()
+        # if event.key() == Qt.Key_G:
+        #     self.toggleGlobalOrganizerVisibility()
+        # if event.key() == Qt.Key_S:
+        #     self.toggleSettingsVisibility()
         return AbstractShojiModelViewWidget.keyPressEvent(self, event)
 
 
@@ -1490,7 +1495,12 @@ class PiPSaveWidget(QWidget):
 
     Signals:
         save
-            user_button_press --> savePiPWidgetToFile --> getAllPiPData
+            user_button_press
+                --> save
+                    --> savePiPWidgetItem
+                        --> updatePiPWidgetItemInFile
+                        --> savePiPWidgetItemToFile
+                    --> savePiPGroupItem --> dumpPiPDataToJSON
         load
 
     Data Structure (Resources):
@@ -1682,7 +1692,7 @@ class PiPSaveWidget(QWidget):
         else:
             self.saveButtonWidget().setText("SAVE")
 
-    def getPiPWidgetItemDict(self, item):
+    def getPiPWidgetItemDict(self):
         """
         Gets the dictionary for a singular PiPWidgetItem to be saved as entry in the
         master PiPFile located at saveFilePath
@@ -1790,7 +1800,12 @@ class PiPSaveWidget(QWidget):
 
         # Save / Update PiPFile
         if item.itemType() == PiPGlobalOrganizerItem.GROUP:
-            self.updatePiPGroupItem(item)
+            if not self.nameWidget().delegateWidget().text():
+                self.updatePiPGroupItem(item)
+            # Save / Update PiPWidgetItem if Group Selected
+            else:
+                self.savePiPWidgetItem()
+
         # Save / Update PiPWidgetItem
         if item.itemType() == PiPGlobalOrganizerItem.PIP:
             self.savePiPWidgetItem()
@@ -1839,7 +1854,7 @@ class PiPSaveWidget(QWidget):
         # update
         if self.saveButtonWidget().text() == "UPDATE":
             _exists = True
-            new_item, orig_item = self.updatePiPItemInFile()
+            new_item, orig_item = self.updatePiPWidgetItemInFile()
 
         # save
         elif self.saveButtonWidget().text() == "SAVE":
@@ -1872,7 +1887,7 @@ class PiPSaveWidget(QWidget):
                     print("Select something...")
 
             # create new widget
-            new_item = self.savePiPWidgetToFile(index=row)
+            new_item = self.savePiPWidgetItemToFile(index=row)
 
         # remove old widget
         if _exists:
@@ -1900,7 +1915,13 @@ class PiPSaveWidget(QWidget):
 
         # create new index
         main_widget = getWidgetAncestor(self, AbstractPiPWidget)
-        parent_index = main_widget.globalOrganizerWidget().getAllSelectedIndexes()[0].parent()
+
+        # get parent index (if Group/PiP is selected)
+        selected_index = main_widget.globalOrganizerWidget().getAllSelectedIndexes()[0]
+        if selected_index.internalPointer().itemType() == PiPGlobalOrganizerItem.PIP:
+            parent_index = selected_index.parent()
+        else:
+            parent_index = selected_index
         item = main_widget.globalOrganizerWidget().createNewPiPIndex(
             name, pip_data[name]["widgets"], pip_data[name]["settings"], parent_index, index=index)
 
@@ -1911,7 +1932,7 @@ class PiPSaveWidget(QWidget):
         print('saving to... ', self.getPiPSaveData())
         return item
 
-    def updatePiPItemInFile(self):
+    def updatePiPWidgetItemInFile(self):
         """
         Updates the currently selected PiPWidgetItem if the user has made changes.
         This will only work, if the current text is empty in the name widget.
@@ -2103,6 +2124,26 @@ class PiPPanelCreatorWidget(AbstractListInputWidget):
 
         return AbstractListInputWidget.keyPressEvent(self, event)
 
+
+""" HELP """
+class PiPHelpWidget(AbstractLabelWidget):
+    def __init__(self, parent=None):
+        super(PiPHelpWidget, self).__init__(parent)
+
+        self.setText("""
+
+Views:
+Widgets that will exist in the PiP View you can create more widgets using the empty field at the bottom of this widget
+
+Organizer:
+PiPWidgets can be saved/loaded through this tab.  This Tab Shows all of the PiPWidgets, selecting an organizer will load that PiPWidget setup.
+\nAny changes made will require you to hit the save/update button at the bottom to store these changes to disk.  By default this button will save/update the selected item.  If a Group is selected, then this will update the entire Group, while if an individual item is selected, it will update that singular entry. 
+
+
+""")
+        self.textWidget().setIndent(20)
+        self.textWidget().setAlignment(Qt.AlignLeft)
+        self.setWordWrap(True)
 
 if __name__ == '__main__':
     import sys
