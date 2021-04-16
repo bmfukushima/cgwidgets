@@ -316,7 +316,7 @@ widget.setWordWrap(True)
 
     """ SAVE (VIRTUAL) """
     def setSavePath(self, file_paths):
-        self.localOrganizerWidget().saveWidget().setSaveData(file_paths)
+        self.localOrganizerWidget().saveWidget().setPiPSaveData(file_paths)
 
     """ VIRTUAL FUNCTIONS (MAIN WIDGET)"""
     def direction(self):
@@ -1254,6 +1254,8 @@ class PiPGlobalOrganizerItem(AbstractDragDropModelItem):
             {"widget_name", "constructor_code"},
             {"widget_name", "constructor_code"},
             ]
+        settings (dict) of settings in form of
+            "settings": {"setting name": "value"}},
     """
     GROUP = 0
     PIP = 1
@@ -1349,7 +1351,7 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
             parent_index = self.createNewPiPGroupIndex(name, locked, file_path)
 
             # Create PiP Widgets as children of Group
-            for widget_name in sorted(pip_data.keys()):
+            for widget_name in reversed(pip_data.keys()):
                 self.createNewPiPIndex(
                     widget_name,
                     pip_data[widget_name]["widgets"],
@@ -1420,11 +1422,11 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
     def currentSaveFilePath(self):
         return self.saveWidget().currentSaveFilePath()
 
-    def saveData(self):
-        return self.saveWidget().saveData()
+    def getPiPSaveData(self):
+        return self.saveWidget().getPiPSaveData()
 
-    def setSaveData(self, file_paths):
-        self.saveWidget().setSaveData(file_paths)
+    def setPiPSaveData(self, file_paths):
+        self.saveWidget().setPiPSaveData(file_paths)
 
     """ SAVE """
     def saveWidget(self):
@@ -1492,7 +1494,7 @@ class PiPSaveWidget(QWidget):
         load
 
     Data Structure (Resources):
-        getAllPiPData
+        getAllPiPData()
             {PiPName: {
                 file_path: str,
                 locked: bool
@@ -1503,20 +1505,21 @@ class PiPSaveWidget(QWidget):
                 data: {PiPData}}
             }
 
-    Data Structure (PiPData):
-        {"PiPName": {
-            "widgets": [
-                {"widget name": "constructor code"},
-                {"widget name": "constructor code"},
-                {"widget name": "constructor code"}],
-            "settings": {"setting name": "value"}},
-        "PiPName2": {
-            "widgets": [
-                {"widget name": "constructor code"},
-                {"widget name": "constructor code"},
-                {"widget name": "constructor code"}],
-            "settings": {"setting name": "value"}}
-        }
+    Data Structure (PiPData Singular File):
+        currentPiPFileData()
+            {"PiPName": {
+                "widgets": [
+                    {"widget name": "constructor code"},
+                    {"widget name": "constructor code"},
+                    {"widget name": "constructor code"}],
+                "settings": {"setting name": "value"}},
+            "PiPName2": {
+                "widgets": [
+                    {"widget name": "constructor code"},
+                    {"widget name": "constructor code"},
+                    {"widget name": "constructor code"}],
+                "settings": {"setting name": "value"}}
+            }
 
     """
     def __init__(self, parent=None, save_data=None):
@@ -1547,7 +1550,7 @@ class PiPSaveWidget(QWidget):
         self._save_data = save_data
 
         # if doesnt exist create empty JSON
-        for path, data in self.saveData().items():
+        for path, data in self.getPiPSaveData().items():
             file_path = data['file_path']
             if not os.path.exists(file_path):
                 # Writing JSON data
@@ -1650,12 +1653,27 @@ class PiPSaveWidget(QWidget):
         Note: see class notes for PiPData data structure
         """
         pip_data = {}
-        for pip_file_name, data in self.saveData().items():
+        for pip_file_name, data in self.getPiPSaveData().items():
             pip_data[pip_file_name] = {}
             pip_data[pip_file_name]["data"] = getJSONData(data['file_path'])
             pip_data[pip_file_name]["locked"] = data["locked"]
             pip_data[pip_file_name]["file_path"] = data["file_path"]
         return pip_data
+
+    def getPiPSaveData(self):
+        """Returns the current save data
+        "Default": {
+            "file_path": getDefaultSavePath() + '/.PiPWidgets.json',
+            "locked": True},
+        "User": {
+            "file_path": getDefaultSavePath() + '/.PiPWidgets_02.json',
+            "locked": False}. The default is
+        $HOME/.cgwidgets/.PiPWidgets.json
+        """
+        return self._save_data
+
+    def setPiPSaveData(self, _save_data):
+        self._save_data = _save_data
 
     """ SAVE (UTILS)"""
     def updateSaveButtonText(self, *args):
@@ -1664,9 +1682,9 @@ class PiPSaveWidget(QWidget):
         else:
             self.saveButtonWidget().setText("SAVE")
 
-    def getPiPWidgetItemDict(self):
+    def getPiPWidgetItemDict(self, item):
         """
-        Gets the dictionary for a singular PiPWidget to be saved as entry in the
+        Gets the dictionary for a singular PiPWidgetItem to be saved as entry in the
         master PiPFile located at saveFilePath
         Returns (OrderedDict):
             "PiPName": {
@@ -1719,11 +1737,10 @@ class PiPSaveWidget(QWidget):
 
             # return if GROUP
             """ Can't save/update an entire group as only one item is selectable at a time..."""
-            if item.itemType() == PiPGlobalOrganizerItem.GROUP:
-                return None
+            if item.itemType() == PiPGlobalOrganizerItem.PIP:
+                item = item.parent()
 
             # get file path
-            item = item.parent()
             file_path = item.filePath()
 
             return file_path
@@ -1761,16 +1778,68 @@ class PiPSaveWidget(QWidget):
             this (AbstractButtonInputWidget): being pressed
             _exists (bool): determines if the item should be deleted or not
         """
-        file_path = self.currentSaveFilePath()
-
         # preflight
+        file_path = self.currentSaveFilePath()
         if not file_path: return
+        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+        selection = main_widget.globalOrganizerWidget().getAllSelectedIndexes()
+        if len(selection) == 0: return
+
+        # get item
+        item = selection[0].internalPointer()
+
+        # Save / Update PiPFile
+        if item.itemType() == PiPGlobalOrganizerItem.GROUP:
+            self.updatePiPGroupItem(item)
+        # Save / Update PiPWidgetItem
+        if item.itemType() == PiPGlobalOrganizerItem.PIP:
+            self.savePiPWidgetItem()
+
+    def updatePiPGroupItem(self, parent_item):
+        """
+        Updates the current PiPFile, this could need to happen if:
+            - new items have been drag/dropped in from a locked one
+            - An item has been rearranged via drag/drop
+
+        Args:
+            parent_item (PiPGlobalOrganizerItem): Currently selected by user, must have an itemType() of GROUP
+
+        {"PiPName": {
+        "widgets": [
+            {"widget name": "constructor code"},
+            {"widget name": "constructor code"},
+            {"widget name": "constructor code"}],
+        "settings": {"setting name": "value"}},
+        """
+
+        # create new dictionary...
+        pip_data = {}
+
+        # run through each item in parent
+        for child in parent_item.children():
+            name = child.columnData()['name']
+            widgets = child.widgetsList()
+            settings = child.settings()
+
+            # store dictionary
+            pip_data[name] = {}
+            pip_data[name]["widgets"] = widgets
+            pip_data[name]["settings"] = settings
+
+        # store as dictionary entry...
+        self.dumpPiPDataToJSON(self.currentSaveFilePath(), pip_data)
+
+    def savePiPWidgetItem(self):
+        """
+        Saves a singular PiPItem in the GlobalOrganizer to the master PiPDictionary
+        located at self.currentSaveFilePath()
+        """
         main_widget = getWidgetAncestor(self, AbstractPiPWidget)
 
         # update
         if self.saveButtonWidget().text() == "UPDATE":
             _exists = True
-            new_item, orig_item = self.updatePiPFile()
+            new_item, orig_item = self.updatePiPItemInFile()
 
         # save
         elif self.saveButtonWidget().text() == "SAVE":
@@ -1814,10 +1883,10 @@ class PiPSaveWidget(QWidget):
         main_widget.globalOrganizerWidget().view().clearItemSelection()
         main_widget.globalOrganizerWidget().view().setIndexSelected(index, True)
 
-    def savePiPWidgetToFile(self, index=0):
+    def savePiPWidgetItemToFile(self, index=0):
         """
-        When the "Save" button is pressed, this will save the current PiPWidget to the master
-        PiPDictionary located at self.saveFilePath()
+        When the "Save" button is pressed, this will save the current PiPWidgetItem to the
+        master PiPFile
 
         Returns:
         """
@@ -1839,12 +1908,12 @@ class PiPSaveWidget(QWidget):
         self.nameWidget().delegateWidget().setText('')
         self.updateSaveButtonText()
 
-        print('saving to... ', self.saveData())
+        print('saving to... ', self.getPiPSaveData())
         return item
 
-    def updatePiPFile(self):
+    def updatePiPItemInFile(self):
         """
-        Updates the currently selected PiPWidget if the user has made changes.
+        Updates the currently selected PiPWidgetItem if the user has made changes.
         This will only work, if the current text is empty in the name widget.
         """
         main_widget = getWidgetAncestor(self, AbstractPiPWidget)
@@ -1858,25 +1927,9 @@ class PiPSaveWidget(QWidget):
 
         if name:
             self.nameWidget().delegateWidget().setText(name)
-            new_item = self.savePiPWidgetToFile(index=index.row())
-            # main_widget.globalOrganizerWidget().deleteItem(item)
+            new_item = self.savePiPWidgetItemToFile(index=index.row())
 
         return new_item, orig_item
-
-    def saveData(self):
-        """Returns the current save data
-        "Default": {
-            "file_path": getDefaultSavePath() + '/.PiPWidgets.json',
-            "locked": True},
-        "User": {
-            "file_path": getDefaultSavePath() + '/.PiPWidgets_02.json',
-            "locked": False}. The default is
-        $HOME/.cgwidgets/.PiPWidgets.json
-        """
-        return self._save_data
-
-    def setSaveData(self, _save_data):
-        self._save_data = _save_data
 
 
 """ ORGANIZER (LOCAL) """
