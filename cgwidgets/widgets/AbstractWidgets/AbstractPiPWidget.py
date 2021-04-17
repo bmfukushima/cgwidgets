@@ -115,9 +115,13 @@ class AbstractPiPWidget(AbstractShojiModelViewWidget):
                 keyPressEvent --> toggleCreatorVisibility --> show
             hide (esc)
     """
+
+    CREATE = 0
+    DISPLAY = 1
     def __init__(self, parent=None, save_data=None, widget_types=None):
         super(AbstractPiPWidget, self).__init__(parent)
         # setup default attrs
+        self._creation_mode = AbstractPiPWidget.CREATE
         self.setHeaderPosition(attrs.NORTH)
         self.setMultiSelectDirection(Qt.Horizontal)
         self.setMultiSelect(True)
@@ -156,10 +160,15 @@ class AbstractPiPWidget(AbstractShojiModelViewWidget):
         self.createTempWidget()
         self.createTempWidget()
 
+        # hide header
+        #self.headerWidget().hide()
+        # self.headerWidget().setFixedHeight(0)
+
     def showEvent(self, event):
         indexes = self.model().findItems("PiP", Qt.MatchExactly)
         for index in indexes:
             self.setIndexSelected(index, True)
+
         return AbstractShojiModelViewWidget.showEvent(self, event)
 
     """ UTILS """
@@ -179,6 +188,65 @@ class AbstractPiPWidget(AbstractShojiModelViewWidget):
         model = self.localOrganizerWidget().model()
         root_item = model.getRootItem()
         return root_item.children()
+
+    def creationMode(self):
+        return self._creation_mode
+
+    def setCreationMode(self, mode):
+        """
+        Sets the current display mode.  If this is set to DISPLAY, then all of the organizers at the top will
+        be hidden.  If this is set to DISPLAY, then all of the organizers will be shown to the user.
+
+        The default mode is CREATE
+
+        Args:
+            mode (AbstractPiPWidget.MODE):
+                DISPLAY | CREATE
+        """
+        self._creation_mode = mode
+        if mode == AbstractPiPWidget.DISPLAY:
+            self.headerWidget().hide()
+            for widget in self.widgets():
+                widget.main_widget.viewWidget().setDisplayMode(AbstractOverlayInputWidget.DISABLED)
+
+        if mode == AbstractPiPWidget.CREATE:
+            self.headerWidget().show()
+            for widget in self.widgets():
+                widget.main_widget.viewWidget().setDisplayMode(AbstractOverlayInputWidget.RELEASE)
+
+    def setDisplayWidget(self, file_name, widget_name):
+        """
+        Sets the current display widget to the parameters provided.
+
+        This should be used with setCreationMode(PiPWidget.DISPLAY) to setup a default
+        display widget.
+
+        Args:
+            file_name (str): name of save file to search in
+            widget_name  (str): name of widget to find
+
+        Returns:
+
+        """
+        model = self.globalOrganizerWidget().model()
+
+        # for each file
+        for pip_file_item in model.getRootItem().children():
+            # match file name
+            if model.getItemName(pip_file_item) == file_name:
+                # for each PiPWidget in file
+                for pip_widget_item in pip_file_item.children():
+                    # match PiPWidget name
+                    if model.getItemName(pip_widget_item) == widget_name:
+                        # get index
+                        index = model.getIndexFromItem(pip_widget_item)
+                        self.globalOrganizerWidget().view().clearItemSelection()
+
+                        # set index
+                        self.globalOrganizerWidget().view().setIndexSelected(index, True)
+                        return
+
+        print('No widgets found in {file_name} --> {widget_name}'.format(file_name=file_name, widget_name=widget_name))
 
     """ WIDGETS (DISPLAY)"""
     def mainWidget(self):
@@ -222,6 +290,13 @@ class AbstractPiPWidget(AbstractShojiModelViewWidget):
 
         # insert widget into layout
         mini_widget = self.miniViewerWidget().createNewWidget(widget, name=name)
+
+        # set title editable
+        if self.creationMode() == AbstractPiPWidget.CREATE:
+            mini_widget.main_widget.viewWidget().setDisplayMode(AbstractOverlayInputWidget.RELEASE)
+        elif self.creationMode() == AbstractPiPWidget.DISPLAY:
+            mini_widget.main_widget.viewWidget().setDisplayMode(AbstractOverlayInputWidget.DISABLED)
+
         if self.numWidgets() < 1:
             self.mainWidget().setCurrentWidget(mini_widget)
 
@@ -244,6 +319,7 @@ class AbstractPiPWidget(AbstractShojiModelViewWidget):
                 self.removeTempWidget()
         #
         # print (self.tempWidgets())
+
 
         self.mainWidget().resizeMiniViewer()
         return index
@@ -2197,15 +2273,28 @@ widget = QPushButton(\"TESTBUTTON\") """
     # drag_drop_widget.setFixedWidth(100)
 
     # Main Widget
+
+    # pip main widget
     main_widget = QWidget()
 
     main_layout = QHBoxLayout(main_widget)
     main_layout.setContentsMargins(0, 0, 0, 0)
     main_layout.addWidget(pip_widget)
-    #main_layout.addWidget(drag_drop_widget)
+
+    # test splitter
+    # from qtpy.QtWidgets import QSplitter, QLabel
+    # splitter = QSplitter()
+    # splitter.addWidget(QLabel("test"))
+    # splitter.addWidget(QLabel("this"))
+    # main_layout.addWidget(splitter)
 
     main_widget.show()
     centerWidgetOnCursor(main_widget)
     main_widget.resize(512, 512)
+
+
+    # setup display widget
+    pip_widget.setDisplayWidget("Bar", "test02")
+    pip_widget.setCreationMode(AbstractPiPWidget.DISPLAY)
 
     sys.exit(app.exec_())
