@@ -2,43 +2,29 @@
 Todo:
     * Overall cleanup / organization
         mainWidget --> AbstractPiPWidget?
-    * Docs / Cleanup
-        Help Tab...
-    * Full Test in Katana...
-        How to get hotkeys working... in stupid stuff...
-    * Global save hierarchy...
-        currently hard coded in SaveWidget
-        self._save_data = {
-            "Default": {
-                "file_path": getDefaultSavePath() + '/.PiPWidgets.json',
-                "locked": True},
-            "User": {
-                "file_path": getDefaultSavePath() + '/.PiPWidgets_02.json',
-                "locked": False}
-        }
-
-
+    * Window popup handler
+        when a user clicks a popup when in the Mini Viewer, it will register as a
+        leave event and leave the current widget
+    *
 """
 import json
 from collections import OrderedDict
 import os
 
 from qtpy.QtWidgets import (
-    QStackedLayout, QWidget, QBoxLayout, QVBoxLayout, QLabel, QSizePolicy, QSplitter, QHBoxLayout)
-from qtpy.QtCore import QEvent, Qt, QPoint, QModelIndex
+    QWidget, QBoxLayout, QVBoxLayout, QSizePolicy, QHBoxLayout, QScrollArea)
+from qtpy.QtCore import QEvent, Qt, QPoint
 from qtpy.QtGui import QCursor
 
 from cgwidgets.views import AbstractDragDropModelItem
 from cgwidgets.utils import attrs, getWidgetUnderCursor, isWidgetDescendantOf, getWidgetAncestor, getDefaultSavePath, getJSONData, showWarningDialogue
 
-from cgwidgets.settings.hover_display import installHoverDisplaySS, removeHoverDisplay
 from cgwidgets.settings.colors import iColor
 from cgwidgets.settings import keylist
 
 from cgwidgets.widgets.AbstractWidgets.AbstractLabelledInputWidget import AbstractLabelledInputWidget
 from cgwidgets.widgets.AbstractWidgets.AbstractOverlayInputWidget import AbstractOverlayInputWidget
 from cgwidgets.widgets.AbstractWidgets.AbstractModelViewWidget import AbstractModelViewWidget
-from cgwidgets.widgets.AbstractWidgets.AbstractShojiLayout import AbstractShojiLayout
 from cgwidgets.widgets.AbstractWidgets.AbstractShojiWidget.AbstractShojiModelViewWidget import AbstractShojiModelViewWidget
 
 
@@ -285,14 +271,19 @@ class AbstractPiPWidget(AbstractShojiModelViewWidget):
         constructor_code = """
 from cgwidgets.widgets import AbstractLabelWidget
 text = \"\"\"
-Press ( F )
-Open widget organizer
+Views:
+Open PiP Widget Organizer.  This will allow you to create/delete
+widgets for the current view (the one that you're looking at now).
 
-Press ( A )
-To Load/Save a PiPWidget
+Organizer:
+Global PiPWidget Organizer.  In this tab, you'll be able to save/load
+PiPWidgets for future use.
 
-Press ( C )
-To create new PiPWidget
+Settings:
+Most likely where the settings are
+
+Help:
+If you can't figure this out, I can't help you.
 \"\"\"
 widget = AbstractLabelWidget(self, text)
 widget.setWordWrap(True)
@@ -944,9 +935,11 @@ class PiPMiniViewer(QWidget):
                     event.accept()
 
         elif event.type() in [QEvent.Drop, QEvent.DragLeave, QEvent.Leave]:
-            self.closeEnlargedView(obj)
-        elif event.type() == QEvent.KeyPress:
-            print("event filter???")
+            new_object = getWidgetUnderCursor()
+            if not isWidgetDescendantOf(new_object, obj):
+                self.closeEnlargedView(obj)
+        # elif event.type() == QEvent.KeyPress:
+        #     print("event filter???")
         return False
 
     def closeEnlargedView(self, obj):
@@ -2126,24 +2119,39 @@ class PiPPanelCreatorWidget(AbstractListInputWidget):
 
 
 """ HELP """
-class PiPHelpWidget(AbstractLabelWidget):
+class PiPHelpWidget(QScrollArea):
     def __init__(self, parent=None):
         super(PiPHelpWidget, self).__init__(parent)
 
-        self.setText("""
+        # create help widget
+        self.help_widget = AbstractLabelWidget(self)
 
-Views:
+        # setup help widget attrs
+        self.help_widget.textWidget().setIndent(20)
+        self.help_widget.textWidget().setAlignment(Qt.AlignLeft)
+        self.help_widget.setWordWrap(True)
+        self.help_widget.setText("""Views:
 Widgets that will exist in the PiP View you can create more widgets using the empty field at the bottom of this widget
 
 Organizer:
 PiPWidgets can be saved/loaded through this tab.  This Tab Shows all of the PiPWidgets, selecting an organizer will load that PiPWidget setup.
-\nAny changes made will require you to hit the save/update button at the bottom to store these changes to disk.  By default this button will save/update the selected item.  If a Group is selected, then this will update the entire Group, while if an individual item is selected, it will update that singular entry. 
 
+Any changes made will require you to hit the save/update button at the bottom to store these changes to disk.  By default this button will save/update the selected item.  If a Group is selected, then this will update the entire Group, while if an individual item is selected, it will update that singular entry. 
 
+Hotkeys:
+< Q >Hold to hide all widgets
+
+< Space >
+Swap current display widget with previously displayed widget.  If this is pressed when the MiniViewer is active, then the widget that is currently enlarged will be set as the actively displayed widget.
+
+< 1 | 2 | 3 | 4 | 5 >
+Sets the current display widget relative to the number pressed, and the widget available to be viewed in the Mini Viewer.
 """)
-        self.textWidget().setIndent(20)
-        self.textWidget().setAlignment(Qt.AlignLeft)
-        self.setWordWrap(True)
+
+        # setup scroll area
+        self.setWidget(self.help_widget)
+        self.setWidgetResizable(True)
+
 
 if __name__ == '__main__':
     import sys
