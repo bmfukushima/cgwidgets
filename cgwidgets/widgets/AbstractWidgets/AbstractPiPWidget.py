@@ -118,8 +118,10 @@ class AbstractPiPWidget(AbstractShojiModelViewWidget):
 
     CREATE = 0
     DISPLAY = 1
+
     def __init__(self, parent=None, save_data=None, widget_types=None):
         super(AbstractPiPWidget, self).__init__(parent)
+
         # setup default attrs
         self._creation_mode = AbstractPiPWidget.CREATE
         self.setHeaderPosition(attrs.NORTH)
@@ -159,10 +161,6 @@ class AbstractPiPWidget(AbstractShojiModelViewWidget):
         # create temp widget
         self.createTempWidget()
         self.createTempWidget()
-
-        # hide header
-        #self.headerWidget().hide()
-        # self.headerWidget().setFixedHeight(0)
 
     def showEvent(self, event):
         indexes = self.model().findItems("PiP", Qt.MatchExactly)
@@ -1657,7 +1655,7 @@ class PiPSaveWidget(QWidget):
         """
         returns a list for populating the names list
         """
-        widgets_list = [[name] for name in self.getAllPiPWidgetsNamesAsList()]
+        widgets_list = [[name] for name in sorted(self.getAllPiPWidgetsNamesAsList())]
 
         return widgets_list
 
@@ -2164,7 +2162,7 @@ class PiPPanelCreatorWidget(AbstractListInputWidget):
         super(PiPPanelCreatorWidget, self).__init__(parent)
 
         self._widget_types = widget_types
-        self.populate([[key] for key in widget_types.keys()])
+        self.populate([[key] for key in sorted(widget_types.keys())])
         #self.setUserFinishedEditingEvent(self.createNewWidget)
 
     def widgetTypes(self):
