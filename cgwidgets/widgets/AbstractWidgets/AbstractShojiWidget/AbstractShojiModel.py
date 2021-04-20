@@ -39,6 +39,7 @@ class AbstractShojiModelItem(AbstractDragDropModelItem, iShojiDynamicWidget):
             or not.
     """
     def __init__(self, parent=None):
+        super(AbstractShojiModelItem, self).__init__(parent)
         #self._data = data
         self._column_data = {}
         self._children = []

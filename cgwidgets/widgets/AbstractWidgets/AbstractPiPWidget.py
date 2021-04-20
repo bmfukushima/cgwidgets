@@ -269,6 +269,23 @@ class AbstractPiPWidget(AbstractShojiModelViewWidget):
         return self._settings_widget
 
     """ WIDGETS """
+    def createNewWidgetFromConstructorCode(self, constructor_code):
+        """
+        Retuns a QWidget from the constructor code provided.
+
+        The widget returned will be the variable "widget" from the constructor code
+        Args:
+            constructor_code (code):
+
+        Returns (QWidget):
+        """
+        loc = {}
+        loc['self'] = self
+        exec(constructor_code, globals(), loc)
+        widget = loc['widget']
+
+        return widget
+
     def createNewWidget(self, constructor_code, name=""):
         """
 
@@ -281,10 +298,7 @@ class AbstractPiPWidget(AbstractShojiModelViewWidget):
         """
 
         # create widget from constructor code
-        loc = {}
-        loc['self'] = self
-        exec(constructor_code, globals(), loc)
-        widget = loc['widget']
+        widget = self.createNewWidgetFromConstructorCode(constructor_code)
 
         # insert widget into layout
         mini_widget = self.miniViewerWidget().createNewWidget(widget, name=name)
@@ -302,6 +316,10 @@ class AbstractPiPWidget(AbstractShojiModelViewWidget):
         index = self.localOrganizerWidget().model().insertNewIndex(0, name=name)
 
         item = index.internalPointer()
+        # import weakref
+        # reference = weakref.ref(mini_widget)
+        # proxy_reference = weakref.proxy(mini_widget)
+
         item.setWidget(mini_widget)
         item.setConstructorCode(constructor_code)
 

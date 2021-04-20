@@ -671,6 +671,8 @@ class AbstractDragDropModel(QAbstractItemModel):
 
         # run virtual function
         self.dragStartEvent(self.indexes, self)
+
+        self.indexes = [index.internalPointer() for index in indexes if index.column() == 0]
         return mimedata
 
     def dropMimeData(self, data, action, row, column, parent):
@@ -686,7 +688,8 @@ class AbstractDragDropModel(QAbstractItemModel):
         indexes = self.indexes
         new_items = []
         for item in indexes:
-            # drop on item
+            # get row
+            """ drop on item"""
             if row < 0:
                 row = 0
 
@@ -705,9 +708,11 @@ class AbstractDragDropModel(QAbstractItemModel):
             else:
                 row += 1
 
-            # create a new item
-            print(item)
-            new_item = copy.deepcopy(item)
+            try:
+                new_item = copy.deepcopy(item)
+            except TypeError:
+                # cannot pickle something
+                new_item = item
             new_items.append(new_item)
 
             # insert item
