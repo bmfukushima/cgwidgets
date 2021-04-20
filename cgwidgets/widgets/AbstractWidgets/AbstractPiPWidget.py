@@ -879,6 +879,9 @@ class PiPMiniViewer(QWidget):
         self._is_enlarged = False
         self._temp = False
 
+        self._popup_widget = None
+        self._enlarged_widget = None
+
         self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
 
     def isEnlarged(self):
@@ -887,9 +890,16 @@ class PiPMiniViewer(QWidget):
     def setIsEnlarged(self, enabled):
         self._is_enlarged = enabled
 
+    def enlargedWidget(self):
+        return self._enlarged_widget
+
+    def setEnlargedWidget(self, widget):
+        self._enlarged_widget = widget
+
     def enlargeWidget(self, widget):
         main_widget = getWidgetAncestor(self, PiPMainWidget)
         self.setIsEnlarged(True)
+        self.setEnlargedWidget(widget)
         # freeze
         self._is_frozen = True
 
@@ -928,7 +938,6 @@ class PiPMiniViewer(QWidget):
 
         # if there are 2 or more mini viewer widgets
         if 2 < num_widgets:
-
             # get widget position / size
             if main_widget.direction() in [attrs.EAST, attrs.WEST]:
                 xoffset = int(main_widget.width() * negative_space)
@@ -966,10 +975,7 @@ class PiPMiniViewer(QWidget):
         # move cursor to center of enlarged widget
         xcursor = xpos + int(width * 0.5)
         ycursor = ypos + int(height * 0.5)
-        QCursor.setPos(main_widget.mapToGlobal(
-            QPoint(
-                xcursor,
-                ycursor)))
+        QCursor.setPos(main_widget.mapToGlobal(QPoint(xcursor, ycursor)))
 
         # unfreeze
         self._is_frozen = False
@@ -1008,10 +1014,32 @@ class PiPMiniViewer(QWidget):
                 if event.type() == QEvent.DragEnter:
                     event.accept()
 
+            else:
+                self._is_frozen = False
+
         elif event.type() in [QEvent.Drop, QEvent.DragLeave, QEvent.Leave]:
             new_object = getWidgetUnderCursor()
+            # exit popup widget (shown from enlarged widget)
+            if obj == self._popup_widget:
+                main_widget = getWidgetAncestor(self, PiPMainWidget)
+                enlarged_widget = self.enlargedWidget()
+                xpos, ypos = enlarged_widget.pos().x(), enlarged_widget.pos().y()
+                width, height = enlarged_widget.width(), enlarged_widget.height()
+                xcursor = xpos + (width * 0.5)
+                ycursor = ypos + (height * 0.5)
+                QCursor.setPos(main_widget.mapToGlobal(QPoint(xcursor, ycursor)))
+                self._popup_widget = None
+                self._is_frozen = True
+                return True
+
+            # exit object
             if not isWidgetDescendantOf(new_object, obj):
                 self.closeEnlargedView(obj)
+
+            # exit popup
+            else:
+                self._popup_widget = obj
+
         # elif event.type() == QEvent.KeyPress:
         #     print("event filter???")
         return False
@@ -2293,6 +2321,6 @@ widget = QPushButton(\"TESTBUTTON\") """
 
     # setup display widget
     pip_widget.setDisplayWidget("Bar", "test02")
-    pip_widget.setCreationMode(AbstractPiPWidget.DISPLAY)
+    # pip_widget.setCreationMode(AbstractPiPWidget.DISPLAY)
 
     sys.exit(app.exec_())

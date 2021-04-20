@@ -706,6 +706,7 @@ class AbstractDragDropModel(QAbstractItemModel):
                 row += 1
 
             # create a new item
+            print(item)
             new_item = copy.deepcopy(item)
             new_items.append(new_item)
 
