@@ -622,7 +622,7 @@ Notes:
 
         # reset cursor position
         cursor_position = self.parent().cursorPosition()
-        self.middle_item.setFocus(True)
+        self.middle_item.setFocus()
         self.middle_item.setCursorPosition(cursor_position)
 
         self.__updateUserInputs()
