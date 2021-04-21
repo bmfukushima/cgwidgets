@@ -663,8 +663,17 @@ class AbstractDragDropModel(QAbstractItemModel):
         return ['application/x-qabstractitemmodeldatalist']
 
     def mimeData(self, indexes):
+        """
+        DragStart event
+
+        Args:
+            indexes:
+
+        Returns:
+
+        """
+        # get indexes
         self.indexes = [index.internalPointer() for index in indexes if index.column() == 0]
-        #self.indexes = [model.mapToSource(index).internalPointer() for index in indexes if index.column() == 0]
 
         mimedata = QMimeData()
         mimedata.setData('application/x-qabstractitemmodeldatalist', QByteArray())
@@ -672,7 +681,8 @@ class AbstractDragDropModel(QAbstractItemModel):
         # run virtual function
         self.dragStartEvent(self.indexes, self)
 
-        self.indexes = [index.internalPointer() for index in indexes if index.column() == 0]
+        # store indexes for recollection in drop event
+        #self.indexes = [index.internalPointer() for index in indexes if index.column() == 0]
         return mimedata
 
     def dropMimeData(self, data, action, row, column, parent):
@@ -708,6 +718,12 @@ class AbstractDragDropModel(QAbstractItemModel):
             else:
                 row += 1
 
+            # duplicate item
+            # todo duck typing passed this error...
+            """
+            Cannot pickle QWidgets...
+            Need to make some sort of weak ref pickling thingymabobber
+            """
             try:
                 new_item = copy.deepcopy(item)
             except TypeError:
@@ -723,6 +739,7 @@ class AbstractDragDropModel(QAbstractItemModel):
         # run virtual function
         self.dropEvent(data, new_items, self, row, parent_item)
 
+        # select new indexes?
         #self.layoutChanged.emit()
         return False
 

@@ -37,7 +37,7 @@ class iAbstractInputWidget(object):
         self._key_list = []
         self._orig_value = None
         self._updating = False
-        self._is_frozen = False
+        self.__is_frozen = False
         # set up style
         self.rgba_border = iColor["rgba_outline"]
         self.rgba_background = iColor["rgba_background_00"]
@@ -198,7 +198,7 @@ class iAbstractInputWidget(object):
         return self._orig_value
 
     def isFrozen(self):
-        return self._is_frozen
+        return self.__is_frozen
 
     def setIsFrozen(self, is_frozen):
-        self._is_frozen = is_frozen
+        self.__is_frozen = is_frozen

@@ -345,6 +345,7 @@ class AbstractLabelWidget(QWidget, iAbstractInputWidget):
         self._text_widget = QLabel(self)
 
         # setup default attrs
+        self._image_path = None
         self._image_resize_mode = Qt.KeepAspectRatio
         self._text_color = iColor["rgba_text"]
         self._text_background_color = iColor["rgba_background_00"]
@@ -360,6 +361,7 @@ class AbstractLabelWidget(QWidget, iAbstractInputWidget):
         style_sheet = removeHoverDisplay(self.styleSheet(), "INPUT WIDGETS")
         self.setStyleSheet(style_sheet)
         self.updateTextColor()
+
         # set text alignment
         self.textWidget().setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
         self.imageWidget().setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
@@ -383,10 +385,19 @@ class AbstractLabelWidget(QWidget, iAbstractInputWidget):
         self.textWidget().setText(text)
 
     def updateTextColor(self):
-        style_sheet = """
-        color: rgba{color};
-        background-color: rgba{background_color};
-        """.format(color=self.textColor(), background_color=self.textBackgroundColor())
+        """
+        Updates the style sheet for text/background depending on if there is an image
+        provided or not.
+        """
+        if not self.imagePath():
+            style_sheet = """
+            color: rgba{color};
+            background-color: rgba{background_color};
+            """.format(color=self.textColor(), background_color=self.textBackgroundColor())
+        else:
+            style_sheet = """
+            color: rgba{color};
+            """.format(color=self.textColor())
         self.textWidget().setStyleSheet(style_sheet)
 
     def textColor(self):
@@ -428,10 +439,18 @@ class AbstractLabelWidget(QWidget, iAbstractInputWidget):
 
         Args:
             image_path (str): path to image on disk
+
+        Note: Todo: no idea if setting this to None will clear...
+            probably not lol, I should prob fix this... w/e not like
+            anyone is ever going to use this repo.
         """
+        if image_path is None:
+            self.setImagePath(None)
+            return
         self.setImagePath(image_path)
         self.pixmap = QPixmap(image_path)
         self.resizeImage()
+        self.updateTextColor()
         # self.removeImage()
 
     def imagePath(self):

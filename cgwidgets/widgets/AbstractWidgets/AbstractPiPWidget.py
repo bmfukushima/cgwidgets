@@ -166,7 +166,6 @@ class AbstractPiPWidget(AbstractShojiModelViewWidget):
         indexes = self.model().findItems("PiP", Qt.MatchExactly)
         for index in indexes:
             self.setIndexSelected(index, True)
-
         return AbstractShojiModelViewWidget.showEvent(self, event)
 
     """ UTILS """
@@ -316,10 +315,6 @@ class AbstractPiPWidget(AbstractShojiModelViewWidget):
         index = self.localOrganizerWidget().model().insertNewIndex(0, name=name)
 
         item = index.internalPointer()
-        # import weakref
-        # reference = weakref.ref(mini_widget)
-        # proxy_reference = weakref.proxy(mini_widget)
-
         item.setWidget(mini_widget)
         item.setConstructorCode(constructor_code)
 
@@ -464,7 +459,7 @@ widget.setWordWrap(True)
         Note: This is currently hard coded to "Q"
         """
 
-        # if self.miniViewerWidget()._is_frozen:
+        # if self.miniViewerWidget().__is_frozen:
         if self.miniViewerWidget().isEnlarged():
             obj = getWidgetUnderCursor(QCursor.pos())
             widget = getWidgetAncestor(obj, PiPMiniViewerWidget)
@@ -487,7 +482,7 @@ widget.setWordWrap(True)
         Note: This is currently hard coded to "Q"
         """
 
-        # if self.miniViewerWidget()._is_frozen:
+        # if self.miniViewerWidget().__is_frozen:
         if self.miniViewerWidget().isEnlarged():
             obj = getWidgetUnderCursor(QCursor.pos())
             widget = getWidgetAncestor(obj, PiPMiniViewerWidget)
@@ -791,13 +786,7 @@ class PiPMainWidget(QWidget):
 
         return QWidget.resizeEvent(self, event)
 
-    # def eventFilter(self, obj, event):
-    #     if event.type() == QEvent.KeyPress:
-    #         print("press me???")
-    #     return False
-
     def keyPressEvent(self, event):
-        print('key press')
         # swap between this and previous
         if event.key() == self.swapKey():
             # pre flight
@@ -892,12 +881,12 @@ class PiPMiniViewer(QWidget):
 
         # self.setMinimumSize(100, 100)
         self._widgets = []
-        self._is_frozen = False
+        self.__is_frozen = False
         self._is_exiting = False
         self._is_enlarged = False
         self._temp = False
 
-        self._popup_widget = None
+        self.__popup_widget = None
         self._enlarged_widget = None
 
         self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
@@ -919,7 +908,7 @@ class PiPMiniViewer(QWidget):
         self.setIsEnlarged(True)
         self.setEnlargedWidget(widget)
         # freeze
-        self._is_frozen = True
+        self.__is_frozen = True
 
         # set/get attrs
         scale = main_widget.enlargedScale()
@@ -996,7 +985,7 @@ class PiPMiniViewer(QWidget):
         QCursor.setPos(main_widget.mapToGlobal(QPoint(xcursor, ycursor)))
 
         # unfreeze
-        self._is_frozen = False
+        self.__is_frozen = False
 
     """ EVENTS """
     def eventFilter(self, obj, event):
@@ -1009,7 +998,7 @@ class PiPMiniViewer(QWidget):
         Returns:
 
         Note:
-            _is_frozen (bool): flag to determine if the UI should be frozen for updates
+            __is_frozen (bool): flag to determine if the UI should be frozen for updates
             _temp (bool): flag to determine if this is exiting into a widget that will be moved,
                 and then another widget will be in its place.
             _enlarged_object (PiPMiniViewerWidget): when exiting, this is the current object that has
@@ -1018,27 +1007,28 @@ class PiPMiniViewer(QWidget):
                 if the user exits into the MiniViewerWidget
 
         """
+        
         if event.type() in [QEvent.DragEnter, QEvent.Enter]:
             # catch a double exit.
             """
             If the user exits on the first widget, or a widget that will be the enlarged widget,
             it will recurse back and enlarge itself.  This will block that recursion
             """
-
             # enlarge widget
-            if not self._is_frozen:
+            if not self.__is_frozen:
                 self.enlargeWidget(obj)
                 # # drag enter
                 if event.type() == QEvent.DragEnter:
                     event.accept()
 
             else:
-                self._is_frozen = False
+                self.__is_frozen = False
 
         elif event.type() in [QEvent.Drop, QEvent.DragLeave, QEvent.Leave]:
+
             new_object = getWidgetUnderCursor()
             # exit popup widget (shown from enlarged widget)
-            if obj == self._popup_widget:
+            if obj == self.__popup_widget:
                 main_widget = getWidgetAncestor(self, PiPMainWidget)
                 enlarged_widget = self.enlargedWidget()
                 xpos, ypos = enlarged_widget.pos().x(), enlarged_widget.pos().y()
@@ -1046,8 +1036,8 @@ class PiPMiniViewer(QWidget):
                 xcursor = xpos + (width * 0.5)
                 ycursor = ypos + (height * 0.5)
                 QCursor.setPos(main_widget.mapToGlobal(QPoint(xcursor, ycursor)))
-                self._popup_widget = None
-                self._is_frozen = True
+                self.__popup_widget = None
+                self.__is_frozen = True
                 return True
 
             # exit object
@@ -1056,7 +1046,7 @@ class PiPMiniViewer(QWidget):
 
             # exit popup
             else:
-                self._popup_widget = obj
+                self.__popup_widget = obj
 
         # elif event.type() == QEvent.KeyPress:
         #     print("event filter???")
@@ -1073,10 +1063,10 @@ class PiPMiniViewer(QWidget):
         """
 
         # exiting
-        if not self._is_frozen:
-            self._is_frozen = True
+        if not self.__is_frozen:
+            self.__is_frozen = True
             self.addWidget(obj)
-            self._is_frozen = False
+            self.__is_frozen = False
 
             # disable enlarged view
             self.setIsEnlarged(False)
