@@ -1377,8 +1377,11 @@ class PiPGlobalOrganizerItem(AbstractDragDropModelItem):
 
     def setIsLocked(self, _is_locked):
         self._is_locked = _is_locked
-        #
         self.setIsDropEnabled(False)
+        # todo KATANA UPDATE NEEDED
+        """ the drag handler can be removed, to allow for drag/drop out of locked items for duplication
+        note that also the Views --> AbstractDragDropModel --> dropMimeData will need to be uncommented..."""
+        self.setIsDragEnabled(not _is_locked)
         self.setIsEditable(not _is_locked)
         self.setDeleteOnDrop(not _is_locked)
 
@@ -1549,9 +1552,13 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
             item (PiPGlobalOrganizerItem):
             enabled (bool):
         """
-        if item.itemType() == PiPGlobalOrganizerItem.PIP:
-            if enabled:
+        if enabled:
+            if item.itemType() == PiPGlobalOrganizerItem.PIP:
                 self.saveWidget().loadPiPWidgetFromItem(item)
+
+            # toggle save button lock
+            is_locked = item.isLocked()
+            self.saveWidget().updateSaveButtonText(is_locked=is_locked)
 
     def deleteItemEvent(self, item):
         """
@@ -1590,6 +1597,37 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
         main_widget.setIsGlobalOrganizerVisible(False)
         main_widget.setFocus()
         AbstractModelViewWidget.hideEvent(self, event)
+
+
+class PiPSaveButtonWidget(AbstractButtonInputWidget):
+
+    SAVE = 0
+    UPDATE = 1
+    LOCKED = 2
+    def __init__(self, parent=None, title="UPDATE"):
+        super(PiPSaveButtonWidget, self).__init__(parent=parent, title=title)
+        self._mode = PiPSaveButtonWidget.UPDATE
+
+    def setMode(self, _mode):
+        self._mode = _mode
+        self.updateText()
+
+    def mode(self):
+        return self._mode
+
+    def updateText(self):
+        """
+        When the mode is set, this will update the display text of the button
+        """
+        if self.mode() == PiPSaveButtonWidget.SAVE:
+            self.setText("SAVE")
+            return
+        if self.mode() == PiPSaveButtonWidget.UPDATE:
+            self.setText("UPDATE")
+            return
+        if self.mode() == PiPSaveButtonWidget.LOCKED:
+            self.setText("LOCKED")
+            return
 
 
 class PiPSaveWidget(QWidget):
@@ -1647,7 +1685,7 @@ class PiPSaveWidget(QWidget):
 
         # create name widget
         self._name_widget = AbstractLabelledInputWidget(name="Name", delegate_widget=self._name_list)
-        self._save_button_widget = AbstractButtonInputWidget(self, title="UPDATE")
+        self._save_button_widget = PiPSaveButtonWidget(self, title="UPDATE")
 
         # setup layout
         self.layout().addWidget(self._name_widget)
@@ -1789,11 +1827,29 @@ class PiPSaveWidget(QWidget):
         self._save_data = _save_data
 
     """ SAVE (UTILS)"""
-    def updateSaveButtonText(self, *args):
+    def updateSaveButtonText(self, *args, **kwargs):
+        # LOCK setting to locked on user selection changed
+        if "is_locked" in list(kwargs.keys()):
+            is_locked = kwargs["is_locked"]
+            if is_locked:
+                self.saveButtonWidget().setMode(PiPSaveButtonWidget.LOCKED)
+                return
+
+        # if already locked then bypass
+        elif self.saveButtonWidget().mode() == PiPSaveButtonWidget.LOCKED:
+            return
+
+        # UPDATE if no text
         if not self.name():
-            self.saveButtonWidget().setText('UPDATE')
+            self.saveButtonWidget().setMode(PiPSaveButtonWidget.UPDATE)
+
+        # UPDATE if name exists
+        elif self.name() in self.getAllPiPWidgetsNamesAsList():
+            self.saveButtonWidget().setMode(PiPSaveButtonWidget.UPDATE)
+
+        # SAVE new
         else:
-            self.saveButtonWidget().setText("SAVE")
+            self.saveButtonWidget().setMode(PiPSaveButtonWidget.SAVE)
 
     def getPiPWidgetItemDict(self):
         """
@@ -1892,6 +1948,8 @@ class PiPSaveWidget(QWidget):
             _exists (bool): determines if the item should be deleted or not
         """
         # preflight
+        if self.saveButtonWidget().mode() == PiPSaveButtonWidget.LOCKED: return
+
         file_path = self.currentSaveFilePath()
         if not file_path: return
         main_widget = getWidgetAncestor(self, AbstractPiPWidget)
@@ -1955,12 +2013,12 @@ class PiPSaveWidget(QWidget):
         main_widget = getWidgetAncestor(self, AbstractPiPWidget)
 
         # update
-        if self.saveButtonWidget().text() == "UPDATE":
+        if self.saveButtonWidget().mode() == PiPSaveButtonWidget.UPDATE:
             _exists = True
             new_item, orig_item = self.updatePiPWidgetItemInFile()
 
         # save
-        elif self.saveButtonWidget().text() == "SAVE":
+        elif self.saveButtonWidget().text() == PiPSaveButtonWidget.SAVE:
             _exists = False
             row = 0
             name = self.nameWidget().delegateWidget().text()
@@ -2116,6 +2174,7 @@ class PiPLocalOrganizerWidget(AbstractModelViewWidget):
         the widget into the mini viewer if it is not currently the active widget.
         """
         # get default attrs
+
         main_widget = getWidgetAncestor(self, AbstractPiPWidget)
         mini_viewer = main_widget.miniViewerWidget()
         widget = items[0].widget()

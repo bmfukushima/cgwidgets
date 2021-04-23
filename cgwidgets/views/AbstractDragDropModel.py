@@ -719,16 +719,20 @@ class AbstractDragDropModel(QAbstractItemModel):
                 row += 1
 
             # duplicate item
-            # todo duck typing passed this error...
             """
             Cannot pickle QWidgets...
-            Need to make some sort of weak ref pickling thingymabobber
+            Need to make some sort of weak ref pickling thingymabobber"""
+            # todo KATANA UPDATE NEEDED
             """
-            try:
-                new_item = copy.deepcopy(item)
-            except TypeError:
-                # cannot pickle something
-                new_item = item
+            Making this work like this because Katana needs to update its shit
+            and this causes a crash...
+            """
+            # try:
+            #     new_item = copy.deepcopy(item)
+            # except TypeError:
+            #     # cannot pickle something
+            #     new_item = item
+            new_item = item
             new_items.append(new_item)
 
             # insert item
