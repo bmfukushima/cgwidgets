@@ -106,15 +106,20 @@ def convertDictToCSSFlags(properties):
 
     return css_properties
 
-
+# {{rgba_gray_4}}
 input_widget_ss ="""
 /* DEFAULT */
 {{type}}{{{{
     border: 1px dotted rgba{{rgba_gray_4}};
-    border-radius: 10px;
     background-color: rgba{{rgba_background}};
     color: rgba{{rgba_text}};
     selection-background-color: rgba{{rgba_selected_background}};
+}}}}
+
+QLabel{{{{
+    color: rgba{{rgba_text}};
+    border: None;
+    background-color: rgba{{rgba_invisible}};
 }}}}
 
 /* SELECTION */

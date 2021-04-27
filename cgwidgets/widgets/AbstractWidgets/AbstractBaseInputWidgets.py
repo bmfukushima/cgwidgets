@@ -1,4 +1,16 @@
 """
+ToDo:
+    StyleSheets
+        AbstractLabelWidget
+            Hierarchy is wrong.  Setting on itself wont set, need to set on parent?
+            Add another level?
+                QWidget --> QStackedWidget
+            or set on stacked widget
+        Hover Display:
+            Append border to original, to support a default border
+                or
+            Don't even create the border... or set a flag to enable/disable default border?
+
 Input Group
     AbstractInputGroupBox (QGroupBox)
         | -- TabShojiWidget
@@ -14,10 +26,9 @@ Input Widgets
 """
 
 from qtpy import API_NAME
-
 from qtpy.QtGui import QPixmap
 from qtpy.QtWidgets import (
-    QLineEdit, QLabel, QPlainTextEdit, QWidget, QStackedLayout
+    QLineEdit, QLabel, QPlainTextEdit, QWidget, QStackedLayout, QFrame
 )
 from qtpy.QtCore import Qt, QEvent
 
@@ -28,7 +39,7 @@ from cgwidgets.utils import (
     checkNegative, updateStyleSheet
 )
 
-from cgwidgets.settings.hover_display import removeHoverDisplay
+from cgwidgets.settings.hover_display import removeHoverDisplay, installHoverDisplaySS
 from cgwidgets.widgets.AbstractWidgets.AbstractInputInterface import iAbstractInputWidget
 
 
@@ -309,7 +320,7 @@ class AbstractStringInputWidget(AbstractInputLineEdit):
         return True
 
 
-class AbstractLabelWidget(QWidget, iAbstractInputWidget):
+class AbstractLabelWidget(QFrame, iAbstractInputWidget):
     """
     Display label
 
@@ -347,8 +358,6 @@ class AbstractLabelWidget(QWidget, iAbstractInputWidget):
         # setup default attrs
         self._image_path = None
         self._image_resize_mode = Qt.KeepAspectRatio
-        self._text_color = iColor["rgba_text"]
-        self._text_background_color = iColor["rgba_background_00"]
 
         if text:
             self.setText(text)
@@ -358,16 +367,34 @@ class AbstractLabelWidget(QWidget, iAbstractInputWidget):
 
         # setup style
         """remove hover display (overwritten by image)"""
-        style_sheet = removeHoverDisplay(self.styleSheet(), "INPUT WIDGETS")
-        self.setStyleSheet(style_sheet)
-        self.updateTextColor()
+        # self.setStyleSheet("AbstractLabelWidget{border: 5px solid rgba(255,0,0,255);}")
+        # style_sheet = removeHoverDisplay(self.styleSheet(), "INPUT WIDGETS")
+        # self.setStyleSheet(style_sheet)
+
+        # self.updateTextColor()
+
 
         # set text alignment
-        self.textWidget().setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
-        self.imageWidget().setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
+        self.setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
+        # self.textWidget().setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
+        # self.imageWidget().setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
 
         self.layout().addWidget(self.textWidget())
         self.layout().addWidget(self.imageWidget())
+
+    """ UTILS """
+    def setAlignment(self, alignment):
+        """
+        Sets the alignment of the text and image widgets
+        Args:
+            alignment (Qt.Alignment): how the widgets text/image should be aligned
+                 ie. (Qt.AlignCenter | Qt.AlignHCenter)
+
+        Returns:
+
+        """
+        self.textWidget().setAlignment(alignment)
+        self.imageWidget().setAlignment(alignment)
 
     """ TEXT """
     def textWidget(self):
@@ -384,24 +411,8 @@ class AbstractLabelWidget(QWidget, iAbstractInputWidget):
         """
         self.textWidget().setText(text)
 
-    def updateTextColor(self):
-        """
-        Updates the style sheet for text/background depending on if there is an image
-        provided or not.
-        """
-        if not self.imagePath():
-            style_sheet = """
-            color: rgba{color};
-            background-color: rgba{background_color};
-            """.format(color=self.textColor(), background_color=self.textBackgroundColor())
-        else:
-            style_sheet = """
-            color: rgba{color};
-            """.format(color=self.textColor())
-        self.textWidget().setStyleSheet(style_sheet)
-
     def textColor(self):
-        return self._text_color
+        return self.rgba_text
 
     def setTextColor(self, color):
         """
@@ -410,11 +421,12 @@ class AbstractLabelWidget(QWidget, iAbstractInputWidget):
         Args:
             color (RGBA): Tuple of RGBA(255) values
         """
-        self._text_color = color
-        self.updateTextColor()
+        self.rgba_text = color
+        self.updateStyleSheet()
 
     def textBackgroundColor(self):
-        return self._text_background_color
+
+        return self.rgba_background
 
     def setTextBackgroundColor(self, color):
         """
@@ -423,8 +435,8 @@ class AbstractLabelWidget(QWidget, iAbstractInputWidget):
         Args:
             color (RGBA): Tuple of RGBA(255) values
         """
-        self._text_background_color = color
-        self.updateTextColor()
+        self.rgba_background = color
+        self.updateStyleSheet()
 
     def setWordWrap(self, enabled):
         self.textWidget().setWordWrap(enabled)
@@ -450,7 +462,8 @@ class AbstractLabelWidget(QWidget, iAbstractInputWidget):
         self.setImagePath(image_path)
         self.pixmap = QPixmap(image_path)
         self.resizeImage()
-        self.updateTextColor()
+        self.updateStyleSheet()
+        #self.updateTextColor()
         # self.removeImage()
 
     def imagePath(self):
@@ -486,12 +499,18 @@ class AbstractLabelWidget(QWidget, iAbstractInputWidget):
         self._image_resize_mode = resize_mode
 
     def resizeImage(self):
-        """
-        Main function for resizing the image.
-        """
-        self.imageWidget().setFixedSize(self.width(), self.height())
+        """ Main function for resizin the image."""
+        # get height/width
+        offset = 4
+        width = self.width() - offset
+        height = self.height() - offset
+
+        # set sized
+        self.imageWidget().setFixedSize(width, height)
+
+        # resize pixmap
         if not self.pixmap.isNull():
-            self.pixmap = self.pixmap.scaled(self.width(), self.height(), self.imageResizeMode())
+            self.pixmap = self.pixmap.scaled(width, height, self.imageResizeMode())
             self.imageWidget().setPixmap(self.pixmap)
 
     """ EVENTS """
@@ -527,17 +546,20 @@ class AbstractLabelWidget(QWidget, iAbstractInputWidget):
         return QWidget.resizeEvent(self, event)
 
 
-class AbstractBooleanInputWidget(QLabel, iAbstractInputWidget):
+class AbstractBooleanInputWidget(AbstractLabelWidget):
     TYPE = 'bool'
-    def __init__(self, parent=None, text=None, is_selected=False):
-        super(AbstractBooleanInputWidget, self).__init__(parent)
+    def __init__(self, parent=None, text=None, image=None, is_selected=False):
+        super(AbstractBooleanInputWidget, self).__init__(parent, text=text, image=image)
         if API_NAME == "PySide2":
             iAbstractInputWidget.__init__(self) #pyside2 forces us to do this import
+
+        # override label defaults
+
         self.is_selected = is_selected
         self.setProperty("input_hover", True)
         if text:
             self.setText(text)
-        self.updateStyleSheet()
+        # self.updateStyleSheet()
 
         self.setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
 
@@ -551,7 +573,7 @@ class AbstractBooleanInputWidget(QLabel, iAbstractInputWidget):
         except AttributeError:
             pass
 
-        return QLabel.mouseReleaseEvent(self, event)
+        return AbstractLabelWidget.mouseReleaseEvent(self, event)
 
     """ PROPERTIES """
     @property
@@ -655,21 +677,27 @@ if __name__ == "__main__":
     import sys
     from qtpy.QtWidgets import QApplication, QWidget, QVBoxLayout
     from qtpy.QtGui import QCursor
-
+    from cgwidgets.settings.icons import icons
     import sys, inspect
 
     app = QApplication(sys.argv)
 
 
     # Construct
-    delegate_widget = AbstractButtonInputWidget(title="yolo", is_toggleable=True)
-    label_test = AbstractLabelWidget(text="test")
-
     string_test = AbstractStringInputWidget()
+
+    boolean_test = AbstractBooleanInputWidget(text="boolean", image=None, is_selected=False)
+    boolean_test.setImage(icons["example_image_01"])
+    label_test = AbstractLabelWidget(text="label")
+    label_test.setImage(icons["example_image_02"])
+    # button_test = AbstractButtonInputWidget(title="yolo", is_toggleable=True)
+    # label_test = AbstractLabelWidget(text="test")
+    #
+    # string_test = AbstractStringInputWidget()
+
     main_widget = QWidget()
     main_layout = QVBoxLayout(main_widget)
-    main_layout.addWidget(delegate_widget)
-    main_layout.addWidget(QLabel("klajdflasjkjfklasfjsl"))
+    main_layout.addWidget(boolean_test)
     main_layout.addWidget(label_test)
     main_layout.addWidget(string_test)
 

@@ -1,6 +1,7 @@
 from qtpy import API_NAME
 from qtpy.QtWidgets import (QLabel, QStackedWidget)
 from qtpy.QtCore import QEvent
+from qtpy.QtGui import QPixmap
 
 from cgwidgets.settings.hover_display import installHoverDisplaySS, removeHoverDisplay
 from cgwidgets.widgets.AbstractWidgets.AbstractInputInterface import iAbstractInputWidget
@@ -35,18 +36,23 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
     Signals:
         userFinishedEditing:
             self --> userFinishedEditing --> delegateWidget --> userFinishedEditing
+
+    Hierarchy:
+        QStackedWidget
+            |- viewWidget --> AbstractLabelWidget
+            |- delegateWidget --> AbstractStringInputWidget
     """
     # Display Modes
     DISABLED = 1
     ENTER = 2
     RELEASE = 4
     def __init__(
-            self,
-            parent=None,
-            delegate_widget=None,
-            image_path=None,
-            title="",
-            display_mode=4
+        self,
+        parent=None,
+        delegate_widget=None,
+        image_path=None,
+        title="",
+        display_mode=4
     ):
         super(AbstractOverlayInputWidget, self).__init__(parent)
         if API_NAME == "PySide2":
@@ -54,10 +60,24 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
         # create widgets
         class ViewWidget(AbstractLabelWidget):
             def __init__(self, parent=None, title=""):
-                super(ViewWidget, self).__init__(parent, title)
+                super(ViewWidget, self).__init__(parent=parent, text=title)
+
+            """ VIRTUAL FUNCTION"""
+            def setImage(self, image_path):
+                """ Overrides default handling to suppress stylesheet updates
+
+                Args:
+                    image_path (str): path to image
+                """
+                if image_path is None:
+                    self.setImagePath(None)
+                    return
+                self.setImagePath(image_path)
+                self.pixmap = QPixmap(image_path)
+                self.resizeImage()
+                # self.updateStyleSheet()
 
             """ EVENTS """
-
             def mouseReleaseEvent(self, event):
                 # enable editor
                 if self.parent().displayMode() == AbstractOverlayInputWidget.RELEASE:
@@ -75,9 +95,11 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
                     self.parent().delegateWidget().setFocus()
                 return AbstractLabelWidget.enterEvent(self, event)
 
+        # create view widget
         view_widget = ViewWidget(self, title)
         self.setViewWidget(view_widget)
 
+        # create delegate widget
         if not delegate_widget:
             delegate_widget = AbstractStringInputWidget(self)
         self.setDelegateWidget(delegate_widget)
@@ -85,13 +107,11 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
 
         # setup style
         self.setDisplayMode(display_mode)
+        self.disableHoverDisplay(self.viewWidget())
 
+        # setup image
         if image_path:
             self.setImage(image_path)
-
-        # style_sheet = removeHoverDisplay(self.styleSheet(), "INPUT WIDGETS")
-        # self.setStyleSheet(style_sheet)
-        # self.viewWidget().updateStyleSheet()
 
     """ WIDGETS """
     def delegateWidget(self):
@@ -174,6 +194,11 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
         # run user event
         self.hideDelegateEvent()
 
+    """ UTILS """
+    def disableHoverDisplay(self, widget):
+        style_sheet = removeHoverDisplay(widget.styleSheet(), "INPUT WIDGETS")
+        widget.setStyleSheet(style_sheet)
+
     """ User Finished Editing"""
     def userFinishedEditingEventWrapper(self, *args, **kwargs):
         if self.displayMode() != AbstractOverlayInputWidget.DISABLED:
@@ -196,12 +221,21 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
             color (RGBA): 255 Tuple
         """
         self.viewWidget().setTextColor(color)
+        self.disableHoverDisplay(self.viewWidget())
 
     def setImage(self, image_path):
         self.viewWidget().setImage(image_path)
+        self.disableHoverDisplay(self.viewWidget())
+        self.setContentsMargins(0, 0, 0, 0)
 
     def showImage(self, enabled):
         self.viewWidget().showImage(enabled)
+        if enabled:
+            self.setContentsMargins(0, 0, 0, 0)
+        else:
+            self.setContentsMargins(2, 2, 2, 2)
+
+        # self.disableHoverDisplay(self.viewWidget())
 
     def setImageResizeMode(self, resize_mode):
         self.viewWidget().setImageResizeMode(resize_mode)
@@ -260,16 +294,12 @@ if __name__ == "__main__":
         title="title",
         display_mode=AbstractOverlayInputWidget.RELEASE,
         image_path=icons["example_image_01"])
-    print(icons["example_image_01"])
-    print(overlay_widget.viewWidget())
-    print(overlay_widget.title())
-    overlay_widget.showImage(True)
-    test_label = AbstractLabelWidget()
-    test_label.setImage(icons["example_image_01"])
-    test_label.imageWidget().show()
-    # main_widget = CustomDynamicWidgetExample()
-    #overlay_widget.setDisplayMode(AbstractOverlayInputWidget.DISABLED)
-    #overlay_widget.setDisplayMode(AbstractOverlayInputWidget.ENTER)
+
+    overlay_widget.showImage(False)
+    #overlay_widget.disableHoverDisplay(overlay_widget.viewWidget().imageWidget())
+
+    test_label = AbstractLabelWidget(text="Label", image=icons["example_image_02"])
+
     main_widget = QWidget()
     main_layout = QVBoxLayout(main_widget)
     main_layout.addWidget(overlay_widget)

@@ -71,7 +71,7 @@ def compileSSArgs(widget, hover_type_flags, hover_object):
         'hover_ss': hover_object.hoverSS().format(**style_sheet_args),
         'focus_ss': hover_object.focusSS().format(**style_sheet_args),
         'hover_focus_ss': hover_object.focusSS().format(**style_sheet_args),
-        'border_ss': hover_object.defaultSS().format(**style_sheet_args)
+        'default_ss': hover_object.defaultSS().format(**style_sheet_args)
     })
 
     return style_sheet_args
@@ -157,6 +157,8 @@ class BorderStyleSheet(object):
 
 class HoverStyleSheet(object):
     """
+    Arbitrary helper object containing all properties needed by the StyleSheet to setup Hover Displays.
+
     Attributes:
         position (attrs.POSITION): the cardinal direction
         color (RGBA): 255 RGBA color to be displayed
@@ -331,6 +333,8 @@ class HoverStyleSheet(object):
                     is set to HoverStyleSheet.BORDER
         """
         if self.hoverStyleType() == HoverStyleSheet.BORDER:
+            # create a default style sheet if None is provided
+
             # create border object
             style_sheet_object = BorderStyleSheet()
             style_sheet_object.setWalls(self.borderWalls())
@@ -343,6 +347,8 @@ class HoverStyleSheet(object):
 
             # set hover
             style_sheet_object.setColor(self.color())
+
+            # setup focus/hover/hover focus
             self.setFocusSS(style_sheet_object.styleSheet())
             self.setHoverSS(style_sheet_object.styleSheet())
             self.setHoverFocusSS(style_sheet_object.styleSheet())
@@ -353,6 +359,7 @@ def installHoverDisplaySS(
         widget,
         name="",
         border_walls=(attrs.NORTH, attrs.SOUTH, attrs.EAST, attrs.WEST),
+        default_ss=None,
         hover_style_type=HoverStyleSheet.BORDER,
         color=iColor["rgba_selected_hover"],
         focus=True,
@@ -421,7 +428,7 @@ def installHoverDisplaySS(
     style_sheet += """
 /* Hover Display Border Padding */
 {type}{{
-    {border_ss}
+    {default_ss}
 }}
     """.format(**style_sheet_args)
 
@@ -455,6 +462,8 @@ def installHoverDisplaySS(
     # END
     style_sheet += "\n/* << HOVER {name} DISPLAY END >> */ \n".format(name=name)
 
+    # print ('==============================')
+    # print(style_sheet)
     widget.setStyleSheet(style_sheet)
 
 def removeHoverDisplay(style_sheet, name):

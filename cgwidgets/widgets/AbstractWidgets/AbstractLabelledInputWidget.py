@@ -194,26 +194,26 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
     def delegateWidget(self):
         return self._delegate_widget
 
-    # def setInputBaseClass(self, _input_widget_base_class):
-    #
-    #     self._input_widget_base_class = _input_widget_base_class
-    #
-    #     if self.delegateWidget():
-    #         self.delegateWidget().setParent(None)
-    #
-    #         # create new input widget
-    #         self._input_widget = _input_widget_base_class(self)
-    #         self._input_widget.setMinimumSize(1, 1)
-    #         self._input_widget.setSizePolicy(
-    #             QSizePolicy.MinimumExpanding, QSizePolicy.Preferred
-    #         )
-    #         # reset splitter
-    #         self.addWidget(self._input_widget)
-    #         self._input_widget.show()
-    #         self.resetSliderPositionToDefault()
-    #
-    # def getInputBaseClass(self):
-    #     return self._input_widget_base_class
+    def setInputBaseClass(self, _input_widget_base_class):
+
+        self._input_widget_base_class = _input_widget_base_class
+
+        if self.delegateWidget():
+            self.delegateWidget().setParent(None)
+
+            # create new input widget
+            self._input_widget = _input_widget_base_class(self)
+            self._input_widget.setMinimumSize(1, 1)
+            self._input_widget.setSizePolicy(
+                QSizePolicy.MinimumExpanding, QSizePolicy.Preferred
+            )
+            # reset splitter
+            self.addWidget(self._input_widget)
+            self._input_widget.show()
+            self.resetSliderPositionToDefault()
+
+    def getInputBaseClass(self):
+        return self._input_widget_base_class
 
     """ SIZES """
     def setSeparatorLength(self, length):
