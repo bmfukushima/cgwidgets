@@ -78,10 +78,15 @@ class iAbstractInputWidget(object):
             'hover_focus':{'input_hover':True},
             'hover':{'input_hover':True},
         }
+
+        # add default border
+        default_ss = "border: 2px dotted rgba{border_color};".format(border_color=iColor["rgba_gray_4"])
+
         installHoverDisplaySS(
             self,
             name="INPUT WIDGETS",
-            hover_type_flags=hover_type_flags)
+            hover_type_flags=hover_type_flags,
+            default_ss=default_ss)
 
     """ UTILS """
     def setValidateInputFunction(self, function):

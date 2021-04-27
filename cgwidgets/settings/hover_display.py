@@ -382,6 +382,8 @@ def installHoverDisplaySS(
         widget (QWidget):
         border_walls (list): of attrs.DIRECTION that will have the border shown on
             attrs.NORTH | attrs.SOUTH | attrs.EAST | attrs.WEST
+        default_ss (StyleSheet): default style sheet that will be added after the widgets initial stylesheet.
+            This allows for you to override the default border that is displayed... finally
         name (str): unique name to cull
         style_type (HoverStyleSheet.TYPE):
             BORDER | BACKGROUND | RADIAL
@@ -410,16 +412,15 @@ def installHoverDisplaySS(
     if hover_style_type == HoverStyleSheet.BORDER:
         hover_object.setBorderWalls(border_walls)
 
+    if default_ss:
+        hover_object.setDefaultSS(default_ss)
+
     # compile style sheet args
     style_sheet_args = compileSSArgs(widget, hover_type_flags, hover_object)
 
     style_sheet = "{widget_style_sheet}".format(widget_style_sheet=widget.styleSheet())
 
     # remove previous hover display
-    # style_sheet = re.sub(
-    #     "(\n/\* << HOVER {name} DISPLAY START >> \*/ \n)([^\$]+)(\n/\* << HOVER {name} DISPLAY END >> \*/ \n)".format(name=name),
-    #     "",
-    #     style_sheet)
     style_sheet = removeHoverDisplay(style_sheet, name)
     # START
     style_sheet += "\n/* << HOVER {name} DISPLAY START >> */ \n".format(name=name)
@@ -431,7 +432,6 @@ def installHoverDisplaySS(
     {default_ss}
 }}
     """.format(**style_sheet_args)
-
     # HOVER
     if hover:
         style_sheet += """
