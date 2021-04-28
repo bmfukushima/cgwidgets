@@ -1,8 +1,7 @@
 from qtpy.QtWidgets import (
     QLineEdit, QLabel, QPlainTextEdit, QStackedWidget, QApplication
 )
-from qtpy.QtCore import Qt, QEvent
-
+from qtpy.QtCore import Qt, QEvent, QTimer
 
 from cgwidgets.settings.colors import iColor
 from cgwidgets.settings.keylist import NUMERICAL_INPUT_KEYS, MATH_KEYS
@@ -151,6 +150,23 @@ class iAbstractInputWidget(object):
 
             else:
                 self.setText(self.getOrigValue())
+
+    def resizeTimerEvent(self, time_delay, resize_finished_event):
+        """
+        Runs a function after a certain amount of time since the last resize
+
+        Args:
+            time_delay (int): number of milliseconds to wait before running the resize_finished_event
+            resize_finished_event (function): to be run after the time delay has finished
+        """
+        # stop existing timer
+        if hasattr(self, "_timer"):
+            self._timer.stop()
+
+        # start timer
+        self._timer = QTimer()
+        self._timer.timeout.connect(resize_finished_event)
+        self._timer.start(time_delay)
 
     """ VIRTUAL EVENTS """
 

@@ -531,14 +531,7 @@ class AbstractLabelWidget(QFrame, iAbstractInputWidget):
         if not hasattr(self, "_image_path"): return QWidget.resizeEvent(self, event)
         if not self.isImageVisible(): return QWidget.resizeEvent(self, event)
 
-        # start _timer
-        from qtpy.QtCore import QTimer
-        if hasattr(self, "_timer"):
-            self._timer.stop()
-
-        self._timer = QTimer()
-        self._timer.timeout.connect(self.time)
-        self._timer.start(500)
+        self.resizeTimerEvent(100, self.time)
 
         # resize image
         self.resizeImage()
@@ -602,6 +595,7 @@ class AbstractButtonInputWidget(AbstractBooleanInputWidget):
         is_toggleable (bool): determines if this widget can be toggle on/off
 
     """
+    TYPE = 'button'
     def __init__(self, parent=None, user_clicked_event=None, title="CLICK ME", flag=None, is_toggleable=False):
         super(AbstractButtonInputWidget, self).__init__(parent)
 

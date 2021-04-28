@@ -13,7 +13,7 @@ from cgwidgets.widgets.AbstractWidgets.AbstractBaseInputWidgets import AbstractS
 from cgwidgets.widgets.AbstractWidgets.AbstractOverlayInputWidget import AbstractOverlayInputWidget
 from cgwidgets.widgets.AbstractWidgets.AbstractShojiLayout import AbstractShojiLayout
 
-from cgwidgets.utils import (getFontSize)
+from cgwidgets.utils import (getFontSize, installResizeEventFinishedEvent)
 from cgwidgets.settings.colors import iColor
 
 class AbstractLabelledInputWidget(AbstractShojiLayout):
@@ -102,16 +102,17 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
         #self._delegate_widget.setProperty("hover_display", True)
 
     """ HANDLE GROUP FRAME MOVING"""
-
     def __splitterMoved(self, pos, index):
         modifiers = QApplication.keyboardModifiers()
 
         # todo this is UBER slow
-        if modifiers in [Qt.AltModifier]:
-            return
-        else:
-            if not self.__splitter_event_is_paused:
-                self.setAllHandlesToPos(pos)
+        if hasattr(self.parent(), "_frame_container"):
+            if self.parent().direction() == Qt.Vertical:
+                if modifiers in [Qt.AltModifier]:
+                    return
+                else:
+                    if not self.__splitter_event_is_paused:
+                        self.setAllHandlesToPos(pos)
 
     @staticmethod
     def getAllParrallelWidgets(labelled_input_widget):
@@ -121,15 +122,12 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
         Args:
             labelled_input_widget (AbstractLabelledInputWidgets)
         """
-        #from .ContainerWidgets import FrameInputWidgetContainer
-        from cgwidgets.widgets import FrameInputWidgetContainer
-        # from ContainerWidgets import FrameInputWidgetContainer
+
         parent = labelled_input_widget.parent()
         handles_list = []
-        if isinstance(parent, FrameInputWidgetContainer):
-            widget_list = parent.delegateWidgets()
-            for widget in widget_list:
-                handles_list.append(widget)
+        widget_list = parent.delegateWidgets()
+        for widget in widget_list:
+            handles_list.append(widget)
 
         return handles_list
 
@@ -289,8 +287,14 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
         return AbstractShojiLayout.showEvent(self, event)
 
     def resizeEvent(self, event):
-        super(AbstractLabelledInputWidget, self).resizeEvent(event)
-        self.resetSliderPositionToDefault()
+        """ installs a resize event to automagically reset the sliders to their default positions"""
+        def _resizeFinishedEvent(*args, **kwargs):
+            super(AbstractLabelledInputWidget, self).resizeEvent(event)
+            self.resetSliderPositionToDefault()
+            #delattr(self, "_timer")
+
+        installResizeEventFinishedEvent(self, 200, _resizeFinishedEvent, '_timer')
+
         return AbstractShojiLayout.resizeEvent(self, event)
 
 

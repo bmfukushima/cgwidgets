@@ -23,6 +23,7 @@ def installCompleterPopup(completer):
     completer.popup().setItemDelegate(delegate)
     return popup
 
+
 """ INVISIBLE CURSOR"""
 def installInvisibleCursorEvent(widget):
     """
@@ -90,6 +91,46 @@ def installInvisibleWidgetEvent(hide_widget, activation_widget=None):
         widget.installEventFilter(invisible_widget_filter)
 
     return invisible_widget_filter
+
+
+""" RESIZE TIMER """
+def installResizeEventFinishedEvent(widget, time_delay, resize_finished_event, timer_name, *args, **kwargs):
+    """
+    Runs a function after a certain amount of time since the last resize
+
+    Args:
+        widget (QWidget): to install timer on
+        time_delay (int): number of milliseconds to wait before running the resize_finished_event
+        resize_finished_event (function): to be run after the time delay has finished
+            note:
+                *args, **kwargs any additional args/kwargs provided to installResizeFinishedEvent
+                are sent directly to this function
+        timer_name (string): name of timer, store as an attr on the object provided
+
+    Note:
+        This should be called INSIDE of the resizeEvent of the widget provided.  I would override it in here...
+        but resizeEvent is a virtual protected method (I know what that means because I'm smrtaf, and not a stoopid).
+
+    """
+    def cleanupResizeFinishedEvent():
+        delattr(widget, timer_name)
+        resize_finished_event(*args, **kwargs)
+
+    def runTimer():
+        # stop existing timer
+        if hasattr(widget, timer_name):
+            timer = getattr(widget, timer_name)
+            timer.stop()
+
+        # create new timer
+        new_timer = QTimer()
+        new_timer.timeout.connect(cleanupResizeFinishedEvent)
+        new_timer.start(time_delay)
+
+        # store timer on widget
+        setattr(widget, timer_name, new_timer)
+
+    runTimer()
 
 
 """ SLIDE"""
