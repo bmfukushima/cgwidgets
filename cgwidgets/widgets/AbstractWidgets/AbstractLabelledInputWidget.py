@@ -5,7 +5,8 @@ Add API for viewWidget
 
 """
 from qtpy.QtWidgets import (QSizePolicy)
-from qtpy.QtCore import (QEvent, QDir)
+from qtpy.QtCore import (QEvent, QDir, QTimer)
+
 from qtpy.QtWidgets import (QFileSystemModel, QCompleter, QApplication)
 from qtpy.QtCore import Qt
 
@@ -58,7 +59,7 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
         self._default_label_length = default_label_length
         self._separator_length = -1
         self._separator_width = 5
-        self.__splitter_event_is_paused = False
+        self._splitter_event_is_paused = False
         font_size = getFontSize(QApplication)
 
         # create view widget
@@ -101,18 +102,28 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
         self.setDirection(direction)
         #self._delegate_widget.setProperty("hover_display", True)
 
-    """ HANDLE GROUP FRAME MOVING"""
+    """ HANDLE GROUP MOVING FOR AbstractFrameInputWidgetContainer"""
     def __splitterMoved(self, pos, index):
         modifiers = QApplication.keyboardModifiers()
 
-        # todo this is UBER slow
         if hasattr(self.parent(), "_frame_container"):
             if self.parent().direction() == Qt.Vertical:
                 if modifiers in [Qt.AltModifier]:
                     return
                 else:
-                    if not self.__splitter_event_is_paused:
+                    if not self._splitter_event_is_paused:
+                        """
+                        """
+                        # start timer
+                        self._test_timer = QTimer()
+                        self._test_timer.start(10)
+                        self._test_timer.timeout.connect(self.test)
+
+                        # update handle positions
                         self.setAllHandlesToPos(pos)
+                        self._splitter_event_is_paused = True
+
+
 
     @staticmethod
     def getAllParrallelWidgets(labelled_input_widget):
@@ -138,20 +149,17 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
         Args:
             pos (int): value offset of the slider
         Attributes:
-            __splitter_event_is_paused (bool): blocks events from updating
+            _splitter_event_is_paused (bool): blocks events from updating
         :param pos:
         :return:
         """
-        self.__splitter_event_is_paused = True
+        self._splitter_event_is_paused = True
         widgets_list = AbstractLabelledInputWidget.getAllParrallelWidgets(self)
 
         for widget in widgets_list:
             widget.moveSplitter(pos, 1)
 
-        self.__splitter_event_is_paused = False
-        # todo
-        # how to handle ShojiGroups?
-        #ShojiInputWidgetContainer
+        self._splitter_event_is_paused = False
 
     def getHandlePosition(self):
         """
@@ -291,9 +299,8 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
         def _resizeFinishedEvent(*args, **kwargs):
             super(AbstractLabelledInputWidget, self).resizeEvent(event)
             self.resetSliderPositionToDefault()
-            #delattr(self, "_timer")
 
-        installResizeEventFinishedEvent(self, 200, _resizeFinishedEvent, '_timer')
+        installResizeEventFinishedEvent(self, 100, _resizeFinishedEvent, '_timer')
 
         return AbstractShojiLayout.resizeEvent(self, event)
 
