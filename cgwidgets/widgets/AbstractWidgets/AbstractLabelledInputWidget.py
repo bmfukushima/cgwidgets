@@ -102,7 +102,10 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
         self.setDirection(direction)
         #self._delegate_widget.setProperty("hover_display", True)
 
-    """ HANDLE GROUP MOVING FOR AbstractFrameInputWidgetContainer"""
+    """ HANDLE GROUP FRAME MOVING"""
+
+
+
     def __splitterMoved(self, pos, index):
         modifiers = QApplication.keyboardModifiers()
 
@@ -112,12 +115,13 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
                     return
                 else:
                     if not self._splitter_event_is_paused:
-                        """
-                        """
+                        def pauseSplitter():
+                            self._splitter_event_is_paused = False
+
                         # start timer
                         self._test_timer = QTimer()
                         self._test_timer.start(10)
-                        self._test_timer.timeout.connect(self.test)
+                        self._test_timer.timeout.connect(pauseSplitter)
 
                         # update handle positions
                         self.setAllHandlesToPos(pos)
