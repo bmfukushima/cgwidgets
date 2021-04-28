@@ -75,6 +75,9 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
         if not delegate_widget and delegate_constructor:
             delegate_widget = delegate_constructor(self)
 
+        if delegate_constructor:
+            self._delegate_constructor = delegate_constructor
+
         self._delegate_widget = delegate_widget #hack to make the setInputBaseClass update work
         self._delegate_widget.setSizePolicy(
             QSizePolicy.MinimumExpanding, QSizePolicy.Preferred
@@ -103,6 +106,7 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
     def __splitterMoved(self, pos, index):
         modifiers = QApplication.keyboardModifiers()
 
+        # todo this is UBER slow
         if modifiers in [Qt.AltModifier]:
             return
         else:
@@ -194,26 +198,27 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
     def delegateWidget(self):
         return self._delegate_widget
 
-    def setInputBaseClass(self, _input_widget_base_class):
+    def setDelegateConstructor(self, _delegate_constructor):
 
-        self._input_widget_base_class = _input_widget_base_class
+        self._delegate_constructor = _delegate_constructor
 
         if self.delegateWidget():
             self.delegateWidget().setParent(None)
+            #self.delegateWidget().deleteLater()
 
             # create new input widget
-            self._input_widget = _input_widget_base_class(self)
-            self._input_widget.setMinimumSize(1, 1)
-            self._input_widget.setSizePolicy(
+            self._delegate_widget = _delegate_constructor(self)
+            self._delegate_widget.setMinimumSize(1, 1)
+            self._delegate_widget.setSizePolicy(
                 QSizePolicy.MinimumExpanding, QSizePolicy.Preferred
             )
             # reset splitter
-            self.addWidget(self._input_widget)
-            self._input_widget.show()
+            self.addWidget(self._delegate_widget)
+            self._delegate_widget.show()
             self.resetSliderPositionToDefault()
 
-    def getInputBaseClass(self):
-        return self._input_widget_base_class
+    def delegateConstructor(self):
+        return self._delegate_constructor
 
     """ SIZES """
     def setSeparatorLength(self, length):

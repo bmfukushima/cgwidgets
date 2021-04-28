@@ -20,7 +20,36 @@ from __CreateFrame__ import createFrame
 
 app = QApplication(sys.argv)
 
-# Subclass
+# Create Labelled Widget w/Args
+args_labelled_widget = LabelledInputWidget(
+    name="Args",
+    note="This is a note",
+    direction=Qt.Vertical,
+    default_label_length=50,
+    # delegate_widget=FloatInputWidget(), # will override the delegate_constructor
+    delegate_constructor=FloatInputWidget)
+args_widget = createFrame("Args", args_labelled_widget)
+
+# Create Labelled Widget w/Setters
+setters_labelled_widget = LabelledInputWidget()
+setters_labelled_widget.setName("Name")
+setters_labelled_widget.setDirection(Qt.Vertical)
+setters_labelled_widget.setDelegateWidget(BooleanInputWidget())
+setters_labelled_widget.setDefaultLabelLength(75)
+
+# Setters view widget
+"""After accessing the viewWidget, you can use all of the functions provided by the OverlayInputWidget"""
+setters_view_widget = setters_labelled_widget.viewWidget()
+setters_view_widget.setTextColor(iColor["rgba_green_7"])
+setters_view_widget.setImage(icons["example_image_01"])
+setters_view_widget.setDisplayMode(OverlayInputWidget.ENTER)
+def hideViewDelegateEvent(widget, delegate_widget):
+    print('---- HIDE VIEW DELEGATE EVENT ----')
+    print(widget, delegate_widget.text())
+setters_view_widget.setHideDelegateEvent(hideViewDelegateEvent)
+setters_widget = createFrame("Setters", setters_labelled_widget)
+
+# Create Subclassed Labelled Widget
 class CustomLabelledInputWidget(LabelledInputWidget):
     """
     A single input widget.  This inherits from the ShojiLayout,
@@ -71,40 +100,7 @@ class CustomLabelledInputWidget(LabelledInputWidget):
         border: 5px rgba(255,0,255,255);
         """)
 
-# Args
-args_labelled_widget = LabelledInputWidget(
-    name="Args",
-    note="This is a note",
-    direction=Qt.Vertical,
-    default_label_length=50,
-    # delegate_widget=FloatInputWidget(), # will override the delegate_constructor
-    delegate_constructor=FloatInputWidget)
-args_widget = createFrame("Args", args_labelled_widget)
 
-
-# Setters
-setters_labelled_widget = LabelledInputWidget()
-setters_labelled_widget.setName("Name")
-setters_labelled_widget.setDirection(Qt.Vertical)
-setters_labelled_widget.setDelegateWidget(BooleanInputWidget())
-setters_labelled_widget.setDefaultLabelLength(75)
-#installHoverDisplaySS(setters_labelled_widget, "TEST")
-
-# Setters view widget
-"""
-After accessing the viewWidget, you can use all of the functions provided by the OverlayInputWidget
-"""
-setters_view_widget = setters_labelled_widget.viewWidget()
-setters_view_widget.setTextColor(iColor["rgba_green_7"])
-setters_view_widget.setImage(icons["example_image_01"])
-setters_view_widget.setDisplayMode(OverlayInputWidget.ENTER)
-def hideViewDelegateEvent(widget, delegate_widget):
-    print('---- HIDE VIEW DELEGATE EVENT ----')
-    print(widget, delegate_widget.text())
-setters_view_widget.setHideDelegateEvent(hideViewDelegateEvent)
-setters_widget = createFrame("Setters", setters_labelled_widget)
-
-# subclass
 subclass_widget = createFrame("SubClass", CustomLabelledInputWidget())
 
 # create main widget

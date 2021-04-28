@@ -339,8 +339,8 @@ def setupAsDoubleDynamic():
     custom_index.internalPointer().setDynamicUpdateFunction(DynamicItemExample.updateGUI)
 
 
-setupAsStacked()
-# setupAsDynamic()
+#setupAsStacked()
+setupAsDynamic()
 #setupAsDoubleDynamic()
 
 # SET FLAGS

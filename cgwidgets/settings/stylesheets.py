@@ -110,7 +110,7 @@ def convertDictToCSSFlags(properties):
 input_widget_ss ="""
 /* DEFAULT */
 {{type}}{{{{
-    border: 1px dotted rgba{{rgba_gray_4}};
+    border: None;
     background-color: rgba{{rgba_background}};
     color: rgba{{rgba_text}};
     selection-background-color: rgba{{rgba_selected_background}};
