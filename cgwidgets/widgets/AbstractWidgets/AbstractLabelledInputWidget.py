@@ -50,6 +50,8 @@ class AbstractLabelledInputWidget(QFrame, iAbstractInputWidget):
         displayed correctly
 
     """
+
+    TYPE = "label_input"
     def __init__(
         self,
         parent=None,
@@ -70,7 +72,7 @@ class AbstractLabelledInputWidget(QFrame, iAbstractInputWidget):
         self._separator_length = -1
         self._separator_width = 5
         self._splitter_event_is_paused = False
-        self._resize_slider_on_widget_resize = False
+        self._resize_slider_on_widget_resize = True
         font_size = getFontSize(QApplication)
 
         # create main widget
@@ -109,19 +111,20 @@ class AbstractLabelledInputWidget(QFrame, iAbstractInputWidget):
         self.mainWidget().setStretchFactor(0, 0)
         self.mainWidget().setStretchFactor(1, 1)
         self.resetSliderPositionToDefault()
+        self.layout().setContentsMargins(1, 1, 1, 1)
 
         # connect signals
         self.mainWidget().splitterMoved.connect(self.__splitterMoved)
 
         self.mainWidget().setIsSoloViewEnabled(False)
-        #self.mainWidget().setOrientation(direction)
+        self.setDirection(direction)
 
     """ HANDLE GROUP FRAME MOVING"""
     def __splitterMoved(self, pos, index):
         modifiers = QApplication.keyboardModifiers()
-
-        if hasattr(self.mainWidget().parent(), "_frame_container"):
-            if self.mainWidget().parent().direction() == Qt.Vertical:
+        frame_container = self.parent()
+        if hasattr(frame_container, "_frame_container"):
+            if frame_container.direction() == Qt.Vertical:
                 if modifiers in [Qt.AltModifier]:
                     return
                 else:
@@ -149,10 +152,11 @@ class AbstractLabelledInputWidget(QFrame, iAbstractInputWidget):
 
         parent = labelled_input_widget.parent()
         handles_list = []
-
-        widget_list = parent.mainWidget().delegateWidgets()
+        widget_list = parent.delegateWidgets()
         for widget in widget_list:
-            handles_list.append(widget)
+            if hasattr(widget, "TYPE"):
+                if widget.TYPE == "label_input":
+                    handles_list.append(widget)
 
         return handles_list
 
@@ -171,7 +175,7 @@ class AbstractLabelledInputWidget(QFrame, iAbstractInputWidget):
         widgets_list = AbstractLabelledInputWidget.getAllParrallelWidgets(self)
 
         for widget in widgets_list:
-            widget.moveSplitter(pos, 1)
+            widget.mainWidget().moveSplitter(pos, 1)
 
         self._splitter_event_is_paused = False
 
@@ -268,6 +272,9 @@ class AbstractLabelledInputWidget(QFrame, iAbstractInputWidget):
         self.mainWidget().setHandleWidth(width)
         self._separator_width = width
 
+    def direction(self):
+        return self._direction
+
     def setDirection(self, direction, update_defaults=False):
         """
 
@@ -281,6 +288,9 @@ class AbstractLabelledInputWidget(QFrame, iAbstractInputWidget):
         """
         # preflight
         if direction not in [Qt.Horizontal, Qt.Vertical]: return
+
+        # set attr
+        self._direction = direction
 
         # setup minimum sizes
         font_size = getFontSize(QApplication)

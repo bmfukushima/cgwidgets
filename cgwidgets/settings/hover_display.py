@@ -12,6 +12,7 @@ be wrapped like:
     }}
 """
 import re
+import copy
 
 from cgwidgets.utils import attrs
 
@@ -208,9 +209,11 @@ class HoverStyleSheet(object):
         """
         #self.name = name
         self._hover_style_type = HoverStyleSheet.BORDER
-        self._color = repr(iColor["rgba_selected_hover"])
+        self._hover_color = repr(iColor["rgba_selected_hover"])
+        self._focus_color = repr(iColor["rgba_selected_hover"])
         self._position = None
-        self._border_style_type = BorderStyleSheet.SOLID
+        self._border_hover_style_type = BorderStyleSheet.DOTTED
+        self._border_focus_style_type = BorderStyleSheet.SOLID
 
     """ STYLE SHEETS"""
     def hoverSS(self):
@@ -289,11 +292,18 @@ class HoverStyleSheet(object):
         self._position = position
         self.__createStyleSheets()
 
-    def color(self):
-        return self._color
+    def focusColor(self):
+        return self._focus_color
 
-    def setColor(self, color):
-        self._color = repr(color)
+    def setFocusColor(self, _focus_color):
+        self._focus_color = repr(_focus_color)
+        self.__createStyleSheets()
+
+    def hoverColor(self):
+        return self._hover_color
+
+    def setHoverColor(self, _hover_color):
+        self._hover_color = repr(_hover_color)
         self.__createStyleSheets()
 
     def hoverStyleType(self):
@@ -313,11 +323,18 @@ class HoverStyleSheet(object):
         self._border_walls = border_walls
         self.__createStyleSheets()
 
-    def borderStyleType(self):
-        return self._border_style_type
+    def borderHoverStyleType(self):
+        return self._border_hover_style_type
 
-    def setBorderStyleType(self, border_style_type):
-        self._border_style_type = border_style_type
+    def setBorderHoverStyleType(self, _border_hover_style_type):
+        self._border_hover_style_type = _border_hover_style_type
+        self.__createStyleSheets()
+
+    def borderFocusStyleType(self):
+        return self._border_focus_style_type
+
+    def setBorderFocusStyleType(self, _border_focus_style_type):
+        self._border_focus_style_type = _border_focus_style_type
         self.__createStyleSheets()
 
     """ UTILS """
@@ -333,25 +350,30 @@ class HoverStyleSheet(object):
                     is set to HoverStyleSheet.BORDER
         """
         if self.hoverStyleType() == HoverStyleSheet.BORDER:
-            # create a default style sheet if None is provided
-
             # create border object
             style_sheet_object = BorderStyleSheet()
             style_sheet_object.setWalls(self.borderWalls())
-            style_sheet_object.setStyle(self.borderStyleType())
 
-            # set border
+            # setup border
             style_sheet_object.setColor(repr(iColor["rgba_invisible"]))
-            style_sheet_object.setStyle(self.borderStyleType())
+
+            # create a default style sheet if None is provided
             self.setDefaultSS(style_sheet_object.styleSheet())
 
-            # set hover
-            style_sheet_object.setColor(self.color())
+            # setup hover
+            hover_style_sheet = copy.deepcopy(style_sheet_object)
+            hover_style_sheet.setColor(self.hoverColor())
+            hover_style_sheet.setStyle(self.borderHoverStyleType())
+
+            # setup focus
+            focus_style_sheet = copy.deepcopy(style_sheet_object)
+            focus_style_sheet.setStyle(self.borderFocusStyleType())
+            focus_style_sheet.setColor(self.focusColor())
 
             # setup focus/hover/hover focus
-            self.setFocusSS(style_sheet_object.styleSheet())
-            self.setHoverSS(style_sheet_object.styleSheet())
-            self.setHoverFocusSS(style_sheet_object.styleSheet())
+            self.setFocusSS(focus_style_sheet.styleSheet())
+            self.setHoverFocusSS(focus_style_sheet.styleSheet())
+            self.setHoverSS(hover_style_sheet.styleSheet())
 
 
 """ CREATE MAIN STYLE SHEET """
@@ -359,9 +381,12 @@ def installHoverDisplaySS(
         widget,
         name="",
         border_walls=(attrs.NORTH, attrs.SOUTH, attrs.EAST, attrs.WEST),
+        border_focus_style_type=BorderStyleSheet.SOLID,
+        border_hover_style_type=BorderStyleSheet.DOTTED,
         default_ss=None,
         hover_style_type=HoverStyleSheet.BORDER,
-        color=iColor["rgba_selected_hover"],
+        hover_color=iColor["rgba_selected_hover"],
+        focus_color=iColor["rgba_selected"],
         focus=True,
         hover=True,
         hover_focus=True,
@@ -382,12 +407,19 @@ def installHoverDisplaySS(
         widget (QWidget):
         border_walls (list): of attrs.DIRECTION that will have the border shown on
             attrs.NORTH | attrs.SOUTH | attrs.EAST | attrs.WEST
+        border_focus_style_type (BorderStyleSheet.STYLE): What style the border of the FOCUSED widgets is
+            DOTTED | SOLID
+        border_hover_style_type (BorderStyleSheet.STYLE): What style the border of the HOVERED widgets is
+            DOTTED | SOLID
         default_ss (StyleSheet): default style sheet that will be added after the widgets initial stylesheet.
             This allows for you to override the default border that is displayed... finally
         name (str): unique name to cull
-        style_type (HoverStyleSheet.TYPE):
+        hover_style_type (HoverStyleSheet.TYPE):
             BORDER | BACKGROUND | RADIAL
-        color (RGBA):
+        focus_color (RGBA):
+            (255, 255, 255, 255)
+        hover_color (RGBA):
+            (255, 255, 255, 255)
         focus (bool): determines if the display property will be turned on/off
         hover (bool): determines if the display property will be turned on/off
         hover_focus (bool): determines if the display property will be turned on/off
@@ -406,12 +438,16 @@ def installHoverDisplaySS(
     # create hover object
     hover_object = HoverStyleSheet()
     hover_object.setHoverStyleType(hover_style_type)
-    hover_object.setColor(color)
+    hover_object.setHoverColor(hover_color)
+    hover_object.setFocusColor(focus_color)
 
     # setup border
     if hover_style_type == HoverStyleSheet.BORDER:
         hover_object.setBorderWalls(border_walls)
+        hover_object.setBorderHoverStyleType(border_hover_style_type)
+        hover_object.setBorderFocusStyleType(border_focus_style_type)
 
+    # setup default SS
     if default_ss:
         hover_object.setDefaultSS(default_ss)
 

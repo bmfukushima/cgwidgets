@@ -129,6 +129,7 @@ def createLabeledWidgets(title, direction=Qt.Horizontal):
         # create widget
         delegate_widget = label_widgets[arg]()
         input_widget = LabelledInputWidget(name=arg, delegate_widget=delegate_widget)
+        input_widget.setResizeSlidersOnWidgetResize(True)
 
         # set widget orientation
         input_widget.setDirection(direction)

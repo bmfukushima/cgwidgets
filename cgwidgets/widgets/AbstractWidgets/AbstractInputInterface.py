@@ -71,6 +71,10 @@ class iAbstractInputWidget(object):
         """.format(input_widget_ss=input_widget_ss.format(**style_sheet_args))
         self.setStyleSheet(style_sheet)
 
+        # install hover/focus display
+        self.installHoverDisplay()
+
+    def installHoverDisplay(self):
         # add hover display
         hover_type_flags = {
             'focus':{'input_hover':True},

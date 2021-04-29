@@ -111,7 +111,7 @@ class ShojiInputWidgetContainer(LabelledInputWidget):
         # inherit
         super(ShojiInputWidgetContainer, self).__init__(parent, name, direction=direction, delegate_constructor=AbstractShojiInputWidget)
 
-        self.setIsSoloViewEnabled(False)
+        self.mainWidget().setIsSoloViewEnabled(False)
 
         # setup main widget
         self.delegateWidget().setDelegateType(
