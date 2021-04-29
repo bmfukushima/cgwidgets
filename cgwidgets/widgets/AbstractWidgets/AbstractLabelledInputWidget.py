@@ -4,20 +4,22 @@ Add API for viewWidget
     - setViewDelegateWidget
 
 """
+from qtpy import API_NAME
 from qtpy.QtWidgets import (QSizePolicy)
 from qtpy.QtCore import (QEvent, QDir, QTimer)
 
-from qtpy.QtWidgets import (QFileSystemModel, QCompleter, QApplication)
+from qtpy.QtWidgets import (QFileSystemModel, QCompleter, QApplication, QFrame, QVBoxLayout)
 from qtpy.QtCore import Qt
 
 from cgwidgets.widgets.AbstractWidgets.AbstractBaseInputWidgets import AbstractStringInputWidget
 from cgwidgets.widgets.AbstractWidgets.AbstractOverlayInputWidget import AbstractOverlayInputWidget
 from cgwidgets.widgets.AbstractWidgets.AbstractShojiLayout import AbstractShojiLayout
+from cgwidgets.widgets.AbstractWidgets.AbstractInputInterface import iAbstractInputWidget
 
 from cgwidgets.utils import (getFontSize, installResizeEventFinishedEvent)
 from cgwidgets.settings.colors import iColor
 
-class AbstractLabelledInputWidget(AbstractShojiLayout):
+class AbstractLabelledInputWidget(QFrame, iAbstractInputWidget):
     """
     A single input widget.  This inherits from the ShojiLayout,
     to provide a slider for the user to expand/contract the editable area
@@ -59,7 +61,9 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
         delegate_widget=None,
         delegate_constructor=None
     ):
-        super(AbstractLabelledInputWidget, self).__init__(parent, direction)
+        super(AbstractLabelledInputWidget, self).__init__(parent)
+        if API_NAME == "PySide2":
+            iAbstractInputWidget.__init__(self) #pyside2 forces us to do this import
 
         # set up attrs
         self._default_label_length = default_label_length
@@ -68,6 +72,11 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
         self._splitter_event_is_paused = False
         self._resize_slider_on_widget_resize = False
         font_size = getFontSize(QApplication)
+
+        # create main widget
+        QVBoxLayout(self)
+        self._main_widget = AbstractShojiLayout(self, direction)
+        self.layout().addWidget(self._main_widget)
 
         # create view widget
         self._view_widget = AbstractOverlayInputWidget(title=name)
@@ -93,27 +102,26 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
         self._delegate_widget.setMinimumSize(1, int(font_size*2.5))
 
         # add widgets
-        self.addWidget(self._view_widget)
-        self.addWidget(self._delegate_widget)
-
-        # set size hints
-        self.setStretchFactor(0, 0)
-        self.setStretchFactor(1, 1)
-        self.resetSliderPositionToDefault()
+        self.mainWidget().addWidget(self._view_widget)
+        self.mainWidget().addWidget(self._delegate_widget)
 
         # setup style
-        self.splitterMoved.connect(self.__splitterMoved)
+        self.mainWidget().setStretchFactor(0, 0)
+        self.mainWidget().setStretchFactor(1, 1)
+        self.resetSliderPositionToDefault()
 
-        # todo this blocks hover display...
-        self.setIsSoloViewEnabled(False)
-        self.setDirection(direction)
+        # connect signals
+        self.mainWidget().splitterMoved.connect(self.__splitterMoved)
+
+        self.mainWidget().setIsSoloViewEnabled(False)
+        #self.mainWidget().setOrientation(direction)
 
     """ HANDLE GROUP FRAME MOVING"""
     def __splitterMoved(self, pos, index):
         modifiers = QApplication.keyboardModifiers()
 
-        if hasattr(self.parent(), "_frame_container"):
-            if self.parent().direction() == Qt.Vertical:
+        if hasattr(self.mainWidget().parent(), "_frame_container"):
+            if self.mainWidget().parent().direction() == Qt.Vertical:
                 if modifiers in [Qt.AltModifier]:
                     return
                 else:
@@ -141,7 +149,8 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
 
         parent = labelled_input_widget.parent()
         handles_list = []
-        widget_list = parent.delegateWidgets()
+
+        widget_list = parent.mainWidget().delegateWidgets()
         for widget in widget_list:
             handles_list.append(widget)
 
@@ -174,6 +183,13 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
         """
         return
 
+    """ MAIN WIDGET"""
+    def mainWidget(self):
+        return self._main_widget
+
+    def setMainWidget(self, main_widget):
+        self._main_widget = main_widget
+
     """ VIEW WIDGET """
     def viewWidget(self):
         return self._view_widget
@@ -201,7 +217,7 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
 
         # create new input widget
         self._delegate_widget = _delegate_widget
-        self.addWidget(_delegate_widget)
+        self.mainWidget().addWidget(_delegate_widget)
         self._delegate_widget.setSizePolicy(
             QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding
         )
@@ -210,7 +226,17 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
         return self._delegate_widget
 
     def setDelegateConstructor(self, _delegate_constructor):
+        """
+        Sets a delegate constructor.  This provides a class constructor, and creates that
+        class type as the delegate widget.
 
+        This is most useful for instances where a delegate needs to be dynamically populated,
+        such as DynamicShojiModelViewWidgets.
+
+        Args:
+            _delegate_constructor (QWidget Class): to be constructed
+
+        """
         self._delegate_constructor = _delegate_constructor
 
         if self.delegateWidget():
@@ -223,8 +249,9 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
             self._delegate_widget.setSizePolicy(
                 QSizePolicy.MinimumExpanding, QSizePolicy.Preferred
             )
+
             # reset splitter
-            self.addWidget(self._delegate_widget)
+            self.mainWidget().addWidget(self._delegate_widget)
             self._delegate_widget.show()
             self.resetSliderPositionToDefault()
 
@@ -232,12 +259,13 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
         return self._delegate_constructor
 
     """ SIZES """
-    def setSeparatorLength(self, length):
-        self.setHandleLength(length)
+    # todo update these to correct names
+    def setHandleLength(self, length):
+        self.mainWidget().setHandleLength(length)
         self._separator_length = length
 
-    def setSeparatorWidth(self, width):
-        self.setHandleWidth(width)
+    def setHandleWidth(self, width):
+        self.mainWidget().setHandleWidth(width)
         self._separator_width = width
 
     def setDirection(self, direction, update_defaults=False):
@@ -258,15 +286,15 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
         font_size = getFontSize(QApplication)
         if direction == Qt.Vertical:
             # hide handle?
-            self.setHandleMarginOffset(0)
-            self.setIsHandleVisible(False)
-            self.setIsHandleStatic(True)
-            self.setMinimumSize(font_size*4, font_size*6)
+            self.mainWidget().setHandleMarginOffset(0)
+            self.mainWidget().setIsHandleVisible(False)
+            self.mainWidget().setIsHandleStatic(True)
+            self.mainWidget().setMinimumSize(font_size*4, font_size*6)
         elif direction == Qt.Horizontal:
-            self.setHandleMarginOffset(15)
-            self.setIsHandleVisible(True)
-            self.setIsHandleStatic(False)
-            self.setMinimumSize(font_size*12, int(font_size*2.5))
+            self.mainWidget().setHandleMarginOffset(15)
+            self.mainWidget().setIsHandleVisible(True)
+            self.mainWidget().setIsHandleStatic(False)
+            self.mainWidget().setMinimumSize(font_size*12, int(font_size*2.5))
 
         # update defaults
         if update_defaults:
@@ -278,7 +306,7 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
             self.resetSliderPositionToDefault()
 
         # update label
-        return AbstractShojiLayout.setOrientation(self, direction)
+        self.mainWidget().setOrientation(direction)
 
     def defaultLabelLength(self):
         return self._default_label_length
@@ -295,7 +323,7 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
     """ EVENTS """
     def resetSliderPositionToDefault(self):
         #print(self.defaultLabelLength())
-        self.moveSplitter(self.defaultLabelLength(), 1)
+        self.mainWidget().moveSplitter(self.defaultLabelLength(), 1)
 
     def setUserFinishedEditingEvent(self, function):
         self.delegateWidget().setUserFinishedEditingEvent(function)
@@ -303,7 +331,7 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
     def showEvent(self, event):
         super(AbstractLabelledInputWidget, self).showEvent(event)
         self.resetSliderPositionToDefault()
-        return AbstractShojiLayout.showEvent(self, event)
+        return QFrame.showEvent(self, event)
 
     def resizeEvent(self, event):
         """ installs a resize event to automagically reset the sliders to their default positions"""
@@ -314,7 +342,7 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
 
         installResizeEventFinishedEvent(self, 100, _resizeFinishedEvent, '_timer')
 
-        return AbstractShojiLayout.resizeEvent(self, event)
+        return QFrame.resizeEvent(self, event)
 
 
 if __name__ == "__main__":
@@ -346,12 +374,13 @@ if __name__ == "__main__":
 
 
     test_labelled_embed = AbstractLabelledInputWidget(name="embed")
-    #labelled_input = LabelledInputWidget(name="test", widget_type=test_labelled_embed)
+
 
     test_labelled_embed.move(QCursor.pos())
     test_labelled_embed.show()
     #test_labelled_embed.resize(256, 256)
     test_labelled_embed.resize(500, 500)
     test_labelled_embed.show()
+    # test_labelled_embed.setStyleSheet("background-color:rgba(255,0,0,255); border: 2px solid rgba(0,255,0,255);")
     #w.move(QCursor.pos())
     sys.exit(app.exec_())
