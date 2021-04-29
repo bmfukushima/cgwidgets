@@ -204,7 +204,7 @@ main_widget.setStyleSheet("""background-color: rgba{rgba_background_00}""".forma
 
 main_widget.addWidget(normal_widget)
 main_widget.addWidget(vertical_label_widget)
-main_widget.addWidget(shoji_input_widget_container)
+#main_widget.addWidget(shoji_input_widget_container)
 main_widget.addWidget(horizontal_label_widget)
 main_widget.addWidget(frame_group_input_widget)
 

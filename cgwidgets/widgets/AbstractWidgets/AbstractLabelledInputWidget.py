@@ -33,6 +33,12 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
             be overwritten by the delegate_widget if it is provided.
         widget_type (QWidget): Widget type to be constructed for as the delegate widget
 
+    Attributes:
+        resize_slider_on_widget_resize (bool): determines if widgets labels should be automatically
+            reset to their default position when the widget is resized.
+        splitter_event_is_paused (bool): determines if the splitter resize event is currently paused
+            or not
+
     Hierarchy:
         |- ViewWidget --> AbstractOverlayInputWidget
         |- DelegateWidget --> QWidget
@@ -60,6 +66,7 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
         self._separator_length = -1
         self._separator_width = 5
         self._splitter_event_is_paused = False
+        self._resize_slider_on_widget_resize = False
         font_size = getFontSize(QApplication)
 
         # create view widget
@@ -100,12 +107,8 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
         # todo this blocks hover display...
         self.setIsSoloViewEnabled(False)
         self.setDirection(direction)
-        #self._delegate_widget.setProperty("hover_display", True)
 
     """ HANDLE GROUP FRAME MOVING"""
-
-
-
     def __splitterMoved(self, pos, index):
         modifiers = QApplication.keyboardModifiers()
 
@@ -126,8 +129,6 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
                         # update handle positions
                         self.setAllHandlesToPos(pos)
                         self._splitter_event_is_paused = True
-
-
 
     @staticmethod
     def getAllParrallelWidgets(labelled_input_widget):
@@ -285,6 +286,12 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
     def setDefaultLabelLength(self, length):
         self._default_label_length = length
 
+    def setResizeSlidersOnWidgetResize(self, enabled):
+        self._resize_slider_on_widget_resize = enabled
+
+    def resizeSliderOnWidgetResize(self):
+        return self._resize_slider_on_widget_resize
+
     """ EVENTS """
     def resetSliderPositionToDefault(self):
         #print(self.defaultLabelLength())
@@ -301,8 +308,9 @@ class AbstractLabelledInputWidget(AbstractShojiLayout):
     def resizeEvent(self, event):
         """ installs a resize event to automagically reset the sliders to their default positions"""
         def _resizeFinishedEvent(*args, **kwargs):
-            super(AbstractLabelledInputWidget, self).resizeEvent(event)
-            self.resetSliderPositionToDefault()
+            if self.resizeSliderOnWidgetResize():
+                super(AbstractLabelledInputWidget, self).resizeEvent(event)
+                self.resetSliderPositionToDefault()
 
         installResizeEventFinishedEvent(self, 100, _resizeFinishedEvent, '_timer')
 
