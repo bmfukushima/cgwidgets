@@ -9,11 +9,16 @@ from cgwidgets.widgets import AbstractStringInputWidget, AbstractListInputWidget
 from cgwidgets.views import (
     AbstractDragDropModel,
     AbstractDragDropTreeView,
-    AbstractDragDropListView
+    AbstractDragDropListView,
+    AbstractDragDropModelItem
 )
 from cgwidgets.utils import attrs, getWidgetAncestor
 from cgwidgets.settings.colors import iColor
 from cgwidgets.widgets import AbstractShojiLayout
+
+class AbstractModelViewItem(AbstractDragDropModelItem):
+    def __int__(self, parent=None):
+        super(AbstractModelViewItem, self).__init__(parent)
 
 
 class AbstractModelViewWidget(AbstractShojiLayout):
@@ -186,6 +191,9 @@ class AbstractModelViewWidget(AbstractShojiLayout):
 
     def setModel(self, model):
         self.view().setModel(model)
+
+    def clearModel(self):
+        self.model().clearModel()
 
     """ SELECTION """
     def selectionModel(self):

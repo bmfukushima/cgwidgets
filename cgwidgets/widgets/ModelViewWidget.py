@@ -1,5 +1,10 @@
 import sys
-from cgwidgets.widgets import AbstractModelViewWidget
+from cgwidgets.widgets import AbstractModelViewWidget, AbstractModelViewItem
+
+class ModelViewItem(AbstractModelViewItem):
+    def __int__(self, parent=None):
+        super(ModelViewItem, self).__init__(parent)
+
 
 class ModelViewWidget(AbstractModelViewWidget):
     def __init__(self, parent=None):

@@ -56,7 +56,7 @@ class Colors(dict):
 
         """ hover / select"""
         self["rgba_selected_background"] = self["rgba_cyan_5"]
-        self["rgba_selected"] = self["rgba_cyan_6"]
+        self["rgba_selected"] = self["rgba_cyan_7"]
         self["rgba_selected_hover"] = self["rgba_cyan_5"]
 
         """ accept / decline"""

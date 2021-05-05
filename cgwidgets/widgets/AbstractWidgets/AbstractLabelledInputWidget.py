@@ -199,7 +199,14 @@ class AbstractLabelledInputWidget(QFrame, iAbstractInputWidget):
         return self._view_widget
 
     def setViewWidget(self, _view_widget):
+        # delete view widget
+        if hasattr(self, "_view_widget"):
+            self._view_widget.setParent(None)
+            self._view_widget.deleteLater()
+
+        # set new view widget
         self._view_widget = _view_widget
+        self.mainWidget().insertWidget(0, _view_widget)
 
     def name(self):
         return self.viewWidget().title()

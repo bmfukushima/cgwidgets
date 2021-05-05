@@ -24,7 +24,8 @@ class CompleterPopup(QListView):
             color: rgba{rgba_text};
         }}
         CompleterPopup::item:selected{{
-            color: rgba{rgba_selected_hover};
+            border: 1px solid rgba{rgba_selected};
+            color: rgba{rgba_selected};
             background-color: rgba{rgba_gray_4};
         }}
         CompleterPopup::item{{
@@ -32,7 +33,10 @@ class CompleterPopup(QListView):
             background-color: rgba{rgba_background_00};
             color: rgba{rgba_text};
         }}
-        CompleterPopup::item:hover{{color: rgba{rgba_selected_hover}}}
+        CompleterPopup::item:hover{{
+            color: rgba{rgba_text_hover};
+            background-color: rgba{rgba_background_01};
+        }}
         {scroll_bar}
         """.format(**style_sheet_args)
 

@@ -39,8 +39,20 @@ def testSelect(item, enabled):
 def testDelegateToggle(enabled, event, widget):
     print("TOGGLING -{key}->".format(key=event.key()), widget, enabled)
 
+# SUBCLASS
+class ModelViewWidgetSubclass(ModelViewWidget):
+    def __init__(self, parent=None):
+        super(ModelViewWidgetSubclass, self).__init__(parent)
+        # self.model().setItemType(DisplayEditableOptionsItem)
+        #
+        # for x in range(0, 4):
+        #     index = self.model().insertNewIndex(x, name=str('node%s' % x))
+        #     for i, char in enumerate('abc'):
+        #         self.model().insertNewIndex(i, name=char, parent=index)
+
+main_widget = ModelViewWidgetSubclass()
 # create main Model View Widget
-main_widget = ModelViewWidget()
+#main_widget = ModelViewWidget()
 
 # setup deletion warning
 delete_warning_widget = AbstractLabelWidget(text="Are you sure you want to delete this?\n You cannot undo it...")
@@ -92,7 +104,6 @@ def contextMenu(index, selected_indexes):
     print(index, selected_indexes)
 
 main_widget.addContextMenuEvent('test', contextMenu)
-
 main_widget.move(QCursor.pos())
 main_widget.show()
 

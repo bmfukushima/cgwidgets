@@ -10,6 +10,7 @@ THE IMPORT ORDER MATTERS!!
 from .AbstractWidgets import *
 
 from .AbstractWidgets.AbstractModelViewWidget import AbstractModelViewWidget
+from .AbstractWidgets.AbstractModelViewWidget import AbstractModelViewItem
 from .AbstractWidgets.AbstractWarningWidget import AbstractWarningWidget
 from .AbstractWidgets.AbstractLabelledInputWidget import AbstractLabelledInputWidget
 from .AbstractWidgets.AbstractOverlayInputWidget import AbstractOverlayInputWidget
@@ -18,6 +19,7 @@ from .AbstractWidgets.AbstractPiPWidget import AbstractPiPWidget
 
 """ MODEL VIEW WIDGET"""
 from .ModelViewWidget import ModelViewWidget as ModelViewWidget
+from .ModelViewWidget import ModelViewWidget as ModelViewItem
 
 """ SHOJI """
 from .ShojiWidget import ShojiModelItem as ShojiModelItem

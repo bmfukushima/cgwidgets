@@ -93,7 +93,10 @@ class AbstractDragDropAbstractView(object):
         style_sheet = """
         {base_header_style_sheet}
         {header_style_sheet}
-        {type}::item:hover{{color: rgba{rgba_selected_hover}}}
+        {type}::item:hover{{
+            color: rgba{rgba_text_hover};
+            background-color: rgba{rgba_background_01};
+        }}
         {splitter_style_sheet}
         """.format(**style_sheet_args)
 
@@ -453,6 +456,7 @@ class AbstractDragDropListView(QListView, AbstractDragDropAbstractView):
 
         return QListView.keyPressEvent(self, event)
 
+
 class AbstractDragDropTreeView(QTreeView, AbstractDragDropAbstractView):
     def __init__(self, parent=None):
         super(AbstractDragDropTreeView, self).__init__(parent)
@@ -560,6 +564,7 @@ class AbstractDragDropTreeView(QTreeView, AbstractDragDropAbstractView):
         #self.__keyPressEvent(event)
 
         return QTreeView.keyPressEvent(self, event)
+
 
 class AbstractViewContextMenu(QMenu):
     def __init__(self, parent=None):
