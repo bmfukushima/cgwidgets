@@ -3,6 +3,8 @@ from qtpy.QtCore import Qt
 
 from cgwidgets.settings.colors import iColor
 from cgwidgets.settings.icons import icons
+from cgwidgets.settings.hover_display import installHoverDisplaySS
+
 from cgwidgets.utils import setAsWindow, centerWidgetOnScreen
 from cgwidgets.widgets import AbstractLabelWidget, AbstractButtonInputWidget
 from cgwidgets.widgets.AbstractWidgets.AbstractGIFWidget import AbstractGIFWidget
@@ -36,9 +38,19 @@ class AbstractWarningWidget(QWidget):
             current event registered with setCancelEvent.
         display_widget (QWidget): The central widget to be displayed
             to the user.
+        widget (QWidget): Widget that called this WarningWidget
+
+    Hierarchy:
+        |- QHBoxLayout
+            |- cancelButton --> (AbstractGIFWidget)
+            |- displayWidget --> (QWidget)
+            |- acceptButton --> (AbstractGIFWidget)
+
+    Notes:
+        The button_width attribute really doesn't make sense... and isn't setup correctly
     """
 
-    def __init__(self, parent=None, display_widget=None, button_width=100, width=1080, height=512, resize_on_show=True, widget=None):
+    def __init__(self, parent=None, display_widget=None, button_width=150, width=1080, height=512, resize_on_show=True, widget=None):
         super(AbstractWarningWidget, self).__init__(parent)
         #self.main_widget = getMainWidget(self)
 
@@ -47,9 +59,6 @@ class AbstractWarningWidget(QWidget):
         setAsWindow(self)
 
         # setup default attrs
-        if not button_width:
-            self.setButtonWidth(100)
-
         self.display_height = height
         self.display_width = width
         self.resize_on_show = resize_on_show
@@ -65,37 +74,40 @@ class AbstractWarningWidget(QWidget):
         # create widgets
         accept_gif = icons["ACCEPT_GIF"]
         cancel_gif = icons["CANCEL_GIF"]
-        self.accept_button = AbstractGIFWidget(accept_gif)
+        self._accept_button = AbstractGIFWidget(accept_gif)
+        self._cancel_button = AbstractGIFWidget(cancel_gif)
 
-        self.cancel_button = AbstractGIFWidget(cancel_gif)
-
-        from cgwidgets.settings.hover_display import installHoverDisplaySS
-        installHoverDisplaySS(self.accept_button, hover_color=iColor["rgba_accept"])
-        installHoverDisplaySS(self.cancel_button, hover_color=iColor["rgba_cancel"])
+        # install hover displays
+        installHoverDisplaySS(self.acceptButton(), hover_color=iColor["rgba_accept"])
+        installHoverDisplaySS(self.cancelButton(), hover_color=iColor["rgba_cancel"])
 
         # setup style
+        if not button_width:
+            self.setButtonWidth(150)
+        self.acceptButton().setResolution(button_width, height-4)
+        self.cancelButton().setResolution(button_width, height-4)
         size_policy = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
-        self.accept_button.setSizePolicy(size_policy)
-        self.cancel_button.setSizePolicy(size_policy)
+        self.acceptButton().setSizePolicy(size_policy)
+        self.cancelButton().setSizePolicy(size_policy)
 
         # setup spacing
-        self.accept_button.layout().setContentsMargins(0, 0, 0, 0)
-        self.cancel_button.layout().setContentsMargins(0, 0, 0, 0)
+        self.acceptButton().layout().setContentsMargins(0, 0, 0, 0)
+        self.cancelButton().layout().setContentsMargins(0, 0, 0, 0)
         self.displayWidget().setContentsMargins(0, 0, 0, 0)
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.layout().setSpacing(0)
 
         # setup events
-        self.accept_button.setMousePressEvent(self.acceptEvent)
-        self.cancel_button.setMousePressEvent(self.cancelEvent)
+        self.acceptButton().setMousePressEvent(self.acceptEvent)
+        self.cancelButton().setMousePressEvent(self.cancelEvent)
 
         # setup helpful tips
         self.setupButtonTooltips()
 
         # set up main layout
-        self.layout().addWidget(self.cancel_button, 1)
+        self.layout().addWidget(self.cancelButton(), 1)
         self.layout().addWidget(self._display_widget)
-        self.layout().addWidget(self.accept_button, 1)
+        self.layout().addWidget(self.acceptButton(), 1)
         self.layout().setAlignment(Qt.AlignTop)
 
     def setupButtonTooltips(self):
@@ -103,14 +115,14 @@ class AbstractWarningWidget(QWidget):
         Creates the tooltips for the user on how to use these buttons
         when they hover over the widget.
         """
-        self.accept_button.setToolTip("""
+        self.acceptButton().setToolTip("""
 The happy af dog bouncing around that has a massive
 green border around it when you hover over it means to continue.
 
 FYI:
 You can also hit <ENTER> and <RETURN> to continue...
         """)
-        self.cancel_button.setToolTip("""
+        self.cancelButton().setToolTip("""
 The super sad dog who looks really sad with the massive red border
 around it when you hover over it means to go back...
 
@@ -129,8 +141,8 @@ You can also hit <ESCAPE> to go back...
         """
         Sets the accept/cancel buttons to a fixed width...
         """
-        self.accept_button.setFixedWidth(width)
-        self.cancel_button.setFixedWidth(width)
+        self.acceptButton().setFixedWidth(width)
+        self.cancelButton().setFixedWidth(width)
 
     """ UTILS """
     def updateStyleSheet(self):
@@ -146,6 +158,12 @@ You can also hit <ESCAPE> to go back...
         self.setStyleSheet(style_sheet)
 
     """ PROPERTIES """
+    def cancelButton(self):
+        return self._cancel_button
+
+    def acceptButton(self):
+        return self._accept_button
+
     def widget(self):
         return self._widget
 
