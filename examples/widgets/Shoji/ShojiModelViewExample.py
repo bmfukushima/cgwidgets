@@ -70,6 +70,11 @@ app = QApplication(sys.argv)
 # CREATE MAIN WIDGET
 shoji_widget = ShojiModelViewWidget()
 
+# SUBCLASS
+class SubclassShojiModelViewWidget(ShojiModelViewWidget):
+    def __init__(self, parent=None, direction=attrs.NORTH):
+        super(SubclassShojiModelViewWidget, self).__init__(parent, direction=direction)
+
 # SETUP VIEW
 """
 Choose between a Tree, List, or Custom view.

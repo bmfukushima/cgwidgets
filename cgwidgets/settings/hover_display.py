@@ -414,22 +414,27 @@ def installHoverDisplaySS(
         default_ss (StyleSheet): default style sheet that will be added after the widgets initial stylesheet.
             This allows for you to override the default border that is displayed... finally
         name (str): unique name to cull
-        hover_style_type (HoverStyleSheet.TYPE):
+        hover_style_type (HoverStyleSheet.TYPE): How to display the hover style type.
             BORDER | BACKGROUND | RADIAL
-        focus_color (RGBA):
+            Note:
+                Only BORDER works right now
+        focus_color (RGBA): color displayed when widget is FOCUSED
             (255, 255, 255, 255)
-        hover_color (RGBA):
+        hover_color (RGBA): colored displayed when cursor HOVERS over widget
             (255, 255, 255, 255)
         focus (bool): determines if the display property will be turned on/off
         hover (bool): determines if the display property will be turned on/off
         hover_focus (bool): determines if the display property will be turned on/off
-        hover_type_flag (dict): of properties for each respective portion
-            of the hover type
+        hover_type_flags (dict): These flags will be installed on the respective portion
+            of the style sheet hover type.
             {
                 hover:{property:bool, property2:bool},
                 hover_focus:{property:bool, property2:bool},
                 focus:{property:bool}
             }
+            Note:
+                This is to allow extra properties to be added and called to dynamically control the
+                hover display later
 
     Returns (StyleSheet): that has already been formatted
 

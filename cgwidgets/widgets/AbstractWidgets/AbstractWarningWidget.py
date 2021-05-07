@@ -26,6 +26,9 @@ class AbstractWarningWidget(QWidget):
         button_width (int): The width of the accept/cancel buttons.
         widget (QWidget): Widget that is calling the WarningWidget
 
+    Attributes:
+        closing (bool): if the widget is currently in a cancel event
+
     Widgets:
         accept_button (QPushButton): When pressed, accepts the
             current event registered with setAcceptEvent.
@@ -51,6 +54,7 @@ class AbstractWarningWidget(QWidget):
         self.display_width = width
         self.resize_on_show = resize_on_show
         self._widget = widget
+        self._closing = False
 
         # create text layout
         if not display_widget:
@@ -61,14 +65,20 @@ class AbstractWarningWidget(QWidget):
         # create widgets
         accept_gif = icons["ACCEPT_GIF"]
         cancel_gif = icons["CANCEL_GIF"]
-        self.accept_button = AbstractGIFWidget(accept_gif, hover_color=iColor["rgba_accept"])
-        self.cancel_button = AbstractGIFWidget(cancel_gif, hover_color=iColor["rgba_cancel"])
+        self.accept_button = AbstractGIFWidget(accept_gif)
+
+        self.cancel_button = AbstractGIFWidget(cancel_gif)
+
+        from cgwidgets.settings.hover_display import installHoverDisplaySS
+        installHoverDisplaySS(self.accept_button, hover_color=iColor["rgba_accept"])
+        installHoverDisplaySS(self.cancel_button, hover_color=iColor["rgba_cancel"])
 
         # setup style
         size_policy = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
         self.accept_button.setSizePolicy(size_policy)
         self.cancel_button.setSizePolicy(size_policy)
 
+        # setup spacing
         self.accept_button.layout().setContentsMargins(0, 0, 0, 0)
         self.cancel_button.layout().setContentsMargins(0, 0, 0, 0)
         self.displayWidget().setContentsMargins(0, 0, 0, 0)
@@ -156,6 +166,7 @@ You can also hit <ESCAPE> to go back...
 
     def acceptEvent(self):
         self._accept_event(self.widget())
+        self._closing = True
         self.close()
 
     def setAcceptEvent(self, accept_event):
@@ -166,6 +177,7 @@ You can also hit <ESCAPE> to go back...
 
     def cancelEvent(self):
         self._cancel_event(self.widget())
+        self._closing = True
         self.close()
 
     def setCancelEvent(self, cancel_event):
@@ -173,7 +185,8 @@ You can also hit <ESCAPE> to go back...
 
     """ EVENTS """
     def leaveEvent(self, event):
-        self.cancelEvent()
+        if not self._closing:
+            self.cancelEvent()
         QWidget.leaveEvent(self, event)
 
     def showEvent(self, event):

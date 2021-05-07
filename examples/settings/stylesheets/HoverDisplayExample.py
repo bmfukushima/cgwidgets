@@ -16,6 +16,22 @@ main_widget = QWidget()
 main_layout = QHBoxLayout(main_widget)
 
 # Create Hover Widgets
+"""
+def installHoverDisplaySS(
+        widget,
+        name="",
+        border_walls=(attrs.NORTH, attrs.SOUTH, attrs.EAST, attrs.WEST),
+        border_focus_style_type=BorderStyleSheet.SOLID,
+        border_hover_style_type=BorderStyleSheet.DOTTED,
+        default_ss=None,
+        hover_style_type=HoverStyleSheet.BORDER,
+        hover_color=iColor["rgba_selected_hover"],
+        focus_color=iColor["rgba_selected"],
+        focus=True,
+        hover=True,
+        hover_focus=True,
+        hover_type_flags={'focus':{}, 'hover_focus':{}, 'hover':{}}):
+        """
 for char in string.ascii_letters:
     widget = QLabel(char)
     installHoverDisplaySS(
