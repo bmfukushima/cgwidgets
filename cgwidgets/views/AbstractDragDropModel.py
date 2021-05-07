@@ -8,7 +8,6 @@ from qtpy.QtCore import (
 from qtpy.QtGui import QPainter, QColor, QPen, QBrush, QCursor, QPolygonF, QPainterPath
 
 from cgwidgets.settings import iColor
-from cgwidgets.utils import attrs
 
 class AbstractDragDropModelItem(object):
     """

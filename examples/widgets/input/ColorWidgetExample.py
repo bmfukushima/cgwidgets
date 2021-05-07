@@ -20,7 +20,7 @@ from qtpy.QtWidgets import QApplication, QLabel, QWidget, QVBoxLayout
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QCursor
 
-from cgwidgets.utils import attrs
+from cgwidgets.settings import attrs
 from cgwidgets.widgets.InputWidgets.ColorInputWidget import ColorInputWidget
 
 # set up main widget

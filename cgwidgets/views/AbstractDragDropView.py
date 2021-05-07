@@ -7,10 +7,8 @@ from qtpy.QtWidgets import (
 from qtpy.QtCore import Qt, QPoint, QPointF, QRect, QItemSelectionModel, QSortFilterProxyModel
 from qtpy.QtGui import QColor, QPen, QBrush, QCursor, QPolygonF, QPainterPath
 
-from cgwidgets.utils import attrs, showWarningDialogue
-from cgwidgets.settings import iColor
-from cgwidgets.settings import icons
-
+from cgwidgets.utils import  showWarningDialogue
+from cgwidgets.settings import iColor, attrs, icons
 
 """ VIEWS """
 class AbstractDragDropAbstractView(object):

@@ -3,9 +3,9 @@ import sys, string
 from qtpy.QtWidgets import QApplication, QLabel, QWidget, QHBoxLayout
 from qtpy.QtGui import QCursor
 
-from cgwidgets.utils import centerWidgetOnCursor, attrs
+from cgwidgets.utils import centerWidgetOnCursor
 from cgwidgets.settings.hover_display import installHoverDisplaySS, HoverStyleSheet
-from cgwidgets.settings import iColor
+from cgwidgets.settings import iColor, attrs
 
 
 app = QApplication(sys.argv)

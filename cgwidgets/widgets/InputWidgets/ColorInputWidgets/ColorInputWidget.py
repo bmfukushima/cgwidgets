@@ -19,7 +19,7 @@ from qtpy.QtGui import (
     QColor, QCursor
 )
 
-from cgwidgets.utils import  attrs
+from cgwidgets.settings import attrs
 from cgwidgets.widgets.InputWidgets.ColorInputWidgets import (
     ColorGradientDelegate, ColorClockView
 )

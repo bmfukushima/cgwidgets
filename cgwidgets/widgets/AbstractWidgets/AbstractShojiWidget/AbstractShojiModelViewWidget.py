@@ -22,8 +22,8 @@ from qtpy.QtWidgets import (
 from qtpy.QtCore import Qt, QModelIndex, QEvent
 from qtpy.QtGui import QCursor
 
-from cgwidgets.utils import getWidgetAncestor, attrs, updateStyleSheet
-from cgwidgets.settings import iColor
+from cgwidgets.utils import getWidgetAncestor, updateStyleSheet
+from cgwidgets.settings import iColor, attrs
 from cgwidgets.settings.hover_display import installHoverDisplaySS
 from cgwidgets.widgets import (
     AbstractFrameInputWidgetContainer,

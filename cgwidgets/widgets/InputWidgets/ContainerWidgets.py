@@ -8,25 +8,17 @@ TODO
 
 import os
 
-from qtpy.QtWidgets import (QSizePolicy)
-from qtpy.QtCore import (QEvent, QDir)
-from qtpy.QtWidgets import (QFileSystemModel, QCompleter, QApplication)
 from qtpy.QtCore import Qt
 
 from cgwidgets.widgets import (
-    AbstractInputGroupFrame,
     AbstractFrameInputWidgetContainer,
     AbstractButtonInputWidgetContainer)
 
 from cgwidgets.widgets import (
     ShojiModelViewWidget,
-    ShojiModelItem,
-    ShojiLayout)
-from cgwidgets.utils import (
-    updateStyleSheet,
-    attrs,
-    getFontSize)
-from cgwidgets.settings import iColor
+    ShojiModelItem)
+from cgwidgets.utils import (updateStyleSheet)
+from cgwidgets.settings import attrs
 
 try:
     from .InputWidgets import LabelledInputWidget, StringInputWidget, ListInputWidget, BooleanInputWidget

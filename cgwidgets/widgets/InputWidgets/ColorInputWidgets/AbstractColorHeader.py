@@ -15,13 +15,14 @@ from qtpy.QtGui import (
 )
 
 from cgwidgets.utils import (
-    attrs, draw, getWidgetAncestor, checkMousePos,  getWidgetAncestorByName,
+    draw, getWidgetAncestor, checkMousePos,  getWidgetAncestorByName,
     getFontSize
 )
 
 from cgwidgets.widgets.InputWidgets import FloatInputWidget
 from cgwidgets.widgets.AbstractWidgets import AbstractInputGroup
 from cgwidgets.settings.colors import updateColorFromArgValue
+from cgwidgets.settings import attrs
 
 
 class ColorHeaderWidget(QScrollArea):

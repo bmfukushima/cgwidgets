@@ -60,7 +60,7 @@ from cgwidgets.widgets import (
     ModelViewWidget, FloatInputWidget, LabelledInputWidget, StringInputWidget)
 from cgwidgets.views import AbstractDragDropListView, AbstractDragDropTreeView
 from cgwidgets.widgets import ShojiLayout
-from cgwidgets.utils import attrs
+from cgwidgets.settings import attrs
 from cgwidgets.settings import icons
 
 

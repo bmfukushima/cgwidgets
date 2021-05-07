@@ -6,7 +6,7 @@ instead of the primary ones if you want to do a per item override.
 from qtpy.QtCore import Qt
 
 from cgwidgets.widgets import ShojiModelViewWidget, FloatInputWidget
-from cgwidgets.utils import attrs
+from cgwidgets.settings import attrs
 
 import sys
 from qtpy.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget

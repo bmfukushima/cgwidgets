@@ -2,7 +2,7 @@ from qtpy.QtCore import Qt
 
 from cgwidgets.widgets import ShojiModelViewWidget
 from cgwidgets.delegates import ShojiLayout
-from cgwidgets.utils import attrs
+from cgwidgets.settings import attrs
 
 import sys
 from qtpy.QtWidgets import QApplication, QLabel

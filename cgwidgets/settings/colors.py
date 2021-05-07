@@ -15,7 +15,7 @@ TODO
 
 from qtpy.QtGui import QColor
 
-from cgwidgets.utils import attrs
+from cgwidgets.settings import attrs
 
 
 class Colors(dict):

@@ -1,7 +1,7 @@
 
 from qtpy.QtCore import Qt
 
-from cgwidgets.utils import attrs
+from cgwidgets.settings import attrs
 from cgwidgets.widgets import (
     AbstractShojiLayout,
     AbstractShojiLayoutHandle,

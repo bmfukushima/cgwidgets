@@ -29,20 +29,11 @@ from cgwidgets.widgets import (
     AbstractButtonInputWidget
 )
 
-from cgwidgets.widgets import (
-    ShojiModelViewWidget,
-    ShojiModelDelegateWidget,
-    ShojiModelItem
-)
-from cgwidgets.widgets import ShojiLayout
+from cgwidgets.widgets import (ShojiModelDelegateWidget)
 from cgwidgets.utils import (
     getWidgetAncestor,
-    updateStyleSheet,
-    attrs,
-    installCompleterPopup,
-    getFontSize
+    installCompleterPopup
 )
-from cgwidgets.settings import iColor
 
 
 class ButtonInputWidget(AbstractButtonInputWidget):

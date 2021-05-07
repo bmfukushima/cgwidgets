@@ -25,11 +25,11 @@ from qtpy.QtGui import (
 )
 
 from cgwidgets.utils import (
-    attrs, draw, getWidgetAncestor, getWidgetAncestorByName,
+    draw, getWidgetAncestor, getWidgetAncestorByName,
     getFontSize, installStickyAdjustDelegate
 )
 from cgwidgets.settings.colors import (
-    iColor, getHSVRGBAFloatFromColor, updateColorFromArgValue,
+    attrs, iColor, getHSVRGBAFloatFromColor, updateColorFromArgValue,
 )
 from cgwidgets.widgets.InputWidgets.ColorInputWidgets import (
     ColorHeaderWidgetItem, AbstractColorDelegate, AbstractColorView,

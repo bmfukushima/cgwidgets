@@ -12,8 +12,8 @@ from cgwidgets.views import (
     AbstractDragDropListView,
     AbstractDragDropModelItem
 )
-from cgwidgets.utils import attrs, getWidgetAncestor
-from cgwidgets.settings import iColor
+from cgwidgets.utils import getWidgetAncestor
+from cgwidgets.settings import iColor, attrs
 from cgwidgets.widgets import AbstractShojiLayout
 
 class AbstractModelViewItem(AbstractDragDropModelItem):

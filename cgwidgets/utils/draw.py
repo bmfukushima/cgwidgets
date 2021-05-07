@@ -2,7 +2,7 @@ from qtpy.QtWidgets import QGraphicsItemGroup, QGraphicsLineItem
 from qtpy.QtCore import Qt, QRectF, QPoint
 from qtpy.QtGui import QColor, QBrush, QLinearGradient, QGradient, QPen
 
-from cgwidgets.utils import attrs
+from cgwidgets.settings import attrs
 
 
 def create1DGradient(

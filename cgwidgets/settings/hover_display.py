@@ -14,7 +14,7 @@ be wrapped like:
 import re
 import copy
 
-from cgwidgets.utils import attrs
+from cgwidgets.settings import attrs
 
 from .colors import iColor
 from .stylesheets import convertDictToCSSFlags, background_radial

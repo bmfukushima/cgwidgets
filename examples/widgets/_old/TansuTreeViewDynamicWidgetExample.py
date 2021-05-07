@@ -10,7 +10,7 @@ from qtpy.QtCore import Qt
 from qtpy.QtGui import QCursor
 
 from cgwidgets.widgets import ShojiModelViewWidget, FloatInputWidget
-from cgwidgets.utils import attrs
+from cgwidgets.settings import attrs
 
 app = QApplication(sys.argv)
 

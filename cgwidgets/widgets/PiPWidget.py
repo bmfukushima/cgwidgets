@@ -93,7 +93,7 @@ if __name__ == '__main__':
 
     from qtpy.QtWidgets import (QWidget, QHBoxLayout, QApplication, QListWidget, QAbstractItemView, QPushButton)
     from cgwidgets.utils import centerWidgetOnCursor
-    from cgwidgets.utils import attrs
+    from cgwidgets.settings import attrs
 
     app = QApplication(sys.argv)
 

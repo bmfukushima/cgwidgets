@@ -12,10 +12,10 @@ from qtpy.QtGui import (
     QColor, QBrush, QCursor
 )
 
-from cgwidgets.utils import attrs, draw, getWidgetAncestor, checkMousePos,  getWidgetAncestorByName
+from cgwidgets.utils import draw, getWidgetAncestor, checkMousePos,  getWidgetAncestorByName
 from cgwidgets.utils.draw import DualColoredLineSegment
 from cgwidgets.settings.colors import (
-    iColor, getHSVRGBAFloatFromColor)
+    attrs, iColor, getHSVRGBAFloatFromColor)
 
 from cgwidgets.widgets.InputWidgets.ColorInputWidgets import (
     ColorPickerItem1D, ColorHeaderWidget, ColorHeaderWidgetItem, AbstractColorDelegate
