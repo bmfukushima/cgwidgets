@@ -3,14 +3,14 @@ from qtpy.QtWidgets import (
 )
 from qtpy.QtCore import Qt, QEvent, QTimer
 
-from cgwidgets.settings.colors import iColor
+from cgwidgets.settings import iColor
 from cgwidgets.settings.keylist import NUMERICAL_INPUT_KEYS, MATH_KEYS
 from cgwidgets.utils import (
     installLadderDelegate, getFontSize, checkIfValueInRange,
     checkNegative, setAsTransparent, updateStyleSheet
 )
 
-from cgwidgets.settings.icons import icons
+from cgwidgets.settings import icons
 from cgwidgets.settings.stylesheets import input_widget_ss
 from cgwidgets.settings.hover_display import installHoverDisplaySS, removeHoverDisplay
 

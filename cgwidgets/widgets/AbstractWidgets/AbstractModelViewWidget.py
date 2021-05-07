@@ -13,7 +13,7 @@ from cgwidgets.views import (
     AbstractDragDropModelItem
 )
 from cgwidgets.utils import attrs, getWidgetAncestor
-from cgwidgets.settings.colors import iColor
+from cgwidgets.settings import iColor
 from cgwidgets.widgets import AbstractShojiLayout
 
 class AbstractModelViewItem(AbstractDragDropModelItem):

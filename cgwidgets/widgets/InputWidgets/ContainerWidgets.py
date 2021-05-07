@@ -26,7 +26,7 @@ from cgwidgets.utils import (
     updateStyleSheet,
     attrs,
     getFontSize)
-from cgwidgets.settings.colors import iColor
+from cgwidgets.settings import iColor
 
 try:
     from .InputWidgets import LabelledInputWidget, StringInputWidget, ListInputWidget, BooleanInputWidget

@@ -1,4 +1,4 @@
-from cgwidgets.settings.colors import iColor
+from cgwidgets.settings import iColor
 from cgwidgets.widgets import AbstractListInputWidget
 from cgwidgets.widgets.AbstractWidgets.AbstractListInputWidget import CompleterPopup
 if __name__ == "__main__":

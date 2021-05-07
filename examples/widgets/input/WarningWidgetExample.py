@@ -35,11 +35,11 @@ def showWarningDialogueA(widget):
     Returns:
 
     """
-    display_widget = LabelWidget(text="SINE.")
+    display_widget = LabelWidget(text="SCARY WARNING")
     showWarningDialogue(widget, display_widget, accept, cancel)
 
 # create warning button
-show_warning_button = ButtonInputWidget()
+show_warning_button = ButtonInputWidget(title="WARN ME!")
 show_warning_button.setUserClickedEvent(showWarningDialogueA)
 
 # create main widget

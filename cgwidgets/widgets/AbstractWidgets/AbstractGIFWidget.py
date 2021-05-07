@@ -3,7 +3,7 @@ from PIL import Image
 from qtpy.QtWidgets import (QWidget, QFrame, QSizePolicy, QLabel, QVBoxLayout)
 from qtpy.QtGui import (QMovie)
 from qtpy.QtCore import (Qt, QByteArray, QSize)
-from cgwidgets.settings.colors import iColor
+from cgwidgets.settings import iColor
 
 class AbstractGIFWidget(QFrame):
     """
@@ -135,7 +135,7 @@ if __name__ == "__main__":
     from qtpy.QtWidgets import QApplication
     from cgwidgets.utils import centerWidgetOnCursor
     from cgwidgets.settings.hover_display import installHoverDisplaySS
-    from cgwidgets.settings.icons import icons
+    from cgwidgets.settings import icons
 
     app = QApplication(sys.argv)
 

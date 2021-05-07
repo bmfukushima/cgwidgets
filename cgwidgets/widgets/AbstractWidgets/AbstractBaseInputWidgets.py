@@ -32,7 +32,7 @@ from qtpy.QtWidgets import (
 )
 from qtpy.QtCore import Qt, QEvent
 
-from cgwidgets.settings.colors import iColor
+from cgwidgets.settings import iColor
 from cgwidgets.settings.keylist import NUMERICAL_INPUT_KEYS, MATH_KEYS, ACCEPT_KEYS
 from cgwidgets.utils import (
     installLadderDelegate, checkIfValueInRange,
@@ -671,7 +671,7 @@ if __name__ == "__main__":
     import sys
     from qtpy.QtWidgets import QApplication, QWidget, QVBoxLayout
     from qtpy.QtGui import QCursor
-    from cgwidgets.settings.icons import icons
+    from cgwidgets.settings import icons
     import sys, inspect
 
     app = QApplication(sys.argv)

@@ -273,7 +273,7 @@ if __name__ == "__main__":
     from qtpy.QtWidgets import QApplication, QWidget, QVBoxLayout
     from qtpy.QtGui import QCursor
     from cgwidgets.widgets import AbstractBooleanInputWidget
-    from cgwidgets.settings.icons import icons
+    from cgwidgets.settings import icons
     import sys, inspect
 
     app = QApplication(sys.argv)

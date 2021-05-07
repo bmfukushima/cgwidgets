@@ -5,7 +5,7 @@ from qtpy.QtWidgets import (
 from qtpy.QtGui import QCursor
 from qtpy.QtCore import Qt
 
-from cgwidgets.settings.colors import iColor
+from cgwidgets.settings import iColor
 from cgwidgets.widgets import (
     ButtonInputWidget,
     FloatInputWidget,

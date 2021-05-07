@@ -6,7 +6,7 @@ from qtpy.QtWidgets import (
 from qtpy.QtCore import Qt
 
 from cgwidgets.widgets.AbstractWidgets.AbstractShojiLayout import AbstractShojiLayout
-from cgwidgets.settings.colors import iColor
+from cgwidgets.settings import iColor
 from cgwidgets.utils import (
     updateStyleSheet, getFontSize
 )

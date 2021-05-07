@@ -1,8 +1,8 @@
 from qtpy.QtWidgets import QWidget, QHBoxLayout, QSizePolicy
 from qtpy.QtCore import Qt
 
-from cgwidgets.settings.colors import iColor
-from cgwidgets.settings.icons import icons
+from cgwidgets.settings import iColor
+from cgwidgets.settings import icons
 from cgwidgets.settings.hover_display import installHoverDisplaySS
 
 from cgwidgets.utils import setAsWindow, centerWidgetOnScreen

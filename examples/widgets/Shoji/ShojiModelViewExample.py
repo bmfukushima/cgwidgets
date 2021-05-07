@@ -61,7 +61,7 @@ from cgwidgets.widgets import (
 from cgwidgets.views import AbstractDragDropListView, AbstractDragDropTreeView
 from cgwidgets.widgets import ShojiLayout
 from cgwidgets.utils import attrs
-from cgwidgets.settings.icons import icons
+from cgwidgets.settings import icons
 
 
 app = QApplication(sys.argv)

@@ -13,9 +13,9 @@ from cgwidgets.widgets import (
     FloatInputWidget,
     BooleanInputWidget)
 
-from cgwidgets.settings.colors import iColor
-from cgwidgets.settings.icons import icons
-from cgwidgets.settings.hover_display import installHoverDisplaySS
+from cgwidgets.settings import iColor
+from cgwidgets.settings import icons
+
 from __CreateFrame__ import createFrame
 
 app = QApplication(sys.argv)

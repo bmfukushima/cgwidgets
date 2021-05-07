@@ -5,7 +5,7 @@ from qtpy.QtGui import QCursor
 
 from cgwidgets.utils import centerWidgetOnCursor, attrs
 from cgwidgets.settings.hover_display import installHoverDisplaySS, HoverStyleSheet
-from cgwidgets.settings.colors import iColor
+from cgwidgets.settings import iColor
 
 
 app = QApplication(sys.argv)

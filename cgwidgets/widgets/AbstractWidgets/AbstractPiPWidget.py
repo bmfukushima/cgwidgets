@@ -19,7 +19,7 @@ from qtpy.QtGui import QCursor
 from cgwidgets.views import AbstractDragDropModelItem
 from cgwidgets.utils import attrs, getWidgetUnderCursor, isWidgetDescendantOf, getWidgetAncestor, getDefaultSavePath, getJSONData, showWarningDialogue
 
-from cgwidgets.settings.colors import iColor
+from cgwidgets.settings import iColor
 from cgwidgets.settings import keylist
 
 from cgwidgets.widgets.AbstractWidgets.AbstractLabelledInputWidget import AbstractLabelledInputWidget

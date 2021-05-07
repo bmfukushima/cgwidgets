@@ -8,7 +8,7 @@ TODO:
 
 from qtpy.QtWidgets import QListView
 from qtpy.QtCore import QModelIndex
-from cgwidgets.settings.colors import iColor
+from cgwidgets.settings import iColor
 from cgwidgets.settings.stylesheets import scroll_bar_ss
 
 

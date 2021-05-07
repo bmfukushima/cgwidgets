@@ -19,7 +19,7 @@ from qtpy.QtWidgets import QApplication, QWidget, QHBoxLayout
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QCursor
 from cgwidgets.widgets import BooleanInputWidget, OverlayInputWidget, FrameInputWidgetContainer
-from cgwidgets.settings.icons import icons
+from cgwidgets.settings import icons
 from __CreateFrame__ import createFrame
 
 app = QApplication(sys.argv)

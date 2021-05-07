@@ -21,7 +21,7 @@ from cgwidgets.utils import (
 
 from cgwidgets.widgets.InputWidgets import FloatInputWidget
 from cgwidgets.widgets.AbstractWidgets import AbstractInputGroup
-from cgwidgets.settings.colors import iColor, updateColorFromArgValue
+from cgwidgets.settings.colors import updateColorFromArgValue
 
 
 class ColorHeaderWidget(QScrollArea):

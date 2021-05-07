@@ -8,8 +8,8 @@ from qtpy.QtCore import Qt, QPoint, QPointF, QRect, QItemSelectionModel, QSortFi
 from qtpy.QtGui import QColor, QPen, QBrush, QCursor, QPolygonF, QPainterPath
 
 from cgwidgets.utils import attrs, showWarningDialogue
-from cgwidgets.settings.colors import iColor
-from cgwidgets.settings.icons import icons
+from cgwidgets.settings import iColor
+from cgwidgets.settings import icons
 
 
 """ VIEWS """

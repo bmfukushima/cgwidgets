@@ -1,7 +1,7 @@
 from qtpy.QtWidgets import QLabel, QWidget, QHBoxLayout
 from qtpy.QtCore import Qt
 
-from cgwidgets.settings.colors import iColor
+from cgwidgets.settings import iColor
 from cgwidgets.settings import stylesheets, hover_display
 from cgwidgets.widgets import LabelledInputWidget, FloatInputWidget, ShojiInputWidgetContainer, FrameInputWidgetContainer
 from cgwidgets.views import ShojiLayout

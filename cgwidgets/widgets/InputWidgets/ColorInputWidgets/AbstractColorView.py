@@ -1,23 +1,8 @@
 import sys
 import math
 
-from qtpy.QtWidgets import (
-    QApplication, QLabel, QVBoxLayout,
-    QGraphicsView, QGraphicsScene, QGraphicsItemGroup, QGraphicsItem,
-    QGraphicsEllipseItem,
-    QGraphicsLineItem, QWidget, QFrame, QBoxLayout
-)
-from qtpy.QtCore import (Qt, QPoint, QRectF)
-from qtpy.QtGui import (
-    QColor, QCursor, QPen, QLinearGradient, QBrush
-)
-
-from cgwidgets.utils import (
-    attrs, draw, getWidgetAncestor, getWidgetAncestorByName,
-    getFontSize, installStickyAdjustDelegate
-)
-from cgwidgets.settings.colors import iColor, getHSVRGBAFloatFromColor
-from cgwidgets.widgets.InputWidgets.ColorInputWidgets import ColorHeaderWidgetItem
+from qtpy.QtWidgets import (QWidget, QBoxLayout)
+from qtpy.QtGui import (QColor)
 
 
 class AbstractColorView(QWidget):

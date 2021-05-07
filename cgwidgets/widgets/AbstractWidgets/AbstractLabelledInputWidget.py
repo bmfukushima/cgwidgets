@@ -17,7 +17,7 @@ from cgwidgets.widgets.AbstractWidgets.AbstractShojiLayout import AbstractShojiL
 from cgwidgets.widgets.AbstractWidgets.AbstractInputInterface import iAbstractInputWidget
 
 from cgwidgets.utils import (getFontSize, installResizeEventFinishedEvent)
-from cgwidgets.settings.colors import iColor
+from cgwidgets.settings import iColor
 
 class AbstractLabelledInputWidget(QFrame, iAbstractInputWidget):
     """

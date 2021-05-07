@@ -42,7 +42,7 @@ from cgwidgets.utils import (
     installCompleterPopup,
     getFontSize
 )
-from cgwidgets.settings.colors import iColor
+from cgwidgets.settings import iColor
 
 
 class ButtonInputWidget(AbstractButtonInputWidget):

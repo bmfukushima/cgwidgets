@@ -14,7 +14,7 @@ from qtpy.QtCore import (QEvent, QAbstractListModel, Qt, QSortFilterProxyModel)
 
 from cgwidgets.widgets.AbstractWidgets import AbstractStringInputWidget
 from cgwidgets.utils import getBottomLeftPos, getFontSize
-from cgwidgets.settings.colors import iColor
+from cgwidgets.settings import iColor
 from cgwidgets.views.CompleterView import CompleterPopup
 
 

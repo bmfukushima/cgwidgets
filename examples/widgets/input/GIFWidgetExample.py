@@ -4,7 +4,7 @@ from qtpy.QtWidgets import QApplication
 from cgwidgets.widgets import GIFWidget
 from cgwidgets.utils import centerWidgetOnCursor
 from cgwidgets.settings.hover_display import installHoverDisplaySS
-from cgwidgets.settings.icons import icons
+from cgwidgets.settings import icons
 
 app = QApplication(sys.argv)
 
