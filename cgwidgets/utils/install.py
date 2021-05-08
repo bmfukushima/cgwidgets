@@ -2,7 +2,7 @@ from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 from qtpy.QtGui import *
 
-from .utils import Magnitude
+from .position import Magnitude
 
 
 """ COMPLETER POPUP """
