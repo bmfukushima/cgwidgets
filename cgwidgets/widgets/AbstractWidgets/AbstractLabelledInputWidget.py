@@ -72,7 +72,7 @@ class AbstractLabelledInputWidget(QFrame, iAbstractInputWidget):
         self._separator_length = -1
         self._separator_width = 5
         self._splitter_event_is_paused = False
-        self._resize_slider_on_widget_resize = True
+        self._resize_slider_on_widget_resize = False
         font_size = getFontSize(QApplication)
 
         # create main widget
@@ -353,9 +353,11 @@ class AbstractLabelledInputWidget(QFrame, iAbstractInputWidget):
     def resizeEvent(self, event):
         """ installs a resize event to automagically reset the sliders to their default positions"""
         def _resizeFinishedEvent(*args, **kwargs):
+            """ Note: This will not work if the widget is deleted
+            Some sort of RuntimeError"""
             if self.resizeSliderOnWidgetResize():
-                super(AbstractLabelledInputWidget, self).resizeEvent(event)
-                self.resetSliderPositionToDefault()
+                    super(AbstractLabelledInputWidget, self).resizeEvent(event)
+                    self.resetSliderPositionToDefault()
 
         installResizeEventFinishedEvent(self, 100, _resizeFinishedEvent, '_timer')
 

@@ -23,7 +23,7 @@ PyQt / PySide compliant Widgets
 
 ## Prerequisites
   * [qtpy](https://pypi.org/project/QtPy/) is a small abstraction layer that lets you write applications using a single API call to either PyQt or PySide.
-  * [PIL](https://pypi.org/project/PIL/) Python Image Library
+  * [Pillow](https://pypi.org/project/Pillow/) Python Image Library
 ## Written in:
   * Python 3.7.7
   * PyQt 5.12

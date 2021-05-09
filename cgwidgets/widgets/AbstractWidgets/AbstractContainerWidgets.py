@@ -266,6 +266,11 @@ class AbstractFrameInputWidgetContainer(AbstractInputGroupFrame):
 
         return input_widgets
 
+    def clearInputWidgets(self):
+        for widget in self.delegateWidgets():
+            widget.setParent(None)
+            widget.deleteLater()
+
     """ STYLE """
     def setSeparatorLength(self, length):
         self._separator.setLength(length)

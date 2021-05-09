@@ -214,6 +214,7 @@ def setupAsDynamic():
             this = widget.getMainWidget()
             this.setText('whatup')
 
+
     # set all items to use this widget
     shoji_widget.setDelegateType(
         ShojiModelViewWidget.DYNAMIC,

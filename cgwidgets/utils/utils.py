@@ -139,6 +139,7 @@ def clearLayout(layout, start=None, end=None):
         widget = layout.itemAt(i).widget()
         try:
             widget.setParent(None)
+            widget.deleteLater()
         except AttributeError:
             pass
 
