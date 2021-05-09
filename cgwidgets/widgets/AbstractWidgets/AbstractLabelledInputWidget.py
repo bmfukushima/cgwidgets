@@ -138,7 +138,7 @@ class AbstractLabelledInputWidget(QFrame, iAbstractInputWidget):
                         self._test_timer.timeout.connect(pauseSplitter)
 
                         # update handle positions
-                        self.setAllHandlesToPos(pos)
+                        self.setAllHandlesToPos(pos, index)
                         self._splitter_event_is_paused = True
 
     @staticmethod
@@ -160,12 +160,13 @@ class AbstractLabelledInputWidget(QFrame, iAbstractInputWidget):
 
         return handles_list
 
-    def setAllHandlesToPos(self, pos):
+    def setAllHandlesToPos(self, pos, index):
         """
         Sets all of the handles to the pos provided
 
         Args:
             pos (int): value offset of the slider
+            index (int): index of splitter being moved
         Attributes:
             _splitter_event_is_paused (bool): blocks events from updating
         :param pos:
@@ -173,9 +174,8 @@ class AbstractLabelledInputWidget(QFrame, iAbstractInputWidget):
         """
         self._splitter_event_is_paused = True
         widgets_list = AbstractLabelledInputWidget.getAllParrallelWidgets(self)
-
         for widget in widgets_list:
-            widget.mainWidget().moveSplitter(pos, 1)
+            widget.mainWidget().moveSplitter(pos, index)
 
         self._splitter_event_is_paused = False
 
@@ -269,6 +269,10 @@ class AbstractLabelledInputWidget(QFrame, iAbstractInputWidget):
     def delegateConstructor(self):
         return self._delegate_constructor
 
+    """ WIDGETS """
+    def addWidget(self, widget, is_soloable=True):
+        self.mainWidget().addWidget(widget, is_soloable=is_soloable)
+
     """ SIZES """
     # todo update these to correct names
     def setHandleLength(self, length):
@@ -339,7 +343,6 @@ class AbstractLabelledInputWidget(QFrame, iAbstractInputWidget):
 
     """ EVENTS """
     def resetSliderPositionToDefault(self):
-        #print(self.defaultLabelLength())
         self.mainWidget().moveSplitter(self.defaultLabelLength(), 1)
 
     def setUserFinishedEditingEvent(self, function):
@@ -347,7 +350,14 @@ class AbstractLabelledInputWidget(QFrame, iAbstractInputWidget):
 
     def showEvent(self, event):
         super(AbstractLabelledInputWidget, self).showEvent(event)
+
+        # Set slider default positions
+        """ Note: need to pause the splitter, or it will wreak havoc in the 
+        FrameInputWidgetContainer """
+        self._splitter_event_is_paused = True
         self.resetSliderPositionToDefault()
+        self._splitter_event_is_paused = False
+
         return QFrame.showEvent(self, event)
 
     def resizeEvent(self, event):
@@ -356,8 +366,8 @@ class AbstractLabelledInputWidget(QFrame, iAbstractInputWidget):
             """ Note: This will not work if the widget is deleted
             Some sort of RuntimeError"""
             if self.resizeSliderOnWidgetResize():
-                    super(AbstractLabelledInputWidget, self).resizeEvent(event)
-                    self.resetSliderPositionToDefault()
+                super(AbstractLabelledInputWidget, self).resizeEvent(event)
+                self.resetSliderPositionToDefault()
 
         installResizeEventFinishedEvent(self, 100, _resizeFinishedEvent, '_timer')
 
@@ -366,7 +376,7 @@ class AbstractLabelledInputWidget(QFrame, iAbstractInputWidget):
 
 if __name__ == "__main__":
     import sys
-    from qtpy.QtWidgets import QApplication, QWidget, QVBoxLayout
+    from qtpy.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel
     from qtpy.QtGui import QCursor
 
     import sys, inspect
@@ -391,15 +401,20 @@ if __name__ == "__main__":
     #     widget.insertInputWidget(0, FloatInputWidget, i, asdf,
     #                            user_live_update_event=asdf, default_value=0.5)
 
+    main_widget = QWidget()
+    main_layout = QVBoxLayout(main_widget)
 
-    test_labelled_embed = AbstractLabelledInputWidget(name="embed")
+    for x in range(3):
 
+        test_labelled_embed = AbstractLabelledInputWidget(name="embed")
+        test_labelled_embed.setDefaultLabelLength(200)
+        test_labelled_embed.addWidget(QLabel("test"))
+        main_layout.addWidget(test_labelled_embed)
 
-    test_labelled_embed.move(QCursor.pos())
-    test_labelled_embed.show()
-    #test_labelled_embed.resize(256, 256)
-    test_labelled_embed.resize(500, 500)
-    test_labelled_embed.show()
+    main_widget.move(QCursor.pos())
+    main_widget.show()
+    #main_widget.resize(256, 256)
+    main_widget.resize(500, 500)
     # test_labelled_embed.setStyleSheet("background-color:rgba(255,0,0,255); border: 2px solid rgba(0,255,0,255);")
     #w.move(QCursor.pos())
     sys.exit(app.exec_())

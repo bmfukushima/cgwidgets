@@ -85,12 +85,19 @@ for arg in label_widgets:
     # create widget
     widget_type = label_widgets[arg]
     input_widget = LabelledInputWidget(name=arg, delegate_constructor=widget_type)
-
+    input_widget.setDefaultLabelLength(200)
     # set widget orientation
     input_widget.setDirection(Qt.Horizontal)
 
     # add to group layout
     frame_input_widget_container.addInputWidget(input_widget, finished_editing_function=frameUserEvent)
+
+    # test
+    from qtpy.QtWidgets import QLabel
+    test = QLabel("-")
+    # test.setFixedWidth(25)
+    #input_widget.mainWidget().setSizes([100,200,25])
+    input_widget.mainWidget().addWidget(test)
 
     # list override
     if arg == "list":
