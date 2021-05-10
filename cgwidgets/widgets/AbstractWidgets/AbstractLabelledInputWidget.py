@@ -40,6 +40,8 @@ class AbstractLabelledInputWidget(QFrame, iAbstractInputWidget):
             reset to their default position when the widget is resized.
         splitter_event_is_paused (bool): determines if the splitter resize event is currently paused
             or not
+        initializing (bool): determines if the widget is starting up or not
+            This is mainly used to set the default size positions
 
     Hierarchy:
         |- ViewWidget --> AbstractOverlayInputWidget
@@ -48,7 +50,6 @@ class AbstractLabelledInputWidget(QFrame, iAbstractInputWidget):
     Note:
         Needs parent to be provided in order for the default size to be
         displayed correctly
-
     """
 
     TYPE = "label_input"
@@ -68,6 +69,7 @@ class AbstractLabelledInputWidget(QFrame, iAbstractInputWidget):
             iAbstractInputWidget.__init__(self) #pyside2 forces us to do this import
 
         # set up attrs
+        self.__initializing = True
         self._default_label_length = default_label_length
         self._separator_length = -1
         self._separator_width = 5
@@ -349,15 +351,15 @@ class AbstractLabelledInputWidget(QFrame, iAbstractInputWidget):
         self.delegateWidget().setUserFinishedEditingEvent(function)
 
     def showEvent(self, event):
-        super(AbstractLabelledInputWidget, self).showEvent(event)
-
-        # Set slider default positions
+        # Set label to default position
         """ Note: need to pause the splitter, or it will wreak havoc in the 
         FrameInputWidgetContainer """
-        self._splitter_event_is_paused = True
-        self.resetSliderPositionToDefault()
-        self._splitter_event_is_paused = False
-
+        if self.__initializing is True:
+            super(AbstractLabelledInputWidget, self).showEvent(event)
+            self._splitter_event_is_paused = True
+            self.resetSliderPositionToDefault()
+            self._splitter_event_is_paused = False
+            self.__initializing = False
         return QFrame.showEvent(self, event)
 
     def resizeEvent(self, event):

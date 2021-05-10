@@ -186,12 +186,11 @@ def setupAsDynamic():
             item (ShojiModelItem)
             self --> widget.getMainWidget()
             """
-            if item:
-                print("---- DYNAMIC WIDGET ----")
-                print(parent, widget, item)
-                name = parent.model().getItemName(item)
-                widget.setTitle(name)
-                widget.getMainWidget().label.setText(name)
+            print("---- DYNAMIC WIDGET ----")
+            print(parent, widget, item)
+            name = parent.model().getItemName(item)
+            widget.setTitle(name)
+            widget.getMainWidget().label.setText(name)
 
     class DynamicItemExample(FloatInputWidget):
         """

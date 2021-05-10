@@ -106,7 +106,6 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         self._delegate_header_direction = Qt.Vertical
 
         # setup model / view
-        # self._model = ShojiModel()
         self._header_widget = AbstractShojiHeader(self)
         self._model = self.headerViewWidget().model()
         self._header_widget.setModel(self._model)
@@ -983,13 +982,12 @@ class AbstractShojiHeader(AbstractModelViewWidget):
         Determines whether or not an items delegateWidget() should be
         displayed/updated/destroyed.
         """
-
         # todo for some reason this double registers the selection even
         # when using dynamic tree widgets...
         top_level_widget = getWidgetAncestor(self, AbstractShojiModelViewWidget)
         top_level_widget.toggleDelegateSpacerWidget()
 
-        # update display
+        # update for item selected display
         top_level_widget._selection_item = enabled
         top_level_widget.updateDelegateItem(item, enabled)
 
@@ -1002,16 +1000,17 @@ class AbstractShojiHeader(AbstractModelViewWidget):
                 top_level_widget.delegateWidget().rgba_background = iColor['rgba_background_01']
 
         # custom input event | need this as we're overriding the models input
-
         top_level_widget.itemSelectedEvent(item, enabled)
+
         # Todo causing multiple selection bug...
         # update full screen selection
         # selected
         if enabled:
             if hasattr(top_level_widget, '_delegate_widget'):
                 delegate_widget = top_level_widget.delegateWidget()
-                delegate_widget.resetShojiLayoutDisplay(False, delegate_widget)
-                delegate_widget.setIsSoloView(delegate_widget, False)
+                if delegate_widget.isSoloView():
+                    delegate_widget.displayAllWidgets(True)
+                    delegate_widget.setIsSoloView(delegate_widget, False)
 
 
 """ EXAMPLE """

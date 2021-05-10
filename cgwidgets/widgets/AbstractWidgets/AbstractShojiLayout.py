@@ -401,7 +401,20 @@ class AbstractShojiLayout(QSplitter):
         return QSplitter.insertWidget(self, index, widget)
 
     """ SOLO VIEW """
+    def isSoloView(self):
+        return self._is_solo_view
+
     def setIsSoloView(self, shoji_view, _is_solo_view):
+        """
+        Determines whether or not the view should be set to solo mode or not.
+
+        This is a helper function called by "toggleIsSoloView"
+
+        Args:
+            shoji_view (AbstractShojiLayout):
+            _is_solo_view (bool):
+        """
+
         shoji_view._is_solo_view = _is_solo_view
         shoji_view.setProperty('is_solo_view', _is_solo_view)
         updateStyleSheet(shoji_view)
@@ -447,10 +460,7 @@ class AbstractShojiLayout(QSplitter):
         for child in self.children():
             self.setChildSoloable(enabled, child)
 
-    def isSoloView(self):
-        return self._is_solo_view
-
-    def toggleIsSoloView(self, is_solo_view, widget=None):
+    def toggleIsSoloView(self, is_solo_view, widget=None, current_shoji=None):
         """
         Toggles how much space a widget should take up relative to its parent.
 
@@ -477,7 +487,8 @@ class AbstractShojiLayout(QSplitter):
         if not current_widget: return
 
         #
-        current_shoji = current_widget.parent()
+        if not current_shoji:
+            current_shoji = current_widget.parent()
 
         # check to ensure shoji view has solo mode enabled
         if hasattr(widget, "isSoloViewEnabled"):
@@ -495,6 +506,7 @@ class AbstractShojiLayout(QSplitter):
                 if current_widget1:
                     parent_shoji = current_widget.parent()
                     parent_shoji.toggleIsSoloView(True, current_shoji)
+
                     self.setIsSoloView(parent_shoji, True)
                     parent_shoji.setFocus()
 
