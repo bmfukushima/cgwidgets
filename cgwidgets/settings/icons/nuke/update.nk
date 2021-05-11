@@ -1,0 +1,193 @@
+#! /opt/nuke/12.2v4/libnuke-12.2.4.so -nx
+#write_info Write1 file:"/media/ssd01/dev/python/cgwidgets/cgwidgets/settings/icons/recycle.png" format:"256 256 1" chans:":rgba.red:rgba.green:rgba.blue:rgba.alpha:" framerange:"1 100" fps:"0" colorspace:"default (sRGB)" datatype:"8 bit" transfer:"unknown" views:"main" colorManagement:"Nuke"
+version 12.2 v4
+define_window_layout_xml {<?xml version="1.0" encoding="UTF-8"?>
+<layout version="1.0">
+    <window x="1698" y="151" w="1638" h="1167" screen="0">
+        <splitter orientation="1">
+            <split size="40"/>
+            <dock id="" hideTitles="1" activePageId="Toolbar.1">
+                <page id="Toolbar.1"/>
+            </dock>
+            <split size="975" stretch="1"/>
+            <splitter orientation="2">
+                <split size="660"/>
+                <dock id="" activePageId="Viewer.1">
+                    <page id="Viewer.1"/>
+                </dock>
+                <split size="464"/>
+                <dock id="" activePageId="DAG.1">
+                    <page id="DAG.1"/>
+                    <page id="Curve Editor.1"/>
+                    <page id="DopeSheet.1"/>
+                </dock>
+            </splitter>
+            <split size="615"/>
+            <dock id="" activePageId="Properties.1">
+                <page id="Properties.1"/>
+                <page id="uk.co.thefoundry.backgroundrenderview.1"/>
+            </dock>
+        </splitter>
+    </window>
+</layout>
+}
+Root {
+ inputs 0
+ name /media/ssd01/dev/python/cgwidgets/cgwidgets/settings/icons/nuke/update.nk
+ format "2048 1556 0 0 2048 1556 1 2K_Super_35(full-ap)"
+ proxy_type scale
+ proxy_format "1024 778 0 0 1024 778 1 1K_Super_35(full-ap)"
+ colorManagement Nuke
+ workingSpaceLUT linear
+ monitorLut sRGB
+ int8Lut sRGB
+ int16Lut sRGB
+ logLut Cineon
+ floatLut linear
+}
+Read {
+ inputs 0
+ file_type png
+ file /media/ssd01/dev/python/cgwidgets/cgwidgets/settings/icons/recycle_orig.png
+ format "1047 1024 0 0 1047 1024 1 "
+ origset true
+ name Read1
+ xpos 190
+ ypos -137
+}
+Reformat {
+ format "256 256 0 0 256 256 1 square_256"
+ black_outside true
+ name Reformat1
+ xpos 190
+ ypos -26
+}
+set Na1e40800 [stack 0]
+Shuffle2 {
+ fromInput1 {{0} B}
+ fromInput2 {{0} B}
+ mappings "4 rgba.alpha 0 3 rgba.alpha 0 3 rgba.alpha 0 3 rgba.blue 0 2 rgba.alpha 0 3 rgba.green 0 1 rgba.alpha 0 3 rgba.red 0 0"
+ name Shuffle1
+ xpos 349
+ ypos 75
+}
+Grade {
+ multiply 0.5
+ name Grade1
+ xpos 349
+ ypos 101
+}
+push $Na1e40800
+Shuffle2 {
+ fromInput1 {{0} B}
+ fromInput2 {{0} B}
+ mappings "4 black -1 -1 rgba.green 0 1 rgba.alpha 0 3 rgba.blue 0 2 black -1 -1 rgba.red 0 0 black -1 -1 rgba.alpha 0 3"
+ name Shuffle2
+ xpos 461
+ ypos 65
+}
+Read {
+ inputs 0
+ file_type png
+ file /media/ssd01/dev/python/cgwidgets/cgwidgets/settings/icons/recycle.png
+ format "256 256 0 0 256 256 1 square_256"
+ origset true
+ name Read2
+ xpos 561
+ ypos -106
+}
+push $Na1e40800
+Constant {
+ inputs 0
+ channels rgb
+ color 0.01
+ format "256 256 0 0 256 256 1 square_256"
+ name Constant1
+ xpos -20
+ ypos 15
+}
+set Nba8cb200 [stack 0]
+Merge2 {
+ inputs 2
+ name Merge1
+ xpos 190
+ ypos 53
+}
+Read {
+ inputs 0
+ file_type png
+ file /media/ssd01/dev/python/cgwidgets/cgwidgets/settings/icons/recycle.png
+ format "256 256 0 0 256 256 1 square_256"
+ origset true
+ name Read3
+ xpos 786
+ ypos -37
+}
+Read {
+ inputs 0
+ file_type png
+ file /home/brian/Pictures/temp.png
+ format "883 178 0 0 883 178 1 "
+ origset true
+ name Read4
+ xpos 444
+ ypos 149
+}
+Read {
+ inputs 0
+ file_type png
+ file /media/ssd01/dev/python/cgwidgets/cgwidgets/settings/icons/recycle.png
+ format "256 256 0 0 256 256 1 square_256"
+ origset true
+ name Read5
+ xpos 272
+ ypos 157
+}
+push $Na1e40800
+push $Nba8cb200
+Copy {
+ inputs 2
+ from0 rgba.alpha
+ to0 rgba.alpha
+ name Copy1
+ xpos 82
+ ypos 147
+}
+Invert {
+ channels alpha
+ name Invert1
+ xpos 82
+ ypos 217
+}
+Write {
+ channels rgba
+ file /media/ssd01/dev/python/cgwidgets/cgwidgets/settings/icons/recycle.png
+ file_type png
+ checkHashOnRead false
+ version 8
+ name Write1
+ xpos 82
+ ypos 284
+}
+Read {
+ inputs 0
+ file_type png
+ file /media/ssd01/dev/python/cgwidgets/cgwidgets/settings/icons/recycle.png
+ format "256 256 0 0 256 256 1 square_256"
+ origset true
+ version 1
+ name Read6
+ xpos 281
+ ypos 286
+}
+push $Nba8cb200
+Viewer {
+ inputs 2
+ frame 1
+ frame_range 1-100
+ input_number 1
+ colour_sample_bbox {-0.0390625 0.171875 -0.03125 0.1796875}
+ name Viewer1
+ xpos -158
+ ypos -11
+}

@@ -120,6 +120,13 @@ def getDefaultSavePath():
 #         except AttributeError:
 #             print("this is has no parents...")
 
+def convertScriptToString(file_path):
+    with open(file_path, "r") as myfile:
+        data = myfile.readlines()
+
+    string_script = "".join(data)
+
+    return string_script
 
 
 def clearLayout(layout, start=None, end=None):
