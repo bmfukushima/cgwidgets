@@ -188,6 +188,7 @@ def setupAsDynamic():
             """
             print("---- DYNAMIC WIDGET ----")
             print(parent, widget, item)
+
             name = parent.model().getItemName(item)
             widget.setTitle(name)
             widget.getMainWidget().label.setText(name)
@@ -472,7 +473,9 @@ for index in indexes:
     shoji_widget.setIndexSelected(index, True)
 
 # display widget
+
 shoji_widget.resize(500, 500)
 shoji_widget.show()
 shoji_widget.move(QCursor.pos())
+
 sys.exit(app.exec_())

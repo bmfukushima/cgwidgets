@@ -54,14 +54,14 @@ class AbstractInputLineEdit(QLineEdit, iAbstractInputWidget):
         self.editingFinished.connect(self.userFinishedEditing)
         self.textChanged.connect(self.userContinuousEditing)
 
-    def focusInEvent(self, *args, **kwargs):
-        """
-        Sets the initial value on re-enter event.  This is mainly valid for
-        ladder widgets?
-        """
-        self.setOrigValue(self.text())
-        #self.setProperty("is_focused", True)
-        return QLineEdit.focusInEvent(self, *args, **kwargs)
+    # def focusInEvent(self, *args, **kwargs):
+    #     """
+    #     Sets the initial value on re-enter event.  This is mainly valid for
+    #     ladder widgets?
+    #     """
+    #     self.setOrigValue(self.text())
+    #     #self.setProperty("is_focused", True)
+    #     return QLineEdit.focusInEvent(self, *args, **kwargs)
 
     def keyPressEvent(self, event):
         if event.key() in ACCEPT_KEYS:

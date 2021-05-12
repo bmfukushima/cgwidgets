@@ -106,6 +106,6 @@ def contextMenu(index, selected_indexes):
 main_widget.addContextMenuEvent('test', contextMenu)
 main_widget.move(QCursor.pos())
 main_widget.show()
-
+# self.model().setItemEnabled(item, enabled)
 
 sys.exit(app.exec_())

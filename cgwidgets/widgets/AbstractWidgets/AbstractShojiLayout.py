@@ -1,4 +1,5 @@
 """
+TODO: Add widgets data?
 SHOJI LAYOUT
 
 The Shoji View is essentially a QSplitter that has the option to

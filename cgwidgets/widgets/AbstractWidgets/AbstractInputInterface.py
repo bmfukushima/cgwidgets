@@ -131,6 +131,7 @@ class iAbstractInputWidget(object):
 
         if is_valid:
             self.setText(self.getInput())
+            self.setOrigValue(self.getInput())
             try:
                 self.userFinishedEditingEvent(self, self.getInput())
             except AttributeError:
