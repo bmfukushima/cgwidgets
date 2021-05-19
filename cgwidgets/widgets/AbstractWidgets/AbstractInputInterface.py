@@ -127,8 +127,9 @@ class iAbstractInputWidget(object):
         """
         # preflight
         if self.isFrozen(): return
-        is_valid = self.checkInput()
+        if self.getOrigValue() == self.getInput(): return
 
+        is_valid = self.checkInput()
         if is_valid:
             self.setText(self.getInput())
             self.setOrigValue(self.getInput())
