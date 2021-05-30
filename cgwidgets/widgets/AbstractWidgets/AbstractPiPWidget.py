@@ -1,11 +1,27 @@
 """
+The PiPWidget is designed to display multiple widgets simultaneously to the user.
+
+Similar to the function that was provided to TV's in the mid 1970's.  This widget is
+designed to allow the user to create multiple hot swappable widgets inside of the same
+widget.
+
 Todo:
+    * Write docs
+    * Leave multiple resize event
     * Overall cleanup / organization
         mainWidget --> AbstractPiPWidget?
-    * Window popup handler
-        when a user clicks a popup when in the Mini Viewer, it will register as a
-        leave event and leave the current widget
-    *
+    * popup handler breaking leave handler =/
+        The main issue here is how it detects if its a pop up or not on the leave event...
+        as it checks to see if the widget being left is a child of the current widget...
+        which then means its a popup =\
+            Workarounds... MimeData?
+            Flags? isDragging?
+        double leave event?
+        PiPMiniViewer --> eventFilter --> leaveEvent
+        PipMiniViewer --> isDragging
+
+        PiPMainWidget --> eventFilter
+        PipMainWidget --> setCurrentWidget
 """
 import json
 from collections import OrderedDict
@@ -756,11 +772,24 @@ class PiPMainWidget(QWidget):
             self._current_widget.setParent(None)
             self.mini_viewer.addWidget(self._current_widget)
             self.setPreviousWidget(self._current_widget)
+            self._current_widget.removeEventFilter(self)
 
         # set widget as current
         self._current_widget = widget
         self.mini_viewer.removeWidget(widget)
         self.main_viewer.setWidget(widget)
+        self._current_widget.installEventFilter(self)
+
+    def eventFilter(self, obj, event):
+        if event.type() == QEvent.DragEnter:
+            event.accept()
+        # elif event.type() == QEvent.Drop:
+        #     print("drop???")
+        #     # todo figure out how to handle this for stupid shit that suppressed
+        #     # the event from being passed on
+        #     self.mini_viewer.setIsDragging(False)
+        #     self.mini_viewer.setPopupWidget(None)
+        return False
 
     def previousWidget(self):
         return self._previous_widget
@@ -870,22 +899,31 @@ class PiPMiniViewer(QWidget):
     This widget is an overlay of the MainWidget, and sits at a parallel hierarchy to the PiPMainViewer
 
     Attributes:
-        is_enlarged (bool): if this widget currently has a widget enlarged by a user hover entering over it.
+        is_dragging (bool): determines if this widget is currently in a drag/drop operation
+        is_enlarged (bool): if this widget currently has a widget enlarged
+            by a user hover entering over it.
+        enlarged_widget (QWidget): The widget that is currently enlarged
+        popup_widget (QWidget): This is the widget that is displayed if the
+            enlarged widget has opened a subwidget (popup) menu.
     """
     def __init__(self, parent=None):
         super(PiPMiniViewer, self).__init__(parent)
 
         QVBoxLayout(self)
-        self.layout().setContentsMargins(10, 10, 10, 10)
-
+        #self.layout().setContentsMargins(10, 10, 10, 10)
+        self.layout().setContentsMargins(0, 0, 0, 0)
+        self.setStyleSheet("background-color:rgba(255,0,0,255);")
         # self.setMinimumSize(100, 100)
         self._widgets = []
         self.__is_frozen = False
+        self._is_dragging = False
+        self._drag_leave_object = None
+
         self._is_exiting = False
         self._is_enlarged = False
         self._temp = False
 
-        self.__popup_widget = None
+        self._popup_widget = None
         self._enlarged_widget = None
 
         self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
@@ -901,6 +939,131 @@ class PiPMiniViewer(QWidget):
 
     def setEnlargedWidget(self, widget):
         self._enlarged_widget = widget
+
+    def popupWidget(self):
+        return self._popup_widget
+
+    def setPopupWidget(self, popup_widget):
+        self._popup_widget = popup_widget
+
+    def isDragging(self):
+        return self._is_dragging
+
+    def setIsDragging(self, is_dragging):
+        self._is_dragging = is_dragging
+
+    """ EVENTS """
+    def eventFilter(self, obj, event):
+        """
+
+        Args:
+            obj:
+            event:
+
+        Returns:
+
+        Note:
+            __is_frozen (bool): flag to determine if the UI should be frozen for updates
+            _temp (bool): flag to determine if this is exiting into a widget that will be moved,
+                and then another widget will be in its place.
+            _enlarged_object (PiPMiniViewerWidget): when exiting, this is the current object that has
+                been enlarged for use.
+            _entered_object (PiPMiniViewerWidget): when exiting, this is the object that is under the cursor
+                if the user exits into the MiniViewerWidget
+            _popup_widget (QWidget): submenu that is currently open, if there are no submenu's open, this
+                will be set to None
+            _is_dragging (bool): determines if a drag operation is currently happening
+            Signals:
+                PopupWidgets:
+                    When activated, this will cause a leave event, and when closed, will cause another leave event.
+                    Due to how this algorithm works, it will detect the widget under the cursor, which conflicts
+                    with the drag leave events =/
+        """
+
+        if event.type() in [QEvent.DragEnter, QEvent.Enter]:
+            # catch a double exit.
+            """
+            If the user exits on the first widget, or a widget that will be the enlarged widget,
+            it will recurse back and enlarge itself.  This will block that recursion
+            """
+
+            # reset widget toe default params
+            print("enter?")
+            if event.type() == QEvent.Enter:
+                self.setIsDragging(False)
+                self.setPopupWidget(None)
+                # self._drag_leave_object = None
+            # if event.type() == QEvent.DragEnter:
+            #     if obj == self._drag_leave_object:
+            #         return False
+            # enlarge widget
+            if not self.__is_frozen:
+                self.enlargeWidget(obj)
+                # # drag enter
+                if event.type() == QEvent.DragEnter:
+                    event.accept()
+
+            else:
+                self.__is_frozen = False
+
+        elif event.type() == QEvent.DragMove:
+            if not self.isDragging():
+                self.setPopupWidget(None)
+                self.setIsDragging(True)
+                # self.__suppress_leave_event = True
+                self.closeEnlargedView(self.enlargedWidget())
+                return True
+
+        elif event.type() in [QEvent.Drop, QEvent.Leave, QEvent.DragLeave]:
+
+            new_object = getWidgetUnderCursor()
+
+            # on drop, close and reset
+            if event.type() == QEvent.Drop:
+                self.setIsDragging(False)
+                self.setPopupWidget(None)
+                self.closeEnlargedView(self.enlargedWidget())
+
+            # on drag leave, if the drag leave enters a widget that
+            # is a child of the current enlargedWidget, then do nothing
+            if event.type() == QEvent.DragLeave:
+                global_event_pos = QCursor.pos()
+                xpos = global_event_pos.x()
+                ypos = global_event_pos.y()
+                top_left = self.enlargedWidget().parent().mapToGlobal(self.enlargedWidget().geometry().topLeft())
+                x = top_left.x()
+                y = top_left.y()
+                w = self.enlargedWidget().geometry().width()
+                h = self.enlargedWidget().geometry().height()
+                if (x < xpos and xpos < (x + w)) and (y < ypos and ypos < (y + h)):
+                    event.ignore()
+                    return True
+            # exit popup widget (shown from enlarged widget)
+            if obj == self.popupWidget():
+                main_widget = getWidgetAncestor(self, PiPMainWidget)
+                enlarged_widget = self.enlargedWidget()
+                xpos, ypos = enlarged_widget.pos().x(), enlarged_widget.pos().y()
+                width, height = enlarged_widget.width(), enlarged_widget.height()
+                xcursor = int(xpos + (width * 0.5))
+                ycursor = int(ypos + (height * 0.5))
+                QCursor.setPos(main_widget.mapToGlobal(QPoint(xcursor, ycursor)))
+                self.setPopupWidget(None)
+                self.__is_frozen = True
+                return True
+
+            # leave object
+            if not isWidgetDescendantOf(new_object, obj):
+                self.closeEnlargedView(obj)
+
+            # leave widget and enter popup widget
+            else:
+                self.setPopupWidget(obj)
+                # todo try and figure out how to ignore this so the window doesn't flicker on double leave
+                #event.ignore()
+
+        # elif event.type() == QEvent.KeyPress:
+        #     print("event filter???")
+        return False
 
     def enlargeWidget(self, widget):
         main_widget = getWidgetAncestor(self, PiPMainWidget)
@@ -986,71 +1149,6 @@ class PiPMiniViewer(QWidget):
         # unfreeze
         self.__is_frozen = False
 
-    """ EVENTS """
-    def eventFilter(self, obj, event):
-        """
-
-        Args:
-            obj:
-            event:
-
-        Returns:
-
-        Note:
-            __is_frozen (bool): flag to determine if the UI should be frozen for updates
-            _temp (bool): flag to determine if this is exiting into a widget that will be moved,
-                and then another widget will be in its place.
-            _enlarged_object (PiPMiniViewerWidget): when exiting, this is the current object that has
-                been enlarged for use.
-            _entered_object (PiPMiniViewerWidget): when exiting, this is the object that is under the cursor
-                if the user exits into the MiniViewerWidget
-
-        """
-        
-        if event.type() in [QEvent.DragEnter, QEvent.Enter]:
-            # catch a double exit.
-            """
-            If the user exits on the first widget, or a widget that will be the enlarged widget,
-            it will recurse back and enlarge itself.  This will block that recursion
-            """
-            # enlarge widget
-            if not self.__is_frozen:
-                self.enlargeWidget(obj)
-                # # drag enter
-                if event.type() == QEvent.DragEnter:
-                    event.accept()
-
-            else:
-                self.__is_frozen = False
-
-        elif event.type() in [QEvent.Drop, QEvent.DragLeave, QEvent.Leave]:
-
-            new_object = getWidgetUnderCursor()
-            # exit popup widget (shown from enlarged widget)
-            if obj == self.__popup_widget:
-                main_widget = getWidgetAncestor(self, PiPMainWidget)
-                enlarged_widget = self.enlargedWidget()
-                xpos, ypos = enlarged_widget.pos().x(), enlarged_widget.pos().y()
-                width, height = enlarged_widget.width(), enlarged_widget.height()
-                xcursor = xpos + (width * 0.5)
-                ycursor = ypos + (height * 0.5)
-                QCursor.setPos(main_widget.mapToGlobal(QPoint(xcursor, ycursor)))
-                self.__popup_widget = None
-                self.__is_frozen = True
-                return True
-
-            # exit object
-            if not isWidgetDescendantOf(new_object, obj):
-                self.closeEnlargedView(obj)
-
-            # exit popup
-            else:
-                self.__popup_widget = obj
-
-        # elif event.type() == QEvent.KeyPress:
-        #     print("event filter???")
-        return False
-
     def closeEnlargedView(self, obj):
         """
         Closes the enlarged viewer, and returns it back to normal PiP mode
@@ -1127,22 +1225,23 @@ class PiPMiniViewerWidget(QWidget):
 
         self.layout().addWidget(self.main_widget)
         self.layout().setContentsMargins(0, 0, 0, 0)
-        base_style_sheet = """
-        {type}{{
-            background-color: rgba{rgba_background};
-            color: rgba{rgba_text};
-            border: 2px solid rgba{rgba_border};
-        }}""".format(
-            rgba_background=repr(self.main_widget.rgba_background),
-            rgba_border=iColor["rgba_background_01"],
-            rgba_text=repr(self.main_widget.rgba_text),
-            type=type(self.main_widget).__name__,
-        )
-        self.main_widget.setBaseStyleSheet(base_style_sheet)
+
+        # todo set stylesheet
+        # base_style_sheet = """
+        # {type}{{
+        #     background-color: rgba{rgba_background};
+        #     color: rgba{rgba_text};
+        #     border: 2px solid rgba{rgba_border};
+        # }}""".format(
+        #     rgba_background=repr(self.main_widget.rgba_background),
+        #     rgba_border=iColor["rgba_background_01"],
+        #     rgba_text=repr(self.main_widget.rgba_text),
+        #     type=type(self.main_widget).__name__,
+        # )
+        # self.main_widget.setBaseStyleSheet(base_style_sheet)
 
         self.setAcceptDrops(True)
 
-        #self.setMinimumSize(80, 80)
         # installHoverDisplaySS(self, "TEST")
 
     def updateItemDisplayName(self, widget, value):
@@ -2347,7 +2446,14 @@ from qtpy.QtWidgets import QLabel
 widget = QLabel(\"TEST\") """,
         "QPushButton":"""
 from qtpy.QtWidgets import QPushButton
-widget = QPushButton(\"TESTBUTTON\") """
+widget = QPushButton(\"TESTBUTTON\") """,
+        "List":"""
+from qtpy.QtWidgets import QListWidget
+widget = QListWidget()
+widget.setDragDropMode(QAbstractItemView.DragDrop)
+widget.addItems(['a', 'b', 'c', 'd'])
+widget.setFixedWidth(100)
+"""
     }
     pip_widget = AbstractPiPWidget(save_data=save_data, widget_types=widget_types)
 
@@ -2367,7 +2473,10 @@ widget = QPushButton(\"TESTBUTTON\") """
     # Main Widget
 
     # pip main widget
-    main_widget = QWidget()
+    class MainWidget(QWidget):
+        def __init__(self, parent=None):
+            super(MainWidget, self).__init__(parent)
+    main_widget = MainWidget()
 
     main_layout = QHBoxLayout(main_widget)
     main_layout.setContentsMargins(0, 0, 0, 0)

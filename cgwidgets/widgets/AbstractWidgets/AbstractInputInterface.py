@@ -127,10 +127,15 @@ class iAbstractInputWidget(object):
         """
         # preflight
         if self.isFrozen(): return
-        if self.getOrigValue() == self.getInput(): return
+        # todo this is causing errors...
 
         is_valid = self.checkInput()
         if is_valid:
+            # todo original input...
+            # if self.getOrigValue() and self.getInput():
+            #     print("orig value ==", self.getOrigValue())
+            #     print("input == ", self.getInput())
+            #     if self.getOrigValue() == self.getInput(): return
             self.setText(self.getInput())
             self.setOrigValue(self.getInput())
             try:

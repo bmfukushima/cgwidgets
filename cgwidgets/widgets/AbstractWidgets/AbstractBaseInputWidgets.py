@@ -116,7 +116,8 @@ class AbstractNumberInputWidget(AbstractInputLineEdit):
         self, parent=None, allow_negative=True, do_math=True
     ):
         super(AbstractNumberInputWidget, self).__init__(parent)
-
+        self.setOrigValue("0")
+        self.setText("0")
         self.setKeyList(NUMERICAL_INPUT_KEYS)
         self.setDoMath(do_math)
         self.setRange(False)
@@ -204,10 +205,34 @@ class AbstractNumberInputWidget(AbstractInputLineEdit):
         # evaluate if math
         if self.getDoMath() is True:
             try:
-                eval(self.text())
+                text = self.text().strip("0")
+                eval(text)
                 return True
             except:
                 return False
+
+    def getInputHelper(self):
+        """
+        Helper function for the FLOAT/INT widgets to call to check
+        the user input to ensure that it will resolve with an eval call
+
+        Returns (str):
+        """
+        try:
+            if int(self.text()) == 0:
+                return "0"
+        except ValueError:
+            pass
+
+        text = self.text().strip("0")
+        try:
+            value = eval(text)
+            value = checkNegative(self.getAllowNegative(), value)
+            value = checkIfValueInRange(self.range_enabled, value, self.range_min, self.range_max)
+        except SyntaxError:
+            value = self.getOrigValue()
+
+        return value
 
     """ EVENTS """
     def keyPressEvent(self, event, *args, **kwargs):
@@ -249,10 +274,20 @@ class AbstractFloatInputWidget(AbstractNumberInputWidget):
         self.appendKey(Qt.Key_Period)
         self.setValidateInputFunction(self.validateInput)
 
+    def getInput(self):
+        """
+        Evaluates the users input, this is important
+        when using numbers
+        """
+        # if value is 0
+        value = self.getInputHelper()
+        return str(float(value))
+
     def validateInput(self):
         """
         Check to see if the users input is valid or not
         """
+        return True
         if not self.validateEvaluation(): return
 
         # check if float
@@ -262,16 +297,6 @@ class AbstractFloatInputWidget(AbstractNumberInputWidget):
             return True
         except ValueError:
             return False
-
-    def getInput(self):
-        """
-        Evaluates the users input, this is important
-        when using numbers
-        """
-        value = eval(self.text())
-        value = checkNegative(self.getAllowNegative(), value)
-        value = checkIfValueInRange(self.range_enabled, value, self.range_min, self.range_max)
-        return str(value)
 
 
 class AbstractIntInputWidget(AbstractNumberInputWidget):
@@ -288,7 +313,7 @@ class AbstractIntInputWidget(AbstractNumberInputWidget):
         """
         Check to see if the users input is valid or not
         """
-        if not self.validateEvaluation(): return
+        if not self.validateEvaluation(): return True
 
         # check if int
         user_input = self.getInput()
@@ -304,9 +329,8 @@ class AbstractIntInputWidget(AbstractNumberInputWidget):
         Evaluates the users input, this is important
         when using numbers
         """
-        value = eval(self.text())
-        value = checkNegative(self.getAllowNegative(), value)
-        value = checkIfValueInRange(self.range_enabled, value, self.range_min, self.range_max)
+        # if value is 0
+        value = self.getInputHelper()
         return str(int(value))
 
 

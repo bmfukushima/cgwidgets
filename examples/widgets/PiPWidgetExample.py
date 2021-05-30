@@ -4,8 +4,9 @@ import os
 os.environ['QT_API'] = 'pyside2'
 from qtpy import API_NAME
 
-from qtpy.QtWidgets import (QWidget, QHBoxLayout, QApplication, QListWidget, QAbstractItemView, QPushButton)
-from cgwidgets.utils import centerWidgetOnCursor, attrs, getDefaultSavePath
+from qtpy.QtWidgets import (QWidget, QHBoxLayout, QApplication)
+from cgwidgets.utils import centerWidgetOnCursor, getDefaultSavePath
+from cgwidgets.settings import attrs
 from cgwidgets.widgets import PiPWidget
 
 app = QApplication(sys.argv)
