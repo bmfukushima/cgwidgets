@@ -912,7 +912,6 @@ class PiPMiniViewer(QWidget):
         QVBoxLayout(self)
         #self.layout().setContentsMargins(10, 10, 10, 10)
         self.layout().setContentsMargins(0, 0, 0, 0)
-        self.setStyleSheet("background-color:rgba(255,0,0,255);")
         # self.setMinimumSize(100, 100)
         self._widgets = []
         self.__is_frozen = False
@@ -988,7 +987,6 @@ class PiPMiniViewer(QWidget):
             """
 
             # reset widget toe default params
-            print("enter?")
             if event.type() == QEvent.Enter:
                 self.setIsDragging(False)
                 self.setPopupWidget(None)
