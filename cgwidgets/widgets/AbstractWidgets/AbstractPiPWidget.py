@@ -952,36 +952,6 @@ class PiPMiniViewer(QWidget):
 
     """ EVENTS """
     # def eventFilter(self, obj, event):
-    #     """
-    #
-    #     Args:
-    #         obj:
-    #         event:
-    #
-    #     Returns:
-    #
-    #     Note:
-    #         __is_frozen (bool): flag to determine if the UI should be frozen for updates
-    #         _temp (bool): flag to determine if this is exiting into a widget that will be moved,
-    #             and then another widget will be in its place.
-    #         _enlarged_object (PiPMiniViewerWidget): when exiting, this is the current object that has
-    #             been enlarged for use.
-    #         _entered_object (PiPMiniViewerWidget): when exiting, this is the object that is under the cursor
-    #             if the user exits into the MiniViewerWidget
-    #         _popup_widget (QWidget): submenu that is currently open, if there are no submenu's open, this
-    #             will be set to None
-    #         _is_dragging (bool): determines if a drag operation is currently happening
-    #         Signals:
-    #             PopupWidgets:
-    #                 When activated, this will cause a leave event, and when closed, will cause another leave event.
-    #                 Due to how this algorithm works, it will detect the widget under the cursor, which conflicts
-    #                 with the drag leave events =/
-    #             DragLeave:
-    #                 isDragging holds attribute to determine if this widget is currently in a drag/drop operation.
-    #                 This is reset when the user hover enters a new mini widget.  When the drag leave enters a
-    #                 widget that is in the bounds of the enlargedWidget, it will do nothing.
-    #     """
-    #
     #     if event.type() in [QEvent.DragEnter, QEvent.Enter]:
     #         # catch a double exit.
     #         """
@@ -1037,6 +1007,7 @@ class PiPMiniViewer(QWidget):
         if self._dragEvent(obj, event): return True
 
         if event.type() == QEvent.Enter:
+            print("ENTER END")
             # catch a double exit.
             """
             If the user exits on the first widget, or a widget that will be the enlarged widget,
@@ -1050,11 +1021,11 @@ class PiPMiniViewer(QWidget):
             # enlarge widget
             if not self.__is_frozen:
                 self.enlargeWidget(obj)
-
             else:
                 self.__is_frozen = False
 
         if event.type() == QEvent.Leave:
+            print("LEAVE END")
             # leave object
             self.closeEnlargedView(obj)
 
@@ -1084,10 +1055,13 @@ class PiPMiniViewer(QWidget):
         if event.type() == QEvent.DragEnter:
             # enlarge widget
             if not self.__is_frozen:
-                print(" ENTER (NOT FROZEN)")
-                self.enlargeWidget(obj)
+                # blocked recursion
+                """ This will mess with the mouse position handlers """
+                if not self.isEnlarged():
+                    # print(" ENTER (NOT FROZEN)")
+                    self.enlargeWidget(obj)
             else:
-                print(" ENTER (FROZEN)")
+                # print(" ENTER (FROZEN)")
                 self.__is_frozen = False
                 #
             event.accept()
@@ -1096,7 +1070,6 @@ class PiPMiniViewer(QWidget):
             if not self.isDragging():
                 self.setPopupWidget(None)
                 self.setIsDragging(True)
-                # self.__suppress_leave_event = True
                 self.closeEnlargedView(self.enlargedWidget())
                 return True
 
@@ -1155,9 +1128,17 @@ class PiPMiniViewer(QWidget):
                 return True
 
     def enlargeWidget(self, widget):
+        """
+        Enlarges the widget provided to be covering most of the main display area.
+
+        Args:
+            widget (QWidget): Widget to be enlarged
+        """
+        # set/get attrs
         main_widget = getWidgetAncestor(self, PiPMainWidget)
         self.setIsEnlarged(True)
         self.setEnlargedWidget(widget)
+
         # freeze
         self.__is_frozen = True
 
