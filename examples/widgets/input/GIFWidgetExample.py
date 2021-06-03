@@ -14,6 +14,6 @@ installHoverDisplaySS(widget)
 
 widget.show()
 centerWidgetOnCursor(widget)
-widget.setResolution(50, maintain_aspect_ratio=True)
+widget.setResolution(500, maintain_aspect_ratio=True)
 
 sys.exit(app.exec_())

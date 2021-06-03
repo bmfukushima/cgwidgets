@@ -6,22 +6,16 @@ designed to allow the user to create multiple hot swappable widgets inside of th
 widget.
 
 Todo:
+    * Save PiPWidgets...
+    * DragLeave (left side)
+    * Widget Resizing
+        - Internal size (stretch to fill)
+        - Resize when being displayed in mini viewer
     * Write docs
-    * Leave multiple resize event
     * Overall cleanup / organization
         mainWidget --> AbstractPiPWidget?
-    * popup handler breaking leave handler =/
-        The main issue here is how it detects if its a pop up or not on the leave event...
-        as it checks to see if the widget being left is a child of the current widget...
-        which then means its a popup =\
-            Workarounds... MimeData?
-            Flags? isDragging?
-        double leave event?
-        PiPMiniViewer --> eventFilter --> leaveEvent
-        PipMiniViewer --> isDragging
-
-        PiPMainWidget --> eventFilter
-        PipMainWidget --> setCurrentWidget
+    * Move MiniViewer to QSplitter?
+        - Allow user to save default sizes for individual widgets
 """
 import json
 from collections import OrderedDict
@@ -1007,7 +1001,7 @@ class PiPMiniViewer(QWidget):
         if self._dragEvent(obj, event): return True
 
         if event.type() == QEvent.Enter:
-            print("ENTER END")
+            # print("ENTER END")
             # catch a double exit.
             """
             If the user exits on the first widget, or a widget that will be the enlarged widget,
@@ -1025,8 +1019,7 @@ class PiPMiniViewer(QWidget):
                 self.__is_frozen = False
 
         if event.type() == QEvent.Leave:
-            print("LEAVE END")
-            # leave object
+            # print("LEAVE END")
             self.closeEnlargedView(obj)
 
         return False
@@ -1047,7 +1040,7 @@ class PiPMiniViewer(QWidget):
             return False
 
     def _dragEvent(self, obj, event):
-        """ Hanldes the event filter's Drag Leave Event
+        """ Handles the event filter's Drag Leave Event
         Args:
             obj (QWidget):
             event (QEvent):
@@ -1225,8 +1218,6 @@ class PiPMiniViewer(QWidget):
 
         Args:
             obj:
-
-        Returns:
         """
 
         # exiting
@@ -2187,7 +2178,7 @@ class PiPSaveWidget(QWidget):
             new_item, orig_item = self.updatePiPWidgetItemInFile()
 
         # save
-        elif self.saveButtonWidget().text() == PiPSaveButtonWidget.SAVE:
+        elif self.saveButtonWidget().mode() == PiPSaveButtonWidget.SAVE:
             _exists = False
             row = 0
             name = self.nameWidget().delegateWidget().text()

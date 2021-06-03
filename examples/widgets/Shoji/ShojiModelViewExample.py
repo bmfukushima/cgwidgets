@@ -50,7 +50,7 @@ Hierachy
 
 """
 import sys, os
-os.environ['QT_API'] = 'pyside2'
+# os.environ['QT_API'] = 'pyside2'
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QApplication, QLabel, QLineEdit, QWidget, QVBoxLayout
 from qtpy.QtGui import QCursor
@@ -193,7 +193,7 @@ def setupAsDynamic():
             widget.setTitle(name)
             widget.getMainWidget().label.setText(name)
 
-    class DynamicItemExample(FloatInputWidget):
+    class DynamicItemExample(StringInputWidget):
         """
         Custom widget which has overloaded functions/widget to be
         displayed in the Shoji

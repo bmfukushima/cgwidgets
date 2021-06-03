@@ -66,6 +66,8 @@ class AbstractInputLineEdit(QLineEdit, iAbstractInputWidget):
     def keyPressEvent(self, event):
         if event.key() in ACCEPT_KEYS:
             self.userFinishedEditing()
+        if event.key() == 96:
+            return self.parent().keyPressEvent(event)
         return QLineEdit.keyPressEvent(self, event)
 
     def mousePressEvent(self, event, *args, **kwargs):
@@ -366,7 +368,7 @@ class AbstractLabelWidget(QFrame, iAbstractInputWidget):
     TYPE = 'label'
 
     def __init__(self, parent=None, text=None, image=None):
-        super(AbstractLabelWidget, self).__init__(parent)
+        super(AbstractLabelWidget, self).__init__(parent=parent)
         if API_NAME == "PySide2":
             iAbstractInputWidget.__init__(self) #pyside2 forces us to do this import
         # setup layout

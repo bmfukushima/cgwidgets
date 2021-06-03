@@ -21,7 +21,7 @@ from qtpy.QtCore import Qt
 from qtpy.QtGui import QCursor
 
 from cgwidgets.settings import attrs
-from cgwidgets.widgets.InputWidgets.ColorInputWidget import ColorInputWidget
+from cgwidgets.widgets import ColorInputWidget
 
 # set up main widget
 app = QApplication(sys.argv)
@@ -43,7 +43,7 @@ color_widget.setUserInput(userInputEvent)
 color_widget.setHeaderPosition(position=attrs.NORTH)
 
 # set direction of gradient slider
-color_widget.setLinearCrosshairDirection(Qt.Vertical)
+color_widget.setLinearCrosshairDirection(Qt.Horizontal)
 
 # add widgets to main widget
 l.addWidget(test_label)

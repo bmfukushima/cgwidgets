@@ -29,7 +29,7 @@ from qtpy.QtGui import QCursor
 from qtpy.QtCore import Qt
 
 from cgwidgets.widgets import ShojiLayout
-from cgwidgets.widgets import StringInputWidget
+from cgwidgets.widgets import StringInputWidget, LabelWidget
 
 app = QApplication(sys.argv)
 class DisplayLabel(StringInputWidget):
@@ -37,6 +37,10 @@ class DisplayLabel(StringInputWidget):
         super(DisplayLabel, self).__init__(parent)
         self.setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
 
+# class DisplayLabel(LabelWidget):
+#     def __init__(self, parent=None, text=None, image=None):
+#         super(DisplayLabel, self).__init__(parent=parent, text=text, image=image)
+#         self.setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
 
 # create shoji
 main_widget = ShojiLayout()
@@ -44,15 +48,15 @@ embedded_shoji_01 = ShojiLayout(orientation=Qt.Horizontal)
 embedded_shoji_02 = ShojiLayout(orientation=Qt.Vertical)
 
 # set custom base setyle sheet
-base_style_sheet = """
-{type}{{
-    background-color: rgba(0,255,0,255);
-    color: rgba(128,128,128,255);
-    border: 2px solid rgba(255,0,0,255);
-}}""".format(
-            type=type(main_widget).__name__,
-        )
-main_widget.setBaseStyleSheet(base_style_sheet)
+# base_style_sheet = """
+# {type}{{
+#     background-color: rgba(0,255,0,255);
+#     color: rgba(128,128,128,255);
+#     border: 2px solid rgba(255,0,0,255);
+# }}""".format(
+#             type=type(main_widget).__name__,
+#         )
+# main_widget.setBaseStyleSheet(base_style_sheet)
 
 
 

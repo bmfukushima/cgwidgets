@@ -231,33 +231,8 @@ if __name__ == "__main__":
     import sys, inspect
 
     app = QApplication(sys.argv)
-    # def userEvent(widget):
-    #     print("user input...", widget)
-    #
-    #
-    # def asdf(item, widget, value):
-    #     return
-    #
-    #
-    # @staticmethod
-    # def liveEdit(item, widget, value):
-    #     return
-    #
-    #
-    # widget = ShojiInputWidgetContainer(name="test")
-    # inputs = ["cx", "cy", "fx", "fy", "radius"]  # , stops"""
-    # for i in inputs:
-    #     widget.insertInputWidget(0, FloatInputWidget, i, asdf,
-    #                            user_live_update_event=asdf, default_value=0.5)
+    label_widget = LabelWidget(text="lakjsdf")
+    label_widget.show()
 
-
-    test_labelled_embed = LabelledInputWidget(name="embed", delegate_widget=FloatInputWidget())
-    #labelled_input = LabelledInputWidget(name="test", delegate_widget=test_labelled_embed)
-
-    test_labelled_embed.move(QCursor.pos())
-    test_labelled_embed.show()
-    #test_labelled_embed.resize(256, 256)
-    test_labelled_embed.resize(500, 500)
-    test_labelled_embed.show()
     #w.move(QCursor.pos())
     sys.exit(app.exec_())
