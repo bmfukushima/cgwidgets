@@ -259,10 +259,10 @@ class AbstractPiPWidget(AbstractShojiModelViewWidget):
         return self._main_widget
 
     def miniViewerWidget(self):
-        return self.mainWidget().mini_viewer
+        return self.mainWidget().miniViewer()
 
     def mainViewerWidget(self):
-        return self.mainWidget().main_viewer
+        return self.mainWidget().mainViewer()
 
     def localOrganizerWidget(self):
         return self._local_organizer_widget
@@ -564,12 +564,13 @@ class PiPMainWidget(QWidget):
         self._pip_scale = (0.35, 0.35)
         self._enlarged_scale = 0.55
         self._mini_viewer_min_size = (100, 100)
+        self._is_mini_viewer_shown = True
         self._direction = attrs.SOUTH
         self._swap_key = Qt.Key_Space
 
         # create widgets
-        self.main_viewer = PiPMainViewer(self)
-        self.mini_viewer = PiPMiniViewer(self)
+        self._main_viewer = PiPMainViewer(self)
+        self._mini_viewer = PiPMiniViewer(self)
 
         # create layout
         """
@@ -580,7 +581,7 @@ class PiPMainWidget(QWidget):
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.layout().setSpacing(0)
 
-        self.layout().addWidget(self.main_viewer)
+        self.layout().addWidget(self.mainViewer())
 
         #self.layout().addWidget(self.panel_creator_widget)
 
@@ -617,6 +618,16 @@ class PiPMainWidget(QWidget):
     def setEnlargedScale(self, _enlarged_scale):
         self._enlarged_scale = _enlarged_scale
 
+    def isMiniViewerShown(self):
+        return self._is_mini_viewer_shown
+
+    def setIsMiniViewerShown(self, enabled):
+        self._is_mini_viewer_shown = enabled
+        if enabled:
+            self.miniViewer().show()
+        else:
+            self.miniViewer().hide()
+
     def miniViewerMinSize(self):
         return self._mini_viewer_min_size
 
@@ -629,7 +640,7 @@ class PiPMainWidget(QWidget):
 
         """
         self._mini_viewer_min_size = size
-        self.mini_viewer.setMinimumSize(size)
+        self.miniViewer().setMinimumSize(size)
 
     def resizeMiniViewer(self):
         """
@@ -730,8 +741,8 @@ class PiPMainWidget(QWidget):
                         height = self.miniViewerMinSize()[1]
 
         # move/resize mini viewer
-        self.mini_viewer.move(int(xpos), int(ypos))
-        self.mini_viewer.resize(int(width), int(height))
+        self.miniViewer().move(int(xpos), int(ypos))
+        self.miniViewer().resize(int(width), int(height))
 
     def areWidgetNamesShown(self):
         return self._are_widget_names_shown
@@ -745,6 +756,12 @@ class PiPMainWidget(QWidget):
                 widget.main_widget.viewWidget().hide()
 
     """ WIDGETS """
+    def mainViewer(self):
+        return self._main_viewer
+
+    def miniViewer(self):
+        return self._mini_viewer
+
     def removeWidget(self, widget):
         #self.widgets().remove(widget)
 
@@ -764,14 +781,14 @@ class PiPMainWidget(QWidget):
         # reset current widget
         if self._current_widget:
             self._current_widget.setParent(None)
-            self.mini_viewer.addWidget(self._current_widget)
+            self.miniViewer().addWidget(self._current_widget)
             self.setPreviousWidget(self._current_widget)
             self._current_widget.removeEventFilter(self)
 
         # set widget as current
         self._current_widget = widget
-        self.mini_viewer.removeWidget(widget)
-        self.main_viewer.setWidget(widget)
+        self.miniViewer().removeWidget(widget)
+        self.mainViewer().setWidget(widget)
         self._current_widget.installEventFilter(self)
 
     def eventFilter(self, obj, event):
@@ -781,8 +798,8 @@ class PiPMainWidget(QWidget):
         #     print("drop???")
         #     # todo figure out how to handle this for stupid shit that suppressed
         #     # the event from being passed on
-        #     self.mini_viewer.setIsDragging(False)
-        #     self.mini_viewer.setPopupWidget(None)
+        #     self.miniViewer().setIsDragging(False)
+        #     self.miniViewer().setPopupWidget(None)
         return False
 
     def previousWidget(self):
@@ -798,9 +815,9 @@ class PiPMainWidget(QWidget):
     def setDirection(self, direction):
         self._direction = direction
         if direction in [attrs.EAST, attrs.WEST]:
-            self.mini_viewer.setDirection(QBoxLayout.TopToBottom)
+            self.miniViewer().setDirection(QBoxLayout.TopToBottom)
         elif direction in [attrs.NORTH, attrs.SOUTH]:
-            self.mini_viewer.setDirection(QBoxLayout.LeftToRight)
+            self.miniViewer().setDirection(QBoxLayout.LeftToRight)
 
     """ EVENTS """
     def resizeEvent(self, event):
@@ -813,7 +830,7 @@ class PiPMainWidget(QWidget):
         if event.key() == self.swapKey():
             # pre flight
             widget = getWidgetUnderCursor()
-            if widget == self.mini_viewer: return
+            if widget == self.miniViewer(): return
 
             # swap previous widget widgets
             is_descendant_of_main_viewer = isWidgetDescendantOf(widget, self.currentWidget())
@@ -826,22 +843,22 @@ class PiPMainWidget(QWidget):
             if is_descendant_of_main_widget:
                 swap_widget = getWidgetAncestor(widget, PiPMiniViewerWidget)
                 self.setCurrentWidget(swap_widget)
-                self.mini_viewer.setIsEnlarged(False)
+                self.miniViewer().setIsEnlarged(False)
                 return QWidget.keyPressEvent(self, event)
 
         # hotkey swapping
         if event.key() in [Qt.Key_1, Qt.Key_2, Qt.Key_3, Qt.Key_4, Qt.Key_5]:
             try:
                 if event.key() == Qt.Key_1:
-                    widget = self.mini_viewer.layout().itemAt(0).widget()
+                    widget = self.miniViewer().layout().itemAt(0).widget()
                 if event.key() == Qt.Key_2:
-                    widget = self.mini_viewer.layout().itemAt(1).widget()
+                    widget = self.miniViewer().layout().itemAt(1).widget()
                 if event.key() == Qt.Key_3:
-                    widget = self.mini_viewer.layout().itemAt(2).widget()
+                    widget = self.miniViewer().layout().itemAt(2).widget()
                 if event.key() == Qt.Key_4:
-                    widget = self.mini_viewer.layout().itemAt(3).widget()
+                    widget = self.miniViewer().layout().itemAt(3).widget()
                 if event.key() == Qt.Key_5:
-                    widget = self.mini_viewer.layout().itemAt(4).widget()
+                    widget = self.miniViewer().layout().itemAt(4).widget()
                 self.setCurrentWidget(widget)
 
             except AttributeError:
@@ -850,24 +867,25 @@ class PiPMainWidget(QWidget):
 
         # hide PiP
         if event.key() == Qt.Key_Q:
-            self.mini_viewer.hide()
+            self.setIsMiniViewerShown(not self.isMiniViewerShown())
+            # self.miniViewer().hide()
             return
 
         # escape
         if event.key() == Qt.Key_Escape:
-            if self.mini_viewer.isEnlarged():
+            if self.miniViewer().isEnlarged():
                 obj = getWidgetUnderCursor(QCursor.pos())
                 widget = getWidgetAncestor(obj, PiPMiniViewerWidget)
-                self.mini_viewer.closeEnlargedView(widget)
-                # self.mini_viewer.setIsEnlarged(False)
+                self.miniViewer().closeEnlargedView(widget)
+                # self.miniViewer().setIsEnlarged(False)
 
         return QWidget.keyPressEvent(self, event)
 
-    def keyReleaseEvent(self, event):
-        if event.key() == Qt.Key_Q:
-            self.mini_viewer.show()
-            return
-        return QWidget.keyReleaseEvent(self, event)
+    # def keyReleaseEvent(self, event):
+    #     if event.key() == Qt.Key_Q:
+    #         self.miniViewer().show()
+    #         return
+    #     return QWidget.keyReleaseEvent(self, event)
 
 
 class PiPMainViewer(QWidget):
