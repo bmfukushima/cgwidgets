@@ -1365,23 +1365,25 @@ class SettingsWidget(AbstractFrameInputWidgetContainer):
             "value": 0.5,
             "value_list": [0.01, 0.025, 0.05, 0.1],
             "range": [True, 0.1, 1],
-            "code": """main_widget.setPiPScale(float(value))"""},
+            "code": """main_widget.mainWidget().setPiPScale(float(value))"""},
         "Enlarged Scale": {
             "type": attrs.FLOAT,
             "value": 0.5,
             "value_list": [0.01, 0.025, 0.05, 0.1],
             "range": [True, 0.1, 0.9],
-            "code": """main_widget.setEnlargedScale(float(value))"""},
+            "code": """main_widget.mainWidget().setEnlargedScale(float(value))"""},
         "Display Titles": {
             "type": attrs.BOOLEAN,
             "value": True,
-            "code": """main_widget.showWidgetDisplayNames(value)"""},
+            "code": """main_widget.mainWidget().showWidgetDisplayNames(value)"""},
         "Direction": {
             "type": attrs.LIST,
             "value": attrs.SOUTH,
             "items": [[attrs.NORTH], [attrs.SOUTH], [attrs.EAST], [attrs.WEST]],
             "code": """
-main_widget.setDirection(value)
+print(main_widget)
+print(main_widget.mainWidget())
+main_widget.mainWidget().setDirection(value)
 main_widget.mainWidget().resizeMiniViewer()"""}
     }
 
@@ -1449,7 +1451,9 @@ main_widget.mainWidget().resizeMiniViewer()"""}
         Returns:
         """
         # get attrs
-        name = widget.parent().name()
+        labelled_input_widget = getWidgetAncestor(widget, AbstractLabelledInputWidget)
+        name = labelled_input_widget.name()
+
         self.setSetting(name, value)
 
     def setSetting(self, name, value):
