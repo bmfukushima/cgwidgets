@@ -409,6 +409,9 @@ class AbstractDragDropModel(QAbstractItemModel):
         return name
 
     """ ITEM SEARCHING """
+    # TODO Add get selected items...
+    # add this handler into the AbstractShojiModelViewWidget
+
     def findItems(self, value, index=None, role=Qt.DisplayRole, match_type=Qt.MatchExactly):
         """
         Finds all of the indexes of the value provided that are descendents of the index provided.

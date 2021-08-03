@@ -143,6 +143,9 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
     def normalizeWidgetSizes(self):
         self.delegateWidget().normalizeWidgetSizes()
 
+    def getAllIndexes(self):
+        return self.headerWidget().getAllIndexes()
+
     def setIndexSelected(self, index, selected):
         self.headerViewWidget().setIndexSelected(index, selected)
 
@@ -549,7 +552,6 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
 
     def updateDelegateDisplay(self):
         """
-
         Updates/refreshes which widgets should be shown/hidden based off of
         the current models selection list
         """

@@ -199,6 +199,9 @@ class AbstractModelViewWidget(AbstractShojiLayout):
     def selectionModel(self):
         return self.view().selectionModel()
 
+    def getAllIndexes(self):
+        return self.model().getAllIndexes()
+
     def getAllSelectedIndexes(self):
         # selected_indexes = []
         # for index in self.headerWidget().selectionModel().selectedIndexes():

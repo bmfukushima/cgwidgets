@@ -1,5 +1,5 @@
 import sys, os
-#os.environ['QT_API'] = 'pyside2'
+os.environ['QT_API'] = 'pyside2'
 from qtpy.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QGroupBox, QSplitter)
 from qtpy.QtGui import QCursor

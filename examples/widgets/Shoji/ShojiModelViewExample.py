@@ -472,8 +472,11 @@ indexes = shoji_widget.model().findItems("hello", Qt.MatchExactly)
 for index in indexes:
     shoji_widget.setIndexSelected(index, True)
 
-# display widget
+# get selected indexes
+print(shoji_widget.getAllSelectedIndexes())
+print(shoji_widget.getAllIndexes())
 
+# display widget
 shoji_widget.resize(500, 500)
 shoji_widget.show()
 shoji_widget.move(QCursor.pos())

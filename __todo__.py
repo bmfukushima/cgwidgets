@@ -20,10 +20,16 @@ TODO:
     need to register to import from cgwidgets.
     needs to assume that this lib is in the pythonpath
 
+* Additional Libs
+    qtpy
+    PySide2
+    shiboken2
+    shiboken2_generator
+    Pillow
 Unit Tests:
-    * Python 2.7.7
-        - PySide 5.12
-        - PyQt 5.12
+    * Python 3.7.11 / 3.8.10
+        - PySide 5.15.2
+        - PyQt 5.15.2
             * /usr/lib/python2.7/dist-packages
                 need to reinstall this... because pip doesnt want to install it =\
 
