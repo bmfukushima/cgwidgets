@@ -152,15 +152,13 @@ class AbstractListInputWidget(AbstractStringInputWidget):
         """
         # preflight
         if self.filter_results:
-            if self.text() == "":
-                regExp = QRegExp("(.*)")
-            else:
-                regExp = QRegExp(self.text())
+            regExp = QRegExp("({text})".format(text=self.text()))
+            self.proxy_model.setFilterRegExp(regExp)
         else:
-            regExp = QRegExp("(.*)")
-        self.proxy_model.setFilterRegExp(regExp)
+            self.completer().setCompletionMode(QCompleter.UnfilteredPopupCompletion)
+
         #self.proxy_model.setFilterFixedString(self.text())
-            #self.completer().setCompletionMode(QCompleter.UnfilteredPopupCompletion)
+
 
         pass
         # if not self.filter_results:
@@ -185,6 +183,8 @@ class AbstractListInputWidget(AbstractStringInputWidget):
         Suppress enter keypress event when the pop up is visible.  This will allow the user to press enter,
         without it registering the setting of the text event...
         """
+
+        #
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             if self.completer().popup().isVisible():
                 self.setIsFrozen(True)
@@ -192,15 +192,17 @@ class AbstractListInputWidget(AbstractStringInputWidget):
                 self.setIsFrozen(False)
                 return
 
+        # resolve
         super(AbstractStringInputWidget, self).keyPressEvent(event)
 
+        #
         self.filterCompletionResults()
 
-        # todo delete completer?
+        # show ALL items when deleting to empty
         if event.key() == Qt.Key_Delete or event.key() == Qt.Key_Backspace:
             if self.text() == "":
-                pass
-                #self.showCompleter()
+                self.completer().setCompletionMode(QCompleter.UnfilteredPopupCompletion)
+                self.completer().complete()
 
     def showCompleter(self):
         """
@@ -414,7 +416,7 @@ if __name__ == "__main__":
         ['a', (255, 0, 0, 255)], ['b'], ['c'], ['aa'], ['bb'], ['cc'], ['b1'], ['c1'], ['aaa'], ['bbb'], ['ccc']]
     )
     list_widget.setUserFinishedEditingEvent(userFinishedEditing)
-    # list_widget.filter_results = False
+    #list_widget.filter_results = False
     list_widget.display_item_colors = True
     e = CompleterPopup()
     l.addWidget(list_widget)
