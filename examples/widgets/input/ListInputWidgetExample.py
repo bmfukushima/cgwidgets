@@ -59,7 +59,7 @@ list_widget.display_item_colors = True
 
 
 e = CompleterPopup()
-#l.addWidget(list_widget)
+l.addWidget(list_widget)
 l.addWidget(e)
 e.setModel(list_widget.proxy_model)
 

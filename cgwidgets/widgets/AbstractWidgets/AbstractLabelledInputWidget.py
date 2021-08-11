@@ -367,9 +367,14 @@ class AbstractLabelledInputWidget(QFrame, iAbstractInputWidget):
         def _resizeFinishedEvent(*args, **kwargs):
             """ Note: This will not work if the widget is deleted
             Some sort of RuntimeError"""
-            if self.resizeSliderOnWidgetResize():
-                super(AbstractLabelledInputWidget, self).resizeEvent(event)
-                self.resetSliderPositionToDefault()
+            try:
+                if self.resizeSliderOnWidgetResize():
+                    super(AbstractLabelledInputWidget, self).resizeEvent(event)
+                    self.resetSliderPositionToDefault()
+            except RuntimeError:
+                # event deleted...
+                """ Will still work... this will just remove the annoying af error message """
+                pass
 
         installResizeEventFinishedEvent(self, 100, _resizeFinishedEvent, '_timer')
 

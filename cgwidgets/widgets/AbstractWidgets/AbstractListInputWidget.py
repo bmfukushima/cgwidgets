@@ -142,7 +142,9 @@ class AbstractListInputWidget(AbstractStringInputWidget):
         finishes typing...
         """
         # preflight
-        if not self.filter_results: return
+        if not self.filter_results:
+            self.completer().setCompletionMode(QCompleter.UnfilteredPopupCompletion)
+            return
         # filter results
         if self.text() != '':
             self.completer().setCaseSensitivity(Qt.CaseInsensitive)
@@ -220,6 +222,7 @@ class AbstractListInputWidget(AbstractStringInputWidget):
         self.completer().popup().setCurrentIndex(index)
 
     def event(self, event, *args, **kwargs):
+        # tab
         if (event.type() == QEvent.KeyPress) and (event.key() == Qt.Key_Tab):
             if self.text() == '':
                 self.completer().complete()
@@ -227,6 +230,7 @@ class AbstractListInputWidget(AbstractStringInputWidget):
                 self.next_completion()
             return True
 
+        # shift tab
         if (event.type() == QEvent.KeyPress) and (event.key() == 16777218):
             self.previous_completion()
             return True
@@ -368,10 +372,10 @@ if __name__ == "__main__":
     w = QWidget()
     l = QVBoxLayout(w)
     list_widget = AbstractListInputWidget(item_list=[
-        ['a', (255,0,0, 255)], ['b'], ['c'], ['aa'], ['bb'], ['cc'], ['b1'], ['c1'], ['aaa'], ['bbb'], ['ccc']]
+        ['a', (255, 0, 0, 255)], ['b'], ['c'], ['aa'], ['bb'], ['cc'], ['b1'], ['c1'], ['aaa'], ['bbb'], ['ccc']]
     )
     list_widget.setUserFinishedEditingEvent(userFinishedEditing)
-    #list_widget.setText("bb")
+    list_widget.filter_results = False
     list_widget.display_item_colors = True
     e = CompleterPopup()
     l.addWidget(list_widget)

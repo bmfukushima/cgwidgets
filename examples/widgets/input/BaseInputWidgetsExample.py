@@ -23,7 +23,10 @@ from cgwidgets.widgets import (
 app = QApplication(sys.argv)
 
 
-widget = StringInputWidget()
+def test(widget):
+    print ("test", widget)
+
+widget = ButtonInputWidget(title="Test", user_clicked_event=test)
 
 widget.show()
 sys.exit(app.exec_())

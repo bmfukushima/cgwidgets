@@ -572,6 +572,7 @@ class AbstractViewContextMenu(QMenu):
     def showEvent(self, event):
         self.item = self.parent().getIndexUnderCursor()
 
+
 """ STYLES """
 class AbstractDragDropModelDelegate(QStyledItemDelegate):
     """
