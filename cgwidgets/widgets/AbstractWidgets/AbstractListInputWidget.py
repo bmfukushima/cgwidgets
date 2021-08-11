@@ -139,7 +139,6 @@ class AbstractListInputWidget(AbstractStringInputWidget):
         # create completer/models
         completer = CustomModelCompleter()
         self.setCompleter(completer)
-        #self.proxy_model = QSortFilterProxyModel()
         self._updateModel(item_list)
 
     # seems to force it to only options that are currently in the list?
@@ -156,21 +155,6 @@ class AbstractListInputWidget(AbstractStringInputWidget):
             self.proxy_model.setFilterRegExp(regExp)
         else:
             self.completer().setCompletionMode(QCompleter.UnfilteredPopupCompletion)
-
-        #self.proxy_model.setFilterFixedString(self.text())
-
-
-        pass
-        # if not self.filter_results:
-        #     self.completer().setCompletionMode(QCompleter.UnfilteredPopupCompletion)
-        #     return
-        #
-        # # filter results
-        # if self.text() != '':
-        #     self.completer().setCaseSensitivity(Qt.CaseInsensitive)
-        #     self.completer().setCompletionMode(QCompleter.PopupCompletion)
-        # else:
-        #     self.completer().setCompletionMode(QCompleter.UnfilteredPopupCompletion)
 
     """ EVENTS """
     def mouseReleaseEvent(self, event, *args, **kwargs):
