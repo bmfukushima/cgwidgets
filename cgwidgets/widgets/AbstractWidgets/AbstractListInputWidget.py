@@ -10,7 +10,7 @@ from qtpy.QtWidgets import (
     QComboBox, QSizePolicy, QLineEdit, QCompleter, QStyledItemDelegate, QApplication)
 from qtpy.QtGui import(
     QStandardItem, QStandardItemModel, QPixmap, QIcon, QColor)
-from qtpy.QtCore import (QEvent, QAbstractListModel, Qt, QSortFilterProxyModel)
+from qtpy.QtCore import (QEvent, QAbstractListModel, Qt, QSortFilterProxyModel, QRegExp)
 
 from cgwidgets.widgets.AbstractWidgets import AbstractStringInputWidget
 from cgwidgets.utils import getBottomLeftPos, getFontSize
@@ -55,6 +55,7 @@ class AbstractListInputWidget(AbstractStringInputWidget):
         self._dynamic_update = False
         self._filter_results = True
         self._display_item_colors = False
+        self.proxy_model = QSortFilterProxyModel()
 
         # setup custom completer
         self.setupCustomModelCompleter(item_list)
@@ -63,7 +64,7 @@ class AbstractListInputWidget(AbstractStringInputWidget):
         self.updateStyleSheet()
 
         # setup signals
-        self.textChanged.connect(self.filterCompletionResults)
+        # self.textChanged.connect(self.filterCompletionResults)
 
     def populate(self, item_list):
         """
@@ -101,13 +102,12 @@ class AbstractListInputWidget(AbstractStringInputWidget):
         if not item_list:
             item_list = self.getCleanItems()
 
-        # completer = CustomModelCompleter()
-        # self.setCompleter(completer)
         # update model items
         self.setItemList(item_list)
         self._model = CustomModel(item_list=item_list)
         self._model.display_item_colors = self.display_item_colors
-        self.proxy_model = QSortFilterProxyModel()
+
+        #self.proxy_model = QSortFilterProxyModel()
         self.proxy_model.setSourceModel(self._model)
 
         # set models
@@ -118,6 +118,15 @@ class AbstractListInputWidget(AbstractStringInputWidget):
         # https://forum.qt.io/topic/26703/solved-stylize-using-css-and-editable-qcombobox-s-completions-list-view/7
         delegate = QStyledItemDelegate()
         self.completer().popup().setItemDelegate(delegate)
+
+    #     self.completer().activated.connect(self.test)
+    #     self.completer().highlighted.connect(self.test2)
+    #
+    # def test(self, string):
+    #     print('testing', string)
+    #
+    # def test2(self, string):
+    #     print('higlights', string)
 
     def setupCustomModelCompleter(self, item_list):
         """
@@ -130,7 +139,7 @@ class AbstractListInputWidget(AbstractStringInputWidget):
         # create completer/models
         completer = CustomModelCompleter()
         self.setCompleter(completer)
-        self.proxy_model = QSortFilterProxyModel()
+        #self.proxy_model = QSortFilterProxyModel()
         self._updateModel(item_list)
 
     # seems to force it to only options that are currently in the list?
@@ -142,18 +151,32 @@ class AbstractListInputWidget(AbstractStringInputWidget):
         finishes typing...
         """
         # preflight
-        if not self.filter_results:
-            self.completer().setCompletionMode(QCompleter.UnfilteredPopupCompletion)
-            return
-        # filter results
-        if self.text() != '':
-            self.completer().setCaseSensitivity(Qt.CaseInsensitive)
-            self.completer().setCompletionMode(QCompleter.PopupCompletion)
+        if self.filter_results:
+            if self.text() == "":
+                regExp = QRegExp("(.*)")
+            else:
+                regExp = QRegExp(self.text())
         else:
-            self.completer().setCompletionMode(QCompleter.UnfilteredPopupCompletion)
+            regExp = QRegExp("(.*)")
+        self.proxy_model.setFilterRegExp(regExp)
+        #self.proxy_model.setFilterFixedString(self.text())
+            #self.completer().setCompletionMode(QCompleter.UnfilteredPopupCompletion)
+
+        pass
+        # if not self.filter_results:
+        #     self.completer().setCompletionMode(QCompleter.UnfilteredPopupCompletion)
+        #     return
+        #
+        # # filter results
+        # if self.text() != '':
+        #     self.completer().setCaseSensitivity(Qt.CaseInsensitive)
+        #     self.completer().setCompletionMode(QCompleter.PopupCompletion)
+        # else:
+        #     self.completer().setCompletionMode(QCompleter.UnfilteredPopupCompletion)
 
     """ EVENTS """
     def mouseReleaseEvent(self, event, *args, **kwargs):
+
         self.showCompleter()
         return AbstractStringInputWidget.mouseReleaseEvent(self, event, *args, **kwargs)
 
@@ -169,9 +192,17 @@ class AbstractListInputWidget(AbstractStringInputWidget):
                 self.setIsFrozen(False)
                 return
 
-        return AbstractStringInputWidget.keyPressEvent(self, event)
+        super(AbstractStringInputWidget, self).keyPressEvent(event)
 
-    def showCompleter(self, filter_results=True):
+        self.filterCompletionResults()
+
+        # todo delete completer?
+        if event.key() == Qt.Key_Delete or event.key() == Qt.Key_Backspace:
+            if self.text() == "":
+                pass
+                #self.showCompleter()
+
+    def showCompleter(self):
         """
         Displays the popup completer to the user
         Args:
@@ -182,9 +213,9 @@ class AbstractListInputWidget(AbstractStringInputWidget):
         if self.dynamic_update:
             self._updateModel()
 
-        #filter completion results
-        if filter_results:
-            self.filterCompletionResults()
+        # filter completion results
+        # if self.filter_results:
+        self.filterCompletionResults()
 
         if self.text() == "":
             item_list = self.itemList()
@@ -239,6 +270,15 @@ class AbstractListInputWidget(AbstractStringInputWidget):
 
     """ PROPERTIES """
     @property
+    def display_item_colors(self):
+        return self._display_item_colors
+
+    @display_item_colors.setter
+    def display_item_colors(self, display_item_colors):
+        self._display_item_colors = display_item_colors
+        self.model().display_item_colors = display_item_colors
+
+    @property
     def dynamic_update(self):
         return self._dynamic_update
 
@@ -253,15 +293,6 @@ class AbstractListInputWidget(AbstractStringInputWidget):
     @filter_results.setter
     def filter_results(self, filter_results):
         self._filter_results = filter_results
-
-    @property
-    def display_item_colors(self):
-        return self._display_item_colors
-
-    @display_item_colors.setter
-    def display_item_colors(self, display_item_colors):
-        self._display_item_colors = display_item_colors
-        self.model().display_item_colors = display_item_colors
 
     def itemList(self):
         return self._item_list
@@ -294,7 +325,7 @@ class CustomModelCompleter(QCompleter):
 
     # def activated(self, text):
     #     print("activated === ", text)
-    #     return QCompleter.activated(self, text)
+    #     #return QCompleter.activated(self, text)
     #
     # def splitPath(self, path):
     #     print("splitPath === ", path)
@@ -367,15 +398,23 @@ if __name__ == "__main__":
 
         #qApp.processEvents()
         QApplication.instance().processEvents()
-        widget.setText('')
+        # widget.setText('')
+
+    def getItems():
+        print('getting items??')
+        items = [['a', (255, 0, 0, 255)], ['b'], ['c'], ['aa'], ['bb'], ['cc'], ['b1'], ['c1'], ['aaa'], ['bbb'], ['ccc']]
+        return items
+
 
     w = QWidget()
     l = QVBoxLayout(w)
+    # list_widget = AbstractListInputWidget()
+    # list_widget.setCleanItemsFunction(getItems)
     list_widget = AbstractListInputWidget(item_list=[
         ['a', (255, 0, 0, 255)], ['b'], ['c'], ['aa'], ['bb'], ['cc'], ['b1'], ['c1'], ['aaa'], ['bbb'], ['ccc']]
     )
     list_widget.setUserFinishedEditingEvent(userFinishedEditing)
-    list_widget.filter_results = False
+    # list_widget.filter_results = False
     list_widget.display_item_colors = True
     e = CompleterPopup()
     l.addWidget(list_widget)

@@ -47,12 +47,13 @@ def userFinishedEditing(widget, value):
 w = QWidget()
 l = QVBoxLayout(w)
 def cleanItems():
+    print('fuck you')
     return [['a', (255, 0, 0, 255)], ['b'], ['c'], ['aa'], ['bb'], ['cc'], ['b1'], ['c1'], ['aaa'], ['bbb'], ['ccc']]
 list_widget = TestSubclass()
 list_widget.setUserFinishedEditingEvent(userFinishedEditing)
 list_widget.setCleanItemsFunction(cleanItems)
 list_widget.dynamic_update = True
-list_widget.filter_results = False
+# list_widget.filter_results = False
 
 
 list_widget.display_item_colors = True
