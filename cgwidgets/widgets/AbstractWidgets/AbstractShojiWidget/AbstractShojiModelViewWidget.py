@@ -114,6 +114,7 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         # setup delegate
         delegate_widget = AbstractShojiMainDelegateWidget(self)
         self.setDelegateWidget(delegate_widget)
+        self.delegateWidget().setMinimumHeight(200)
         self._temp_proxy_widget = QWidget()
         self._temp_proxy_widget.setObjectName("proxy_widget")
 
