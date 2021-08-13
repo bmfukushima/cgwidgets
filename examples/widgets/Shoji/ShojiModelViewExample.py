@@ -186,6 +186,7 @@ def setupAsDynamic():
             item (ShojiModelItem)
             self --> widget.getMainWidget()
             """
+            print ("=================== UPDATE GUI =================")
             print("---- DYNAMIC WIDGET ----")
             print(parent, widget, item)
 
@@ -349,7 +350,7 @@ setupAsDynamic()
 #setupAsDoubleDynamic()
 
 # SET FLAGS
-shoji_widget.setMultiSelect(True)
+#shoji_widget.setMultiSelect(True)
 
 shoji_widget.delegateWidget().setHandleLength(100)
 shoji_widget.setHeaderPosition(attrs.WEST, attrs.SOUTH)

@@ -20,8 +20,6 @@ from cgwidgets.views.CompleterView import CompleterPopup
 
 class AbstractListInputWidget(AbstractStringInputWidget):
     """
-    TODO:
-        *   as soon as you type it breaks?
     Signals:
     QLineEdit
         QCompleter

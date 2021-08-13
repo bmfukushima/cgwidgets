@@ -6,14 +6,9 @@ designed to allow the user to create multiple hot swappable widgets inside of th
 widget.
 
 Todo:
-    * Save PiPWidgets...
-    * DragLeave (left side)
-    * Widget Resizing
-        - Internal size (stretch to fill)
-        - Resize when being displayed in mini viewer
-    * Write docs
-    * Overall cleanup / organization
-        mainWidget --> AbstractPiPWidget?
+    * Display Name (bug)
+        When display names is active, when leaving the mini viewer, the widgets
+        will "wobble" for a few seconds.  This is only when display names is active...
     * Move MiniViewer to QSplitter?
         - Allow user to save default sizes for individual widgets
 """
@@ -650,7 +645,6 @@ class PiPMainWidget(QWidget):
             xpos | ypos | width | height
         of the mini viewer, based off of the number of widgets, and its current location on screen.
         """
-
         # get attrs
         main_widget = getWidgetAncestor(self, AbstractPiPWidget)
         num_widgets = main_widget.numWidgets()
@@ -741,6 +735,7 @@ class PiPMainWidget(QWidget):
                         height = self.miniViewerMinSize()[1]
 
         # move/resize mini viewer
+
         self.miniViewer().move(int(xpos), int(ypos))
         self.miniViewer().resize(int(width), int(height))
 
@@ -1381,8 +1376,8 @@ class SettingsWidget(AbstractFrameInputWidgetContainer):
             "value": attrs.SOUTH,
             "items": [[attrs.NORTH], [attrs.SOUTH], [attrs.EAST], [attrs.WEST]],
             "code": """
-print(main_widget)
-print(main_widget.mainWidget())
+#print(main_widget)
+#print(main_widget.mainWidget())
 main_widget.mainWidget().setDirection(value)
 main_widget.mainWidget().resizeMiniViewer()"""}
     }
@@ -2537,6 +2532,20 @@ widget = QListWidget()
 widget.setDragDropMode(QAbstractItemView.DragDrop)
 widget.addItems(['a', 'b', 'c', 'd'])
 widget.setFixedWidth(100)
+""",
+        "Recursion":"""
+
+save_data = {
+    "Foo": {
+        "file_path": getDefaultSavePath() + '/.PiPWidgets.json',
+        "locked": True},
+    "Bar": {
+        "file_path": getDefaultSavePath() + '/.PiPWidgets_02.json',
+        "locked": False}
+}
+widget = AbstractPiPWidget(save_data=save_data)
+widget.setDisplayWidget("Bar", "test02")
+widget.setCreationMode(AbstractPiPWidget.DISPLAY)
 """
     }
     pip_widget = AbstractPiPWidget(save_data=save_data, widget_types=widget_types)

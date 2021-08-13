@@ -13,7 +13,7 @@ TODO: View scroll bar needs to change locations
     https://www.qtcentre.org/threads/23624-Scrollbar-on-the-left
     from the sounds it it. This is going to be a proxy display type setup
 
-
+TODO: Check dynamic display updates... I feel like I wrote 95 functions for this...
 """
 from qtpy import API_NAME
 
@@ -114,7 +114,6 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         # setup delegate
         delegate_widget = AbstractShojiMainDelegateWidget(self)
         self.setDelegateWidget(delegate_widget)
-        self.delegateWidget().setMinimumHeight(200)
         self._temp_proxy_widget = QWidget()
         self._temp_proxy_widget.setObjectName("proxy_widget")
 
@@ -584,7 +583,6 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         # todo column registry.
         ## note that this is set so that it will not run for each column
         if self.getDelegateType() == AbstractShojiModelViewWidget.STACKED:
-
             if item.delegateWidget():
                 self.__updateStackedDisplay(item, selected)
 
@@ -814,10 +812,11 @@ class AbstractShojiMainDelegateWidget(AbstractShojiLayout):
                 tab_shoji_widget.updateDelegateDisplay()
                 tab_shoji_widget.toggleDelegateSpacerWidget()
 
-    def showEvent(self, event):
-        tab_shoji_widget = getWidgetAncestor(self, AbstractShojiModelViewWidget)
-        if tab_shoji_widget:
-            tab_shoji_widget.updateDelegateDisplay()
+    # def showEvent(self, event):
+    #     """todo is this necessary... show events causing a lot of excess updates..."""
+    #     tab_shoji_widget = getWidgetAncestor(self, AbstractShojiModelViewWidget)
+    #     if tab_shoji_widget:
+    #         tab_shoji_widget.updateDelegateDisplay()
 
     def installHoverDisplay(self, widget):
         """
@@ -961,11 +960,12 @@ class AbstractShojiHeader(AbstractModelViewWidget):
         self.setModel(model)
         self.setIsDropEnabled(False)
 
-    def showEvent(self, event):
-        tab_shoji_widget = getWidgetAncestor(self, AbstractShojiModelViewWidget)
-        if tab_shoji_widget:
-            tab_shoji_widget.updateDelegateDisplay()
-        AbstractModelViewWidget.showEvent(self, event)
+    # def showEvent(self, event):
+    #     """todo is this necessary... show events causing a lot of excess updates..."""
+    #     tab_shoji_widget = getWidgetAncestor(self, AbstractShojiModelViewWidget)
+    #     if tab_shoji_widget:
+    #         tab_shoji_widget.updateDelegateDisplay()
+    #     AbstractModelViewWidget.showEvent(self, event)
 
     def dropEvent(self, event):
         # resolve drop event

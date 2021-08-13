@@ -30,7 +30,9 @@ save_data = {"File Name": {"file_path": save_file_path, "locked": False}}
 pip_widget = PiPWidget(save_data=save_data, widget_types=widget_types)
 
 # set to headerless mode
-# pip_widget.setDisplayWidget(file_name, widget_name)
+print(save_file_path)
+#pip_widget.setDisplayWidget(file_name, widget_name)
+# pip_widget.setDisplayWidget("File Name", "test02")
 # pip_widget.setCreationMode(PiPWidget.DISPLAY)
 
 # setup default attrs
