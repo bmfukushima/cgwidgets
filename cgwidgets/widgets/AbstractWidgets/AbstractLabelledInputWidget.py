@@ -123,6 +123,13 @@ class AbstractLabelledInputWidget(QFrame, iAbstractInputWidget):
 
     """ HANDLE GROUP FRAME MOVING"""
     def __splitterMoved(self, pos, index):
+        """ When the splitter is moved, this will check to see if it there are parrallel
+        splitters that can be moved in unison
+
+        Args:
+            pos (int): position of the spltiter handle
+            index (int): index of the splitter handle
+            """
         modifiers = QApplication.keyboardModifiers()
         frame_container = self.parent()
         if hasattr(frame_container, "_frame_container"):

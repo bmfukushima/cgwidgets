@@ -63,7 +63,7 @@ model.setDropEvent(testDrop)
 model.setTextChangedEvent(testEdit)
 model.setItemEnabledEvent(testEnable)
 model.setItemDeleteEvent(testDelete)
-model.setIndexSelectedEvent(testSelect)
+model.setItemSelectedEvent(testSelect)
 
 # set flags
 tree_view.setIsRootDropEnabled(True)

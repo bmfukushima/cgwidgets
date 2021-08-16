@@ -149,8 +149,9 @@ class AbstractListInputWidget(AbstractStringInputWidget):
         """
         # preflight
         if self.filter_results:
-            regExp = QRegExp("({text})".format(text=self.text()))
-            self.proxy_model.setFilterRegExp(regExp)
+            regex = QRegExp("({text})".format(text=self.text()))
+            regex.setCaseSensitivity(Qt.CaseInsensitive)
+            self.proxy_model.setFilterRegExp(regex)
         else:
             self.completer().setCompletionMode(QCompleter.UnfilteredPopupCompletion)
 

@@ -19,18 +19,21 @@ Cheers,
 Me
 
 # CGWidgets
-PyQt / PySide compliant Widgets
+PyQt5 / PySide2 compliant Widgets
 
 ## Prerequisites
   * [qtpy](https://pypi.org/project/QtPy/) is a small abstraction layer that lets you write applications using a single API call to either PyQt or PySide.
   * [Pillow](https://pypi.org/project/Pillow/) Python Image Library
+  * Append this repo to your $PYTHONPATH environment variable
+  * 
 ## Written in:
-  * Python 3.7.7
-  * PyQt 5.12
+  This library is written for [VFX Reference Platform 2021](https://vfxplatform.com/)
+  * Python 3.7.11
+  * PyQt 5.15.2
 
 ## Compatibility
-This library is written for [VFX Reference Platform 2020](https://vfxplatform.com/)
-  * Python 3.7.7
-    * PyQt 5.12.1
-    * PySide 5.13
+  * Python 2.7+
+  * PyQt5 5.6+
+  * PySide2 2.0+
+
 
