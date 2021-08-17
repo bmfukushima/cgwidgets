@@ -24,8 +24,8 @@ from collections import OrderedDict
 import os
 
 from qtpy.QtWidgets import (
-    QWidget, QBoxLayout, QVBoxLayout, QSizePolicy, QHBoxLayout, QScrollArea, QSplitter)
-from qtpy.QtCore import QEvent, Qt, QPoint
+    QWidget, QBoxLayout, QVBoxLayout, QSizePolicy, QHBoxLayout, QLabel, QScrollArea, QSplitter, QSplitterHandle)
+from qtpy.QtCore import QEvent, Qt, QPoint, QTimer
 from qtpy.QtGui import QCursor
 
 from cgwidgets.views import AbstractDragDropModelItem
@@ -35,7 +35,9 @@ from cgwidgets.utils import (
     getWidgetAncestor,
     getDefaultSavePath,
     getJSONData,
-    showWarningDialogue)
+    showWarningDialogue,
+    setAsTool,
+    unsetAsTool)
 
 from cgwidgets.settings import attrs, iColor, keylist
 
@@ -900,9 +902,7 @@ class PiPMainWidget(QWidget):
         # escape
         if event.key() == Qt.Key_Escape:
             if self.miniViewer().isEnlarged():
-                obj = getWidgetUnderCursor(QCursor.pos())
-                widget = getWidgetAncestor(obj, PiPMiniViewerWidget)
-                self.miniViewer().closeEnlargedView(widget)
+                self.miniViewer().closeEnlargedView(self.miniViewer().enlargedWidget())
 
         return QWidget.keyPressEvent(self, event)
 
@@ -966,7 +966,7 @@ class PiPMiniViewer(QSplitter):
         self.setHandleWidth(15)
 
         #
-        self.splitterMoved.connect(self._splitterMoved)
+        # self.splitterMoved.connect(self._splitterMoved)
         #self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
 
     """ PROPERTIES """
@@ -1000,33 +1000,54 @@ class PiPMiniViewer(QSplitter):
     def setPopupWidget(self, popup_widget):
         self._popup_widget = popup_widget
 
+    """ UTILS """
+    def _resetSpacerWidget(self, widget):
+        """ Swaps the spacer widget with the one provided
+
+        This swap is done when opening/closing the enlarged view.
+        The spacer widget (self._spacer_widget) is used as a place
+        holder.
+
+        Args:
+            widget (PiPMiniViewerWidget): to be swapped in/out
+        """
+        self._spacer_widget.setParent(None)
+        self.insertWidget(widget.index(), widget)
+        self.widgets().append(widget)
+        self.setSizes(self._temp_sizes)
+
     """ EVENTS """
-    def _splitterMoved(self, pos, index):
-        """
-        Todo: Weird enter bug... where if the spliter is still processing,
-        and it enters an object and shows the object will segfault
+    # def _splitterMoved(self, pos, index):
+    #     """
+    #     Todo: Weird enter bug... where if the spliter is still processing,
+    #     and it enters an object and shows the object will segfault
+    #
+    #
+    #     """
+    #
+    #
+    #     # User finished dragging splitter
+    #     def splitterFinishedMoving():
+    #         self.setIsFrozen(False)
+    #     # stop existing timer
+    #     if hasattr(self, "_splitter_moving_timer"):
+    #         self._splitter_moving_timer.stop()
+    #
+    #     # create new timer
+    #     self.setIsFrozen(True)
+    #     self._splitter_moving_timer = QTimer()
+    #     self._splitter_moving_timer.start(1000)
+    #     self._splitter_moving_timer.timeout.connect(splitterFinishedMoving)
 
-
-        """
-        from qtpy.QtCore import QTimer
-
-        # User finished dragging splitter
-        def splitterFinishedMoving():
-            delattr(self, "_splitter_moving_timer")
-            print("sizes === ", self.sizes())
-            # Todo: Update meta data to store the splitter positions
-            # restore splitter positions on init
-
-            # return QSplitter.splitterMoved(pos, index)
-
-        # stop existing timer
-        if hasattr(self, "_splitter_moving_timer"):
-            self._splitter_moving_timer.stop()
-
-        # create new timer
-        self._splitter_moving_timer = QTimer()
-        self._splitter_moving_timer.start(1000)
-        self._splitter_moving_timer.timeout.connect(splitterFinishedMoving)
+    # def keyPressEvent(self, event):
+    #     # escape
+    #     print('key press')
+    #     if event.key() == Qt.Key_Escape:
+    #         print('1')
+    #         if self.isEnlarged():
+    #             print('2')
+    #             self.closeEnlargedView(self.enlargedWidget())
+    #     return QSplitter.keyPressEvent(self, event)
 
     def eventFilter(self, obj, event):
         """
@@ -1058,11 +1079,17 @@ class PiPMiniViewer(QSplitter):
                     This is reset when the user hover enters a new mini widget.  When the drag leave enters a
                     widget that is in the bounds of the enlargedWidget, it will do nothing.
         """
+        if event.type() == QEvent.KeyPress:
+            if event.key() == Qt.Key_Escape:
+                if self.isEnlarged():
+                    if obj == self.enlargedWidget():
+                        self.closeEnlargedView(self.enlargedWidget())
+
+        if self.isFrozen(): return True
+
         if self._popupWidgetEvent(obj, event): return True
-
+        #
         if self._dragEvent(obj, event): return True
-
-        if hasattr(self, "_splitter_moving_timer"): return True
 
         if event.type() == QEvent.Enter:
             # print("ENTER END")
@@ -1071,25 +1098,22 @@ class PiPMiniViewer(QSplitter):
             If the user exits on the first widget, or a widget that will be the enlarged widget,
             it will recurse back and enlarge itself.  This will block that recursion
             """
-
             # reset widget to default params
+            if self.isEnlarged():
+                return True
+
             self.setIsDragging(False)
             self.setPopupWidget(None)
 
-            #print(type(self.isFrozen()), self.isFrozen())
-
             # enlarge widget
-            if not self.isFrozen():
-                self.enlargeWidget(obj)
-            # else:
-            #     self.setIsFrozen(False)
+            self.enlargeWidget(obj)
+
+            return True
 
         if event.type() == QEvent.Leave:
-            # print("LEAVE END")
-            # if not self.isEnlarged():
-            #     self.setIsFrozen(False)
-            # else:
-            self.closeEnlargedView(obj)
+            if obj == self.enlargedWidget():
+                self.closeEnlargedView(obj)
+                return True
 
         return False
 
@@ -1162,6 +1186,7 @@ class PiPMiniViewer(QSplitter):
             event (QEvent):
         """
         if event.type() in [QEvent.Drop, QEvent.Leave]:
+
             new_object = getWidgetUnderCursor()
 
             # exit popup widget (shown from enlarged widget)
@@ -1194,24 +1219,25 @@ class PiPMiniViewer(QSplitter):
         Enlarges the widget provided to be covering most of the main display area.
 
         Args:
-            widget (QWidget): Widget to be enlarged
+            widget (PiPMiniViewerWidget): Widget to be enlarged
         """
+        # freeze
+        self.setIsFrozen(True)
+
         # set/get attrs
         main_widget = getWidgetAncestor(self, PiPMainWidget)
         self.setIsEnlarged(True)
         self.setEnlargedWidget(widget)
 
-        # freeze
-        self.setIsFrozen(True)
+        """temp sizes holds the current size of widgets
+        so that they can be added/removed and restored to their original state"""
+        self._temp_sizes = self.sizes()
 
         # set/get attrs
         scale = main_widget.enlargedScale()
         negative_space = 1 - scale
         half_neg_space = negative_space * 0.5
         num_widgets = getWidgetAncestor(widget, AbstractPiPWidget).numWidgets()
-
-        # reparent widget
-        widget.setParent(main_widget)
 
         # special case for only one mini viewer widget
         if num_widgets == 2:
@@ -1247,13 +1273,14 @@ class PiPMiniViewer(QSplitter):
                 height = int(main_widget.height() - (yoffset * 2))
                 ypos = int(yoffset)
 
+                margins = 25
                 if main_widget.direction() == attrs.EAST:
-                    width = int(main_widget.width() - xoffset - self.width() + self.layout().contentsMargins().right())
+                    width = int(main_widget.width() - xoffset - self.width() + margins)
                     xpos = int(xoffset)
 
                 if main_widget.direction() == attrs.WEST:
                     width = int(main_widget.width() - xoffset - self.width())
-                    xpos = self.width() - self.layout().contentsMargins().left()
+                    xpos = self.width() - margins
 
             if main_widget.direction() in [attrs.NORTH, attrs.SOUTH]:
                 offset = int(self.height() * 0.75)
@@ -1266,44 +1293,69 @@ class PiPMiniViewer(QSplitter):
                 if main_widget.direction() == attrs.SOUTH:
                     ypos = int(main_widget.height() * (negative_space - half_neg_space))
 
-        # show enlarged widget
+        # insert temp widget?
+        self._enlarged_widget_orig_size = widget.size()
+        self._spacer_widget = QLabel("")
+        self._spacer_widget.show()
+
+        # reparent widget
+        widget.setParent(self.parent())
         widget.show()
 
         # move / resize enlarged widget
         widget.resize(width, height)
         widget.move(xpos, ypos)
 
-        # move cursor to center of enlarged widget
-        xcursor = xpos + int(width * 0.5)
-        ycursor = ypos + int(height * 0.5)
-        QCursor.setPos(main_widget.mapToGlobal(QPoint(xcursor, ycursor)))
+        # # move cursor to center of enlarged widget
+        # xcursor = xpos + int(width * 0.5)
+        # ycursor = ypos + int(height * 0.5)
+        # print("moving cursor to --> ", main_widget.mapToGlobal(QPoint(xcursor, ycursor)))
+        # QCursor.setPos(main_widget.mapToGlobal(QPoint(xcursor, ycursor)))
+        self.insertWidget(widget.index(), self._spacer_widget)
 
-        # unfreeze
+        self.setSizes(self._temp_sizes)
         self.setIsFrozen(False)
 
-    def closeEnlargedView(self, obj):
+    def closeEnlargedView(self, widget):
         """
         Closes the enlarged viewer, and returns it back to normal PiP mode
 
         Args:
-            obj:
+            widget (PiPMiniViewerWidget):
         """
 
-        # exiting
-        if not self.isFrozen():
-            self.setIsFrozen(True)
-            self.addWidget(obj)
-            self.setIsFrozen(False)
-            # disable enlarged view
+        self.setIsFrozen(True)
+        widget_under_cursor = getWidgetUnderCursor()
+        # exitted over the mini viewer
+        if isWidgetDescendantOf(widget_under_cursor, self):
+            if widget_under_cursor == self._spacer_widget:
+                pass
+            elif isinstance(widget_under_cursor, QSplitterHandle):
+                pass
+            else:
+                # reset display label
+                self._temp_sizes = self.sizes()
+                self._resetSpacerWidget(widget)
+
+                # enlarge mini viewer
+                mini_viewer_widget = getWidgetAncestor(widget_under_cursor, PiPMiniViewerWidget)
+                self.enlargeWidget(mini_viewer_widget)
+
+        else:
+            # reset display label
+            self._resetSpacerWidget(widget)
+
             self.setIsEnlarged(False)
 
+        self.setIsFrozen(False)
 
-            # update frozen status
-            """ This is used when the cursor exits, and enters another mini widget
-            to stop recursive entering from happening"""
-            # widget_under_cursor = getWidgetUnderCursor()
-            # if not isWidgetDescendantOf(widget_under_cursor, self):
-            #     self.setIsFrozen(False)
+        # update frozen status
+        """ This is used when the cursor exits, and enters another mini widget
+        to stop recursive entering from happening"""
+        # widget_under_cursor = getWidgetUnderCursor()
+        # if not isWidgetDescendantOf(widget_under_cursor, self):
+        #     self.setIsFrozen(False)
+
 
     """ DIRECTION """
     # def setDirection(self, direction):
@@ -1311,11 +1363,13 @@ class PiPMiniViewer(QSplitter):
     #     self.setOrientation(direction)
 
     """ WIDGETS """
-    def addWidget(self, widget):
-        #self.layout().insertWidget(widget.index(), widget)
-        self.widgets().append(widget)
-        widget.installEventFilter(self)
-        return QSplitter.addWidget(self, widget)
+    # def addWidget(self, widget):
+    #     #self.layout().insertWidget(widget.index(), widget)
+    #     if widget:
+    #         self.widgets().append(widget)
+    #         if not isinstance(widget, QSplitterHandle):
+    #             widget.installEventFilter(self)
+    #     return QSplitter.addWidget(self, widget)
         # installHoverDisplaySS(
         #     widget,
         #     name="PIP")
@@ -1338,9 +1392,11 @@ class PiPMiniViewer(QSplitter):
 
     def removeWidget(self, widget):
         #self.layout().removeWidget(widget)
-        widget.setParent(None)
-        self.widgets().remove(widget)
-        widget.removeEventFilter(self)
+        if widget:
+            widget.setParent(None)
+            self.widgets().remove(widget)
+            if not isinstance(widget, QSplitterHandle):
+                widget.removeEventFilter(self)
 
     def resetWidgetsList(self):
         self._widgets = []
@@ -1393,6 +1449,9 @@ class PiPMiniViewerWidget(QWidget):
         self.setAcceptDrops(True)
 
         # installHoverDisplaySS(self, "TEST")
+
+    def name(self):
+        return self.item().columnData()["name"]
 
     def updateItemDisplayName(self, widget, value):
         """
@@ -2595,7 +2654,7 @@ if __name__ == '__main__':
     from qtpy import API_NAME
 
     from qtpy.QtWidgets import (QApplication, QListWidget, QAbstractItemView, QPushButton)
-    from cgwidgets.utils import centerWidgetOnCursor
+    from cgwidgets.utils import centerWidgetOnCursor, setAsAlwaysOnTop
     app = QApplication(sys.argv)
 
     # PiP Widget
@@ -2670,7 +2729,10 @@ widget.setCreationMode(AbstractPiPWidget.DISPLAY)
     # splitter.addWidget(QLabel("this"))
     # main_layout.addWidget(splitter)
 
+    setAsAlwaysOnTop(main_widget)
     main_widget.show()
+
+    #main_widget.move(2000,700)
     centerWidgetOnCursor(main_widget)
     main_widget.resize(512, 512)
 

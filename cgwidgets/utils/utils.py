@@ -187,6 +187,15 @@ def showWarningDialogue(widget, warning_display_widget, accept_event, cancel_eve
     return widget._warning_widget
 
 
+def setAsAlwaysOnTop(widget):
+    """ Sets the widget as always on top.
+
+    Must be run BEFORE the widget has been shown."""
+    widget.setWindowFlag(Qt.WindowStaysOnTopHint)
+    widget.setWindowState(widget.windowState() & ~Qt.WindowMinimized | Qt.WindowActive)
+    widget.activateWindow()
+
+
 def setAsTool(widget):
     import platform
     if platform.system() == 'Windows':
@@ -202,6 +211,24 @@ def setAsTool(widget):
             | Qt.Tool
             | Qt.NoDropShadowWindowHint
             | Qt.FramelessWindowHint
+            )
+
+
+def unsetAsTool(widget):
+    import platform
+    if platform.system() == 'Windows':
+        widget.setWindowFlags(
+            widget.windowFlags()
+            & Qt.Tool
+            & Qt.NoDropShadowWindowHint
+            & Qt.WindowStaysOnTopHint
+            )
+    elif platform.system() == 'Linux':
+        widget.setWindowFlags(
+            widget.windowFlags()
+            & Qt.Tool
+            & Qt.NoDropShadowWindowHint
+            & Qt.FramelessWindowHint
             )
 
 
