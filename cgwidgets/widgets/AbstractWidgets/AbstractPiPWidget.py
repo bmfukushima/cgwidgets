@@ -996,7 +996,7 @@ class PiPMiniViewer(QSplitter):
 
         self._popup_widget = None
         self._enlarged_widget = None
-        self._spacer_widget = QLabel("--SPACER--")
+        self._spacer_widget = QLabel("")
         self._spacer_widget.setParent(self.parent())
         self._spacer_widget.hide()
         self.setHandleWidth(15)
