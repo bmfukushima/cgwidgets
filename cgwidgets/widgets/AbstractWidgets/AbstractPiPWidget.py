@@ -79,6 +79,9 @@ Signals:
             3.) Sometimes the order gets bricked... seems to be a size problem?
                     Mainly happens when its 0.5 and 0.5...
     * Swap Widgets (Space)
+        - When swapping over the MiniViewer portion, sometimes it will not reinsert
+        the widget
+            - Potentially entering a widget in the MiniViewer? Causing issues?
     * Resize
         Update Enlarged widget on resize finished
     
@@ -86,6 +89,7 @@ Signals:
         - Weird bug in replaceWidget() call... that sometimes will cause it not to work
             this seems to happen if you move the cursor super fast, and make it go in/out
             of the widget.
+        - 5.6 doesnt have replaceWidget()... GG Katana...
     * Display Name (bug)
         When display names is active, when leaving the mini viewer, the widgets
         will "wobble" for a few seconds.  This is only when display names is active...
@@ -550,6 +554,8 @@ widget.setWordWrap(True)
 
     """ EVENTS """
     def keyPressEvent(self, event):
+        # if event.key() == self.swapKey():
+        #     self.mainWidget().swapWidgets()
         # these are registering???
         # if event.key() == Qt.Key_F:
         #     self.toggleLocalOrganizerVisibility()
@@ -599,9 +605,7 @@ class PiPMainWidget(QWidget):
         self._mini_viewer_widget = PiPMiniViewer(self)
 
         # create layout
-        """
-        Not using a stacked layout as the enter/leave events get borked
-        """
+        """Not using a stacked layout as the enter/leave events get borked"""
         #QStackedLayout(self)
         QVBoxLayout(self)
         self.layout().setContentsMargins(0, 0, 0, 0)
@@ -610,7 +614,6 @@ class PiPMainWidget(QWidget):
         self.layout().addWidget(self.mainViewerWidget())
 
         self._is_frozen = False
-        #self.layout().addWidget(self.panel_creator_widget)
 
     """ UTILS (SWAP) """
     def swapWidgets(self):
@@ -694,12 +697,6 @@ class PiPMainWidget(QWidget):
     def miniViewerWidget(self):
         return self._mini_viewer_widget
 
-    # def removeWidget(self, widget):
-    #     #self.widgets().remove(widget)
-    #
-    #     widget.setParent(None)
-    #     widget.deleteLater()
-
     def currentWidget(self):
         return self._current_widget
 
@@ -716,11 +713,13 @@ class PiPMainWidget(QWidget):
         if self._current_widget:
             # Close enlarged widget
             """ Need to ensure the spacer is swapped out"""
-            self.miniViewerWidget()._resetSpacerWidget(self.miniViewerWidget().enlargedWidget())
-            self.miniViewerWidget().setIsEnlarged(False)
+            if self.miniViewerWidget().isEnlarged():
+                self.miniViewerWidget()._resetSpacerWidget(self.miniViewerWidget().enlargedWidget())
+                self.miniViewerWidget().setIsEnlarged(False)
 
             # setup mini viewer widget
             self.miniViewerWidget().insertWidget(widget.index(), self._current_widget)
+            self._current_widget.show()
             self._current_widget.setIndex(widget.index())
             self._current_widget.removeEventFilter(self)
 
@@ -859,14 +858,16 @@ class PiPMainWidget(QWidget):
         self.miniViewerWidget().move(int(xpos), int(ypos))
         self.miniViewerWidget().resize(int(width), int(height))
 
-        # resize individual widgets?
-        # print("widgets == ", self.miniViewerWidget().widgets())
-        # for widget in self.miniViewerWidget().widgets():
-        #     print(widget)
-
     def eventFilter(self, obj, event):
         if event.type() == QEvent.DragEnter:
             event.accept()
+        # if event.type() == QEvent.KeyPress:
+        #     print('key press2 ')
+        #     if event.key() == self.swapKey():
+        #         if obj == self.currentWidget():
+        #             print('swap1')
+        #             self.swapWidgets()
+        #             return True
         # elif event.type() == QEvent.Drop:
         #     print("drop???")
         #     # todo figure out how to handle this for stupid shit that suppressed
@@ -886,20 +887,24 @@ class PiPMainWidget(QWidget):
             # pre flight
             widget = getWidgetUnderCursor()
             if widget == self.miniViewerWidget(): return
+            if isWidgetDescendantOf(widget, self.miniViewerWidget()): return
+            # if widget == self.miniViewerWidget().spacerWidget(): return
+            # if isinstance(widget, QSplitterHandle): return
+
+            # set currently enlarged widget as the main widget
+            self.miniViewerWidget().setIsFrozen(True)
+
+            if self.miniViewerWidget().isEnlarged():
+                self.setCurrentWidget(self.miniViewerWidget().enlargedWidget())
+                self.miniViewerWidget().setIsEnlarged(False)
 
             # swap previous widget widgets
-            is_descendant_of_main_viewer = isWidgetDescendantOf(widget, self.currentWidget())
-            if widget == self or is_descendant_of_main_viewer:
+            else:
                 self.swapWidgets()
-                return QWidget.keyPressEvent(self, event)
 
-            # set widget under cursor as current
-            is_descendant_of_main_widget = isWidgetDescendantOf(widget, self)
-            if is_descendant_of_main_widget:
-                swap_widget = getWidgetAncestor(widget, PiPMiniViewerWidget)
-                self.setCurrentWidget(swap_widget)
-                self.miniViewerWidget().setIsEnlarged(False)
-                return QWidget.keyPressEvent(self, event)
+            self.miniViewerWidget().setIsFrozen(False)
+
+            return QWidget.keyPressEvent(self, event)
 
         # hotkey swapping
         if event.key() in [Qt.Key_1, Qt.Key_2, Qt.Key_3, Qt.Key_4, Qt.Key_5]:
@@ -954,6 +959,8 @@ class PiPMainViewer(QWidget):
         self._widget = widget
         self.layout().addWidget(widget)
         widget.layout().setContentsMargins(0, 0, 0, 0)
+        # self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+        # self.setStyleSheet("background-color:rgba(0,255,0,255)")
 
 
 class PiPMiniViewer(QSplitter):
@@ -989,7 +996,7 @@ class PiPMiniViewer(QSplitter):
 
         self._popup_widget = None
         self._enlarged_widget = None
-        self._spacer_widget = QLabel("")
+        self._spacer_widget = QLabel("--SPACER--")
         self._spacer_widget.setParent(self.parent())
         self._spacer_widget.hide()
         self.setHandleWidth(15)
@@ -1051,9 +1058,9 @@ class PiPMiniViewer(QSplitter):
         # preflight
         if not widget: return
         if widget == self.widget(widget.index()): return True
+        # todo: this is where it stops?
         if not self.widget(widget.index()): return True
         if widget.parent() == self.widget(widget.index()).parent(): return True
-
         self.replaceWidget(widget.index(), widget)
         self.spacerWidget().setParent(self.parent())
         self.widgets().append(widget)
@@ -1077,6 +1084,21 @@ class PiPMiniViewer(QSplitter):
             return True
         else:
             return False
+    #
+    # # # Todo remove this once katana gets updated...
+    # def replaceWidget(self, index, widget):
+    #     """ Because Katana is on 5.6... this will still crash like crazy, but idgaf
+    #
+    #     Args:
+    #         index:
+    #         widget:
+    #     """
+    #     if hasattr(QSplitter, "replaceWidget"):
+    #         return QSplitter.replaceWidget(self, index, widget)
+    #     else:
+    #         # legacy
+    #         self.widget(index).setParent(None)
+    #         self.insertWidget(index, widget)
 
     """ EVENTS """
     def eventFilter(self, obj, event):
@@ -1109,7 +1131,10 @@ class PiPMiniViewer(QSplitter):
                 if self.isEnlarged():
                     if obj == self.enlargedWidget():
                         self.closeEnlargedView(self.enlargedWidget())
-
+            # todo handle swapping when over the mini viewer
+            # if event.key() == self.parent().swapKey():
+            #     if self.isEnlarged():
+            #         self.parent().setCurrentWidget(self.enlargedWidget())
         if self.isFrozen(): return True
 
         if self._popupWidgetEvent(obj, event): return True
@@ -1266,10 +1291,11 @@ class PiPMiniViewer(QSplitter):
         """
 
         # preflight
+        if not widget: return
         if not self.widget(widget.index()): return
         if self.widget(widget.index()) == self.spacerWidget(): return
         if self.widget(widget.index()).parent() == self.spacerWidget().parent():return
-
+        if not getWidgetAncestor(widget, AbstractPiPWidget): return
         # freeze
         self.setIsFrozen(True)
 
@@ -1416,7 +1442,6 @@ class PiPMiniViewer(QSplitter):
     def insertWidget(self, index, widget):
         if isinstance(widget, PiPMiniViewerWidget):
             widget.installEventFilter(self)
-            self.widgets().append(widget)
         return QSplitter.insertWidget(self, index, widget)
 
     def removeWidget(self, widget):
@@ -1899,10 +1924,10 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
         """
         if enabled:
             if item.itemType() == PiPGlobalOrganizerItem.PIP:
-                pip_widget = getWidgetAncestor(self, AbstractPiPWidget)
-                pip_widget.mainWidget().setIsFrozen(True)
+                # pip_widget = getWidgetAncestor(self, AbstractPiPWidget)
+                # pip_widget.mainWidget().setIsFrozen(True)
                 self.saveWidget().loadPiPWidgetFromItem(item)
-                pip_widget.mainWidget().setIsFrozen(False)
+                # pip_widget.mainWidget().setIsFrozen(False)
 
             # toggle save button lock
             is_locked = item.isLocked()
@@ -2132,12 +2157,12 @@ class PiPSaveWidget(QWidget):
         # load settings
         main_widget.settingsWidget().loadSettings(item.settings())
 
+        # reset previous widget
+        main_widget.mainWidget().setPreviousWidget(None)
+
         # restore mini widget sizes
         if "sizes" in list(item.settings().keys()):
             main_widget.miniViewerWidget().setSizes(item.settings()["sizes"])
-
-        # reset previous widget
-        main_widget.mainWidget().setPreviousWidget(None)
 
     def getAllPiPData(self):
         """
@@ -2768,7 +2793,7 @@ widget.setCreationMode(AbstractPiPWidget.DISPLAY)
 
 
     # setup display widget
-    pip_widget.setDisplayWidget("Bar", "Recursion")
+    pip_widget.setDisplayWidget("Bar", "test02")
     # pip_widget.setCreationMode(AbstractPiPWidget.DISPLAY)
 
     sys.exit(app.exec_())
