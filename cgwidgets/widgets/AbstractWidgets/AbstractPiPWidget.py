@@ -74,17 +74,18 @@ Signals:
     * Recursive PiPs
         - MiniViewer
             1.) Can't press escape to close
-            2.) Wrong sizes being displayed at bottom? 3 widgets.. 4+?
-                    create properly name PiPs to test
-            3.) Sometimes the order gets bricked... seems to be a size problem?
-                    Mainly happens when its 0.5 and 0.5...
-    * Swap Widgets (Space)
-        - When swapping over the MiniViewer portion, sometimes it will not reinsert
-        the widget
-            - Potentially entering a widget in the MiniViewer? Causing issues?
-    * Resize
-        Update Enlarged widget on resize finished
-    
+    * Display Name
+        Remove ability to adjust display name in MiniViewerWidgets
+    * Move AbstractPiPWidget to AbstractPiPWidgetOrganizer
+        - AbstractPiPWidget then becomes a display only PiPWidget
+            so that it doesn't have to keep creating a ton of extra widgets...
+    * Clean up mini viewer resize
+        PiPGlobalOrganizerWidget --> loadPiPWidgetFromSelection ( This runs twice for some reason)
+        PiPSaveWidget --> loadPiPWidgetFromItem
+        AbstractPiPWidget --> createNewWidget --> resizeMiniViewer
+
+
+
     * Move MiniViewer to QSplitter?
         - Weird bug in replaceWidget() call... that sometimes will cause it not to work
             this seems to happen if you move the cursor super fast, and make it go in/out
@@ -321,11 +322,12 @@ class AbstractPiPWidget(AbstractShojiModelViewWidget):
 
         return widget
 
-    def createNewWidget(self, constructor_code, name=""):
+    def createNewWidget(self, constructor_code, name="", resize_mini_viewer=True):
         """
         Args:
             constructor_code (str):
             name (str):
+            resize_mini_viewer (bool): if the miniViewerWidget should be updated or not
 
         Returns (QModelIndex):
 
@@ -368,7 +370,8 @@ class AbstractPiPWidget(AbstractShojiModelViewWidget):
 
         # TODO This is probably causing some slowness on loading
         # as it is resizing the mini viewer EVERY time a widget is created
-        self.mainWidget().resizeMiniViewer()
+        if resize_mini_viewer:
+            self.mainWidget().resizeMiniViewer()
         return index
 
     def updateWidgetIndexes(self):
@@ -771,7 +774,6 @@ class PiPMainWidget(QWidget):
         """
 
         if self.isFrozen(): return True
-
         # get attrs
         main_widget = getWidgetAncestor(self, AbstractPiPWidget)
         num_widgets = main_widget.numWidgets()
@@ -2129,6 +2131,7 @@ class PiPSaveWidget(QWidget):
         reversed_widgets = OrderedDict(reversed(list(widgets.items())))
 
         main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+        main_widget.mainWidget().setIsFrozen(True)
 
         # clear pip view
         main_widget.removeAllWidgets()
@@ -2136,7 +2139,7 @@ class PiPSaveWidget(QWidget):
         # populate pip view
         # load widgets
         for widget_name, constructor_code in reversed_widgets.items():
-            main_widget.createNewWidget(constructor_code, name=widget_name)
+            main_widget.createNewWidget(constructor_code, name=widget_name, resize_mini_viewer=False)
 
         # load settings
         main_widget.settingsWidget().loadSettings(item.settings())
@@ -2145,6 +2148,8 @@ class PiPSaveWidget(QWidget):
         main_widget.mainWidget().setPreviousWidget(None)
 
         # restore mini widget sizes
+        main_widget.mainWidget().setIsFrozen(False)
+        main_widget.mainWidget().resizeMiniViewer()
         if "sizes" in list(item.settings().keys()):
             main_widget.miniViewerWidget().setSizes(item.settings()["sizes"])
 
