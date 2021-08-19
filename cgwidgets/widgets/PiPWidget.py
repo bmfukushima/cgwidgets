@@ -23,7 +23,7 @@ class PiPWidget(AbstractPiPWidget):
         |- PiPMainWidget --> QWidget
         |    |- QVBoxLayout
         |    |    |- PiPMainViewer --> QWidget
-        |    |    |- PiPPanelCreatorWidget --> AbstractListInputWidget
+        |    |    |- PiPMiniViewerWidgetCreator --> AbstractListInputWidget
         |    |- MiniViewer (QWidget)
         |        |- QBoxLayout
         |            |-* PiPMiniViewerWidget --> QWidget

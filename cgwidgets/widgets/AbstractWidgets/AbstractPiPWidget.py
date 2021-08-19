@@ -10,7 +10,7 @@ Hierarchy:
         |- PiPMainWidget --> (QWidget)
         |    |- QVBoxLayout
         |    |    |- PiPMainViewer --> (QWidget)
-        |    |    |- PiPPanelCreatorWidget --> (AbstractListInputWidget)
+        |    |    |- PiPMiniViewerWidgetCreator --> (AbstractListInputWidget)
         |    |- spacer_widget (QLabel)
         |    |- MiniViewer (QWidget)
         |        |- QBoxLayout
@@ -112,9 +112,7 @@ from cgwidgets.utils import (
     getWidgetAncestor,
     getDefaultSavePath,
     getJSONData,
-    showWarningDialogue,
-    setAsTool,
-    unsetAsTool)
+    installResizeEventFinishedEvent)
 
 from cgwidgets.settings import attrs, iColor, keylist
 
@@ -176,7 +174,7 @@ class AbstractPiPWidget(AbstractShojiModelViewWidget):
         self._main_widget = PiPMainWidget(self)
 
         # setup local organizer widget
-        self._local_organizer_widget = PiPLocalOrganizerWidget(self, widget_types)
+        self._local_organizer_widget = PiPMiniViewerOrganizerWidget(self, widget_types)
         self._is_local_organizer_visible = False
 
         # setup global organizer widget
@@ -498,10 +496,12 @@ widget.setWordWrap(True)
         """
 
         # if self.miniViewerWidget()._is_frozen:
-        if self.miniViewerWidget().isEnlarged():
-            obj = getWidgetUnderCursor(QCursor.pos())
-            widget = getWidgetAncestor(obj, PiPMiniViewerWidget)
-            self.miniViewerWidget().closeEnlargedView(widget)
+        # if self.miniViewerWidget().isEnlarged():
+        # close enlarged view
+        # obj = getWidgetUnderCursor(QCursor.pos())
+        # widget = getWidgetAncestor(obj, PiPMiniViewerWidget)
+        # self.miniViewerWidget().closeEnlargedView(widget)
+        self.miniViewerWidget().closeEnlargedView()
 
         # toggle visibility
         self._is_local_organizer_visible = not self.isLocalOrganizerVisible()
@@ -521,10 +521,11 @@ widget.setWordWrap(True)
         """
 
         # if self.miniViewerWidget()._is_frozen:
-        if self.miniViewerWidget().isEnlarged():
-            obj = getWidgetUnderCursor(QCursor.pos())
-            widget = getWidgetAncestor(obj, PiPMiniViewerWidget)
-            self.miniViewerWidget().closeEnlargedView(widget)
+        # if self.miniViewerWidget().isEnlarged():
+        # obj = getWidgetUnderCursor(QCursor.pos())
+        # widget = getWidgetAncestor(obj, PiPMiniViewerWidget)
+        # self.miniViewerWidget().closeEnlargedView(widget)
+        self.miniViewerWidget().closeEnlargedView()
 
         # toggle visibility
         self._is_global_organizer_visible = not self.isGlobalOrganizerVisible()
@@ -543,10 +544,11 @@ widget.setWordWrap(True)
         Note: This is currently hard coded to "Q"
         """
 
-        if self.miniViewerWidget().isEnlarged():
-            obj = getWidgetUnderCursor(QCursor.pos())
-            widget = getWidgetAncestor(obj, PiPMiniViewerWidget)
-            self.miniViewerWidget().closeEnlargedView(widget)
+        # if self.miniViewerWidget().isEnlarged():
+        #     obj = getWidgetUnderCursor(QCursor.pos())
+        #     widget = getWidgetAncestor(obj, PiPMiniViewerWidget)
+        #     self.miniViewerWidget().closeEnlargedView(widget)
+        self.miniViewerWidget().closeEnlargedView()
 
         # toggle visibility
         self._is_settings_visible = not self.isSettingsVisible()
@@ -720,12 +722,11 @@ class PiPMainWidget(QWidget):
             # Close enlarged widget
             """ Need to ensure the spacer is swapped out"""
             if self.miniViewerWidget().isEnlarged():
-                self.miniViewerWidget()._resetSpacerWidget(self.miniViewerWidget().enlargedWidget())
+                self.miniViewerWidget()._resetSpacerWidget()
                 self.miniViewerWidget().setIsEnlarged(False)
 
             # setup mini viewer widget
             self.miniViewerWidget().insertWidget(widget.index(), self._current_widget)
-            # self._current_widget.show()
             self._current_widget.setIndex(widget.index())
             self._current_widget.removeEventFilter(self)
 
@@ -876,15 +877,18 @@ class PiPMainWidget(QWidget):
         #             return True
         # elif event.type() == QEvent.Drop:
         #     print("drop???")
-        #     # todo figure out how to handle this for stupid shit that suppressed
+        #     # todo figure out how to handle this for suppressed
         #     # the event from being passed on
         #     self.miniViewerWidget().setIsDragging(False)
         #     self.miniViewerWidget().setPopupWidget(None)
         return False
 
     def resizeEvent(self, event):
-        self.resizeMiniViewer()
-
+        """ After a delay in the resize, this will update the display"""
+        def updateDisplay():
+            self.resizeMiniViewer()
+            self.miniViewerWidget().closeEnlargedView()
+        installResizeEventFinishedEvent(self, 100, updateDisplay, '_timer')
         return QWidget.resizeEvent(self, event)
 
     def swapEvent(self):
@@ -936,7 +940,7 @@ class PiPMainWidget(QWidget):
                 # Todo for some reason the PRINT makes it so that the IF clause below actually works... tf
                 # print(widget.name(), self.miniViewerWidget().enlargedWidget().name())
                 if widget != self.miniViewerWidget().enlargedWidget():
-                    self.miniViewerWidget().closeEnlargedView(self.miniViewerWidget().enlargedWidget())
+                    self.miniViewerWidget().closeEnlargedView()
                     self.miniViewerWidget().enlargeWidget(widget)
 
             # swap with main widget
@@ -960,21 +964,13 @@ class PiPMainWidget(QWidget):
         # hide PiP
         if event.key() == Qt.Key_Q:
             self.setIsMiniViewerShown(not self.isMiniViewerShown())
-            # self.miniViewerWidget().hide()
             return
 
         # escape
         if event.key() == Qt.Key_Escape:
-            if self.miniViewerWidget().isEnlarged():
-                self.miniViewerWidget().closeEnlargedView(self.miniViewerWidget().enlargedWidget())
+            self.miniViewerWidget().closeEnlargedView()
 
         return QWidget.keyPressEvent(self, event)
-
-    # def keyReleaseEvent(self, event):
-    #     if event.key() == Qt.Key_Q:
-    #         self.miniViewerWidget().show()
-    #         return
-    #     return QWidget.keyReleaseEvent(self, event)
 
 
 class PiPMainViewer(QWidget):
@@ -991,8 +987,6 @@ class PiPMainViewer(QWidget):
         self._widget = widget
         self.layout().addWidget(widget)
         widget.layout().setContentsMargins(0, 0, 0, 0)
-        # self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
-        # self.setStyleSheet("background-color:rgba(0,255,0,255)")
 
 
 class PiPMiniViewer(QSplitter):
@@ -1077,8 +1071,8 @@ class PiPMiniViewer(QSplitter):
 
         return False
 
-    def _resetSpacerWidget(self, widget):
-        """ Swaps the spacer widget with the one provided
+    def _resetSpacerWidget(self):
+        """ Swaps (removes) the spacer widget with the one provided
 
         This swap is done when opening/closing the enlarged view.
         The spacer widget (self._spacer_widget) is used as a place
@@ -1087,12 +1081,16 @@ class PiPMiniViewer(QSplitter):
         Args:
             widget (PiPMiniViewerWidget): to be swapped in/out
         """
+        widget = self.enlargedWidget()
+
         # preflight
+        if not self.isEnlarged(): return
         if not widget: return
         if widget == self.widget(widget.index()): return True
-        # todo: this is where it stops?
         if not self.widget(widget.index()): return True
         if widget.parent() == self.widget(widget.index()).parent(): return True
+
+        # swap widgets
         self.replaceWidget(widget.index(), widget)
         self.spacerWidget().setParent(self.parent())
         self.widgets().append(widget)
@@ -1103,7 +1101,6 @@ class PiPMiniViewer(QSplitter):
 
         This is mainly used in the DragLeave event to determine what kind
         of leave is happening"""
-        # padding = 20
         global_event_pos = QCursor.pos()
         xpos = global_event_pos.x()
         ypos = global_event_pos.y()
@@ -1116,21 +1113,6 @@ class PiPMiniViewer(QSplitter):
             return True
         else:
             return False
-    #
-    # # # Todo remove this once katana gets updated...
-    # def replaceWidget(self, index, widget):
-    #     """ Because Katana is on 5.6... this will still crash like crazy, but idgaf
-    #
-    #     Args:
-    #         index:
-    #         widget:
-    #     """
-    #     if hasattr(QSplitter, "replaceWidget"):
-    #         return QSplitter.replaceWidget(self, index, widget)
-    #     else:
-    #         # legacy
-    #         self.widget(index).setParent(None)
-    #         self.insertWidget(index, widget)
 
     """ EVENTS """
     def eventFilter(self, obj, event):
@@ -1160,17 +1142,12 @@ class PiPMiniViewer(QSplitter):
         """
         if event.type() == QEvent.KeyPress:
             if event.key() == Qt.Key_Escape:
-                if self.isEnlarged():
-                    if obj == self.enlargedWidget():
-                        self.closeEnlargedView(self.enlargedWidget())
-            # todo handle swapping when over the mini viewer
-            # if event.key() == self.parent().swapKey():
-            #     if self.isEnlarged():
-            #         self.parent().swapEvent()
-        if self.isFrozen(): return True
+                if obj == self.enlargedWidget():
+                    self.closeEnlargedView()
 
+        # preflight
+        if self.isFrozen(): return True
         if self._popupWidgetEvent(obj, event): return True
-        #
         if self._dragEvent(obj, event): return True
 
         if event.type() == QEvent.Enter:
@@ -1185,9 +1162,9 @@ class PiPMiniViewer(QSplitter):
                 # Has just enlarged the widget, but the cursor never entered it
                 else:
                     # reset display label
-                    self._resetSpacerWidget(self.enlargedWidget())
+                    self._resetSpacerWidget()
 
-                    # # reset widget to default params
+                    # reset widget to default params
                     self.setIsDragging(False)
                     self.setPopupWidget(None)
 
@@ -1207,7 +1184,7 @@ class PiPMiniViewer(QSplitter):
         if event.type() == QEvent.Leave:
 
             if obj == self.enlargedWidget():
-                self.closeEnlargedView(obj)
+                self.closeEnlargedView()
             return True
 
         return False
@@ -1236,26 +1213,26 @@ class PiPMiniViewer(QSplitter):
             if not self.isDragging():
                 self.setPopupWidget(None)
                 self.setIsDragging(True)
-                self.closeEnlargedView(self.enlargedWidget())
+                self.closeEnlargedView()
                 return True
 
         # on drop, close and reset
         if event.type() == QEvent.Drop:
             self.setIsDragging(False)
             self.setPopupWidget(None)
-            self.closeEnlargedView(self.enlargedWidget())
+            self.closeEnlargedView()
 
         # on drag leave, if the drag leave enters a widget that
         # is a child of the current enlargedWidget, then do nothing
         if event.type() == QEvent.DragLeave:
 
             if self._isCursorOverEnlargedWidget():
-                print(" LEAVE (OVER)")
+                # print(" LEAVE (OVER)")
                 # event.ignore()
                 return True
             else:
-                print(" LEAVE (NOT OVER)")
-                self.closeEnlargedView(self.enlargedWidget())
+                # print(" LEAVE (NOT OVER)")
+                self.closeEnlargedView()
                 return True
 
     def _popupWidgetEvent(self, obj, event):
@@ -1409,28 +1386,28 @@ class PiPMiniViewer(QSplitter):
         widget.resize(width, height)
         widget.move(xpos, ypos)
 
-        """ Old way of working, auto centered the cursor...
-        Moving away from this as it was causing all sorts of issues"""
-        # # move cursor to center of enlarged widget
-        # xcursor = xpos + int(width * 0.5)
-        # ycursor = ypos + int(height * 0.5)
-        # print("moving cursor to --> ", main_widget.mapToGlobal(QPoint(xcursor, ycursor)))
-        # QCursor.setPos(main_widget.mapToGlobal(QPoint(xcursor, ycursor)))
+        #
         self.insertWidget(widget.index(), self._spacer_widget)
-
         self.setSizes(self._temp_sizes)
         self.setIsFrozen(False)
 
-    def closeEnlargedView(self, widget):
+    def closeEnlargedView(self, enlarged_widget=None):
         """
         Closes the enlarged viewer, and returns it back to normal PiP mode
 
         Args:
-            widget (PiPMiniViewerWidget):
+            enlarged_widget (PiPMiniViewerWidget):
         """
 
+        # preflight
+        if not self.isEnlarged(): return
+
+        # setup attrs
         self.setIsFrozen(True)
+        if not enlarged_widget:
+            enlarged_widget = self.enlargedWidget()
         widget_under_cursor = getWidgetUnderCursor()
+
         # exitted over the mini viewer
         if isWidgetDescendantOf(widget_under_cursor, self):
             if widget_under_cursor == self._spacer_widget:
@@ -1440,7 +1417,7 @@ class PiPMiniViewer(QSplitter):
             else:
                 # reset display label
                 self._temp_sizes = self.sizes()
-                self._resetSpacerWidget(widget)
+                self._resetSpacerWidget()
 
                 # enlarge mini viewer
                 mini_viewer_widget = getWidgetAncestor(widget_under_cursor, PiPMiniViewerWidget)
@@ -1448,8 +1425,7 @@ class PiPMiniViewer(QSplitter):
 
         else:
             # reset display label
-            self._resetSpacerWidget(widget)
-
+            self._resetSpacerWidget()
             self.setIsEnlarged(False)
 
         self.setIsFrozen(False)
@@ -1471,13 +1447,17 @@ class PiPMiniViewer(QSplitter):
         mini_widget.installEventFilter(self)
         return mini_widget
 
+    def addWidget(self, widget):
+        if isinstance(widget, PiPMiniViewerWidget):
+            widget.installEventFilter(self)
+        return QSplitter.addWidget(self, widget)
+
     def insertWidget(self, index, widget):
         if isinstance(widget, PiPMiniViewerWidget):
             widget.installEventFilter(self)
         return QSplitter.insertWidget(self, index, widget)
 
     def removeWidget(self, widget):
-        #self.layout().removeWidget(widget)
         if widget:
             widget.setParent(None)
             if not isinstance(widget, QSplitterHandle):
@@ -1498,7 +1478,7 @@ class PiPMiniViewerWidget(QWidget):
 
     Attributes:
         index (int): current index in model
-        item (PiPLocalOrganizerItem)
+        item (PiPMiniViewerOrganizerItem)
     """
     def __init__(
         self,
@@ -1763,9 +1743,6 @@ class PiPGlobalOrganizerItem(AbstractDragDropModelItem):
     def setIsLocked(self, _is_locked):
         self._is_locked = _is_locked
         self.setIsDropEnabled(False)
-        # todo KATANA UPDATE NEEDED
-        """ the drag handler can be removed, to allow for drag/drop out of locked items for duplication
-        note that also the Views --> AbstractDragDropModel --> dropMimeData will need to be uncommented..."""
         self.setIsDragEnabled(not _is_locked)
         self.setIsEditable(not _is_locked)
         self.setDeleteOnDrop(not _is_locked)
@@ -1901,7 +1878,6 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
         item.setIsDropEnabled(False)
         if index.parent().internalPointer().isLocked():
             item.setIsLocked(True)
-            #item.setIsEditable(False)
 
         return item
 
@@ -1939,10 +1915,7 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
         """
         if enabled:
             if item.itemType() == PiPGlobalOrganizerItem.PIP:
-                # pip_widget = getWidgetAncestor(self, AbstractPiPWidget)
-                # pip_widget.mainWidget().setIsFrozen(True)
                 self.saveWidget().loadPiPWidgetFromItem(item)
-                # pip_widget.mainWidget().setIsFrozen(False)
 
             # toggle save button lock
             is_locked = item.isLocked()
@@ -1955,13 +1928,9 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
 
         Args:
             item (PiPGlobalOrganizerItem): currently selected by the user to be deleted
-
-        Returns:
-
         """
         # remove from JSON
         if item.itemType() == PiPGlobalOrganizerItem.PIP:
-            # todo
             pip_data = self.currentPiPFileData()
             name = item.columnData()['name']
             del pip_data[name]
@@ -2509,9 +2478,9 @@ class PiPSaveWidget(QWidget):
 
 
 """ ORGANIZER (LOCAL) """
-class PiPLocalOrganizerItem(AbstractDragDropModelItem):
+class PiPMiniViewerOrganizerItem(AbstractDragDropModelItem):
     def __init__(self, parent=None):
-        super(PiPLocalOrganizerItem, self).__init__(parent)
+        super(PiPMiniViewerOrganizerItem, self).__init__(parent)
 
     def widget(self):
         return self._widget
@@ -2526,7 +2495,7 @@ class PiPLocalOrganizerItem(AbstractDragDropModelItem):
         self._constructor_code = constructor_code
 
 
-class PiPLocalOrganizerWidget(AbstractModelViewWidget):
+class PiPMiniViewerOrganizerWidget(AbstractModelViewWidget):
     """
     This widget is in charge of organizing widgets that will be visible in the AbstractPiPWidget
         Abilities include:
@@ -2543,10 +2512,10 @@ class PiPLocalOrganizerWidget(AbstractModelViewWidget):
         Delete Widget -->
     """
     def __init__(self, parent=None, widget_types=None):
-        super(PiPLocalOrganizerWidget, self).__init__(parent=parent)
+        super(PiPMiniViewerOrganizerWidget, self).__init__(parent=parent)
 
         # setup model
-        self.model().setItemType(PiPLocalOrganizerItem)
+        self.model().setItemType(PiPMiniViewerOrganizerItem)
 
         # install events
         self.setItemDeleteEvent(self.deleteWidget)
@@ -2557,7 +2526,7 @@ class PiPLocalOrganizerWidget(AbstractModelViewWidget):
         if not widget_types:
             widget_types = {}
 
-        self.panel_creator_widget = PiPPanelCreatorWidget(self, widget_types=widget_types)
+        self.panel_creator_widget = PiPMiniViewerWidgetCreator(self, widget_types=widget_types)
         self.addDelegate([Qt.Key_C], self.panel_creator_widget, modifier=Qt.AltModifier, focus=True)
         self.panel_creator_widget.show()
 
@@ -2625,13 +2594,10 @@ class PiPLocalOrganizerWidget(AbstractModelViewWidget):
             main_widget.createTempWidget()
 
         # delete widget
-        # if item.widget():
         item.widget().setParent(None)
         item.widget().deleteLater()
         # resize
         main_widget.mainWidget().resizeMiniViewer()
-
-        # print("removing widget -->", item.columnData()['name'])
 
     """ EVENTS """
     def showEvent(self, event):
@@ -2646,13 +2612,13 @@ class PiPLocalOrganizerWidget(AbstractModelViewWidget):
         AbstractModelViewWidget.hideEvent(self, event)
 
 
-class PiPPanelCreatorWidget(AbstractListInputWidget):
+class PiPMiniViewerWidgetCreator(AbstractListInputWidget):
+    """ """
     def __init__(self, parent=None, widget_types=None):
-        super(PiPPanelCreatorWidget, self).__init__(parent)
+        super(PiPMiniViewerWidgetCreator, self).__init__(parent)
 
         self._widget_types = widget_types
         self.populate([[key] for key in sorted(widget_types.keys())])
-        #self.setUserFinishedEditingEvent(self.createNewWidget)
 
     def widgetTypes(self):
         return self._widget_types
