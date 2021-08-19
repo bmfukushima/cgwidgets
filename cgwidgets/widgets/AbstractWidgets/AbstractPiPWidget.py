@@ -567,23 +567,22 @@ widget.setWordWrap(True)
 
 
 class PiPMainWidget(QWidget):
-    """
-    The PiPWidget is designed to display multiple widgets simultaneously to the user.
+    """The PiPWidget is designed to display multiple widgets simultaneously to the user.
 
     Similar to the function that was provided to TV's in the mid 1970's.  This widget is
     designed to allow the user to create multiple hot swappable widgets inside of the same
     widget.
 
-    Args:
-
     Attributes:
         current_widget (QWidget): the widget that is currently set as the main display
         direction (attrs.DIRECTION): what side the mini viewer will be displayed on.
+        hotkey_swap_key (list): of Qt.Key that will swap to the corresponding widget in the miniViewerWidget().
+
+            The index of the Key in the list, is the index of the widget that will be swapped to.
         pip_scale ((float, float)):  fractional percentage of the amount of space that
             the mini viewer will take up in relation to the overall size of the widget.
         swap_key (Qt.KEY): this key will trigger the popup
         widgets (list): of widgets
-
     """
 
     def __init__(self, parent=None):
@@ -599,7 +598,7 @@ class PiPMainWidget(QWidget):
         self._is_mini_viewer_shown = True
         self._direction = attrs.SOUTH
         self._swap_key = Qt.Key_Space
-
+        self._hotkey_swap_keys = [Qt.Key_1, Qt.Key_2, Qt.Key_3, Qt.Key_4, Qt.Key_5]
         # create widgets
         self._main_viewer_widget = PiPMainViewer(self)
         self._mini_viewer_widget = PiPMiniViewer(self)
@@ -630,6 +629,12 @@ class PiPMainWidget(QWidget):
 
     def setSwapKey(self, key):
         self._swap_key = key
+
+    def hotkeySwapKeys(self):
+        return self._hotkey_swap_keys
+
+    def setHotkeySwapKeys(self, hotkey_swap_keys):
+        self._hotkey_swap_keys = hotkey_swap_keys
 
     """ PROPERTIES """
     def pipScale(self):
@@ -708,6 +713,7 @@ class PiPMainWidget(QWidget):
             widget (QWidget): widget to be set as full screen
         """
 
+        self.miniViewerWidget().setIsFrozen(True)
         sizes = self.miniViewerWidget().sizes()
         # reset current widget
         if self._current_widget:
@@ -719,7 +725,7 @@ class PiPMainWidget(QWidget):
 
             # setup mini viewer widget
             self.miniViewerWidget().insertWidget(widget.index(), self._current_widget)
-            self._current_widget.show()
+            # self._current_widget.show()
             self._current_widget.setIndex(widget.index())
             self._current_widget.removeEventFilter(self)
 
@@ -881,49 +887,75 @@ class PiPMainWidget(QWidget):
 
         return QWidget.resizeEvent(self, event)
 
+    def swapEvent(self):
+        """ Swaps the widget that is being displayed.
+
+        This occurs when the swapKey() is pressed.
+        If there is currently a widget enlarged, the enlarged widget will become the one
+        that is currently being displayed.
+
+        If there is no widget currently enlarged, then it will swap the main widget, with
+        the previously enlarged widget."""
+        # pre flight
+        widget = getWidgetUnderCursor()
+        if widget == self.miniViewerWidget(): return
+        if isWidgetDescendantOf(widget, self.miniViewerWidget()): return
+        if widget == self.miniViewerWidget().spacerWidget(): return
+        if isinstance(widget, QSplitterHandle): return
+
+        # set currently enlarged widget as the main widget
+        """Freezing here to avoid the cursor being over the MiniViewerWidget
+        If this happens, it will close, then try to enlarge, then get stuck in
+        Qts event queue and have unexpected behavior"""
+        self.miniViewerWidget().setIsFrozen(True)
+
+        if self.miniViewerWidget().isEnlarged():
+            self.setCurrentWidget(self.miniViewerWidget().enlargedWidget())
+            self.miniViewerWidget().setIsEnlarged(False)
+
+        # swap previous widget widgets
+        else:
+            self.swapWidgets()
+
+        self.miniViewerWidget().setIsFrozen(False)
+
+    def hotkeySwapEvent(self, key):
+        """ Swaps the widgets when a hotkey (1-5) is pressed.
+
+        Args:
+            key (Qt.Key): Valid inputs are 1-5
+        """
+        try:
+            # select user input
+            for i, swap_key in enumerate(self.hotkeySwapKeys()):
+                if swap_key == key:
+                    widget = self.miniViewerWidget().widget(i)
+
+            # swap with enlarged widget
+            if self.miniViewerWidget().isEnlarged():
+                # Todo for some reason the PRINT makes it so that the IF clause below actually works... tf
+                # print(widget.name(), self.miniViewerWidget().enlargedWidget().name())
+                if widget != self.miniViewerWidget().enlargedWidget():
+                    self.miniViewerWidget().closeEnlargedView(self.miniViewerWidget().enlargedWidget())
+                    self.miniViewerWidget().enlargeWidget(widget)
+
+            # swap with main widget
+            else:
+                self.setCurrentWidget(widget)
+
+        except AttributeError:
+            # not enough widgets
+            pass
+
     def keyPressEvent(self, event):
         # swap between this and previous
         if event.key() == self.swapKey():
-            # pre flight
-            widget = getWidgetUnderCursor()
-            if widget == self.miniViewerWidget(): return
-            if isWidgetDescendantOf(widget, self.miniViewerWidget()): return
-            # if widget == self.miniViewerWidget().spacerWidget(): return
-            # if isinstance(widget, QSplitterHandle): return
-
-            # set currently enlarged widget as the main widget
-            self.miniViewerWidget().setIsFrozen(True)
-
-            if self.miniViewerWidget().isEnlarged():
-                self.setCurrentWidget(self.miniViewerWidget().enlargedWidget())
-                self.miniViewerWidget().setIsEnlarged(False)
-
-            # swap previous widget widgets
-            else:
-                self.swapWidgets()
-
-            self.miniViewerWidget().setIsFrozen(False)
-
+            self.swapEvent()
             return QWidget.keyPressEvent(self, event)
 
         # hotkey swapping
-        if event.key() in [Qt.Key_1, Qt.Key_2, Qt.Key_3, Qt.Key_4, Qt.Key_5]:
-            try:
-                if event.key() == Qt.Key_1:
-                    widget = self.miniViewerWidget().layout().itemAt(0).widget()
-                if event.key() == Qt.Key_2:
-                    widget = self.miniViewerWidget().layout().itemAt(1).widget()
-                if event.key() == Qt.Key_3:
-                    widget = self.miniViewerWidget().layout().itemAt(2).widget()
-                if event.key() == Qt.Key_4:
-                    widget = self.miniViewerWidget().layout().itemAt(3).widget()
-                if event.key() == Qt.Key_5:
-                    widget = self.miniViewerWidget().layout().itemAt(4).widget()
-                self.setCurrentWidget(widget)
-
-            except AttributeError:
-                # not enough widgets
-                pass
+        if event.key() in self.hotkeySwapKeys():
+            self.hotkeySwapEvent(event.key())
 
         # hide PiP
         if event.key() == Qt.Key_Q:
@@ -1134,7 +1166,7 @@ class PiPMiniViewer(QSplitter):
             # todo handle swapping when over the mini viewer
             # if event.key() == self.parent().swapKey():
             #     if self.isEnlarged():
-            #         self.parent().setCurrentWidget(self.enlargedWidget())
+            #         self.parent().swapEvent()
         if self.isFrozen(): return True
 
         if self._popupWidgetEvent(obj, event): return True
@@ -1485,25 +1517,8 @@ class PiPMiniViewerWidget(QWidget):
 
         self.layout().addWidget(self.main_widget)
         self.layout().setContentsMargins(0, 0, 0, 0)
-        self.main_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
-        # todo set stylesheet
-        # base_style_sheet = """
-        # {type}{{
-        #     background-color: rgba{rgba_background};
-        #     color: rgba{rgba_text};
-        #     border: 2px solid rgba{rgba_border};
-        # }}""".format(
-        #     rgba_background=repr(self.main_widget.rgba_background),
-        #     rgba_border=iColor["rgba_background_01"],
-        #     rgba_text=repr(self.main_widget.rgba_text),
-        #     type=type(self.main_widget).__name__,
-        # )
-        # self.main_widget.setBaseStyleSheet(base_style_sheet)
 
         self.setAcceptDrops(True)
-
-        # installHoverDisplaySS(self, "TEST")
 
     def name(self):
         return self.item().columnData()["name"]
@@ -2733,7 +2748,7 @@ from qtpy.QtWidgets import QListWidget
 widget = QListWidget()
 widget.setDragDropMode(QAbstractItemView.DragDrop)
 widget.addItems(['a', 'b', 'c', 'd'])
-widget.setFixedWidth(100)
+# widget.setFixedWidth(100)
 """,
         "Recursion":"""
 
@@ -2794,6 +2809,7 @@ widget.setCreationMode(AbstractPiPWidget.DISPLAY)
 
     # setup display widget
     pip_widget.setDisplayWidget("Bar", "test02")
+    pip_widget.setDelegateTitleIsShown(True)
     # pip_widget.setCreationMode(AbstractPiPWidget.DISPLAY)
 
     sys.exit(app.exec_())
