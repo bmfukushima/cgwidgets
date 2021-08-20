@@ -6,8 +6,8 @@ designed to allow the user to create multiple hot swappable widgets inside of th
 widget.
 
 Hierarchy:
-    AbstractPiPWidget --> (AbstractShojiModelViewWidget)
-        |- PiPMainWidget --> (QWidget)
+    AbstractPiPOrganizerWidget --> (AbstractShojiModelViewWidget)
+        |- PiPDisplayWidget --> (QWidget)
         |    |- QVBoxLayout
         |    |    |- PiPMainViewer --> (QWidget)
         |    |    |- PiPMiniViewerWidgetCreator --> (AbstractListInputWidget)
@@ -17,7 +17,7 @@ Hierarchy:
         |            |-* PiPMiniViewerWidget --> QWidget
         |                    |- QVBoxLayout
         |                    |- AbstractLabelledInputWidget
-        |- LocalOrganizerWidget --> AbstractModelViewWidget
+        |- miniViewerOrganizerWidget --> AbstractModelViewWidget
         |- CreatorWidget (Extended...)
         |- GlobalOrganizerWidget --> AbstractModelViewWidget
         |- SettingsWidget --> FrameInputWidgetContainer
@@ -36,11 +36,11 @@ Signals:
 
         Default is "Space"
 
-        PiPMainWidget --> keyPressEvent --> setCurrentWidget, swapWidgets
+        PiPDisplayWidget --> keyPressEvent --> setCurrentWidget, swapWidgets
 
     Swap Previous (Key Press)
         Press ~, main widget is swapped with previous main widget
-        PiPMainWidget --> keyPressEvent --> setCurrentWidget
+        PiPDisplayWidget --> keyPressEvent --> setCurrentWidget
     Quick Drag ( Drag Enter ):
         Upon user drag enter, the mini widget becomes large to allow easier dropping
         PiPMiniViewer --> EventFilter --> Drag Enter
@@ -49,9 +49,9 @@ Signals:
                                       --> Drag Leave
                                       --> Leave
     HotSwap (Key Press 1-5):
-        PiPMainWidget --> keyPressEvent --> setCurrentWidget
+        PiPDisplayWidget --> keyPressEvent --> setCurrentWidget
     Toggle previous widget
-        PiPMainWidget --> keyPressEvent --> swapWidgets
+        PiPDisplayWidget --> keyPressEvent --> swapWidgets
     Toggle Organizer Widget (Q):
         keyPressEvent --> toggleLocalOrganizerVisibility
     Create New Widget -->
@@ -65,7 +65,7 @@ Signals:
             tempWidgets()
             removeTempWidget()
 
-    PanelCreatorWidget:
+    miniViewerCreatorWidget:
         show (c):
             keyPressEvent --> toggleCreatorVisibility --> show
         hide (esc)
@@ -73,21 +73,26 @@ Signals:
 """ TODO
     * Recursive PiPs
         - MiniViewer
-            Swapping to Main View creates awkward behavior...
-            Hard to swap back to original...
-            If miniviewer is in the same position... will juste overlay =/
-            potentially just block PiPWidgets from doing that?
+            recursive swapping main widget (Space/12345)
+            PiPDisplayWidget --> setCurrentWidget
+            Needs to make it so that the PIPWidget that is displayed, is the one that is 
+            selected, and the current pip widget is set in the mini viewer... With the PiPViewer
+            that was selected removed from the miniviewer...
+            1.) Make selected PiPDisplayWidget/AbstractPiPOrganizerWidget the currently displayed PiPWidget
+                    - How to get/store this data?
+            2.) Take old PiPDisplayWidget/AbstractPiPOrganizerWidget and insert it as the first index
+                    in the new PiPDisplayWidget/AbstractPiPOrganizerWidget
     * Display Name
         Remove ability to adjust display name in MiniViewerWidgets
-    * Move AbstractPiPWidget to AbstractPiPWidgetOrganizer
-        - AbstractPiPWidget then becomes a display only PiPWidget
+            .headerWidget().setName(new_value) ?
+            MiniViewerWidget --> headerWidget()
+    * Move AbstractPiPOrganizerWidget to AbstractPiPOrganizerWidgetOrganizer
+        - AbstractPiPOrganizerWidget then becomes a display only PiPWidget
             so that it doesn't have to keep creating a ton of extra widgets...
     * Clean up mini viewer resize
         PiPGlobalOrganizerWidget --> loadPiPWidgetFromSelection ( This runs twice for some reason)
         PiPSaveWidget --> loadPiPWidgetFromItem
-        AbstractPiPWidget --> createNewWidget --> resizeMiniViewer
-
-
+        AbstractPiPOrganizerWidget --> createNewWidget --> resizeMiniViewer
 
     * Move MiniViewer to QSplitter?
         - Weird bug in replaceWidget() call... that sometimes will cause it not to work
@@ -136,7 +141,7 @@ from cgwidgets.widgets import (
     AbstractButtonInputWidgetContainer)
 
 
-class AbstractPiPWidget(AbstractShojiModelViewWidget):
+class AbstractPiPOrganizerWidget(AbstractShojiModelViewWidget):
     """
     The PiPWidget is designed to display multiple widgets simultaneously to the user.
 
@@ -160,22 +165,24 @@ class AbstractPiPWidget(AbstractShojiModelViewWidget):
     DISPLAY = 1
 
     def __init__(self, parent=None, save_data=None, widget_types=None):
-        super(AbstractPiPWidget, self).__init__(parent)
+        super(AbstractPiPOrganizerWidget, self).__init__(parent)
 
         # setup default attrs
-        self._creation_mode = AbstractPiPWidget.CREATE
+        self._creation_mode = AbstractPiPOrganizerWidget.CREATE
         self.setHeaderPosition(attrs.NORTH)
         self.setMultiSelectDirection(Qt.Horizontal)
         self.setMultiSelect(True)
         self.setHeaderItemIsEditable(False)
         self.setHeaderItemIsDragEnabled(False)
+        self.setHeaderItemIsDeleteEnabled(False)
+        self.setHeaderItemIsEnableable(False)
         self._temp_widgets = []
         if not widget_types:
             widget_types = []
 
         """ create widgets """
         # create main pip widget
-        self._main_widget = PiPMainWidget(self)
+        self._main_widget = PiPDisplayWidget(self)
 
         # setup local organizer widget
         self._local_organizer_widget = PiPMiniViewerOrganizerWidget(self, widget_types)
@@ -213,7 +220,7 @@ class AbstractPiPWidget(AbstractShojiModelViewWidget):
         return len(self.widgets())
 
     def widgets(self):
-        return [index.internalPointer().widget() for index in self.localOrganizerWidget().model().getAllIndexes() if hasattr(index.internalPointer(), "_widget")]
+        return [index.internalPointer().widget() for index in self.miniViewerOrganizerWidget().model().getAllIndexes() if hasattr(index.internalPointer(), "_widget")]
 
     def items(self):
         """
@@ -222,7 +229,7 @@ class AbstractPiPWidget(AbstractShojiModelViewWidget):
         Returns (list)
         """
 
-        model = self.localOrganizerWidget().model()
+        model = self.miniViewerOrganizerWidget().model()
         root_item = model.getRootItem()
         return root_item.children()
 
@@ -237,19 +244,19 @@ class AbstractPiPWidget(AbstractShojiModelViewWidget):
         The default mode is CREATE
 
         Args:
-            mode (AbstractPiPWidget.MODE):
+            mode (AbstractPiPOrganizerWidget.MODE):
                 DISPLAY | CREATE
         """
         self._creation_mode = mode
-        if mode == AbstractPiPWidget.DISPLAY:
+        if mode == AbstractPiPOrganizerWidget.DISPLAY:
             self.headerWidget().hide()
             for widget in self.widgets():
-                widget.main_widget.viewWidget().setDisplayMode(AbstractOverlayInputWidget.DISABLED)
+                widget.headerWidget().setDisplayMode(AbstractOverlayInputWidget.DISABLED)
 
-        if mode == AbstractPiPWidget.CREATE:
+        if mode == AbstractPiPOrganizerWidget.CREATE:
             self.headerWidget().show()
             for widget in self.widgets():
-                widget.main_widget.viewWidget().setDisplayMode(AbstractOverlayInputWidget.RELEASE)
+                widget.headerWidget().setDisplayMode(AbstractOverlayInputWidget.RELEASE)
 
     def setDisplayWidget(self, file_name, widget_name):
         """
@@ -295,14 +302,14 @@ class AbstractPiPWidget(AbstractShojiModelViewWidget):
     def mainViewerWidget(self):
         return self.mainWidget().mainViewerWidget()
 
-    def localOrganizerWidget(self):
+    def miniViewerOrganizerWidget(self):
         return self._local_organizer_widget
 
     def globalOrganizerWidget(self):
         return self._global_organizer_widget
 
-    def panelCreatorWidget(self):
-        return self.mainWidget().panel_creator_widget
+    def miniViewerCreatorWidget(self):
+        return self.mainWidget()._panel_creator_widget
 
     def settingsWidget(self):
         return self._settings_widget
@@ -318,12 +325,7 @@ class AbstractPiPWidget(AbstractShojiModelViewWidget):
 
         Returns (QWidget):
         """
-        loc = {}
-        loc['self'] = self
-        exec(constructor_code, globals(), loc)
-        widget = loc['widget']
-
-        return widget
+        return self.mainWidget().createNewWidgetFromConstructorCode(constructor_code)
 
     def createNewWidget(self, constructor_code, name="", resize_mini_viewer=True):
         """
@@ -335,36 +337,18 @@ class AbstractPiPWidget(AbstractShojiModelViewWidget):
         Returns (QModelIndex):
 
         """
-
-        # create widget from constructor code
-        widget = self.createNewWidgetFromConstructorCode(constructor_code)
-
-        # setup recursion of PiPWidgets
-        if isinstance(widget, AbstractPiPWidget):
-            widget.setIsMiniViewerWidget(True)
-        if isinstance(widget, PiPMainWidget):
-            widget.setIsMiniViewerWidget(True)
-        # insert widget into layout
-        mini_widget = self.miniViewerWidget().createNewWidget(widget, name=name)
-
-        # set title editable
-        if self.creationMode() == AbstractPiPWidget.CREATE:
-            mini_widget.main_widget.viewWidget().setDisplayMode(AbstractOverlayInputWidget.RELEASE)
-        elif self.creationMode() == AbstractPiPWidget.DISPLAY:
-            mini_widget.main_widget.viewWidget().setDisplayMode(AbstractOverlayInputWidget.DISABLED)
-
-        if self.numWidgets() < 1:
-            self.mainWidget().setCurrentWidget(mini_widget)
+        # create mini viewer widget
+        mini_viewer_widget = self.mainWidget().createNewWidget(constructor_code, name, resize_mini_viewer)
 
         # create new index
-        index = self.localOrganizerWidget().model().insertNewIndex(0, name=name)
+        index = self.miniViewerOrganizerWidget().model().insertNewIndex(0, name=name)
 
         item = index.internalPointer()
-        item.setWidget(mini_widget)
+        item.setWidget(mini_viewer_widget)
         item.setConstructorCode(constructor_code)
 
-        mini_widget.setIndex(0)
-        mini_widget.setItem(item)
+        mini_viewer_widget.setIndex(0)
+        mini_viewer_widget.setItem(item)
 
         # update indexes
         self.updateWidgetIndexes()
@@ -373,13 +357,7 @@ class AbstractPiPWidget(AbstractShojiModelViewWidget):
         if 2 < self.numWidgets():
             if name != "":
                 self.removeTempWidget()
-        #
-        # print (self.tempWidgets())
 
-        # TODO This is probably causing some slowness on loading
-        # as it is resizing the mini viewer EVERY time a widget is created
-        if resize_mini_viewer:
-            self.mainWidget().resizeMiniViewer()
         return index
 
     def updateWidgetIndexes(self):
@@ -388,17 +366,17 @@ class AbstractPiPWidget(AbstractShojiModelViewWidget):
 
         This will need to be done every time a new widget is added
         """
-        for index in self.localOrganizerWidget().model().getAllIndexes():
+        for index in self.miniViewerOrganizerWidget().model().getAllIndexes():
             item = index.internalPointer()
             if hasattr(item, "_widget"):
                 item.widget().setIndex(index.row())
 
     def removeAllWidgets(self):
-        """ Clears all of the widgets from the current AbstractPiPWidget"""
-        for item in self.localOrganizerWidget().model().getRootItem().children():
+        """ Clears all of the widgets from the current AbstractPiPOrganizerWidget"""
+        for item in self.miniViewerOrganizerWidget().model().getRootItem().children():
             item.widget().setParent(None)
             item.widget().deleteLater()
-        self.localOrganizerWidget().model().clearModel()
+        self.miniViewerOrganizerWidget().model().clearModel()
 
     """ WIDGETS (TEMP)"""
     def createTempWidget(self):
@@ -432,13 +410,13 @@ widget.setWordWrap(True)
         item.setIsEnabled(False)
 
         # setup widget
-        item.widget().main_widget.viewWidget().setDisplayMode(AbstractOverlayInputWidget.DISABLED)
+        item.widget().headerWidget().setDisplayMode(AbstractOverlayInputWidget.DISABLED)
 
     def removeTempWidget(self):
         """
         Removes the first temp widget from the tempWidgets list
         """
-        model = self.localOrganizerWidget().model()
+        model = self.miniViewerOrganizerWidget().model()
         indexes = model.findItems("", match_type=Qt.MatchExactly)
         if 0 < len(indexes):
             model.deleteItem(indexes[0].internalPointer(), event_update=True)
@@ -452,7 +430,7 @@ widget.setWordWrap(True)
 
     """ VIRTUAL PROPERTIES """
     def setSavePath(self, file_paths):
-        self.localOrganizerWidget().saveWidget().setPiPSaveData(file_paths)
+        self.miniViewerOrganizerWidget().saveWidget().setPiPSaveData(file_paths)
 
     def direction(self):
         return self.mainWidget().direction()
@@ -585,7 +563,7 @@ widget.setWordWrap(True)
         return AbstractShojiModelViewWidget.keyPressEvent(self, event)
 
 
-class PiPMainWidget(QWidget):
+class PiPDisplayWidget(QWidget):
     """The PiPWidget is designed to display multiple widgets simultaneously to the user.
 
     Similar to the function that was provided to TV's in the mid 1970's.  This widget is
@@ -608,7 +586,7 @@ class PiPMainWidget(QWidget):
     """
 
     def __init__(self, parent=None, is_mini_viewer_widget=False):
-        super(PiPMainWidget, self).__init__(parent)
+        super(PiPDisplayWidget, self).__init__(parent)
 
         # setup attrs
         self._is_frozen = True
@@ -676,6 +654,12 @@ class PiPMainWidget(QWidget):
     def setEnlargedScale(self, _enlarged_scale):
         self._enlarged_scale = _enlarged_scale
 
+    def isFrozen(self):
+        return self._is_frozen
+
+    def setIsFrozen(self, is_frozen):
+        self._is_frozen = is_frozen
+
     def isMiniViewerShown(self):
         return self._is_mini_viewer_shown
 
@@ -706,11 +690,15 @@ class PiPMainWidget(QWidget):
         self._mini_viewer_min_size = size
         self.miniViewerWidget().setMinimumSize(size)
 
-    def isFrozen(self):
-        return self._is_frozen
-
-    def setIsFrozen(self, is_frozen):
-        self._is_frozen = is_frozen
+    def numWidgets(self):
+        """ Number of widgets currently in this PiPDisplay"""
+        # todo currently working... not really sure how... but it is... w/e
+        """
+        Include spacer widget, need to figure out how this effects it
+        numWidgets needs to be removed from the AbstractPiPOrganizer, and added in here...
+        as it effects other things such as the mini viewer resize"""
+        return self.miniViewerWidget().count()
+        # return getWidgetAncestor(self, AbstractPiPOrganizerWidget).numWidgets()
 
     """ UTILS """
     def areWidgetNamesShown(self):
@@ -718,18 +706,78 @@ class PiPMainWidget(QWidget):
 
     def showWidgetDisplayNames(self, enabled):
         self._are_widget_names_shown = enabled
-        for widget in getWidgetAncestor(self, AbstractPiPWidget).widgets():
+        for widget in getWidgetAncestor(self, AbstractPiPOrganizerWidget).widgets():
             if enabled:
-                widget.main_widget.viewWidget().show()
+                widget.headerWidget().show()
             else:
-                widget.main_widget.viewWidget().hide()
+                widget.headerWidget().hide()
+
+    """ WIDGETS ( CREATION )"""
+    def createNewWidgetFromConstructorCode(self, constructor_code):
+        """
+        Retuns a QWidget from the constructor code provided.
+
+        The widget returned will be the variable "widget" from the constructor code
+        Args:
+            constructor_code (code):
+
+        Returns (QWidget):
+        """
+        loc = {}
+        loc['self'] = self
+        exec(constructor_code, globals(), loc)
+        widget = loc['widget']
+
+        return widget
+
+    def createNewWidget(self, constructor_code, name="", resize_mini_viewer=True):
+        """
+        Args:
+            constructor_code (str):
+            name (str):
+            resize_mini_viewer (bool): if the miniViewerWidget should be updated or not
+
+        Returns (QModelIndex):
+
+        """
+
+        # create widget from constructor code
+        widget = self.createNewWidgetFromConstructorCode(constructor_code)
+
+        # setup recursion for PiPWidgets
+        if isinstance(widget, AbstractPiPOrganizerWidget) or isinstance(widget, PiPDisplayWidget):
+            widget.setIsMiniViewerWidget(True)
+
+        # insert widget into layout
+        mini_viewer_widget = self.miniViewerWidget().createNewWidget(widget, name=name)
+
+        # set title editable
+        # if self.creationMode() == AbstractPiPOrganizerWidget.CREATE:
+        #     mini_viewer_widget.headerWidget().setDisplayMode(AbstractOverlayInputWidget.RELEASE)
+        # elif self.creationMode() == AbstractPiPOrganizerWidget.DISPLAY:
+        #     mini_viewer_widget.headerWidget().setDisplayMode(AbstractOverlayInputWidget.DISABLED)
+
+        if self.numWidgets() == 1:
+            self.setCurrentWidget(mini_viewer_widget)
+
+        # TODO This is probably causing some slowness on loading
+        # as it is resizing the mini viewer EVERY time a widget is created
+        if resize_mini_viewer:
+            self.resizeMiniViewer()
+        return mini_viewer_widget
 
     """ WIDGETS """
     def mainViewerWidget(self):
         return self._main_viewer_widget
 
+    def setMainViewerWidget(self, widget):
+        self._main_viewer_widget = widget
+
     def miniViewerWidget(self):
         return self._mini_viewer_widget
+
+    def setMiniViewerWidget(self, widget):
+        self._mini_viewer_widget = widget
 
     def currentWidget(self):
         return self._current_widget
@@ -741,6 +789,32 @@ class PiPMainWidget(QWidget):
         Args:
             widget (QWidget): widget to be set as full screen
         """
+
+        # todo multi recursive swapping
+        if widget.isPiPWidget():
+            if isinstance(widget.delegateWidget(), AbstractPiPOrganizerWidget):
+                # create new pip widget
+                # new_pip_widget = PiPDisplayWidget(self)
+                # new_pip_widget.setMainViewerWidget(PiPMainViewer(self))
+                # new_pip_widget.setMiniViewerWidget(self.miniViewerWidget())
+                # self.miniViewerWidget().setParent(new_pip_widget)
+                # self.mainViewerWidget().setParent(new_pip_widget)
+                # new_pip_widget.setCurrentWidget(self._current_widget)
+                # new_pip_widget.show()
+
+                # update this widget
+                # new_main_widget = widget.delegateWidget().mainWidget()
+                # print(new_main_widget.miniViewerWidget())
+                # self.setMiniViewerWidget(new_main_widget.miniViewerWidget())
+                # self.setMainViewerWidget(new_main_widget.mainViewerWidget())
+                # widget.miniViewerWidget()
+                # do pip organize
+                pass
+            elif isinstance(widget.delegateWidget(), PiPDisplayWidget):
+                # do pip widget swap
+                pass
+            print("multi recursive swapping is currently disabled... because I haven\'t set it up yet")
+            return
 
         self.miniViewerWidget().setIsFrozen(True)
         sizes = self.miniViewerWidget().sizes()
@@ -799,7 +873,9 @@ class PiPMainWidget(QWidget):
 
         if self.isFrozen(): return True
         # get attrs
-        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+        main_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
+        print("orig === ", main_widget.numWidgets())
+        print("new === ", self.numWidgets())
         num_widgets = main_widget.numWidgets()
 
         # preflight
@@ -1002,7 +1078,7 @@ class PiPMainWidget(QWidget):
 
             # close parent mini viewer (if open recursively)
             if self.isMiniViewerWidget():
-                parent_main_widget = getWidgetAncestor(self.parent(), PiPMainWidget)
+                parent_main_widget = getWidgetAncestor(self.parent(), PiPDisplayWidget)
                 parent_main_widget.miniViewerWidget().closeEnlargedView()
             return
 
@@ -1012,9 +1088,10 @@ class PiPMainWidget(QWidget):
 class PiPMainViewer(QWidget):
     def __init__(self, parent=None):
         super(PiPMainViewer, self).__init__(parent)
-
         QVBoxLayout(self)
         self.layout().setContentsMargins(0, 0, 0, 0)
+
+        self._widget = None
 
     def widget(self):
         return self._widget
@@ -1286,7 +1363,7 @@ class PiPMiniViewer(QSplitter):
             if obj == self.popupWidget():
                 # set cursor position to center of enlarged widget
                 """ This is to make it so that a leave event is not created"""
-                main_widget = getWidgetAncestor(self, PiPMainWidget)
+                main_widget = getWidgetAncestor(self, PiPDisplayWidget)
                 enlarged_widget = self.enlargedWidget()
                 xpos, ypos = enlarged_widget.pos().x(), enlarged_widget.pos().y()
                 width, height = enlarged_widget.width(), enlarged_widget.height()
@@ -1340,12 +1417,12 @@ class PiPMiniViewer(QSplitter):
         if not self.widget(widget.index()): return
         if self.widget(widget.index()) == self.spacerWidget(): return
         if self.widget(widget.index()).parent() == self.spacerWidget().parent():return
-        if not getWidgetAncestor(widget, AbstractPiPWidget): return
+        if not getWidgetAncestor(widget, AbstractPiPOrganizerWidget): return
         # freeze
         self.setIsFrozen(True)
 
         # set/get attrs
-        main_widget = getWidgetAncestor(self, PiPMainWidget)
+        main_widget = getWidgetAncestor(self, PiPDisplayWidget)
         self.setIsEnlarged(True)
         self.setEnlargedWidget(widget)
         """temp sizes holds the current size of widgets
@@ -1354,7 +1431,7 @@ class PiPMiniViewer(QSplitter):
         scale = main_widget.enlargedScale()
         negative_space = 1 - scale
         half_neg_space = negative_space * 0.5
-        num_widgets = getWidgetAncestor(widget, AbstractPiPWidget).numWidgets()
+        num_widgets = getWidgetAncestor(widget, AbstractPiPOrganizerWidget).numWidgets()
 
         # special case for only one mini viewer widget
         if num_widgets == 2:
@@ -1521,34 +1598,60 @@ class PiPMiniViewerWidget(QWidget):
         parent=None,
         name="None",
         direction=Qt.Horizontal,
-        delegate_widget=None,
+        delegate_widget=None
     ):
         super(PiPMiniViewerWidget, self).__init__(parent)
         QVBoxLayout(self)
 
-        self._index = 0
-        self.main_widget = AbstractLabelledInputWidget(
-            self, name=name, direction=direction, delegate_widget=delegate_widget)
-        self.main_widget.viewWidget().delegateWidget().setUserFinishedEditingEvent(self.updateItemDisplayName)
+        # setup flag for if this is a pip widget (for recursive purposes
+        if isinstance(delegate_widget, AbstractPiPOrganizerWidget) or isinstance(delegate_widget, PiPDisplayWidget):
+            self._is_pip_widget = True
+        else:
+            self._is_pip_widget = False
 
-        self.layout().addWidget(self.main_widget)
+        self._index = 0
+        self._main_widget = AbstractLabelledInputWidget(
+            self, name=name, direction=direction, delegate_widget=delegate_widget)
+        #self._main_widget.viewWidget().delegateWidget().setUserFinishedEditingEvent(self.updateItemDisplayName)
+
+        self.layout().addWidget(self._main_widget)
         self.layout().setContentsMargins(0, 0, 0, 0)
 
+        # Todo find all of these handlers and remove them?
+        # this is just a forced override for now
+        # disable editable header
+        self.headerWidget().setDisplayMode(AbstractOverlayInputWidget.DISABLED)
+
+        #
         self.setAcceptDrops(True)
 
-    def name(self):
-        return self.item().columnData()["name"]
+    # def updateItemDisplayName(self, widget, value):
+    #     """
+    #     Updates the display name of this label
+    #     Args:
+    #         widget:
+    #         value:
+    #     """
+    #     self.item().columnData()['name'] = value
+    #     self.headerWidget().viewWidget().hideDelegate()
+    #     self.headerWidget().setName(value)
 
-    def updateItemDisplayName(self, widget, value):
-        """
-        Updates the display name of this label
-        Args:
-            widget:
-            value:
-        """
-        self.item().columnData()['name'] = value
-        self.main_widget.viewWidget().hideDelegate()
-        self.main_widget.setName(value)
+    """ WIDGETS """
+    def mainWidget(self):
+        return self._main_widget
+
+    def headerWidget(self):
+        return self.mainWidget().viewWidget()
+
+    def delegateWidget(self):
+        return self.mainWidget().delegateWidget()
+
+    """ PROPERTIES """
+    def isPiPWidget(self):
+        return self._is_pip_widget
+
+    def setIsPiPWidget(self, is_pip_widget):
+        self._is_pip_widget = is_pip_widget
 
     def item(self):
         return self._item
@@ -1561,6 +1664,9 @@ class PiPMiniViewerWidget(QWidget):
 
     def setIndex(self, index):
         self._index = index
+
+    def name(self):
+        return self.item().columnData()["name"]
 
 
 """ SETTINGS """
@@ -1689,7 +1795,7 @@ main_widget.mainWidget().resizeMiniViewer()"""}
         # get attrs
         setting = self.settings()[name]
         code = setting['code']
-        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+        main_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
 
         # prepare local scope
         loc = {}
@@ -1742,12 +1848,12 @@ main_widget.mainWidget().resizeMiniViewer()"""}
 
     """ EVENTS """
     def showEvent(self, event):
-        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+        main_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
         main_widget.setIsSettingsVisible(True)
         AbstractFrameInputWidgetContainer.showEvent(self, event)
 
     def hideEvent(self, event):
-        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+        main_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
         main_widget.setIsSettingsVisible(False)
         main_widget.setFocus()
         AbstractFrameInputWidgetContainer.hideEvent(self, event)
@@ -1810,7 +1916,7 @@ class PiPGlobalOrganizerItem(AbstractDragDropModelItem):
 
 class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
     """
-    This widget will read all of the AbstractPiPWidgets that the user has created.
+    This widget will read all of the AbstractPiPOrganizerWidgets that the user has created.
 
     The user can then select an item from this list to have their gui updated.
 
@@ -1868,8 +1974,7 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
                     parent_index)
 
     def createNewPiPGroupIndex(self, name, locked, file_path):
-        """
-        Creates a new Group for
+        """ Creates a new Group for index which stores PiPWidgets
         Args:
             name (str):
             locked (bool): whether or not this group can be manipulated by the user
@@ -1942,7 +2047,7 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
 
     """ EVENTS """
     def loadPiPWidgetFromSelection(self, item, enabled):
-        """ When an item is selected, this will update the AbstractPiPWidget to the item
+        """ When an item is selected, this will update the AbstractPiPOrganizerWidget to the item
         that has been selected
 
         Args:
@@ -1981,12 +2086,12 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
                 item.setIsLocked(False)
 
     def showEvent(self, event):
-        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+        main_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
         main_widget.setIsGlobalOrganizerVisible(True)
         AbstractModelViewWidget.showEvent(self, event)
 
     def hideEvent(self, event):
-        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+        main_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
         main_widget.setIsGlobalOrganizerVisible(False)
         main_widget.setFocus()
         AbstractModelViewWidget.hideEvent(self, event)
@@ -2164,28 +2269,28 @@ class PiPSaveWidget(QWidget):
         widgets = item.widgetsList()
         reversed_widgets = OrderedDict(reversed(list(widgets.items())))
 
-        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
-        main_widget.mainWidget().setIsFrozen(True)
+        organizer_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
+        organizer_widget.mainWidget().setIsFrozen(True)
 
         # clear pip view
-        main_widget.removeAllWidgets()
+        organizer_widget.removeAllWidgets()
 
         # populate pip view
         # load widgets
         for widget_name, constructor_code in reversed_widgets.items():
-            main_widget.createNewWidget(constructor_code, name=widget_name, resize_mini_viewer=False)
+            organizer_widget.createNewWidget(constructor_code, name=widget_name, resize_mini_viewer=False)
 
         # load settings
-        main_widget.settingsWidget().loadSettings(item.settings())
+        organizer_widget.settingsWidget().loadSettings(item.settings())
 
         # reset previous widget
-        main_widget.mainWidget().setPreviousWidget(None)
+        organizer_widget.mainWidget().setPreviousWidget(None)
 
         # restore mini widget sizes
-        main_widget.mainWidget().setIsFrozen(False)
-        main_widget.mainWidget().resizeMiniViewer()
+        organizer_widget.mainWidget().setIsFrozen(False)
+        organizer_widget.mainWidget().resizeMiniViewer()
         if "sizes" in list(item.settings().keys()):
-            main_widget.miniViewerWidget().setSizes(item.settings()["sizes"])
+            organizer_widget.miniViewerWidget().setSizes(item.settings()["sizes"])
 
     def getAllPiPData(self):
         """
@@ -2265,7 +2370,7 @@ class PiPSaveWidget(QWidget):
                 "settings": {"setting name": "value"}
             }
         """
-        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+        main_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
 
         # create pip save dict
         item_dict = OrderedDict()
@@ -2356,7 +2461,7 @@ class PiPSaveWidget(QWidget):
 
         file_path = self.currentSaveFilePath()
         if not file_path: return
-        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+        main_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
         selection = main_widget.globalOrganizerWidget().getAllSelectedIndexes()
         if len(selection) == 0: return
 
@@ -2414,7 +2519,7 @@ class PiPSaveWidget(QWidget):
         Saves a singular PiPItem in the GlobalOrganizer to the master PiPDictionary
         located at self.currentSaveFilePath()
         """
-        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+        main_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
 
         # update
         if self.saveButtonWidget().mode() == PiPSaveButtonWidget.UPDATE:
@@ -2477,7 +2582,7 @@ class PiPSaveWidget(QWidget):
         self.dumpPiPDataToJSON(self.currentSaveFilePath(), pip_data)
 
         # create new index
-        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+        main_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
 
         # get parent index (if Group/PiP is selected)
         selected_index = main_widget.globalOrganizerWidget().getAllSelectedIndexes()[0]
@@ -2500,7 +2605,7 @@ class PiPSaveWidget(QWidget):
         Updates the currently selected PiPWidgetItem if the user has made changes.
         This will only work, if the current text is empty in the name widget.
         """
-        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+        main_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
         selected_indexes = main_widget.globalOrganizerWidget().getAllSelectedIndexes()
 
         # get name
@@ -2536,7 +2641,7 @@ class PiPMiniViewerOrganizerItem(AbstractDragDropModelItem):
 
 class PiPMiniViewerOrganizerWidget(AbstractModelViewWidget):
     """
-    This widget is in charge of organizing widgets that will be visible in the AbstractPiPWidget
+    This widget is in charge of organizing widgets that will be visible in the AbstractPiPOrganizerWidget
         Abilities include:
             Delete | Rename | Reorder
 
@@ -2565,9 +2670,9 @@ class PiPMiniViewerOrganizerWidget(AbstractModelViewWidget):
         if not widget_types:
             widget_types = {}
 
-        self.panel_creator_widget = PiPMiniViewerWidgetCreator(self, widget_types=widget_types)
-        self.addDelegate([Qt.Key_C], self.panel_creator_widget, modifier=Qt.AltModifier, focus=True)
-        self.panel_creator_widget.show()
+        self._panel_creator_widget = PiPMiniViewerWidgetCreator(self, widget_types=widget_types)
+        self.addDelegate([Qt.Key_C], self._panel_creator_widget, modifier=Qt.AltModifier, focus=True)
+        self._panel_creator_widget.show()
 
     """ EVENTS """
     def itemReordered(self, data, items, model, row, parent):
@@ -2577,7 +2682,7 @@ class PiPMiniViewerOrganizerWidget(AbstractModelViewWidget):
         """
         # get default attrs
 
-        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+        main_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
         mini_viewer = main_widget.miniViewerWidget()
         widget = items[0].widget()
 
@@ -2592,7 +2697,7 @@ class PiPMiniViewerOrganizerWidget(AbstractModelViewWidget):
         main_widget.updateWidgetIndexes()
 
     def editWidget(self, item, old_value, new_value):
-        item.widget().main_widget.setName(new_value)
+        item.widget().headerWidget().setName(new_value)
 
     def deleteWidget(self, item):
         """
@@ -2609,7 +2714,7 @@ class PiPMiniViewerOrganizerWidget(AbstractModelViewWidget):
         widget = item.widget()
 
         # get current widget
-        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+        main_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
 
         # if current widget
         current_widget = main_widget.currentWidget()
@@ -2640,12 +2745,12 @@ class PiPMiniViewerOrganizerWidget(AbstractModelViewWidget):
 
     """ EVENTS """
     def showEvent(self, event):
-        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+        main_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
         main_widget.setIsLocalOrganizerVisible(True)
         AbstractModelViewWidget.showEvent(self, event)
 
     def hideEvent(self, event):
-        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+        main_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
         main_widget.setIsLocalOrganizerVisible(False)
         main_widget.setFocus()
         AbstractModelViewWidget.hideEvent(self, event)
@@ -2670,7 +2775,7 @@ class PiPMiniViewerWidgetCreator(AbstractListInputWidget):
         value = self.text()
 
         if value not in self.widgetTypes().keys(): return
-        main_widget = getWidgetAncestor(self, AbstractPiPWidget)
+        main_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
 
         # get constructor
         main_widget.createNewWidget(self.widgetTypes()[value], name=str(value))
@@ -2765,12 +2870,12 @@ save_data = {
         "file_path": getDefaultSavePath() + '/.PiPWidgets_02.json',
         "locked": False}
 }
-widget = AbstractPiPWidget(save_data=save_data)
+widget = AbstractPiPOrganizerWidget(save_data=save_data)
 widget.setDisplayWidget("Bar", "test02")
-widget.setCreationMode(AbstractPiPWidget.DISPLAY)
+widget.setCreationMode(AbstractPiPOrganizerWidget.DISPLAY)
 """
     }
-    pip_widget = AbstractPiPWidget(save_data=save_data, widget_types=widget_types)
+    pip_widget = AbstractPiPOrganizerWidget(save_data=save_data, widget_types=widget_types)
 
     pip_widget.setPiPScale((0.25, 0.25))
     pip_widget.setEnlargedScale(0.75)
@@ -2811,10 +2916,9 @@ widget.setCreationMode(AbstractPiPWidget.DISPLAY)
     centerWidgetOnCursor(main_widget)
     main_widget.resize(512, 512)
 
-
     # setup display widget
-    pip_widget.setDisplayWidget("Bar", "recursion")
-    pip_widget.setDelegateTitleIsShown(True)
-    # pip_widget.setCreationMode(AbstractPiPWidget.DISPLAY)
+    #pip_widget.setDisplayWidget("Bar", "recursion")
+    # pip_widget.setDelegateTitleIsShown(True)
+    # pip_widget.setCreationMode(AbstractPiPOrganizerWidget.DISPLAY)
 
     sys.exit(app.exec_())

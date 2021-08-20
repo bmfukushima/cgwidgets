@@ -1,7 +1,7 @@
-from cgwidgets.widgets import AbstractPiPWidget
+from cgwidgets.widgets import AbstractPiPOrganizerWidget
 
 
-class PiPWidget(AbstractPiPWidget):
+class PiPWidget(AbstractPiPOrganizerWidget):
     """
     The PiPWidget is designed to display multiple widgets simultaneously to the user.
 
