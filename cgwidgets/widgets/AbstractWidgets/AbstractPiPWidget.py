@@ -73,7 +73,10 @@ Signals:
 """ TODO
     * Recursive PiPs
         - MiniViewer
-            1.) Can't press escape to close
+            Swapping to Main View creates awkward behavior...
+            Hard to swap back to original...
+            If miniviewer is in the same position... will juste overlay =/
+            potentially just block PiPWidgets from doing that?
     * Display Name
         Remove ability to adjust display name in MiniViewerWidgets
     * Move AbstractPiPWidget to AbstractPiPWidgetOrganizer
@@ -336,6 +339,11 @@ class AbstractPiPWidget(AbstractShojiModelViewWidget):
         # create widget from constructor code
         widget = self.createNewWidgetFromConstructorCode(constructor_code)
 
+        # setup recursion of PiPWidgets
+        if isinstance(widget, AbstractPiPWidget):
+            widget.setIsMiniViewerWidget(True)
+        if isinstance(widget, PiPMainWidget):
+            widget.setIsMiniViewerWidget(True)
         # insert widget into layout
         mini_widget = self.miniViewerWidget().createNewWidget(widget, name=name)
 
@@ -435,11 +443,17 @@ widget.setWordWrap(True)
         if 0 < len(indexes):
             model.deleteItem(indexes[0].internalPointer(), event_update=True)
 
-    """ SAVE (VIRTUAL) """
+    """ PROPERTIES """
+    def isMiniViewerWidget(self):
+        return self.mainWidget().isMiniViewerWidget()
+
+    def setIsMiniViewerWidget(self, is_mini_viewer_widget):
+        self.mainWidget().setIsMiniViewerWidget(is_mini_viewer_widget)
+
+    """ VIRTUAL PROPERTIES """
     def setSavePath(self, file_paths):
         self.localOrganizerWidget().saveWidget().setPiPSaveData(file_paths)
 
-    """ VIRTUAL FUNCTIONS (MAIN WIDGET)"""
     def direction(self):
         return self.mainWidget().direction()
 
@@ -584,13 +598,16 @@ class PiPMainWidget(QWidget):
         hotkey_swap_key (list): of Qt.Key that will swap to the corresponding widget in the miniViewerWidget().
 
             The index of the Key in the list, is the index of the widget that will be swapped to.
+        is_mini_viewer_widget (bool): determines if this is a child of a MiniViewerWidget.
+        is_mini_viewer_shown (bool): if the mini viewer is currently visible.
+            This is normally toggled with the "Q" key
         pip_scale ((float, float)):  fractional percentage of the amount of space that
             the mini viewer will take up in relation to the overall size of the widget.
         swap_key (Qt.KEY): this key will trigger the popup
         widgets (list): of widgets
     """
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, is_mini_viewer_widget=False):
         super(PiPMainWidget, self).__init__(parent)
 
         # setup attrs
@@ -601,6 +618,7 @@ class PiPMainWidget(QWidget):
         self._enlarged_scale = 0.55
         self._mini_viewer_min_size = (100, 100)
         self._is_mini_viewer_shown = True
+        self._is_mini_viewer_widget = is_mini_viewer_widget
         self._direction = attrs.SOUTH
         self._swap_key = Qt.Key_Space
         self._hotkey_swap_keys = [Qt.Key_1, Qt.Key_2, Qt.Key_3, Qt.Key_4, Qt.Key_5]
@@ -667,6 +685,12 @@ class PiPMainWidget(QWidget):
             self.miniViewerWidget().show()
         else:
             self.miniViewerWidget().hide()
+
+    def isMiniViewerWidget(self):
+        return self._is_mini_viewer_widget
+
+    def setIsMiniViewerWidget(self, is_mini_viewer_widget):
+        self._is_mini_viewer_widget = is_mini_viewer_widget
 
     def miniViewerMinSize(self):
         return self._mini_viewer_min_size
@@ -957,11 +981,12 @@ class PiPMainWidget(QWidget):
         # swap between this and previous
         if event.key() == self.swapKey():
             self.swapEvent()
-            return QWidget.keyPressEvent(self, event)
+            return
 
         # hotkey swapping
         if event.key() in self.hotkeySwapKeys():
             self.hotkeySwapEvent(event.key())
+            return
 
         # hide PiP
         if event.key() == Qt.Key_Q:
@@ -970,7 +995,16 @@ class PiPMainWidget(QWidget):
 
         # escape
         if event.key() == Qt.Key_Escape:
-            self.miniViewerWidget().closeEnlargedView()
+            # close this mini viewer
+            if self.miniViewerWidget().isEnlarged():
+                self.miniViewerWidget().closeEnlargedView()
+                return
+
+            # close parent mini viewer (if open recursively)
+            if self.isMiniViewerWidget():
+                parent_main_widget = getWidgetAncestor(self.parent(), PiPMainWidget)
+                parent_main_widget.miniViewerWidget().closeEnlargedView()
+            return
 
         return QWidget.keyPressEvent(self, event)
 
@@ -1142,10 +1176,10 @@ class PiPMiniViewer(QSplitter):
                     This is reset when the user hover enters a new mini widget.  When the drag leave enters a
                     widget that is in the bounds of the enlargedWidget, it will do nothing.
         """
-        if event.type() == QEvent.KeyPress:
-            if event.key() == Qt.Key_Escape:
-                if obj == self.enlargedWidget():
-                    self.closeEnlargedView()
+        # if event.type() == QEvent.KeyPress:
+        #     if event.key() == Qt.Key_Escape:
+        #         if obj == self.enlargedWidget():
+        #             self.closeEnlargedView()
 
         # preflight
         if self.isFrozen(): return True
@@ -2779,7 +2813,7 @@ widget.setCreationMode(AbstractPiPWidget.DISPLAY)
 
 
     # setup display widget
-    pip_widget.setDisplayWidget("Bar", "test02")
+    pip_widget.setDisplayWidget("Bar", "recursion")
     pip_widget.setDelegateTitleIsShown(True)
     # pip_widget.setCreationMode(AbstractPiPWidget.DISPLAY)
 
