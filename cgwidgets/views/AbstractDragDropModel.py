@@ -35,10 +35,10 @@ class AbstractDragDropModelItem(object):
 
         #self._is_selected = False
         self._is_enabled = True
-        self._isSelectable = True
-        self._isDragEnabled = True
-        self._isDropEnabled = True
-        self._isEditable = True
+        self._isSelectable = None
+        self._isDragEnabled = None
+        self._isDropEnabled = None
+        self._isEditable = None
         self._delete_on_drop = None
         # default parent
         if parent is not None:
@@ -636,19 +636,31 @@ class AbstractDragDropModel(QAbstractItemModel):
 
         if item:
             # determine flag values
-            if self.isSelectable(): selectable = item.isSelectable()
-            else: selectable = 0
+            if item.isSelectable(): selectable = item.isSelectable()
+            else: selectable = self.isSelectable()
 
-            if self.isDropEnabled(): drop_enabled = item.isDropEnabled()
-            else: drop_enabled = 0
+            if item.isDropEnabled(): drop_enabled = item.isDropEnabled()
+            else: drop_enabled = self.isDropEnabled()
 
-            if self.isDragEnabled(): drag_enabled = item.isDragEnabled()
-            else: drag_enabled = 0
+            if item.isDragEnabled(): drag_enabled = item.isDragEnabled()
+            else: drag_enabled = self.isDragEnabled()
 
-            if self.isEditable(): editable = item.isEditable()
-            else: editable = 0
+            if item.isEditable(): editable = item.isEditable()
+            else: editable = self.isEditable()
+            # if self.isSelectable(): selectable = item.isSelectable()
+            # else: selectable = 0
+            #
+            # if self.isDropEnabled(): drop_enabled = item.isDropEnabled()
+            # else: drop_enabled = 0
+            #
+            # if self.isDragEnabled(): drag_enabled = item.isDragEnabled()
+            # else: drag_enabled = 0
+            #
+            # if self.isEditable(): editable = item.isEditable()
+            # else: editable = 0
 
             # return flag values
+            # Qt.ItemIsEnabled
             return (
                 Qt.ItemIsEnabled
                 | selectable

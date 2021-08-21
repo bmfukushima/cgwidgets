@@ -70,7 +70,9 @@ for x in range(0, 4):
     index = main_widget.model().insertNewIndex(x, name=str('node%s'%x))
     for i, char in enumerate('abc'):
         main_widget.model().insertNewIndex(i, name=char, parent=index)
-
+    if x == 0:
+        index.internalPointer().setIsEditable(True)
+        index.internalPointer().setIsSelectable(False)
 # set delete on drop...
 """ This will make it so that when an item is dropped, it can be duplicated
 

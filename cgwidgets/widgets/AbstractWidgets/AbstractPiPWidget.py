@@ -216,11 +216,8 @@ class AbstractPiPOrganizerWidget(AbstractShojiModelViewWidget):
         return AbstractShojiModelViewWidget.showEvent(self, event)
 
     """ UTILS """
-    def numWidgets(self):
-        return len(self.widgets())
-
     def widgets(self):
-        return [index.internalPointer().widget() for index in self.miniViewerOrganizerWidget().model().getAllIndexes() if hasattr(index.internalPointer(), "_widget")]
+        return self.miniViewerOrganizerWidget().widgets()
 
     def items(self):
         """
@@ -354,7 +351,7 @@ class AbstractPiPOrganizerWidget(AbstractShojiModelViewWidget):
         self.updateWidgetIndexes()
 
         # # destroy temp widgets
-        if 2 < self.numWidgets():
+        if 1 < self.mainWidget().numWidgets():
             if name != "":
                 self.removeTempWidget()
 
@@ -408,6 +405,7 @@ widget.setWordWrap(True)
         item.setIsSelectable(False)
         item.setIsDragEnabled(False)
         item.setIsEnabled(False)
+        # item.setIsEditable(False)
 
         # setup widget
         item.widget().headerWidget().setDisplayMode(AbstractOverlayInputWidget.DISABLED)
@@ -589,6 +587,7 @@ class PiPDisplayWidget(QWidget):
         super(PiPDisplayWidget, self).__init__(parent)
 
         # setup attrs
+        self._num_widgets = 0
         self._is_frozen = True
         self._current_widget = None
         self._previous_widget = None
@@ -600,6 +599,7 @@ class PiPDisplayWidget(QWidget):
         self._direction = attrs.SOUTH
         self._swap_key = Qt.Key_Space
         self._hotkey_swap_keys = [Qt.Key_1, Qt.Key_2, Qt.Key_3, Qt.Key_4, Qt.Key_5]
+
         # create widgets
         self._main_viewer_widget = PiPMainViewer(self)
         self._mini_viewer_widget = PiPMiniViewer(self)
@@ -692,13 +692,7 @@ class PiPDisplayWidget(QWidget):
 
     def numWidgets(self):
         """ Number of widgets currently in this PiPDisplay"""
-        # todo currently working... not really sure how... but it is... w/e
-        """
-        Include spacer widget, need to figure out how this effects it
-        numWidgets needs to be removed from the AbstractPiPOrganizer, and added in here...
-        as it effects other things such as the mini viewer resize"""
         return self.miniViewerWidget().count()
-        # return getWidgetAncestor(self, AbstractPiPOrganizerWidget).numWidgets()
 
     """ UTILS """
     def areWidgetNamesShown(self):
@@ -872,19 +866,16 @@ class PiPDisplayWidget(QWidget):
         """
 
         if self.isFrozen(): return True
-        # get attrs
-        main_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
-        print("orig === ", main_widget.numWidgets())
-        print("new === ", self.numWidgets())
-        num_widgets = main_widget.numWidgets()
+
+        num_widgets = self.numWidgets()
 
         # preflight
-        if num_widgets < 2: return
+        if num_widgets < 1: return
 
         # get xpos, ypos, width, height
 
         # special case for only one widget
-        if num_widgets == 2:
+        if num_widgets == 1:
             # get height / width
             width = self.width() * self.pipScale()[0]
             height = self.height() * self.pipScale()[1]
@@ -930,7 +921,7 @@ class PiPDisplayWidget(QWidget):
                     ypos = 0
 
         # more than one widget
-        if 2 < num_widgets:
+        if 1 < num_widgets:
             pip_offset = 1 - self.pipScale()[0]
 
             # get xpos/ypos/height/width
@@ -1066,8 +1057,9 @@ class PiPDisplayWidget(QWidget):
 
         # hide PiP
         if event.key() == Qt.Key_Q:
-            self.setIsMiniViewerShown(not self.isMiniViewerShown())
-            return
+            if not self.miniViewerWidget().isEnlarged():
+                self.setIsMiniViewerShown(not self.isMiniViewerShown())
+                return
 
         # escape
         if event.key() == Qt.Key_Escape:
@@ -1431,10 +1423,9 @@ class PiPMiniViewer(QSplitter):
         scale = main_widget.enlargedScale()
         negative_space = 1 - scale
         half_neg_space = negative_space * 0.5
-        num_widgets = getWidgetAncestor(widget, AbstractPiPOrganizerWidget).numWidgets()
-
+        num_widgets = main_widget.numWidgets()
         # special case for only one mini viewer widget
-        if num_widgets == 2:
+        if num_widgets == 1:
             xoffset = int(main_widget.width() * negative_space)
             yoffset = int(main_widget.width() * negative_space)
             width = int(main_widget.width() - xoffset)
@@ -1458,7 +1449,7 @@ class PiPMiniViewer(QSplitter):
                 ypos = yoffset
 
         # if there are 2 or more mini viewer widgets
-        if 2 < num_widgets:
+        if 1 < num_widgets:
             # get widget position / size
             if main_widget.direction() in [attrs.EAST, attrs.WEST]:
                 xoffset = int(main_widget.width() * negative_space)
@@ -2674,6 +2665,10 @@ class PiPMiniViewerOrganizerWidget(AbstractModelViewWidget):
         self.addDelegate([Qt.Key_C], self._panel_creator_widget, modifier=Qt.AltModifier, focus=True)
         self._panel_creator_widget.show()
 
+    """ UTILS """
+    def widgets(self):
+        return [index.internalPointer().widget() for index in self.model().getAllIndexes() if hasattr(index.internalPointer(), "_widget")]
+
     """ EVENTS """
     def itemReordered(self, data, items, model, row, parent):
         """
@@ -2714,34 +2709,34 @@ class PiPMiniViewerOrganizerWidget(AbstractModelViewWidget):
         widget = item.widget()
 
         # get current widget
-        main_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
+        organizer_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
 
         # if current widget
-        current_widget = main_widget.currentWidget()
+        current_widget = organizer_widget.currentWidget()
         if widget == current_widget:
             # get first useable widget
-            first_widget = main_widget.widgets()[0]
+            first_widget = organizer_widget.widgets()[0]
             if first_widget == widget:
-                first_widget = main_widget.widgets()[1]
+                first_widget = organizer_widget.widgets()[1]
 
             # set current widget
-            if main_widget.previousWidget():
-                main_widget.setCurrentWidget(main_widget.previousWidget())
+            if organizer_widget.previousWidget():
+                organizer_widget.setCurrentWidget(organizer_widget.previousWidget())
             else:
-                main_widget.setCurrentWidget(first_widget)
+                organizer_widget.setCurrentWidget(first_widget)
 
             # remove previous widget
-            main_widget.setPreviousWidget(None)
+            organizer_widget.setPreviousWidget(None)
 
         # create temp widget
-        if main_widget.numWidgets() < 3:
-            main_widget.createTempWidget()
+        if organizer_widget.mainWidget().numWidgets() < 2:
+            organizer_widget.createTempWidget()
 
         # delete widget
         item.widget().setParent(None)
         item.widget().deleteLater()
         # resize
-        main_widget.mainWidget().resizeMiniViewer()
+        organizer_widget.mainWidget().resizeMiniViewer()
 
     """ EVENTS """
     def showEvent(self, event):
