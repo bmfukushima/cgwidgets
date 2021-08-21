@@ -18,6 +18,8 @@ from .AbstractBaseInputWidgets import AbstractLabelWidget
 from .AbstractListInputWidget import AbstractListInputWidget as AbstractListInputWidget
 from .AbstractBaseInputWidgets import AbstractInputPlainText as AbstractInputPlainText
 
+from .AbstractSplitterWidget import AbstractSplitterWidget
+
 from .AbstractGIFWidget import AbstractGIFWidget
 from .AbstractShojiLayout import AbstractShojiLayout, AbstractShojiLayoutHandle
 

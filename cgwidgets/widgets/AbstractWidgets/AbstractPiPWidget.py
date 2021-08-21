@@ -84,11 +84,6 @@ Signals:
     * Move AbstractPiPOrganizerWidget to AbstractPiPOrganizerWidgetOrganizer
         - AbstractPiPOrganizerWidget then becomes a display only PiPWidget
             so that it doesn't have to keep creating a ton of extra widgets...
-    * Loading PiPWidget gets the wrong number of mini viewer widgets...
-        saveWidget --> loadPiPWidgetFromItem        
-        for whatever, when loading a new pip widget, the count returns one greater than the actual
-        number of widgets added into the mini viewer.  And the last widget that is
-        added is always, the last widget that was displayed in the main viewer
 
     * Clean up mini viewer resize
         PiPGlobalOrganizerWidget --> loadPiPWidgetFromSelection ( This runs twice for some reason)
@@ -1410,6 +1405,7 @@ class PiPMiniViewer(QSplitter):
         # User finished dragging splitter
         def splitterFinishedMoving():
             self._temp_sizes = self.sizes()
+            print('finished moving')
         # stop existing timer
         if hasattr(self, "_splitter_moving_timer"):
             self._splitter_moving_timer.stop()
@@ -2309,8 +2305,6 @@ class PiPSaveWidget(QWidget):
 
         # load settings
         organizer_widget.settingsWidget().loadSettings(item.settings())
-
-
 
         # restore mini widget sizes
         main_widget.setIsFrozen(False)

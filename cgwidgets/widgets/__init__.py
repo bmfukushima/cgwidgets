@@ -36,6 +36,9 @@ from .PiPWidget import PiPWidget
 """ INPUT WIDGETS """
 from .InputWidgets import *
 
+""" BASE WIDGETS """
+
+from .BaseWidgets import *
 # color widget
 #from .InputWidgets.ColorInputWidgets import ColorGradientDelegate, ColorInputWidget
 
