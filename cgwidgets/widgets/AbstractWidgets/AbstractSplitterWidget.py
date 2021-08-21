@@ -18,13 +18,11 @@ class AbstractSplitterWidget(QSplitter):
 
     Attributes:
         delayed_resize_data (dict): data of all of the delayed events
-            {name_of_event (str) : {
-                delay (str) : delay_amount (int)}
-            }
+            {name_of_event (str) : event_data (DelayedSplitterMovedEventData)}
         is_frozen (bool):
 
     """
-    def __init__(self, orientation=Qt.Vertical, parent=None):
+    def __init__(self, parent=None, orientation=Qt.Vertical):
         super(AbstractSplitterWidget, self).__init__(orientation, parent)
         self._delayed_splitter_moved_events_data = {}
         self._is_frozen = False
@@ -32,7 +30,7 @@ class AbstractSplitterWidget(QSplitter):
         self.splitterMoved.connect(self.splitterMovedEvent)
 
     """ EVENTS """
-    def splitterMovedEvent(self):
+    def splitterMovedEvent(self, pos, index):
         """ Runs all of the delayed events after the user finishes moving the splitter"""
 
         # preflight
@@ -40,14 +38,21 @@ class AbstractSplitterWidget(QSplitter):
 
         # Delayed Events Handler
         for name, event_data in self.delayedSplitterMovedEventsData().items():
-            if hasattr(self, "{name}_timer".format(name=name)):
-                getattr(self, "{name}_timer".format(name=name)).setInterval(event_data["delay"])
+            # if timer is running, reset it
+            if hasattr(event_data, "_timer"):
+                getattr(event_data, "_timer").setInterval(event_data.delayAmount())
+
+            # if no timer, setup a new timer from the event data
             else:
+                # setup timer
                 timer = QTimer()
-                timer.start(event_data["delay"])
-                event = getattr(self, "{name}_event".format(name=name))
-                timer.timeout.connect(event)
-                setattr(self, "{name}_timer".format(name=name), timer)
+                timer.start(event_data.delayAmount())
+                timer.timeout.connect(event_data.splitterFinishedMoving)
+
+                # setup event data
+                event_data.setPos(pos)
+                event_data.setIndex(index)
+                setattr(event_data, "_timer", timer)
 
     """ PROPERTIES """
     def delayedSplitterMovedEventsData(self):
@@ -65,6 +70,12 @@ class AbstractSplitterWidget(QSplitter):
         return list(self.delayedSplitterMovedEventsData().keys())
 
     def changeDelayedEventName(self, old_name, new_name):
+        """ Changes the event name from the one provided to the new one
+
+        Args:
+            old_name (str):
+            new_name (str):
+        """
         if old_name in self.delayedSplitterMovedEventNames():
             self.delayedSplitterMovedEventsData()[new_name] = self.delayedSplitterMovedEventsData().pop(old_name)
         else:
@@ -78,8 +89,7 @@ class AbstractSplitterWidget(QSplitter):
             name (str):
             delay_amount (int):
         """
-
-        self.delayedSplitterMovedEventsData()[name]["delay"] = delay_amount
+        self.delayedSplitterMovedEventsData()[name].setDelayAmount(delay_amount)
 
     """ DELAYED SPLITTER MOVED"""
     def addDelayedSplitterMovedEvent(self, name, delayed_splitter_moved_function, delay_amount=50):
@@ -90,24 +100,69 @@ class AbstractSplitterWidget(QSplitter):
             delayed_splitter_moved_function (function): Function that will run after the resize has finished
             name (str): name of event
         """
-        self.delayedSplitterMovedEventsData()[name] = {}
-        self.delayedSplitterMovedEventsData()[name]["delay"] = delay_amount
+        # self.delayedSplitterMovedEventsData()[name]["delay"] = delay_amount
 
         # create event
-        def splitterFinishedMoving():
-            delayed_splitter_moved_function()
-            delattr(self, "{name}_timer".format(name=name))
+        # def splitterFinishedMoving(pos, index):
+        #     delayed_splitter_moved_function(pos, index)
+        #     delattr(self, "{name}_timer".format(name=name))
 
-        setattr(self, "{name}_event".format(name=name), splitterFinishedMoving)
+        self.delayedSplitterMovedEventsData()[name] = DelayedSplitterMovedEventData(
+            name, delayed_splitter_moved_function, delay_amount)
+
+        #setattr(self, "{name}_event".format(name=name), splitter_moved_object)
 
     def removeDelayedSplitterMovedEvent(self, name):
         del self.delayedSplitterMovedEventsData()[name]
-        delattr(self, "{name}_event".format(name=name))
 
     def removeAllDelayedSplitterMovedEvents(self):
         """ Removes all of the delayed splitter events """
         for event_name in self.splitterMovedEvent():
             self.removeDelayedSplitterMovedEvent(event_name)
+
+
+class DelayedSplitterMovedEventData(object):
+
+    def __init__(self, name, func, delay_amount):
+        self._name = name
+        self._function = func
+        self._delay_amount = delay_amount
+        self._index = 0
+        self._pos = 0
+
+    def delayAmount(self):
+        return self._delay_amount
+
+    def setDelayAmount(self, delay_amount):
+        self._delay_amount = delay_amount
+
+    def index(self):
+        return self._index
+
+    def setIndex(self, index):
+        self._index = index
+
+    def pos(self):
+        return self._pos
+
+    def setPos(self, pos):
+        self._pos = pos
+
+    def name(self):
+        return self._name
+
+    def setName(self, name):
+        self._name = name
+
+    def getFunction(self):
+        return self._function
+
+    def setFunction(self, func):
+        self._function = func
+
+    def splitterFinishedMoving(self):
+        self.getFunction()(self.pos(), self.index())
+        delattr(self, "_timer")
 
 
 if __name__ == "__main__":
@@ -116,16 +171,19 @@ if __name__ == "__main__":
     from cgwidgets.utils import setAsAlwaysOnTop, centerWidgetOnCursor
     app = QApplication(sys.argv)
 
-    def delayEvent1():
+    def delayEvent1(pos, index):
+        print(pos, index)
         print('1')
 
-    def delayEvent2():
+    def delayEvent2(pos, index):
+        print(pos, index)
         print('2')
 
-    def delayEvent3():
+    def delayEvent3(pos, index):
+        print(pos, index)
         print('3')
 
-    splitter = AbstractSplitterWidget(Qt.Horizontal)
+    splitter = AbstractSplitterWidget(orientation=Qt.Horizontal)
     for x in range(3):
         label = QLabel("test")
         splitter.addWidget(label)
@@ -134,7 +192,7 @@ if __name__ == "__main__":
     splitter.addDelayedSplitterMovedEvent("two", delayEvent2, 200)
     splitter.addDelayedSplitterMovedEvent("three", delayEvent3, 300)
 
-    splitter.removeDelayedSplitterMovedEvent("three")
+    #splitter.removeDelayedSplitterMovedEvent("three")
 
     setAsAlwaysOnTop(splitter)
     splitter.show()

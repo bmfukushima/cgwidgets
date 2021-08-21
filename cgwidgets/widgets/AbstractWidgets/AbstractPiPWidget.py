@@ -129,7 +129,7 @@ from cgwidgets.widgets.AbstractWidgets.AbstractLabelledInputWidget import Abstra
 from cgwidgets.widgets.AbstractWidgets.AbstractOverlayInputWidget import AbstractOverlayInputWidget
 from cgwidgets.widgets.AbstractWidgets.AbstractModelViewWidget import AbstractModelViewWidget
 from cgwidgets.widgets.AbstractWidgets.AbstractShojiWidget.AbstractShojiModelViewWidget import AbstractShojiModelViewWidget
-
+#from cgwidgets.widgets.AbstractWidgets.AbstractSplitterWidget import AbstractSplitterWidget
 
 from cgwidgets.widgets import (
     AbstractFrameInputWidgetContainer,
@@ -138,7 +138,9 @@ from cgwidgets.widgets import (
     AbstractFloatInputWidget,
     AbstractStringInputWidget,
     AbstractLabelWidget,
-    AbstractButtonInputWidgetContainer)
+    AbstractButtonInputWidgetContainer,
+AbstractSplitterWidget
+    )
 
 
 class AbstractPiPOrganizerWidget(AbstractShojiModelViewWidget):
@@ -1112,7 +1114,7 @@ class PiPMainViewer(QWidget):
         widget.layout().setContentsMargins(0, 0, 0, 0)
 
 
-class PiPMiniViewer(QSplitter):
+class PiPMiniViewer(AbstractSplitterWidget):
     """
     Widget that contains all of the PiPWidgets.
 
@@ -1136,8 +1138,8 @@ class PiPMiniViewer(QSplitter):
             This does not include the currently enlarged widget
 
     """
-    def __init__(self, parent=None):
-        super(PiPMiniViewer, self).__init__(parent)
+    def __init__(self, parent=None, orientation=Qt.Vertical):
+        super(PiPMiniViewer, self).__init__(parent, orientation)
 
         self._is_frozen = False
         self._is_dragging = False
@@ -1150,7 +1152,7 @@ class PiPMiniViewer(QSplitter):
         self._spacer_widget.hide()
         self.setHandleWidth(15)
 
-        self.splitterMoved.connect(self._splitterMoved)
+        self.addDelayedSplitterMovedEvent("set_temp_sizes", self._splitterMoved, 100)
 
     """ PROPERTIES """
     def isDragging(self):
@@ -1403,17 +1405,7 @@ class PiPMiniViewer(QSplitter):
         if not self.isEnlarged(): return
 
         # User finished dragging splitter
-        def splitterFinishedMoving():
-            self._temp_sizes = self.sizes()
-            print('finished moving')
-        # stop existing timer
-        if hasattr(self, "_splitter_moving_timer"):
-            self._splitter_moving_timer.stop()
-
-        # create new timer
-        self._splitter_moving_timer = QTimer()
-        self._splitter_moving_timer.start(100)
-        self._splitter_moving_timer.timeout.connect(splitterFinishedMoving)
+        self._temp_sizes = self.sizes()
 
     def enlargeWidget(self, widget):
         """

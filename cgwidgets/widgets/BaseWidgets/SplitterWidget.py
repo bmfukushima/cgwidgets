@@ -26,7 +26,7 @@ class SplitterWidget(AbstractSplitterWidget):
         is_frozen (bool):
 
     """
-    def __init__(self, orientation=Qt.Vertical, parent=None):
-        super(SplitterWidget, self).__init__(orientation, parent)
+    def __init__(self, parent=None, orientation=Qt.Vertical):
+        super(SplitterWidget, self).__init__(parent, orientation)
 
 

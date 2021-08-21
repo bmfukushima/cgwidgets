@@ -48,8 +48,9 @@ from cgwidgets.settings.stylesheets import (splitter_handle_ss)
 from cgwidgets.settings.hover_display import installHoverDisplaySS
 from cgwidgets.utils import updateStyleSheet, getWidgetUnderCursor
 
+from cgwidgets.widgets.AbstractWidgets.AbstractSplitterWidget import AbstractSplitterWidget
 
-class AbstractShojiLayout(QSplitter):
+class AbstractShojiLayout(AbstractSplitterWidget):
     """
     Splitter widget that has advanced functionality.  This serves as a base
     class for everything that will be used through this library.
@@ -752,6 +753,11 @@ if __name__ == "__main__":
     splitter1.setChildSoloable(False, l)
     main_splitter.setChildSoloable(False, label)
     main_splitter.addWidget(splitter1)
+
+    def test(pos, index):
+        print (pos, index)
+
+    main_splitter.addDelayedSplitterMovedEvent()
 
 
     main_splitter.show()

@@ -16,6 +16,7 @@ from cgwidgets.widgets.AbstractWidgets.AbstractOverlayInputWidget import Abstrac
 from cgwidgets.widgets.AbstractWidgets.AbstractShojiLayout import AbstractShojiLayout
 from cgwidgets.widgets.AbstractWidgets.AbstractInputInterface import iAbstractInputWidget
 
+
 from cgwidgets.utils import (getFontSize, installResizeEventFinishedEvent)
 from cgwidgets.settings import iColor
 
@@ -116,6 +117,8 @@ class AbstractLabelledInputWidget(QFrame, iAbstractInputWidget):
         self.layout().setContentsMargins(1, 1, 1, 1)
 
         # connect signals
+        # todo move to newer tech
+        # self.mainWidget().addDelayedSplitterMovedEvent(self, self.__splitterMoved, 100)
         self.mainWidget().splitterMoved.connect(self.__splitterMoved)
 
         self.mainWidget().setIsSoloViewEnabled(False)
