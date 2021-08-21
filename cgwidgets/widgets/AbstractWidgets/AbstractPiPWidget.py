@@ -73,7 +73,6 @@ Signals:
 """ TODO
     * Recursive PiPs
         - MiniViewer
-            recursive swapping main widget (Space/12345)
             PiPDisplayWidget --> setCurrentWidget
             Needs to make it so that the PIPWidget that is displayed, is the one that is 
             selected, and the current pip widget is set in the mini viewer... With the PiPViewer
@@ -82,18 +81,19 @@ Signals:
                     - How to get/store this data?
             2.) Take old PiPDisplayWidget/AbstractPiPOrganizerWidget and insert it as the first index
                     in the new PiPDisplayWidget/AbstractPiPOrganizerWidget
-    * Display Name
-        Remove ability to adjust display name in MiniViewerWidgets
-            .headerWidget().setName(new_value) ?
-            MiniViewerWidget --> headerWidget()
     * Move AbstractPiPOrganizerWidget to AbstractPiPOrganizerWidgetOrganizer
         - AbstractPiPOrganizerWidget then becomes a display only PiPWidget
             so that it doesn't have to keep creating a ton of extra widgets...
+    * Loading PiPWidget gets the wrong number of mini viewer widgets...
+        saveWidget --> loadPiPWidgetFromItem        
+        for whatever, when loading a new pip widget, the count returns one greater than the actual
+        number of widgets added into the mini viewer.  And the last widget that is
+        added is always, the last widget that was displayed in the main viewer
+
     * Clean up mini viewer resize
         PiPGlobalOrganizerWidget --> loadPiPWidgetFromSelection ( This runs twice for some reason)
         PiPSaveWidget --> loadPiPWidgetFromItem
         AbstractPiPOrganizerWidget --> createNewWidget --> resizeMiniViewer
-
     * Move MiniViewer to QSplitter?
         - Weird bug in replaceWidget() call... that sometimes will cause it not to work
             this seems to happen if you move the cursor super fast, and make it go in/out
@@ -104,6 +104,11 @@ Signals:
         will "wobble" for a few seconds.  This is only when display names is active...
         
         Potentially a resize in the actual labelled widget?
+    * Display Name
+        Remove ability to adjust display name in MiniViewerWidgets
+            .headerWidget().setName(new_value) ?
+            MiniViewerWidget --> headerWidget()
+        For now this is just force disabled, I think
 """
 import json
 from collections import OrderedDict
@@ -174,8 +179,10 @@ class AbstractPiPOrganizerWidget(AbstractShojiModelViewWidget):
         self.setMultiSelect(True)
         self.setHeaderItemIsEditable(False)
         self.setHeaderItemIsDragEnabled(False)
+        self.setHeaderItemIsDropEnabled(False)
         self.setHeaderItemIsDeleteEnabled(False)
         self.setHeaderItemIsEnableable(False)
+
         self._temp_widgets = []
         if not widget_types:
             widget_types = []
@@ -336,7 +343,7 @@ class AbstractPiPOrganizerWidget(AbstractShojiModelViewWidget):
         """
         # create mini viewer widget
         mini_viewer_widget = self.mainWidget().createNewWidget(constructor_code, name, resize_mini_viewer)
-
+        # print("num_widgets ==", self.mainWidget().numWidgets())
         # create new index
         index = self.miniViewerOrganizerWidget().model().insertNewIndex(0, name=name)
 
@@ -370,6 +377,7 @@ class AbstractPiPOrganizerWidget(AbstractShojiModelViewWidget):
 
     def removeAllWidgets(self):
         """ Clears all of the widgets from the current AbstractPiPOrganizerWidget"""
+        # todo merge this in with the pip display widget?
         for item in self.miniViewerOrganizerWidget().model().getRootItem().children():
             item.widget().setParent(None)
             item.widget().deleteLater()
@@ -725,7 +733,10 @@ class PiPDisplayWidget(QWidget):
         return widget
 
     def createNewWidget(self, constructor_code, name="", resize_mini_viewer=True):
-        """
+        """ Creates a new widget from the constructor code provided.
+
+        This widget is inserted into the PiPMiniViewer
+
         Args:
             constructor_code (str):
             name (str):
@@ -737,21 +748,19 @@ class PiPDisplayWidget(QWidget):
 
         # create widget from constructor code
         widget = self.createNewWidgetFromConstructorCode(constructor_code)
-
         # setup recursion for PiPWidgets
         if isinstance(widget, AbstractPiPOrganizerWidget) or isinstance(widget, PiPDisplayWidget):
             widget.setIsMiniViewerWidget(True)
 
-        # insert widget into layout
-        mini_viewer_widget = self.miniViewerWidget().createNewWidget(widget, name=name)
+        """ Note: This can't install in the MiniViewer then remove.  It will still register
+        in the count, even if you process the events."""
+        # create main widget
+        if self.currentWidget():
+            mini_viewer_widget = self.miniViewerWidget().createNewWidget(widget, name=name)
 
-        # set title editable
-        # if self.creationMode() == AbstractPiPOrganizerWidget.CREATE:
-        #     mini_viewer_widget.headerWidget().setDisplayMode(AbstractOverlayInputWidget.RELEASE)
-        # elif self.creationMode() == AbstractPiPOrganizerWidget.DISPLAY:
-        #     mini_viewer_widget.headerWidget().setDisplayMode(AbstractOverlayInputWidget.DISABLED)
-
-        if self.numWidgets() == 1:
+        # create mini viewer widgets
+        else:
+            mini_viewer_widget = PiPMiniViewerWidget(self.mainViewerWidget(), direction=Qt.Vertical, delegate_widget=widget, name=name)
             self.setCurrentWidget(mini_viewer_widget)
 
         # TODO This is probably causing some slowness on loading
@@ -838,11 +847,17 @@ class PiPDisplayWidget(QWidget):
         self.miniViewerWidget().setSizes(sizes)
         self.miniViewerWidget().setIsFrozen(False)
 
+    def clearCurrentWidget(self):
+        self._current_widget = None
+
     def previousWidget(self):
         return self._previous_widget
 
     def setPreviousWidget(self, widget):
         self._previous_widget = widget
+
+    def clearPreviousWidget(self):
+        self._previous_widget = None
 
     """ DIRECTION """
     def direction(self):
@@ -856,6 +871,98 @@ class PiPDisplayWidget(QWidget):
             self.miniViewerWidget().setOrientation(Qt.Horizontal)
 
     """ EVENTS """
+    def eventFilter(self, obj, event):
+        if event.type() == QEvent.DragEnter:
+            event.accept()
+        # if event.type() == QEvent.KeyPress:
+        #     print('key press2 ')
+        #     if event.key() == self.swapKey():
+        #         if obj == self.currentWidget():
+        #             print('swap1')
+        #             self.swapWidgets()
+        #             return True
+        # elif event.type() == QEvent.Drop:
+        #     print("drop???")
+        #     # todo figure out how to handle this for suppressed
+        #     # the event from being passed on
+        #     self.miniViewerWidget().setIsDragging(False)
+        #     self.miniViewerWidget().setPopupWidget(None)
+        return False
+
+    def hotkeySwapEvent(self, key):
+        """ Swaps the widgets when a hotkey (1-5) is pressed.
+
+        Args:
+            key (Qt.Key): Valid inputs are 1-5
+        """
+        try:
+            # select user input
+            for i, swap_key in enumerate(self.hotkeySwapKeys()):
+                if swap_key == key:
+                    widget = self.miniViewerWidget().widget(i)
+
+            # swap with enlarged widget
+            if self.miniViewerWidget().isEnlarged():
+                # Todo for some reason the PRINT makes it so that the IF clause below actually works... tf
+                # print(widget.name(), self.miniViewerWidget().enlargedWidget().name())
+                if widget != self.miniViewerWidget().enlargedWidget():
+                    self.miniViewerWidget().closeEnlargedView()
+                    self.miniViewerWidget().enlargeWidget(widget)
+
+            # swap with main widget
+            else:
+                self.setCurrentWidget(widget)
+
+        except AttributeError:
+            # not enough widgets
+            pass
+
+    def keyPressEvent(self, event):
+        # swap between this and previous
+        if event.key() == self.swapKey():
+            self.swapEvent()
+            return
+
+        # hotkey swapping
+        if event.key() in self.hotkeySwapKeys():
+            self.hotkeySwapEvent(event.key())
+            return
+
+        # hide PiP
+        if event.key() == Qt.Key_Q:
+            if not self.miniViewerWidget().isEnlarged():
+                self.setIsMiniViewerShown(not self.isMiniViewerShown())
+                return
+
+        # escape
+        if event.key() == Qt.Key_Escape:
+            # close this mini viewer
+            if self.miniViewerWidget().isEnlarged():
+                self.miniViewerWidget().closeEnlargedView()
+                return
+
+            # close parent mini viewer (if open recursively)
+            if self.isMiniViewerWidget():
+                parent_main_widget = getWidgetAncestor(self.parent(), PiPDisplayWidget)
+                parent_main_widget.miniViewerWidget().closeEnlargedView()
+            return
+
+        return QWidget.keyPressEvent(self, event)
+
+    def leaveEvent(self, event):
+        """ Blocks the error that occurs when switching between different PiPDisplays"""
+        if self.miniViewerWidget().isEnlarged():
+            self.miniViewerWidget().closeEnlargedView()
+        return QWidget.leaveEvent(self, event)
+
+    def resizeEvent(self, event):
+        """ After a delay in the resize, this will update the display"""
+        def updateDisplay():
+            self.resizeMiniViewer()
+            self.miniViewerWidget().closeEnlargedView()
+        installResizeEventFinishedEvent(self, 100, updateDisplay, '_timer')
+        return QWidget.resizeEvent(self, event)
+
     def resizeMiniViewer(self):
         """
         Main function for resizing the mini viewer
@@ -867,10 +974,12 @@ class PiPDisplayWidget(QWidget):
 
         if self.isFrozen(): return True
 
+        # todo this is 1 greater than the actual number during load?
         num_widgets = self.numWidgets()
 
         # preflight
-        if num_widgets < 1: return
+        if num_widgets < 1:
+            return
 
         # get xpos, ypos, width, height
 
@@ -958,32 +1067,6 @@ class PiPDisplayWidget(QWidget):
         self.miniViewerWidget().move(int(xpos), int(ypos))
         self.miniViewerWidget().resize(int(width), int(height))
 
-    def eventFilter(self, obj, event):
-        if event.type() == QEvent.DragEnter:
-            event.accept()
-        # if event.type() == QEvent.KeyPress:
-        #     print('key press2 ')
-        #     if event.key() == self.swapKey():
-        #         if obj == self.currentWidget():
-        #             print('swap1')
-        #             self.swapWidgets()
-        #             return True
-        # elif event.type() == QEvent.Drop:
-        #     print("drop???")
-        #     # todo figure out how to handle this for suppressed
-        #     # the event from being passed on
-        #     self.miniViewerWidget().setIsDragging(False)
-        #     self.miniViewerWidget().setPopupWidget(None)
-        return False
-
-    def resizeEvent(self, event):
-        """ After a delay in the resize, this will update the display"""
-        def updateDisplay():
-            self.resizeMiniViewer()
-            self.miniViewerWidget().closeEnlargedView()
-        installResizeEventFinishedEvent(self, 100, updateDisplay, '_timer')
-        return QWidget.resizeEvent(self, event)
-
     def swapEvent(self):
         """ Swaps the widget that is being displayed.
 
@@ -1015,66 +1098,6 @@ class PiPDisplayWidget(QWidget):
             self.swapWidgets()
 
         self.miniViewerWidget().setIsFrozen(False)
-
-    def hotkeySwapEvent(self, key):
-        """ Swaps the widgets when a hotkey (1-5) is pressed.
-
-        Args:
-            key (Qt.Key): Valid inputs are 1-5
-        """
-        try:
-            # select user input
-            for i, swap_key in enumerate(self.hotkeySwapKeys()):
-                if swap_key == key:
-                    widget = self.miniViewerWidget().widget(i)
-
-            # swap with enlarged widget
-            if self.miniViewerWidget().isEnlarged():
-                # Todo for some reason the PRINT makes it so that the IF clause below actually works... tf
-                # print(widget.name(), self.miniViewerWidget().enlargedWidget().name())
-                if widget != self.miniViewerWidget().enlargedWidget():
-                    self.miniViewerWidget().closeEnlargedView()
-                    self.miniViewerWidget().enlargeWidget(widget)
-
-            # swap with main widget
-            else:
-                self.setCurrentWidget(widget)
-
-        except AttributeError:
-            # not enough widgets
-            pass
-
-    def keyPressEvent(self, event):
-        # swap between this and previous
-        if event.key() == self.swapKey():
-            self.swapEvent()
-            return
-
-        # hotkey swapping
-        if event.key() in self.hotkeySwapKeys():
-            self.hotkeySwapEvent(event.key())
-            return
-
-        # hide PiP
-        if event.key() == Qt.Key_Q:
-            if not self.miniViewerWidget().isEnlarged():
-                self.setIsMiniViewerShown(not self.isMiniViewerShown())
-                return
-
-        # escape
-        if event.key() == Qt.Key_Escape:
-            # close this mini viewer
-            if self.miniViewerWidget().isEnlarged():
-                self.miniViewerWidget().closeEnlargedView()
-                return
-
-            # close parent mini viewer (if open recursively)
-            if self.isMiniViewerWidget():
-                parent_main_widget = getWidgetAncestor(self.parent(), PiPDisplayWidget)
-                parent_main_widget.miniViewerWidget().closeEnlargedView()
-            return
-
-        return QWidget.keyPressEvent(self, event)
 
 
 class PiPMainViewer(QWidget):
@@ -1547,19 +1570,27 @@ class PiPMiniViewer(QSplitter):
         """
         mini_widget = PiPMiniViewerWidget(self, direction=Qt.Vertical, delegate_widget=widget, name=name)
         self.insertWidget(0, mini_widget)
-
-        mini_widget.installEventFilter(self)
         return mini_widget
 
     def addWidget(self, widget):
         if isinstance(widget, PiPMiniViewerWidget):
             widget.installEventFilter(self)
-        return QSplitter.addWidget(self, widget)
+            return QSplitter.addWidget(self, widget)
+        elif widget == self.spacerWidget():
+            return
+        else:
+            print("{widget_type} is not valid.".format(widget_type=type(widget)))
+            return
 
     def insertWidget(self, index, widget):
         if isinstance(widget, PiPMiniViewerWidget):
             widget.installEventFilter(self)
-        return QSplitter.insertWidget(self, index, widget)
+            return QSplitter.insertWidget(self, index, widget)
+        elif widget == self.spacerWidget():
+            pass
+        else:
+            print ("{widget_type} is not valid.".format(widget_type=type(widget)))
+            return
 
     def removeWidget(self, widget):
         if widget:
@@ -2261,25 +2292,34 @@ class PiPSaveWidget(QWidget):
         reversed_widgets = OrderedDict(reversed(list(widgets.items())))
 
         organizer_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
-        organizer_widget.mainWidget().setIsFrozen(True)
+        main_widget = organizer_widget.mainWidget()
+        main_widget.setIsFrozen(True)
 
         # clear pip view
         organizer_widget.removeAllWidgets()
+        # reset previous widget
+        main_widget.clearPreviousWidget()
+        main_widget.clearCurrentWidget()
 
         # populate pip view
         # load widgets
         for widget_name, constructor_code in reversed_widgets.items():
+            # print("widget_name == ", widget_name)
             organizer_widget.createNewWidget(constructor_code, name=widget_name, resize_mini_viewer=False)
 
         # load settings
         organizer_widget.settingsWidget().loadSettings(item.settings())
 
-        # reset previous widget
-        organizer_widget.mainWidget().setPreviousWidget(None)
+
 
         # restore mini widget sizes
-        organizer_widget.mainWidget().setIsFrozen(False)
-        organizer_widget.mainWidget().resizeMiniViewer()
+        main_widget.setIsFrozen(False)
+
+        # todo count is wrong... for some reason...
+        main_widget.resizeMiniViewer()
+        # for i in range(main_widget.miniViewerWidget().count()):
+        #     print("name === ", main_widget.miniViewerWidget().widget(i).name())
+
         if "sizes" in list(item.settings().keys()):
             organizer_widget.miniViewerWidget().setSizes(item.settings()["sizes"])
 

@@ -54,11 +54,11 @@ class AbstractShojiModelItem(AbstractDragDropModelItem, iShojiDynamicWidget):
 
         self._test = True
         #self._is_selected = False
-        self._is_enabled = True
-        self._isSelectable = True
-        self._isDragEnabled = True
-        self._isDropEnabled = True
-        self._isEditable = True
+        # self._is_enabled = True
+        # self._isSelectable = True
+        # self._isDragEnabled = True
+        # self._isDropEnabled = True
+        # self._isEditable = True
         if parent is not None:
             parent.addChild(self)
 

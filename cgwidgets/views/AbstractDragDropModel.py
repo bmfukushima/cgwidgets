@@ -1,4 +1,10 @@
 # https://doc.qt.io/qt-5/model-view-programming.html#model-view-classes
+"""
+Todo:
+    * AbstractDragDropModelItem
+        Weird naming in the "able" stuff, some has the suffix "Enabled",
+        while others have the suffix "able"
+"""
 import copy
 from qtpy.QtWidgets import (
     QStyledItemDelegate, QApplication, QWidget, QStyle, QStyleOptionViewItem)
