@@ -1452,7 +1452,6 @@ class PiPMiniViewer(AbstractSplitterWidget):
             return True
 
         if event.type() == QEvent.Leave:
-
             if obj == self.enlargedWidget():
                 self.closeEnlargedView()
             return True
@@ -1564,8 +1563,9 @@ class PiPMiniViewer(AbstractSplitterWidget):
         if not widget: return
         if not self.widget(widget.index()): return
         if self.widget(widget.index()) == self.spacerWidget(): return
-        if self.widget(widget.index()).parent() == self.spacerWidget().parent():return
-        if not getWidgetAncestor(widget, AbstractPiPOrganizerWidget): return
+        if self.widget(widget.index()).parent() == self.spacerWidget().parent(): return
+
+        #if not getWidgetAncestor(widget, AbstractPiPOrganizerWidget): return
         # freeze
         self.setIsFrozen(True)
 
@@ -1689,6 +1689,8 @@ class PiPMiniViewer(AbstractSplitterWidget):
             self.setIsEnlarged(False)
 
         self.setIsFrozen(False)
+
+        # QApplication.processEvents()
 
     """ WIDGETS """
     def createNewWidget(self, widget, name=""):
@@ -3045,21 +3047,28 @@ widget.setCreationMode(AbstractPiPOrganizerWidget.DISPLAY)
     # main_layout.addWidget(splitter)
 
     setAsAlwaysOnTop(main_widget)
-    main_widget.show()
+    #main_widget.show()
 
     #main_widget.move(2000,700)
     centerWidgetOnCursor(main_widget)
     main_widget.resize(512, 512)
 
-    # display_test = PiPDisplayWidget()
-    # display_test.loadPiPWidgetFromFile(
-    #     getDefaultSavePath() + '/.PiPWidgets.json',
-    #     "test02"
-    # )
-    # display_test.show()
     # setup display widget
-    #pip_widget.setDisplayWidget("Bar", "recursion")
+    # pip_widget.setDisplayWidget("Bar", "recursion")
     # pip_widget.setDelegateTitleIsShown(True)
     # pip_widget.setCreationMode(AbstractPiPOrganizerWidget.DISPLAY)
+
+    # display test
+    display_test = PiPDisplayWidget()
+    display_test.loadPiPWidgetFromFile(
+        getDefaultSavePath() + '/.PiPWidgets_02.json',
+        "recursion"
+    )
+    centerWidgetOnCursor(display_test)
+    display_test.resize(512, 512)
+    setAsAlwaysOnTop(display_test)
+    display_test.show()
+
+
 
     sys.exit(app.exec_())
