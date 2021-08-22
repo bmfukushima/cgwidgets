@@ -5,7 +5,7 @@ from cgwidgets.settings import iColor
 from cgwidgets.settings import icons
 from cgwidgets.settings.hover_display import installHoverDisplaySS
 
-from cgwidgets.utils import setAsWindow, centerWidgetOnScreen
+from cgwidgets.utils import setAsWindow, centerWidgetOnScreen, setAsAlwaysOnTop
 from cgwidgets.widgets import AbstractLabelWidget, AbstractButtonInputWidget
 from cgwidgets.widgets.AbstractWidgets.AbstractGIFWidget import AbstractGIFWidget
 

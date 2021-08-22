@@ -40,7 +40,7 @@ from qtpy.QtGui import QCursor
 
 from cgwidgets.utils import (
     getMagnitude, Magnitude, getTopLeftPos,
-    setAsTransparent, setAsTool, getGlobalPos
+    setAsTransparent, setAsTool, getGlobalPos, setAsAlwaysOnTop
 )
 
 
@@ -195,6 +195,8 @@ class iStickyValueAdjustDelegate(object):
         # show invisible widget ( yeah I know how it sounds )
         drag_widget.setParent(None)
         # setAsTool(drag_widget)
+
+        setAsAlwaysOnTop(drag_widget)
         drag_widget.show()
 
         # user activation event

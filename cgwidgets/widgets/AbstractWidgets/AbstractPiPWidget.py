@@ -84,6 +84,9 @@ Signals:
     * Move AbstractPiPOrganizerWidget to AbstractPiPOrganizerWidgetOrganizer
         - AbstractPiPOrganizerWidget then becomes a display only PiPWidget
             so that it doesn't have to keep creating a ton of extra widgets...
+    * Delete (Global Organizer)
+        After delete, wrong widget is displayed in the PiPView
+
 
     * Clean up mini viewer resize
         PiPGlobalOrganizerWidget --> loadPiPWidgetFromSelection ( This runs twice for some reason)
@@ -139,7 +142,7 @@ from cgwidgets.widgets import (
     AbstractStringInputWidget,
     AbstractLabelWidget,
     AbstractButtonInputWidgetContainer,
-AbstractSplitterWidget
+    AbstractSplitterWidget
     )
 
 

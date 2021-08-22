@@ -180,6 +180,7 @@ def showWarningDialogue(widget, warning_display_widget, accept_event, cancel_eve
     widget._warning_widget.setCancelEvent(cancel_event)
 
     # show widget._warning_widget
+    setAsAlwaysOnTop(widget._warning_widget)
     widget._warning_widget.show()
     centerCursorOnWidget(widget._warning_widget)
     # widget._warning_widget.setFocus()
