@@ -22,6 +22,35 @@ Hierarchy:
         |- GlobalOrganizerWidget --> AbstractModelViewWidget
         |- SettingsWidget --> FrameInputWidgetContainer
 
+Data Structure (save widget):
+    Data Structure (Resources):
+        getAllPiPData()
+            {PiPName: {
+                file_path: str,
+                locked: bool
+                data: {PiPData}},
+            PiPName2: {
+                file_path: str,
+                locked: bool,
+                data: {PiPData}}
+            }
+
+    Data Structure (PiPData Singular File):
+        currentPiPFileData()
+            {"PiPName": {
+                "widgets": [
+                    {"widget name": "constructor code"},
+                    {"widget name": "constructor code"},
+                    {"widget name": "constructor code"}],
+                "settings": {"setting name": "value"}},
+            "PiPName2": {
+                "widgets": [
+                    {"widget name": "constructor code"},
+                    {"widget name": "constructor code"},
+                    {"widget name": "constructor code"}],
+                "settings": {"setting name": "value"}}
+            }
+
 Signals:
     Swap (Enter):
         Upon user cursor entering a widget, that widget becomes the main widget
@@ -81,9 +110,8 @@ Signals:
                     - How to get/store this data?
             2.) Take old PiPDisplayWidget/AbstractPiPOrganizerWidget and insert it as the first index
                     in the new PiPDisplayWidget/AbstractPiPOrganizerWidget
-    * Move AbstractPiPOrganizerWidget to AbstractPiPOrganizerWidgetOrganizer
-        - AbstractPiPOrganizerWidget then becomes a display only PiPWidget
-            so that it doesn't have to keep creating a ton of extra widgets...
+    * Enlarged --> Enter AbstractPiPOrganizer/PiPDisplayWidget
+        When doing this, it will insert the mainViewerWidget into the miniViewer
     * Delete (Global Organizer)
         After delete, wrong widget is displayed in the PiPView
 
@@ -190,7 +218,7 @@ class AbstractPiPOrganizerWidget(AbstractShojiModelViewWidget):
         """ create widgets """
         # create main pip widget
         self._main_widget = PiPDisplayWidget(self)
-
+        self._main_widget.setIsStandalone(False)
         # setup local organizer widget
         self._local_organizer_widget = PiPMiniViewerOrganizerWidget(self, widget_types)
         self._is_local_organizer_visible = False
@@ -343,7 +371,7 @@ class AbstractPiPOrganizerWidget(AbstractShojiModelViewWidget):
         """
         # create mini viewer widget
         mini_viewer_widget = self.mainWidget().createNewWidget(constructor_code, name, resize_mini_viewer)
-        # print("num_widgets ==", self.mainWidget().numWidgets())
+
         # create new index
         index = self.miniViewerOrganizerWidget().model().insertNewIndex(0, name=name)
 
@@ -351,11 +379,12 @@ class AbstractPiPOrganizerWidget(AbstractShojiModelViewWidget):
         item.setWidget(mini_viewer_widget)
         item.setConstructorCode(constructor_code)
 
-        mini_viewer_widget.setIndex(0)
+        # mini_viewer_widget.setIndex(0)
         mini_viewer_widget.setItem(item)
 
         # update indexes
-        self.updateWidgetIndexes()
+        self.miniViewerWidget().updateWidgetIndexes()
+        # self.updateWidgetIndexes()
 
         # # destroy temp widgets
         if 1 < self.mainWidget().numWidgets():
@@ -377,10 +406,7 @@ class AbstractPiPOrganizerWidget(AbstractShojiModelViewWidget):
 
     def removeAllWidgets(self):
         """ Clears all of the widgets from the current AbstractPiPOrganizerWidget"""
-        # todo merge this in with the pip display widget?
-        for item in self.miniViewerOrganizerWidget().model().getRootItem().children():
-            item.widget().setParent(None)
-            item.widget().deleteLater()
+        self.mainWidget().removeAllWidgets()
         self.miniViewerOrganizerWidget().model().clearModel()
 
     """ WIDGETS (TEMP)"""
@@ -585,6 +611,8 @@ class PiPDisplayWidget(QWidget):
         is_mini_viewer_widget (bool): determines if this is a child of a MiniViewerWidget.
         is_mini_viewer_shown (bool): if the mini viewer is currently visible.
             This is normally toggled with the "Q" key
+        is_standalone (bool): determines if this is a child of the PiPAbstractOrganizer.
+            If True, this means that this display is a standalone..
         pip_scale ((float, float)):  fractional percentage of the amount of space that
             the mini viewer will take up in relation to the overall size of the widget.
         swap_key (Qt.KEY): this key will trigger the popup
@@ -604,6 +632,7 @@ class PiPDisplayWidget(QWidget):
         self._mini_viewer_min_size = (100, 100)
         self._is_mini_viewer_shown = True
         self._is_mini_viewer_widget = is_mini_viewer_widget
+        self._is_standalone = True
         self._direction = attrs.SOUTH
         self._swap_key = Qt.Key_Space
         self._hotkey_swap_keys = [Qt.Key_1, Qt.Key_2, Qt.Key_3, Qt.Key_4, Qt.Key_5]
@@ -645,6 +674,22 @@ class PiPDisplayWidget(QWidget):
     def setHotkeySwapKeys(self, hotkey_swap_keys):
         self._hotkey_swap_keys = hotkey_swap_keys
 
+    def updateSettings(self, settings):
+        """ Updates all of the settings from the settings provided.
+
+        Note that you may need to call "resizeMiniViewer" afterwards in order
+        to trigger a display update.
+
+        Args:
+            settings (dict): of {setting_name (str): value}
+        """
+        self.setPiPScale(float(settings["PiP Scale"]))
+        self.setEnlargedScale(float(settings["Enlarged Scale"]))
+        self.showWidgetDisplayNames(settings["Display Titles"])
+        self.setDirection(settings["Direction"])
+        if "sizes" in list(settings.keys()):
+            self.miniViewerWidget().setSizes(settings["sizes"])
+
     """ PROPERTIES """
     def pipScale(self):
         return self._pip_scale
@@ -684,6 +729,12 @@ class PiPDisplayWidget(QWidget):
     def setIsMiniViewerWidget(self, is_mini_viewer_widget):
         self._is_mini_viewer_widget = is_mini_viewer_widget
 
+    def isStandalone(self):
+        return self._is_standalone
+
+    def setIsStandalone(self, is_standalone):
+        self._is_standalone = is_standalone
+
     def miniViewerMinSize(self):
         return self._mini_viewer_min_size
 
@@ -702,13 +753,12 @@ class PiPDisplayWidget(QWidget):
         """ Number of widgets currently in this PiPDisplay"""
         return self.miniViewerWidget().count()
 
-    """ UTILS """
     def areWidgetNamesShown(self):
         return self._are_widget_names_shown
 
     def showWidgetDisplayNames(self, enabled):
         self._are_widget_names_shown = enabled
-        for widget in getWidgetAncestor(self, AbstractPiPOrganizerWidget).widgets():
+        for widget in self.widgets():
             if enabled:
                 widget.headerWidget().show()
             else:
@@ -767,7 +817,77 @@ class PiPDisplayWidget(QWidget):
         # as it is resizing the mini viewer EVERY time a widget is created
         if resize_mini_viewer:
             self.resizeMiniViewer()
+
+        # update indexes
+        self.miniViewerWidget().updateWidgetIndexes()
+
         return mini_viewer_widget
+
+    def removeAllWidgets(self):
+        if self.mainViewerWidget().widget():
+            self.mainViewerWidget().widget().setParent(None)
+        self.miniViewerWidget().removeAllWidgets()
+
+    def loadPiPWidgetFromFile(self, filepath, pip_name):
+        """ Loads the PiPWidget from the file/name provided
+
+        Args:
+            filepath (str): path on disk to pipfile to load
+            pip_name (str): name of pip in filepath to load
+        """
+        # load json data
+        data = getJSONData(filepath)
+
+        # preflight
+        if not pip_name in data.keys():
+            print("{pip_name} not find in {filepath}".format(pip_name=pip_name, filepath=filepath))
+
+        # update pip display
+        self.removeAllWidgets()
+        self.loadPiPWidgetFromData(
+            data[pip_name]["widgets"],
+            data[pip_name]["settings"])
+
+    def loadPiPWidgetFromData(self, widgets, settings):
+        """ Loads the PiPWidget from the data provided.
+
+        Args:
+            widgets (dict): of {widget_name(str): constructor_code(str)}
+            settings (dict): of {setting (str): value}
+        """
+        reversed_widgets = OrderedDict(reversed(list(widgets.items())))
+
+        self.setIsFrozen(True)
+
+        # update
+        # createNewWidget
+
+        # clear pip view
+        self.removeAllWidgets()
+
+        # reset previous widget
+        self.clearPreviousWidget()
+        self.clearCurrentWidget()
+
+        # populate pip view
+        # load widgets
+        for widget_name, constructor_code in reversed_widgets.items():
+            if self.isStandalone():
+                self.createNewWidget(constructor_code, name=widget_name, resize_mini_viewer=False)
+            else:
+                organizer_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
+                organizer_widget.createNewWidget(constructor_code, name=widget_name, resize_mini_viewer=False)
+
+        # update settings
+        self.updateSettings(settings)
+
+        # restore mini widget sizes
+        self.setIsFrozen(False)
+
+        # resize
+        self.resizeMiniViewer()
+        if "sizes" in list(settings.keys()):
+            self.miniViewerWidget().setSizes(settings["sizes"])
 
     """ WIDGETS """
     def mainViewerWidget(self):
@@ -858,6 +978,18 @@ class PiPDisplayWidget(QWidget):
 
     def clearPreviousWidget(self):
         self._previous_widget = None
+
+    def widgets(self):
+        """ Returns a list of all child widgtes
+
+        This list will include the currently viewed main widget, aswell
+        as all of the widgets in the miniViewerWidget()"""
+        widgets = []
+        if self.mainViewerWidget().widget():
+            widgets.append(self.mainViewerWidget().widget())
+        widgets += self.miniViewerWidget().widgets()
+
+        return widgets
 
     """ DIRECTION """
     def direction(self):
@@ -1116,6 +1248,10 @@ class PiPMainViewer(QWidget):
         self.layout().addWidget(widget)
         widget.layout().setContentsMargins(0, 0, 0, 0)
 
+    def removeWidget(self):
+        self.widget().setParent(None)
+        #self.widget().deleteLater()
+
 
 class PiPMiniViewer(AbstractSplitterWidget):
     """
@@ -1241,6 +1377,12 @@ class PiPMiniViewer(AbstractSplitterWidget):
             return True
         else:
             return False
+
+    def updateWidgetIndexes(self):
+        """ Updates all of the widget indexes to their current position """
+        # update indexes
+        for i, widget in enumerate(self.widgets()):
+            widget.setIndex(i)
 
     """ EVENTS """
     def eventFilter(self, obj, event):
@@ -1588,6 +1730,11 @@ class PiPMiniViewer(AbstractSplitterWidget):
             widget.setParent(None)
             if not isinstance(widget, QSplitterHandle):
                 widget.removeEventFilter(self)
+
+    def removeAllWidgets(self):
+        for i in reversed(range(self.count())):
+            self.widget(i).removeEventFilter(self)
+            self.widget(i).setParent(None)
 
     def widgets(self):
         _widgets = []
@@ -2069,7 +2216,13 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
         """
         if enabled:
             if item.itemType() == PiPGlobalOrganizerItem.PIP:
-                self.saveWidget().loadPiPWidgetFromItem(item)
+                organizer_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
+                organizer_widget.removeAllWidgets()
+                organizer_widget.mainWidget().loadPiPWidgetFromData(item.widgetsList(), item.settings())
+
+                # load settings
+                organizer_widget.settingsWidget().loadSettings(item.settings())
+
 
             # toggle save button lock
             is_locked = item.isLocked()
@@ -2183,7 +2336,6 @@ class PiPSaveWidget(QWidget):
                     {"widget name": "constructor code"}],
                 "settings": {"setting name": "value"}}
             }
-
     """
     def __init__(self, parent=None, save_data=None):
         super(PiPSaveWidget, self).__init__(parent)
@@ -2269,49 +2421,6 @@ class PiPSaveWidget(QWidget):
         return widgets_list
 
     """ LOAD """
-    def loadPiPWidgetFromItem(self, item):
-        """
-        Updates the main display to the meta data of the PiPWidget that was selected
-
-        Args:
-            item (PiPGlobalOrganizerItem): selected
-
-        Returns:
-
-        """
-        widgets = item.widgetsList()
-        reversed_widgets = OrderedDict(reversed(list(widgets.items())))
-
-        organizer_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
-        main_widget = organizer_widget.mainWidget()
-        main_widget.setIsFrozen(True)
-
-        # clear pip view
-        organizer_widget.removeAllWidgets()
-        # reset previous widget
-        main_widget.clearPreviousWidget()
-        main_widget.clearCurrentWidget()
-
-        # populate pip view
-        # load widgets
-        for widget_name, constructor_code in reversed_widgets.items():
-            # print("widget_name == ", widget_name)
-            organizer_widget.createNewWidget(constructor_code, name=widget_name, resize_mini_viewer=False)
-
-        # load settings
-        organizer_widget.settingsWidget().loadSettings(item.settings())
-
-        # restore mini widget sizes
-        main_widget.setIsFrozen(False)
-
-        # todo count is wrong... for some reason...
-        main_widget.resizeMiniViewer()
-        # for i in range(main_widget.miniViewerWidget().count()):
-        #     print("name === ", main_widget.miniViewerWidget().widget(i).name())
-
-        if "sizes" in list(item.settings().keys()):
-            organizer_widget.miniViewerWidget().setSizes(item.settings()["sizes"])
-
     def getAllPiPData(self):
         """
         Loads all of the PiPData as JSON Data from ALL of the PiP resource locations
@@ -2700,9 +2809,10 @@ class PiPMiniViewerOrganizerWidget(AbstractModelViewWidget):
 
     """ EVENTS """
     def itemReordered(self, data, items, model, row, parent):
-        """
-        When an item is drag/dropped, this will update the widget indexes, and reinsert
+        """When an item is drag/dropped, this will update the widget indexes, and reinsert
         the widget into the mini viewer if it is not currently the active widget.
+
+        # todo this will probably need work...
         """
         # get default attrs
 
@@ -2718,7 +2828,8 @@ class PiPMiniViewerOrganizerWidget(AbstractModelViewWidget):
             mini_viewer.addWidget(widget)
 
         # update all widget indexes
-        main_widget.updateWidgetIndexes()
+        mini_viewer.updateWidgetIndexes()
+        # main_widget.updateWidgetIndexes()
 
     def editWidget(self, item, old_value, new_value):
         item.widget().headerWidget().setName(new_value)
@@ -2940,6 +3051,12 @@ widget.setCreationMode(AbstractPiPOrganizerWidget.DISPLAY)
     centerWidgetOnCursor(main_widget)
     main_widget.resize(512, 512)
 
+    # display_test = PiPDisplayWidget()
+    # display_test.loadPiPWidgetFromFile(
+    #     getDefaultSavePath() + '/.PiPWidgets.json',
+    #     "test02"
+    # )
+    # display_test.show()
     # setup display widget
     #pip_widget.setDisplayWidget("Bar", "recursion")
     # pip_widget.setDelegateTitleIsShown(True)
