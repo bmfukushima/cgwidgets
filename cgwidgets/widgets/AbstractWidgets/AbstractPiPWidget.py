@@ -115,7 +115,12 @@ Signals:
     * Delete (Global Organizer)
         After delete, wrong widget is displayed in the PiPView
 
-
+    * Mouse moving to fast bug
+        PiPMiniViewer --> enlargeWidget | closeEnlargedView
+        Can potentially add a flag on the enlarged/closed, so that if the flag is active
+        for the other one, then it will recursively call itself until the flag has been deactivated.
+        This would ensure that double events don't happen...
+        
     * Clean up mini viewer resize
         PiPGlobalOrganizerWidget --> loadPiPWidgetFromSelection ( This runs twice for some reason)
         PiPSaveWidget --> loadPiPWidgetFromItem
@@ -1668,10 +1673,9 @@ class PiPMiniViewer(AbstractSplitterWidget):
         # setup attrs
         self.setIsFrozen(True)
 
-        #enlarged_widget = self.enlargedWidget()
         widget_under_cursor = getWidgetUnderCursor()
 
-        # exitted over the mini viewer
+        # exited over the mini viewer
         if isWidgetDescendantOf(widget_under_cursor, self):
             if widget_under_cursor == self._spacer_widget:
                 pass
@@ -1686,6 +1690,7 @@ class PiPMiniViewer(AbstractSplitterWidget):
                 mini_viewer_widget = getWidgetAncestor(widget_under_cursor, PiPMiniViewerWidget)
                 self.enlargeWidget(mini_viewer_widget)
 
+        # exited over main viewer
         else:
             # reset display label
             self._resetSpacerWidget()
@@ -1694,7 +1699,7 @@ class PiPMiniViewer(AbstractSplitterWidget):
         # self.setIsFrozen(False)
         """ Unfreezing as a delayed event to help to avoid the segfaults that occur
         when PyQt tries to do things to fast..."""
-        runDelayedEvent(self, self.unfreeze)
+        runDelayedEvent(self, self.unfreeze, delay_amount=10)
 
     def unfreeze(self):
         self.setIsFrozen(False)
