@@ -111,7 +111,7 @@ widget = QPushButton(\"TESTBUTTON\") """
     pip_widget.setPiPScale((0.25, 0.25))
     pip_widget.setEnlargedScale(0.75)
     pip_widget.setDirection(attrs.WEST)
-    pip_widget.showWidgetDisplayNames(False)
+    pip_widget.setIsDisplayNamesShown(False)
 
     # Main Widget
     main_widget = QWidget()
