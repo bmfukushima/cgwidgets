@@ -100,16 +100,6 @@ Signals:
         hide (esc)
 """
 """ TODO
-    * Recursive PiPs
-        - MiniViewer
-            PiPDisplayWidget --> setCurrentWidget
-            Needs to make it so that the PIPWidget that is displayed, is the one that is 
-            selected, and the current pip widget is set in the mini viewer... With the PiPViewer
-            that was selected removed from the miniviewer...
-            1.) Make selected PiPDisplayWidget/AbstractPiPOrganizerWidget the currently displayed PiPWidget
-                    - How to get/store this data?
-            2.) Take old PiPDisplayWidget/AbstractPiPOrganizerWidget and insert it as the first index
-                    in the new PiPDisplayWidget/AbstractPiPOrganizerWidget
     * Enlarged --> Enter AbstractPiPOrganizer/PiPDisplayWidget
         When doing this, it will insert the mainViewerWidget into the miniViewer
     * Delete (Global Organizer)
@@ -120,6 +110,8 @@ Signals:
         Can potentially add a flag on the enlarged/closed, so that if the flag is active
         for the other one, then it will recursively call itself until the flag has been deactivated.
         This would ensure that double events don't happen...
+        
+        Currently has a timer set in the close closeEnlargedView() to block the signal from going to fast...
     * Clean up mini viewer resize
         PiPGlobalOrganizerWidget --> loadPiPWidgetFromSelection ( This runs twice for some reason)
         PiPSaveWidget --> loadPiPWidgetFromItem
