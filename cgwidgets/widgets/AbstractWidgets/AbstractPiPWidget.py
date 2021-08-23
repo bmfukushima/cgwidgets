@@ -152,7 +152,8 @@ from cgwidgets.utils import (
     getWidgetAncestor,
     getDefaultSavePath,
     getJSONData,
-    installResizeEventFinishedEvent)
+    installResizeEventFinishedEvent,
+    runDelayedEvent)
 
 from cgwidgets.settings import attrs, iColor, keylist
 
@@ -1425,6 +1426,7 @@ class PiPMiniViewer(AbstractSplitterWidget):
             If the user exits on the first widget, or a widget that will be the enlarged widget,
             it will recurse back and enlarge itself.  This will block that recursion
             """
+            print ('===== ENTER ===== ', obj.name())
             if self.isEnlarged():
                 # Block from re-enlarging itself
                 if self.enlargedWidget() == obj:
@@ -1452,6 +1454,7 @@ class PiPMiniViewer(AbstractSplitterWidget):
             return True
 
         if event.type() == QEvent.Leave:
+            print("===== LEAVE ===== ", obj.name())
             if obj == self.enlargedWidget():
                 self.closeEnlargedView()
             return True
@@ -1651,7 +1654,7 @@ class PiPMiniViewer(AbstractSplitterWidget):
         self.setSizes(self._temp_sizes)
         self.setIsFrozen(False)
 
-    def closeEnlargedView(self, enlarged_widget=None):
+    def closeEnlargedView(self):
         """
         Closes the enlarged viewer, and returns it back to normal PiP mode
 
@@ -1664,8 +1667,8 @@ class PiPMiniViewer(AbstractSplitterWidget):
 
         # setup attrs
         self.setIsFrozen(True)
-        if not enlarged_widget:
-            enlarged_widget = self.enlargedWidget()
+
+        #enlarged_widget = self.enlargedWidget()
         widget_under_cursor = getWidgetUnderCursor()
 
         # exitted over the mini viewer
@@ -1688,9 +1691,13 @@ class PiPMiniViewer(AbstractSplitterWidget):
             self._resetSpacerWidget()
             self.setIsEnlarged(False)
 
-        self.setIsFrozen(False)
+        # self.setIsFrozen(False)
+        """ Unfreezing as a delayed event to help to avoid the segfaults that occur
+        when PyQt tries to do things to fast..."""
+        runDelayedEvent(self, self.unfreeze)
 
-        # QApplication.processEvents()
+    def unfreeze(self):
+        self.setIsFrozen(False)
 
     """ WIDGETS """
     def createNewWidget(self, widget, name=""):
@@ -1770,7 +1777,7 @@ class PiPMiniViewerWidget(QWidget):
             self._is_pip_widget = True
         else:
             self._is_pip_widget = False
-
+        self._name = name
         self._index = 0
         self._main_widget = AbstractLabelledInputWidget(
             self, name=name, direction=direction, delegate_widget=delegate_widget)
@@ -1828,9 +1835,11 @@ class PiPMiniViewerWidget(QWidget):
         self._index = index
 
     def name(self):
-        return self.item().columnData()["name"]
+        return self._name
+        # return self.item().columnData()["name"]
 
     def setName(self, name):
+        self._name = name
         self.item().columnData()["name"] = name
         self.headerWidget().viewWidget().setText(name)
 

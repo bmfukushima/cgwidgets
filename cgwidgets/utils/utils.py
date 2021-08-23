@@ -119,6 +119,26 @@ def getDefaultSavePath():
 #             return getMainWidget(widget.parent(), name)
 #         except AttributeError:
 #             print("this is has no parents...")
+def runDelayedEvent(widget, event, name="_timer", delay_amount=50):
+    """ Runs the event provided after a certain amount of delay (delay_amount)
+
+    Args:
+        widget (obj): to store metadata on
+        event (func): function to be run when timer times out
+        name (str):
+        delay_amount (int)
+    """
+    if hasattr(widget, name):
+        getattr(widget, name).setInterval(delay_amount)
+
+    def eventWrapper():
+        event()
+        delattr(widget, name)
+
+    new_timer = QTimer()
+    setattr(widget, name, new_timer)
+    getattr(widget, name).start(delay_amount)
+    getattr(widget, name).timeout.connect(eventWrapper)
 
 def convertScriptToString(file_path):
     with open(file_path, "r") as myfile:
