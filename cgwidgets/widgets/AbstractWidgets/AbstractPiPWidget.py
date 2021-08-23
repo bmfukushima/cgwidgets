@@ -1830,6 +1830,10 @@ class PiPMiniViewerWidget(QWidget):
     def name(self):
         return self.item().columnData()["name"]
 
+    def setName(self, name):
+        self.item().columnData()["name"] = name
+        self.headerWidget().viewWidget().setText(name)
+
 
 """ SETTINGS """
 class SettingsWidget(AbstractFrameInputWidgetContainer):
@@ -2224,7 +2228,6 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
 
                 # load settings
                 organizer_widget.settingsWidget().loadSettings(item.settings())
-
 
             # toggle save button lock
             is_locked = item.isLocked()
@@ -2834,7 +2837,7 @@ class PiPMiniViewerOrganizerWidget(AbstractModelViewWidget):
         # main_widget.updateWidgetIndexes()
 
     def editWidget(self, item, old_value, new_value):
-        item.widget().headerWidget().setName(new_value)
+        item.widget().setName(new_value)
 
     def deleteWidget(self, item):
         """
@@ -2999,17 +3002,11 @@ widget.addItems(['a', 'b', 'c', 'd'])
 """,
         "Recursion":"""
 
-save_data = {
-    "Foo": {
-        "file_path": getDefaultSavePath() + '/.PiPWidgets.json',
-        "locked": True},
-    "Bar": {
-        "file_path": getDefaultSavePath() + '/.PiPWidgets_02.json',
-        "locked": False}
-}
-widget = AbstractPiPOrganizerWidget(save_data=save_data)
-widget.setDisplayWidget("Bar", "test02")
-widget.setCreationMode(AbstractPiPOrganizerWidget.DISPLAY)
+widget = PiPDisplayWidget()
+widget.loadPiPWidgetFromFile(
+        getDefaultSavePath() + '/.PiPWidgets_02.json',
+        "test02"
+    )
 """
     }
     pip_widget = AbstractPiPOrganizerWidget(save_data=save_data, widget_types=widget_types)
@@ -3047,7 +3044,7 @@ widget.setCreationMode(AbstractPiPOrganizerWidget.DISPLAY)
     # main_layout.addWidget(splitter)
 
     setAsAlwaysOnTop(main_widget)
-    #main_widget.show()
+    main_widget.show()
 
     #main_widget.move(2000,700)
     centerWidgetOnCursor(main_widget)
@@ -3067,7 +3064,7 @@ widget.setCreationMode(AbstractPiPOrganizerWidget.DISPLAY)
     centerWidgetOnCursor(display_test)
     display_test.resize(512, 512)
     setAsAlwaysOnTop(display_test)
-    display_test.show()
+    # display_test.show()
 
 
 
