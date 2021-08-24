@@ -95,6 +95,28 @@ def getDefaultSavePath():
     return save_dir
 
 
+def isCursorOverWidget(widget):
+    """ Determines if the cursor is over the enlarged widget or not
+
+    This is mainly used in the DragLeave event to determine what kind
+    of leave is happening"""
+    global_event_pos = QCursor.pos()
+    cursor_xpos = global_event_pos.x()
+    cursor_ypos = global_event_pos.y()
+    if widget.parent():
+        top_left = widget.parent().mapToGlobal(widget.geometry().topLeft())
+    else:
+        top_left = widget.geometry().topLeft()
+    x = top_left.x()
+    y = top_left.y()
+    w = widget.geometry().width()
+    h = widget.geometry().height()
+
+    if (x < cursor_xpos and cursor_xpos < (x + w)) and (y < cursor_ypos and cursor_ypos < (y + h)):
+        return True
+    else:
+        return False
+
 # remove this for now
 # def getMainWidget(widget, name):
 #     """
@@ -139,6 +161,7 @@ def runDelayedEvent(widget, event, name="_timer", delay_amount=50):
     setattr(widget, name, new_timer)
     getattr(widget, name).start(delay_amount)
     getattr(widget, name).timeout.connect(eventWrapper)
+
 
 def convertScriptToString(file_path):
     with open(file_path, "r") as myfile:

@@ -100,8 +100,13 @@ Signals:
         hide (esc)
 """
 """ TODO
-    * Enlarged --> Enter AbstractPiPOrganizer/PiPDisplayWidget
-        When doing this, it will insert the mainViewerWidget into the miniViewer
+    * Drag/Drop from MiniViewerWidgets
+        - workign ish??
+        - Alt leave not working on recursive widgets
+    * Leave Enlarged --> Enter Recursive miniviewer = crash
+    * Enlarged widgets dissappear?
+        resizing to wide?
+    * PopUps??
     * Delete (Global Organizer)
         After delete, wrong widget is displayed in the PiPView
 
@@ -145,6 +150,7 @@ from cgwidgets.views import AbstractDragDropModelItem
 from cgwidgets.utils import (
     getWidgetUnderCursor,
     isWidgetDescendantOf,
+    isCursorOverWidget,
     getWidgetAncestor,
     getDefaultSavePath,
     getJSONData,
@@ -157,7 +163,6 @@ from cgwidgets.widgets.AbstractWidgets.AbstractLabelledInputWidget import Abstra
 from cgwidgets.widgets.AbstractWidgets.AbstractOverlayInputWidget import AbstractOverlayInputWidget
 from cgwidgets.widgets.AbstractWidgets.AbstractModelViewWidget import AbstractModelViewWidget
 from cgwidgets.widgets.AbstractWidgets.AbstractShojiWidget.AbstractShojiModelViewWidget import AbstractShojiModelViewWidget
-#from cgwidgets.widgets.AbstractWidgets.AbstractSplitterWidget import AbstractSplitterWidget
 
 from cgwidgets.widgets import (
     AbstractFrameInputWidgetContainer,
@@ -1086,7 +1091,12 @@ class PiPDisplayWidget(QWidget):
     def eventFilter(self, obj, event):
         if event.type() == QEvent.DragEnter:
             event.accept()
-
+        # if event.type() == QEvent.DragMove:
+        #     # print(event.modifiers())
+        #     modifiers = QApplication.keyboardModifiers()
+        #     if modifiers == Qt.AltModifier:
+        #         obj.pipMiniViewerWidget().closeEnlargedView()
+        #         return True
         # elif event.type() == QEvent.Drop:
         #     print("drop???")
         #     # todo figure out how to handle this for suppressed
@@ -1158,7 +1168,8 @@ class PiPDisplayWidget(QWidget):
     def leaveEvent(self, event):
         """ Blocks the error that occurs when switching between different PiPDisplays"""
         if self.miniViewerWidget().isEnlarged():
-            self.miniViewerWidget().closeEnlargedView()
+            if not isCursorOverWidget(self):
+                self.miniViewerWidget().closeEnlargedView()
         return QWidget.leaveEvent(self, event)
 
     def resizeEvent(self, event):
@@ -1369,10 +1380,10 @@ class PiPMiniViewer(AbstractSplitterWidget):
 
     """ PROPERTIES """
     def isDragging(self):
-        return self._is_dragging
+        return self.window()._pip_widget_is_dragging
 
-    def setIsDragging(self, is_dragging):
-        self._is_dragging = is_dragging
+    def setIsDragging(self, _pip_widget_is_dragging):
+        self.window()._pip_widget_is_dragging = _pip_widget_is_dragging
 
     def isEnlarged(self):
         return self._is_enlarged
@@ -1434,23 +1445,23 @@ class PiPMiniViewer(AbstractSplitterWidget):
         self.widgets().append(widget)
         self.setSizes(self._temp_sizes)
 
-    def _isCursorOverEnlargedWidget(self):
-        """ Determines if the cursor is over the enlarged widget or not
-
-        This is mainly used in the DragLeave event to determine what kind
-        of leave is happening"""
-        global_event_pos = QCursor.pos()
-        xpos = global_event_pos.x()
-        ypos = global_event_pos.y()
-        top_left = self.enlargedWidget().parent().mapToGlobal(self.enlargedWidget().geometry().topLeft())
-        x = top_left.x()
-        y = top_left.y()
-        w = self.enlargedWidget().geometry().width()
-        h = self.enlargedWidget().geometry().height()
-        if (x < xpos and xpos < (x + w)) and (y < ypos and ypos < (y + h)):
-            return True
-        else:
-            return False
+    # def _isCursorOverEnlargedWidget(self):
+    #     """ Determines if the cursor is over the enlarged widget or not
+    #
+    #     This is mainly used in the DragLeave event to determine what kind
+    #     of leave is happening"""
+    #     global_event_pos = QCursor.pos()
+    #     xpos = global_event_pos.x()
+    #     ypos = global_event_pos.y()
+    #     top_left = self.enlargedWidget().parent().mapToGlobal(self.enlargedWidget().geometry().topLeft())
+    #     x = top_left.x()
+    #     y = top_left.y()
+    #     w = self.enlargedWidget().geometry().width()
+    #     h = self.enlargedWidget().geometry().height()
+    #     if (x < xpos and xpos < (x + w)) and (y < ypos and ypos < (y + h)):
+    #         return True
+    #     else:
+    #         return False
 
     def updateWidgetIndexes(self):
         """ Updates all of the widget indexes to their current position """
@@ -1491,8 +1502,9 @@ class PiPMiniViewer(AbstractSplitterWidget):
 
         # preflight
         if self.isFrozen(): return True
-        if self._popupWidgetEvent(obj, event): return True
-        if self._dragEvent(obj, event): return True
+        # if self._popupWidgetEvent(obj, event): return True
+
+        # if self._dragEvent(obj, event): return True
 
         if event.type() == QEvent.Enter:
             """
@@ -1526,11 +1538,57 @@ class PiPMiniViewer(AbstractSplitterWidget):
             return True
 
         if event.type() == QEvent.Leave:
-            if obj == self.enlargedWidget():
-                self.closeEnlargedView()
+            # print('NORMAL LEAVE')
+            if not isCursorOverWidget(obj):
+                if obj == self.enlargedWidget():
+                    self.closeEnlargedView()
             return True
 
         return False
+    # def _dragEvent(self, obj, event):
+    #     """ Handles the event filter's Drag Leave Event
+    #     Args:
+    #         obj (QWidget):
+    #         event (QEvent):
+    #     """
+    #     if event.type() == QEvent.DragEnter:
+    #         # enlarge widget
+    #         print("ENTER (NOT FROZEN)")
+    #         # blocked recursion
+    #         """ This will mess with the mouse position handlers """
+    #         print(self.isEnlarged())
+    #         if not self.isEnlarged():
+    #             print("??")
+    #             # print(" ENTER (NOT FROZEN)")
+    #             self.enlargeWidget(obj)
+    #             #
+    #         event.accept()
+    #
+    #     if event.type() == QEvent.DragMove:
+    #         if not self.isDragging():
+    #             print('drag move?')
+    #             self.setPopupWidget(None)
+    #             self.setIsDragging(True)
+    #             self.closeEnlargedView()
+    #             return True
+    #
+    #     # on drop, close and reset
+    #     if event.type() == QEvent.Drop:
+    #         self.setIsDragging(False)
+    #         self.setPopupWidget(None)
+    #         self.closeEnlargedView()
+    #
+    #     # on drag leave, if the drag leave enters a widget that
+    #     # is a child of the current enlargedWidget, then do nothing
+    #     if event.type() == QEvent.DragLeave:
+    #         if self._isCursorOverEnlargedWidget():
+    #             # print(" LEAVE (OVER)")
+    #             # event.ignore()
+    #             return True
+    #         else:
+    #             # print(" LEAVE (NOT OVER)")
+    #             self.closeEnlargedView()
+    #             return True
 
     def _dragEvent(self, obj, event):
         """ Handles the event filter's Drag Leave Event
@@ -1538,44 +1596,55 @@ class PiPMiniViewer(AbstractSplitterWidget):
             obj (QWidget):
             event (QEvent):
         """
+        # if event.type() == QEvent.KeyPress:
+        #     if self.isDragging():
+        #         if event.key() == Qt.Key_Escape:
+        #             self.closeEnlargedView()
+        #             return True
+
         if event.type() == QEvent.DragEnter:
+
             # enlarge widget
-            if not self.isFrozen():
-                # blocked recursion
-                """ This will mess with the mouse position handlers """
-                if not self.isEnlarged():
-                    # print(" ENTER (NOT FROZEN)")
-                    self.enlargeWidget(obj)
-            else:
-                # print(" ENTER (FROZEN)")
-                self.setIsFrozen(False)
+            print("ENTER (NOT FROZEN)")
+            # blocked recursion
+            """ This will mess with the mouse position handlers """
+            # todo this needs to get hte miniViewerFrom the obj... not self
+            if not obj.pipMiniViewerWidget().isEnlarged():
+                # print(" ENTER (NOT FROZEN)")
+                obj.pipMiniViewerWidget().enlargeWidget(obj)
                 #
             event.accept()
 
+            return True
+
         if event.type() == QEvent.DragMove:
+            modifiers = QApplication.keyboardModifiers()
+            if modifiers == Qt.AltModifier:
+                obj.pipMiniViewerWidget().closeEnlargedView()
+                return True
             if not self.isDragging():
-                self.setPopupWidget(None)
+                # self.setPopupWidget(None)
                 self.setIsDragging(True)
-                self.closeEnlargedView()
+                # self.setIsFrozen(True)
+                obj.pipMiniViewerWidget().closeEnlargedView()
                 return True
 
         # on drop, close and reset
         if event.type() == QEvent.Drop:
             self.setIsDragging(False)
             self.setPopupWidget(None)
-            self.closeEnlargedView()
+            obj.pipMiniViewerWidget().closeEnlargedView()
 
         # on drag leave, if the drag leave enters a widget that
         # is a child of the current enlargedWidget, then do nothing
         if event.type() == QEvent.DragLeave:
-
-            if self._isCursorOverEnlargedWidget():
-                # print(" LEAVE (OVER)")
+            if isCursorOverWidget(self.enlargedWidget()):
+                print(" LEAVE (OVER ENLARGED)")
                 # event.ignore()
                 return True
             else:
-                # print(" LEAVE (NOT OVER)")
-                self.closeEnlargedView()
+                print(" LEAVE (NOT OVER ENLARGED)")
+                obj.pipMiniViewerWidget().closeEnlargedView()
                 return True
 
     def _popupWidgetEvent(self, obj, event):
@@ -1638,81 +1707,81 @@ class PiPMiniViewer(AbstractSplitterWidget):
         if not self.widget(widget.index()): return
         if self.widget(widget.index()) == self.spacerWidget(): return
         if self.widget(widget.index()).parent() == self.spacerWidget().parent(): return
-
         #if not getWidgetAncestor(widget, AbstractPiPOrganizerWidget): return
         # freeze
         self.setIsFrozen(True)
 
         # set/get attrs
-        main_widget = getWidgetAncestor(self, PiPDisplayWidget)
+        pip_display_widget = getWidgetAncestor(self, PiPDisplayWidget)
         self.setIsEnlarged(True)
         self.setEnlargedWidget(widget)
         """temp sizes holds the current size of widgets
         so that they can be added/removed and restored to their original state"""
         self._temp_sizes = self.sizes()
-        scale = main_widget.enlargedScale()
+        scale = pip_display_widget.enlargedScale()
         negative_space = 1 - scale
         half_neg_space = negative_space * 0.5
-        num_widgets = main_widget.numWidgets()
+        num_widgets = pip_display_widget.numWidgets()
         # special case for only one mini viewer widget
         if num_widgets == 1:
-            xoffset = int(main_widget.width() * negative_space)
-            yoffset = int(main_widget.width() * negative_space)
-            width = int(main_widget.width() - xoffset)
-            height = int(main_widget.height() - yoffset)
+            xoffset = int(pip_display_widget.width() * negative_space)
+            yoffset = int(pip_display_widget.width() * negative_space)
+            width = int(pip_display_widget.width() - xoffset)
+            height = int(pip_display_widget.height() - yoffset)
 
             # NORTH WEST
-            if main_widget.direction() == attrs.NORTH:
+            if pip_display_widget.direction() == attrs.NORTH:
                 xpos = 0
                 ypos = 0
             # SOUTH EAST
-            if main_widget.direction() == attrs.SOUTH:
+            if pip_display_widget.direction() == attrs.SOUTH:
                 xpos = xoffset
                 ypos = yoffset
             # NORTH EAST
-            if main_widget.direction() == attrs.EAST:
+            if pip_display_widget.direction() == attrs.EAST:
                 xpos = xoffset
                 ypos = 0
             # SOUTH WEST
-            if main_widget.direction() == attrs.WEST:
+            if pip_display_widget.direction() == attrs.WEST:
                 xpos = 0
                 ypos = yoffset
 
         # if there are 2 or more mini viewer widgets
         if 1 < num_widgets:
             # get widget position / size
-            if main_widget.direction() in [attrs.EAST, attrs.WEST]:
-                xoffset = int(main_widget.width() * negative_space)
-                yoffset = int(main_widget.width() * negative_space)
+            if pip_display_widget.direction() in [attrs.EAST, attrs.WEST]:
+                xoffset = int(pip_display_widget.width() * negative_space)
+                yoffset = int(pip_display_widget.width() * negative_space)
 
-                height = int(main_widget.height() - (yoffset * 2))
+                height = int(pip_display_widget.height() - (yoffset * 2))
                 ypos = int(yoffset)
 
                 margins = 25
-                if main_widget.direction() == attrs.EAST:
-                    width = int(main_widget.width() - xoffset - self.width() + margins)
+                if pip_display_widget.direction() == attrs.EAST:
+                    width = int(pip_display_widget.width() - xoffset - self.width() + margins)
                     xpos = int(xoffset)
 
-                if main_widget.direction() == attrs.WEST:
-                    width = int(main_widget.width() - xoffset - self.width())
+                if pip_display_widget.direction() == attrs.WEST:
+                    width = int(pip_display_widget.width() - xoffset - self.width())
                     xpos = self.width() - margins
 
-            if main_widget.direction() in [attrs.NORTH, attrs.SOUTH]:
+            if pip_display_widget.direction() in [attrs.NORTH, attrs.SOUTH]:
                 offset = int(self.height() * 0.75)
-                xpos = int(main_widget.width() * half_neg_space)
-                width = int(main_widget.width() * scale)
-                height = int(main_widget.height() * (scale + half_neg_space) - offset)
+                xpos = int(pip_display_widget.width() * half_neg_space)
+                width = int(pip_display_widget.width() * scale)
+                height = int(pip_display_widget.height() * (scale + half_neg_space) - offset)
 
-                if main_widget.direction() == attrs.NORTH:
+                if pip_display_widget.direction() == attrs.NORTH:
                     ypos = 0 + offset
-                if main_widget.direction() == attrs.SOUTH:
-                    ypos = int(main_widget.height() * (negative_space - half_neg_space))
+                if pip_display_widget.direction() == attrs.SOUTH:
+                    ypos = int(pip_display_widget.height() * (negative_space - half_neg_space))
 
         # Swap spacer widget
         self.replaceWidget(widget.index(), self.spacerWidget())
         self.spacerWidget().show()
 
         # reparent widget
+        print(widget, self.parent())
         widget.setParent(self.parent())
         widget.show()
 
@@ -1723,6 +1792,11 @@ class PiPMiniViewer(AbstractSplitterWidget):
         #
         self.insertWidget(widget.index(), self._spacer_widget)
         self.setSizes(self._temp_sizes)
+
+        # show mini viewer widgets
+        if widget.isPiPWidget():
+            widget.delegateWidget().setIsMiniViewerShown(True)
+
         self.setIsFrozen(False)
 
     def closeEnlargedView(self):
@@ -1735,7 +1809,6 @@ class PiPMiniViewer(AbstractSplitterWidget):
 
         # preflight
         if not self.isEnlarged(): return
-
         # setup attrs
         self.setIsFrozen(True)
 
@@ -1763,6 +1836,11 @@ class PiPMiniViewer(AbstractSplitterWidget):
             self.setIsEnlarged(False)
 
         # self.setIsFrozen(False)
+        # show mini viewer widgets
+        # if self.enlargedWidget().isPiPWidget():
+        #     # pip_display_widget = getWidgetAncestor(self.enlargedWidget(), PiPDisplayWidget)
+        #     self.enlargedWidget().delegateWidget().setIsMiniViewerShown(False)
+
         """ Unfreezing as a delayed event to help to avoid the segfaults that occur
         when PyQt tries to do things to fast..."""
         runDelayedEvent(self, self.unfreeze, delay_amount=10)
@@ -1885,6 +1963,9 @@ class PiPMiniViewerWidget(QWidget):
 
     def delegateWidget(self):
         return self.mainWidget().delegateWidget()
+
+    def pipMiniViewerWidget(self):
+        return getWidgetAncestor(self, PiPDisplayWidget).miniViewerWidget()
 
     """ PROPERTIES """
     def isPiPWidget(self):
@@ -2857,7 +2938,7 @@ class PiPMiniViewerOrganizerWidget(AbstractModelViewWidget):
     """
     This widget is in charge of organizing widgets that will be visible in the AbstractPiPOrganizerWidget
         Abilities include:
-            Delete | Rename | Reorder
+            Create | Delete | Rename | Reorder
 
     Attributes:
         widget_types (dict): of widget names / constructors
@@ -2977,7 +3058,7 @@ class PiPMiniViewerOrganizerWidget(AbstractModelViewWidget):
 
 
 class PiPMiniViewerWidgetCreator(AbstractListInputWidget):
-    """ """
+    """ Creates the widgets that are available in the current PiPDisplayWidget"""
     def __init__(self, parent=None, widget_types=None):
         super(PiPMiniViewerWidgetCreator, self).__init__(parent)
 
@@ -3123,7 +3204,7 @@ widget.loadPiPWidgetFromFile(
     # main_layout.addWidget(splitter)
 
     setAsAlwaysOnTop(main_widget)
-    main_widget.show()
+    # main_widget.show()
 
     #main_widget.move(2000,700)
     centerWidgetOnCursor(main_widget)
@@ -3141,8 +3222,8 @@ widget.loadPiPWidgetFromFile(
         "recursion"
     )
     centerWidgetOnCursor(display_test)
-    display_test.resize(512, 512)
-    setAsAlwaysOnTop(display_test)
+    display_test.resize(1024, 1024)
+    #setAsAlwaysOnTop(display_test)
     display_test.show()
 
 
