@@ -101,11 +101,12 @@ Signals:
 """
 """ TODO
     * Drag/Drop from MiniViewerWidgets
-        - workign ish??
         - Alt leave not working on recursive widgets
-    * Leave Enlarged --> Enter Recursive miniviewer = crash
     * Enlarged widgets dissappear?
         resizing to wide?
+        Seems to just make it small... so it dissapears...
+        Minimum size handler?
+        Math is grabbing either the height/width, not doing a min/max of it...
     * PopUps??
     * Delete (Global Organizer)
         After delete, wrong widget is displayed in the PiPView
@@ -1659,7 +1660,6 @@ class PiPMiniViewer(AbstractSplitterWidget):
         if self.widget(widget.index()) == self.spacerWidget(): return
         if self.widget(widget.index()).parent() == self.spacerWidget().parent(): return
         #if not getWidgetAncestor(widget, AbstractPiPOrganizerWidget): return
-        # freeze
         self.setIsFrozen(True)
 
         # set/get attrs
@@ -1744,8 +1744,8 @@ class PiPMiniViewer(AbstractSplitterWidget):
         self.setSizes(self._temp_sizes)
 
         # show mini viewer widgets
-        if widget.isPiPWidget():
-            widget.delegateWidget().setIsMiniViewerShown(True)
+        # if widget.isPiPWidget():
+        #     widget.delegateWidget().setIsMiniViewerShown(True)
 
         self.setIsFrozen(False)
 
@@ -1776,14 +1776,15 @@ class PiPMiniViewer(AbstractSplitterWidget):
                 self._resetSpacerWidget()
 
                 # enlarge mini viewer
-
                 display_widget = getWidgetAncestor(widget_under_cursor, PiPDisplayWidget)
                 mini_viewer_widget = getWidgetAncestor(widget_under_cursor, PiPMiniViewerWidget)
 
                 if display_widget.isMiniViewerWidget():
                     # exit over recursive mini viewer
-                    if isinstance(mini_viewer_widget.parent(), PiPMiniViewer):
-                        display_widget.miniViewerWidget().enlargeWidget(mini_viewer_widget)
+                    if isinstance(mini_viewer_widget.parent(), PiPDisplayWidget):
+                        display_widget.miniViewerWidget().closeEnlargedView()
+                        self.enlargeWidget(getWidgetAncestor(display_widget, PiPMiniViewerWidget))
+
                     # exit over recursive main viewer
                     elif isinstance(mini_viewer_widget.parent(), PiPMainViewer):
                         self.enlargeWidget(getWidgetAncestor(display_widget, PiPMiniViewerWidget))
