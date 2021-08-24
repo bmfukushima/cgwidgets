@@ -1375,7 +1375,7 @@ class PiPMiniViewer(AbstractSplitterWidget):
         self._spacer_widget.setParent(self.parent())
         self._spacer_widget.hide()
         self.setHandleWidth(15)
-
+        self.__recursive_entering = False
         self.addDelayedSplitterMovedEvent("set_temp_sizes", self._splitterMoved, 100)
 
     """ PROPERTIES """
@@ -1445,24 +1445,6 @@ class PiPMiniViewer(AbstractSplitterWidget):
         self.widgets().append(widget)
         self.setSizes(self._temp_sizes)
 
-    # def _isCursorOverEnlargedWidget(self):
-    #     """ Determines if the cursor is over the enlarged widget or not
-    #
-    #     This is mainly used in the DragLeave event to determine what kind
-    #     of leave is happening"""
-    #     global_event_pos = QCursor.pos()
-    #     xpos = global_event_pos.x()
-    #     ypos = global_event_pos.y()
-    #     top_left = self.enlargedWidget().parent().mapToGlobal(self.enlargedWidget().geometry().topLeft())
-    #     x = top_left.x()
-    #     y = top_left.y()
-    #     w = self.enlargedWidget().geometry().width()
-    #     h = self.enlargedWidget().geometry().height()
-    #     if (x < xpos and xpos < (x + w)) and (y < ypos and ypos < (y + h)):
-    #         return True
-    #     else:
-    #         return False
-
     def updateWidgetIndexes(self):
         """ Updates all of the widget indexes to their current position """
         # update indexes
@@ -1504,13 +1486,15 @@ class PiPMiniViewer(AbstractSplitterWidget):
         if self.isFrozen(): return True
         # if self._popupWidgetEvent(obj, event): return True
 
-        # if self._dragEvent(obj, event): return True
+        if self._dragEvent(obj, event): return True
 
         if event.type() == QEvent.Enter:
             """
             If the user exits on the first widget, or a widget that will be the enlarged widget,
             it will recurse back and enlarge itself.  This will block that recursion
             """
+            # if self.__recursive_entering: return True
+
             if self.isEnlarged():
                 # Block from re-enlarging itself
                 if self.enlargedWidget() == obj:
@@ -1539,56 +1523,29 @@ class PiPMiniViewer(AbstractSplitterWidget):
 
         if event.type() == QEvent.Leave:
             # print('NORMAL LEAVE')
+
+            # leaves over mini viewer widget
+            """ Setup recursion flag, to be called in the closed enlarged view
+            to stop recursive entering.
+            """
+            # widget_under_cursor = getWidgetUnderCursor()
+            # if isWidgetDescendantOf(widget_under_cursor, self):
+            #     mini_viewer_widget = getWidgetAncestor(widget_under_cursor, PiPMiniViewerWidget)
+            #     if mini_viewer_widget:
+            #         display_widget = getWidgetAncestor(mini_viewer_widget.parent(), PiPMiniViewerWidget)
+            #         if display_widget.isPiPWidget():
+            #             self.__recursive_entering = True
+            #         else:
+            #             self.__recursive_entering = False
+
+            """ Check to see if the cursor is over the object, because the drag
+            events will trigger a leave event"""
             if not isCursorOverWidget(obj):
                 if obj == self.enlargedWidget():
                     self.closeEnlargedView()
             return True
 
         return False
-    # def _dragEvent(self, obj, event):
-    #     """ Handles the event filter's Drag Leave Event
-    #     Args:
-    #         obj (QWidget):
-    #         event (QEvent):
-    #     """
-    #     if event.type() == QEvent.DragEnter:
-    #         # enlarge widget
-    #         print("ENTER (NOT FROZEN)")
-    #         # blocked recursion
-    #         """ This will mess with the mouse position handlers """
-    #         print(self.isEnlarged())
-    #         if not self.isEnlarged():
-    #             print("??")
-    #             # print(" ENTER (NOT FROZEN)")
-    #             self.enlargeWidget(obj)
-    #             #
-    #         event.accept()
-    #
-    #     if event.type() == QEvent.DragMove:
-    #         if not self.isDragging():
-    #             print('drag move?')
-    #             self.setPopupWidget(None)
-    #             self.setIsDragging(True)
-    #             self.closeEnlargedView()
-    #             return True
-    #
-    #     # on drop, close and reset
-    #     if event.type() == QEvent.Drop:
-    #         self.setIsDragging(False)
-    #         self.setPopupWidget(None)
-    #         self.closeEnlargedView()
-    #
-    #     # on drag leave, if the drag leave enters a widget that
-    #     # is a child of the current enlargedWidget, then do nothing
-    #     if event.type() == QEvent.DragLeave:
-    #         if self._isCursorOverEnlargedWidget():
-    #             # print(" LEAVE (OVER)")
-    #             # event.ignore()
-    #             return True
-    #         else:
-    #             # print(" LEAVE (NOT OVER)")
-    #             self.closeEnlargedView()
-    #             return True
 
     def _dragEvent(self, obj, event):
         """ Handles the event filter's Drag Leave Event
@@ -1603,18 +1560,12 @@ class PiPMiniViewer(AbstractSplitterWidget):
         #             return True
 
         if event.type() == QEvent.DragEnter:
-
             # enlarge widget
-            print("ENTER (NOT FROZEN)")
             # blocked recursion
-            """ This will mess with the mouse position handlers """
-            # todo this needs to get hte miniViewerFrom the obj... not self
             if not obj.pipMiniViewerWidget().isEnlarged():
                 # print(" ENTER (NOT FROZEN)")
                 obj.pipMiniViewerWidget().enlargeWidget(obj)
-                #
             event.accept()
-
             return True
 
         if event.type() == QEvent.DragMove:
@@ -1623,7 +1574,7 @@ class PiPMiniViewer(AbstractSplitterWidget):
                 obj.pipMiniViewerWidget().closeEnlargedView()
                 return True
             if not self.isDragging():
-                # self.setPopupWidget(None)
+                self.setPopupWidget(None)
                 self.setIsDragging(True)
                 # self.setIsFrozen(True)
                 obj.pipMiniViewerWidget().closeEnlargedView()
@@ -1639,11 +1590,11 @@ class PiPMiniViewer(AbstractSplitterWidget):
         # is a child of the current enlargedWidget, then do nothing
         if event.type() == QEvent.DragLeave:
             if isCursorOverWidget(self.enlargedWidget()):
-                print(" LEAVE (OVER ENLARGED)")
+                #print(" LEAVE (OVER ENLARGED)")
                 # event.ignore()
                 return True
             else:
-                print(" LEAVE (NOT OVER ENLARGED)")
+                #print(" LEAVE (NOT OVER ENLARGED)")
                 obj.pipMiniViewerWidget().closeEnlargedView()
                 return True
 
@@ -1781,7 +1732,6 @@ class PiPMiniViewer(AbstractSplitterWidget):
         self.spacerWidget().show()
 
         # reparent widget
-        print(widget, self.parent())
         widget.setParent(self.parent())
         widget.show()
 
@@ -1826,8 +1776,20 @@ class PiPMiniViewer(AbstractSplitterWidget):
                 self._resetSpacerWidget()
 
                 # enlarge mini viewer
+
+                display_widget = getWidgetAncestor(widget_under_cursor, PiPDisplayWidget)
                 mini_viewer_widget = getWidgetAncestor(widget_under_cursor, PiPMiniViewerWidget)
-                self.enlargeWidget(mini_viewer_widget)
+
+                if display_widget.isMiniViewerWidget():
+                    # exit over recursive mini viewer
+                    if isinstance(mini_viewer_widget.parent(), PiPMiniViewer):
+                        display_widget.miniViewerWidget().enlargeWidget(mini_viewer_widget)
+                    # exit over recursive main viewer
+                    elif isinstance(mini_viewer_widget.parent(), PiPMainViewer):
+                        self.enlargeWidget(getWidgetAncestor(display_widget, PiPMiniViewerWidget))
+                else:
+                    # exit over normal widget
+                    self.enlargeWidget(mini_viewer_widget)
 
         # exited over main viewer
         else:
