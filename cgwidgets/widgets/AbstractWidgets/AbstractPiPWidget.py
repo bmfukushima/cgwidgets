@@ -1664,41 +1664,41 @@ class PiPMiniViewer(AbstractSplitterWidget):
         if event.type() == QEvent.DragLeave:
             self._dragLeaveEvent(obj)
 
-    def _popupWidgetEvent(self, obj, event):
-        """ Handles the event filter for popup widgets in the enlarged view
-
-        Args:
-            obj (QWidget):
-            event (QEvent):
-        """
-        if event.type() in [QEvent.Drop, QEvent.Leave]:
-
-            new_object = getWidgetUnderCursor()
-
-            # exit popup widget (shown from enlarged widget)
-            if obj == self.popupWidget():
-                # set cursor position to center of enlarged widget
-                """ This is to make it so that a leave event is not created"""
-                main_widget = getWidgetAncestor(self, PiPDisplayWidget)
-                enlarged_widget = self.enlargedWidget()
-                xpos, ypos = enlarged_widget.pos().x(), enlarged_widget.pos().y()
-                width, height = enlarged_widget.width(), enlarged_widget.height()
-                xcursor = int(xpos + (width * 0.5))
-                ycursor = int(ypos + (height * 0.5))
-                QCursor.setPos(main_widget.mapToGlobal(QPoint(xcursor, ycursor)))
-
-                # reset attrs
-                self.setPopupWidget(None)
-                self.setIsFrozen(True)
-
-                # ignore event
-                event.ignore()
-                return True
-
-            # leave widget and enter popup widget
-            if isWidgetDescendantOf(new_object, obj):
-                self.setPopupWidget(obj)
-                return True
+    # def _popupWidgetEvent(self, obj, event):
+    #     """ Handles the event filter for popup widgets in the enlarged view
+    #
+    #     Args:
+    #         obj (QWidget):
+    #         event (QEvent):
+    #     """
+    #     if event.type() in [QEvent.Drop, QEvent.Leave]:
+    #
+    #         new_object = getWidgetUnderCursor()
+    #
+    #         # exit popup widget (shown from enlarged widget)
+    #         if obj == self.popupWidget():
+    #             # set cursor position to center of enlarged widget
+    #             """ This is to make it so that a leave event is not created"""
+    #             main_widget = getWidgetAncestor(self, PiPDisplayWidget)
+    #             enlarged_widget = self.enlargedWidget()
+    #             xpos, ypos = enlarged_widget.pos().x(), enlarged_widget.pos().y()
+    #             width, height = enlarged_widget.width(), enlarged_widget.height()
+    #             xcursor = int(xpos + (width * 0.5))
+    #             ycursor = int(ypos + (height * 0.5))
+    #             QCursor.setPos(main_widget.mapToGlobal(QPoint(xcursor, ycursor)))
+    #
+    #             # reset attrs
+    #             self.setPopupWidget(None)
+    #             self.setIsFrozen(True)
+    #
+    #             # ignore event
+    #             event.ignore()
+    #             return True
+    #
+    #         # leave widget and enter popup widget
+    #         if isWidgetDescendantOf(new_object, obj):
+    #             self.setPopupWidget(obj)
+    #             return True
 
     def _splitterMoved(self, *args):
         """ Sets the _temp_sizes list after the splitter has finished moving
@@ -1731,19 +1731,20 @@ class PiPMiniViewer(AbstractSplitterWidget):
         pip_display_widget = getWidgetAncestor(self, PiPDisplayWidget)
         self.setIsEnlarged(True)
         self.setEnlargedWidget(widget)
-        """temp sizes holds the current size of widgets
-        so that they can be added/removed and restored to their original state"""
-        self._temp_sizes = self.sizes()
         scale = pip_display_widget.enlargedScale()
         negative_space = 1 - scale
         half_neg_space = negative_space * 0.5
         num_widgets = pip_display_widget.numWidgets()
+        offset = int(min(pip_display_widget.width(), pip_display_widget.height()) * half_neg_space)
+        """temp sizes holds the current size of widgets
+        so that they can be added/removed and restored to their original state"""
+        self._temp_sizes = self.sizes()
+
         # special case for only one mini viewer widget
         if num_widgets == 1:
-            xoffset = int(pip_display_widget.width() * negative_space)
-            yoffset = int(pip_display_widget.width() * negative_space)
-            width = int(pip_display_widget.width() - xoffset)
-            height = int(pip_display_widget.height() - yoffset)
+            #yoffset = int(pip_display_widget.width() * negative_space)
+            width = int(pip_display_widget.width() - offset)
+            height = int(pip_display_widget.height() - offset)
 
             # NORTH WEST
             if pip_display_widget.direction() == attrs.NORTH:
@@ -1751,46 +1752,40 @@ class PiPMiniViewer(AbstractSplitterWidget):
                 ypos = 0
             # SOUTH EAST
             if pip_display_widget.direction() == attrs.SOUTH:
-                xpos = xoffset
-                ypos = yoffset
+                xpos = offset
+                ypos = offset
             # NORTH EAST
             if pip_display_widget.direction() == attrs.EAST:
-                xpos = xoffset
+                xpos = offset
                 ypos = 0
             # SOUTH WEST
             if pip_display_widget.direction() == attrs.WEST:
                 xpos = 0
-                ypos = yoffset
+                ypos = offset
 
         # if there are 2 or more mini viewer widgets
         if 1 < num_widgets:
             # get widget position / size
             if pip_display_widget.direction() in [attrs.EAST, attrs.WEST]:
-                xoffset = int(pip_display_widget.width() * negative_space)
-                yoffset = int(pip_display_widget.width() * negative_space)
-
-                height = int(pip_display_widget.height() - (yoffset * 2))
-                ypos = int(yoffset)
-
-                margins = 25
+                height = int(pip_display_widget.height() - (offset * 2))
+                ypos = int(offset)
+                width = int(pip_display_widget.width() - offset - self.width())
                 if pip_display_widget.direction() == attrs.EAST:
-                    width = int(pip_display_widget.width() - xoffset - self.width() + margins)
-                    xpos = int(xoffset)
-
+                    xpos = offset
                 if pip_display_widget.direction() == attrs.WEST:
-                    width = int(pip_display_widget.width() - xoffset - self.width())
-                    xpos = self.width() - margins
+                    xpos = self.width()
 
             if pip_display_widget.direction() in [attrs.NORTH, attrs.SOUTH]:
-                offset = int(self.height() * 0.75)
                 xpos = int(pip_display_widget.width() * half_neg_space)
                 width = int(pip_display_widget.width() * scale)
-                height = int(pip_display_widget.height() * (scale + half_neg_space) - offset)
-
+                height = int(
+                    pip_display_widget.height()
+                    - self.height()
+                    - offset)
                 if pip_display_widget.direction() == attrs.NORTH:
-                    ypos = 0 + offset
+                    ypos = self.height()
                 if pip_display_widget.direction() == attrs.SOUTH:
-                    ypos = int(pip_display_widget.height() * (negative_space - half_neg_space))
+                    ypos = offset
 
         # Swap spacer widget
         self.replaceWidget(widget.index(), self.spacerWidget())
@@ -1815,12 +1810,7 @@ class PiPMiniViewer(AbstractSplitterWidget):
         self.setIsFrozen(False)
 
     def closeEnlargedView(self):
-        """
-        Closes the enlarged viewer, and returns it back to normal PiP mode
-
-        Args:
-            enlarged_widget (PiPMiniViewerWidget):
-        """
+        """Closes the enlarged viewer, and returns it back to normal PiP mode"""
 
         # preflight
         if not self.isEnlarged(): return
@@ -2047,6 +2037,7 @@ class PiPMiniViewerWidget(QWidget):
         self._name = name
         self.item().columnData()["name"] = name
         self.headerWidget().viewWidget().setText(name)
+
 
 """ SETTINGS """
 class SettingsWidget(AbstractFrameInputWidgetContainer):
@@ -3220,6 +3211,18 @@ widget.loadPiPWidgetFromFile(
         getDefaultSavePath() + '/.PiPWidgets_02.json',
         "test02"
     )
+""",
+        "Popup":"""
+import string
+from qtpy.QtWidgets import QWidget, QVBoxLayout, QComboBox
+from qtpy.QtGui import QCursor
+
+pos = QCursor().pos()
+widget = QWidget()
+l = QVBoxLayout(widget)
+b = QComboBox()
+b.addItems([char for char in string.ascii_letters])
+l.addWidget(b)
 """
     }
     pip_widget = AbstractPiPOrganizerWidget(save_data=save_data, widget_types=widget_types)
@@ -3257,7 +3260,7 @@ widget.loadPiPWidgetFromFile(
     # main_layout.addWidget(splitter)
 
     setAsAlwaysOnTop(main_widget)
-    # main_widget.show()
+    main_widget.show()
 
     #main_widget.move(2000,700)
     centerWidgetOnCursor(main_widget)
