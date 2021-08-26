@@ -100,19 +100,11 @@ Signals:
         hide (esc)
 """
 """ TODO
-    * Drag/Drop from MiniViewerWidgets
-        - Alt leave not working on recursive widgets
-    * Main Viewer Recursion?
     * Enlarged widgets dissappear?
         resizing to wide?
         Seems to just make it small... so it dissapears...
         Minimum size handler?
         Math is grabbing either the height/width, not doing a min/max of it...
-    * Does not enlarge if done in this order:
-        Enlarged Recurisve (1)
-        enter recursive
-        enlarged list(0)
-        enter recursive (1)
     * PopUps??
     * Delete (Global Organizer)
         After delete, wrong widget is displayed in the PiPView
@@ -1607,6 +1599,7 @@ class PiPMiniViewer(AbstractSplitterWidget):
                 self.closeEnlargedView()
 
     def _dragEnterEvent(self, obj):
+
         if self.isEnlarged():
             # Block from re-enlarging itself
             if self.enlargedWidget() == obj:
@@ -1629,8 +1622,9 @@ class PiPMiniViewer(AbstractSplitterWidget):
             self.setPopupWidget(None)
 
             # enlarge widget
-            obj.pipMiniViewerWidget().closeEnlargedView()
-            self.enlargeWidget(obj)
+            if not obj.isMainViewerWidget():
+                obj.pipMiniViewerWidget().closeEnlargedView()
+                self.enlargeWidget(obj)
 
     def _dragEvent(self, obj, event):
         """ Handles the event filter's Drag Leave Event
@@ -1835,7 +1829,6 @@ class PiPMiniViewer(AbstractSplitterWidget):
 
         # setup attrs
         self.setIsFrozen(True)
-
         widget_under_cursor = getWidgetUnderCursor()
 
         # exited over the mini viewer
