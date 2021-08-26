@@ -96,10 +96,11 @@ def getDefaultSavePath():
 
 
 def isCursorOverWidget(widget):
-    """ Determines if the cursor is over the enlarged widget or not
+    """ Determines if the cursor is over the widget or not
+    Args:
+        widget (QWidget): to test position of
 
-    This is mainly used in the DragLeave event to determine what kind
-    of leave is happening"""
+    Returns (bool)"""
     global_event_pos = QCursor.pos()
     cursor_xpos = global_event_pos.x()
     cursor_ypos = global_event_pos.y()
