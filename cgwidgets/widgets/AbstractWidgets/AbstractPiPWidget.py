@@ -1049,12 +1049,15 @@ class PiPDisplayWidget(QWidget):
 
             # update previous widget
             self.setPreviousWidget(self._current_widget)
+            self._current_widget.setIsMainViewerWidget(False)
 
         # set widget as current
         self._current_widget = widget
-        self.miniViewerWidget().removeWidget(widget)
+
+        #self.miniViewerWidget().removeWidget(widget)
+        #widget.removeEventFilter(self.miniViewerWidget())
         self.mainViewerWidget().setWidget(widget)
-        self._current_widget.installEventFilter(self)
+        # self._current_widget.installEventFilter(self)
 
         # update mini viewer widget
         self.miniViewerWidget().setSizes(sizes)
@@ -1357,6 +1360,7 @@ class PiPMainViewer(QWidget):
     def setWidget(self, widget):
         self._widget = widget
         self.layout().addWidget(widget)
+        widget.setIsMainViewerWidget(True)
         widget.layout().setContentsMargins(0, 0, 0, 0)
 
     def removeWidget(self):
@@ -1481,14 +1485,16 @@ class PiPMiniViewer(AbstractSplitterWidget):
         def _dragMoveEvent(event):
             widget._old_dragMoveEvent(event)
             self._dragMoveEvent(getWidgetAncestor(widget, PiPMiniViewerWidget))
-        widget._old_dragMoveEvent = widget.dragMoveEvent
+        if not hasattr(widget, "_old_dragMoveEvent"):
+            widget._old_dragMoveEvent = widget.dragMoveEvent
         widget.dragMoveEvent = _dragMoveEvent
 
     def installDragLeaveMonkeyPatch(self, widget):
         def _dragLeaveEvent(event):
             widget._old_dragLeaveEvent(event)
             self._dragLeaveEvent(getWidgetAncestor(widget, PiPMiniViewerWidget))
-        widget._old_dragLeaveEvent = widget.dragLeaveEvent
+        if not hasattr(widget, "_old_dragLeaveEvent"):
+            widget._old_dragLeaveEvent = widget.dragLeaveEvent
         widget.dragLeaveEvent = _dragLeaveEvent
 
     def installDragEnterMonkeyPatch(self, widget):
@@ -1496,7 +1502,8 @@ class PiPMiniViewer(AbstractSplitterWidget):
             event.accept()
             widget._old_dragEnterEvent(event)
             self._dragEnterEvent(getWidgetAncestor(widget, PiPMiniViewerWidget))
-        widget._old_dragEnterEvent = widget.dragEnterEvent
+        if not hasattr(widget, "_old_dragEnterEvent"):
+            widget._old_dragEnterEvent = widget.dragEnterEvent
         widget.dragEnterEvent = _dragEnterEvent
 
     """ EVENTS """
@@ -1546,6 +1553,8 @@ class PiPMiniViewer(AbstractSplitterWidget):
                 # Block from re-enlarging itself
                 if self.enlargedWidget() == obj:
                     return True
+                elif obj.isMainViewerWidget():
+                    return True
                 # Has just enlarged the widget, but the cursor never entered it
                 else:
                     # reset display label
@@ -1560,30 +1569,17 @@ class PiPMiniViewer(AbstractSplitterWidget):
 
             # Enlarge MiniViewerWidget
             else:
-                # reset widget to default params
-                self.setIsDragging(False)
-                self.setPopupWidget(None)
+                if not obj.isMainViewerWidget():
+                    # reset widget to default params
+                    self.setIsDragging(False)
+                    self.setPopupWidget(None)
 
-                # enlarge widget
-                self.enlargeWidget(obj)
+                    # enlarge widget
+                    self.enlargeWidget(obj)
             return True
 
         if event.type() == QEvent.Leave:
-
             # leaves over mini viewer widget
-            """ Setup recursion flag, to be called in the closed enlarged view
-            to stop recursive entering.
-            """
-            # widget_under_cursor = getWidgetUnderCursor()
-            # if isWidgetDescendantOf(widget_under_cursor, self):
-            #     mini_viewer_widget = getWidgetAncestor(widget_under_cursor, PiPMiniViewerWidget)
-            #     if mini_viewer_widget:
-            #         display_widget = getWidgetAncestor(mini_viewer_widget.parent(), PiPMiniViewerWidget)
-            #         if display_widget.isPiPWidget():
-            #             self.__recursive_entering = True
-            #         else:
-            #             self.__recursive_entering = False
-
             """ Check to see if the cursor is over the object, because the drag
             events will trigger a leave event"""
             if not isCursorOverWidget(obj):
@@ -1834,6 +1830,9 @@ class PiPMiniViewer(AbstractSplitterWidget):
 
         # preflight
         if not self.isEnlarged(): return
+
+        if self.enlargedWidget().isMainViewerWidget(): return
+
         # setup attrs
         self.setIsFrozen(True)
 
@@ -1898,12 +1897,21 @@ class PiPMiniViewer(AbstractSplitterWidget):
         Returns (PiPMiniViewerWidget):
         """
         mini_widget = PiPMiniViewerWidget(self, direction=Qt.Vertical, delegate_widget=widget, name=name)
+        # self.installDragEnterMonkeyPatch(mini_widget.delegateWidget())
+        # self.installDragLeaveMonkeyPatch(mini_widget.delegateWidget())
+        # self.installDragMoveMonkeyPatch(mini_widget.delegateWidget())
+        mini_widget.installEventFilter(self)
+        mini_widget.delegateWidget().setAcceptDrops(True)
+
         self.insertWidget(0, mini_widget)
         return mini_widget
 
     def addWidget(self, widget):
         if isinstance(widget, PiPMiniViewerWidget):
             widget.installEventFilter(self)
+            self.installDragEnterMonkeyPatch(widget.delegateWidget())
+            self.installDragLeaveMonkeyPatch(widget.delegateWidget())
+            self.installDragMoveMonkeyPatch(widget.delegateWidget())
             widget.delegateWidget().setAcceptDrops(True)
             return QSplitter.addWidget(self, widget)
         elif widget == self.spacerWidget():
@@ -1915,11 +1923,9 @@ class PiPMiniViewer(AbstractSplitterWidget):
     def insertWidget(self, index, widget):
         if isinstance(widget, PiPMiniViewerWidget):
             widget.installEventFilter(self)
-            # if isinstance(widget.delegateWidget(), QListWidget):
             self.installDragEnterMonkeyPatch(widget.delegateWidget())
             self.installDragLeaveMonkeyPatch(widget.delegateWidget())
             self.installDragMoveMonkeyPatch(widget.delegateWidget())
-
             widget.delegateWidget().setAcceptDrops(True)
             return QSplitter.insertWidget(self, index, widget)
         elif widget == self.spacerWidget():
@@ -1971,6 +1977,8 @@ class PiPMiniViewerWidget(QWidget):
             self._is_pip_widget = True
         else:
             self._is_pip_widget = False
+
+        self._is_main_viewer_widget = False
         self._name = name
         self._index = 0
         self._main_widget = AbstractLabelledInputWidget(
@@ -2019,6 +2027,12 @@ class PiPMiniViewerWidget(QWidget):
 
     def setIsPiPWidget(self, is_pip_widget):
         self._is_pip_widget = is_pip_widget
+
+    def isMainViewerWidget(self):
+        return self._is_main_viewer_widget
+
+    def setIsMainViewerWidget(self, _is_main_viewer_widget):
+        self._is_main_viewer_widget = _is_main_viewer_widget
 
     def item(self):
         return self._item
