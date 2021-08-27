@@ -100,7 +100,16 @@ Signals:
         hide (esc)
 """
 """ TODO
-    * Why does this go apeshit in DCCs
+    * Organizer has issues selecting/reselecting/saving?
+        mini viewer doesn't exist?
+    * Traceback (most recent call last):
+  File "/media/ssd01/dev/python/cgwidgets/cgwidgets/widgets/AbstractWidgets/AbstractPiPWidget.py", line 1484, in _dragMoveEvent
+    self._dragMoveEvent(getWidgetAncestor(widget, PiPMiniViewerWidget))
+  File "/media/ssd01/dev/python/cgwidgets/cgwidgets/widgets/AbstractWidgets/AbstractPiPWidget.py", line 1596, in _dragMoveEvent
+    if not self.isDragging():
+  File "/media/ssd01/dev/python/cgwidgets/cgwidgets/widgets/AbstractWidgets/AbstractPiPWidget.py", line 1410, in isDragging
+    return self.window()._pip_widget_is_dragging
+AttributeError: 'PySide2.QtWidgets.QMainWindow' object has no attribute '_pip_widget_is_dragging'
     * PopUps??
     * Delete (Global Organizer)
         After delete, wrong widget is displayed in the PiPView
@@ -626,6 +635,7 @@ class AbstractPiPDisplayWidget(QWidget):
         self._pip_scale = (0.35, 0.35)
         self._enlarged_scale = 0.55
         self._mini_viewer_min_size = (100, 100)
+        self._is_dragging = True
         self._is_mini_viewer_shown = True
         self._is_mini_viewer_widget = is_mini_viewer_widget
         self._is_standalone = True
@@ -786,6 +796,12 @@ class AbstractPiPDisplayWidget(QWidget):
 
     def setHotkeySwapKeys(self, hotkey_swap_keys):
         self._hotkey_swap_keys = hotkey_swap_keys
+
+    def isDragging(self):
+        return self._is_dragging
+
+    def setIsDragging(self, dragging):
+        self._is_dragging = dragging
 
     def isFrozen(self):
         return self._is_frozen
@@ -1322,7 +1338,7 @@ class AbstractPiPDisplayWidget(QWidget):
         # pre flight
         widget = getWidgetUnderCursor()
         if widget == self.miniViewerWidget(): return
-        if isWidgetDescendantOf(widget, self.miniViewerWidget()): return
+        if isWidgetDescendantOf(widget, widget.parent(), self.miniViewerWidget()): return
         if widget == self.miniViewerWidget().spacerWidget(): return
         if isinstance(widget, QSplitterHandle): return
 
@@ -1406,11 +1422,24 @@ class PiPMiniViewer(AbstractSplitterWidget):
         self.addDelayedSplitterMovedEvent("set_temp_sizes", self._splitterMoved, 100)
 
     """ PROPERTIES """
+    def getTopMostPiPDisplay(self, widget, parent, pip_display_widget=None):
+        """ Gets the top most pip display..."""
+        if isinstance(widget, AbstractPiPDisplayWidget):
+            pip_display_widget = widget
+
+        if parent:
+            return self.getTopMostPiPDisplay(widget.parent(), parent.parent(), pip_display_widget)
+
+        if not parent:
+            return pip_display_widget
+
     def isDragging(self):
-        return self.window()._pip_widget_is_dragging
+        print(self.getTopMostPiPDisplay(self, self.parent()))
+        return self.getTopMostPiPDisplay(self, self.parent()).isDragging()
 
     def setIsDragging(self, _pip_widget_is_dragging):
-        self.window()._pip_widget_is_dragging = _pip_widget_is_dragging
+        print(self.getTopMostPiPDisplay(self, self.parent()))
+        self.getTopMostPiPDisplay(self, self.parent()).setIsDragging(_pip_widget_is_dragging)
 
     def isEnlarged(self):
         return self._is_enlarged
@@ -1496,9 +1525,11 @@ class PiPMiniViewer(AbstractSplitterWidget):
 
     def installDragEnterMonkeyPatch(self, widget):
         def _dragEnterEvent(event):
+            print('monkey1')
             event.accept()
             widget._old_dragEnterEvent(event)
             self._dragEnterEvent(getWidgetAncestor(widget, PiPMiniViewerWidget))
+            print('monkey2')
         if not hasattr(widget, "_old_dragEnterEvent"):
             widget._old_dragEnterEvent = widget.dragEnterEvent
         widget.dragEnterEvent = _dragEnterEvent
@@ -1599,19 +1630,26 @@ class PiPMiniViewer(AbstractSplitterWidget):
             return True
 
     def _dragLeaveEvent(self, obj):
+        print('drag leave')
         if not isCursorOverWidget(obj):
+            print('1')
             if obj == self.enlargedWidget():
+                print('2')
                 self.closeEnlargedView()
+                print('3')
 
     def _dragEnterEvent(self, obj):
 
         if self.isEnlarged():
+            print('1')
             # Block from re-enlarging itself
             if self.enlargedWidget() == obj:
+                print('1a')
                 return True
 
             # Has just enlarged the widget, but the cursor never entered it
             else:
+                print('1b')
                 # reset display label
                 self._resetSpacerWidget()
 
@@ -1621,15 +1659,19 @@ class PiPMiniViewer(AbstractSplitterWidget):
 
                 # enlarge widget
                 self.enlargeWidget(obj)
-
+                print('1bc')
         # Enlarge MiniViewerWidget
         else:
+            print('2')
             self.setPopupWidget(None)
 
             # enlarge widget
             if not obj.isMainViewerWidget():
+                print('2a')
                 obj.pipMiniViewerWidget().closeEnlargedView()
                 self.enlargeWidget(obj)
+                print('2b')
+            print('2c')
 
     def _dragEvent(self, obj, event):
         """ Handles the event filter's Drag Leave Event
@@ -1826,8 +1868,12 @@ class PiPMiniViewer(AbstractSplitterWidget):
         self.setIsFrozen(True)
         widget_under_cursor = getWidgetUnderCursor()
 
+        # exitted out of widget
+        if not widget_under_cursor:
+            self._resetSpacerWidget()
+            self.setIsEnlarged(False)
         # exited over the mini viewer
-        if isWidgetDescendantOf(widget_under_cursor, self):
+        elif isWidgetDescendantOf(widget_under_cursor, widget_under_cursor.parent(), self):
             if widget_under_cursor == self._spacer_widget:
                 pass
             elif isinstance(widget_under_cursor, QSplitterHandle):
@@ -3203,10 +3249,10 @@ widget = QLabel(\"TEST\") """,
 from qtpy.QtWidgets import QPushButton
 widget = QPushButton(\"TESTBUTTON\") """,
         "List":"""
-from qtpy.QtWidgets import QListWidget
+from qtpy.QtWidgets import QListWidget, QAbstractItemView
 widget = QListWidget()
 widget.setDragDropMode(QAbstractItemView.DragDrop)
-widget.setAcceptDrop(True)
+widget.setAcceptDrops(True)
 widget.addItems(['a', 'b', 'c', 'd'])
 # widget.setFixedWidth(100)
 """,
@@ -3280,7 +3326,7 @@ l.addWidget(b)
     display_test = AbstractPiPDisplayWidget()
     display_test.loadPiPWidgetFromFile(
         getDefaultSavePath() + '/.PiPWidgets_02.json',
-        "recursion"
+        "test02"
     )
     centerWidgetOnCursor(display_test)
     display_test.resize(1024, 1024)

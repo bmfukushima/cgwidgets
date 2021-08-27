@@ -4,7 +4,9 @@ import os
 
 os.environ['QT_API'] = 'pyside2'
 from qtpy import API_NAME
-
+print(API_NAME)
+#import PySide2
+#print(PySide2.__version__)
 from qtpy.QtWidgets import (QApplication, QWidget)
 from cgwidgets.widgets import PiPOrganizerWidget, PiPDisplayWidget
 from cgwidgets.utils import centerWidgetOnCursor, setAsAlwaysOnTop, getDefaultSavePath
@@ -72,8 +74,6 @@ setAsAlwaysOnTop(pip_organizer_widget)
 pip_organizer_widget.show()
 centerWidgetOnCursor(pip_organizer_widget)
 pip_organizer_widget.resize(512, 512)
-
-
 
 # setup display widget
 pip_display_widget = PiPDisplayWidget()

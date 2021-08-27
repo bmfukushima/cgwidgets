@@ -20,14 +20,13 @@ TODO: SEGFAULT
 
 import string
 import sys
-from qtpy.QtWidgets import QApplication, QLabel, QApplication#, qApp
-from qtpy.QtGui import QCursor
-from qtpy.QtCore import QPoint
+from qtpy.QtWidgets import QLabel, QApplication
 
-from cgwidgets.widgets import ShojiModelViewWidget, ListInputWidget, OverlayInputWidget, StringInputWidget
+
+from cgwidgets.widgets import ShojiModelViewWidget, ListInputWidget, OverlayInputWidget
 from cgwidgets.views import AbstractDragDropListView, AbstractDragDropModelDelegate
-from cgwidgets.utils import getWidgetAncestor, centerWidgetOnCursor, attrs
-
+from cgwidgets.utils import getWidgetAncestor, centerWidgetOnCursor
+from cgwidgets.settings import attrs
 
 class ShojiDelegateExample(ShojiModelViewWidget):
     """

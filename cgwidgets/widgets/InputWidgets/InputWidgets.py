@@ -72,7 +72,7 @@ class BooleanInputWidget(AbstractBooleanInputWidget):
         When the user clicks on this
         """
         try:
-            widget = getWidgetAncestor(self, ShojiModelDelegateWidget)
+            widget = getWidgetAncestor(self, self.parent(), ShojiModelDelegateWidget)
             widget.item().columnData()['value'] = self.is_selected
             self.is_selected = self.is_selected
 
@@ -101,7 +101,7 @@ class ListInputWidget(AbstractListInputWidget):
 
     def updateUserInputItem(self, *args):
         try:
-            widget = getWidgetAncestor(self, ShojiModelDelegateWidget)
+            widget = getWidgetAncestor(self, self.parent(), ShojiModelDelegateWidget)
             widget.item().columnData()['value'] = self.text()
 
             # add user input event
