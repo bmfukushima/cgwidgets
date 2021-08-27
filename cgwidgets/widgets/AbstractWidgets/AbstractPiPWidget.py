@@ -100,6 +100,7 @@ Signals:
         hide (esc)
 """
 """ TODO
+    * Why does this go apeshit in DCCs
     * PopUps??
     * Delete (Global Organizer)
         After delete, wrong widget is displayed in the PiPView
@@ -756,7 +757,6 @@ class AbstractPiPDisplayWidget(QWidget):
         return self._pip_scale
 
     def setPiPScale(self, pip_scale):
-        print(pip_scale, type(pip_scale))
         if isinstance(pip_scale, str):
             pip_scale = float(pip_scale)
         # this will probably fail in python 3...
