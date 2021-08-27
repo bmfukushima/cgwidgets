@@ -7,7 +7,7 @@ widget.
 
 Hierarchy:
     AbstractPiPOrganizerWidget --> (AbstractShojiModelViewWidget)
-        |- PiPDisplayWidget --> (QWidget)
+        |- AbstractPiPDisplayWidget --> (QWidget)
         |    |- QVBoxLayout
         |    |    |- PiPMainViewer --> (QWidget)
         |    |    |- PiPMiniViewerWidgetCreator --> (AbstractListInputWidget)
@@ -65,11 +65,11 @@ Signals:
 
         Default is "Space"
 
-        PiPDisplayWidget --> keyPressEvent --> setCurrentWidget, swapWidgets
+        AbstractPiPDisplayWidget --> keyPressEvent --> setCurrentWidget, swapWidgets
 
     Swap Previous (Key Press)
         Press ~, main widget is swapped with previous main widget
-        PiPDisplayWidget --> keyPressEvent --> setCurrentWidget
+        AbstractPiPDisplayWidget --> keyPressEvent --> setCurrentWidget
     Quick Drag ( Drag Enter ):
         Upon user drag enter, the mini widget becomes large to allow easier dropping
         PiPMiniViewer --> EventFilter --> Drag Enter
@@ -78,9 +78,9 @@ Signals:
                                       --> Drag Leave
                                       --> Leave
     HotSwap (Key Press 1-5):
-        PiPDisplayWidget --> keyPressEvent --> setCurrentWidget
+        AbstractPiPDisplayWidget --> keyPressEvent --> setCurrentWidget
     Toggle previous widget
-        PiPDisplayWidget --> keyPressEvent --> swapWidgets
+        AbstractPiPDisplayWidget --> keyPressEvent --> swapWidgets
     Toggle Organizer Widget (Q):
         keyPressEvent --> toggleLocalOrganizerVisibility
     Create New Widget -->
@@ -100,11 +100,6 @@ Signals:
         hide (esc)
 """
 """ TODO
-    * Enlarged widgets dissappear?
-        resizing to wide?
-        Seems to just make it small... so it dissapears...
-        Minimum size handler?
-        Math is grabbing either the height/width, not doing a min/max of it...
     * PopUps??
     * Delete (Global Organizer)
         After delete, wrong widget is displayed in the PiPView
@@ -141,9 +136,8 @@ from collections import OrderedDict
 import os
 
 from qtpy.QtWidgets import (
-    QWidget, QBoxLayout, QVBoxLayout, QSizePolicy, QHBoxLayout, QLabel, QScrollArea, QSplitter, QSplitterHandle)
-from qtpy.QtCore import QEvent, Qt, QPoint, QTimer
-from qtpy.QtGui import QCursor
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QScrollArea, QSplitter, QSplitterHandle, QApplication)
+from qtpy.QtCore import QEvent, Qt
 
 from cgwidgets.views import AbstractDragDropModelItem
 from cgwidgets.utils import (
@@ -218,7 +212,7 @@ class AbstractPiPOrganizerWidget(AbstractShojiModelViewWidget):
 
         """ create widgets """
         # create main pip widget
-        self._pip_display_widget = PiPDisplayWidget(self)
+        self._pip_display_widget = AbstractPiPDisplayWidget(self)
         self._pip_display_widget.setIsStandalone(False)
         # setup local organizer widget
         self._local_organizer_widget = PiPMiniViewerOrganizerWidget(self, widget_types)
@@ -596,7 +590,7 @@ widget.setWordWrap(True)
         return AbstractShojiModelViewWidget.keyPressEvent(self, event)
 
 
-class PiPDisplayWidget(QWidget):
+class AbstractPiPDisplayWidget(QWidget):
     """The PiPWidget is designed to display multiple widgets simultaneously to the user.
 
     Similar to the function that was provided to TV's in the mid 1970's.  This widget is
@@ -621,7 +615,7 @@ class PiPDisplayWidget(QWidget):
     """
 
     def __init__(self, parent=None, is_mini_viewer_widget=False):
-        super(PiPDisplayWidget, self).__init__(parent)
+        super(AbstractPiPDisplayWidget, self).__init__(parent)
 
         # setup attrs
         self._num_widgets = 0
@@ -657,7 +651,7 @@ class PiPDisplayWidget(QWidget):
     def swapMainViewer(self, mini_viewer_widget):
         """ Swaps the PiPMainViewerWidget from the PiPMiniViewerWidget provided
 
-        Note: The PiPMiniViewerWidget MUST be a PiPDisplayWidget
+        Note: The PiPMiniViewerWidget MUST be a AbstractPiPDisplayWidget
 
         Args:
             mini_viewer_widget (PiPMiniViewerWidget):
@@ -678,7 +672,7 @@ class PiPDisplayWidget(QWidget):
     def swapMiniViewer(self, mini_viewer_widget):
         """ Swaps the PiPMiniViewer from the PiPMiniViewerWidget provided.
 
-        Note: The PiPMiniViewerWidget MUST be a PiPDisplayWidget
+        Note: The PiPMiniViewerWidget MUST be a AbstractPiPDisplayWidget
 
         Args:
             mini_viewer_widget (PiPMiniViewerWidget):
@@ -686,7 +680,7 @@ class PiPDisplayWidget(QWidget):
         new_display_widget = mini_viewer_widget.delegateWidget()
 
         # preflight
-        if not isinstance(new_display_widget, PiPDisplayWidget): return
+        if not isinstance(new_display_widget, AbstractPiPDisplayWidget): return
 
         # get temp attrs
         _temp_num_widgets = new_display_widget.numWidgets()
@@ -711,7 +705,7 @@ class PiPDisplayWidget(QWidget):
     def swapSettings(self, mini_viewer_widget):
         """ Swaps the settings from the PiPMiniViewerWidget provided.
 
-        Note: The PiPMiniViewerWidget MUST be a PiPDisplayWidget
+        Note: The PiPMiniViewerWidget MUST be a AbstractPiPDisplayWidget
 
         Args:
             mini_viewer_widget (PiPMiniViewerWidget):
@@ -762,10 +756,21 @@ class PiPDisplayWidget(QWidget):
         return self._pip_scale
 
     def setPiPScale(self, pip_scale):
+        print(pip_scale, type(pip_scale))
         if isinstance(pip_scale, str):
             pip_scale = float(pip_scale)
+        # this will probably fail in python 3...
+        try:
+            # python 2.7
+            if isinstance(pip_scale, unicode):
+                pip_scale = float(pip_scale)
+        except NameError:
+            # python 3+
+            pass
         if isinstance(pip_scale, float):
             pip_scale = (pip_scale, pip_scale)
+        if isinstance(pip_scale, tuple):
+            pip_scale = (float(pip_scale[0]), float(pip_scale[1]))
 
         self._pip_scale = pip_scale
         self.resizeMiniViewer()
@@ -880,7 +885,7 @@ class PiPDisplayWidget(QWidget):
         # create widget from constructor code
         widget = self.createNewWidgetFromConstructorCode(constructor_code)
         # setup recursion for PiPWidgets
-        if isinstance(widget, AbstractPiPOrganizerWidget) or isinstance(widget, PiPDisplayWidget):
+        if isinstance(widget, AbstractPiPOrganizerWidget) or isinstance(widget, AbstractPiPDisplayWidget):
             widget.setIsMiniViewerWidget(True)
 
         """ Note: This can't install in the MiniViewer then remove.  It will still register
@@ -996,7 +1001,7 @@ class PiPDisplayWidget(QWidget):
                 print("multi recursive swapping is disabled for OrganizerWidgets")
                 # won't be supporting this probably
                 pass
-            elif isinstance(widget.delegateWidget(), PiPDisplayWidget):
+            elif isinstance(widget.delegateWidget(), AbstractPiPDisplayWidget):
                 # update settings
                 """ sizes doesn't swap... probably due to the add/remove of widgets
                 Is not calculating the fact that the mini viewer widget will have
@@ -1180,7 +1185,7 @@ class PiPDisplayWidget(QWidget):
 
             # close parent mini viewer (if open recursively)
             if self.isMiniViewerWidget():
-                parent_main_widget = getWidgetAncestor(self.parent(), PiPDisplayWidget)
+                parent_main_widget = getWidgetAncestor(self.parent(), AbstractPiPDisplayWidget)
                 parent_main_widget.miniViewerWidget().closeEnlargedView()
             return
 
@@ -1679,7 +1684,7 @@ class PiPMiniViewer(AbstractSplitterWidget):
     #         if obj == self.popupWidget():
     #             # set cursor position to center of enlarged widget
     #             """ This is to make it so that a leave event is not created"""
-    #             main_widget = getWidgetAncestor(self, PiPDisplayWidget)
+    #             main_widget = getWidgetAncestor(self, AbstractPiPDisplayWidget)
     #             enlarged_widget = self.enlargedWidget()
     #             xpos, ypos = enlarged_widget.pos().x(), enlarged_widget.pos().y()
     #             width, height = enlarged_widget.width(), enlarged_widget.height()
@@ -1728,7 +1733,7 @@ class PiPMiniViewer(AbstractSplitterWidget):
         self.setIsFrozen(True)
 
         # set/get attrs
-        pip_display_widget = getWidgetAncestor(self, PiPDisplayWidget)
+        pip_display_widget = getWidgetAncestor(self, AbstractPiPDisplayWidget)
         self.setIsEnlarged(True)
         self.setEnlargedWidget(widget)
         scale = pip_display_widget.enlargedScale()
@@ -1833,12 +1838,12 @@ class PiPMiniViewer(AbstractSplitterWidget):
                 self._resetSpacerWidget()
 
                 # enlarge mini viewer
-                display_widget = getWidgetAncestor(widget_under_cursor, PiPDisplayWidget)
+                display_widget = getWidgetAncestor(widget_under_cursor, AbstractPiPDisplayWidget)
                 mini_viewer_widget = getWidgetAncestor(widget_under_cursor, PiPMiniViewerWidget)
 
                 if display_widget.isMiniViewerWidget():
                     # exit over recursive mini viewer
-                    if isinstance(mini_viewer_widget.parent(), PiPDisplayWidget):
+                    if isinstance(mini_viewer_widget.parent(), AbstractPiPDisplayWidget):
                         display_widget.miniViewerWidget().closeEnlargedView()
                         self.enlargeWidget(getWidgetAncestor(display_widget, PiPMiniViewerWidget))
 
@@ -1858,7 +1863,7 @@ class PiPMiniViewer(AbstractSplitterWidget):
         # self.setIsFrozen(False)
         # show mini viewer widgets
         # if self.enlargedWidget().isPiPWidget():
-        #     # pip_display_widget = getWidgetAncestor(self.enlargedWidget(), PiPDisplayWidget)
+        #     # pip_display_widget = getWidgetAncestor(self.enlargedWidget(), AbstractPiPDisplayWidget)
         #     self.enlargedWidget().delegateWidget().setIsMiniViewerShown(False)
 
         """ Unfreezing as a delayed event to help to avoid the segfaults that occur
@@ -1956,7 +1961,7 @@ class PiPMiniViewerWidget(QWidget):
         QVBoxLayout(self)
 
         # setup flag for if this is a pip widget (for recursive purposes
-        if isinstance(delegate_widget, AbstractPiPOrganizerWidget) or isinstance(delegate_widget, PiPDisplayWidget):
+        if isinstance(delegate_widget, AbstractPiPOrganizerWidget) or isinstance(delegate_widget, AbstractPiPDisplayWidget):
             self._is_pip_widget = True
         else:
             self._is_pip_widget = False
@@ -2002,7 +2007,7 @@ class PiPMiniViewerWidget(QWidget):
         return self.mainWidget().delegateWidget()
 
     def pipMiniViewerWidget(self):
-        return getWidgetAncestor(self, PiPDisplayWidget).miniViewerWidget()
+        return getWidgetAncestor(self, AbstractPiPDisplayWidget).miniViewerWidget()
 
     """ PROPERTIES """
     def isPiPWidget(self):
@@ -3101,7 +3106,7 @@ class PiPMiniViewerOrganizerWidget(AbstractModelViewWidget):
 
 
 class PiPMiniViewerWidgetCreator(AbstractListInputWidget):
-    """ Creates the widgets that are available in the current PiPDisplayWidget"""
+    """ Creates the widgets that are available in the current AbstractPiPDisplayWidget"""
     def __init__(self, parent=None, widget_types=None):
         super(PiPMiniViewerWidgetCreator, self).__init__(parent)
 
@@ -3206,7 +3211,7 @@ widget.addItems(['a', 'b', 'c', 'd'])
 # widget.setFixedWidth(100)
 """,
         "Recursion":"""
-widget = PiPDisplayWidget()
+widget = AbstractPiPDisplayWidget()
 widget.loadPiPWidgetFromFile(
         getDefaultSavePath() + '/.PiPWidgets_02.json',
         "test02"
@@ -3272,7 +3277,7 @@ l.addWidget(b)
     # pip_widget.setCreationMode(AbstractPiPOrganizerWidget.DISPLAY)
 
     # display test
-    display_test = PiPDisplayWidget()
+    display_test = AbstractPiPDisplayWidget()
     display_test.loadPiPWidgetFromFile(
         getDefaultSavePath() + '/.PiPWidgets_02.json',
         "recursion"

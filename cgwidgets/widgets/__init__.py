@@ -15,7 +15,7 @@ from .AbstractWidgets.AbstractWarningWidget import AbstractWarningWidget
 from .AbstractWidgets.AbstractLabelledInputWidget import AbstractLabelledInputWidget
 from .AbstractWidgets.AbstractOverlayInputWidget import AbstractOverlayInputWidget
 from .AbstractWidgets.AbstractShojiWidget import *
-from .AbstractWidgets.AbstractPiPWidget import AbstractPiPOrganizerWidget
+from .AbstractWidgets.AbstractPiPWidget import AbstractPiPOrganizerWidget, AbstractPiPDisplayWidget
 
 """ MODEL VIEW WIDGET"""
 from .ModelViewWidget import ModelViewWidget as ModelViewWidget
@@ -31,7 +31,7 @@ from .ShojiWidget import ShojiModelViewWidget as ShojiModelViewWidget
 from .ShojiWidget import ShojiModelDelegateWidget as ShojiModelDelegateWidget
 
 """ PiP """
-from .PiPWidget import PiPWidget
+from .PiPWidget import PiPOrganizerWidget, PiPDisplayWidget
 
 """ INPUT WIDGETS """
 from .InputWidgets import *
