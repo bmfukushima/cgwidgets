@@ -102,11 +102,6 @@ Signals:
 """ TODO
     * Organizer has issues selecting/reselecting/saving?
         mini viewer doesn't exist?
-    * Drag Leave / Enter
-        Make this so the PiPMiniViewerWidget and its delegate
-        do not auto accept events... rather accepting events
-        should be called by the actual delegate widget.
-        Probably need to move this all into the drag enter =/
     * Delete (Global Organizer)
         After delete, wrong widget is displayed in the PiPView
 
@@ -1364,9 +1359,13 @@ class PiPMiniViewer(AbstractSplitterWidget):
             has opened a subwidget (popup) menu.
         spacer_widget (QLabel): Widget that holds the space in the QSplitter where
             the currently enlarged widget normally lives.
-        _temp_sizes (list): of ints, that are the sizes of the individual widgets.
+        __temp_sizes (list): of ints, that are the sizes of the individual widgets.
             This is normally gotten through the "sizes()" call, but needs a temp one,
             for swapping the spacer widget in/out.
+        __last_object_entered (PiPMiniViewerWidget): placeholder to determine the last object
+            that was entered.  This is mainly used when enlarging widgets to ensure that the
+            enlarged widget can be entered, as if the bounds are not great enough, you can enter
+            the Main Viewer, thus closing the enlarged widget.
         widgets (list): Of PiPMiniViewer widgets that are currently displayed.
             This does not include the currently enlarged widget
 
@@ -1378,7 +1377,6 @@ class PiPMiniViewer(AbstractSplitterWidget):
         self._is_dragging = False
         self._is_enlarged = False
 
-        self._popup_widget = None
         self._enlarged_widget = None
         self._createSpacerWidget()
 
@@ -1430,12 +1428,6 @@ class PiPMiniViewer(AbstractSplitterWidget):
     def setEnlargedWidget(self, widget):
         self._enlarged_widget = widget
 
-    def popupWidget(self):
-        return self._popup_widget
-
-    def setPopupWidget(self, popup_widget):
-        self._popup_widget = popup_widget
-
     def spacerWidget(self):
         return self._spacer_widget
 
@@ -1448,15 +1440,10 @@ class PiPMiniViewer(AbstractSplitterWidget):
         return False
 
     def _resetSpacerWidget(self):
-        """ Swaps (removes) the spacer widget with the one provided
+        """ Places the enlarged widget back into its original index.
 
-        This swap is done when opening/closing the enlarged view.
-        The spacer widget (self._spacer_widget) is used as a place
-        holder.
-
-        Args:
-            widget (PiPMiniViewerWidget): to be swapped in/out
-        """
+        It does this by swapping out the spacer widget, with the currently
+        enlarged widget.  This swap is done when closing the enlarged view."""
         widget = self.enlargedWidget()
 
         # preflight
@@ -1470,7 +1457,7 @@ class PiPMiniViewer(AbstractSplitterWidget):
         self.replaceWidget(widget.index(), widget)
         self.spacerWidget().setParent(self.parent())
         self.widgets().append(widget)
-        self.setSizes(self._temp_sizes)
+        self.setSizes(self.__temp_sizes)
 
     def updateWidgetIndexes(self):
         """ Updates all of the widget indexes to their current position """
@@ -1479,6 +1466,14 @@ class PiPMiniViewer(AbstractSplitterWidget):
             widget.setIndex(i)
 
     def installDragMoveMonkeyPatch(self, widget):
+        """ Monkey patch for bug with widgets that already have drag/drop enabled.
+
+        This bypasses a bug/limitation of Qt, where EventFilters will not work on
+        widgets that have already had their drag/drop enabled, and are probably
+        exiting the event queue early.
+
+        Args:
+            widget (QWidget): to install pseudoevent on"""
         def _dragMoveEvent(event):
             widget._old_dragMoveEvent(event)
             self.__dragMoveEvent(getWidgetAncestor(widget, PiPMiniViewerWidget))
@@ -1487,6 +1482,14 @@ class PiPMiniViewer(AbstractSplitterWidget):
         widget.dragMoveEvent = _dragMoveEvent
 
     def installDragEnterMonkeyPatch(self, widget):
+        """ Monkey patch for bug with widgets that already have drag/drop enabled.
+
+        This bypasses a bug/limitation of Qt, where EventFilters will not work on
+        widgets that have already had their drag/drop enabled, and are probably
+        exiting the event queue early.
+
+        Args:
+            widget (QWidget): to install pseudoevent on"""
         def _dragEnterEvent(event):
             # event.accept()
             widget._old_dragEnterEvent(event)
@@ -1497,10 +1500,11 @@ class PiPMiniViewer(AbstractSplitterWidget):
 
     """ EVENTS """
     def eventFilter(self, obj, event):
-        """
+        """ Event handler for ALL PiPMiniViewerWIdgets
+
         Args:
             obj (PiPMiniViewerWidget):
-            event:
+            event (QEvent):
 
         Note:
             _is_frozen (bool): flag to determine if the UI should be frozen for updates
@@ -1508,23 +1512,14 @@ class PiPMiniViewer(AbstractSplitterWidget):
                 been enlarged for use.
             _entered_object (PiPMiniViewerWidget): when exiting, this is the object that is under the cursor
                 if the user exits into the MiniViewerWidget
-            _popup_widget (QWidget): submenu that is currently open, if there are no submenu's open, this
                 will be set to None
             _is_dragging (bool): determines if a drag operation is currently happening
             Signals:
-                PopupWidgets:
-                    When activated, this will cause a leave event, and when closed, will cause another leave event.
-                    Due to how this algorithm works, it will detect the widget under the cursor, which conflicts
-                    with the drag leave events =/
                 DragLeave:
                     isDragging holds attribute to determine if this widget is currently in a drag/drop operation.
                     This is reset when the user hover enters a new mini widget.  When the drag leave enters a
                     widget that is in the bounds of the enlargedWidget, it will do nothing.
         """
-        # if event.type() == QEvent.KeyPress:
-        #     if event.key() == Qt.Key_Escape:
-        #         if obj == self.enlargedWidget():
-        #             self.closeEnlargedView()
 
         # preflight
         if self.isFrozen(): return True
@@ -1552,7 +1547,6 @@ class PiPMiniViewer(AbstractSplitterWidget):
 
                     # reset widget to default params
                     self.setIsDragging(False)
-                    self.setPopupWidget(None)
 
                     # enlarge widget
                     self.enlargeWidget(obj)
@@ -1562,7 +1556,6 @@ class PiPMiniViewer(AbstractSplitterWidget):
                 if not obj.isMainViewerWidget():
                     # reset widget to default params
                     self.setIsDragging(False)
-                    self.setPopupWidget(None)
 
                     # enlarge widget
                     self.enlargeWidget(obj)
@@ -1612,7 +1605,6 @@ class PiPMiniViewer(AbstractSplitterWidget):
             obj.pipMiniViewerWidget().closeEnlargedView()
             return True
         if not self.isDragging():
-            self.setPopupWidget(None)
             self.setIsDragging(True)
             # self.setIsFrozen(True)
             obj.pipMiniViewerWidget().closeEnlargedView()
@@ -1633,14 +1625,11 @@ class PiPMiniViewer(AbstractSplitterWidget):
 
                 # reset widget to default params
                 self.setIsDragging(False)
-                self.setPopupWidget(None)
 
                 # enlarge widget
                 self.enlargeWidget(obj)
         # Enlarge MiniViewerWidget
         else:
-            self.setPopupWidget(None)
-
             # enlarge widget
             if not obj.isMainViewerWidget():
                 obj.pipMiniViewerWidget().closeEnlargedView()
@@ -1676,11 +1665,10 @@ class PiPMiniViewer(AbstractSplitterWidget):
         # on drop, close and reset
         if event.type() == QEvent.Drop:
             self.setIsDragging(False)
-            self.setPopupWidget(None)
             obj.pipMiniViewerWidget().closeEnlargedView()
 
     def __splitterMoved(self, *args):
-        """ Sets the _temp_sizes list after the splitter has finished moving
+        """ Sets the __temp_sizes list after the splitter has finished moving
 
         This ensures that when the widget is enlarged, that if the widgets
         are resized, they will be restored back to the new sizes"""
@@ -1688,7 +1676,7 @@ class PiPMiniViewer(AbstractSplitterWidget):
         if not self.isEnlarged(): return
 
         # User finished dragging splitter
-        self._temp_sizes = self.sizes()
+        self.__temp_sizes = self.sizes()
 
     def enlargeWidget(self, widget):
         """
@@ -1717,7 +1705,7 @@ class PiPMiniViewer(AbstractSplitterWidget):
         offset = int(min(pip_display_widget.width(), pip_display_widget.height()) * half_neg_space)
         """temp sizes holds the current size of widgets
         so that they can be added/removed and restored to their original state"""
-        self._temp_sizes = self.sizes()
+        self.__temp_sizes = self.sizes()
 
         # special case for only one mini viewer widget
         if num_widgets == 1:
@@ -1780,7 +1768,7 @@ class PiPMiniViewer(AbstractSplitterWidget):
 
         #
         self.insertWidget(widget.index(), self._spacer_widget)
-        self.setSizes(self._temp_sizes)
+        self.setSizes(self.__temp_sizes)
 
         # show mini viewer widgets
         # if widget.isPiPWidget():
@@ -1812,7 +1800,7 @@ class PiPMiniViewer(AbstractSplitterWidget):
                 pass
             else:
                 # reset display label
-                self._temp_sizes = self.sizes()
+                self.__temp_sizes = self.sizes()
                 self._resetSpacerWidget()
 
                 # enlarge mini viewer
