@@ -58,6 +58,7 @@ class AbstractListInputWidget(AbstractStringInputWidget):
         # setup custom completer
         self.setupCustomModelCompleter(item_list)
 
+
         # setup style
         self.updateStyleSheet()
 
@@ -138,6 +139,7 @@ class AbstractListInputWidget(AbstractStringInputWidget):
         completer = CustomModelCompleter()
         self.setCompleter(completer)
         self._updateModel(item_list)
+        completer.setCaseSensitivity(Qt.CaseInsensitive)
 
     # seems to force it to only options that are currently in the list?
     def filterCompletionResults(self):
@@ -226,7 +228,7 @@ class AbstractListInputWidget(AbstractStringInputWidget):
     def previous_completion(self):
         row = self.completer().currentRow()
         numRows = self.completer().completionCount()
-
+        
         # if wrapping
         if not self.completer().setCurrentRow(row - 1):
             self.completer().setCurrentRow(numRows - 1)

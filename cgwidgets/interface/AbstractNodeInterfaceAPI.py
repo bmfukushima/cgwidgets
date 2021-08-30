@@ -241,4 +241,4 @@ def getAllNodeTypes():
     if TRANSLATE:
         return dccnode.getAllNodeTypes()
     else:
-        return ['test', 'list', 'of', 'nodes']
+        return ['Test', 'list', 'of', 'nodes', "Apple", "ardvark", "Ant"]

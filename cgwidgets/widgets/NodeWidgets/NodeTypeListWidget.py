@@ -22,7 +22,7 @@ class NodeTypeListWidget(ListInputWidget):
 
     @staticmethod
     def __getAllNodes():
-        node_list = [["<multi>"]] + [[node] for node in AbstractNodeInterfaceAPI.getAllNodeTypes()]
+        node_list = [["<multi>"]] + sorted([[node] for node in AbstractNodeInterfaceAPI.getAllNodeTypes()])
         return node_list
 
     def checkUserInput(self):

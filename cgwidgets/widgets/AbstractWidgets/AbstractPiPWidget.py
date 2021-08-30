@@ -116,11 +116,6 @@ Signals:
         PiPGlobalOrganizerWidget --> loadPiPWidgetFromSelection ( This runs twice for some reason)
         PiPSaveWidget --> loadPiPWidgetFromItem
         AbstractPiPOrganizerWidget --> createNewWidget --> resizeMiniViewer
-    * Move MiniViewer to QSplitter?
-        - Weird bug in replaceWidget() call... that sometimes will cause it not to work
-            this seems to happen if you move the cursor super fast, and make it go in/out
-            of the widget.
-        - 5.6 doesnt have replaceWidget()... GG Katana...
     * Display Name (bug)
         When display names is active, when leaving the mini viewer, the widgets
         will "wobble" for a few seconds.  This is only when display names is active...
