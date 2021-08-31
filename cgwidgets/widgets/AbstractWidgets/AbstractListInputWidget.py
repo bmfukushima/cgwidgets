@@ -228,7 +228,7 @@ class AbstractListInputWidget(AbstractStringInputWidget):
     def previous_completion(self):
         row = self.completer().currentRow()
         numRows = self.completer().completionCount()
-        
+
         # if wrapping
         if not self.completer().setCurrentRow(row - 1):
             self.completer().setCurrentRow(numRows - 1)

@@ -64,8 +64,8 @@ class NodeTypeListWidget(ListInputWidget):
         # preflight
         if self.previous_text == self.text(): return
         """
-        # without this it randomly allows the user to change to a
-        # new node type =\
+        without this it randomly allows the user to change to a
+        new node type =/
         """
         # preflight checks
         # return if this node type does not exist
