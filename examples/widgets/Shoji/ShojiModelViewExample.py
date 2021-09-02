@@ -50,7 +50,7 @@ Hierachy
 
 """
 import sys, os
-# os.environ['QT_API'] = 'pyside2'
+os.environ['QT_API'] = 'pyside2'
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QApplication, QLabel, QLineEdit, QWidget, QVBoxLayout
 from qtpy.QtGui import QCursor
@@ -92,9 +92,9 @@ def setupCustomView():
     view = CustomView()
     shoji_widget.setHeaderViewWidget(view)
 
-shoji_widget.setHeaderViewType(ModelViewWidget.TREE_VIEW)
-#shoji_widget.setHeaderViewType(ModelViewWidget.LIST_VIEW)
-#setupCustomView()
+# shoji_widget.setHeaderViewType(ModelViewWidget.TREE_VIEW)
+# shoji_widget.setHeaderViewType(ModelViewWidget.LIST_VIEW)
+setupCustomView()
 
 
 # SETUP CUSTOM MODEL

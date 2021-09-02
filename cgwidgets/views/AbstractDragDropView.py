@@ -413,7 +413,7 @@ class AbstractDragDropListView(QListView, AbstractDragDropAbstractView):
                 self.model().itemSelectedEvent(item, False)
 
     def keyPressEvent(self, event):
-
+        print("=== LIST EVENT")
         # Clear Selection
         if event.key() == Qt.Key_Escape:
             # from qtpy.QtWidgets import qApp
@@ -425,14 +425,14 @@ class AbstractDragDropListView(QListView, AbstractDragDropAbstractView):
             if event.key() in [Qt.Key_Delete, Qt.Key_Backspace]:
                 # delete events
                 def deleteItems(widget):
-                    indexes = self.selectionModel().selectedRows(0)
+                    #indexes = self.selectionModel().selectedRows(0)
+                    indexes = self.selectionModel().selectedIndexes()
                     for index in indexes:
                         item = index.internalPointer()
                         self.model().deleteItem(item, event_update=True)
 
                 def dontDeleteItem(widget):
                     return
-
                 # delete item
                 if self.deleteWarningWidget():
                     showWarningDialogue(self, self.deleteWarningWidget(), deleteItems, dontDeleteItem)
@@ -442,7 +442,7 @@ class AbstractDragDropListView(QListView, AbstractDragDropAbstractView):
         # Disable Item
         if self.model().isEnableable():
             if event.key() == Qt.Key_D:
-                indexes = self.selectionModel().selectedRows(0)
+                indexes = self.selectionModel().selectedIndexes()
                 for index in indexes:
                     #if index.column() == 0:
                     item = index.internalPointer()
@@ -522,7 +522,6 @@ class AbstractDragDropTreeView(QTreeView, AbstractDragDropAbstractView):
                 self.model().itemSelectedEvent(item, False)
 
     def keyPressEvent(self, event):
-
         # Clear Selection
         if event.key() == Qt.Key_Escape:
             # from qtpy.QtWidgets import qApp
