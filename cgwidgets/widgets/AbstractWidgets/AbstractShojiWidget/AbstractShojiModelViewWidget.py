@@ -152,7 +152,13 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
     def insertShojiWidget(
         self, row, column_data={}, parent=None, widget=None,
         image_path=None, display_overlay=None, text_color=None,
-        display_delegate_title=None, is_selectable=None, is_enableable=None, is_dragable=None, is_dropable=None):
+        display_delegate_title=None,
+        is_editable=None,
+        is_selectable=None,
+        is_enableable=None,
+        is_deletable=None,
+        is_dragable=None,
+        is_dropable=None):
         """
         Creates a new tab at  the specified index
 
@@ -191,10 +197,12 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         view_item.setDisplayDelegateTitle(display_delegate_title)
 
         # setup flags
-        view_item.setIsSelectable = is_selectable
-        view_item.setIsEnableable = is_enableable
-        view_item.setIsDragable = is_dragable
-        view_item.setIsDropable = None
+        view_item.setIsEditable(is_editable)
+        view_item.setIsSelectable(is_selectable)
+        view_item.setIsDragEnabled(is_dragable)
+        view_item.setIsDropEnabled(is_dropable)
+        view_item.setIsEnableable(is_enableable)
+        view_item.setIsDeleteEnabled(is_deletable)
 
         # add to layout if stacked
         if self.getDelegateType() == AbstractShojiModelViewWidget.STACKED:

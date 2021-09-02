@@ -448,7 +448,6 @@ shoji_widget.setHeaderItemDragStartEvent(testDrag)
 shoji_widget.setHeaderItemDropEvent(testDrop)
 shoji_widget.setHeaderItemTextChangedEvent(testEdit)
 shoji_widget.setHeaderItemSelectedEvent(testSelect)
-
 #####################################################
 # Header Delegates
 #####################################################

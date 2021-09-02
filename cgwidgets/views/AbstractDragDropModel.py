@@ -126,6 +126,18 @@ class AbstractDragDropModelItem(object):
     def setIsEnabled(self, enable):
         self._is_enabled = enable
 
+    def isEnableable(self):
+        return self._isEnableble
+
+    def setIsEnableable(self, enable):
+        self._isEnableble = enable
+
+    def isDeleteEnabled(self):
+        return self._isDeleteEnabled
+
+    def setIsDeleteEnabled(self, enable):
+        self._isDeleteEnabled = enable
+
     def isSelectable(self):
         if self._isSelectable: return Qt.ItemIsSelectable
         else: return 0
