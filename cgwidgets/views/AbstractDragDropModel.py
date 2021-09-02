@@ -45,6 +45,7 @@ class AbstractDragDropModelItem(object):
         self._isDraggable = None
         self._isDroppable = None
         self._isEditable = None
+        self._isDeletable = None
         self._delete_on_drop = None
         # default parent
         if parent is not None:
