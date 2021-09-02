@@ -228,6 +228,9 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         root_item = model.getRootItem()
         return root_item
 
+    def setItemType(self, item_type):
+        self.model().setItemType(item_type)
+
     """ HEADER EVENT SIGNALS"""
     def setHeaderItemDragDropMode(self, drag_drop_mode):
         """
@@ -657,14 +660,9 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
 
         dynamic_update_function(parent, widget, item, *args, **kwargs)
 
-    """ EVENTS """
-    def showEvent(self, event):
-        return_val = QSplitter.showEvent(self, event)
-        self.setHeaderWidgetToDefaultSize()
-        self.updateStyleSheet()
-        return return_val
-
-    def resizeEvent(self, event):
+    """ UTILS """
+    def updateHeaderItemSizes(self):
+        """ Updates all of the header items to fit into the space provided"""
         model = self.model()
         num_items = model.getRootItem().childCount()
         if 0 < num_items:
@@ -677,6 +675,16 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
                 if AbstractShojiModel.ITEM_WIDTH < width:
                     model.item_width = width
                     self.updateStyleSheet()
+
+    """ EVENTS """
+    def showEvent(self, event):
+        return_val = QSplitter.showEvent(self, event)
+        self.setHeaderWidgetToDefaultSize()
+        self.updateStyleSheet()
+        return return_val
+
+    def resizeEvent(self, event):
+        self.updateHeaderItemSizes()
         return QSplitter.resizeEvent(self, event)
 
     @staticmethod
