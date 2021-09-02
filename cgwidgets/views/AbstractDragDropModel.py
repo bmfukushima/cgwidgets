@@ -688,7 +688,7 @@ class AbstractDragDropModel(QAbstractItemModel):
             )
 
         # set up drag/drop on root node
-        if self.isRootDroppable(): return Qt.ItemIsEnabled | Qt.ItemIsDroppable
+        if self.isRootDroppable(): return Qt.ItemIsEnabled | Qt.ItemIsDropEnabled
         else: return Qt.ItemIsEnabled
 
     def mimeTypes(self):
