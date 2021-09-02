@@ -148,29 +148,48 @@ class AbstractDragDropAbstractView(object):
             self.setSelectionMode(QAbstractItemView.SingleSelection)
 
     """ DRAG / DROP PROPERTIES """
+    def isDragEnabled(self):
+        return self.model().isDragEnabled()
+
     def setIsDragEnabled(self, enabled):
-        self._isDragEnabled = enabled
         self.model().setIsDragEnabled(enabled)
 
+    def isDropEnabled(self):
+        return self.model().isDropEnabled()
+
     def setIsDropEnabled(self, enabled):
-        self._isDropEnabled = enabled
         self.model().setIsDropEnabled(enabled)
+
+    def isRootDropEnabled(self):
+        return self.model().isRootDropEnabled()
 
     def setIsRootDropEnabled(self, enabled):
         self._isRootDropEnabled = enabled
         self.model().setIsRootDropEnabled(enabled)
 
+    def isEditable(self):
+        return self.model().isEditable()
+
     def setIsEditable(self, enabled):
-        self._isEditable = enabled
         self.model().setIsEditable(enabled)
 
+    def isEnableable(self):
+        return self.model().isEnableable()
+
     def setIsEnableable(self, enabled):
-        self._isEnableable = enabled
         self.model().setIsEnableable(enabled)
 
+    def isDeleteEnabled(self):
+        return self.model().isDeleteEnabled()
+
     def setIsDeleteEnabled(self, enabled):
-        self._isDeleteEnabled = enabled
         self.model().setIsDeleteEnabled(enabled)
+
+    def isSelectable(self):
+        return self.model().isSelectable()
+
+    def setIsSelectable(self, enabled):
+        self.model().setIsSelectable(enabled)
 
     """ SELECTION """
     def setIndexSelected(self, index, selected):

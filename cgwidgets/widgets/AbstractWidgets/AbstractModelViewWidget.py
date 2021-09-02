@@ -368,23 +368,44 @@ class AbstractModelViewWidget(AbstractShojiLayout):
         """
         self.view().setDragDropMode(drag_drop_mode)
 
+    def isDragEnabled(self):
+        return self.view().isDragEnabled()
+
     def setIsDragEnabled(self, enabled):
         self.view().setIsDragEnabled(enabled)
 
     def setIsDropEnabled(self, enabled):
         self.view().setIsDropEnabled(enabled)
 
+    def isDropEnabled(self):
+        return self.view().isDropEnabled()
+
+    def isRootDropEnabled(self):
+        return self.view().isRootDropEnabled()
+
     def setIsRootDropEnabled(self, enabled):
         self.view().setIsRootDropEnabled(enabled)
+
+    def isEditable(self):
+        return self.view().isEditable()
 
     def setIsEditable(self, enabled):
         self.view().setIsEditable(enabled)
 
+    def isSelectable(self):
+        return self.view().isSelectable()
+
     def setIsSelectable(self, enabled):
         self.view().setIsSelectable(enabled)
 
+    def isEnableable(self):
+        return self.view().isEnableable()
+
     def setIsEnableable(self, enabled):
         self.view().setIsEnableable(enabled)
+
+    def isDeleteEnabled(self):
+        return self.view().isDeleteEnabled()
 
     def setIsDeleteEnabled(self, enabled):
         self.view().setIsDeleteEnabled(enabled)

@@ -290,23 +290,41 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         self.headerWidget().setDelegateToggleEvent(function)
 
     """ SET FLAGS """
+    def headerItemIsDragEnabled(self):
+        return self.headerWidget().isDragEnabled()
+
     def setHeaderItemIsDragEnabled(self, enabled):
         self.headerWidget().setIsDragEnabled(enabled)
+
+    def headerItemIsDropEnabled(self):
+        return self.headerWidget().isDropEnabled()
 
     def setHeaderItemIsDropEnabled(self, enabled):
         self.headerWidget().setIsDropEnabled(enabled)
 
+    def headerItemIsRootDropEnabled(self):
+        return self.headerWidget().isRootDropEnabled()
+
     def setHeaderItemIsRootDropEnabled(self, enabled):
         self.headerWidget().setIsRootDropEnabled(enabled)
 
+    def headerItemIsEditable(self):
+        return self.headerWidget().isEditable()
+
     def setHeaderItemIsEditable(self, enabled):
         self.headerWidget().setIsEditable(enabled)
+
+    def headerItemIsSelectable(self):
+        return self.headerWidget().isSelectable()
 
     def setHeaderItemIsSelectable(self, enabled):
         self.headerWidget().setIsSelectable(enabled)
 
     def setHeaderItemIsEnableable(self, enabled):
         self.headerWidget().setIsEnableable(enabled)
+
+    def headerItemIsDeleteEnabled(self):
+        return self.headerWidget().isDeleteEnabled()
 
     def setHeaderItemIsDeleteEnabled(self, enabled):
         self.headerWidget().setIsDeleteEnabled(enabled)
