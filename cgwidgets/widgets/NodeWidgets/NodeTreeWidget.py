@@ -187,7 +187,7 @@ class NodeViewWidget(ShojiModelViewWidget):
             new_index = self.insertShojiWidget(0, column_data={'name': name, 'type': node_type}, parent=parent_index)
             new_item = new_index.internalPointer()
             if not hasattr(new_node, 'getChildren'):
-                new_item.setIsDropEnabled(False)
+                new_item.setIsDroppable(False)
             # wire node
             nodeutils.createIOPorts(new_node, force_create=False, connect=False)
 

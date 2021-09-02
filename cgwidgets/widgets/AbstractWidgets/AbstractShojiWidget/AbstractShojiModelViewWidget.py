@@ -199,10 +199,10 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         # setup flags
         view_item.setIsEditable(is_editable)
         view_item.setIsSelectable(is_selectable)
-        view_item.setIsDragEnabled(is_dragable)
-        view_item.setIsDropEnabled(is_dropable)
+        view_item.setIsDraggable(is_dragable)
+        view_item.setIsDroppable(is_dropable)
         view_item.setIsEnableable(is_enableable)
-        view_item.setIsDeleteEnabled(is_deletable)
+        view_item.setIsDeletable(is_deletable)
 
         # add to layout if stacked
         if self.getDelegateType() == AbstractShojiModelViewWidget.STACKED:
@@ -298,23 +298,23 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         self.headerWidget().setDelegateToggleEvent(function)
 
     """ SET FLAGS """
-    def headerItemIsDragEnabled(self):
-        return self.headerWidget().isDragEnabled()
+    def headerItemIsDraggable(self):
+        return self.headerWidget().isDraggable()
 
-    def setHeaderItemIsDragEnabled(self, enabled):
-        self.headerWidget().setIsDragEnabled(enabled)
+    def setHeaderItemIsDraggable(self, enabled):
+        self.headerWidget().setIsDraggable(enabled)
 
-    def headerItemIsDropEnabled(self):
-        return self.headerWidget().isDropEnabled()
+    def headerItemIsDroppable(self):
+        return self.headerWidget().isDroppable()
 
-    def setHeaderItemIsDropEnabled(self, enabled):
-        self.headerWidget().setIsDropEnabled(enabled)
+    def setHeaderItemIsDroppable(self, enabled):
+        self.headerWidget().setIsDroppable(enabled)
 
-    def headerItemIsRootDropEnabled(self):
-        return self.headerWidget().isRootDropEnabled()
+    def headerItemIsRootDroppable(self):
+        return self.headerWidget().isRootDroppable()
 
-    def setHeaderItemIsRootDropEnabled(self, enabled):
-        self.headerWidget().setIsRootDropEnabled(enabled)
+    def setHeaderItemIsRootDroppable(self, enabled):
+        self.headerWidget().setIsRootDroppable(enabled)
 
     def headerItemIsEditable(self):
         return self.headerWidget().isEditable()
@@ -331,11 +331,11 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
     def setHeaderItemIsEnableable(self, enabled):
         self.headerWidget().setIsEnableable(enabled)
 
-    def headerItemIsDeleteEnabled(self):
-        return self.headerWidget().isDeleteEnabled()
+    def headerItemIsDeletable(self):
+        return self.headerWidget().isDeletable()
 
-    def setHeaderItemIsDeleteEnabled(self, enabled):
-        self.headerWidget().setIsDeleteEnabled(enabled)
+    def setHeaderItemIsDeletable(self, enabled):
+        self.headerWidget().setIsDeletable(enabled)
 
     def headerDefaultLength(self):
         return self._header_length
@@ -998,7 +998,7 @@ class AbstractShojiHeader(AbstractModelViewWidget):
         # self.setPresetViewType(ModelViewWidget.LIST_VIEW)
         model = AbstractShojiModel()
         self.setModel(model)
-        self.setIsDropEnabled(False)
+        self.setIsDroppable(False)
 
     # def showEvent(self, event):
     #     """todo is this necessary... show events causing a lot of excess updates..."""
@@ -1146,11 +1146,11 @@ if __name__ == "__main__":
     shoji_widget.delegateWidget().setHandleLength(100)
 
     shoji_widget.show()
-    # #w.headerWidget().model().setIsDragEnabled(False)
-    # w.setHeaderItemIsDropEnabled(True)
-    # w.setHeaderItemIsDragEnabled(True)
+    # #w.headerWidget().model().setIsDraggable(False)
+    # w.setHeaderItemIsDroppable(True)
+    # w.setHeaderItemIsDraggable(True)
     # w.setHeaderItemIsEnableable(True)
-    # w.setHeaderItemIsDeleteEnabled(False)
+    # w.setHeaderItemIsDeletable(False)
     shoji_widget.move(QCursor.pos())
 
     sys.exit(app.exec_())

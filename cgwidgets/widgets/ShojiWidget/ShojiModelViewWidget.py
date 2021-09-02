@@ -142,11 +142,11 @@ if __name__ == "__main__":
     shoji_widget.delegateWidget().setHandleLength(100)
 
     shoji_widget.show()
-    # #w.headerWidget().model().setIsDragEnabled(False)
-    # w.setHeaderItemIsDropEnabled(True)
-    # w.setHeaderItemIsDragEnabled(True)
+    # #w.headerWidget().model().setIsDraggable(False)
+    # w.setHeaderItemIsDroppable(True)
+    # w.setHeaderItemIsDraggable(True)
     # w.setHeaderItemIsEnableable(True)
-    # w.setHeaderItemIsDeleteEnabled(False)
+    # w.setHeaderItemIsDeletable(False)
     shoji_widget.move(QCursor.pos())
 
     sys.exit(app.exec_())

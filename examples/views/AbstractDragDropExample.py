@@ -66,12 +66,12 @@ model.setItemDeleteEvent(testDelete)
 model.setItemSelectedEvent(testSelect)
 
 # set flags
-tree_view.setIsRootDropEnabled(True)
+tree_view.setIsRootDroppable(True)
 tree_view.setIsEditable(True)
-tree_view.setIsDragEnabled(True)
-tree_view.setIsDropEnabled(True)
+tree_view.setIsDraggable(True)
+tree_view.setIsDroppable(True)
 tree_view.setIsEnableable(True)
-tree_view.setIsDeleteEnabled(True)
+tree_view.setIsDeletable(True)
 
 # set selection mode
 tree_view.setSelectionMode(QAbstractItemView.MultiSelection)

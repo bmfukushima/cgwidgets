@@ -27,8 +27,8 @@ class AbstractDragDropAbstractView(object):
 
         # setup flags
         self.setDragDropMode(QAbstractItemView.InternalMove)
-        self._isDropEnabled = False
-        self._isDragEnabled = False
+        self._isDroppable = False
+        self._isDraggable = False
         self._isEditable = False
         self._isEnableable = False
         #self._isSelectable = True
@@ -148,24 +148,24 @@ class AbstractDragDropAbstractView(object):
             self.setSelectionMode(QAbstractItemView.SingleSelection)
 
     """ DRAG / DROP PROPERTIES """
-    def isDragEnabled(self):
-        return self.model().isDragEnabled()
+    def isDraggable(self):
+        return self.model().isDraggable()
 
-    def setIsDragEnabled(self, enabled):
-        self.model().setIsDragEnabled(enabled)
+    def setIsDraggable(self, enabled):
+        self.model().setIsDraggable(enabled)
 
-    def isDropEnabled(self):
-        return self.model().isDropEnabled()
+    def isDroppable(self):
+        return self.model().isDroppable()
 
-    def setIsDropEnabled(self, enabled):
-        self.model().setIsDropEnabled(enabled)
+    def setIsDroppable(self, enabled):
+        self.model().setIsDroppable(enabled)
 
-    def isRootDropEnabled(self):
-        return self.model().isRootDropEnabled()
+    def isRootDroppable(self):
+        return self.model().isRootDroppable()
 
-    def setIsRootDropEnabled(self, enabled):
-        self._isRootDropEnabled = enabled
-        self.model().setIsRootDropEnabled(enabled)
+    def setIsRootDroppable(self, enabled):
+        self._isRootDroppable = enabled
+        self.model().setIsRootDroppable(enabled)
 
     def isEditable(self):
         return self.model().isEditable()
@@ -179,11 +179,11 @@ class AbstractDragDropAbstractView(object):
     def setIsEnableable(self, enabled):
         self.model().setIsEnableable(enabled)
 
-    def isDeleteEnabled(self):
-        return self.model().isDeleteEnabled()
+    def isDeletable(self):
+        return self.model().isDeletable()
 
-    def setIsDeleteEnabled(self, enabled):
-        self.model().setIsDeleteEnabled(enabled)
+    def setIsDeletable(self, enabled):
+        self.model().setIsDeletable(enabled)
 
     def isSelectable(self):
         return self.model().isSelectable()
@@ -256,7 +256,7 @@ class AbstractDragDropAbstractView(object):
             self.clearItemSelection()
 
         # Delete Item
-        if self.model().isDeleteEnabled():
+        if self.model().isDeletable():
             if event.key() in [Qt.Key_Delete, Qt.Key_Backspace]:
                 # delete events
                 def deleteItems(widget):
@@ -342,7 +342,7 @@ class AbstractDragDropListView(QListView, AbstractDragDropAbstractView):
         if API_NAME == "PySide2":
             AbstractDragDropAbstractView.__init__(self)
         self.setEditTriggers(QAbstractItemView.DoubleClicked)
-        self._isDropEnabled = False
+        self._isDroppable = False
 
     def createStyleSheet(self, header_position, style_sheet_args):
         """
@@ -439,7 +439,7 @@ class AbstractDragDropListView(QListView, AbstractDragDropAbstractView):
             self.clearItemSelection()
 
         # Delete Item
-        if self.model().isDeleteEnabled():
+        if self.model().isDeletable():
             if event.key() in [Qt.Key_Delete, Qt.Key_Backspace]:
                 # delete events
                 def deleteItems(widget):
@@ -447,7 +447,7 @@ class AbstractDragDropListView(QListView, AbstractDragDropAbstractView):
                     indexes = self.selectionModel().selectedIndexes()
                     for index in indexes:
                         item = index.internalPointer()
-                        if item.isDeleteEnabled() or item.isDeleteEnabled() is None:
+                        if item.isDeletable() or item.isDeletable() is None:
                             self.model().deleteItem(item, event_update=True)
 
                 def dontDeleteItem(widget):
@@ -548,7 +548,7 @@ class AbstractDragDropTreeView(QTreeView, AbstractDragDropAbstractView):
             self.clearItemSelection()
 
         # Delete Item
-        if self.model().isDeleteEnabled():
+        if self.model().isDeletable():
             if event.key() in [Qt.Key_Delete, Qt.Key_Backspace]:
                 # delete events
                 def deleteItems(widget):
@@ -913,8 +913,8 @@ if __name__ == '__main__':
     for x in range(0, 4):
         model.insertNewIndex(x, str('node%s'%x))
 
-    #model.setIsRootDropEnabled(False)
-    #model.setIsDragEnabled(False)
+    #model.setIsRootDroppable(False)
+    #model.setIsDraggable(False)
     # set model event
     model.setDragStartEvent(testDrag)
     model.setDropEvent(testDrop)
@@ -929,7 +929,7 @@ if __name__ == '__main__':
     tree_view.setSelectionMode(QAbstractItemView.MultiSelection)
 
     tree_view.setModel(model)
-    #model.setIsDragEnabled(True)
+    #model.setIsDraggable(True)
 
     list_view = AbstractDragDropListView()
 
@@ -938,7 +938,7 @@ if __name__ == '__main__':
     list_view.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
     #list_view.setDropIndicatorShown(True)
     list_view.setModel(model)
-    list_view.setIsDropEnabled(False)
+    list_view.setIsDroppable(False)
     list_view.setIsEnableable(False)
     # table_view = QTableView()
     # table_view.show()

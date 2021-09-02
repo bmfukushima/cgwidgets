@@ -82,12 +82,12 @@ if __name__ == "__main__":
     # main_widget.setDelegateToggleEvent(testDelegateToggle)
     # #
     # # # set flags
-    # main_widget.setIsRootDropEnabled(True)
+    # main_widget.setIsRootDroppable(True)
     # main_widget.setIsEditable(True)
-    # main_widget.setIsDragEnabled(True)
-    # #main_widget.setIsDropEnabled(True)
+    # main_widget.setIsDraggable(True)
+    # #main_widget.setIsDroppable(True)
     # main_widget.setIsEnableable(True)
-    # main_widget.setIsDeleteEnabled(True)
+    # main_widget.setIsDeletable(True)
     #
     # # set selection mode
     # main_widget.setMultiSelect(True)

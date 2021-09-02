@@ -197,9 +197,9 @@ class AbstractPiPOrganizerWidget(AbstractShojiModelViewWidget):
         self.setMultiSelectDirection(Qt.Horizontal)
         self.setMultiSelect(True)
         self.setHeaderItemIsEditable(False)
-        self.setHeaderItemIsDragEnabled(False)
-        self.setHeaderItemIsDropEnabled(False)
-        self.setHeaderItemIsDeleteEnabled(False)
+        self.setHeaderItemIsDraggable(False)
+        self.setHeaderItemIsDroppable(False)
+        self.setHeaderItemIsDeletable(False)
         self.setHeaderItemIsEnableable(False)
 
         self._temp_widgets = []
@@ -428,7 +428,7 @@ widget.setWordWrap(True)
         # setup item
         item = index.internalPointer()
         item.setIsSelectable(False)
-        item.setIsDragEnabled(False)
+        item.setIsDraggable(False)
         item.setIsEnabled(False)
         # item.setIsEditable(False)
 
@@ -2219,8 +2219,8 @@ class PiPGlobalOrganizerItem(AbstractDragDropModelItem):
 
     def setIsLocked(self, _is_locked):
         self._is_locked = _is_locked
-        self.setIsDropEnabled(False)
-        self.setIsDragEnabled(not _is_locked)
+        self.setIsDroppable(False)
+        self.setIsDraggable(not _is_locked)
         self.setIsEditable(not _is_locked)
         self.setDeleteOnDrop(not _is_locked)
 
@@ -2284,7 +2284,7 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
         self.setDeleteWarningWidget(delete_warning_widget)
 
         # set flags
-        self.setIsRootDropEnabled(False)
+        self.setIsRootDroppable(False)
 
     def populate(self):
         # get all data
@@ -2325,7 +2325,7 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
         container_item.setFilePath(file_path)
 
         # setup flags
-        container_item.setIsDragEnabled(False)
+        container_item.setIsDraggable(False)
         if locked:
             container_item.setIsLocked(True)
 
@@ -2351,7 +2351,7 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
         item.setItemType(PiPGlobalOrganizerItem.PIP)
 
         # set flags
-        item.setIsDropEnabled(False)
+        item.setIsDroppable(False)
         if index.parent().internalPointer().isLocked():
             item.setIsLocked(True)
 

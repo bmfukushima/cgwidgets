@@ -56,8 +56,8 @@ class AbstractShojiModelItem(AbstractDragDropModelItem, iShojiDynamicWidget):
         #self._is_selected = False
         # self._is_enabled = True
         # self._isSelectable = True
-        # self._isDragEnabled = True
-        # self._isDropEnabled = True
+        # self._isDraggable = True
+        # self._isDroppable = True
         # self._isEditable = True
         if parent is not None:
             parent.addChild(self)
@@ -170,7 +170,7 @@ if __name__ == '__main__':
     tree_view = QTreeView()
 
     tree_view.move(QCursor.pos())
-    tree_view.setDragEnabled(True)
+    tree_view.setDraggable(True)
     tree_view.setDragDropOverwriteMode(False)
     tree_view.setSelectionMode(QAbstractItemView.MultiSelection)
     # tree_view.viewport().setAcceptDrops(True)

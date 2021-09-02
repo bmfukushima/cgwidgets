@@ -118,7 +118,7 @@ class AbstractModelViewWidget(AbstractShojiLayout):
         if self.model():
             view.setModel(self.model())
             # if isinstance(view, AbstractDragDropListView):
-            #     self.setIsDropEnabled(False)
+            #     self.setIsDroppable(False)
         else:
             model = AbstractDragDropModel()
             view.setModel(model)
@@ -136,9 +136,9 @@ class AbstractModelViewWidget(AbstractShojiLayout):
 
         # setup default drop attrs
         if view_type == AbstractModelViewWidget.TREE_VIEW:
-            self.setIsDropEnabled(True)
+            self.setIsDroppable(True)
         if view_type == AbstractModelViewWidget.LIST_VIEW:
-            self.setIsDropEnabled(False)
+            self.setIsDroppable(False)
 
     def setPresetViewType(self, view_type):
         """
@@ -368,23 +368,23 @@ class AbstractModelViewWidget(AbstractShojiLayout):
         """
         self.view().setDragDropMode(drag_drop_mode)
 
-    def isDragEnabled(self):
-        return self.view().isDragEnabled()
+    def isDraggable(self):
+        return self.view().isDraggable()
 
-    def setIsDragEnabled(self, enabled):
-        self.view().setIsDragEnabled(enabled)
+    def setIsDraggable(self, enabled):
+        self.view().setIsDraggable(enabled)
 
-    def setIsDropEnabled(self, enabled):
-        self.view().setIsDropEnabled(enabled)
+    def isDroppable(self):
+        return self.view().isDroppable()
 
-    def isDropEnabled(self):
-        return self.view().isDropEnabled()
+    def setIsDroppable(self, enabled):
+        self.view().setIsDroppable(enabled)
 
-    def isRootDropEnabled(self):
-        return self.view().isRootDropEnabled()
+    def isRootDroppable(self):
+        return self.view().isRootDroppable()
 
-    def setIsRootDropEnabled(self, enabled):
-        self.view().setIsRootDropEnabled(enabled)
+    def setIsRootDroppable(self, enabled):
+        self.view().setIsRootDroppable(enabled)
 
     def isEditable(self):
         return self.view().isEditable()
@@ -404,11 +404,11 @@ class AbstractModelViewWidget(AbstractShojiLayout):
     def setIsEnableable(self, enabled):
         self.view().setIsEnableable(enabled)
 
-    def isDeleteEnabled(self):
-        return self.view().isDeleteEnabled()
+    def isDeletable(self):
+        return self.view().isDeletable()
 
-    def setIsDeleteEnabled(self, enabled):
-        self.view().setIsDeleteEnabled(enabled)
+    def setIsDeletable(self, enabled):
+        self.view().setIsDeletable(enabled)
 
     """ EVENTS """
     def enterEvent(self, event):
@@ -678,12 +678,12 @@ if __name__ == "__main__":
     # main_widget.setDelegateToggleEvent(testDelegateToggle)
     # #
     # # # set flags
-    # main_widget.setIsRootDropEnabled(True)
+    # main_widget.setIsRootDroppable(True)
     # main_widget.setIsEditable(True)
-    # main_widget.setIsDragEnabled(True)
-    # #main_widget.setIsDropEnabled(True)
+    # main_widget.setIsDraggable(True)
+    # #main_widget.setIsDroppable(True)
     # main_widget.setIsEnableable(True)
-    # main_widget.setIsDeleteEnabled(True)
+    # main_widget.setIsDeletable(True)
     #
     # # set selection mode
     # main_widget.setMultiSelect(True)

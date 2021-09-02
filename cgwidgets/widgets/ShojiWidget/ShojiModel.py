@@ -54,7 +54,7 @@ if __name__ == '__main__':
     tree_view = QTreeView()
 
     tree_view.move(QCursor.pos())
-    tree_view.setDragEnabled(True)
+    tree_view.setDraggable(True)
     tree_view.setDragDropOverwriteMode(False)
     tree_view.setSelectionMode(QAbstractItemView.MultiSelection)
     # tree_view.viewport().setAcceptDrops(True)

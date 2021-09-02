@@ -90,12 +90,12 @@ main_widget.setItemDeleteEvent(testDelete)
 main_widget.setIndexSelectedEvent(testSelect)
 #
 # set flags
-main_widget.setIsRootDropEnabled(True)
+main_widget.setIsRootDroppable(True)
 main_widget.setIsEditable(False)
-main_widget.setIsDragEnabled(True)
-main_widget.setIsDropEnabled(False)
+main_widget.setIsDraggable(True)
+main_widget.setIsDroppable(False)
 main_widget.setIsEnableable(True)
-main_widget.setIsDeleteEnabled(True)
+main_widget.setIsDeletable(True)
 main_widget.setDelegateToggleEvent(testDelegateToggle)
 
 # set selection mode
