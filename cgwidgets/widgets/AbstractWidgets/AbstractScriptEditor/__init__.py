@@ -1,0 +1,2 @@
+from .AbstractScriptEditorWidget import ScriptEditorWidget
+from .AbstractScriptEditorWidgets import *
