@@ -96,9 +96,7 @@ class DesignWidget(object):
         gesture_points_dict=None,
         r0=None
     ):
-        # =======================================================================
         # create button layout
-        # =======================================================================
         if 'hotkey' in button_type:
             self.button_list = [
                 ['1', '2', '3', '4'],
@@ -110,15 +108,14 @@ class DesignWidget(object):
             self.button_list = [['0', '1', '2', '3', '4', '5', '6', '7']]
 
         for row in self.button_list:
-            #
             for item in row:
                 unique_hash = None
                 # create buttons that are not empty
                 if '.' in file_dict[item]:
                     if '.py' in file_dict[item]:
-                        unique_hash, name = file_dict[item][file_dict[item].rindex('/')+1:].replace('.py','').split('.')
+                        unique_hash, name = file_dict[item][file_dict[item].rindex('/')+1:].replace('.py', '').split('.')
                     elif '.json' in file_dict[item]:
-                        unique_hash, name = file_dict[item][file_dict[item].rindex('/')+1:].replace('.json','').split('.')
+                        unique_hash, name = file_dict[item][file_dict[item].rindex('/')+1:].replace('.json', '').split('.')
                     if 'gesture' in button_type:
                         text = name
                     else:
@@ -132,10 +129,11 @@ class DesignWidget(object):
                     )
                     self.button_dict[item].setHotkey(item)
                     self.button_dict[item].setFilepath(file_dict[item])
-                    # print 'setting %s to %s '%(self.button_dict[item], file_dict[item])
+
                     if item_dict:
-                        self.button_dict[item].setItem(item_dict[unique_hash]) #
-                        self.button_dict[item].setHash(unique_hash) #
+                        if unique_hash in list(item_dict.keys()):
+                            self.button_dict[item].setItem(item_dict[unique_hash]) #
+                            self.button_dict[item].setHash(unique_hash) #
                     file_type = Locals().checkFileType(file_dict[item])
 
                     self.button_dict[item].setFileType(file_type=file_type)
@@ -162,14 +160,12 @@ class DesignWidget(object):
         self.setButtonSize()
 
     def updateButtons(self):
-        #=======================================================================
-        # populate needs to set items on the buttons?
+        """
         # to get the hash? or I can just grab the hash directly from the button?
         # some thing some wehre is going to have to search for the item that is linked...
-        # could store a dict with hashes?
-        #=======================================================================
+        # could store a dict with hashes?"""
         script_editor_widget = getWidgetAncestorByName(self, "ScriptEditorWidget")
-        item_dict = script_editor_widget.scriptWidget().getItemDict()
+        item_dict = script_editor_widget.scriptWidget().itemDict()
 
         button_list = self.getButtonDict()
         for key in list(button_list.keys()):
@@ -455,7 +451,7 @@ class GestureDesignWidget(QGraphicsView, DesignWidget):
 
         file_dict = Locals().getFileDict(self.filepath())
 
-        item_dict = script_editor_widget.scriptWidget().getItemDict()
+        item_dict = script_editor_widget.scriptWidget().itemDict()
         self.drawPolygons(
             num_points=num_points,
             display_type=display_type,
@@ -847,15 +843,13 @@ class HotkeyDesignEditorWidget(HotkeyDesignWidget):
     """
     def __init__(self, parent=None, item=None, file_path=''):
         super(HotkeyDesignEditorWidget, self).__init__(parent)
-        # =======================================================================
         # set up default attributes
-        # =======================================================================
         self.setFilepath(file_path)
         # self.button_dict = {}
         file_dict = Locals().getFileDict(self.filepath())
 
         script_editor_widget = getWidgetAncestorByName(self.parentWidget(), "ScriptEditorWidget")
-        item_dict = script_editor_widget.scriptWidget().getItemDict()
+        item_dict = script_editor_widget.scriptWidget().itemDict()
         self.item = item
         self.populate(file_dict, item_dict=item_dict, button_type='hotkey editor')
 
@@ -1084,7 +1078,7 @@ class GestureDesignEditorWidget(GestureDesignWidget):
         # set up buttons
         file_dict = Locals().getFileDict(self.filepath())
         script_editor_widget = getWidgetAncestorByName(self, "ScriptEditorWidget")
-        item_dict = script_editor_widget.scriptWidget().getItemDict()
+        item_dict = script_editor_widget.scriptWidget().itemDict()
         self.drawPolygons(
             num_points=8,
             display_type='gesture editor',
