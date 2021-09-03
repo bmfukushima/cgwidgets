@@ -132,6 +132,27 @@ def centerWidgetOnScreen(widget, width=1080, height=512, resize=False):
     widget.move(int(xpos), int(ypos))
 
 
+def getCenterOfScreen():
+    """ Returns the center of the screen as a QPoint
+
+    Returns (QPoint)"""
+    screen_resolution = QApplication.desktop().screenGeometry()
+
+    xpos = (screen_resolution.width() * 0.5)
+    ypos = (screen_resolution.height() * 0.5)
+    return QPoint(xpos, ypos)
+
+def getCenterOfWidget(widget):
+    """ Returns the center of the widget
+
+    Args:
+        widget (QWidget)
+
+    Returns (QPoint)"""
+    xpos = widget.geometry().width() * 0.5
+    ypos = widget.geometry().height() * 0.5
+    return QPoint(xpos, ypos)
+
 def checkMousePos(pos, widget):
     """
     Checks the mouse position to determine its relation to the current
@@ -203,6 +224,8 @@ def getBottomLeftPos(widget):
         pos = QPoint(0, 0)
 
     return pos
+
+
 
 # TODO Combine these into an uber function
 def getGlobalPos(widget):

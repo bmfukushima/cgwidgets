@@ -3,11 +3,26 @@ import math
 import json
 import os
 
-from qtpy import QtGui, QtWidgets, QtCore
+#from qtpy import QtGui, QtWidgets, QtCore
 
 from AbstractScriptEditorUtils import Utils as Locals
 
-from cgwidgets.utils import getWidgetAncestor, getWidgetAncestorByName
+from cgwidgets.utils import getWidgetAncestorByName, setAsTransparent, getCenterOfScreen, setAsTool
+from qtpy.QtWidgets import (
+    QVBoxLayout,
+    QWidget,
+    QGraphicsView,
+    QGraphicsItem,
+    QPushButton,
+    QGraphicsItemGroup,
+    QGraphicsPolygonItem,
+    QOpenGLWidget,
+    QGraphicsScene,
+    QGraphicsTextItem,
+)
+from qtpy.QtGui import (QCursor, QTransform, QColor, QPolygonF, QTextBlockFormat, QTextCursor)
+from qtpy.QtCore import Qt, QPointF
+
 
 """ ABSTRACT CLASSES """
 
@@ -116,7 +131,7 @@ class DesignWidget(object):
                         index=item
                     )
                     self.button_dict[item].setHotkey(item)
-                    self.button_dict[item].setFilePath(file_dict[item])
+                    self.button_dict[item].setFilepath(file_dict[item])
                     # print 'setting %s to %s '%(self.button_dict[item], file_dict[item])
                     if item_dict:
                         self.button_dict[item].setItem(item_dict[unique_hash]) #
@@ -164,10 +179,10 @@ class DesignWidget(object):
                     button.updateButton(current_item=item_dict[str(button.getHash())])
 
     """ PROPERTIES """
-    def setFilePath(self, file_path):
+    def setFilepath(self, file_path):
         self.file_path = file_path
 
-    def getFilePath(self):
+    def filepath(self):
         return self.file_path
 
     def setHash(self, unique_hash):
@@ -219,10 +234,10 @@ class DesignButtonWidget(object):
     def getHotkey(self):
         return self.hotkey
 
-    def setFilePath(self, file_path):
+    def setFilepath(self, file_path):
         self.file_path = file_path
 
-    def getFilePath(self):
+    def filepath(self):
         return self.file_path
 
     def getFileType(self):
@@ -242,7 +257,7 @@ class DesignButtonWidget(object):
         """
         item = self.getCurrentItem()
         if not file_path:
-            file_path = '%s' % (item.getFilePath())
+            file_path = '%s' % (item.filepath())
         hotkey_dict = self.getHotkeyDict()
         if hotkey_dict:
             if delete is True:
@@ -250,7 +265,7 @@ class DesignButtonWidget(object):
             else:
                 hotkey_dict[self.getHotkey()] = file_path
             # write out json
-            #design_path = self.getView().getFilePath()
+            #design_path = self.getView().filepath()
             design_path = self.getDesignPath()
             if file_path:
                 # Writing JSON data
@@ -284,10 +299,10 @@ class DesignButtonWidget(object):
                 else:
                     self.setText(self.hotkey + '\n%s' % (current_item.text(0)))
 
-                file_path = current_item.getFilePath()
+                file_path = current_item.filepath()
                 self.updateFile(file_path=file_path)
 
-                self.setFilePath(file_path)
+                self.setFilepath(file_path)
 
                 self.setHash(current_item.getHash())
                 self.setItem(current_item)
@@ -299,7 +314,7 @@ class DesignButtonWidget(object):
                     self.updateButton(current_item=None)
 
 
-class HotkeyDesignWidget(QtWidgets.QWidget, DesignWidget):
+class HotkeyDesignWidget(QWidget, DesignWidget):
     def __init__(
         self,
         parent=None,
@@ -321,10 +336,10 @@ class HotkeyDesignWidget(QtWidgets.QWidget, DesignWidget):
 
     def resizeEvent(self, *args, **kwargs):
         self.setButtonSize()
-        return QtWidgets.QWidget.resizeEvent(self, *args, **kwargs)
+        return QWidget.resizeEvent(self, *args, **kwargs)
 
 
-class HotkeyDesignButtonWidget(QtWidgets.QPushButton, DesignButtonWidget):
+class HotkeyDesignButtonWidget(QPushButton, DesignButtonWidget):
     def __init__(self, parent=None, text=None, unique_hash=None):
         super(HotkeyDesignButtonWidget, self).__init__(parent)
         self.setText(text)
@@ -401,7 +416,7 @@ class HotkeyDesignButtonWidget(QtWidgets.QPushButton, DesignButtonWidget):
                     self.setStyleSheet(''.join(style_sheet_list))
 
 
-class GestureDesignWidget(QtWidgets.QGraphicsView, DesignWidget):
+class GestureDesignWidget(QGraphicsView, DesignWidget):
     def __init__(
         self,
         parent=None,
@@ -413,8 +428,8 @@ class GestureDesignWidget(QtWidgets.QGraphicsView, DesignWidget):
         size=50
     ):
         super(GestureDesignWidget, self).__init__(parent)
-        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.horizontalScrollBar().setStyleSheet('height:0px')
         self.verticalScrollBar().setStyleSheet('width:0px')
 
@@ -438,7 +453,7 @@ class GestureDesignWidget(QtWidgets.QGraphicsView, DesignWidget):
         outer_radius = size * .25
         inner_radius = outer_radius * self.poly_width
 
-        file_dict = Locals().getFileDict(self.getFilePath())
+        file_dict = Locals().getFileDict(self.filepath())
 
         item_dict = script_editor_widget.scriptWidget().getItemDict()
         self.drawPolygons(
@@ -490,7 +505,7 @@ class GestureDesignWidget(QtWidgets.QGraphicsView, DesignWidget):
                     2 * math.pi * ((index + .5) / num_points) + offset
                 )
             )
-            p0 = QtCore.QPointF(x0, y0)
+            p0 = QPointF(x0, y0)
 
             # ===================================================================
             # inner left
@@ -507,7 +522,7 @@ class GestureDesignWidget(QtWidgets.QGraphicsView, DesignWidget):
                     2 * math.pi * ((index + .5) / num_points) + offset
                 )
             )
-            p1 = QtCore.QPointF(x1, y1)
+            p1 = QPointF(x1, y1)
             # ===================================================================
             # outer right
             # ===================================================================
@@ -523,7 +538,7 @@ class GestureDesignWidget(QtWidgets.QGraphicsView, DesignWidget):
                     2 * math.pi * ((index - .5) / num_points) - offset
                 )
             )
-            p2 = QtCore.QPointF(x2, y2)
+            p2 = QPointF(x2, y2)
             # ===================================================================
             # inner right
             # ===================================================================
@@ -539,7 +554,7 @@ class GestureDesignWidget(QtWidgets.QGraphicsView, DesignWidget):
                     2 * math.pi * ((index - .5) / num_points) - offset
                 )
             )
-            p3 = QtCore.QPointF(x3, y3)
+            p3 = QPointF(x3, y3)
 
             # ===================================================================
             # Center Point of polygon
@@ -555,7 +570,7 @@ class GestureDesignWidget(QtWidgets.QGraphicsView, DesignWidget):
                     2 * math.pi * ((index) / num_points)
                 )
             )
-            p4 = QtCore.QPointF(x4, y4 - 20)
+            p4 = QPointF(x4, y4 - 20)
 
             # ===================================================================
             # Add inner points to list for central button
@@ -572,7 +587,7 @@ class GestureDesignWidget(QtWidgets.QGraphicsView, DesignWidget):
                     2 * math.pi * ((index + .5) / num_points)
                 )
             )
-            p5 = QtCore.QPointF(x5, y5)
+            p5 = QPointF(x5, y5)
             inner_polygon_points.append(p5)
 
             # ===================================================================
@@ -590,7 +605,7 @@ class GestureDesignWidget(QtWidgets.QGraphicsView, DesignWidget):
                     2 * math.pi * ((index) / num_points) + offset
                 )
             )
-            p6 = QtCore.QPointF(x6, y6)
+            p6 = QPointF(x6, y6)
 
             # p0-3 polygon
             # p4 = point center of polygon (for text)
@@ -640,17 +655,17 @@ class GestureDesignWidget(QtWidgets.QGraphicsView, DesignWidget):
     def rotate(self, item, angle):
         sina = math.sin(math.radians(angle))
         cosa = math.cos(math.radians(angle))
-        translationTransform = QtGui.QTransform(
+        translationTransform = QTransform(
             1, 0, 0,
             0, 1, 0,
             0, 0, 1
         )
 
-        rotationTransform = QtGui.QTransform(
+        rotationTransform = QTransform(
             cosa, sina, -sina, cosa, 0, 0
         )
 
-        scalingTransform = QtGui.QTransform(
+        scalingTransform = QTransform(
             1, 0, 0,
             0, 1, 0,
             0, 0, 1
@@ -665,15 +680,15 @@ class GestureDesignWidget(QtWidgets.QGraphicsView, DesignWidget):
         pass
 
     def dropEvent(self, event, *args, **kwargs):
-        event.setDropAction(QtCore.Qt.CopyAction)
-        return QtWidgets.QGraphicsView.dropEvent(self, event, *args, **kwargs)
+        event.setDropAction(Qt.CopyAction)
+        return QGraphicsView.dropEvent(self, event, *args, **kwargs)
 
 
 class GestureDesignButtonWidget(
-        QtWidgets.QGraphicsItemGroup, DesignButtonWidget
+        QGraphicsItemGroup, DesignButtonWidget
 ):
     """
-    @points_list: <list> of <QtCore.QPointF> for building the polygon
+    @points_list: <list> of <QPointF> for building the polygon
     @text: <str> display text
     @center_point: <QPointF> center point of each polygon
     @num_points: <int> total number of buttons
@@ -695,17 +710,17 @@ class GestureDesignButtonWidget(
     def rotate(self, item, angle):
         sina = math.sin(math.radians(angle))
         cosa = math.cos(math.radians(angle))
-        translationTransform = QtGui.QTransform(
+        translationTransform = QTransform(
             1, 0, 0,
             0, 1, 0,
             0, 0, 1
         )
 
-        rotationTransform = QtGui.QTransform(
+        rotationTransform = QTransform(
             cosa, sina, -sina, cosa, 0, 0
         )
 
-        scalingTransform = QtGui.QTransform(
+        scalingTransform = QTransform(
             1, 0, 0,
             0, 1, 0,
             0, 0, 1
@@ -719,12 +734,12 @@ class GestureDesignButtonWidget(
         pen = self.poly_item.pen()
         width = 2
         pen.setWidth(width)
-        pen_style = QtCore.Qt.CustomDashLine
+        pen_style = Qt.CustomDashLine
         file_type = self.getFileType()
         # set up morse code dots...
         if file_type is None:
             text = 'None'
-            color = QtGui.QColor(0, 0, 0)
+            color = QColor(0, 0, 0)
 
             morse_code = [
                 3, 1, 1, 3,
@@ -735,7 +750,7 @@ class GestureDesignButtonWidget(
         else:
             if file_type == 'hotkey':
                 text = 'hotkey'
-                color = QtGui.QColor(128, 0, 0)
+                color = QColor(128, 0, 0)
                 morse_code = [
                     1, 1, 1, 1, 1, 1, 1, 3,
                     3, 1, 3, 1, 3, 3,
@@ -756,7 +771,7 @@ class GestureDesignButtonWidget(
                 """
             elif file_type == 'gesture':
                 text = 'gesture'
-                color = QtGui.QColor(0, 0, 128)
+                color = QColor(0, 0, 128)
                 morse_code = [
                     3, 1, 3, 1, 1, 3,
                     1, 3,
@@ -768,7 +783,7 @@ class GestureDesignButtonWidget(
                 ]
             elif file_type == 'script':
                 text = 'script'
-                color = QtGui.QColor(0, 128, 0)
+                color = QColor(0, 128, 0)
                 morse_code = [
                     1, 1, 1, 1, 1, 3,
                     3, 1, 1, 1, 3, 1, 1, 3,
@@ -791,7 +806,7 @@ class GestureDesignButtonWidget(
 
 
 class GestureDesignPolyWidget(
-        QtWidgets.QGraphicsPolygonItem, DesignButtonWidget
+        QGraphicsPolygonItem, DesignButtonWidget
 ):
     def __init__(self, parent=None, points_list=None):
         super(GestureDesignPolyWidget, self).__init__(parent)
@@ -800,25 +815,25 @@ class GestureDesignPolyWidget(
         # setup color
         # =======================================================================
         """
-        brush = QtGui.QBrush()
-        brush_color = QtGui.QColor()
+        brush = QBrush()
+        brush_color = QColor()
         brush_color.setRgbF(1.0, 1.0, 0.0)
         brush.setColor(brush_color)
-        brush.setStyle(QtCore.Qt.SolidPattern)
+        brush.setStyle(Qt.SolidPattern)
         self.setBrush(brush)
         """
         # =======================================================================
         # hide border
         # =======================================================================
         pen = self.pen()
-        pen_color = QtGui.QColor()
+        pen_color = QColor()
         pen_color.setRgb(255, 255, 255, 255)
         pen.setColor(pen_color)
         self.setPen(pen)
-        pen.setStyle(QtCore.Qt.DotLine)
+        pen.setStyle(Qt.DotLine)
 
     def drawPolygon(self, points_list):
-        polygon = QtGui.QPolygonF()
+        polygon = QPolygonF()
         for point in points_list:
             polygon.append(point)
         self.setPolygon(polygon)
@@ -835,9 +850,9 @@ class HotkeyDesignEditorWidget(HotkeyDesignWidget):
         # =======================================================================
         # set up default attributes
         # =======================================================================
-        self.setFilePath(file_path)
+        self.setFilepath(file_path)
         # self.button_dict = {}
-        file_dict = Locals().getFileDict(self.getFilePath())
+        file_dict = Locals().getFileDict(self.filepath())
 
         script_editor_widget = getWidgetAncestorByName(self.parentWidget(), "ScriptEditorWidget")
         item_dict = script_editor_widget.scriptWidget().getItemDict()
@@ -887,7 +902,7 @@ class HotkeyDesignEditorWidget(HotkeyDesignWidget):
 
     def resizeEvent(self, *args, **kwargs):
         self.setButtonSize()
-        return QtWidgets.QWidget.resizeEvent(self, *args, **kwargs)
+        return QWidget.resizeEvent(self, *args, **kwargs)
 
 
 class HotkeyDesignEditorButton(HotkeyDesignButtonWidget):
@@ -924,13 +939,13 @@ class HotkeyDesignEditorButton(HotkeyDesignButtonWidget):
         """
         Returns the hotkey dictionary or None
         """
-        if os.path.exists(self.parent().getFilePath()):
-            return Locals().getFileDict(self.parent().getFilePath())
+        if os.path.exists(self.parent().filepath()):
+            return Locals().getFileDict(self.parent().filepath())
         else:
             return None
 
     def getDesignPath(self):
-        return self.parent().getFilePath()
+        return self.parent().filepath()
 
     """ EVENTS """
 
@@ -940,20 +955,20 @@ class HotkeyDesignEditorButton(HotkeyDesignButtonWidget):
         dropable_list = ['script', 'gesture', 'hotkey']
         if item_type in dropable_list:
             event.accept()
-        return QtWidgets.QPushButton.dragEnterEvent(self, event, *args, **kwargs)
+        return QPushButton.dragEnterEvent(self, event, *args, **kwargs)
 
     def dropEvent(self, event, *args, **kwargs):
         self.updateButton(current_item=self.getCurrentItem())
-        return QtWidgets.QPushButton.dropEvent(self, event, *args, **kwargs)
+        return QPushButton.dropEvent(self, event, *args, **kwargs)
 
     def mouseReleaseEvent(self, event, *args, **kwargs):
-        if event.button() == QtCore.Qt.MiddleButton:
+        if event.button() == Qt.MiddleButton:
             if hasattr(self, 'file_path'):
                 self.updateFile(delete=True)
                 self.updateButton()
-        elif event.button() == QtCore.Qt.LeftButton:
+        elif event.button() == Qt.LeftButton:
             self.execute()
-        return QtWidgets.QPushButton.mouseReleaseEvent(self, event, *args, **kwargs)
+        return QPushButton.mouseReleaseEvent(self, event, *args, **kwargs)
 
 
 class HotkeyDesignGUIWidget(HotkeyDesignWidget):
@@ -962,9 +977,9 @@ class HotkeyDesignGUIWidget(HotkeyDesignWidget):
         # =======================================================================
         # set up default attributes
         # =======================================================================
-        self.setFilePath(file_path)
+        self.setFilepath(file_path)
         self.button_dict = {}
-        file_dict = Locals().getFileDict(self.getFilePath())
+        file_dict = Locals().getFileDict(self.filepath())
 
         self.init_pos = init_pos
         self.populate(file_dict, button_type='hotkey gui')
@@ -987,10 +1002,10 @@ class HotkeyDesignGUIWidget(HotkeyDesignWidget):
                 x_pos = (column_index * modified_button_width) + offset
                 y_pos = row_index * button_height
                 self.button_dict[item].setGeometry(
-                    x_pos,
-                    y_pos,
-                    modified_button_width * button_spacing,
-                    button_height * button_spacing
+                    int(x_pos),
+                    int(y_pos),
+                    int(modified_button_width * button_spacing),
+                    int(button_height * button_spacing)
                 )
 
     def keyPressEvent(self, event, *args, **kwargs):
@@ -998,9 +1013,9 @@ class HotkeyDesignGUIWidget(HotkeyDesignWidget):
         button_dict = self.getButtonDict()
         if key in button_dict.keys():
             button_dict[key].execute()
-        elif QtCore.Qt.Key_Escape:
+        elif Qt.Key_Escape:
             self.parent().close()
-        return QtWidgets.QWidget.keyPressEvent(self,event,  *args, **kwargs)
+        return QWidget.keyPressEvent(self,event,  *args, **kwargs)
 
 
 class HotkeyDesignGUIButton(HotkeyDesignButtonWidget):
@@ -1014,15 +1029,13 @@ class HotkeyDesignGUIButton(HotkeyDesignButtonWidget):
 
     def execute(self):
         if self.getFileType() == 'script':
-            if os.path.exists(self.getFilePath()):
-                with open(self.getFilePath()) as script_descriptor:
+            if os.path.exists(self.filepath()):
+                with open(self.filepath()) as script_descriptor:
                     exec(script_descriptor.read())
         elif self.getFileType() == 'hotkey':
-            self.showHotkeyDesign(self.getFilePath())
+            self.showHotkeyDesign(self.filepath())
         elif self.getFileType() == 'gesture':
-            # todo this is a fail
-            katana_main = UI4.App.MainWindow.GetMainWindow()
-            gesture_menu = PopupGestureMenu(katana_main, file_path=self.getFilePath())
+            gesture_menu = PopupGestureMenu(file_path=self.filepath())
             gesture_menu.show()
         self.parent().parent().close()
 
@@ -1032,10 +1045,8 @@ class HotkeyDesignGUIButton(HotkeyDesignButtonWidget):
             popup_hotkey_menu = PopupHotkeyMenu(self, file_path=file_path, pos=pos)
             popup_hotkey_menu.show()
         else:
-            # todo this is a fail
-            katana_main = UI4.App.MainWindow.GetMainWindow()
             pos = self.parentWidget().init_pos
-            popup_hotkey_menu = PopupHotkeyMenu(katana_main, file_path=file_path, pos=pos)
+            popup_hotkey_menu = PopupHotkeyMenu(file_path=file_path, pos=pos)
             popup_hotkey_menu.show()
 
 
@@ -1054,24 +1065,24 @@ class GestureDesignEditorWidget(GestureDesignWidget):
         size=50
     ):
         super(GestureDesignEditorWidget, self).__init__(parent)
-        # self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
+        # self.setAttribute(Qt.WA_TranslucentBackground)
         script_editor_widget = getWidgetAncestorByName(self, "ScriptEditorWidget")
         self.script_list = script_list
         self.setItem(item)
-        self.setFilePath(file_path)
+        self.setFilepath(file_path)
         self.poly_width = .5
         # init settings
         outer_radius = size * .25
         inner_radius = outer_radius * self.poly_width
 
         # set up graphics scene
-        self.gl_widget = QtWidgets.QOpenGLWidget()
+        self.gl_widget = QOpenGLWidget()
         self.setViewport(self.gl_widget)
-        scene = QtWidgets.QGraphicsScene()
+        scene = QGraphicsScene()
         self.setScene(scene)
 
         # set up buttons
-        file_dict = Locals().getFileDict(self.getFilePath())
+        file_dict = Locals().getFileDict(self.filepath())
         script_editor_widget = getWidgetAncestorByName(self, "ScriptEditorWidget")
         item_dict = script_editor_widget.scriptWidget().getItemDict()
         self.drawPolygons(
@@ -1086,7 +1097,7 @@ class GestureDesignEditorWidget(GestureDesignWidget):
         # set scene display
         self.setMaximumSize(size, size)
 
-        file_dict = Locals().getFileDict(self.getFilePath())
+        file_dict = Locals().getFileDict(self.filepath())
 
 
 class GestureDesignEditorButton(GestureDesignButtonWidget):
@@ -1142,14 +1153,14 @@ class GestureDesignEditorButton(GestureDesignButtonWidget):
         """
         @returns: path on disk to the design file
         """
-        return self.getView().getFilePath()
+        return self.getView().filepath()
 
     def getHotkeyDict(self):
         """
         @returns: dictionary of design hotkeys
         """
-        if os.path.exists(self.getView().getFilePath()):
-            return Locals().getFileDict(self.getView().getFilePath())
+        if os.path.exists(self.getView().filepath()):
+            return Locals().getFileDict(self.getView().filepath())
 
     def getView(self):
         return self.scene().views()[0]
@@ -1170,31 +1181,31 @@ class GestureDesignEditorButton(GestureDesignButtonWidget):
         if item_type in dropable_list:
             event.accept()
 
-        return QtWidgets.QGraphicsItemGroup.dragEnterEvent(self, event, *args, **kwargs)
+        return QGraphicsItemGroup.dragEnterEvent(self, event, *args, **kwargs)
 
     def dropEvent(self, event, *args, **kwargs):
         self.updateButton(current_item=self.getCurrentItem())
-        # print self.parent().getFilePath()
-        return QtWidgets.QGraphicsItemGroup.dropEvent(self, event, *args, **kwargs)
+        # print self.parent().filepath()
+        return QGraphicsItemGroup.dropEvent(self, event, *args, **kwargs)
 
     """
     def hoverEnterEvent(self, event, *args, **kwargs):
         event.accept()
         print('hover mcdover')
-        return QtWidgets.QGraphicsPolygonItem.hoverEnterEvent(self, event, *args, **kwargs)
+        return QGraphicsPolygonItem.hoverEnterEvent(self, event, *args, **kwargs)
     """
 
     def mousePressEvent(self, event, *args, **kwargs):
-        if event.button() == QtCore.Qt.MiddleButton:
+        if event.button() == Qt.MiddleButton:
             if hasattr(self, 'file_path'):
                 self.updateFile(delete=True)
                 self.updateButton()
-        elif event.button() == QtCore.Qt.LeftButton:
+        elif event.button() == Qt.LeftButton:
             self.execute()
-        return QtWidgets.QGraphicsItemGroup.mousePressEvent(self, event, *args, **kwargs)
+        return QGraphicsItemGroup.mousePressEvent(self, event, *args, **kwargs)
 
 
-class GestureDesignEditorTextItem(QtWidgets.QGraphicsTextItem):
+class GestureDesignEditorTextItem(QGraphicsTextItem):
     def __init__(
             self,
             parent=None,
@@ -1221,13 +1232,13 @@ class GestureDesignEditorTextItem(QtWidgets.QGraphicsTextItem):
         width = self.boundingRect().width()
         # center text
         self.setTextWidth(width)
-        text_format = QtGui.QTextBlockFormat()
+        text_format = QTextBlockFormat()
 
         xpos = pos.x() - (width * .5)
-        text_format.setAlignment(QtCore.Qt.AlignCenter)
+        text_format.setAlignment(Qt.AlignCenter)
 
         cursor = self.textCursor()
-        cursor.select(QtGui.QTextCursor.Document)
+        cursor.select(QTextCursor.Document)
         cursor.mergeBlockFormat(text_format)
         cursor.clearSelection()
         self.setTextCursor(cursor)
@@ -1245,7 +1256,7 @@ class GestureDesignEditorTextItem(QtWidgets.QGraphicsTextItem):
             xpos += 15
         
         # specific handlers to center based on awkward shapes...
-        new_pos = QtCore.QPointF(xpos, ypos)
+        new_pos = QPointF(xpos, ypos)
         self.setPos(new_pos)
 
 
@@ -1258,7 +1269,7 @@ class GestureDesignGUIWidget(GestureDesignWidget):
         size=None
     ):
         super(GestureDesignGUIWidget, self).__init__(parent)
-        self.setFilePath(file_path)
+        self.setFilepath(file_path)
         self.poly_width = .85
 
         # init settings
@@ -1266,13 +1277,13 @@ class GestureDesignGUIWidget(GestureDesignWidget):
         inner_radius = outer_radius * self.poly_width
 
         # set up graphics scene
-        self.gl_widget = QtWidgets.QOpenGLWidget()
+        self.gl_widget = QOpenGLWidget()
         self.setViewport(self.gl_widget)
-        scene = QtWidgets.QGraphicsScene()
+        scene = QGraphicsScene()
         self.setScene(scene)
 
         # set up buttons
-        file_dict = Locals().getFileDict(self.getFilePath())
+        file_dict = Locals().getFileDict(self.filepath())
 
         self.drawPolygons(
             num_points=8,
@@ -1329,17 +1340,17 @@ class GestureDesignGUIButton(GestureDesignButtonWidget):
     def execute(self):
         # todo this will fail... loading katana, AND imp
         if self.getFileType() == 'script':
-            if os.path.exists(self.getFilePath()):
-                with open(self.getFilePath()) as script_descriptor:
+            if os.path.exists(self.filepath()):
+                with open(self.filepath()) as script_descriptor:
                     exec(script_descriptor.read())
         elif self.getFileType() == 'hotkey':
-            katana_main = UI4.App.MainWindow.GetMainWindow()
-            pos = QtGui.QCursor.pos()
-            popup_menu_widget = PopupHotkeyMenu(katana_main, file_path=self.getFilePath(), pos=pos)
+            # katana_main = UI4.App.MainWindow.GetMainWindow()
+            pos = QCursor.pos()
+            popup_menu_widget = PopupHotkeyMenu(file_path=self.filepath(), pos=pos)
             popup_menu_widget.show()
         elif self.getFileType() == 'gesture':
-            katana_main = UI4.App.MainWindow.GetMainWindow()
-            popup_gesture_widget = PopupGestureMenu(katana_main, file_path=self.getFilePath())
+            # katana_main = UI4.App.MainWindow.GetMainWindow()
+            popup_gesture_widget = PopupGestureMenu(file_path=self.filepath())
             popup_gesture_widget.show()
 
         self.scene().views()[0].parent().close()
@@ -1350,7 +1361,7 @@ class GestureDesignGUIButton(GestureDesignButtonWidget):
         return GestureDesignButtonWidget.hoverEnterEvent(self, *args, **kwargs)
 
 
-class GestureDesignGUITextItem(QtWidgets.QGraphicsTextItem):
+class GestureDesignGUITextItem(QGraphicsTextItem):
     def __init__(
             self,
             parent=None,
@@ -1377,23 +1388,23 @@ class GestureDesignGUITextItem(QtWidgets.QGraphicsTextItem):
         width = self.boundingRect().width()
         # center text
         self.setTextWidth(width)
-        text_format = QtGui.QTextBlockFormat()
+        text_format = QTextBlockFormat()
 
         # center
         if self.hotkey in '26':
             xpos = pos.x() - (width * .5)
-            text_format.setAlignment(QtCore.Qt.AlignCenter)
+            text_format.setAlignment(Qt.AlignCenter)
         # right
         elif self.hotkey in '107':
             xpos = pos.x()
-            text_format.setAlignment(QtCore.Qt.AlignRight)
+            text_format.setAlignment(Qt.AlignRight)
             pass #align right
         # left
         elif self.hotkey in '345':
             xpos = pos.x() - (width)
-            text_format.setAlignment(QtCore.Qt.AlignLeft)
+            text_format.setAlignment(Qt.AlignLeft)
         cursor = self.textCursor()
-        cursor.select(QtGui.QTextCursor.Document)
+        cursor.select(QTextCursor.Document)
         cursor.mergeBlockFormat(text_format)
         cursor.clearSelection()
         self.setTextCursor(cursor)
@@ -1411,80 +1422,86 @@ class GestureDesignGUITextItem(QtWidgets.QGraphicsTextItem):
             xpos += 15
         """
         # specific handlers to center based on awkward shapes...
-        new_pos = QtCore.QPointF(xpos, ypos)
+        new_pos = QPointF(xpos, ypos)
         self.setPos(new_pos)
 
 
 """ POPUP MENUS """
-class PopupHotkeyMenu(QtWidgets.QMenu):
+class PopupHotkeyMenu(QWidget):
     def __init__(self, parent=None, file_path=None, pos=None):
         super(PopupHotkeyMenu, self).__init__(parent)
 
-        self.setAttribute(QtCore.Qt.WA_NoSystemBackground)
-        #self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
-        self.setWindowFlags(
-            self.windowFlags()
-            | QtCore.Qt.NoDropShadowWindowHint
-            | QtCore.Qt.FramelessWindowHint
-        )
-        #m.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint)
-
-        self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
-        self.setStyleSheet("background-color:rgba(50,50,50, 0); border:none;")
+        setAsTransparent(self)
+        setAsTool(self)
+        # set position
         y_size = 300
         x_size = y_size * 3
-        if pos == None:
-            pos = QtGui.QCursor.pos()
-        self.setGeometry(pos.x() - x_size*.5, pos.y()-y_size*.5, x_size, y_size)
-        main_layout = QtWidgets.QVBoxLayout(self)
+        if not pos:
+            pos = getCenterOfScreen()
 
+        self.setGeometry(
+            int(pos.x() - x_size*.5),
+            int(pos.y()-y_size*.5),
+            x_size,
+            y_size)
+
+        # create layout
+        main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
         design_widget = HotkeyDesignGUIWidget(self, file_path=file_path, init_pos=pos)
-
-        design_widget.setFocusPolicy(QtCore.Qt.StrongFocus)
+        design_widget.setFocusPolicy(Qt.StrongFocus)
         design_widget.setFocus()
-
         main_layout.addWidget(design_widget)
 
 
-class PopupGestureMenu(QtWidgets.QMenu):
+class PopupGestureMenu(QWidget):
     def __init__(self, parent=None, file_path=None, pos=None):
         super(PopupGestureMenu, self).__init__(parent)
         """
-        self.setAttribute(QtCore.Qt.WA_NoSystemBackground)
+        self.setAttribute(Qt.WA_NoSystemBackground)
         self.setWindowFlags(
             self.windowFlags()
-            | QtCore.Qt.NoDropShadowWindowHint
-            | QtCore.Qt.FramelessWindowHint
+            | Qt.NoDropShadowWindowHint
+            | Qt.FramelessWindowHint
         )
         """
-        self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
-        self.setStyleSheet("background-color:rgba(128,50,50, 255); border:none;")
+        setAsTransparent(self)
+        setAsTool(self)
+        # self.setAttribute(Qt.WA_TranslucentBackground)
+        # self.setStyleSheet("background-color:rgba(128,50,50, 255); border:none;")
         size = 200
         arbitrary_scaler = 5
-        #y_size = 300
-        #x_size = y_size * 3
-        if pos == None:
-            pos = QtGui.QCursor.pos()
+        if not pos:
+            pos = QCursor.pos()
         self.setGeometry(
-            pos.x() - size * arbitrary_scaler * .5,
-            pos.y() - size * arbitrary_scaler * .5,
-            size * arbitrary_scaler,
-            size * arbitrary_scaler
+            int(pos.x() - size * arbitrary_scaler * .5),
+            int(pos.y() - size * arbitrary_scaler * .5),
+            int(size * arbitrary_scaler),
+            int(size * arbitrary_scaler)
         )
-        main_layout = QtWidgets.QVBoxLayout(self)
+        main_layout = QVBoxLayout(self)
 
         main_layout.setContentsMargins(0, 0, 0, 0)
         design_widget = GestureDesignGUIWidget(self, file_path=file_path, init_pos=pos, size=size)
 
-        design_widget.setFocusPolicy(QtCore.Qt.StrongFocus)
+        design_widget.setFocusPolicy(Qt.StrongFocus)
         design_widget.setFocus()
 
         main_layout.addWidget(design_widget)
 
 
-if __name__ == '__main__':
-    app = QtWidgets.QApplication(sys.argv)
-    mw = GestureDesignWidget()
-    mw.show()
+if __name__ == "__main__":
+    import sys
+    from qtpy.QtWidgets import QApplication
+
+    app = QApplication(sys.argv)
+
+    hotkey_file_path = "/media/ssd01/dev/katana/KatanaResources_old/Scripts/designs/7352456805894839296.Debug.json"
+    popup_widget = PopupHotkeyMenu(file_path=hotkey_file_path)
+    popup_widget.show()
+
+    # gesture_file_path = "/media/ssd01/dev/katana/KatanaResources_old/Scripts/designs/7297414313744113664.GestureDesign.json"
+    # gesture_widget = PopupGestureMenu(file_path=gesture_file_path)
+    # gesture_widget.show()
+
     sys.exit(app.exec_())
