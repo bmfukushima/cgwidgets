@@ -1,21 +1,62 @@
+""" The Script Editor acts a place that can hold all of a users scripts neatly.
+This organizes the data into a few different item types,
+    Directory:
+        Directory for holding scripts
+    Group:
+        Subdirectory for holding additional scripts, this can be deleted/created
+        from the UI.
+    Script:
+        Python script / executable that can be run from the application
+    Hotkey:
+        Design widget, this creates a 4x4 hotkey design window.  Users can
+        drag/drop Scripts/Designs into this window.  When the window is then
+        activated it will create a recursive popup menu that the user can
+        either click on, or use hotkeys to get through.
+    Gesture:
+        Design Widget, this creates a 8x1 design window that forms an octagon with
+        the users cursor in the center.  Moving the mouse through an option will
+        activate that option.  Note... this doesn't really work all that well... lol
+
+Hierarchy:
+ScriptEditorWidget --> (QSplitter)
+  |- ScriptTreeWidget --> (QTreeWidget)
+  |  |- ScriptDirectoryItem
+  |     |- GroupItem --> (BaseItem)
+  |     |- ScriptItem --> (BaseItem)
+  |     |- HotkeyDesignItem --> (BaseItem)
+  |     |- GestureDesignItem --> (BaseItem)
+  |- design_main_widget --> (QWidget)
+     |- QVBoxLayout
+        |- DesignWidget --> (QTabWidget)
+        |   |- AbstractPythonEditor --> (QWidget)
+        |      |-vbox
+        |         |- code_widget --> (AbstractPythonCodeWidget --> QPlainTextEdit)
+        |- SaveButton --> (QPushButton)
+
+Data:
+    Hotkeys (hotkeys.json):
+        {"/path/on/disk/to/file": "QKeySequence().toString()",
+        "/home/user/test.json": "Ctrl+Shift+F"}
+    Hotkey (design):
+        {
+            "1" : "filepath", "2": "filepath"...
+            "q" : "filepath", ... "r" : "filepath"}
+            ...
+            "z" "filepath", ... "v" : "filepath"}
+        }
+    Gesture (design)
+        {"1-7" : "filepath"}
 """
-#===============================================================================
-# HotkeyDesign
-#===============================================================================
-
-
-                ScriptEditorWidget (Widget)
-                hbox
-                Splitter
-                v---------------------------------------------------------v
-            ScriptTreeWidget(Tree)                                      widget 
-            BaseItem                                                    vbox 
-            v--------------------v-----------------v                    v-------------------------------------------------v
-        HotkeyDesignBaseItem       ScriptItem    X ScriptMasterItem X        MainTab (Tab)                                 SaveButton (Button)
-    v----------------------v                                            v----------------------v
- X HotkeyDesignMasterItem X        HotkeyDesignItem                                      code (PlainText)    HotkeyDesign (Widget)
-                                                                                            PushButton Array
-
+"""
+Todo:
+    * Drag/Drop
+        - Need to set up drag/drop for moving files around the system
+        - Setup locking mechanisms...
+            metadata?
+    * Update All Designs/Hotkeys
+        - Should fail... since it can't find them anymore
+    * Set focus on popup
+        - Hotkey Design popup is not setting focus, so hotkeys don't work =/
 
 #===============================================================================
 # WISH LIST
@@ -28,7 +69,7 @@
 - Add save path...
     - How to have this work on larger networks with multiple Katana Resources?
 
-- Add fifth row of fingers for '5tgb'
+- Add fifth row of fingers for "5tgb"
 
 
 - Multi Gesture...
@@ -132,7 +173,7 @@ class AbstractPythonEditor(QWidget):
         return self._code_widget
 
 
-class ScriptEditorWidget(QWidget):
+class ScriptEditorWidget(QSplitter):
     """ Script Editors main widget
 
     Attributes:
@@ -154,27 +195,23 @@ class ScriptEditorWidget(QWidget):
 
     @staticmethod
     def __createScriptDirectories(scripts_directory):
-        """ Creates all of the directories for the script directories if they don't exist
+        """ Creates all of the directories for the script directories if they don"t exist
 
         Args:
             scripts_directory (str): path on disk"""
         if not os.path.exists(scripts_directory):
             os.mkdir(scripts_directory)
-        # if not os.path.exists(scripts_directory + '/scripts'):
-        #     os.mkdir(scripts_directory + '/scripts')
-        # if not os.path.exists(scripts_directory + '/designs'):
-        #     os.mkdir(scripts_directory + '/designs')
-        if not os.path.exists(scripts_directory + '/hotkeys.json'):
+        # if not os.path.exists(scripts_directory + "/scripts"):
+        #     os.mkdir(scripts_directory + "/scripts")
+        # if not os.path.exists(scripts_directory + "/designs"):
+        #     os.mkdir(scripts_directory + "/designs")
+        if not os.path.exists(scripts_directory + "/hotkeys.json"):
             hotkey_dict = {}
-            with open(scripts_directory + '/hotkeys.json', 'w') as f:
+            with open(scripts_directory + "/hotkeys.json", "w") as f:
                 json.dump(hotkey_dict, f)
 
     def __setupGUI(self, python_editor):
         """ Sets up the main GUI"""
-        # MAIN LAYOUT
-        self.layout = QHBoxLayout(self)
-        self.splitter = QSplitter()
-        self.layout.addWidget(self.splitter)
 
         # CREATE WIDGETS
         self._script_widget = ScriptTreeWidget(parent=self)
@@ -188,8 +225,8 @@ class ScriptEditorWidget(QWidget):
         design_vbox.addWidget(save_button)
 
         # ADD WIDGETS TO SPLITTER
-        self.splitter.addWidget(self._script_widget)
-        self.splitter.addWidget(self._design_main_widget)
+        self.addWidget(self._script_widget)
+        self.addWidget(self._design_main_widget)
 
     def __name__(self):
         return "ScriptEditorWidget"
@@ -220,10 +257,27 @@ class ScriptEditorWidget(QWidget):
     def scriptsDirectories(self):
         return os.environ[self.scriptsVariable()].split(":")
 
+    """ UTILS """
+    @staticmethod
+    def sortedFiles(file_dir):
+        """ Returns a list of the sorted files in the directory provided
+
+        Args:
+            file_dir (str): path on disk to return files from"""
+        files = os.listdir(file_dir)
+        try:
+            # python 3.3+
+            files.sort(key=lambda x:x.split(".")[1].casefold())
+        except AttributeError:
+            # python 2.7
+            files.sort(key=lambda x:x.split(".")[1].lower())
+        return files
+
+    """ EVENTS """
     def resizeEvent(self, event, *args, **kwargs):
         design_tab = self.designTabWidget()
         design_tab.updateAllGestureDesignsGeometry()
-        return QWidget.resizeEvent(self, event, *args, **kwargs)
+        return QSplitter.resizeEvent(self, event, *args, **kwargs)
 
 
 class SaveButton(QPushButton):
@@ -233,11 +287,11 @@ class SaveButton(QPushButton):
     """
     def __init__(self, parent=None):
         super(SaveButton, self).__init__(parent)
-        self.setText('Save')
+        self.setText("Save")
         self.clicked.connect(self.saveScript)
 
     def __name__(self):
-        return '__save_button__'
+        return "__save_button__"
 
     def saveScript(self):
         """Saves the current script to disk"""
@@ -251,9 +305,14 @@ class SaveButton(QPushButton):
 
 
 class ScriptTreeWidget(QTreeWidget):
-    """
+    """ The main hierarchical view which holds the scripts/designs
+
     This tree widget sits on the left side of GUI and holds the list
     of all of the scripts/designs for the user to adjust
+
+    Args:
+        item_dict (dict): all of the items... need to fix this...
+            {str(unique_hash):item}
     """
     def __init__(self, parent=None):
         super(ScriptTreeWidget, self).__init__(parent)
@@ -261,7 +320,7 @@ class ScriptTreeWidget(QTreeWidget):
         # set up attributes
         self._item_dict = {}
         self.head = self.header()
-        header_widget = QTreeWidgetItem(['Name', 'Type', 'Hotkey'])
+        header_widget = QTreeWidgetItem(["Name", "Type", "Hotkey"])
         self.setHeaderItem(header_widget)
         self.accepts_inputs = False
 
@@ -277,7 +336,6 @@ class ScriptTreeWidget(QTreeWidget):
         item_delegate = DataTypeDelegate(self)
         self.setItemDelegate(item_delegate)
 
-
         # Populate Items
         for script_directory in self.scriptDirectories():
             directory_item = ScriptDirectoryItem(
@@ -288,13 +346,13 @@ class ScriptTreeWidget(QTreeWidget):
             )
             # Populate Items from Directories
 
-            self.populateItems(script_directory, directory_item)
+            self.populateDirectory(script_directory, directory_item, script_directory)
 
         root_item = self.invisibleRootItem()
         root_item.setFlags(root_item.flags() & ~ Qt.ItemIsDropEnabled)
 
     def __name__(self):
-        return '__script_list__'
+        return "__script_list__"
 
     def populateDirectory(self, file_dir, parent_item, orig_dir):
         """ Populates all of the items in the directory provided.
@@ -305,68 +363,60 @@ class ScriptTreeWidget(QTreeWidget):
             orig_dir (str): original directory...
                 lazy af hack
         """
-        # sort directory
-        dir_dict = {}
-        for path in os.listdir(file_dir):
-            name = path[path.index('.')+1:]
-            dir_dict[name] = path
 
-        for key in sorted(list(dir_dict.keys())):
-            file = dir_dict[key]
-            file_path = file_dir + '/%s' % file
-            if '.' in file:
-                if file != 'master.py' and file != 'master.json' and file != "hotkeys.json":
+        for file in ScriptEditorWidget.sortedFiles(file_dir):
+            file_path = "{filedir}/{file}".format(filedir=file_dir, file=file)
+            if "." in file:
+                if file != "master.py" and file != "master.json" and file != "hotkeys.json":
                     if os.path.isdir(file_path):
-                        unique_hash, text = file.replace('.py', '').split('.')
+                        unique_hash, text = file.replace(".py", "").split(".")
                         item = GroupItem(
                             parent_item,
                             text=text,
                             unique_hash=unique_hash,
                             file_dir=file_dir
                         )
-                        self.itemDict()[str(unique_hash)] = item
+                        self.itemDict()[file_path] = item
                         self.populateDirectory(file_path, item, orig_dir)
                     elif os.path.isfile(file_path):
-                        if '.pyc' in file:
+                        if ".pyc" in file:
                             pass
                         else:
                             file_type = Locals().checkFileType(file_path)
                             if file_type == BaseItem.HOTKEY:
-                                unique_hash, text = file.replace('.json', '').split('.')
+                                unique_hash, text = file.replace(".json", "").split(".")
                                 item = HotkeyDesignItem(
                                     parent_item,
-                                    text=text.replace('.json', ''),
+                                    text=text.replace(".json", ""),
                                     unique_hash=unique_hash,
                                     file_dir=file_dir
                                 )
 
                             elif file_type == BaseItem.GESTURE:
-                                unique_hash, text = file.replace('.json', '').split('.')
+                                unique_hash, text = file.replace(".json", "").split(".")
                                 item = GestureDesignItem(
                                     parent_item,
-                                    text=text.replace('.json', ''),
+                                    text=text.replace(".json", ""),
                                     unique_hash=unique_hash,
                                     file_dir=file_dir
                                 )
 
                             elif file_type == BaseItem.SCRIPT:
-                                unique_hash, text = file.replace('.py', '').split('.')
+                                unique_hash, text = file.replace(".py", "").split(".")
                                 item = ScriptItem(
                                     parent_item,
-                                    text=text.replace('.py', ''),
+                                    text=text.replace(".py", ""),
                                     unique_hash=unique_hash,
                                     file_dir=file_dir
                                 )
-                            self.itemDict()[str(unique_hash)] = item
+                            self.itemDict()[file_path] = item
 
                     # set display hotkey
-                    hotkey_dict = Locals().getFileDict(orig_dir + '/hotkeys.json')
+                    hotkey_dict = Locals().getFileDict(orig_dir + "/hotkeys.json")
                     if file_path in list(hotkey_dict.keys()):
                         item.setText(2, hotkey_dict[file_path])
 
-    def populateItems(self, filepath, parent):
-        self.populateDirectory(filepath, parent, filepath)
-
+    """ ITEMS """
     def getAllChildren(self, item, child_list=[]):
         """ Get all children/grandchildren of specified item
 
@@ -400,9 +450,9 @@ class ScriptTreeWidget(QTreeWidget):
                 item = HotkeyDesignItem(current_parent, file_dir=file_dir)
             elif item_type == BaseItem.GESTURE:
                 item = GestureDesignItem(current_parent, file_dir=file_dir)
-            self.itemDict()[str(item.getHash())] = item
+            self.itemDict()[str(item.filepath())] = item
         elif item_type == BaseItem.GROUP:
-            item = GroupItem(current_parent, text='Group', file_dir=file_dir)
+            GroupItem(current_parent, text="Group", file_dir=file_dir)
 
     def itemDict(self):
         return self._item_dict
@@ -412,6 +462,20 @@ class ScriptTreeWidget(QTreeWidget):
             return self.checkParentType(item.parent())
         else:
             return item
+
+    def getScriptDirectoryItem(self, item):
+        """ Gets the current ScriptDirectoryItem
+
+        Return (ScriptDirectoryItem)"""
+        if item:
+            if isinstance(item, ScriptDirectoryItem):
+                return item
+            # not ScriptDirectory, recurse up
+            else:
+                return self.getScriptDirectoryItem(item.parent())
+        # no item found
+        else:
+            return None
 
     """ PROPERTIES """
     def scriptsVariable(self):
@@ -426,7 +490,7 @@ class ScriptTreeWidget(QTreeWidget):
         
         """
         # update file dir
-        if hasattr(current_item, 'file_path'):
+        if hasattr(current_item, "file_path"):
             if current_item.filepath() != None:
                 file_path = current_item.filepath().replace(old_file_dir, new_file_dir)
                 current_item.setFilepath(file_path)
@@ -435,7 +499,7 @@ class ScriptTreeWidget(QTreeWidget):
                 # update design files
                 script_editor_widget = getWidgetAncestor(self, ScriptEditorWidget)
                 self.updateAllDesigns(
-                    script_editor_widget.filepath() + '/designs',
+                    script_editor_widget.filepath() + "/designs",
                     new_file_dir,
                     old_file_dir
                 )
@@ -468,7 +532,7 @@ class ScriptTreeWidget(QTreeWidget):
 
         if not new_file_dir:
             new_file_dir = current_item.parent().getFileDir()
-            new_file_name = '%s.%s' % (current_item.getHash(), current_item.text(0))
+            new_file_name = "%s.%s" % (current_item.getHash(), current_item.text(0))
             new_file_path = old_file_path.replace(old_file_name, new_file_name)
         else:
             new_file_name = current_item.getFileName()
@@ -484,7 +548,7 @@ class ScriptTreeWidget(QTreeWidget):
         # update design files
         script_editor_widget = getWidgetAncestor(self, ScriptEditorWidget)
         self.updateAllDesigns(
-            script_editor_widget.filepath() + '/designs',
+            script_editor_widget.filepath() + "/designs",
             new_file_path,
             old_file_path
         )
@@ -505,21 +569,21 @@ class ScriptTreeWidget(QTreeWidget):
         def updateItem(current_item):
             # rename file
             old_file_name = current_item.getFileName()
-            file_extension = old_file_name[old_file_name.rindex('.') + 1:]
+            file_extension = old_file_name[old_file_name.rindex(".") + 1:]
             unique_hash = current_item.getHash()
 
             # in here to bypass the master for now...
-            # if unique_hash == 'master':
+            # if unique_hash == "master":
             #     return
             new_name = current_item.text(0)
 
-            file_name = '%s.%s.%s' % (unique_hash, new_name, file_extension)
+            file_name = "%s.%s.%s" % (unique_hash, new_name, file_extension)
 
             current_item.setFileName(file_name)
             old_file_path = current_item.filepath()
 
             # this line will break... needs item file path
-            new_file_path = '%s/%s' % (
+            new_file_path = "%s/%s" % (
                 current_item.getFileDir(), current_item.getFileName()
             )
             current_item.setFilepath(new_file_path)
@@ -538,7 +602,7 @@ class ScriptTreeWidget(QTreeWidget):
                 tab_bar = design_tab.tabBar()
                 for index in range(tab_bar.count()):
                     widget = design_tab.widget(index)
-                    if hasattr(widget, 'getItem'):
+                    if hasattr(widget, "getItem"):
                         if widget.getItem().getHash() == current_item.getHash():
                             design_tab.setTabText(index, current_item.text(0))
                             widget.setFilepath(new_file_path)
@@ -561,7 +625,7 @@ class ScriptTreeWidget(QTreeWidget):
         if current_item:
             # check to see if it is a name change
             old_name = current_item.getFileName()
-            old_name = old_name[old_name.index('.')+1:old_name.rindex('.')]
+            old_name = old_name[old_name.index(".")+1:old_name.rindex(".")]
             new_name = current_item.text(0)
             if old_name != new_name:
                 if isinstance(current_item, GroupItem):
@@ -585,7 +649,7 @@ class ScriptTreeWidget(QTreeWidget):
         new_dir = str(new_dir)
 
         for file in os.listdir(start_dir):
-            file_path = start_dir + '/' + file
+            file_path = start_dir + "/" + file
             if os.path.isdir(file_path) is True:
                 return self.updateAllDesigns(
                     file_path,
@@ -597,7 +661,7 @@ class ScriptTreeWidget(QTreeWidget):
                 update_list = [BaseItem.HOTKEY, BaseItem.GESTURE]
                 if Locals().checkFileType(file_path) in update_list:
                     def checkFile(file_path):
-                        current_file = open(file_path, 'r')
+                        current_file = open(file_path, "r")
                         current_text = current_file.readlines()
                         current_file.close()
                         return current_text
@@ -606,7 +670,7 @@ class ScriptTreeWidget(QTreeWidget):
                     if len(current_text) > 0:
                         text = current_text[0]
                         new_text = text.replace(old_dir, new_dir)
-                        current_file = open(file_path, 'w')
+                        current_file = open(file_path, "w")
                         current_file.write(new_text)
                         current_file.close()
 
@@ -616,64 +680,98 @@ class ScriptTreeWidget(QTreeWidget):
         design_tab = script_editor_widget.designTabWidget()
         design_tab.updateAllHotkeyDesigns()
 
-    """ update global hotkeys registry"""
-    """ $KATANA_RESOURCES/Scripts/hotkeys.json """
+    """ HOTKEYS """
+    def addHotkeyToItem(self, item=None, hotkey=None):
+        """ Adds a a hotkey to a SCRIPT | DESIGN item
 
-    def appendHotkeyToGlobalRegistry(self, item=None, hotkey=None):
+        The global hotkey's registry is located at the top of each Scripts directory
+        as the file "hotkeys.json"
+
+        Args:
+            item (ScriptItem | DesignItem): item to have hotkey added to it
+            hotkey (str): hotkey to set
+                QKeySequence().toString()
         """
-        Updates the hotkeys file located at
-        $KATANA_RESOURCES/Scripts/hotkeys.json
-        """
-        file_path = self.filepath() + '/hotkeys.json'
-        hotkey_dict = Locals().getFileDict(file_path)
+
+        # file_path = self.filepath() + "/hotkeys.json"
+        hotkey_filepath = self.hotkeyFile()
+        hotkey_dict = Locals().getFileDict(hotkey_filepath)
         hotkey_dict[item.filepath()] = hotkey
-        with open(file_path, 'w') as f:
+        with open(hotkey_filepath, "w") as f:
             json.dump(hotkey_dict, f)
 
-    def deleteHotkeyFromGlobalRegistry(self, item_path):
+    def removeHotkeyFromItem(self, item_path):
+        """ Removes the item's hotkey from the global registry
+
+        Args:
+            item_path (str): path to script/design/etc
         """
-        @item_path <str> path to script/design/etc
-        removes the item path from the global hotkeys registry
-        """
-        def updateItemHotkeys():
-            pass
-        # reset item text
-        design_items = self.getAllChildren(self.design_item)
-        for item in design_items:
-            if item.filepath() == item_path:
-                item.setText(2, '')
-        self.currentItem().setText(2, '')
+        self.currentItem().setText(2, "")
 
         # delete from global file
-        file_path = self.filepath() + '/hotkeys.json'
-        hotkey_dict = Locals().getFileDict(file_path)
+        hotkeys_filepath = self.hotkeyFile()
+        hotkey_dict = Locals().getFileDict(hotkeys_filepath)
         hotkey_dict.pop(item_path, None)
-        with open(file_path, 'w') as f:
+        with open(hotkeys_filepath, "w") as f:
             json.dump(hotkey_dict, f)
 
-    def getInvertedHotkeyDict(self):
+    def hotkeyFile(self, item=None):
+        """ Returns the path on disk to the current items hotkey.json file
+
+        Returns (str): path on disk"""
+        if not item:
+            item = self.currentItem()
+        directory_item = self.getScriptDirectoryItem(item)
+        return directory_item.getFileDir() + "/hotkeys.json"
+
+    def hotkeyDict(self, item=None):
+        """ Returns the hotkey dict from the ScriptDirectoryItem for the item provided
+
+        If no item is provided, this will use the currentItem()
+
+        Returns (dict): """
+        if not item:
+            item = self.currentItem()
+
+        directory_item = self.getScriptDirectoryItem(item)
+        if directory_item:
+            file_path = directory_item.getFileDir() + "/hotkeys.json"
+            hotkey_dict = Locals().getFileDict(file_path)
+            print(hotkey_dict)
+            return hotkey_dict
+
+    def invertedHotkeyDict(self, item=None):
+        """ This should then be used to get the file_path for a hotkey from the hotkey registered
+
+        Instead of returning
+            {<filepath>:<hotkey>}
+        This will return
+            {<hotkey>:<filepath>}
+
+        Args:
+            item (ScriptItem | DesignItem): item to get hotkey dict from
         """
-        getInvertedHotkeyDict
-        @return: <dict> of inverted global hotkey registry.
-        This should then be used to get the file_path for
-        a hotkey from the hotkey registered
-        """
+        if not item:
+            item = self.currentItem()
+
         inverted_hotkey_dict = {}
-        file_path = self.filepath() + '/hotkeys.json'
-        hotkey_dict = Locals().getFileDict(file_path)
+        hotkey_dict = self.hotkeyDict(item=item)
         for file_path in list(hotkey_dict.keys()):
             hotkey = hotkey_dict[file_path]
             inverted_hotkey_dict[hotkey] = file_path
-
         return inverted_hotkey_dict
 
-    def checkHotkeyExistance(self, hotkey):
+    def checkHotkeyExistence(self, hotkey, item=None):
+        """ Checks to see if this hotkey already exists
+
+        Args:
+            hotkey (str): of QKeySequence
+                QtGui.QKeySequence().toString
         """
-        @hotkey: <str> from QtGui.QKeySequence().toString
-        checks to see if this hotkey already exists in the current
-        master hotkey settings
-        """
-        hotkeys_dict = self.getInvertedHotkeyDict()
+        if not item:
+            item = self.currentItem()
+
+        hotkeys_dict = self.invertedHotkeyDict(item=item)
         if hotkey in list(hotkeys_dict.keys()):
             return True
         else:
@@ -693,23 +791,23 @@ class ScriptTreeWidget(QTreeWidget):
 
             # check to make sure its under designs/scripts,
             # if not send to top most level of appropriate category
-            if action.text() == 'Create Hotkey Design':
+            if action.text() == "Create Hotkey Design":
                 self.createNewItem(current_parent, item_type=BaseItem.HOTKEY)
-            elif action.text() == 'Create Gesture Design':
+            elif action.text() == "Create Gesture Design":
                 self.createNewItem(current_parent, item_type=BaseItem.GESTURE)
-            elif action.text() == 'Create Script':
+            elif action.text() == "Create Script":
                 self.createNewItem(current_parent, BaseItem.SCRIPT)
-            elif action.text() == 'Create Group':
+            elif action.text() == "Create Group":
                 self.createNewItem(current_parent, BaseItem.GROUP)
-            elif action.text() == 'Get File Path':
+            elif action.text() == "Get File Path":
                 print(self.currentItem().filepath())
         pos = event.globalPos()
         menu = QMenu(self)
-        menu.addAction('Create Hotkey Design')
-        menu.addAction('Create Gesture Design')
-        menu.addAction('Create Script')
-        menu.addAction('Create Group')
-        menu.addAction('Get File Path')
+        menu.addAction("Create Hotkey Design")
+        menu.addAction("Create Gesture Design")
+        menu.addAction("Create Script")
+        menu.addAction("Create Group")
+        menu.addAction("Get File Path")
         menu.popup(pos)
         action = menu.exec_(QCursor.pos())
         if action is not None:
@@ -731,15 +829,15 @@ class ScriptTreeWidget(QTreeWidget):
         if isinstance(current_item, ScriptItem):
             code_tab = script_editor_widget.designTabWidget().codeWidget()
             file_path = current_item.filepath()
-            current_file = open('%s' % (file_path), 'r')
+            current_file = open("%s" % (file_path), "r")
             text_list = current_file.readlines()
-            text = ''.join(text_list)
+            text = "".join(text_list)
             code_tab.setPlainText(text)
             current_file.close()
             script_editor_widget.setCurrentItem(current_item)
         return QTreeWidget.selectionChanged(self, event, *args, **kwargs)
     # todo update drag/drop
-    # all of these creates can be merged under one function that has a 'create type'
+    # all of these creates can be merged under one function that has a "create type"
 
     # def dragEnterEvent(self, *args, **kwargs):
     #     """ set up flags for drag/drop so that an item cannot be moved out of its top most item"""
@@ -795,12 +893,12 @@ class ScriptTreeWidget(QTreeWidget):
     #     old_file_dir = old_parent.filepath()
     #     if isinstance(old_parent, HotkeyDesignMasterItem):
     #         old_file_dir = old_parent.getFileDir()
-    #     old_file_path = old_file_dir + '/' + item_name
+    #     old_file_path = old_file_dir + "/" + item_name
     #
     #     new_file_dir = new_parent.filepath()
     #     if isinstance(new_parent, HotkeyDesignMasterItem):
     #         new_file_dir = new_parent.getFileDir()
-    #     new_file_path = new_file_dir + '/' + item_name
+    #     new_file_path = new_file_dir + "/" + item_name
     #
     #     # move file
     #     shutil.move(str(old_file_path), str(new_file_path))
@@ -830,7 +928,7 @@ class ScriptTreeWidget(QTreeWidget):
             # create/show tab if it exists/doesnt
             for index in range(tab_bar.count()):
                 widget = design_tab.widget(index)
-                if hasattr(widget, 'getItem'):
+                if hasattr(widget, "getItem"):
                     if widget.getItem().getHash() == current_item.getHash():
                         design_tab.setCurrentWidget(widget)
                         return
@@ -853,7 +951,7 @@ class ScriptTreeWidget(QTreeWidget):
         elif isinstance(current_item, GestureDesignItem):
             for index in range(tab_bar.count()):
                 widget = design_tab.widget(index)
-                if hasattr(widget, 'getItem'):
+                if hasattr(widget, "getItem"):
                     if widget.getItem().getHash() == current_item.getHash():
                         design_tab.setCurrentWidget(widget)
                         return
@@ -890,6 +988,8 @@ class ScriptTreeWidget(QTreeWidget):
 
     def deleteItem(self, item):
         if item:
+
+
             if isinstance(item, GroupItem):
                 # has to recusively delete all children?
                 for index in range(item.childCount()):
@@ -919,50 +1019,48 @@ class ScriptTreeWidget(QTreeWidget):
                 # needs to update all buttons again?
                 self.updateAllButtons()
                 for directory in script_editor_widget.scriptsDirectories():
-                    self.updateAllDesigns(directory, '', file_path)
+                    self.updateAllDesigns(directory, "", file_path)
 
                 # del item
                 index = item.parent().indexOfChild(item)
                 item.parent().takeChild(index)
 
                 # del key
-                del self.itemDict()[str(item.getHash())]
+                del self.itemDict()[str(item.filepath())]
 
     def keyPressEvent(self, event, *args, **kwargs):
         if self.accepts_inputs is True:
-            if event.text() != '':
+            if event.text() != "":
                 # reset hotkey if user presses backspace/delete
                 if(
                     event.key() == Qt.Key_Backspace
                     or event.key() == Qt.Key_Delete
                 ):
-                    inverted_hotkey_dict = self.getInvertedHotkeyDict()
+                    inverted_hotkey_dict = self.invertedHotkeyDict()
                     hotkey = self.currentItem().text(2)
                     item_path = inverted_hotkey_dict[hotkey]
-                    self.deleteHotkeyFromGlobalRegistry(item_path)
+                    self.removeHotkeyFromItem(item_path)
                     return QTreeWidget.keyPressEvent(self, event, *args, **kwargs)
 
-                # get modifiers, not sure if I'm still using this...
+                # get modifiers, not sure if I"m still using this...
                 self.shift = bool(event.modifiers() & Qt.ShiftModifier)
                 self.control = bool(event.modifiers() & Qt.ControlModifier)
                 self.alt = bool(event.modifiers() & Qt.AltModifier)
 
                 # get key sequence
-                hotkey = QKeySequence(
-                    int(event.modifiers()) + event.key()
-                ).toString()
+                hotkey = QKeySequence(int(event.modifiers()) + event.key()).toString()
 
-                # check existance of hotkey, and append the keypath to the
+                # check existence of hotkey, and append the keypath to the
                 # global hotkey registry
-                hotkey_exists = self.checkHotkeyExistance(hotkey)
+                hotkey_exists = self.checkHotkeyExistence(hotkey)
                 if hotkey_exists is True:
                     # create pop up box
                     msg = QMessageBox()
                     msg.setIcon(QMessageBox.Information)
                     msg.setText(
-                        "The hotkey \' %s \' exists.  Would you like to override it and continue?" % hotkey
+                        "The hotkey \" %s \" exists.  Would you like to override it and continue?" % hotkey
                     )
-                    msg.setWindowTitle('omg its a duplicate')
+                    msg.setWindowTitle("omg its a duplicate")
                     msg.setStandardButtons(
                         QMessageBox.Ok | QMessageBox.Cancel
                     )
@@ -970,20 +1068,19 @@ class ScriptTreeWidget(QTreeWidget):
 
                     # if user accepts input
                     if retval == 1024:
-                        inverted_hotkey_dict = self.getInvertedHotkeyDict()
+                        inverted_hotkey_dict = self.invertedHotkeyDict()
                         item_path = inverted_hotkey_dict[hotkey]
-                        self.deleteHotkeyFromGlobalRegistry(item_path)
+                        self.removeHotkeyFromItem(item_path)
                         self.currentItem().setText(2, hotkey)
-                        self.appendHotkeyToGlobalRegistry(item=self.currentItem(), hotkey=hotkey)
+                        self.addHotkeyToItem(item=self.currentItem(), hotkey=hotkey)
                 else:
                     self.currentItem().setText(2, hotkey)
-                    self.appendHotkeyToGlobalRegistry(item=self.currentItem(), hotkey=hotkey)
+                    self.addHotkeyToItem(item=self.currentItem(), hotkey=hotkey)
 
         else:
             if event.key() == Qt.Key_Delete or event.key() == Qt.Key_Backspace:
-                # ===================================================================
+                if isinstance(self.currentItem(), ScriptDirectoryItem): return
                 # if enter pressed show warning box
-                # ===================================================================
                 msg = QMessageBox()
                 msg.setIcon(QMessageBox.Information)
                 msg.setWindowTitle("Are ya sure matey!?!?? (said like a pirate)")
@@ -991,9 +1088,7 @@ class ScriptTreeWidget(QTreeWidget):
                     QMessageBox.Ok | QMessageBox.Cancel
                 )
                 retval = msg.exec_()
-                # ===================================================================
                 # if user selects ok on warning box
-                # ===================================================================
                 if retval == 1024:
                     item = self.currentItem()
                     self.deleteItem(item)
@@ -1033,15 +1128,14 @@ class DataTypeDelegate(QItemDelegate):
                 self.parent().accepts_inputs = True
                 delegate_widget = QLabel(parent)
                 delegate_widget.setStyleSheet(
-                    'background-color: rgb(240, 200, 0);\
-                    color: rgb(15, 55, 255)'
+                    "background-color: rgb(240, 200, 0);\
+                    color: rgb(15, 55, 255)"
                 )
                 return delegate_widget
         else:
             return QItemDelegate.createEditor(self, parent, option, index)
 
     def closeEditor(self, *args, **kwargs):
-        print('close')
         self.parent().accepts_inputs = False
         return QItemDelegate.closeEditor(self, *args, **kwargs)
 
@@ -1049,20 +1143,20 @@ class DataTypeDelegate(QItemDelegate):
     def setEditorData(self, editor, index):
         text = index.model().data(index, Qt.DisplayRole)
         editor.setText(text)
-        #editor.setText('')
+        #editor.setText("")
         #self.closeEditor()
         return QItemDelegate.setEditorData(self, editor, index)
 
     def setModelData(self, editor, model, index):
         """
-        # swap out 'v' for current value
+        # swap out "v" for current value
         """
         # =======================================================================
         # get data
         # =======================================================================
         self.parent().accepts_inputs = False
         new_value = editor.text()
-        if new_value == '':
+        if new_value == "":
             return
         model.setData(index, QVariant(new_value))
 
@@ -1083,7 +1177,7 @@ class BaseItem(QTreeWidgetItem):
     def __init__(
         self,
         parent=None,
-        text='BaseItem',
+        text="BaseItem",
         unique_hash=None
     ):
         super(BaseItem, self).__init__(parent)
@@ -1091,7 +1185,7 @@ class BaseItem(QTreeWidgetItem):
     def initialize(
         self,
         parent=None,
-        text='Base Item',
+        text="Base Item",
         unique_hash=None,
         file_dir=None
     ):
@@ -1103,11 +1197,11 @@ class BaseItem(QTreeWidgetItem):
         @file_dir: <str> directory of file
         """
         def getFileName(unique_hash, text):
-            file_name = '%s.%s' % (unique_hash, text)
+            file_name = "%s.%s" % (unique_hash, text)
             if self.getItemType() == BaseItem.SCRIPT:
-                file_name += '.py'
+                file_name += ".py"
             elif self.getItemType() == BaseItem.HOTKEY:
-                file_name += '.json'
+                file_name += ".json"
             return file_name
 
         # set meta data
@@ -1118,13 +1212,13 @@ class BaseItem(QTreeWidgetItem):
             unique_hash = self.createHash(text, self.getFileDir())
             file_name = getFileName(unique_hash, text)
             self.setFileName(file_name)
-            self.setFilepath(self.getFileDir() + '/' + self.getFileName())
+            self.setFilepath(self.getFileDir() + "/" + self.getFileName())
             # why am I creating a dir here? for everything?
             self.createData(self.filepath())
         # set up item meta data
         file_name = getFileName(unique_hash, text)
         self.setFileName(file_name)
-        self.setFilepath(self.getFileDir() + '/' + self.getFileName())
+        self.setFilepath(self.getFileDir() + "/" + self.getFileName())
         self.setHash(unique_hash)
 
         # set display text
@@ -1156,9 +1250,9 @@ class BaseItem(QTreeWidgetItem):
     def getHashList(self, location, hash_list=[]):
         """ Returns a list of all of the uniques hashes in the directory"""
         for child in os.listdir(location):
-            child_location = '%s/%s' % (location, child)
-            if '.' in child:
-                unique_hash = child.split('.')[0]
+            child_location = "%s/%s" % (location, child)
+            if "." in child:
+                unique_hash = child.split(".")[0]
                 hash_list.append(unique_hash)
 
             if os.path.isdir(child_location):
@@ -1241,7 +1335,7 @@ class GroupItem(BaseItem):
 #         self,
 #         parent=None,
 #         filepath="",
-#         text='Script',
+#         text="Script",
 #         unique_hash=None
 #     ):
 #         super(ScriptMasterItem, self).__init__(parent)
@@ -1250,18 +1344,18 @@ class GroupItem(BaseItem):
 #             & ~Qt.ItemIsEditable
 #             & ~Qt.ItemIsDragEnabled
 #         )
-#         self.setFileDir(filepath + '/scripts')
-#         self.setFilepath(filepath + '/scripts')
+#         self.setFileDir(filepath + "/scripts")
+#         self.setFilepath(filepath + "/scripts")
 #         self.setText(0, text)
 #         self.setHash(unique_hash)
-#         self.setItemType('master')
+#         self.setItemType("master")
 
 
 class ScriptItem(BaseItem):
     def __init__(
             self,
             parent=None,
-            text='Script',
+            text="Script",
             unique_hash=None,
             file_dir=None
     ):
@@ -1284,8 +1378,8 @@ class ScriptItem(BaseItem):
         )
 
     def createData(self, file_path):
-        current_file = open(file_path, 'w')
-        current_file.write('')
+        current_file = open(file_path, "w")
+        current_file.write("")
         current_file.close()
 
 
@@ -1305,29 +1399,29 @@ class HotkeyDesignBaseItem(BaseItem):
         @file_path <str> path to file
         """
         """
-        current_file = open(file_path, 'w')
+        current_file = open(file_path, "w")
         # copy/paste from design tab
         button_list = [
-            '1', '2', '3', '4',
-            'q', 'w', 'e', 'r',
-            'a', 's', 'd', 'f',
-            'z', 'x', 'c', 'v',
+            "1", "2", "3", "4",
+            "q", "w", "e", "r",
+            "a", "s", "d", "f",
+            "z", "x", "c", "v",
         ]
-        current_file.write(r'=|'.join(button_list) + '=')
+        current_file.write(r"=|".join(button_list) + "=")
         current_file.close()
         """
-        hotkeys = '1234qwerasdfzxcv'
+        hotkeys = "1234qwerasdfzxcv"
         hotkey_dict = {}
         for letter in hotkeys:
-            hotkey_dict[letter] = ''
+            hotkey_dict[letter] = ""
         if file_path:
             # Writing JSON data
-            with open(file_path, 'w') as f:
+            with open(file_path, "w") as f:
                 json.dump(hotkey_dict, f)
 
 
 # class HotkeyDesignMasterItem(HotkeyDesignBaseItem):
-#     def __init__(self, parent=None, filepath="", text='HotkeyDesign', unique_hash='master'):
+#     def __init__(self, parent=None, filepath="", text="HotkeyDesign", unique_hash="master"):
 #         super(HotkeyDesignMasterItem, self).__init__(parent)
 #         self.setFlags(
 #             self.flags()
@@ -1335,9 +1429,9 @@ class HotkeyDesignBaseItem(BaseItem):
 #             & ~Qt.ItemIsDragEnabled
 #         )
 #
-#         self.setFileDir(filepath + '/designs')
-#         self.setFileName('master.json')
-#         self.setFilepath(self.getFileDir() + '/' + self.getFileName())
+#         self.setFileDir(filepath + "/designs")
+#         self.setFileName("master.json")
+#         self.setFilepath(self.getFileDir() + "/" + self.getFileName())
 #
 #         if not os.path.exists(self.filepath()):
 #             self.createData(self.filepath())
@@ -1351,7 +1445,7 @@ class HotkeyDesignItem(HotkeyDesignBaseItem):
     def __init__(
         self,
         parent=None,
-        text='HotkeyDesign',
+        text="HotkeyDesign",
         unique_hash=None,
         file_dir=None
     ):
@@ -1377,7 +1471,7 @@ class GestureDesignItem(HotkeyDesignBaseItem):
     def __init__(
         self,
         parent=None,
-        text='GestureDesign',
+        text="GestureDesign",
         unique_hash=None,
         file_dir=None
     ):
@@ -1403,13 +1497,13 @@ class GestureDesignItem(HotkeyDesignBaseItem):
         Creates the hotkey design file as a JSON
         @file_path <str> path to file
         """
-        hotkeys = '01234567'
+        hotkeys = "01234567"
         hotkey_dict = {}
         for letter in hotkeys:
-            hotkey_dict[letter] = ''
+            hotkey_dict[letter] = ""
         if file_path:
             # Writing JSON data
-            with open(file_path, 'w') as f:
+            with open(file_path, "w") as f:
                 json.dump(hotkey_dict, f)
 
 
@@ -1426,10 +1520,10 @@ class DesignTab(QTabWidget):
         self.setAcceptDrops(True)
 
         self._python_editor_widget = python_editor()
-        self.addTab(self._python_editor_widget, 'Python')
+        self.addTab(self._python_editor_widget, "Python")
 
     def __name__(self):
-        return '__main_tab__'
+        return "__main_tab__"
 
     def setPythonEditor(self, editor_widget):
         self._python_editor_widget = editor_widget
@@ -1454,7 +1548,7 @@ class DesignTab(QTabWidget):
         tab_bar = design_tab.tabBar()
         for index in range(tab_bar.count()):
             widget = design_tab.widget(index)
-            if hasattr(widget, 'file_path'):
+            if hasattr(widget, "file_path"):
                 if old_file_path in widget.filepath():
                     file_path = widget.filepath().replace(old_file_path, new_file_path)
                     widget.setFilepath(file_path)
@@ -1508,7 +1602,7 @@ class DesignTab(QTabWidget):
         return QTabWidget.resizeEvent(self, event, *args, **kwargs)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys, os
     from qtpy.QtWidgets import QApplication
     from cgwidgets.utils import centerWidgetOnScreen, getDefaultSavePath
@@ -1517,7 +1611,7 @@ if __name__ == '__main__':
     os.environ["CGWscripts"] = ":".join([
         getDefaultSavePath() + "/.scripts",
         getDefaultSavePath() + "/.scripts2",
-        '/media/ssd01/dev/katana/KatanaResources_old/ScriptsTest'
+        "/media/ssd01/dev/katana/KatanaResources_old/ScriptsTest"
     ])
 
     main_widget = ScriptEditorWidget()

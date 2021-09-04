@@ -160,19 +160,20 @@ class DesignWidget(object):
         self.setButtonSize()
 
     def updateButtons(self):
-        """
+        """ Todo update buttons
         # to get the hash? or I can just grab the hash directly from the button?
         # some thing some wehre is going to have to search for the item that is linked...
         # could store a dict with hashes?"""
         script_editor_widget = getWidgetAncestorByName(self, "ScriptEditorWidget")
         item_dict = script_editor_widget.scriptWidget().itemDict()
-
         button_list = self.getButtonDict()
         for key in list(button_list.keys()):
             button = button_list[key]
-            if hasattr(button, 'hash'):
-                if button.getHash():
-                    button.updateButton(current_item=item_dict[str(button.getHash())])
+            if hasattr(button, 'file_path'):
+                if button.filepath():
+                    item = item_dict[str(button.filepath())]
+                    button.updateButton(current_item=item)
+                    item_dict[str(button.filepath())] = item
 
     """ PROPERTIES """
     def setFilepath(self, file_path):
@@ -203,11 +204,10 @@ class DesignWidget(object):
         return self.item
 
 
-class DesignButtonWidget(object):
+class DesignButtonInterface(object):
+    """Class to hold properties and methods that will need to be shared across all DesignButtons
     """
-    Class to hold properties and methods that will need
-    to be shared across all DesignButtons
-    """
+
     def __name__(self):
         return '__design_button_widget__'
 
@@ -260,8 +260,8 @@ class DesignButtonWidget(object):
                 hotkey_dict[self.getHotkey()] = ''
             else:
                 hotkey_dict[self.getHotkey()] = file_path
+
             # write out json
-            #design_path = self.getView().filepath()
             design_path = self.getDesignPath()
             if file_path:
                 # Writing JSON data
@@ -269,25 +269,10 @@ class DesignButtonWidget(object):
                     json.dump(hotkey_dict, f)
 
     def updateButton(self, current_item=None):
-        if current_item == None:
-            self.setText(self.getHotkey())
-            delattr(self, 'hash')
-            delattr(self, 'file_path')
-            delattr(self, 'item')
-            delattr(self, 'file_type')
-            self.setButtonColor()
-        else:
+        if current_item:
             item_type = current_item.getItemType()
             dropable_list = ['script', 'gesture', 'hotkey']
             if item_type in dropable_list:
-                """
-                self.setText(
-                    self.hotkey + '\n%s\n(%s)' % (
-                        current_item.text(0), current_item.getHash()
-                    )
-                )
-                """
-                #self.setText(self.hotkey + '\n%s' % (current_item.text(0)))
                 if isinstance(self, GestureDesignEditorButton):
                     self.setText('%s' % (current_item.text(0)))
                 elif isinstance(self, GestureDesignGUIButton):
@@ -308,6 +293,13 @@ class DesignButtonWidget(object):
                     self.setButtonColor()
                 else:
                     self.updateButton(current_item=None)
+        else:
+            self.setText(self.getHotkey())
+            delattr(self, 'hash')
+            delattr(self, 'file_path')
+            # delattr(self, 'item')
+            delattr(self, 'file_type')
+            self.setButtonColor()
 
 
 class HotkeyDesignWidget(QWidget, DesignWidget):
@@ -335,7 +327,7 @@ class HotkeyDesignWidget(QWidget, DesignWidget):
         return QWidget.resizeEvent(self, *args, **kwargs)
 
 
-class HotkeyDesignButtonWidget(QPushButton, DesignButtonWidget):
+class HotkeyDesignButtonWidget(QPushButton, DesignButtonInterface):
     def __init__(self, parent=None, text=None, unique_hash=None):
         super(HotkeyDesignButtonWidget, self).__init__(parent)
         self.setText(text)
@@ -681,7 +673,7 @@ class GestureDesignWidget(QGraphicsView, DesignWidget):
 
 
 class GestureDesignButtonWidget(
-        QGraphicsItemGroup, DesignButtonWidget
+        QGraphicsItemGroup, DesignButtonInterface
 ):
     """
     @points_list: <list> of <QPointF> for building the polygon
@@ -802,7 +794,7 @@ class GestureDesignButtonWidget(
 
 
 class GestureDesignPolyWidget(
-        QGraphicsPolygonItem, DesignButtonWidget
+        QGraphicsPolygonItem, DesignButtonInterface
 ):
     def __init__(self, parent=None, points_list=None):
         super(GestureDesignPolyWidget, self).__init__(parent)
@@ -1038,6 +1030,7 @@ class HotkeyDesignGUIButton(HotkeyDesignButtonWidget):
             pos = self.parentWidget().init_pos
             popup_hotkey_menu = PopupHotkeyMenu(self, file_path=file_path, pos=pos)
             popup_hotkey_menu.show()
+
         else:
             pos = self.parentWidget().init_pos
             popup_hotkey_menu = PopupHotkeyMenu(file_path=file_path, pos=pos)
@@ -1045,8 +1038,6 @@ class HotkeyDesignGUIButton(HotkeyDesignButtonWidget):
 
 
 """ GESTURE WIDGETS """
-
-
 class GestureDesignEditorWidget(GestureDesignWidget):
     def __init__(
         self,
@@ -1314,14 +1305,9 @@ class GestureDesignGUIButton(GestureDesignButtonWidget):
         )
         self.text_item.setPos(type_point)
 
-        #self.label_item = GestureDesignLabelItem(text=text, pos=type_point)
-
-        #self.label_item.setPos(type_point)
-
         # parent items
         self.addToGroup(self.poly_item)
         self.text_item.setParentItem(self.poly_item)
-        #self.label_item.setParentItem(self.poly_item)
 
         # set up attributes
         self.setHotkey(hotkey)
@@ -1332,7 +1318,6 @@ class GestureDesignGUIButton(GestureDesignButtonWidget):
         self.setHash(unique_hash)
 
     def execute(self):
-        # todo this will fail... loading katana, AND imp
         if self.getFileType() == 'script':
             if os.path.exists(self.filepath()):
                 with open(self.filepath()) as script_descriptor:
@@ -1350,19 +1335,19 @@ class GestureDesignGUIButton(GestureDesignButtonWidget):
         self.scene().views()[0].parent().close()
 
     def hoverEnterEvent(self, *args, **kwargs):
-        if hasattr (self, 'file_path'):
+        if hasattr(self, 'file_path'):
             self.execute()
         return GestureDesignButtonWidget.hoverEnterEvent(self, *args, **kwargs)
 
 
 class GestureDesignGUITextItem(QGraphicsTextItem):
     def __init__(
-            self,
-            parent=None,
-            text=None,
-            hotkey=None,
-            pos=None
-        ):
+        self,
+        parent=None,
+        text=None,
+        hotkey=None,
+        pos=None
+    ):
 
         super(GestureDesignGUITextItem, self).__init__(parent)
         self.setPlainText(text)
@@ -1447,6 +1432,10 @@ class PopupHotkeyMenu(QWidget):
         design_widget.setFocus()
         main_layout.addWidget(design_widget)
 
+    def showEvent(self, event):
+        QWidget.showEvent(self, event)
+        self.setFocus()
+
 
 class PopupGestureMenu(QWidget):
     def __init__(self, parent=None, file_path=None, pos=None):
@@ -1490,7 +1479,8 @@ if __name__ == "__main__":
 
     app = QApplication(sys.argv)
 
-    hotkey_file_path = "/media/ssd01/dev/katana/KatanaResources_old/Scripts/designs/7352456805894839296.Debug.json"
+    # hotkey_file_path = "/home/brian/.cgwidgets/.scripts/5745126593639012352.hotkey1.json"
+    hotkey_file_path = "/home/brian/.cgwidgets/.scripts/991172910425919104.hotkey2.json"
     popup_widget = PopupHotkeyMenu(file_path=hotkey_file_path)
     popup_widget.show()
 
