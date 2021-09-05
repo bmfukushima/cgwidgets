@@ -49,12 +49,13 @@ Data:
 """
 """
 Todo:
+    * Metadata
+        - Setup locking mechanisms...
+        - Order of files?
+        - Filedir display names
+            metadata?
     * Drag/Drop
         - Need to set up drag/drop for moving files around the system
-        - Setup locking mechanisms...
-            metadata?
-    * Update All Designs/Hotkeys
-        - Should fail... since it can't find them anymore
     * Set focus on popup
         - Hotkey Design popup is not setting focus, so hotkeys don't work =/
 
@@ -65,9 +66,6 @@ Todo:
     - Remove master design item as hotkey...
             - renameFile has a hack patch right now to fix this...
 - Moving item to group does NOT update master hotkey file...
-    
-- Add save path...
-    - How to have this work on larger networks with multiple Katana Resources?
 
 - Add fifth row of fingers for "5tgb"
 
@@ -91,7 +89,6 @@ Todo:
         python tabs are now popup?
 
     how to automatically source this in? as it wont be in the same standard dir structure?
-
 
 # figure out QApp stuff... just using imp to load atm
 
@@ -345,7 +342,6 @@ class ScriptTreeWidget(QTreeWidget):
 
             )
             # Populate Items from Directories
-
             self.populateDirectory(script_directory, directory_item, script_directory)
 
         root_item = self.invisibleRootItem()
@@ -417,6 +413,16 @@ class ScriptTreeWidget(QTreeWidget):
                         item.setText(2, hotkey_dict[file_path])
 
     """ ITEMS """
+    def getAllScriptDirectoryItems(self):
+        """ Gets all of the script directory items
+
+        Returns (list): of ScriptDirectoryItem"""
+        script_directories = []
+        for index in range(self.invisibleRootItem().childCount()):
+            script_directories.append(self.invisibleRootItem().child(index))
+
+        return script_directories
+
     def getAllChildren(self, item, child_list=[]):
         """ Get all children/grandchildren of specified item
 
@@ -457,14 +463,10 @@ class ScriptTreeWidget(QTreeWidget):
     def itemDict(self):
         return self._item_dict
 
-    def checkParentType(self, item):
-        if item.parent():
-            return self.checkParentType(item.parent())
-        else:
-            return item
-
     def getScriptDirectoryItem(self, item):
-        """ Gets the current ScriptDirectoryItem
+        """ Gets the ScriptDirectoryItem from the item provided
+
+        This is the items top level item (right below the invisible root)
 
         Return (ScriptDirectoryItem)"""
         if item:
@@ -498,11 +500,7 @@ class ScriptTreeWidget(QTreeWidget):
 
                 # update design files
                 script_editor_widget = getWidgetAncestor(self, ScriptEditorWidget)
-                self.updateAllDesigns(
-                    script_editor_widget.filepath() + "/designs",
-                    new_file_dir,
-                    old_file_dir
-                )
+                self.updateAllDesigns(new_file_dir, old_file_dir)
                 self.updateAllButtons()
 
     def updateAllItemPaths(self, current_item, new_file_dir, old_file_dir):
@@ -547,11 +545,7 @@ class ScriptTreeWidget(QTreeWidget):
             os.rename(old_file_path, new_file_path)
         # update design files
         script_editor_widget = getWidgetAncestor(self, ScriptEditorWidget)
-        self.updateAllDesigns(
-            script_editor_widget.filepath() + "/designs",
-            new_file_path,
-            old_file_path
-        )
+        self.updateAllDesigns(new_file_path, old_file_path)
 
         # update all items
         self.updateAllItemPaths(current_item, new_file_path, old_file_path)
@@ -637,11 +631,21 @@ class ScriptTreeWidget(QTreeWidget):
                 ):
                     updateItem(current_item)
 
-    def updateAllDesigns(self, start_dir, new_dir, old_dir):
-        """ updates all of the design files
+    def updateAllDesigns(self, new_dir, old_dir):
+        """ Updates all of the design files in all of the script directories
 
         Args:
-            start_dir (str):  directory to start searching from
+            new_dir (str):  New Path to add and replace old path with
+            old_dir (str):  Old path to look for/remove """
+        script_editor_widget = getWidgetAncestor(self, ScriptEditorWidget)
+        for start_dir in script_editor_widget.scriptsDirectories():
+            self.__updateAllDesigns(start_dir, new_dir, old_dir)
+
+    def __updateAllDesigns(self, start_dir, new_dir, old_dir):
+        """ updates all of the design files in the directory specified
+
+        Args:
+            start_dir (str): Directory to search and replace from
             new_dir (str):  New Path to add and replace old path with
             old_dir (str):  Old path to look for/remove
         """
@@ -650,12 +654,8 @@ class ScriptTreeWidget(QTreeWidget):
 
         for file in os.listdir(start_dir):
             file_path = start_dir + "/" + file
-            if os.path.isdir(file_path) is True:
-                return self.updateAllDesigns(
-                    file_path,
-                    new_dir,
-                    old_dir
-                )
+            if os.path.isdir(file_path):
+                return self.__updateAllDesigns(file_path, new_dir, old_dir)
 
             elif os.path.isfile(file_path):
                 update_list = [BaseItem.HOTKEY, BaseItem.GESTURE]
@@ -787,7 +787,6 @@ class ScriptTreeWidget(QTreeWidget):
                 or isinstance(current_parent, ScriptItem)
             ): # or isinstance(current_parent,HotkeyDesignMasterItem):
                 current_parent = self.currentItem().parent()
-            current_top_most_item = self.checkParentType(current_parent)
 
             # check to make sure its under designs/scripts,
             # if not send to top most level of appropriate category
@@ -839,31 +838,95 @@ class ScriptTreeWidget(QTreeWidget):
     # todo update drag/drop
     # all of these creates can be merged under one function that has a "create type"
 
-    # def dragEnterEvent(self, *args, **kwargs):
-    #     """ set up flags for drag/drop so that an item cannot be moved out of its top most item"""
-    #     # create list of all children...
-    #     current_top_most_item = self.checkParentType(self.currentItem())
-    #     self.temp_list = []
-    #
-    #     if isinstance(current_top_most_item, ScriptMasterItem):
-    #         item_list = self.getAllChildren(self.design_item, child_list=[])
-    #         self.design_item.setFlags(
-    #             self.design_item.flags() ^ Qt.ItemIsDropEnabled
-    #         )
-    #         self.temp_list.append(self.design_item)
-    #     elif isinstance(current_top_most_item, HotkeyDesignMasterItem):
-    #         item_list = self.getAllChildren(self.scripts_item, child_list=[])
-    #         self.scripts_item.setFlags(
-    #             self.scripts_item.flags() ^ Qt.ItemIsDropEnabled
-    #         )
-    #         self.temp_list.append(self.scripts_item)
-    #
-    #     for child in list(set(item_list)):
-    #         if isinstance(child, GroupItem):
-    #             self.temp_list.append(child)
-    #             child.setFlags(child.flags() ^ Qt.ItemIsDropEnabled)
-    #
-    #     return QTreeWidget.dragEnterEvent(self, *args, **kwargs)
+    def dragEnterEvent(self, *args, **kwargs):
+        """ set up flags for drag/drop so that an item cannot be moved out of its top most item"""
+        # create list of all children...
+
+        # enable drop into this directory
+        current_script_directory = self.getScriptDirectoryItem(self.currentItem())
+        # disable drop into other directories
+        for script_directory_item in self.getAllScriptDirectoryItems():
+            # disable drop into other directories
+            children = self.getAllChildren(script_directory_item, child_list=[])
+            if script_directory_item != current_script_directory:
+                script_directory_item.setFlags(script_directory_item.flags() & ~Qt.ItemIsDropEnabled)
+                for child in children:
+                    child.setFlags(child.flags() & ~Qt.ItemIsDropEnabled)
+
+            # enable drop into this directory
+            if script_directory_item == current_script_directory:
+                script_directory_item.setFlags(script_directory_item.flags() | Qt.ItemIsDropEnabled)
+                for child in children:
+                    if isinstance(child, GroupItem):
+                        child.setFlags(child.flags() | Qt.ItemIsDropEnabled)
+
+        # print(current_script_directory.text(0))
+        self.temp_list = []
+
+
+        """     
+        if isinstance(current_top_most_item, ScriptMasterItem):
+            item_list = self.getAllChildren(self.design_item, child_list=[])
+            self.design_item.setFlags(
+                self.design_item.flags() ^ Qt.ItemIsDropEnabled
+            )
+            self.temp_list.append(self.design_item)
+        elif isinstance(current_top_most_item, HotkeyDesignMasterItem):
+            item_list = self.getAllChildren(self.scripts_item, child_list=[])
+            self.scripts_item.setFlags(
+                self.scripts_item.flags() ^ Qt.ItemIsDropEnabled
+            )
+            self.temp_list.append(self.scripts_item)
+
+        for child in list(set(item_list)):
+            if isinstance(child, GroupItem):
+                self.temp_list.append(child)
+                child.setFlags(child.flags() ^ Qt.ItemIsDropEnabled)"""
+
+        return QTreeWidget.dragEnterEvent(self, *args, **kwargs)
+
+    def dropEvent(self, event, *args, **kwargs):
+        # when an item is dropped, its directory is updated along with all
+        # meta data relating to tabs/buttons/designs
+        # get attributes
+        current_item = self.currentItem()
+        old_parent = current_item.parent()
+
+        return_val = super(ScriptTreeWidget, self).dropEvent(event, *args, **kwargs)
+
+        new_parent = current_item.parent()
+        item_name = current_item.getFileName()
+
+        old_file_dir = old_parent.filepath()
+        if isinstance(old_parent, ScriptDirectoryItem):
+            old_file_dir = old_parent.getFileDir()
+        old_file_path = old_file_dir + "/" + item_name
+
+        new_file_dir = new_parent.filepath()
+        if isinstance(new_parent, ScriptDirectoryItem):
+            new_file_dir = new_parent.getFileDir()
+        new_file_path = new_file_dir + "/" + item_name
+
+        # move file
+        shutil.move(str(old_file_path), str(new_file_path))
+
+        # update
+        if isinstance(current_item, GroupItem):
+            self.updateGroup(current_item, new_file_dir, old_file_dir)
+        elif (
+            isinstance(current_item, ScriptItem)
+            or isinstance(current_item, GestureDesignItem)
+            or isinstance(current_item, HotkeyDesignItem)
+        ):
+            self.updateItem(current_item, new_file_dir, old_file_dir)
+            self.updateAllButtons()
+            script_editor_widget = getWidgetAncestor(self, ScriptEditorWidget)
+            script_editor_widget.designTabWidget().updateTabFilePath(new_file_path, old_file_path)
+        return return_val
+
+    def dragLeaveEvent(self, event):
+        print("drag leave")
+        return QTreeWidget.dragLeaveEvent(self, event)
 
     # def dragLeaveEvent(self, *args, **kwargs):
     #     # =======================================================================
@@ -1018,8 +1081,7 @@ class ScriptTreeWidget(QTreeWidget):
 
                 # needs to update all buttons again?
                 self.updateAllButtons()
-                for directory in script_editor_widget.scriptsDirectories():
-                    self.updateAllDesigns(directory, "", file_path)
+                self.updateAllDesigns(directory, "", file_path)
 
                 # del item
                 index = item.parent().indexOfChild(item)

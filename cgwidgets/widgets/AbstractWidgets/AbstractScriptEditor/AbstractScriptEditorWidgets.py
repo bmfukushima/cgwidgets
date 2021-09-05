@@ -23,6 +23,7 @@ from qtpy.QtWidgets import (
 from qtpy.QtGui import (QCursor, QTransform, QColor, QPolygonF, QTextBlockFormat, QTextCursor)
 from qtpy.QtCore import Qt, QPointF
 
+from cgwidgets.utils import getWidgetAncestor
 
 """ ABSTRACT CLASSES """
 
@@ -52,7 +53,7 @@ class DesignWidget(object):
             )
 
         elif button_type == 'hotkey gui':
-            button = HotkeyDesignGUIButton(
+            button = HotkeyDesignPopupButton(
                 parent=self,
                 text=text,
                 unique_hash=unique_hash
@@ -366,7 +367,6 @@ class HotkeyDesignButtonWidget(QPushButton, DesignButtonInterface):
                             'border-color: rgb(%s,0,0);' % color
                         )
                         new_color = '(%s,0,0)' % str(float(color) * .75)
-
                     elif hotkey in finger_list['s']:
                         style_sheet_list.append(
                             'border-color: rgb(0,%s,0);' % color
@@ -922,9 +922,7 @@ class HotkeyDesignEditorButton(HotkeyDesignButtonWidget):
         return current_item
 
     def getHotkeyDict(self):
-        """
-        Returns the hotkey dictionary or None
-        """
+        """Returns the hotkey dictionary or None"""
         if os.path.exists(self.parent().filepath()):
             return Locals().getFileDict(self.parent().filepath())
         else:
@@ -934,7 +932,6 @@ class HotkeyDesignEditorButton(HotkeyDesignButtonWidget):
         return self.parent().filepath()
 
     """ EVENTS """
-
     def dragEnterEvent(self, event, *args, **kwargs):
         current_item = self.getCurrentItem()
         item_type = current_item.getItemType()
@@ -952,89 +949,7 @@ class HotkeyDesignEditorButton(HotkeyDesignButtonWidget):
             if hasattr(self, 'file_path'):
                 self.updateFile(delete=True)
                 self.updateButton()
-        elif event.button() == Qt.LeftButton:
-            self.execute()
         return QPushButton.mouseReleaseEvent(self, event, *args, **kwargs)
-
-
-class HotkeyDesignGUIWidget(HotkeyDesignWidget):
-    def __init__(self, parent=None, item=None, file_path='', init_pos=None):
-        super(HotkeyDesignGUIWidget, self).__init__(parent)
-        # =======================================================================
-        # set up default attributes
-        # =======================================================================
-        self.setFilepath(file_path)
-        self.button_dict = {}
-        file_dict = Locals().getFileDict(self.filepath())
-
-        self.init_pos = init_pos
-        self.populate(file_dict, button_type='hotkey gui')
-
-    def setButtonSize(self):
-        """
-        Sets the button size and position, will be offset to simulate
-        a keyboard layout
-        """
-        button_spacing = .9
-        button_width, button_height = self.getButtonSize()
-        offset_amount = button_width * .2
-        modified_button_width = (
-            (float(button_width) - offset_amount)
-            + (offset_amount * .25)
-        )
-        for row_index, row in enumerate(self.button_list):
-            offset = (row_index*offset_amount)
-            for column_index, item in enumerate(row):
-                x_pos = (column_index * modified_button_width) + offset
-                y_pos = row_index * button_height
-                self.button_dict[item].setGeometry(
-                    int(x_pos),
-                    int(y_pos),
-                    int(modified_button_width * button_spacing),
-                    int(button_height * button_spacing)
-                )
-
-    def keyPressEvent(self, event, *args, **kwargs):
-        key = event.text()
-        button_dict = self.getButtonDict()
-        if key in button_dict.keys():
-            button_dict[key].execute()
-        elif Qt.Key_Escape:
-            self.parent().close()
-        return QWidget.keyPressEvent(self,event,  *args, **kwargs)
-
-
-class HotkeyDesignGUIButton(HotkeyDesignButtonWidget):
-    def __init__(self, parent=None, text=None, unique_hash=None):
-        super(HotkeyDesignGUIButton, self).__init__(parent)
-        self.setText(text)
-        self.setHotkey(text)
-        self.setAcceptDrops(True)
-        self.clicked.connect(self.execute)
-        self.setHash(unique_hash)
-
-    def execute(self):
-        if self.getFileType() == 'script':
-            if os.path.exists(self.filepath()):
-                with open(self.filepath()) as script_descriptor:
-                    exec(script_descriptor.read())
-        elif self.getFileType() == 'hotkey':
-            self.showHotkeyDesign(self.filepath())
-        elif self.getFileType() == 'gesture':
-            gesture_menu = PopupGestureMenu(file_path=self.filepath())
-            gesture_menu.show()
-        self.parent().parent().close()
-
-    def showHotkeyDesign(self, file_path):
-        if __name__ == '__main__':
-            pos = self.parentWidget().init_pos
-            popup_hotkey_menu = PopupHotkeyMenu(self, file_path=file_path, pos=pos)
-            popup_hotkey_menu.show()
-
-        else:
-            pos = self.parentWidget().init_pos
-            popup_hotkey_menu = PopupHotkeyMenu(file_path=file_path, pos=pos)
-            popup_hotkey_menu.show()
 
 
 """ GESTURE WIDGETS """
@@ -1406,6 +1321,81 @@ class GestureDesignGUITextItem(QGraphicsTextItem):
 
 
 """ POPUP MENUS """
+class HotkeyDesignPopupWidget(HotkeyDesignWidget):
+    def __init__(self, parent=None, item=None, file_path='', init_pos=None):
+        super(HotkeyDesignPopupWidget, self).__init__(parent)
+        # =======================================================================
+        # set up default attributes
+        # =======================================================================
+        self.setFilepath(file_path)
+        self.button_dict = {}
+        file_dict = Locals().getFileDict(self.filepath())
+
+        self.init_pos = init_pos
+        self.populate(file_dict, button_type='hotkey gui')
+
+    def setButtonSize(self):
+        """
+        Sets the button size and position, will be offset to simulate
+        a keyboard layout
+        """
+        button_spacing = .9
+        button_width, button_height = self.getButtonSize()
+        offset_amount = button_width * .2
+        modified_button_width = (
+            (float(button_width) - offset_amount)
+            + (offset_amount * .25)
+        )
+        for row_index, row in enumerate(self.button_list):
+            offset = (row_index*offset_amount)
+            for column_index, item in enumerate(row):
+                x_pos = (column_index * modified_button_width) + offset
+                y_pos = row_index * button_height
+                self.button_dict[item].setGeometry(
+                    int(x_pos),
+                    int(y_pos),
+                    int(modified_button_width * button_spacing),
+                    int(button_height * button_spacing)
+                )
+
+    def keyPressEvent(self, event, *args, **kwargs):
+        key = event.text()
+        button_dict = self.getButtonDict()
+        if key in button_dict.keys():
+            button_dict[key].execute()
+        elif Qt.Key_Escape:
+            self.parent().close()
+        return QWidget.keyPressEvent(self, event,  *args, **kwargs)
+
+
+class HotkeyDesignPopupButton(HotkeyDesignButtonWidget):
+    def __init__(self, parent=None, text=None, unique_hash=None):
+        super(HotkeyDesignPopupButton, self).__init__(parent)
+        self.setText(text)
+        self.setHotkey(text)
+        self.setAcceptDrops(True)
+        self.clicked.connect(self.execute)
+        self.setHash(unique_hash)
+
+    def execute(self):
+        if self.getFileType() == 'script':
+            if os.path.exists(self.filepath()):
+                with open(self.filepath()) as script_descriptor:
+                    exec(script_descriptor.read())
+        elif self.getFileType() == 'hotkey':
+            self.showHotkeyDesign(self.filepath())
+        elif self.getFileType() == 'gesture':
+            gesture_menu = PopupGestureMenu(self, file_path=self.filepath())
+            gesture_menu.show()
+
+        getWidgetAncestor(self, PopupHotkeyMenu).close()
+
+    def showHotkeyDesign(self, file_path):
+        pos = self.parentWidget().init_pos
+        popup_hotkey_menu = PopupHotkeyMenu(self, file_path=file_path, pos=pos)
+        popup_hotkey_menu.show()
+
+
 class PopupHotkeyMenu(QWidget):
     def __init__(self, parent=None, file_path=None, pos=None):
         super(PopupHotkeyMenu, self).__init__(parent)
@@ -1427,7 +1417,7 @@ class PopupHotkeyMenu(QWidget):
         # create layout
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
-        design_widget = HotkeyDesignGUIWidget(self, file_path=file_path, init_pos=pos)
+        design_widget = HotkeyDesignPopupWidget(self, file_path=file_path, init_pos=pos)
         design_widget.setFocusPolicy(Qt.StrongFocus)
         design_widget.setFocus()
         main_layout.addWidget(design_widget)
@@ -1479,8 +1469,8 @@ if __name__ == "__main__":
 
     app = QApplication(sys.argv)
 
-    # hotkey_file_path = "/home/brian/.cgwidgets/.scripts/5745126593639012352.hotkey1.json"
-    hotkey_file_path = "/home/brian/.cgwidgets/.scripts/991172910425919104.hotkey2.json"
+    hotkey_file_path = "/home/brian/.cgwidgets/.scripts/5745126593639012352.hotkey1.json"
+    # hotkey_file_path = "/home/brian/.cgwidgets/.scripts/991172910425919104.hotkey2.json"
     popup_widget = PopupHotkeyMenu(file_path=hotkey_file_path)
     popup_widget.show()
 
