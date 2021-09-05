@@ -51,7 +51,6 @@ class DesignWidget(object):
                 text=text,
                 unique_hash=unique_hash
             )
-
         elif button_type == 'hotkey gui':
             button = HotkeyDesignPopupButton(
                 parent=self,
@@ -70,7 +69,6 @@ class DesignWidget(object):
             # no idea why it's not setting with the pos being sent through...
             # so just using the post hack instead =\
             button.setPos(gesture_points_dict['pos'], gesture_points_dict['pos'])
-            #button.text_item.centerText(update_pos=False)
             button.text_item.centerText()
             self.scene().addItem(button)
         elif button_type == 'gesture gui':
@@ -97,6 +95,11 @@ class DesignWidget(object):
         gesture_points_dict=None,
         r0=None
     ):
+        """ Populates the design editor
+
+        Args:
+            file_dict (dict): from the filepath.json for a design item
+            item_dict (dict): of {filepath:item} that is stored on the ScriptEditorWidget"""
         # create button layout
         if 'hotkey' in button_type:
             self.button_list = [
@@ -120,7 +123,7 @@ class DesignWidget(object):
                     if 'gesture' in button_type:
                         text = name
                     else:
-                        text = item + '\n%s' % (name) #
+                        text = "{item}\n{name}".format(item=item, name=name)
                     self.button_dict[item] = self.createButton(
                         button_type=button_type,
                         text=text,
@@ -130,11 +133,10 @@ class DesignWidget(object):
                     )
                     self.button_dict[item].setHotkey(item)
                     self.button_dict[item].setFilepath(file_dict[item])
-
                     if item_dict:
-                        if unique_hash in list(item_dict.keys()):
-                            self.button_dict[item].setItem(item_dict[unique_hash]) #
-                            self.button_dict[item].setHash(unique_hash) #
+                        if file_dict[item] in list(item_dict.keys()):
+                            self.button_dict[item].setItem(item_dict[file_dict[item]])
+                            self.button_dict[item].setHash(unique_hash)
                     file_type = Locals().checkFileType(file_dict[item])
 
                     self.button_dict[item].setFileType(file_type=file_type)
