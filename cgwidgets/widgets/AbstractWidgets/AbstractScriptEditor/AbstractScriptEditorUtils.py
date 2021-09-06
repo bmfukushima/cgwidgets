@@ -11,9 +11,7 @@ class Utils(object):
             with open(file_path, 'r') as f:
                 hotkeys = json.load(f)
                 return hotkeys
-                # for key in list(hotkeys.keys()):
-                #     hotkeys[key] = str(hotkeys[key])
-                # return hotkeys
+
 
     def checkFileType(self, file_path):
         '''

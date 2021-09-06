@@ -26,8 +26,13 @@ from qtpy.QtCore import Qt, QPointF
 from cgwidgets.utils import getWidgetAncestor
 
 """ ABSTRACT CLASSES """
-
 class DesignWidget(object):
+    """ Design Widget base class
+
+    Attributes:
+        button_dict (dict): of all of the buttons
+            {"hotkey": QPushButton, "a", QPushButton}
+        """
     def __init__(self):
         self.button_dict = {}
 
@@ -35,13 +40,13 @@ class DesignWidget(object):
         return '__design_widget__'
 
     def createButton(
-            self,
-            button_type=None,
-            text=None,
-            unique_hash=None,
-            gesture_points_dict=None,
-            index=None
-        ):
+        self,
+        button_type=None,
+        text=None,
+        unique_hash=None,
+        gesture_points_dict=None,
+        index=None
+    ):
         if button_type is None:
             return
 
@@ -96,6 +101,8 @@ class DesignWidget(object):
         r0=None
     ):
         """ Populates the design editor
+
+        This also populates the button dict
 
         Args:
             file_dict (dict): from the filepath.json for a design item
@@ -163,10 +170,8 @@ class DesignWidget(object):
         self.setButtonSize()
 
     def updateButtons(self):
-        """ Todo update buttons
-        # to get the hash? or I can just grab the hash directly from the button?
-        # some thing some wehre is going to have to search for the item that is linked...
-        # could store a dict with hashes?"""
+        """ Updates all of the buttons file paths """
+
         script_editor_widget = getWidgetAncestorByName(self, "ScriptEditorWidget")
         item_dict = script_editor_widget.scriptWidget().itemDict()
         button_list = self.getButtonDict()
@@ -176,7 +181,6 @@ class DesignWidget(object):
                 if button.filepath():
                     item = item_dict[str(button.filepath())]
                     button.updateButton(current_item=item)
-                    item_dict[str(button.filepath())] = item
 
     """ PROPERTIES """
     def setFilepath(self, file_path):
@@ -795,16 +799,12 @@ class GestureDesignButtonWidget(
         #self.text_item.setDefaultTextColor(color)
 
 
-class GestureDesignPolyWidget(
-        QGraphicsPolygonItem, DesignButtonInterface
-):
+class GestureDesignPolyWidget(QGraphicsPolygonItem, DesignButtonInterface):
     def __init__(self, parent=None, points_list=None):
         super(GestureDesignPolyWidget, self).__init__(parent)
         self.drawPolygon(points_list)
-        # =======================================================================
-        # setup color
-        # =======================================================================
         """
+        # setup color
         brush = QBrush()
         brush_color = QColor()
         brush_color.setRgbF(1.0, 1.0, 0.0)
@@ -812,9 +812,8 @@ class GestureDesignPolyWidget(
         brush.setStyle(Qt.SolidPattern)
         self.setBrush(brush)
         """
-        # =======================================================================
+
         # hide border
-        # =======================================================================
         pen = self.pen()
         pen_color = QColor()
         pen_color.setRgb(255, 255, 255, 255)
@@ -1019,27 +1018,20 @@ class GestureDesignEditorButton(GestureDesignButtonWidget):
         # set up items
         self.poly_item = GestureDesignPolyWidget(points_list=points_list)
 
-        # print(text)
         self.text_item = GestureDesignGUITextItem(
             text=text, hotkey=hotkey, pos=type_point
         )
         self.text_item.setPos(center_point)
 
-        # self.label_item = GestureDesignLabelItem(text=text, pos=type_point)
-
-        #self.label_item.setPos(type_point)
-
         # parent items
         self.addToGroup(self.poly_item)
         self.text_item.setParentItem(self.poly_item)
-        # self.label_item.setParentItem(self.poly_item)
 
         # set up attributes
         self.setHotkey(hotkey)
         self.setAcceptDrops(True)
         self.text_item.setAcceptDrops(False)
         self.poly_item.setAcceptDrops(False)
-        # self.label_item.setAcceptDrops(False)
         self.setHash(unique_hash)
 
     def execute(self):
@@ -1087,15 +1079,7 @@ class GestureDesignEditorButton(GestureDesignButtonWidget):
 
     def dropEvent(self, event, *args, **kwargs):
         self.updateButton(current_item=self.getCurrentItem())
-        # print self.parent().filepath()
         return QGraphicsItemGroup.dropEvent(self, event, *args, **kwargs)
-
-    """
-    def hoverEnterEvent(self, event, *args, **kwargs):
-        event.accept()
-        print('hover mcdover')
-        return QGraphicsPolygonItem.hoverEnterEvent(self, event, *args, **kwargs)
-    """
 
     def mousePressEvent(self, event, *args, **kwargs):
         if event.button() == Qt.MiddleButton:
@@ -1471,7 +1455,7 @@ if __name__ == "__main__":
 
     app = QApplication(sys.argv)
 
-    hotkey_file_path = "/home/brian/.cgwidgets/.scripts/5745126593639012352.hotkey1.json"
+    hotkey_file_path = "/home/brian/.cgwidgets/.scripts/4317164938395446784.HotkeyDesign.json"
     # hotkey_file_path = "/home/brian/.cgwidgets/.scripts/991172910425919104.hotkey2.json"
     popup_widget = PopupHotkeyMenu(file_path=hotkey_file_path)
     popup_widget.show()
