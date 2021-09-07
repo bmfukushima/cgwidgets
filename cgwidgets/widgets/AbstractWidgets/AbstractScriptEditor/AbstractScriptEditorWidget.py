@@ -49,31 +49,17 @@ Data:
 """
 """
 Todo:
-    * Create new item on group
-    * Rename / Move update filepaths...
-        - Groups/Scripts appear to be working?
-        - Designs/Gesture
-        - Update List
-            - Update name
-            - Update Group Name
-            - Check design updates
-            - Check drag/drop updates
     * Metadata
         - Setup locking mechanisms...
         - Order of files?
         - Filedir display names
             metadata?
-    * Drag/Drop
-        - Need to set up drag/drop for moving files around the system
     * Set focus on popup
         - Hotkey Design popup is not setting focus, so hotkeys don't work =/
 
 #===============================================================================
 # WISH LIST
 #===============================================================================
-- Hotkeys...
-    - Remove master design item as hotkey...
-            - updateItemName has a hack patch right now to fix this...
 - Moving item to group does NOT update master hotkey file...
 
 - Add fifth row of fingers for "5tgb"
@@ -123,7 +109,7 @@ import shutil
 import json
 
 from qtpy.QtWidgets import (
-    QHBoxLayout,
+    QHeaderView,
     QVBoxLayout,
     QLabel,
     QWidget,
@@ -226,6 +212,7 @@ class ScriptEditorWidget(QSplitter):
 
         self._design_main_widget = QWidget()
         design_vbox = QVBoxLayout()
+        design_vbox.setContentsMargins(0, 0, 0, 0)
         self._design_main_widget.setLayout(design_vbox)
         design_vbox.addWidget(self._design_tab_widget)
         design_vbox.addWidget(save_button)
@@ -353,8 +340,14 @@ class ScriptTreeWidget(QTreeWidget):
             # Populate Items from Directories
             self.populateDirectory(script_directory, directory_item, script_directory)
 
+        # setup style
         root_item = self.invisibleRootItem()
         root_item.setFlags(root_item.flags() & ~ Qt.ItemIsDropEnabled)
+        self.header().setStretchLastSection(False)
+        self.header().setSectionResizeMode(0, QHeaderView.Stretch)
+        for x in range(1, 3):
+            self.setColumnWidth(x, 80)
+            self.header().setSectionResizeMode(x, QHeaderView.Fixed)
 
     def __name__(self):
         return "__script_list__"
@@ -499,7 +492,7 @@ class ScriptTreeWidget(QTreeWidget):
     def moveFile(self, old_file_path, new_file_path):
         shutil.move(str(old_file_path), str(new_file_path))
 
-    def updateItemDictDir(self, new_path, old_path):
+    def updateItemDictDir(self, old_path, new_path):
         """ Updates the current internal itemDict()
 
         This will replace all instances of the old path with the new path provided.
@@ -513,7 +506,7 @@ class ScriptTreeWidget(QTreeWidget):
                 new_key = key.replace(old_path, new_path)
                 self.itemDict()[new_key] = self.itemDict().pop(key)
 
-    def updateItemFileDir(self, current_item, new_file_dir, old_file_dir):
+    def updateItemFileDir(self, old_file_dir, new_file_dir, current_item):
         """ Updates an items directories.
 
         This occurs after an item has been drag/dropped under a new group in the hierarchy
@@ -531,13 +524,13 @@ class ScriptTreeWidget(QTreeWidget):
         current_item.setFileDir(new_file_dir)
 
         # update design files
-        self.updateAllDesigns(new_file_dir, old_file_dir)
+        self.updateAllDesignPaths(old_file_dir, new_file_dir)
         self.updateAllButtons()
 
         # update meta data
-        self.updateItemDictDir(new_file_dir, old_file_dir)
+        self.updateItemDictDir(old_file_dir, new_file_dir)
 
-    def updateAllItemsFileDir(self, current_item, new_file_dir, old_file_dir):
+    def updateAllItemsFileDir(self, old_file_dir, new_file_dir, current_item):
         """ Recursively updates all of the descendants file directories
 
         When a group name is changed, this function changes the file paths
@@ -551,12 +544,12 @@ class ScriptTreeWidget(QTreeWidget):
         """
         for index in range(current_item.childCount()):
             child = current_item.child(index)
-            self.updateItemFileDir(child, new_file_dir, old_file_dir)
+            self.updateItemFileDir(old_file_dir, new_file_dir, child)
             if isinstance(child, GroupItem):
                 if current_item.childCount() > 0:
-                    self.updateAllItemsFileDir(child, new_file_dir, old_file_dir)
+                    self.updateAllItemsFileDir(old_file_dir, new_file_dir, child)
 
-    def updateGroupItemFilepath(self, current_item, new_file_dir=None, old_file_dir=None):
+    def updateGroupItemFilepath(self, old_file_dir=None, new_file_dir=None, current_item=None):
         """ Updates the filepath of a GroupItem and all of its descendants.
 
         Args:
@@ -564,7 +557,8 @@ class ScriptTreeWidget(QTreeWidget):
             new_file_dir (str): path on disk to the NEW directory
             old_file_dir (str:) path on disk to the OLD directory
         """
-
+        if not current_item:
+            current_item = self.currentItem()
         # compile attrs
         old_file_name = current_item.getFileName()
         old_file_path = current_item.filepath()
@@ -585,47 +579,42 @@ class ScriptTreeWidget(QTreeWidget):
         current_item.setFileName(new_file_name)
         current_item.setFileDir(new_file_dir)
 
-        # update all child items...
+        # rename file
+        if not os.path.exists(new_file_path):
+            os.rename(old_file_path, new_file_path)
+
+        # update all items
+        """ Note: updateAllItemsFileDir updates the internal itemDict"""
+        self.updateAllDesignPaths(old_file_path, new_file_path)
+        self.updateAllItemsFileDir(old_file_path, new_file_path, current_item)
+        self.updateAllButtons()
+        self.updateHotkeyFile(old_file_path, new_file_path)
+
+        # update design tab paths
+        script_editor_widget = getWidgetAncestor(self, ScriptEditorWidget)
+        script_editor_widget.designTabWidget().updateTabFilePath(new_file_path, old_file_path)
+
+    def updateItemFilepath(self, current_item):
+        # get attrs
+        file_extension = current_item.getFileName().split(".")[-1]
+        unique_hash = current_item.getHash()
+
+        new_name = current_item.text(0)
+        new_file_name = "%s.%s.%s" % (unique_hash, new_name, file_extension)
+
+        new_file_path = "%s/%s" % (current_item.getFileDir(), new_file_name)
+        old_file_path = current_item.filepath()
+
+        # update item filename/path
+        current_item.setFileName(new_file_name)
+        current_item.setFilepath(new_file_path)
 
         # rename file
         if not os.path.exists(new_file_path):
             os.rename(old_file_path, new_file_path)
 
-        # update design files
-        script_editor_widget = getWidgetAncestor(self, ScriptEditorWidget)
-        self.updateAllDesigns(new_file_path, old_file_path)
-
-        # update all items
-        self.updateAllItemsFileDir(current_item, new_file_path, old_file_path)
-
-        # update all executable buttons
-        self.updateAllButtons()
-        # update design tab paths
-        script_editor_widget.designTabWidget().updateTabFilePath(new_file_path, old_file_path)
-
-    def updateItemFilepath(self, current_item):
-        # get attrs
-        old_file_name = current_item.getFileName()
-        file_extension = old_file_name.split(".")[-1]
-        unique_hash = current_item.getHash()
-        new_name = current_item.text(0)
-        file_name = "%s.%s.%s" % (unique_hash, new_name, file_extension)
-
-        # update item filename/path
-        current_item.setFileName(file_name)
-        old_file_path = current_item.filepath()
-
-        # this line will break... needs item file path
-        new_file_path = "%s/%s" % (
-            current_item.getFileDir(), current_item.getFileName()
-        )
-        current_item.setFilepath(new_file_path)
-        if not os.path.exists(new_file_path):
-            os.rename(old_file_path, new_file_path)
-
         # update active design items
         if isinstance(current_item, (HotkeyDesignItem, GestureDesignItem)):
-            # set tab name
             script_editor_widget = getWidgetAncestor(self, ScriptEditorWidget)
             design_tab = script_editor_widget.designTabWidget()
             tab_bar = design_tab.tabBar()
@@ -643,7 +632,9 @@ class ScriptTreeWidget(QTreeWidget):
             design_tab.updateAllHotkeyDesigns()
 
         # update item dict data
-        self.updateItemDictDir(new_file_path, old_file_path)
+        self.updateItemDictDir(old_file_path, new_file_path)
+        self.updateAllDesignPaths(old_file_path, new_file_path)
+        self.updateHotkeyFile(old_file_path, new_file_path)
         return
 
     def updateItemName(self):
@@ -661,17 +652,33 @@ class ScriptTreeWidget(QTreeWidget):
 
         # check to see if it is a name change
         old_name = self.currentItem().getFileName()
-        old_name = old_name[old_name.index(".")+1:old_name.rindex(".")]
+        old_name = old_name.split(".")[1]
         new_name = self.currentItem().text(0)
         if old_name == new_name: return
 
         # update items
         if isinstance(self.currentItem(), GroupItem):
-            self.updateGroupItemFilepath(self.currentItem())
+            self.updateGroupItemFilepath()
         elif isinstance(self.currentItem(), (ScriptItem, GestureDesignItem, HotkeyDesignItem)):
             self.updateItemFilepath(self.currentItem())
 
-    def updateAllDesigns(self, new_dir, old_dir):
+    def updateHotkeyFile(self, old_dir, new_dir):
+        """ Updates the current hotkey master file
+
+        Args:
+            old_dir (str):
+            new_dir (str):
+        """
+
+        hotkey_dict = self.hotkeyDict()
+        for key in list(hotkey_dict.keys()):
+            new_key = key.replace(old_dir, new_dir)
+            hotkey_dict[new_key] = hotkey_dict.pop(key)
+
+        with open(self.hotkeyFile(), "w") as current_file:
+            json.dump(hotkey_dict, current_file)
+
+    def updateAllDesignPaths(self, old_dir, new_dir):
         """ Updates all of the design files in all of the script directories
 
         Args:
@@ -679,9 +686,9 @@ class ScriptTreeWidget(QTreeWidget):
             old_dir (str):  Old path to look for/remove """
         script_editor_widget = getWidgetAncestor(self, ScriptEditorWidget)
         for start_dir in script_editor_widget.scriptsDirectories():
-            self.__updateAllDesigns(start_dir, new_dir, old_dir)
+            self.__updateAllDesignPaths(old_dir, new_dir, start_dir)
 
-    def __updateAllDesigns(self, start_dir, new_dir, old_dir):
+    def __updateAllDesignPaths(self, old_dir, new_dir, start_dir):
         """ updates all of the design files in the directory specified
 
         Args:
@@ -695,7 +702,7 @@ class ScriptTreeWidget(QTreeWidget):
         for file in os.listdir(start_dir):
             file_path = start_dir + "/" + file
             if os.path.isdir(file_path):
-                self.__updateAllDesigns(file_path, new_dir, old_dir)
+                self.__updateAllDesignPaths(old_dir, new_dir, file_path)
 
             elif os.path.isfile(file_path):
                 update_list = [AbstractBaseItem.HOTKEY, AbstractBaseItem.GESTURE]
@@ -956,12 +963,14 @@ class ScriptTreeWidget(QTreeWidget):
 
         # update
         if isinstance(current_item, GroupItem):
-            self.updateGroupItemFilepath(current_item, new_file_dir, old_file_dir)
+            self.updateGroupItemFilepath(old_file_dir, new_file_dir)
         elif isinstance(current_item, (ScriptItem, GestureDesignItem, HotkeyDesignItem)):
-            self.updateItemFileDir(current_item, new_file_dir, old_file_dir)
+            self.updateItemFileDir(old_file_dir, new_file_dir, current_item)
             # self.updateAllButtons()
             script_editor_widget = getWidgetAncestor(self, ScriptEditorWidget)
             script_editor_widget.designTabWidget().updateTabFilePath(new_file_path, old_file_path)
+
+        self.updateHotkeyFile(old_file_dir, new_file_dir)
         return return_val
 
     # def dragLeaveEvent(self, *args, **kwargs):
@@ -1055,15 +1064,15 @@ class ScriptTreeWidget(QTreeWidget):
                 for index in range(tab_bar.count()):
                     widget = design_tab_widget.widget(index)
                     if (
-                        isinstance(widget, HotkeyDesignEditorWidget)
-                        or isinstance(widget, GestureDesignEditorWidget)
+                            isinstance(widget, HotkeyDesignEditorWidget)
+                            or isinstance(widget, GestureDesignEditorWidget)
                     ):
                         if item.getHash() == widget.getHash():
                             design_tab_widget.removeTab(index)
 
                 # needs to update all buttons again?
                 self.updateAllButtons()
-                self.updateAllDesigns("", file_path)
+                self.updateAllDesignPaths(file_path, "")
 
                 # del item
                 index = item.parent().indexOfChild(item)
@@ -1077,8 +1086,8 @@ class ScriptTreeWidget(QTreeWidget):
             if event.text() != "":
                 # reset hotkey if user presses backspace/delete
                 if(
-                    event.key() == Qt.Key_Backspace
-                    or event.key() == Qt.Key_Delete
+                        event.key() == Qt.Key_Backspace
+                        or event.key() == Qt.Key_Delete
                 ):
                     inverted_hotkey_dict = self.invertedHotkeyDict()
                     hotkey = self.currentItem().text(2)
