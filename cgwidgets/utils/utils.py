@@ -241,39 +241,71 @@ def setAsAlwaysOnTop(widget):
     widget.activateWindow()
 
 
-def setAsTool(widget):
+def setAsTool(widget, enabled=True):
     import platform
-    if platform.system() == 'Windows':
-        widget.setWindowFlags(
-            widget.windowFlags()
-            | Qt.Tool
-            | Qt.NoDropShadowWindowHint
-            | Qt.WindowStaysOnTopHint
+    if enabled:
+        if platform.system() == 'Windows':
+            widget.setWindowFlags(
+                widget.windowFlags()
+                | Qt.Tool
+                | Qt.NoDropShadowWindowHint
+                | Qt.WindowStaysOnTopHint
+                )
+        elif platform.system() == 'Linux':
+            widget.setWindowFlags(
+                widget.windowFlags()
+                | Qt.Tool
+                | Qt.NoDropShadowWindowHint
+                | Qt.FramelessWindowHint
+                )
+    else:
+        if platform.system() == 'Windows':
+            widget.setWindowFlags(
+                widget.windowFlags()
+                & ~Qt.Tool
+                & ~Qt.NoDropShadowWindowHint
+                & ~Qt.WindowStaysOnTopHint
             )
-    elif platform.system() == 'Linux':
-        widget.setWindowFlags(
-            widget.windowFlags()
-            | Qt.Tool
-            | Qt.NoDropShadowWindowHint
-            | Qt.FramelessWindowHint
+        elif platform.system() == 'Linux':
+            widget.setWindowFlags(
+                widget.windowFlags()
+                & ~Qt.Tool
+                & ~Qt.NoDropShadowWindowHint
+                & ~Qt.FramelessWindowHint
             )
 
 
-def unsetAsTool(widget):
+def setAsPopup(widget, enabled=True):
     import platform
-    if platform.system() == 'Windows':
-        widget.setWindowFlags(
-            widget.windowFlags()
-            & Qt.Tool
-            & Qt.NoDropShadowWindowHint
-            & Qt.WindowStaysOnTopHint
+    if enabled:
+        if platform.system() == 'Windows':
+            widget.setWindowFlags(
+                widget.windowFlags()
+                | Qt.Popup
+                | Qt.NoDropShadowWindowHint
+                | Qt.WindowStaysOnTopHint
+                )
+        elif platform.system() == 'Linux':
+            widget.setWindowFlags(
+                widget.windowFlags()
+                | Qt.Popup
+                | Qt.NoDropShadowWindowHint
+                | Qt.FramelessWindowHint
+                )
+    else:
+        if platform.system() == 'Windows':
+            widget.setWindowFlags(
+                widget.windowFlags()
+                & ~Qt.Popup
+                & ~Qt.NoDropShadowWindowHint
+                & ~Qt.WindowStaysOnTopHint
             )
-    elif platform.system() == 'Linux':
-        widget.setWindowFlags(
-            widget.windowFlags()
-            & Qt.Tool
-            & Qt.NoDropShadowWindowHint
-            & Qt.FramelessWindowHint
+        elif platform.system() == 'Linux':
+            widget.setWindowFlags(
+                widget.windowFlags()
+                & ~Qt.Popup
+                & ~Qt.NoDropShadowWindowHint
+                & ~Qt.FramelessWindowHint
             )
 
 

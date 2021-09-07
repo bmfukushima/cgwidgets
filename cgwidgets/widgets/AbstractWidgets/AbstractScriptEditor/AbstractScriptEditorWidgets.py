@@ -3,11 +3,6 @@ import math
 import json
 import os
 
-#from qtpy import QtGui, QtWidgets, QtCore
-
-from AbstractScriptEditorUtils import Utils as Locals
-
-from cgwidgets.utils import getWidgetAncestorByName, setAsTransparent, getCenterOfScreen, setAsTool
 from qtpy.QtWidgets import (
     QVBoxLayout,
     QWidget,
@@ -20,10 +15,28 @@ from qtpy.QtWidgets import (
     QGraphicsScene,
     QGraphicsTextItem,
 )
-from qtpy.QtGui import (QCursor, QTransform, QColor, QPolygonF, QTextBlockFormat, QTextCursor)
-from qtpy.QtCore import Qt, QPointF
+from qtpy.QtGui import (
+    QCursor,
+    QTransform,
+    QColor,
+    QPainter,
+    QPen,
+    QPolygonF,
+    QTextBlockFormat,
+    QTextCursor
+)
+from qtpy.QtCore import Qt, QPointF, QPoint, QSize
 
-from cgwidgets.utils import getWidgetAncestor
+from AbstractScriptEditorUtils import Utils as Locals
+
+from cgwidgets.utils import (
+    getWidgetAncestorByName,
+    setAsTransparent,
+    getCenterOfScreen,
+    setAsTool,
+    getWidgetAncestor,
+    setAsPopup
+)
 
 """ ABSTRACT CLASSES """
 class DesignWidget(object):
@@ -678,9 +691,7 @@ class GestureDesignWidget(QGraphicsView, DesignWidget):
         return QGraphicsView.dropEvent(self, event, *args, **kwargs)
 
 
-class GestureDesignButtonWidget(
-        QGraphicsItemGroup, DesignButtonInterface
-):
+class GestureDesignButtonWidget(QGraphicsItemGroup, DesignButtonInterface):
     """
     @points_list: <list> of <QPointF> for building the polygon
     @text: <str> display text
@@ -1383,70 +1394,75 @@ class HotkeyDesignPopupButton(HotkeyDesignButtonWidget):
 
 
 class PopupHotkeyMenu(QWidget):
-    def __init__(self, parent=None, file_path=None, pos=None):
+    def __init__(self, parent=None, file_path=None, pos=None, size=QSize(1200, 400)):
         super(PopupHotkeyMenu, self).__init__(parent)
 
-        setAsTransparent(self)
-        setAsTool(self)
-        # set position
-        y_size = 300
-        x_size = y_size * 3
+        # create attrs
+        self._size = size
         if not pos:
             pos = getCenterOfScreen()
 
-        self.setGeometry(
-            int(pos.x() - x_size*.5),
-            int(pos.y()-y_size*.5),
-            x_size,
-            y_size)
+        # setup style
+        self.move(pos)
+        self.setSize(size)
+        setAsTransparent(self)
+        setAsPopup(self)
 
         # create layout
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
-        design_widget = HotkeyDesignPopupWidget(self, file_path=file_path, init_pos=pos)
-        design_widget.setFocusPolicy(Qt.StrongFocus)
-        design_widget.setFocus()
-        main_layout.addWidget(design_widget)
+        self._design_widget = HotkeyDesignPopupWidget(self, file_path=file_path, init_pos=pos)
+        self._design_widget.setFocus()
+        main_layout.addWidget(self._design_widget)
 
-    def showEvent(self, event):
-        QWidget.showEvent(self, event)
-        self.setFocus()
+    def paintEvent(self, event=None):
+        """ Set transparency """
+        painter = QPainter(self)
+        painter.setOpacity(0.5)
+        bg_color = QColor(32, 32, 32, 255)
+        painter.setBrush(bg_color)
+        painter.setPen(QPen(bg_color))
+        painter.drawRect(self.rect())
+
+    def setSize(self, size):
+        self._size = size
+        self.setGeometry(
+            int(self.pos().x() - (size.width() * 0.5)),
+            int(self.pos().y() - (size.height() * 0.5)),
+            size.width(),
+            size.height())
 
 
 class PopupGestureMenu(QWidget):
-    def __init__(self, parent=None, file_path=None, pos=None):
+    def __init__(self, parent=None, file_path=None, pos=None, size=300, arbitrary_scaler=5):
         super(PopupGestureMenu, self).__init__(parent)
-        """
-        self.setAttribute(Qt.WA_NoSystemBackground)
-        self.setWindowFlags(
-            self.windowFlags()
-            | Qt.NoDropShadowWindowHint
-            | Qt.FramelessWindowHint
-        )
-        """
-        setAsTransparent(self)
-        setAsTool(self)
-        # self.setAttribute(Qt.WA_TranslucentBackground)
-        # self.setStyleSheet("background-color:rgba(128,50,50, 255); border:none;")
-        size = 200
-        arbitrary_scaler = 5
+
+        # setup attrs
         if not pos:
             pos = QCursor.pos()
+
+        # setup style
+        setAsTransparent(self)
+        setAsPopup(self)
+
         self.setGeometry(
             int(pos.x() - size * arbitrary_scaler * .5),
             int(pos.y() - size * arbitrary_scaler * .5),
             int(size * arbitrary_scaler),
             int(size * arbitrary_scaler)
         )
-        main_layout = QVBoxLayout(self)
 
+        # create main layout
+        main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
         design_widget = GestureDesignGUIWidget(self, file_path=file_path, init_pos=pos, size=size)
+        main_layout.addWidget(design_widget)
 
+        # set focus
         design_widget.setFocusPolicy(Qt.StrongFocus)
         design_widget.setFocus()
 
-        main_layout.addWidget(design_widget)
+
 
 
 if __name__ == "__main__":
@@ -1455,11 +1471,11 @@ if __name__ == "__main__":
 
     app = QApplication(sys.argv)
 
-    hotkey_file_path = "/home/brian/.cgwidgets/.scripts/4317164938395446784.HotkeyDesign.json"
+    hotkey_file_path = "/home/brian/.cgwidgets/.scripts/3418230839597978624.Group/6688775880885072896.keytest.json"
     # hotkey_file_path = "/home/brian/.cgwidgets/.scripts/991172910425919104.hotkey2.json"
     popup_widget = PopupHotkeyMenu(file_path=hotkey_file_path)
-    popup_widget.show()
 
+    popup_widget.show()
     # gesture_file_path = "/media/ssd01/dev/katana/KatanaResources_old/Scripts/designs/7297414313744113664.GestureDesign.json"
     # gesture_widget = PopupGestureMenu(file_path=gesture_file_path)
     # gesture_widget.show()
