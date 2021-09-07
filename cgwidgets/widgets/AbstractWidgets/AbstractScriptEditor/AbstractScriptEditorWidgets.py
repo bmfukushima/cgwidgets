@@ -1,4 +1,4 @@
-import sys
+
 import math
 import json
 import os
@@ -265,7 +265,6 @@ class DesignButtonInterface(object):
         self.file_type = file_type
 
     """ METHODS """
-
     def updateFile(self, file_path=None, delete=False):
         """
         @file_path <str> path to script file
@@ -1321,9 +1320,7 @@ class GestureDesignGUITextItem(QGraphicsTextItem):
 class HotkeyDesignPopupWidget(HotkeyDesignWidget):
     def __init__(self, parent=None, item=None, file_path='', init_pos=None):
         super(HotkeyDesignPopupWidget, self).__init__(parent)
-        # =======================================================================
         # set up default attributes
-        # =======================================================================
         self.setFilepath(file_path)
         self.button_dict = {}
         file_dict = Locals().getFileDict(self.filepath())
@@ -1332,10 +1329,7 @@ class HotkeyDesignPopupWidget(HotkeyDesignWidget):
         self.populate(file_dict, button_type='hotkey gui')
 
     def setButtonSize(self):
-        """
-        Sets the button size and position, will be offset to simulate
-        a keyboard layout
-        """
+        """Sets the button size and position, will be offset to simulate a keyboard layout"""
         button_spacing = .9
         button_width, button_height = self.getButtonSize()
         offset_amount = button_width * .2
@@ -1394,6 +1388,11 @@ class HotkeyDesignPopupButton(HotkeyDesignButtonWidget):
 
 
 class PopupHotkeyMenu(QWidget):
+    """ Popup Hotkey Menu
+
+    Attributes:
+        popup_stack (list): of strings of the current paths that the user
+            has clicked to get to the current menu"""
     def __init__(self, parent=None, file_path=None, pos=None, size=QSize(1200, 400)):
         super(PopupHotkeyMenu, self).__init__(parent)
 
@@ -1401,6 +1400,7 @@ class PopupHotkeyMenu(QWidget):
         self._size = size
         if not pos:
             pos = getCenterOfScreen()
+        self._popup_stack = []
 
         # setup style
         self.move(pos)
@@ -1411,6 +1411,8 @@ class PopupHotkeyMenu(QWidget):
         # create layout
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
+        self._previous_item = QPushButton("Previous Item")
+        self._next_item = QPushButton("Next Item")
         self._design_widget = HotkeyDesignPopupWidget(self, file_path=file_path, init_pos=pos)
         self._design_widget.setFocus()
         main_layout.addWidget(self._design_widget)
@@ -1422,7 +1424,7 @@ class PopupHotkeyMenu(QWidget):
         bg_color = QColor(32, 32, 32, 255)
         painter.setBrush(bg_color)
         painter.setPen(QPen(bg_color))
-        painter.drawRect(self.rect())
+        painter.drawRect(self.window().rect())
 
     def setSize(self, size):
         self._size = size

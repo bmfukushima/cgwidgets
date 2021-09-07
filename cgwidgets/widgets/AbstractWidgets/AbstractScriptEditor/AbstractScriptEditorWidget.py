@@ -49,14 +49,14 @@ Data:
 """
 """
 Todo:
+    * Popup Widgets
+        - Add forward/backwards menu options
+        - Dim unused buttons
     * Metadata
         - Setup locking mechanisms...
         - Order of files?
         - Filedir display names
             metadata?
-    * Set focus on popup
-        - Hotkey Design popup is not setting focus, so hotkeys don't work =/
-
 #===============================================================================
 # WISH LIST
 #===============================================================================
@@ -127,7 +127,7 @@ from qtpy.QtWidgets import (
 from qtpy.QtCore import QVariant, Qt
 from qtpy.QtGui import QCursor, QKeySequence
 
-from cgwidgets.utils import getWidgetAncestor
+from cgwidgets.utils import getWidgetAncestor, getFontSize
 
 from AbstractScriptEditorUtils import Utils as Locals
 from AbstractScriptEditorWidgets import (
@@ -346,7 +346,7 @@ class ScriptTreeWidget(QTreeWidget):
         self.header().setStretchLastSection(False)
         self.header().setSectionResizeMode(0, QHeaderView.Stretch)
         for x in range(1, 3):
-            self.setColumnWidth(x, 80)
+            self.setColumnWidth(x, getFontSize() * 7)
             self.header().setSectionResizeMode(x, QHeaderView.Fixed)
 
     def __name__(self):

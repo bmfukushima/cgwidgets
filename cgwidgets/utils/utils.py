@@ -45,10 +45,12 @@ def checkIfValueInRange(enabled, value, range_min, range_max):
     return value
 
 
-def getFontSize(application):
+def getFontSize(application=None):
     """
     Returns the current systems font size
     """
+    if not application:
+        application = QApplication
     font = application.font()
     return font.pointSize()
 

@@ -147,14 +147,14 @@ class AbstractDragDropModelItem(object):
         self._isSelectable = _isSelectable
 
     def isDraggable(self):
-        if self._isDraggable: return Qt.ItemIsDraggable
+        if self._isDraggable: return Qt.ItemIsDragEnabled
         else: return 0
 
     def setIsDraggable(self, _isDraggable):
         self._isDraggable = _isDraggable
 
     def isDroppable(self):
-        if self._isDroppable: return Qt.ItemIsDroppable
+        if self._isDroppable: return Qt.ItemIsDropEnabled
         else: return 0
 
     def setIsDroppable(self, _isDroppable):
