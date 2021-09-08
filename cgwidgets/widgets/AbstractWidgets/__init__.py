@@ -22,4 +22,4 @@ from .AbstractSplitterWidget import AbstractSplitterWidget
 
 from .AbstractGIFWidget import AbstractGIFWidget
 from .AbstractShojiLayout import AbstractShojiLayout, AbstractShojiLayoutHandle
-
+from .AbstractScriptEditor import *

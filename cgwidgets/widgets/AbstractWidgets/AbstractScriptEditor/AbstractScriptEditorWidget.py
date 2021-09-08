@@ -18,7 +18,7 @@ This organizes the data into a few different item types,
         activate that option.  Note... this doesn't really work all that well... lol
 
 Hierarchy:
-ScriptEditorWidget --> (QSplitter)
+AbstractScriptEditorWidget --> (QSplitter)
   |- ScriptTreeWidget --> (QTreeWidget)
   |  |- ScriptDirectoryItem
   |     |- GroupItem --> (AbstractBaseItem)
@@ -129,8 +129,8 @@ from qtpy.QtGui import QCursor, QKeySequence
 
 from cgwidgets.utils import getWidgetAncestor, getFontSize
 
-from AbstractScriptEditorUtils import Utils as Locals
-from AbstractScriptEditorWidgets import (
+from .AbstractScriptEditorUtils import Utils as Locals
+from .AbstractScriptEditorWidgets import (
     HotkeyDesignEditorButton,
     HotkeyDesignEditorWidget,
     GestureDesignEditorWidget,
@@ -165,7 +165,7 @@ class AbstractPythonEditor(QWidget):
         return self._code_widget
 
 
-class ScriptEditorWidget(QSplitter):
+class AbstractScriptEditorWidget(QSplitter):
     """ Script Editors main widget
 
     Attributes:
@@ -175,12 +175,12 @@ class ScriptEditorWidget(QSplitter):
         scripts_variable (str): Environment Variable that will hold all of the locations
             that the scripts will be located in"""
     def __init__(self, parent=None, python_editor=AbstractPythonEditor, scripts_variable="CGWscripts"):
-        super(ScriptEditorWidget, self).__init__(parent)
+        super(AbstractScriptEditorWidget, self).__init__(parent)
         self._scripts_variable = scripts_variable
 
         # create all directories
         for scripts_directory in self.scriptsDirectories():
-            ScriptEditorWidget.__createScriptDirectories(scripts_directory)
+            AbstractScriptEditorWidget.__createScriptDirectories(scripts_directory)
 
         # create main gui
         self.__setupGUI(python_editor)
@@ -222,7 +222,7 @@ class ScriptEditorWidget(QSplitter):
         self.addWidget(self._design_main_widget)
 
     def __name__(self):
-        return "ScriptEditorWidget"
+        return "AbstractScriptEditorWidget"
 
     """ WIDGETS """
     def designMainWidget(self):
@@ -288,7 +288,7 @@ class SaveButton(QPushButton):
 
     def saveScript(self):
         """Saves the current script to disk"""
-        script_editor_widget = getWidgetAncestor(self, ScriptEditorWidget)
+        script_editor_widget = getWidgetAncestor(self, AbstractScriptEditorWidget)
         current_item = script_editor_widget.currentItem()
         if current_item.getItemType() == AbstractBaseItem.SCRIPT:
             text_block = script_editor_widget.designTabWidget().codeWidget()
@@ -362,7 +362,7 @@ class ScriptTreeWidget(QTreeWidget):
                 lazy af hack
         """
 
-        for file in ScriptEditorWidget.sortedFiles(file_dir):
+        for file in AbstractScriptEditorWidget.sortedFiles(file_dir):
             file_path = "{filedir}/{file}".format(filedir=file_dir, file=file)
             if "." in file:
                 if file != "master.py" and file != "master.json" and file != "hotkeys.json":
@@ -483,10 +483,10 @@ class ScriptTreeWidget(QTreeWidget):
 
     """ PROPERTIES """
     def scriptsVariable(self):
-        return getWidgetAncestor(self, ScriptEditorWidget).scriptsVariable()
+        return getWidgetAncestor(self, AbstractScriptEditorWidget).scriptsVariable()
 
     def scriptDirectories(self):
-        return getWidgetAncestor(self, ScriptEditorWidget).scriptsDirectories()
+        return getWidgetAncestor(self, AbstractScriptEditorWidget).scriptsDirectories()
 
     """ UPDATE """
     def moveFile(self, old_file_path, new_file_path):
@@ -591,7 +591,7 @@ class ScriptTreeWidget(QTreeWidget):
         self.updateHotkeyFile(old_file_path, new_file_path)
 
         # update design tab paths
-        script_editor_widget = getWidgetAncestor(self, ScriptEditorWidget)
+        script_editor_widget = getWidgetAncestor(self, AbstractScriptEditorWidget)
         script_editor_widget.designTabWidget().updateTabFilePath(new_file_path, old_file_path)
 
     def updateItemFilepath(self, current_item):
@@ -615,7 +615,7 @@ class ScriptTreeWidget(QTreeWidget):
 
         # update active design items
         if isinstance(current_item, (HotkeyDesignItem, GestureDesignItem)):
-            script_editor_widget = getWidgetAncestor(self, ScriptEditorWidget)
+            script_editor_widget = getWidgetAncestor(self, AbstractScriptEditorWidget)
             design_tab = script_editor_widget.designTabWidget()
             tab_bar = design_tab.tabBar()
             for index in range(tab_bar.count()):
@@ -627,7 +627,7 @@ class ScriptTreeWidget(QTreeWidget):
 
         # update active buttons
         if isinstance(current_item, (ScriptItem, HotkeyDesignItem, GestureDesignItem)):
-            script_editor_widget = getWidgetAncestor(self, ScriptEditorWidget)
+            script_editor_widget = getWidgetAncestor(self, AbstractScriptEditorWidget)
             design_tab = script_editor_widget.designTabWidget()
             design_tab.updateAllHotkeyDesigns()
 
@@ -684,7 +684,7 @@ class ScriptTreeWidget(QTreeWidget):
         Args:
             new_dir (str):  New Path to add and replace old path with
             old_dir (str):  Old path to look for/remove """
-        script_editor_widget = getWidgetAncestor(self, ScriptEditorWidget)
+        script_editor_widget = getWidgetAncestor(self, AbstractScriptEditorWidget)
         for start_dir in script_editor_widget.scriptsDirectories():
             self.__updateAllDesignPaths(old_dir, new_dir, start_dir)
 
@@ -715,7 +715,7 @@ class ScriptTreeWidget(QTreeWidget):
 
     def updateAllButtons(self):
         """Updates the display of all of the buttons in  the Design Tab"""
-        script_editor_widget = getWidgetAncestor(self, ScriptEditorWidget)
+        script_editor_widget = getWidgetAncestor(self, AbstractScriptEditorWidget)
         design_tab = script_editor_widget.designTabWidget()
         design_tab.updateAllHotkeyDesigns()
 
@@ -818,7 +818,7 @@ class ScriptTreeWidget(QTreeWidget):
     """ UTILS """
     def loadScript(self):
         """ Loads the script of the current item"""
-        script_editor_widget = getWidgetAncestor(self, ScriptEditorWidget)
+        script_editor_widget = getWidgetAncestor(self, AbstractScriptEditorWidget)
         current_item = self.currentItem()
         code_tab = script_editor_widget.designTabWidget().codeWidget()
         file_path = current_item.filepath()
@@ -831,7 +831,7 @@ class ScriptTreeWidget(QTreeWidget):
 
     def showTab(self, current_item):
         """sets the tab widget to the current item to be display"""
-        script_editor_widget = getWidgetAncestor(self, ScriptEditorWidget)
+        script_editor_widget = getWidgetAncestor(self, AbstractScriptEditorWidget)
         design_tab = script_editor_widget.designTabWidget()
         tab_bar = design_tab.tabBar()
 
@@ -967,7 +967,7 @@ class ScriptTreeWidget(QTreeWidget):
         elif isinstance(current_item, (ScriptItem, GestureDesignItem, HotkeyDesignItem)):
             self.updateItemFileDir(old_file_dir, new_file_dir, current_item)
             # self.updateAllButtons()
-            script_editor_widget = getWidgetAncestor(self, ScriptEditorWidget)
+            script_editor_widget = getWidgetAncestor(self, AbstractScriptEditorWidget)
             script_editor_widget.designTabWidget().updateTabFilePath(new_file_path, old_file_path)
 
         self.updateHotkeyFile(old_file_dir, new_file_dir)
@@ -1021,7 +1021,7 @@ class ScriptTreeWidget(QTreeWidget):
     #     ):
     #         self.updateItemFileDir(current_item, new_file_dir, old_file_dir)
     #         self.updateAllButtons()
-    #         script_editor_widget = getWidgetAncestor(self, ScriptEditorWidget)
+    #         script_editor_widget = getWidgetAncestor(self, AbstractScriptEditorWidget)
     #         script_editor_widget.designTabWidget().updateTabFilePath(new_file_path, old_file_path)
     #     return return_val
 
@@ -1051,7 +1051,7 @@ class ScriptTreeWidget(QTreeWidget):
                     self.deleteItem(child)
 
             else:
-                script_editor_widget = getWidgetAncestor(self, ScriptEditorWidget)
+                script_editor_widget = getWidgetAncestor(self, AbstractScriptEditorWidget)
                 file_path = item.filepath()
 
                 # delete disk location
@@ -1258,7 +1258,7 @@ class DesignTab(QTabWidget):
 class DataTypeDelegate(QItemDelegate):
     def __init__(self, parent=None):
         super(DataTypeDelegate, self).__init__(parent)
-        # self.katana_main = UI4.App.ScriptEditorWidget.GetScriptEditor()
+        # self.katana_main = UI4.App.AbstractScriptEditorWidget.GetScriptEditor()
         #self.katana_main.removeEventFilter(self.katana_main.event_filter_widget)
 
     """ Do I need this"""
@@ -1623,7 +1623,7 @@ if __name__ == "__main__":
         #"/media/ssd01/dev/katana/KatanaResources_old/ScriptsTest"
     ])
 
-    main_widget = ScriptEditorWidget()
+    main_widget = AbstractScriptEditorWidget()
     setAsAlwaysOnTop(main_widget)
     main_widget.show()
     centerWidgetOnScreen(main_widget)

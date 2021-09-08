@@ -30,6 +30,9 @@ from .ShojiWidget import ShojiLayoutHandle
 from .ShojiWidget import ShojiModelViewWidget as ShojiModelViewWidget
 from .ShojiWidget import ShojiModelDelegateWidget as ShojiModelDelegateWidget
 
+""" Script Editor """
+from .ScriptEditorWidget import ScriptEditorWidget
+
 """ PiP """
 from .PiPWidget import PiPOrganizerWidget, PiPDisplayWidget
 

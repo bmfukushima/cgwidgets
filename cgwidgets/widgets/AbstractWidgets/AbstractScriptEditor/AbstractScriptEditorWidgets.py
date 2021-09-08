@@ -27,7 +27,7 @@ from qtpy.QtGui import (
 )
 from qtpy.QtCore import Qt, QPointF, QPoint, QSize
 
-from AbstractScriptEditorUtils import Utils as Locals
+from .AbstractScriptEditorUtils import Utils as Locals
 
 from cgwidgets.utils import (
     getWidgetAncestorByName,
@@ -119,7 +119,7 @@ class DesignWidget(object):
 
         Args:
             file_dict (dict): from the filepath.json for a design item
-            item_dict (dict): of {filepath:item} that is stored on the ScriptEditorWidget"""
+            item_dict (dict): of {filepath:item} that is stored on the AbstractScriptEditorWidget"""
         # create button layout
         if 'hotkey' in button_type:
             self.button_list = [
@@ -185,7 +185,7 @@ class DesignWidget(object):
     def updateButtons(self):
         """ Updates all of the buttons file paths """
 
-        script_editor_widget = getWidgetAncestorByName(self, "ScriptEditorWidget")
+        script_editor_widget = getWidgetAncestorByName(self, "AbstractScriptEditorWidget")
         item_dict = script_editor_widget.scriptWidget().itemDict()
         button_list = self.getButtonDict()
         for key in list(button_list.keys()):
@@ -450,7 +450,7 @@ class GestureDesignWidget(QGraphicsView, DesignWidget):
         display_type='gesture editor',
         size=None
     ):
-        script_editor_widget = getWidgetAncestorByName(self, "ScriptEditorWidget")
+        script_editor_widget = getWidgetAncestorByName(self, "AbstractScriptEditorWidget")
 
         for item in self.scene().items():
             self.scene().removeItem(item)
@@ -851,7 +851,7 @@ class HotkeyDesignEditorWidget(HotkeyDesignWidget):
         # self.button_dict = {}
         file_dict = Locals().getFileDict(self.filepath())
 
-        script_editor_widget = getWidgetAncestorByName(self.parentWidget(), "ScriptEditorWidget")
+        script_editor_widget = getWidgetAncestorByName(self.parentWidget(), "AbstractScriptEditorWidget")
         item_dict = script_editor_widget.scriptWidget().itemDict()
         self.item = item
         self.populate(file_dict, item_dict=item_dict, button_type='hotkey editor')
@@ -928,7 +928,7 @@ class HotkeyDesignEditorButton(HotkeyDesignButtonWidget):
             tw.showTab(item)
 
     def getCurrentItem(self):
-        script_editor_widget = getWidgetAncestorByName(self, "ScriptEditorWidget")
+        script_editor_widget = getWidgetAncestorByName(self, "AbstractScriptEditorWidget")
         current_item = script_editor_widget.scriptWidget().currentItem()
         return current_item
 
@@ -977,7 +977,7 @@ class GestureDesignEditorWidget(GestureDesignWidget):
     ):
         super(GestureDesignEditorWidget, self).__init__(parent)
         # self.setAttribute(Qt.WA_TranslucentBackground)
-        script_editor_widget = getWidgetAncestorByName(self, "ScriptEditorWidget")
+        script_editor_widget = getWidgetAncestorByName(self, "AbstractScriptEditorWidget")
         self.script_list = script_list
         self.setItem(item)
         self.setFilepath(file_path)
@@ -994,7 +994,7 @@ class GestureDesignEditorWidget(GestureDesignWidget):
 
         # set up buttons
         file_dict = Locals().getFileDict(self.filepath())
-        script_editor_widget = getWidgetAncestorByName(self, "ScriptEditorWidget")
+        script_editor_widget = getWidgetAncestorByName(self, "AbstractScriptEditorWidget")
         item_dict = script_editor_widget.scriptWidget().itemDict()
         self.drawPolygons(
             num_points=8,
@@ -1463,8 +1463,6 @@ class PopupGestureMenu(QWidget):
         # set focus
         design_widget.setFocusPolicy(Qt.StrongFocus)
         design_widget.setFocus()
-
-
 
 
 if __name__ == "__main__":

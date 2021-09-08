@@ -1,2 +1,2 @@
-from .AbstractScriptEditorWidget import ScriptEditorWidget
+from .AbstractScriptEditorWidget import AbstractScriptEditorWidget, AbstractPythonEditor
 from .AbstractScriptEditorWidgets import *
