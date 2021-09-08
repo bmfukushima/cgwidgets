@@ -185,6 +185,24 @@ class AbstractScriptEditorWidget(QSplitter):
         # create main gui
         self.__setupGUI(python_editor)
 
+    # @staticmethod
+    # def updateAllDesignFiles(filepath, old_path, new_path):
+    #     """ Recursively searches"""
+    #     for file in os.listdir(filepath):
+    #         full_path = f"{filepath}/{file}"
+    #         if os.path.isdir(full_path):
+    #             AbstractScriptEditorWidget.updateAllDesigns(full_path, old_path, new_path)
+    #         elif full_path.endswith(".json"):
+    #             with open(full_path, "r") as current_file:
+    #                 data = json.load(current_file)
+    #                 for key in data.keys():
+    #                     if data[key]:
+    #                         if old_path in data[key]:
+    #                             data[key] = data[key].replace(old_path, new_path)
+    #
+    #             with open(full_path, "w") as current_file:
+    #                 json.dump(data, current_file)
+
     @staticmethod
     def __createScriptDirectories(scripts_directory):
         """ Creates all of the directories for the script directories if they don"t exist

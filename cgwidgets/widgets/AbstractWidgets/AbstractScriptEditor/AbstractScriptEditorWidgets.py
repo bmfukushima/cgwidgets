@@ -272,7 +272,7 @@ class DesignButtonInterface(object):
         """
         item = self.getCurrentItem()
         if not file_path:
-            file_path = '%s' % (item.filepath())
+            file_path = item.filepath()
         hotkey_dict = self.getHotkeyDict()
         if hotkey_dict:
             if delete is True:

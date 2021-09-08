@@ -5,17 +5,18 @@ from qtpy.QtWidgets import QWidget
 from qtpy.QtCore import QEvent
 from qtpy.QtGui import QKeySequence
 
-from Katana import UI4
-
 from AbstractScriptEditorWidgets import PopupHotkeyMenu, PopupGestureMenu
 from AbstractScriptEditorUtils import Utils as Locals
 
-class eventFilter(QWidget):
-    def __init__(self, parent=None, scripts_variable="CGWscripts"):
-        super(eventFilter, self).__init__(parent)
-        self.widget = UI4.App.MainWindow.GetMainWindow()
+class AbstractEventFilter(QWidget):
+    def __init__(self, parent=None, main_window=None, scripts_variable="CGWscripts"):
+        print(scripts_variable)
+        super(AbstractEventFilter, self).__init__(parent)
+        if not main_window:
+            main_window = self.window()
+
+        self._main_window = main_window
         self._scripts_variable = scripts_variable
-        #self.widget.installEventFilter(self)
 
     """ PROPERTIES """
     def scriptsVariable(self):
@@ -24,17 +25,20 @@ class eventFilter(QWidget):
     def scriptsDirectories(self):
         return os.environ[self.scriptsVariable()].split(":")
 
+    """ WIDGETS """
+    def mainWindow(self):
+        return self._main_window
+
     """ EVENTS """
     def closeEvent(self, *args, **kwargs):
-        self.widget.removeEventFilter(self)
+        self._main_window.removeEventFilter(self)
         return QWidget.closeEvent(self, *args, **kwargs)
 
     def eventFilter(self, obj, event, *args, **kwargs):
         if event.type() == QEvent.KeyPress:
             # get user hotkeys
             for directory in self.scriptsDirectories():
-                hotkeys_file_path = "{directory}/{hotkeys_file_path}".format(
-                    directory=directory, hotkeys_file_path=hotkeys_file_path)
+                hotkeys_file_path = "{directory}/hotkeys.json".format(directory=directory)
                 self.hotkey_dict = Locals().getFileDict(hotkeys_file_path)
 
                 # get key input
@@ -46,10 +50,10 @@ class eventFilter(QWidget):
                     if hotkey == user_input:
                         file_type = Locals().checkFileType(file_path)
                         if file_type == 'hotkey':
-                            main_widget = PopupHotkeyMenu(self.widget, file_path=file_path)
+                            main_widget = PopupHotkeyMenu(self.mainWindow(), file_path=file_path)
                             main_widget.show()
                         elif file_type == 'gesture':
-                            main_widget = PopupGestureMenu(self.widget, file_path=file_path)
+                            main_widget = PopupGestureMenu(self.mainWindow(), file_path=file_path)
                             main_widget.show()
                         elif file_type == 'script':
                             if os.path.exists(file_path):
