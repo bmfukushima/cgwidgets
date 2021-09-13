@@ -13,7 +13,6 @@ from .AbstractScriptEditorUtils import Utils as Locals
 
 class AbstractEventFilter(QWidget):
     def __init__(self, parent=None, main_window=None, scripts_variable="CGWscripts"):
-        print(scripts_variable)
         super(AbstractEventFilter, self).__init__(parent)
         if not main_window:
             main_window = self.window()
@@ -64,8 +63,6 @@ class AbstractEventFilter(QWidget):
                                 # with open(file_path, "r") as script_descriptor:
                                 #     exec(script_descriptor.read())
                                 with open(file_path) as script_descriptor:
-                                    print('execute script...')
-
                                     exec(compile(script_descriptor.read(), "script", "exec"))
                         return QWidget.eventFilter(self, obj, event, *args, **kwargs)
 

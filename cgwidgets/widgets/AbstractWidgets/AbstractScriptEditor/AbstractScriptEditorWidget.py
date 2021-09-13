@@ -845,11 +845,9 @@ class ScriptTreeWidget(QTreeWidget):
         code_tab = script_editor_widget.designTabWidget().codeWidget()
         file_path = current_item.filepath()
         with open(file_path, "r") as current_file:
-            #current_file = open(file_path, "r")
             text_list = current_file.readlines()
             text = "".join(text_list)
             code_tab.setPlainText(text)
-            #current_file.close()
         script_editor_widget.setCurrentItem(current_item)
 
     def showTab(self, current_item):
