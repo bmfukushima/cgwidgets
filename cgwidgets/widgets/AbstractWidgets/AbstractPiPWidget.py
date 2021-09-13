@@ -865,7 +865,8 @@ class AbstractPiPDisplayWidget(QWidget):
         """
         loc = {}
         loc['self'] = self
-        exec(constructor_code, globals(), loc)
+
+        exec(compile(constructor_code, "constructor_code", "exec"), globals(), loc)
         widget = loc['widget']
 
         return widget
@@ -2139,7 +2140,7 @@ organizer_widget.pipDisplayWidget().resizeMiniViewer()"""}
         loc['value'] = value
 
         # run update
-        exec(code, globals(), loc)
+        exec(compile(code, "code", "exec"), globals(), loc)
 
         # update local settings dictionary
         self.settings()[name]["value"] = value

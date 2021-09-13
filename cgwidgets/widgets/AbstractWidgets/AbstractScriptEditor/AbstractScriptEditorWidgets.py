@@ -1232,7 +1232,8 @@ class GestureDesignGUIButton(GestureDesignButtonWidget):
         if self.getFileType() == 'script':
             if os.path.exists(self.filepath()):
                 with open(self.filepath()) as script_descriptor:
-                    exec(script_descriptor.read())
+                    print('execute gesture')
+                    exec(compile(script_descriptor.read(), "script_descriptor", "exec"))
         elif self.getFileType() == 'hotkey':
             # katana_main = UI4.App.MainWindow.GetMainWindow()
             pos = QCursor.pos()
@@ -1372,7 +1373,8 @@ class HotkeyDesignPopupButton(HotkeyDesignButtonWidget):
         if self.getFileType() == 'script':
             if os.path.exists(self.filepath()):
                 with open(self.filepath()) as script_descriptor:
-                    exec(script_descriptor.read())
+                    print('execute hotkey')
+                    exec(compile(script_descriptor.read(), "script_descriptor", "exec"))
         elif self.getFileType() == 'hotkey':
             self.showHotkeyDesign(self.filepath())
         elif self.getFileType() == 'gesture':

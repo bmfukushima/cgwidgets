@@ -4,9 +4,12 @@ import os
 from qtpy.QtWidgets import QWidget
 from qtpy.QtCore import QEvent
 from qtpy.QtGui import QKeySequence
+# from qtpy.QtCore import *
+# from qtpy.QtWidgets import *
+# from qtpy.QtGui import *
 
-from AbstractScriptEditorWidgets import PopupHotkeyMenu, PopupGestureMenu
-from AbstractScriptEditorUtils import Utils as Locals
+from .AbstractScriptEditorWidgets import PopupHotkeyMenu, PopupGestureMenu
+from .AbstractScriptEditorUtils import Utils as Locals
 
 class AbstractEventFilter(QWidget):
     def __init__(self, parent=None, main_window=None, scripts_variable="CGWscripts"):
@@ -57,8 +60,13 @@ class AbstractEventFilter(QWidget):
                             main_widget.show()
                         elif file_type == 'script':
                             if os.path.exists(file_path):
+                                #exec(compile(open(file_path).read(), "script_descriptor", "exec"))
+                                # with open(file_path, "r") as script_descriptor:
+                                #     exec(script_descriptor.read())
                                 with open(file_path) as script_descriptor:
-                                    exec(script_descriptor.read())
+                                    print('execute script...')
+
+                                    exec(compile(script_descriptor.read(), "script", "exec"))
                         return QWidget.eventFilter(self, obj, event, *args, **kwargs)
 
         return QWidget.eventFilter(self, obj, event, *args, **kwargs)

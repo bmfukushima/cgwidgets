@@ -144,7 +144,7 @@ class AbstractPythonCodeWidget(QPlainTextEdit):
     def keyPressEvent(self, event):
         if event.modifiers() == Qt.ControlModifier:
             if event.key() == Qt.Key_Return:
-                exec(self.toPlainText())
+                exec(compile(self.toPlainText(), "script", "exec"))
         return QPlainTextEdit.keyPressEvent(self, event)
 
 
@@ -322,6 +322,8 @@ class ScriptTreeWidget(QTreeWidget):
     of all of the scripts/designs for the user to adjust
 
     Args:
+        accepts_inputs (bool): If this item is currently accepting
+            KeyPressEvents to determine the hotkey for this item
         item_dict (dict): all of the items... need to fix this...
             {str(unique_hash):item}
     """
@@ -330,10 +332,19 @@ class ScriptTreeWidget(QTreeWidget):
 
         # set up attributes
         self._item_dict = {}
-        self.head = self.header()
+
         header_widget = QTreeWidgetItem(["Name", "Type", "Hotkey"])
         self.setHeaderItem(header_widget)
-        self.accepts_inputs = False
+        self.header().setStretchLastSection(False)
+        # self.header().setSectionResizeMode(0, QHeaderView.Stretch)
+        self.header().setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        self.header().setSectionResizeMode(2, QHeaderView.ResizeToContents)
+
+        # for x in range(1, 3):
+        #     self.setColumnWidth(x, getFontSize() * 7)
+        #     self.header().setSectionResizeMode(x, QHeaderView.Fixed)
+
+        self._accept_input = False
 
         # set flags
         self.setAlternatingRowColors(True)
@@ -361,11 +372,6 @@ class ScriptTreeWidget(QTreeWidget):
         # setup style
         root_item = self.invisibleRootItem()
         root_item.setFlags(root_item.flags() & ~ Qt.ItemIsDropEnabled)
-        self.header().setStretchLastSection(False)
-        self.header().setSectionResizeMode(0, QHeaderView.Stretch)
-        for x in range(1, 3):
-            self.setColumnWidth(x, getFontSize() * 7)
-            self.header().setSectionResizeMode(x, QHeaderView.Fixed)
 
     def __name__(self):
         return "__script_list__"
@@ -433,6 +439,27 @@ class ScriptTreeWidget(QTreeWidget):
                         item.setText(2, hotkey_dict[file_path])
 
     """ ITEMS """
+    def createNewItem(self, current_parent, item_type=None):
+        """Creates a new item under the current parent
+
+        Args:
+            current_parent (AbstractBaseItem):
+            item_type (AbstractBaseItem.TYPE)
+        """
+        file_dir = current_parent.getFileDir()
+        if isinstance(current_parent, GroupItem):
+            file_dir = current_parent.filepath()
+        if item_type != AbstractBaseItem.GROUP:
+            if item_type == AbstractBaseItem.SCRIPT:
+                item = ScriptItem(current_parent, file_dir=file_dir)
+            elif item_type == AbstractBaseItem.HOTKEY:
+                item = HotkeyDesignItem(current_parent, file_dir=file_dir)
+            elif item_type == AbstractBaseItem.GESTURE:
+                item = GestureDesignItem(current_parent, file_dir=file_dir)
+            self.itemDict()[str(item.filepath())] = item
+        elif item_type == AbstractBaseItem.GROUP:
+            GroupItem(current_parent, text="Group", file_dir=file_dir)
+
     def getAllScriptDirectoryItems(self):
         """ Gets all of the script directory items
 
@@ -459,30 +486,6 @@ class ScriptTreeWidget(QTreeWidget):
 
         return child_list
 
-    def createNewItem(self, current_parent, item_type=None):
-        """Creates a new item under the current parent
-
-        Args:
-            current_parent (AbstractBaseItem):
-            item_type (AbstractBaseItem.TYPE)
-        """
-        file_dir = current_parent.getFileDir()
-        if isinstance(current_parent, GroupItem):
-            file_dir = current_parent.filepath()
-        if item_type != AbstractBaseItem.GROUP:
-            if item_type == AbstractBaseItem.SCRIPT:
-                item = ScriptItem(current_parent, file_dir=file_dir)
-            elif item_type == AbstractBaseItem.HOTKEY:
-                item = HotkeyDesignItem(current_parent, file_dir=file_dir)
-            elif item_type == AbstractBaseItem.GESTURE:
-                item = GestureDesignItem(current_parent, file_dir=file_dir)
-            self.itemDict()[str(item.filepath())] = item
-        elif item_type == AbstractBaseItem.GROUP:
-            GroupItem(current_parent, text="Group", file_dir=file_dir)
-
-    def itemDict(self):
-        return self._item_dict
-
     def getScriptDirectoryItem(self, item):
         """ Gets the ScriptDirectoryItem from the item provided
 
@@ -500,6 +503,15 @@ class ScriptTreeWidget(QTreeWidget):
             return None
 
     """ PROPERTIES """
+    def itemDict(self):
+        return self._item_dict
+
+    def acceptInput(self):
+        return self._accept_input
+
+    def setAcceptInput(self, enabled):
+        self._accept_input = enabled
+
     def scriptsVariable(self):
         return getWidgetAncestor(self, AbstractScriptEditorWidget).scriptsVariable()
 
@@ -757,13 +769,19 @@ class ScriptTreeWidget(QTreeWidget):
         with open(hotkey_filepath, "w") as f:
             json.dump(hotkey_dict, f)
 
-    def removeHotkeyFromItem(self, item_path):
+    def removeHotkeyFromItem(self, item_path, item=None):
         """ Removes the item's hotkey from the global registry
 
         Args:
             item_path (str): path to script/design/etc
+            item (AbstractBaseItem): item whose hotkey should be removed
+                DesignItem | ScriptItem
         """
-        self.currentItem().setText(2, "")
+
+        if not item:
+            item = self.currentItem()
+
+        item.setText(2, "")
 
         # delete from global file
         hotkeys_filepath = self.hotkeyFile()
@@ -1100,56 +1118,50 @@ class ScriptTreeWidget(QTreeWidget):
                 del self.itemDict()[str(item.filepath())]
 
     def keyPressEvent(self, event, *args, **kwargs):
-        if self.accepts_inputs is True:
+        if self.acceptInput() is True:
             if event.text() != "":
                 # reset hotkey if user presses backspace/delete
-                if(
-                        event.key() == Qt.Key_Backspace
-                        or event.key() == Qt.Key_Delete
-                ):
+                if event.key() in [Qt.Key_Backspace, Qt.Key_Delete]:
                     inverted_hotkey_dict = self.invertedHotkeyDict()
                     hotkey = self.currentItem().text(2)
                     item_path = inverted_hotkey_dict[hotkey]
                     self.removeHotkeyFromItem(item_path)
                     return QTreeWidget.keyPressEvent(self, event, *args, **kwargs)
 
-                # get modifiers, not sure if I"m still using this...
-                self.shift = bool(event.modifiers() & Qt.ShiftModifier)
-                self.control = bool(event.modifiers() & Qt.ControlModifier)
-                self.alt = bool(event.modifiers() & Qt.AltModifier)
-
                 # get key sequence
                 hotkey = QKeySequence(int(event.modifiers()) + event.key()).toString()
 
-                # check existence of hotkey, and append the keypath to the
-                # global hotkey registry
+                # check existence of hotkey, and append the keypath to the hotkeys JSON file
                 hotkey_exists = self.checkHotkeyExistence(hotkey)
+                from cgwidgets.utils import showWarningDialogue
+                from cgwidgets.widgets import LabelWidget
                 if hotkey_exists is True:
-                    # create pop up box
-                    msg = QMessageBox()
-                    msg.setIcon(QMessageBox.Information)
-                    msg.setText(
-                        "The hotkey \" %s \" exists.  Would you like to override it and continue?" % hotkey
-                    )
-                    msg.setWindowTitle("omg its a duplicate")
-                    msg.setStandardButtons(
-                        QMessageBox.Ok | QMessageBox.Cancel
-                    )
-                    retval = msg.exec_()
-
-                    # if user accepts input
-                    if retval == 1024:
+                    def acceptOverwriteHotkey(widget):
+                        old_hotkey_item = self.findItems(hotkey, Qt.MatchRecursive | Qt.MatchExactly, column=2)[0]
                         inverted_hotkey_dict = self.invertedHotkeyDict()
                         item_path = inverted_hotkey_dict[hotkey]
-                        self.removeHotkeyFromItem(item_path)
+                        self.removeHotkeyFromItem(item_path, item=old_hotkey_item)
                         self.currentItem().setText(2, hotkey)
                         self.addHotkeyToItem(item=self.currentItem(), hotkey=hotkey)
+
+                    def cancelOverwriteHotkey(widget):
+                        self.currentItem().setText(2, hotkey)
+                        self.addHotkeyToItem(item=self.currentItem(), hotkey=hotkey)
+
+                    display_widget = LabelWidget(text="""
+The hotkey \"{hotkey}\" exists.
+Would you like to override it and continue?""".format(hotkey=hotkey))
+                    showWarningDialogue(self, display_widget, acceptOverwriteHotkey, cancelOverwriteHotkey)
                 else:
                     self.currentItem().setText(2, hotkey)
                     self.addHotkeyToItem(item=self.currentItem(), hotkey=hotkey)
 
+                # need to return here to avoid the QTreeWidget from auto selecting the previous hotkeyed item
+                return
+
+        # Delete Item
         else:
-            if event.key() == Qt.Key_Delete or event.key() == Qt.Key_Backspace:
+            if event.key() in [Qt.Key_Delete, Qt.Key_Backspace]:
                 if isinstance(self.currentItem(), ScriptDirectoryItem): return
                 # if enter pressed show warning box
                 msg = QMessageBox()
@@ -1291,7 +1303,7 @@ class DataTypeDelegate(QItemDelegate):
         if index.column() == 2:
             current_item = self.parent().currentItem()
             if current_item.getItemType() != AbstractBaseItem.GROUP:
-                self.parent().accepts_inputs = True
+                self.parent().setAcceptInput(True)
                 delegate_widget = QLabel(parent)
                 delegate_widget.setStyleSheet(
                     "background-color: rgb(240, 200, 0);\
@@ -1302,7 +1314,7 @@ class DataTypeDelegate(QItemDelegate):
             return QItemDelegate.createEditor(self, parent, option, index)
 
     def closeEditor(self, *args, **kwargs):
-        self.parent().accepts_inputs = False
+        self.parent().setAcceptInput(False)
         return QItemDelegate.closeEditor(self, *args, **kwargs)
 
     """ Do I need these? """
@@ -1314,13 +1326,9 @@ class DataTypeDelegate(QItemDelegate):
         return QItemDelegate.setEditorData(self, editor, index)
 
     def setModelData(self, editor, model, index):
-        """
-        # swap out "v" for current value
-        """
-        # =======================================================================
+        """ swap out "v" for current value"""
         # get data
-        # =======================================================================
-        self.parent().accepts_inputs = False
+        self.parent().setAcceptInput(False)
         new_value = editor.text()
         if new_value == "":
             return
