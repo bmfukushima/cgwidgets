@@ -60,8 +60,6 @@ Todo:
 #===============================================================================
 # WISH LIST
 #===============================================================================
-- Moving item to group does NOT update master hotkey file...
-
 - Add fifth row of fingers for "5tgb"
 
 
@@ -71,7 +69,7 @@ Todo:
 #--------------------------------------------------------------------------- OLD
 # IRF Support
     - if modifier hit... create it as an IRF and apply it?
-    - Modifer Support?
+    - Modifier Support?
 # Unique hashes are getting split as string/ints... would be good to standardize a data format
     for them if they are to remain as key/pair values... probably ints?
 
@@ -85,21 +83,12 @@ Todo:
 
     how to automatically source this in? as it wont be in the same standard dir structure?
 
-# figure out QApp stuff... just using imp to load atm
-
-#Drag/Drop Slow
-    Due to setting flags...
-    Populating list is fine... its running through flags which causes the slight delay?
-
-    Could just collapse the item and disable it, then re-expand it?
-
 
 # could potentially use a hot key for previous/next? instead of groups?
     - easier for dumb dumbs...
     - technically less combinations
         (multiplication vs exponents)
 
-# Stop HotkeyDesigns from being able to drop on themselves?
 """
 
 import sys
@@ -118,7 +107,6 @@ from qtpy.QtWidgets import (
     QTreeWidget,
     QTreeWidgetItem,
     QItemDelegate,
-    QMessageBox,
     QTabWidget,
     QPlainTextEdit,
     QMenu
@@ -127,7 +115,8 @@ from qtpy.QtWidgets import (
 from qtpy.QtCore import QVariant, Qt
 from qtpy.QtGui import QCursor, QKeySequence
 
-from cgwidgets.utils import getWidgetAncestor, getFontSize
+from cgwidgets.utils import getWidgetAncestor, showWarningDialogue
+from cgwidgets.widgets.AbstractWidgets.AbstractBaseInputWidgets import AbstractLabelWidget
 
 from .AbstractScriptEditorUtils import Utils as Locals
 from .AbstractScriptEditorWidgets import (
@@ -321,37 +310,25 @@ class ScriptTreeWidget(QTreeWidget):
     This tree widget sits on the left side of GUI and holds the list
     of all of the scripts/designs for the user to adjust
 
-    Args:
-        accepts_inputs (bool): If this item is currently accepting
+    Attributes:
+        accept_input (bool): If this item is currently accepting
             KeyPressEvents to determine the hotkey for this item
         item_dict (dict): all of the items... need to fix this...
-            {str(unique_hash):item}
+            {filepath:item}
     """
     def __init__(self, parent=None):
         super(ScriptTreeWidget, self).__init__(parent)
 
         # set up attributes
         self._item_dict = {}
+        self._accept_input = False
 
+        # setup header
         header_widget = QTreeWidgetItem(["Name", "Type", "Hotkey"])
         self.setHeaderItem(header_widget)
         self.header().setStretchLastSection(False)
-        # self.header().setSectionResizeMode(0, QHeaderView.Stretch)
         self.header().setSectionResizeMode(1, QHeaderView.ResizeToContents)
         self.header().setSectionResizeMode(2, QHeaderView.ResizeToContents)
-
-        # for x in range(1, 3):
-        #     self.setColumnWidth(x, getFontSize() * 7)
-        #     self.header().setSectionResizeMode(x, QHeaderView.Fixed)
-
-        self._accept_input = False
-
-        # set flags
-        self.setAlternatingRowColors(True)
-        self.setDropIndicatorShown(True)
-        self.setDragDropMode(QTreeWidget.InternalMove)
-        self.setDragEnabled(True)
-        self.setAcceptDrops(True)
 
         # connect signals
         self.itemChanged.connect(self.updateItemName)
@@ -369,7 +346,12 @@ class ScriptTreeWidget(QTreeWidget):
             # Populate Items from Directories
             self.populateDirectory(script_directory, directory_item, script_directory)
 
-        # setup style
+        # set flags
+        self.setAlternatingRowColors(True)
+        self.setDropIndicatorShown(True)
+        self.setDragDropMode(QTreeWidget.InternalMove)
+        self.setDragEnabled(True)
+        self.setAcceptDrops(True)
         root_item = self.invisibleRootItem()
         root_item.setFlags(root_item.flags() & ~ Qt.ItemIsDropEnabled)
 
@@ -762,18 +744,22 @@ class ScriptTreeWidget(QTreeWidget):
                 QKeySequence().toString()
         """
 
-        # file_path = self.filepath() + "/hotkeys.json"
+        if not item:
+            item = self.currentItem()
+
         hotkey_filepath = self.hotkeyFile()
         hotkey_dict = Locals().getFileDict(hotkey_filepath)
         hotkey_dict[item.filepath()] = hotkey
         with open(hotkey_filepath, "w") as f:
             json.dump(hotkey_dict, f)
 
-    def removeHotkeyFromItem(self, item_path, item=None):
+    def removeHotkeyFromItem(self, item=None):
         """ Removes the item's hotkey from the global registry
 
+        # todo not sure if this needs item_path...
+        should be able to get it from the item provided
+
         Args:
-            item_path (str): path to script/design/etc
             item (AbstractBaseItem): item whose hotkey should be removed
                 DesignItem | ScriptItem
         """
@@ -782,7 +768,7 @@ class ScriptTreeWidget(QTreeWidget):
             item = self.currentItem()
 
         item.setText(2, "")
-
+        item_path = item.filepath()
         # delete from global file
         hotkeys_filepath = self.hotkeyFile()
         hotkey_dict = Locals().getFileDict(hotkeys_filepath)
@@ -858,11 +844,12 @@ class ScriptTreeWidget(QTreeWidget):
         current_item = self.currentItem()
         code_tab = script_editor_widget.designTabWidget().codeWidget()
         file_path = current_item.filepath()
-        current_file = open(file_path, "r")
-        text_list = current_file.readlines()
-        text = "".join(text_list)
-        code_tab.setPlainText(text)
-        current_file.close()
+        with open(file_path, "r") as current_file:
+            #current_file = open(file_path, "r")
+            text_list = current_file.readlines()
+            text = "".join(text_list)
+            code_tab.setPlainText(text)
+            #current_file.close()
         script_editor_widget.setCurrentItem(current_item)
 
     def showTab(self, current_item):
@@ -1081,7 +1068,7 @@ class ScriptTreeWidget(QTreeWidget):
     def deleteItem(self, item):
         if item:
             if isinstance(item, GroupItem):
-                # has to recusively delete all children?
+                # has to recursively delete all children?
                 for index in range(item.childCount()):
                     child = item.child(index)
                     self.deleteItem(child)
@@ -1122,10 +1109,7 @@ class ScriptTreeWidget(QTreeWidget):
             if event.text() != "":
                 # reset hotkey if user presses backspace/delete
                 if event.key() in [Qt.Key_Backspace, Qt.Key_Delete]:
-                    inverted_hotkey_dict = self.invertedHotkeyDict()
-                    hotkey = self.currentItem().text(2)
-                    item_path = inverted_hotkey_dict[hotkey]
-                    self.removeHotkeyFromItem(item_path)
+                    self.removeHotkeyFromItem()
                     return QTreeWidget.keyPressEvent(self, event, *args, **kwargs)
 
                 # get key sequence
@@ -1133,14 +1117,14 @@ class ScriptTreeWidget(QTreeWidget):
 
                 # check existence of hotkey, and append the keypath to the hotkeys JSON file
                 hotkey_exists = self.checkHotkeyExistence(hotkey)
-                from cgwidgets.utils import showWarningDialogue
-                from cgwidgets.widgets import LabelWidget
+
                 if hotkey_exists is True:
                     def acceptOverwriteHotkey(widget):
+                        # remove old hotkey
                         old_hotkey_item = self.findItems(hotkey, Qt.MatchRecursive | Qt.MatchExactly, column=2)[0]
-                        inverted_hotkey_dict = self.invertedHotkeyDict()
-                        item_path = inverted_hotkey_dict[hotkey]
-                        self.removeHotkeyFromItem(item_path, item=old_hotkey_item)
+                        self.removeHotkeyFromItem(item=old_hotkey_item)
+
+                        # add new hotkey
                         self.currentItem().setText(2, hotkey)
                         self.addHotkeyToItem(item=self.currentItem(), hotkey=hotkey)
 
@@ -1148,7 +1132,7 @@ class ScriptTreeWidget(QTreeWidget):
                         self.currentItem().setText(2, hotkey)
                         self.addHotkeyToItem(item=self.currentItem(), hotkey=hotkey)
 
-                    display_widget = LabelWidget(text="""
+                    display_widget = AbstractLabelWidget(text="""
 The hotkey \"{hotkey}\" exists.
 Would you like to override it and continue?""".format(hotkey=hotkey))
                     showWarningDialogue(self, display_widget, acceptOverwriteHotkey, cancelOverwriteHotkey)
@@ -1163,30 +1147,22 @@ Would you like to override it and continue?""".format(hotkey=hotkey))
         else:
             if event.key() in [Qt.Key_Delete, Qt.Key_Backspace]:
                 if isinstance(self.currentItem(), ScriptDirectoryItem): return
-                # if enter pressed show warning box
-                msg = QMessageBox()
-                msg.setIcon(QMessageBox.Information)
-                msg.setWindowTitle("Are ya sure matey!?!?? (said like a pirate)")
-                msg.setStandardButtons(
-                    QMessageBox.Ok | QMessageBox.Cancel
-                )
-                retval = msg.exec_()
-                # if user selects ok on warning box
-                if retval == 1024:
+                def deleteItem(widget):
                     item = self.currentItem()
+                    self.removeHotkeyFromItem()
                     self.deleteItem(item)
                     if isinstance(item, GroupItem):
-                        # os.rmdir(item.filepath())
                         shutil.rmtree(item.filepath())
-                        # os.system("rm -rf %s" % build_dir)
                         index = item.parent().indexOfChild(item)
                         item.parent().takeChild(index)
 
-        return QTreeWidget.keyPressEvent(self, event, *args, **kwargs)
+                def cancel(widget):
+                    pass
 
-    def keyReleaseEvent(self, *args, **kwargs):
-        #self.accepts_inputs = False
-        return QTreeWidget.keyReleaseEvent(self, *args, **kwargs)
+                display_widget = AbstractLabelWidget(text="Are ya sure matey!?!?? (said like a pirate)")
+                showWarningDialogue(self, display_widget, deleteItem, cancel)
+
+        return QTreeWidget.keyPressEvent(self, event, *args, **kwargs)
 
 
 class DesignTab(QTabWidget):
