@@ -8,7 +8,7 @@ app = QApplication(sys.argv)
 os.environ["CGWscripts"] = ":".join([
     getDefaultSavePath() + "/.scripts",
     getDefaultSavePath() + "/.scripts2",
-    "/media/ssd01/dev/katana/KatanaResources_old/ScriptsTest"
+    "/media/ssd01/dev/katana/KatanaWidgets/Scripts/"
 ])
 
 main_widget = AbstractScriptEditorWidget()

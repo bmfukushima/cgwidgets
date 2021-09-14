@@ -59,13 +59,8 @@ Todo:
     * Popup Widgets
         - Add forward/backwards menu options
         - Dim unused buttons
-    * Metadata
-        - Setup locking mechanisms...
-        - Order of files?
-            - such a pain in the ass... will have to repopulate every time to ensure
-                that the data is correct... nah
-        - Filedir display names
-            metadata?
+    * HotkeyDesigns
+        not opening new tabs?
 #===============================================================================
 # WISH LIST
 #===============================================================================
@@ -907,7 +902,7 @@ class ScriptTreeWidget(QTreeWidget):
         tab_bar = design_tab.tabBar()
 
         # Hotkey
-        if isinstance(current_item, HotkeyDesignItem):
+        if isinstance(current_item, (HotkeyDesignItem, GestureDesignItem)):
             # create/show tab if it exists/doesnt
             for index in range(tab_bar.count()):
                 widget = design_tab.widget(index)
@@ -916,14 +911,34 @@ class ScriptTreeWidget(QTreeWidget):
                         design_tab.setCurrentWidget(widget)
                         return
 
-            design_widget = HotkeyDesignEditorWidget(
-                parent=design_tab,
-                item=current_item,
-                file_path=current_item.filepath()
-            )
+            if isinstance(current_item, HotkeyDesignItem):
+                design_widget = HotkeyDesignEditorWidget(
+                    parent=design_tab,
+                    item=current_item,
+                    file_path=current_item.filepath()
+                )
+            if isinstance(current_item, GestureDesignItem):
+                size = design_tab.getGestureWidgetSize()
+                design_widget = GestureDesignEditorWidget(
+                    parent=design_tab,
+                    item=current_item,
+                    file_path=current_item.filepath(),
+                    script_list=self,
+                    size=size
+
+                )
+            # update design widget meta data
             design_widget.setHash(current_item.getHash())
-            design_tab.addTab(design_widget, current_item.text(0))
             design_tab.setCurrentWidget(design_widget)
+            design_tab.setCurrentWidget(design_widget)
+
+            # add tab
+            tab_name = current_item.text(0)
+            tab = design_tab.addTab(design_widget, tab_name)
+            directory_display_name = self.getSetting("display_name", current_item)
+            display_name = "{directory_name}/{tab_name}".format(
+                directory_name=directory_display_name, tab_name=tab_name)
+            design_tab.setTabToolTip(tab, display_name)
 
         # Script
         elif isinstance(current_item, ScriptItem):
@@ -931,27 +946,68 @@ class ScriptTreeWidget(QTreeWidget):
             widget = design_tab.widget(0)
             design_tab.setCurrentWidget(widget)
 
-        # Gesture
-        elif isinstance(current_item, GestureDesignItem):
-            for index in range(tab_bar.count()):
-                widget = design_tab.widget(index)
-                if hasattr(widget, "getItem"):
-                    if widget.getItem().getHash() == current_item.getHash():
-                        design_tab.setCurrentWidget(widget)
-                        return
+        # # Gesture
+        # elif isinstance(current_item, GestureDesignItem):
+        #     for index in range(tab_bar.count()):
+        #         widget = design_tab.widget(index)
+        #         if hasattr(widget, "getItem"):
+        #             if widget.getItem().getHash() == current_item.getHash():
+        #                 design_tab.setCurrentWidget(widget)
+        #                 return
+        #
+        #     size = design_tab.getGestureWidgetSize()
+        #     design_widget = GestureDesignEditorWidget(
+        #         parent=design_tab,
+        #         item=current_item,
+        #         file_path=current_item.filepath(),
+        #         script_list=self,
+        #         size=size
+        #
+        #     )
+        #     design_widget.setHash(current_item.getHash())
+        #     design_tab.addTab(design_widget, current_item.text(0))
+        #     design_tab.setCurrentWidget(design_widget)
 
-            size = design_tab.getGestureWidgetSize()
-            design_widget = GestureDesignEditorWidget(
-                parent=design_tab,
-                item=current_item,
-                file_path=current_item.filepath(),
-                script_list=self,
-                size=size
+    def deleteItem(self, item):
 
-            )
-            design_widget.setHash(current_item.getHash())
-            design_tab.addTab(design_widget, current_item.text(0))
-            design_tab.setCurrentWidget(design_widget)
+        if item:
+
+            if isinstance(item, GroupItem):
+                # has to recursively delete all children?
+                for index in range(item.childCount()):
+                    child = item.child(index)
+                    self.deleteItem(child)
+
+            else:
+                script_editor_widget = getWidgetAncestor(self, AbstractScriptEditorWidget)
+                file_path = item.filepath()
+
+                # delete disk location
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+
+                # del tab
+                design_tab_widget = script_editor_widget.designTabWidget()
+                tab_bar = design_tab_widget.tabBar()
+                for index in range(tab_bar.count()):
+                    widget = design_tab_widget.widget(index)
+                    if (
+                            isinstance(widget, HotkeyDesignEditorWidget)
+                            or isinstance(widget, GestureDesignEditorWidget)
+                    ):
+                        if item.getHash() == widget.getHash():
+                            design_tab_widget.removeTab(index)
+
+                # needs to update all buttons again?
+                self.updateAllButtons()
+                self.updateAllDesignPaths(file_path, "")
+
+                # del item
+                index = item.parent().indexOfChild(item)
+                item.parent().takeChild(index)
+
+                # del key
+                del self.itemDict()[str(item.filepath())]
 
     """ EVENTS """
     def contextMenuEvent(self, event, *args, **kwargs):
@@ -1118,47 +1174,6 @@ class ScriptTreeWidget(QTreeWidget):
 
         return QTreeWidget.mouseReleaseEvent(self, event,  *args, **kwargs)
 
-    def deleteItem(self, item):
-
-        if item:
-
-            if isinstance(item, GroupItem):
-                # has to recursively delete all children?
-                for index in range(item.childCount()):
-                    child = item.child(index)
-                    self.deleteItem(child)
-
-            else:
-                script_editor_widget = getWidgetAncestor(self, AbstractScriptEditorWidget)
-                file_path = item.filepath()
-
-                # delete disk location
-                if os.path.exists(file_path):
-                    os.remove(file_path)
-
-                # del tab
-                design_tab_widget = script_editor_widget.designTabWidget()
-                tab_bar = design_tab_widget.tabBar()
-                for index in range(tab_bar.count()):
-                    widget = design_tab_widget.widget(index)
-                    if (
-                            isinstance(widget, HotkeyDesignEditorWidget)
-                            or isinstance(widget, GestureDesignEditorWidget)
-                    ):
-                        if item.getHash() == widget.getHash():
-                            design_tab_widget.removeTab(index)
-
-                # needs to update all buttons again?
-                self.updateAllButtons()
-                self.updateAllDesignPaths(file_path, "")
-
-                # del item
-                index = item.parent().indexOfChild(item)
-                item.parent().takeChild(index)
-
-                # del key
-                del self.itemDict()[str(item.filepath())]
-
     def keyPressEvent(self, event, *args, **kwargs):
         # block if locked
         if self.isItemLocked(self.currentItem()): return
@@ -1306,10 +1321,11 @@ class DesignTab(QTabWidget):
 
     """ EVENTS """
     def mousePressEvent(self, event, *args, **kwargs):
-        tab_bar = self.tabBar()
-        current_tab = tab_bar.tabAt(event.pos())
-        if current_tab > 0:
-            self.removeTab(tab_bar.tabAt(event.pos()))
+        if event.button() == Qt.MiddleButton:
+            tab_bar = self.tabBar()
+            current_tab = tab_bar.tabAt(event.pos())
+            if current_tab > 0:
+                self.removeTab(tab_bar.tabAt(event.pos()))
 
         return QTabWidget.mousePressEvent(self, event, *args, **kwargs)
 
