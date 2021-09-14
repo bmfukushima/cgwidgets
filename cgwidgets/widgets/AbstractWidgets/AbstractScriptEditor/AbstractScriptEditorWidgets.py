@@ -867,11 +867,6 @@ class HotkeyDesignEditorWidget(AbstractHotkeyDesignWidget):
         self.item = item
         self.populate(file_dict, item_dict=item_dict, button_type='hotkey editor')
 
-    def getButtonSize(self):
-        width   = self.geometry().width() / 4
-        height  = self.geometry().height() / 4 
-        return width, height
-
     def setButtonSize(self):
         button_width, button_height = self.getButtonSize()
         for row_index, row in enumerate(self.button_list):
