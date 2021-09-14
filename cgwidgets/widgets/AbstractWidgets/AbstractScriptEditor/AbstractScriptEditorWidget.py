@@ -46,6 +46,13 @@ Data:
         }
     Gesture (design)
         {"1-7" : "filepath"}
+
+    Settings (settings.json):
+        {
+            setting_name:value,
+            locked:bool,
+            display_name, str
+        }
 """
 """
 Todo:
@@ -55,6 +62,8 @@ Todo:
     * Metadata
         - Setup locking mechanisms...
         - Order of files?
+            - such a pain in the ass... will have to repopulate every time to ensure
+                that the data is correct... nah
         - Filedir display names
             metadata?
 #===============================================================================
@@ -115,7 +124,7 @@ from qtpy.QtWidgets import (
 from qtpy.QtCore import QVariant, Qt
 from qtpy.QtGui import QCursor, QKeySequence
 
-from cgwidgets.utils import getWidgetAncestor, showWarningDialogue
+from cgwidgets.utils import getWidgetAncestor, showWarningDialogue, getJSONData
 from cgwidgets.widgets.AbstractWidgets.AbstractBaseInputWidgets import AbstractLabelWidget
 
 from .AbstractScriptEditorUtils import Utils as Locals
@@ -200,14 +209,13 @@ class AbstractScriptEditorWidget(QSplitter):
             scripts_directory (str): path on disk"""
         if not os.path.exists(scripts_directory):
             os.mkdir(scripts_directory)
-        # if not os.path.exists(scripts_directory + "/scripts"):
-        #     os.mkdir(scripts_directory + "/scripts")
-        # if not os.path.exists(scripts_directory + "/designs"):
-        #     os.mkdir(scripts_directory + "/designs")
-        if not os.path.exists(scripts_directory + "/hotkeys.json"):
-            hotkey_dict = {}
-            with open(scripts_directory + "/hotkeys.json", "w") as f:
-                json.dump(hotkey_dict, f)
+        for item in ["hotkeys", "settings"]:
+            if not os.path.exists(scripts_directory + "/{item}.json".format(item=item)):
+                data_dict = {}
+                if item == "settings":
+                    data_dict = {"locked": False, "display_name": os.path.basename(scripts_directory)}
+                with open(scripts_directory + "/{item}.json".format(item=item), "w") as f:
+                    json.dump(data_dict, f)
 
     def __setupGUI(self, python_editor):
         """ Sets up the main GUI"""
@@ -337,9 +345,11 @@ class ScriptTreeWidget(QTreeWidget):
 
         # Populate Items
         for script_directory in self.scriptDirectories():
+            display_name = getJSONData(script_directory + "/settings.json")["display_name"]
+            # display_name = os.path.basename(script_directory)
             directory_item = ScriptDirectoryItem(
                 self,
-                text=os.path.basename(script_directory),
+                text=display_name,
                 file_dir=script_directory,
 
             )
@@ -371,7 +381,8 @@ class ScriptTreeWidget(QTreeWidget):
         for file in AbstractScriptEditorWidget.sortedFiles(file_dir):
             file_path = "{filedir}/{file}".format(filedir=file_dir, file=file)
             if "." in file:
-                if file != "master.py" and file != "master.json" and file != "hotkeys.json":
+                if file not in ["hotkeys.json", "settings.json"]:
+                    # create directory item
                     if os.path.isdir(file_path):
                         unique_hash, text = file.replace(".py", "").split(".")
                         item = GroupItem(
@@ -382,6 +393,8 @@ class ScriptTreeWidget(QTreeWidget):
                         )
                         self.itemDict()[file_path] = item
                         self.populateDirectory(file_path, item, orig_dir)
+
+                    # create design/script item
                     elif os.path.isfile(file_path):
                         if ".pyc" in file:
                             pass
@@ -416,9 +429,12 @@ class ScriptTreeWidget(QTreeWidget):
                             self.itemDict()[file_path] = item
 
                     # set display hotkey
-                    hotkey_dict = Locals().getFileDict(orig_dir + "/hotkeys.json")
+                    hotkey_dict = getJSONData(orig_dir + "/hotkeys.json")
+                    is_locked = self.getSetting("locked", item)
                     if file_path in list(hotkey_dict.keys()):
                         item.setText(2, hotkey_dict[file_path])
+                    if is_locked:
+                        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
 
     """ ITEMS """
     def createNewItem(self, current_parent, item_type=None):
@@ -731,6 +747,41 @@ class ScriptTreeWidget(QTreeWidget):
         design_tab = script_editor_widget.designTabWidget()
         design_tab.updateAllHotkeyDesigns()
 
+    """ SETTINGS """
+    def settingsFile(self, item=None):
+        """ Gets the current items setting files
+
+        Returns (str): path on disk"""
+        if not item:
+            item = self.currentItem()
+        directory_item = self.getScriptDirectoryItem(item)
+        return directory_item.getFileDir() + "/settings.json"
+
+    def settingsDict(self, item=None):
+        """ Returns all of the data from the settings file"""
+        if not item:
+            item = self.currentItem()
+
+        directory_item = self.getScriptDirectoryItem(item)
+        if directory_item:
+            file_path = self.settingsFile(item)
+            return getJSONData(file_path)
+
+    def getSetting(self, setting, item=None):
+        """ Returns the settings value from the item provided
+
+        Args:
+            setting (str): name of setting to query
+                locked | display_name
+        Returns"""
+        if not item:
+            item = self.currentItem()
+        settings_data = self.settingsDict(item)
+        return settings_data[setting]
+
+    def isItemLocked(self, item):
+        return self.getSetting("locked", item)
+
     """ HOTKEYS """
     def addHotkeyToItem(self, item=None, hotkey=None):
         """ Adds a a hotkey to a SCRIPT | DESIGN item
@@ -748,7 +799,7 @@ class ScriptTreeWidget(QTreeWidget):
             item = self.currentItem()
 
         hotkey_filepath = self.hotkeyFile()
-        hotkey_dict = Locals().getFileDict(hotkey_filepath)
+        hotkey_dict = getJSONData(hotkey_filepath)
         hotkey_dict[item.filepath()] = hotkey
         with open(hotkey_filepath, "w") as f:
             json.dump(hotkey_dict, f)
@@ -771,7 +822,7 @@ class ScriptTreeWidget(QTreeWidget):
         item_path = item.filepath()
         # delete from global file
         hotkeys_filepath = self.hotkeyFile()
-        hotkey_dict = Locals().getFileDict(hotkeys_filepath)
+        hotkey_dict = getJSONData(hotkeys_filepath)
         hotkey_dict.pop(item_path, None)
         with open(hotkeys_filepath, "w") as f:
             json.dump(hotkey_dict, f)
@@ -796,9 +847,8 @@ class ScriptTreeWidget(QTreeWidget):
 
         directory_item = self.getScriptDirectoryItem(item)
         if directory_item:
-            file_path = directory_item.getFileDir() + "/hotkeys.json"
-            hotkey_dict = Locals().getFileDict(file_path)
-            return hotkey_dict
+            file_path = self.hotkeyFile(item)
+            return getJSONData(file_path)
 
     def invertedHotkeyDict(self, item=None):
         """ This should then be used to get the file_path for a hotkey from the hotkey registered
@@ -905,6 +955,9 @@ class ScriptTreeWidget(QTreeWidget):
 
     """ EVENTS """
     def contextMenuEvent(self, event, *args, **kwargs):
+        # block if locked
+        if self.isItemLocked(self.currentItem()): return
+
         def actionPicker(action):
             # get parent item
             current_parent = self.currentItem()
@@ -936,6 +989,8 @@ class ScriptTreeWidget(QTreeWidget):
 
     def dragEnterEvent(self, *args, **kwargs):
         """ set up flags for drag/drop so that an item cannot be moved out of its top most item"""
+        # block if locked
+        if self.isItemLocked(self.currentItem()): return
 
         # enable drop into this directory
         current_script_directory = self.getScriptDirectoryItem(self.currentItem())
@@ -958,9 +1013,9 @@ class ScriptTreeWidget(QTreeWidget):
         return QTreeWidget.dragEnterEvent(self, *args, **kwargs)
 
     def dropEvent(self, event, *args, **kwargs):
-        # when an item is dropped, its directory is updated along with all
-        # meta data relating to tabs/buttons/designs
-        # get attributes
+        """ when an item is dropped, its directory is updated along with all
+        meta data relating to tabs/buttons/designs
+        get attributes"""
         current_item = self.currentItem()
         old_parent = current_item.parent()
 
@@ -1064,7 +1119,9 @@ class ScriptTreeWidget(QTreeWidget):
         return QTreeWidget.mouseReleaseEvent(self, event,  *args, **kwargs)
 
     def deleteItem(self, item):
+
         if item:
+
             if isinstance(item, GroupItem):
                 # has to recursively delete all children?
                 for index in range(item.childCount()):
@@ -1103,6 +1160,9 @@ class ScriptTreeWidget(QTreeWidget):
                 del self.itemDict()[str(item.filepath())]
 
     def keyPressEvent(self, event, *args, **kwargs):
+        # block if locked
+        if self.isItemLocked(self.currentItem()): return
+
         if self.acceptInput() is True:
             if event.text() != "":
                 # reset hotkey if user presses backspace/delete

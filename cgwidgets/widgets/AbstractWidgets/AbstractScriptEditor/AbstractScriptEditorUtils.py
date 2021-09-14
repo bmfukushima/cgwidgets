@@ -4,19 +4,14 @@ import os
 
 class Utils(object):
     def getFileDict(self, file_path):
-        '''
-        @returns <dict> dict[hotkey]=file_path
-        '''
+        """@returns <dict> dict[hotkey]=file_path"""
         if file_path:
             with open(file_path, 'r') as f:
                 hotkeys = json.load(f)
                 return hotkeys
 
-
     def checkFileType(self, file_path):
-        '''
-        @file_path <str> path on disk to file
-        '''
+        """@file_path <str> path on disk to file"""
         if os.path.exists(file_path):
             if os.path.isdir(file_path):
                 return 'group'

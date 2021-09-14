@@ -31,10 +31,11 @@ from .AbstractScriptEditorUtils import Utils as Locals
 
 from cgwidgets.utils import (
     getWidgetAncestorByName,
-    setAsTransparent,
+    getJSONData,
     getCenterOfScreen,
-    setAsTool,
     getWidgetAncestor,
+    setAsTransparent,
+    setAsTool,
     setAsPopup
 )
 
@@ -459,7 +460,7 @@ class GestureDesignWidget(QGraphicsView, DesignWidget):
         outer_radius = size * .25
         inner_radius = outer_radius * self.poly_width
 
-        file_dict = Locals().getFileDict(self.filepath())
+        file_dict = getJSONData(self.filepath())
 
         item_dict = script_editor_widget.scriptWidget().itemDict()
         self.drawPolygons(
@@ -849,7 +850,7 @@ class HotkeyDesignEditorWidget(HotkeyDesignWidget):
         # set up default attributes
         self.setFilepath(file_path)
         # self.button_dict = {}
-        file_dict = Locals().getFileDict(self.filepath())
+        file_dict = getJSONData(self.filepath())
 
         script_editor_widget = getWidgetAncestorByName(self.parentWidget(), "AbstractScriptEditorWidget")
         item_dict = script_editor_widget.scriptWidget().itemDict()
@@ -935,7 +936,7 @@ class HotkeyDesignEditorButton(HotkeyDesignButtonWidget):
     def getHotkeyDict(self):
         """Returns the hotkey dictionary or None"""
         if os.path.exists(self.parent().filepath()):
-            return Locals().getFileDict(self.parent().filepath())
+            return getJSONData(self.parent().filepath())
         else:
             return None
 
@@ -993,7 +994,7 @@ class GestureDesignEditorWidget(GestureDesignWidget):
         self.setScene(scene)
 
         # set up buttons
-        file_dict = Locals().getFileDict(self.filepath())
+        file_dict = getJSONData(self.filepath())
         script_editor_widget = getWidgetAncestorByName(self, "AbstractScriptEditorWidget")
         item_dict = script_editor_widget.scriptWidget().itemDict()
         self.drawPolygons(
@@ -1008,7 +1009,7 @@ class GestureDesignEditorWidget(GestureDesignWidget):
         # set scene display
         self.setMaximumSize(size, size)
 
-        file_dict = Locals().getFileDict(self.filepath())
+        file_dict = getJSONData(self.filepath())
 
 
 class GestureDesignEditorButton(GestureDesignButtonWidget):
@@ -1064,7 +1065,7 @@ class GestureDesignEditorButton(GestureDesignButtonWidget):
         @returns: dictionary of design hotkeys
         """
         if os.path.exists(self.getView().filepath()):
-            return Locals().getFileDict(self.getView().filepath())
+            return getJSONData(self.getView().filepath())
 
     def getView(self):
         return self.scene().views()[0]
@@ -1179,7 +1180,7 @@ class GestureDesignGUIWidget(GestureDesignWidget):
         self.setScene(scene)
 
         # set up buttons
-        file_dict = Locals().getFileDict(self.filepath())
+        file_dict = getJSONData(self.filepath())
 
         self.drawPolygons(
             num_points=8,
@@ -1324,7 +1325,7 @@ class HotkeyDesignPopupWidget(HotkeyDesignWidget):
         # set up default attributes
         self.setFilepath(file_path)
         self.button_dict = {}
-        file_dict = Locals().getFileDict(self.filepath())
+        file_dict = getJSONData(self.filepath())
 
         self.init_pos = init_pos
         self.populate(file_dict, button_type='hotkey gui')
@@ -1373,7 +1374,6 @@ class HotkeyDesignPopupButton(HotkeyDesignButtonWidget):
         if self.getFileType() == 'script':
             if os.path.exists(self.filepath()):
                 with open(self.filepath()) as script_descriptor:
-                    print('execute hotkey')
                     exec(compile(script_descriptor.read(), "script_descriptor", "exec"))
         elif self.getFileType() == 'hotkey':
             self.showHotkeyDesign(self.filepath())

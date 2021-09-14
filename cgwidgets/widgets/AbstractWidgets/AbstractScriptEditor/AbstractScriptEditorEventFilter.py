@@ -4,12 +4,11 @@ import os
 from qtpy.QtWidgets import QWidget
 from qtpy.QtCore import QEvent
 from qtpy.QtGui import QKeySequence
-# from qtpy.QtCore import *
-# from qtpy.QtWidgets import *
-# from qtpy.QtGui import *
+
 
 from .AbstractScriptEditorWidgets import PopupHotkeyMenu, PopupGestureMenu
 from .AbstractScriptEditorUtils import Utils as Locals
+from cgwidgets.utils import getJSONData
 
 class AbstractEventFilter(QWidget):
     def __init__(self, parent=None, main_window=None, scripts_variable="CGWscripts"):
@@ -41,7 +40,7 @@ class AbstractEventFilter(QWidget):
             # get user hotkeys
             for directory in self.scriptsDirectories():
                 hotkeys_file_path = "{directory}/hotkeys.json".format(directory=directory)
-                self.hotkey_dict = Locals().getFileDict(hotkeys_file_path)
+                self.hotkey_dict = getJSONData(hotkeys_file_path)
 
                 # get key input
                 user_input = QKeySequence(
