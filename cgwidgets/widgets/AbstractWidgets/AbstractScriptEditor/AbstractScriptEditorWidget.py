@@ -29,8 +29,10 @@ AbstractScriptEditorWidget --> (QSplitter)
      |- QVBoxLayout
         |- AbstractDesignWidget --> (QTabWidget)
         |   |- AbstractPythonEditor --> (QWidget)
-        |      |-vbox
-        |         |- code_widget --> (AbstractPythonCodeWidget --> QPlainTextEdit)
+        |   |   |-vbox
+        |   |      |- code_widget --> (AbstractPythonCodeWidget --> QPlainTextEdit)
+        |   |* HotkeyDesignEditorWidget --> (AbstractHotkeyDesignWidget --> QWidget, AbstractDesignWidget)
+        |   |* GestureDesignEditorWidget--> (AbstractGestureDesignWidget --> QWidget, AbstractDesignWidget)
         |- SaveButton --> (QPushButton)
 
 Data:
@@ -56,45 +58,21 @@ Data:
 """
 """
 Todo:
+    * Imports
+        How to handle the scoping issue...
+        https://stackoverflow.com/questions/69110529/issue-when-executing-code-snippet-with-exec-and-inheritance
     * Popup Widgets
         - Add forward/backwards menu options
         - Dim unused buttons
 
-#===============================================================================
-# WISH LIST
-#===============================================================================
-- Add fifth row of fingers for "5tgb"
-- Add support for modifiers on HotkeyDesigns
-
-- Multi Gesture...
-    Always reset display to center of the screen
-        - Will this work on tablets?
-#--------------------------------------------------------------------------- OLD
-# IRF Support
-    - if modifier hit... create it as an IRF and apply it?
-    - Modifier Support?
-# Unique hashes are getting split as string/ints... would be good to standardize a data format
-    for them if they are to remain as key/pair values... probably ints?
-
-# scripts master item
-    create utils file
-        first tab = utils
-        second tab = python
-            or 
-        first tab = utils
-        python tabs are now popup?
-
-    how to automatically source this in? as it wont be in the same standard dir structure?
-
-
-# could potentially use a hot key for previous/next? instead of groups?
-    - easier for dumb dumbs...
-    - technically less combinations
-        (multiplication vs exponents)
-
+WISH LIST
+    - Add support for modifiers on HotkeyDesigns
+    
+    - Multi Gesture...
+        Always reset display to center of the screen
+            - Will this work on tablets?W
 """
 
-import sys
 import os
 import math
 import shutil
@@ -390,6 +368,8 @@ class ScriptTreeWidget(QTreeWidget):
                             pass
                         else:
                             file_type = Locals().checkFileType(file_path)
+                            # create new item
+
                             if file_type == AbstractBaseItem.HOTKEY:
                                 unique_hash, text = file.replace(".json", "").split(".")
                                 item = HotkeyDesignItem(
@@ -416,7 +396,11 @@ class ScriptTreeWidget(QTreeWidget):
                                     unique_hash=unique_hash,
                                     file_dir=file_dir
                                 )
-                            self.itemDict()[file_path] = item
+
+                            if item:
+                                self.itemDict()[file_path] = item
+                            else:
+                                print(file_path, "is not valid")
 
                     # set display hotkey
                     hotkey_dict = getJSONData(orig_dir + "/hotkeys.json")
@@ -912,6 +896,7 @@ class ScriptTreeWidget(QTreeWidget):
                     item=current_item,
                     file_path=current_item.filepath()
                 )
+
             if isinstance(current_item, GestureDesignItem):
                 size = design_tab.getGestureWidgetSize()
                 design_widget = GestureDesignEditorWidget(
@@ -922,18 +907,18 @@ class ScriptTreeWidget(QTreeWidget):
                     size=size
 
                 )
-            # update design widget meta data
-            design_widget.setHash(current_item.getHash())
-            design_tab.setCurrentWidget(design_widget)
-            design_tab.setCurrentWidget(design_widget)
 
             # add tab
             tab_name = current_item.text(0)
             tab = design_tab.addTab(design_widget, tab_name)
+
+            # update design widget meta data
             directory_display_name = self.getSetting("display_name", current_item)
             display_name = "{directory_name}/{tab_name}".format(
                 directory_name=directory_display_name, tab_name=tab_name)
             design_tab.setTabToolTip(tab, display_name)
+            design_widget.setHash(current_item.getHash())
+            design_tab.setCurrentWidget(design_widget)
 
         # Script
         elif isinstance(current_item, ScriptItem):
@@ -1670,7 +1655,7 @@ class GestureDesignItem(AbstractDesignItem):
 
 
 if __name__ == "__main__":
-    import sys, os
+    import sys
     from qtpy.QtWidgets import QApplication
     from cgwidgets.utils import centerWidgetOnScreen, getDefaultSavePath, setAsAlwaysOnTop
     app = QApplication(sys.argv)

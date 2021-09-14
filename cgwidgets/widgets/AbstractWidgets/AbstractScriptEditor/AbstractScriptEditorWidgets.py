@@ -1,4 +1,6 @@
 
+
+
 import math
 import json
 import os
@@ -816,7 +818,6 @@ class GestureDesignButtonWidget(QGraphicsItemGroup, AbstractDesignButtonInterfac
         self.text_item.centerText()
         pen.setColor(color)
         self.poly_item.setPen(pen)
-        #self.text_item.setDefaultTextColor(color)
 
 
 class GestureDesignPolyWidget(QGraphicsPolygonItem, AbstractDesignButtonInterface):

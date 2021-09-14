@@ -26,6 +26,14 @@ class AbstractEventFilter(QWidget):
     def scriptsDirectories(self):
         return os.environ[self.scriptsVariable()].split(":")
 
+    """ UTILS """
+    def importModules(self):
+        """ Virtual function to be overwritten.  Can import custom modules
+        to be run in the script here.
+
+        Returns (dict): of locals values"""
+        return {}
+
     """ WIDGETS """
     def mainWindow(self):
         return self._main_window
@@ -61,8 +69,10 @@ class AbstractEventFilter(QWidget):
                                 #exec(compile(open(file_path).read(), "script_descriptor", "exec"))
                                 # with open(file_path, "r") as script_descriptor:
                                 #     exec(script_descriptor.read())
+                                environment = locals()
+                                environment.update(self.importModules())
                                 with open(file_path) as script_descriptor:
-                                    exec(compile(script_descriptor.read(), "script", "exec"))
+                                    exec(compile(script_descriptor.read(), "script", "exec"), globals(), locals())
                         return QWidget.eventFilter(self, obj, event, *args, **kwargs)
 
         return QWidget.eventFilter(self, obj, event, *args, **kwargs)
