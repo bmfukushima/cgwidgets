@@ -21,7 +21,7 @@ class Utils(object):
                 if file_path:
                     with open(file_path, 'r') as f:
                         hotkeys = json.load(f)
-                        if len(list(hotkeys.keys())) == 16:
+                        if len(list(hotkeys.keys())) == 20:
                             return 'hotkey'
                         elif len(list(hotkeys.keys())) == 8:
                             return 'gesture'

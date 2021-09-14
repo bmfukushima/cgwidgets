@@ -27,7 +27,7 @@ AbstractScriptEditorWidget --> (QSplitter)
   |     |- GestureDesignItem --> (AbstractBaseItem)
   |- design_main_widget --> (QWidget)
      |- QVBoxLayout
-        |- DesignWidget --> (QTabWidget)
+        |- AbstractDesignWidget --> (QTabWidget)
         |   |- AbstractPythonEditor --> (QWidget)
         |      |-vbox
         |         |- code_widget --> (AbstractPythonCodeWidget --> QPlainTextEdit)
@@ -59,13 +59,12 @@ Todo:
     * Popup Widgets
         - Add forward/backwards menu options
         - Dim unused buttons
-    * HotkeyDesigns
-        not opening new tabs?
+
 #===============================================================================
 # WISH LIST
 #===============================================================================
 - Add fifth row of fingers for "5tgb"
-
+- Add support for modifiers on HotkeyDesigns
 
 - Multi Gesture...
     Always reset display to center of the screen
@@ -123,11 +122,7 @@ from cgwidgets.utils import getWidgetAncestor, showWarningDialogue, getJSONData
 from cgwidgets.widgets.AbstractWidgets.AbstractBaseInputWidgets import AbstractLabelWidget
 
 from .AbstractScriptEditorUtils import Utils as Locals
-from .AbstractScriptEditorWidgets import (
-    HotkeyDesignEditorButton,
-    HotkeyDesignEditorWidget,
-    GestureDesignEditorWidget,
-    GestureDesignButtonWidget)
+from .AbstractScriptEditorWidgets import (HotkeyDesignEditorWidget, GestureDesignEditorWidget)
 
 
 class AbstractPythonCodeWidget(QPlainTextEdit):
@@ -1512,23 +1507,10 @@ class AbstractDesignItem(AbstractBaseItem):
         self.setItemType(AbstractBaseItem.HOTKEY)
 
     def createData(self, file_path):
+        """Creates the hotkey design file as a JSON@file_path <str> path to file
         """
-        Creates the hotkey design file as a JSON
-        @file_path <str> path to file
-        """
-        """
-        current_file = open(file_path, "w")
-        # copy/paste from design tab
-        button_list = [
-            "1", "2", "3", "4",
-            "q", "w", "e", "r",
-            "a", "s", "d", "f",
-            "z", "x", "c", "v",
-        ]
-        current_file.write(r"=|".join(button_list) + "=")
-        current_file.close()
-        """
-        hotkeys = "1234qwerasdfzxcv"
+
+        hotkeys = "12345qwertasdfgzxcvb"
         hotkey_dict = {}
         for letter in hotkeys:
             hotkey_dict[letter] = ""

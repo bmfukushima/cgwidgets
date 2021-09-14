@@ -40,8 +40,8 @@ from cgwidgets.utils import (
 )
 
 """ ABSTRACT CLASSES """
-class DesignWidget(object):
-    """ Design Widget base class
+class AbstractDesignWidget(object):
+    """ Design Widget base class used for all Hotkey/Gesture DesignWidgets
 
     Attributes:
         button_dict (dict): of all of the buttons
@@ -124,10 +124,10 @@ class DesignWidget(object):
         # create button layout
         if 'hotkey' in button_type:
             self.button_list = [
-                ['1', '2', '3', '4'],
-                ['q', 'w', 'e', 'r'],
-                ['a', 's', 'd', 'f'],
-                ['z', 'x', 'c', 'v'],
+                ['1', '2', '3', '4', '5'],
+                ['q', 'w', 'e', 'r', 't'],
+                ['a', 's', 'd', 'f', 'g'],
+                ['z', 'x', 'c', 'v', 'b'],
             ]
         elif 'gesture' in button_type:
             self.button_list = [['0', '1', '2', '3', '4', '5', '6', '7']]
@@ -162,6 +162,7 @@ class DesignWidget(object):
 
                     self.button_dict[item].setFileType(file_type=file_type)
                     self.button_dict[item].setButtonColor()
+
                 # Create Empty Buttons
                 # Will bypass for the gesture user display
                 else:
@@ -225,9 +226,8 @@ class DesignWidget(object):
         return self.item
 
 
-class DesignButtonInterface(object):
-    """Class to hold properties and methods that will need to be shared across all DesignButtons
-    """
+class AbstractDesignButtonInterface(object):
+    """ Base class used for all Design Buttons (Gesture/Hotkey) """
 
     def __name__(self):
         return '__design_button_widget__'
@@ -322,7 +322,8 @@ class DesignButtonInterface(object):
             self.setButtonColor()
 
 
-class HotkeyDesignWidget(QWidget, DesignWidget):
+class AbstractHotkeyDesignWidget(QWidget, AbstractDesignWidget):
+    """ AbstractHotkeyDesignWidget base class"""
     def __init__(
         self,
         parent=None,
@@ -330,13 +331,13 @@ class HotkeyDesignWidget(QWidget, DesignWidget):
         file_path='',
         init_pos=None
     ):
-        super(HotkeyDesignWidget, self).__init__(parent)
+        super(AbstractHotkeyDesignWidget, self).__init__(parent)
 
     def __name__(self):
         return '__hotkey_editor_widget__'
 
     def getButtonSize(self):
-        width = self.geometry().width() / 4
+        width = self.geometry().width() / 5
         height = self.geometry().height() / 4
         return width, height
 
@@ -347,9 +348,9 @@ class HotkeyDesignWidget(QWidget, DesignWidget):
         return QWidget.resizeEvent(self, *args, **kwargs)
 
 
-class HotkeyDesignButtonWidget(QPushButton, DesignButtonInterface):
+class AbstractHotkeyDesignButtonWidget(QPushButton, AbstractDesignButtonInterface):
     def __init__(self, parent=None, text=None, unique_hash=None):
-        super(HotkeyDesignButtonWidget, self).__init__(parent)
+        super(AbstractHotkeyDesignButtonWidget, self).__init__(parent)
         self.setText(text)
         self.setHotkey(text)
         self.setAcceptDrops(True)
@@ -364,11 +365,12 @@ class HotkeyDesignButtonWidget(QPushButton, DesignButtonInterface):
             finger_list['s'] = ['2', 'w', 's', 'x']
             finger_list['d'] = ['3', 'e', 'd', 'c']
             finger_list['f'] = ['4', 'r', 'f', 'v']
+            finger_list['g'] = ['5', 't', 'g', 'b']
             for finger in finger_list.keys():
                 for item in finger_list[finger]:
                     hotkey = self.getHotkey()
                     color = 100
-                    if hotkey in ['a', 's', 'd', 'f']:
+                    if hotkey in ['a', 's', 'd', 'f', 'g']:
                         color = color + (color * 2)
                         if color > 255:
                             color = 255
@@ -403,6 +405,13 @@ class HotkeyDesignButtonWidget(QPushButton, DesignButtonInterface):
                         new_color = '(%s,%s,0)' % (
                             str(float(color) * .75), str(float(color) * .75)
                         )
+                    elif hotkey in finger_list['g']:
+                        style_sheet_list.append(
+                            'border-color: rgb(%s,0,%s);' % (color, color)
+                        )
+                        new_color = '(%s,0,%s)' % (
+                            str(float(color) * .75), str(float(color) * .75)
+                        )
                     if hasattr(self, 'file_type'):
                         if self.getFileType() == 'hotkey':
                             style_sheet_list.append(
@@ -423,7 +432,7 @@ class HotkeyDesignButtonWidget(QPushButton, DesignButtonInterface):
                     self.setStyleSheet(''.join(style_sheet_list))
 
 
-class GestureDesignWidget(QGraphicsView, DesignWidget):
+class GestureDesignWidget(QGraphicsView, AbstractDesignWidget):
     def __init__(
         self,
         parent=None,
@@ -691,7 +700,7 @@ class GestureDesignWidget(QGraphicsView, DesignWidget):
         return QGraphicsView.dropEvent(self, event, *args, **kwargs)
 
 
-class GestureDesignButtonWidget(QGraphicsItemGroup, DesignButtonInterface):
+class GestureDesignButtonWidget(QGraphicsItemGroup, AbstractDesignButtonInterface):
     """
     @points_list: <list> of <QPointF> for building the polygon
     @text: <str> display text
@@ -810,7 +819,7 @@ class GestureDesignButtonWidget(QGraphicsItemGroup, DesignButtonInterface):
         #self.text_item.setDefaultTextColor(color)
 
 
-class GestureDesignPolyWidget(QGraphicsPolygonItem, DesignButtonInterface):
+class GestureDesignPolyWidget(QGraphicsPolygonItem, AbstractDesignButtonInterface):
     def __init__(self, parent=None, points_list=None):
         super(GestureDesignPolyWidget, self).__init__(parent)
         self.drawPolygon(points_list)
@@ -840,8 +849,9 @@ class GestureDesignPolyWidget(QGraphicsPolygonItem, DesignButtonInterface):
 
 
 """ HOTKEY WIDGETS """
-class HotkeyDesignEditorWidget(HotkeyDesignWidget):
-    """
+class HotkeyDesignEditorWidget(AbstractHotkeyDesignWidget):
+    """ Hotkey designer displayed as a widget in the DesignTab
+
     Displayed on right side when user clicks on a "HotkeyDesign" item
     The individual buttons inside of this are the HotkeyDesignEditorButtons
     """
@@ -856,23 +866,6 @@ class HotkeyDesignEditorWidget(HotkeyDesignWidget):
         item_dict = script_editor_widget.scriptWidget().itemDict()
         self.item = item
         self.populate(file_dict, item_dict=item_dict, button_type='hotkey editor')
-
-    """
-    def checkFileType(self, file_path):
-        if os.path.exists(file_path):
-            if os.path.isdir(file_path):
-                return 'group'
-            elif file_path.endswith('.py'):
-                return 'script'
-            elif file_path.endswith('.json'):
-                if file_path:
-                    with open(file_path, 'r') as f:
-                        hotkeys = json.load(f)
-                        if len(list(hotkeys.keys())) == 16:
-                            return 'hotkey'
-                        elif len(list(hotkeys.keys())) == 9:
-                            return 'gesture'
-    """
 
     def getButtonSize(self):
         width   = self.geometry().width() / 4
@@ -903,7 +896,7 @@ class HotkeyDesignEditorWidget(HotkeyDesignWidget):
         return QWidget.resizeEvent(self, *args, **kwargs)
 
 
-class HotkeyDesignEditorButton(HotkeyDesignButtonWidget):
+class HotkeyDesignEditorButton(AbstractHotkeyDesignButtonWidget):
     """Individiual Buttons displayed in the HotkeyDesign Widget"""
     def __init__(
         self,
@@ -1319,7 +1312,7 @@ class GestureDesignGUITextItem(QGraphicsTextItem):
 
 
 """ POPUP MENUS """
-class HotkeyDesignPopupWidget(HotkeyDesignWidget):
+class HotkeyDesignPopupWidget(AbstractHotkeyDesignWidget):
     def __init__(self, parent=None, item=None, file_path='', init_pos=None):
         super(HotkeyDesignPopupWidget, self).__init__(parent)
         # set up default attributes
@@ -1361,7 +1354,7 @@ class HotkeyDesignPopupWidget(HotkeyDesignWidget):
         return QWidget.keyPressEvent(self, event,  *args, **kwargs)
 
 
-class HotkeyDesignPopupButton(HotkeyDesignButtonWidget):
+class HotkeyDesignPopupButton(AbstractHotkeyDesignButtonWidget):
     def __init__(self, parent=None, text=None, unique_hash=None):
         super(HotkeyDesignPopupButton, self).__init__(parent)
         self.setText(text)
@@ -1395,7 +1388,7 @@ class PopupHotkeyMenu(QWidget):
     Attributes:
         popup_stack (list): of strings of the current paths that the user
             has clicked to get to the current menu"""
-    def __init__(self, parent=None, file_path=None, pos=None, size=QSize(1200, 400)):
+    def __init__(self, parent=None, file_path=None, pos=None, size=QSize(1800, 600)):
         super(PopupHotkeyMenu, self).__init__(parent)
 
         # create attrs
@@ -1412,7 +1405,7 @@ class PopupHotkeyMenu(QWidget):
 
         # create layout
         main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setContentsMargins(200, 100, 200, 100)
         self._previous_item = QPushButton("Previous Item")
         self._next_item = QPushButton("Next Item")
         self._design_widget = HotkeyDesignPopupWidget(self, file_path=file_path, init_pos=pos)
@@ -1473,7 +1466,7 @@ if __name__ == "__main__":
 
     app = QApplication(sys.argv)
 
-    hotkey_file_path = "/home/brian/.cgwidgets/.scripts/3418230839597978624.Group/6688775880885072896.keytest.json"
+    hotkey_file_path = "/home/brian/.cgwidgets/.scripts/1540676548115043584.HotkeyDesign.json"
     # hotkey_file_path = "/home/brian/.cgwidgets/.scripts/991172910425919104.hotkey2.json"
     popup_widget = PopupHotkeyMenu(file_path=hotkey_file_path)
 
