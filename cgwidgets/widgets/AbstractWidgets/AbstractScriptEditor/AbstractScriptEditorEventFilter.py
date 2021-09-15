@@ -10,9 +10,16 @@ from .AbstractScriptEditorWidgets import PopupHotkeyMenu, PopupGestureMenu
 from .AbstractScriptEditorUtils import Utils as Locals
 from cgwidgets.utils import getJSONData
 
-class AbstractEventFilter(QWidget):
+class AbstractScriptEditorPopupEventFilter(QWidget):
+    """ Event Filter for displaying the PopupHotkeys
+
+    This will need to be installed on the main window that the instance of the application is running
+
+    Args:
+        main_window (QMainWindow): Main window of the application (ie. widget.window())
+        scripts_variable (str): Environment variable that holds the scripts directories"""
     def __init__(self, parent=None, main_window=None, scripts_variable="CGWscripts"):
-        super(AbstractEventFilter, self).__init__(parent)
+        super(AbstractScriptEditorPopupEventFilter, self).__init__(parent)
         if not main_window:
             main_window = self.window()
 
@@ -26,13 +33,13 @@ class AbstractEventFilter(QWidget):
     def scriptsDirectories(self):
         return os.environ[self.scriptsVariable()].split(":")
 
-    """ UTILS """
-    def importModules(self):
-        """ Virtual function to be overwritten.  Can import custom modules
-        to be run in the script here.
-
-        Returns (dict): of locals values"""
-        return {}
+    # """ UTILS """
+    # def importModules(self):
+    #     """ Virtual function to be overwritten.  Can import custom modules
+    #     to be run in the script here.
+    #
+    #     Returns (dict): of locals values"""
+    #     return {}
 
     """ WIDGETS """
     def mainWindow(self):
@@ -66,13 +73,10 @@ class AbstractEventFilter(QWidget):
                             main_widget.show()
                         elif file_type == 'script':
                             if os.path.exists(file_path):
-                                #exec(compile(open(file_path).read(), "script_descriptor", "exec"))
-                                # with open(file_path, "r") as script_descriptor:
-                                #     exec(script_descriptor.read())
-                                environment = locals()
-                                environment.update(self.importModules())
+                                environment = dict(locals(), **globals())
+                                # environment.update(self.importModules())
                                 with open(file_path) as script_descriptor:
-                                    exec(compile(script_descriptor.read(), "script", "exec"), globals(), locals())
+                                    exec(script_descriptor.read(), environment, environment)
                         return QWidget.eventFilter(self, obj, event, *args, **kwargs)
 
         return QWidget.eventFilter(self, obj, event, *args, **kwargs)

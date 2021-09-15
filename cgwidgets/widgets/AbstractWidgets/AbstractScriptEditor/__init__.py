@@ -1,2 +1,3 @@
 from .AbstractScriptEditorWidget import AbstractScriptEditorWidget, AbstractPythonEditor
 from .AbstractScriptEditorWidgets import *
+from .AbstractScriptEditorEventFilter import AbstractScriptEditorPopupEventFilter

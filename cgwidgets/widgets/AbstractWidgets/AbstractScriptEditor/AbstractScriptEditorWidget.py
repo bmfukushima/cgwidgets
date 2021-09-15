@@ -58,9 +58,11 @@ Data:
 """
 """
 Todo:
-    * Imports
-        How to handle the scoping issue...
-        https://stackoverflow.com/questions/69110529/issue-when-executing-code-snippet-with-exec-and-inheritance
+    *   Hotkeys are going wonky
+            - When there is more than one directory with overlapping hotkeys, it
+                seems to fail.
+            - Need to find all, and send a different flag notification...
+            - How to handle locked overwrites?  Disallow?
     * Popup Widgets
         - Add forward/backwards menu options
         - Dim unused buttons
@@ -146,7 +148,7 @@ class AbstractScriptEditorWidget(QSplitter):
 
         # create all directories
         for scripts_directory in self.scriptsDirectories():
-            AbstractScriptEditorWidget.__createScriptDirectories(scripts_directory)
+            AbstractScriptEditorWidget.createScriptDirectories(scripts_directory)
 
         # create main gui
         self.__setupGUI(python_editor)
@@ -170,7 +172,7 @@ class AbstractScriptEditorWidget(QSplitter):
     #                 json.dump(data, current_file)
 
     @staticmethod
-    def __createScriptDirectories(scripts_directory):
+    def createScriptDirectories(scripts_directory, locked=False, display_name=None):
         """ Creates all of the directories for the script directories if they don"t exist
 
         Args:
@@ -181,7 +183,9 @@ class AbstractScriptEditorWidget(QSplitter):
             if not os.path.exists(scripts_directory + "/{item}.json".format(item=item)):
                 data_dict = {}
                 if item == "settings":
-                    data_dict = {"locked": False, "display_name": os.path.basename(scripts_directory)}
+                    if not display_name:
+                        display_name = os.path.basename(scripts_directory)
+                    data_dict = {"locked": locked, "display_name": display_name}
                 with open(scripts_directory + "/{item}.json".format(item=item), "w") as f:
                     json.dump(data_dict, f)
 

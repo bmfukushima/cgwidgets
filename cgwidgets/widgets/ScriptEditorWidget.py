@@ -1,4 +1,4 @@
-from cgwidgets.widgets import AbstractScriptEditorWidget, AbstractPythonEditor
+from cgwidgets.widgets import AbstractScriptEditorWidget, AbstractPythonEditor, AbstractScriptEditorPopupEventFilter
 
 class ScriptEditorWidget(AbstractScriptEditorWidget):
     """ Script Editors main widget
@@ -12,3 +12,8 @@ class ScriptEditorWidget(AbstractScriptEditorWidget):
     def __init__(self, parent=None, python_editor=AbstractPythonEditor, scripts_variable="CGWscripts"):
         super(ScriptEditorWidget, self).__init__(
             parent=parent, python_editor=python_editor, scripts_variable=scripts_variable)
+
+
+class ScriptEditorPopupEventFilter(AbstractScriptEditorPopupEventFilter):
+    def __init__(self, parent=None, main_window=None, scripts_variable="CGWscripts"):
+        super(ScriptEditorPopupEventFilter, self).__init__(parent, main_window=main_window, scripts_variable=scripts_variable)
