@@ -926,28 +926,6 @@ class ScriptTreeWidget(QTreeWidget):
             widget = design_tab.widget(0)
             design_tab.setCurrentWidget(widget)
 
-        # # Gesture
-        # elif isinstance(current_item, GestureDesignItem):
-        #     for index in range(tab_bar.count()):
-        #         widget = design_tab.widget(index)
-        #         if hasattr(widget, "getItem"):
-        #             if widget.getItem().getHash() == current_item.getHash():
-        #                 design_tab.setCurrentWidget(widget)
-        #                 return
-        #
-        #     size = design_tab.getGestureWidgetSize()
-        #     design_widget = GestureDesignEditorWidget(
-        #         parent=design_tab,
-        #         item=current_item,
-        #         file_path=current_item.filepath(),
-        #         script_list=self,
-        #         size=size
-        #
-        #     )
-        #     design_widget.setHash(current_item.getHash())
-        #     design_tab.addTab(design_widget, current_item.text(0))
-        #     design_tab.setCurrentWidget(design_widget)
-
     def deleteItem(self, item):
 
         if item:
@@ -1084,58 +1062,6 @@ class ScriptTreeWidget(QTreeWidget):
 
         self.updateHotkeyFile(old_file_dir, new_file_dir)
         return return_val
-
-    # def dragLeaveEvent(self, *args, **kwargs):
-    #     # =======================================================================
-    #     # reset drag event flags
-    #     # =======================================================================
-    #     for child in self.temp_list:
-    #             child.setFlags(child.flags() | Qt.ItemIsDropEnabled)
-    #     # self.setDragDropMode(QAbstractItemView.NoDragDrop)
-    #     return QTreeWidget.dragLeaveEvent(self, *args, **kwargs)
-
-    # def dropEvent(self, event, *args, **kwargs):
-    #     # reset drag/drop flags
-    #     for child in self.temp_list:
-    #         child.setFlags(child.flags() | Qt.ItemIsDropEnabled)
-    #
-    #     # when an item is dropped, its directory is updated along with all
-    #     # meta data relating to tabs/buttons/designs
-    #     # get attributes
-    #     current_item = self.currentItem()
-    #     old_parent = current_item.parent()
-    #
-    #     return_val = super(ScriptTreeWidget, self).dropEvent(event, *args, **kwargs)
-    #
-    #     new_parent = current_item.parent()
-    #     item_name = current_item.getFileName()
-    #
-    #     old_file_dir = old_parent.filepath()
-    #     if isinstance(old_parent, HotkeyDesignMasterItem):
-    #         old_file_dir = old_parent.getFileDir()
-    #     old_file_path = old_file_dir + "/" + item_name
-    #
-    #     new_file_dir = new_parent.filepath()
-    #     if isinstance(new_parent, HotkeyDesignMasterItem):
-    #         new_file_dir = new_parent.getFileDir()
-    #     new_file_path = new_file_dir + "/" + item_name
-    #
-    #     # move file
-    #     shutil.move(str(old_file_path), str(new_file_path))
-    #
-    #     # update
-    #     if isinstance(current_item, GroupItem):
-    #         self.updateGroupItemFilepath(current_item, new_file_dir, old_file_dir)
-    #     elif (
-    #         isinstance(current_item, ScriptItem)
-    #         or isinstance(current_item, GestureDesignItem)
-    #         or isinstance(current_item, HotkeyDesignItem)
-    #     ):
-    #         self.updateItemFileDir(current_item, new_file_dir, old_file_dir)
-    #         self.updateAllButtons()
-    #         script_editor_widget = getWidgetAncestor(self, AbstractScriptEditorWidget)
-    #         script_editor_widget.designTabWidget().updateTabFilePath(new_file_path, old_file_path)
-    #     return return_val
 
     def mouseReleaseEvent(self, event, *args, **kwargs):
         """on lmb change the design viewed tab/create a new tab"""
