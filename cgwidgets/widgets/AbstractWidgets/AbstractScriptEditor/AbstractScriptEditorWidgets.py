@@ -186,7 +186,7 @@ class AbstractDesignWidget(object):
 
         self.setButtonSize()
 
-    def updateButtons(self):
+    def updateButtons(self, old_file_path, new_file_path):
         """ Updates all of the buttons file paths """
 
         script_editor_widget = getWidgetAncestorByName(self, "AbstractScriptEditorWidget")
@@ -195,7 +195,7 @@ class AbstractDesignWidget(object):
         for key in list(button_list.keys()):
             button = button_list[key]
             if hasattr(button, 'file_path'):
-                if button.filepath():
+                if button.filepath() == old_file_path:
                     item = item_dict[str(button.filepath())]
                     button.updateButton(current_item=item)
 
@@ -304,9 +304,7 @@ class AbstractDesignButtonInterface(object):
 
                 file_path = current_item.filepath()
                 self.updateFile(file_path=file_path)
-
                 self.setFilepath(file_path)
-
                 self.setHash(current_item.getHash())
                 self.setItem(current_item)
                 if os.path.exists(file_path):

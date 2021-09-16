@@ -69,22 +69,22 @@ class ViewModeDropDown(QComboBox):
             self.switchToListView(main_widget, model)
 
     def switchToThumbnailView(self, main_widget, model):
-        main_widget.search_bar.show()
+        main_widget.nodeSearchBox.show()
         for item in main_widget.thumbnail_view.widget_list:
             if item in model.metadata['selected']:
                 item.setSelected()
         main_widget.working_area_layout.setCurrentIndex(0)
 
     def switchToDetailedView(self, main_widget, model):
-        main_widget.search_bar.show()
+        main_widget.nodeSearchBox.show()
         main_widget.working_area_layout.setCurrentIndex(1)
 
     def switchToListView(self, main_widget, model):
-        main_widget.search_bar.show()
+        main_widget.nodeSearchBox.show()
         main_widget.working_area_layout.setCurrentIndex(2)
 
     def switchToPublishView(self, main_widget):
-        main_widget.search_bar.hide()
+        main_widget.nodeSearchBox.hide()
         main_widget.working_area_layout.setCurrentIndex(3)
 
 

@@ -33,14 +33,6 @@ class AbstractScriptEditorPopupEventFilter(QWidget):
     def scriptsDirectories(self):
         return os.environ[self.scriptsVariable()].split(":")
 
-    # """ UTILS """
-    # def importModules(self):
-    #     """ Virtual function to be overwritten.  Can import custom modules
-    #     to be run in the script here.
-    #
-    #     Returns (dict): of locals values"""
-    #     return {}
-
     """ WIDGETS """
     def mainWindow(self):
         return self._main_window

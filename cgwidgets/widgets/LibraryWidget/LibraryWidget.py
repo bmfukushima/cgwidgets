@@ -241,7 +241,7 @@ class LibraryWidget(QWidget, iUtils):
         self.working_area_layout.setAlignment(Qt.AlignTop)
         # self.working_area_layout.setContentsMargins(0,0,0,0)
         # setup widgets
-        self.search_bar = SearchBar()
+        self.nodeSearchBox = SearchBar()
         self.publish_widget = PublishWidget()
         # setup views
         self.thumbnail_view = ThumbnailViewWidget(self)
@@ -257,7 +257,7 @@ class LibraryWidget(QWidget, iUtils):
         # add widgets/layouts
         self.working_area_widget.setLayout(self.working_area_main_layout)
         self.working_area_main_layout.addLayout(self.working_area_layout)
-        self.working_area_main_layout.addWidget(self.search_bar)
+        self.working_area_main_layout.addWidget(self.nodeSearchBox)
         return self.working_area_layout
 
     def createGUI(self):
