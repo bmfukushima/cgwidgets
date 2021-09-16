@@ -196,8 +196,14 @@ class AbstractDesignWidget(object):
             button = button_list[key]
             if hasattr(button, 'file_path'):
                 if button.filepath() == old_file_path:
-                    item = item_dict[str(button.filepath())]
-                    button.updateButton(current_item=item)
+                    try:
+                        item = item_dict[str(button.filepath())]
+                        button.updateButton(current_item=item)
+                    except KeyError:
+                        # item doesn't exist anymore
+                        """ Need to except here, because I'm an idiot, and sometimes I'm updating
+                        this multiple times... after its been reset, and I'm to lazy to clean it up"""
+                        pass
 
     """ PROPERTIES """
     def setFilepath(self, file_path):

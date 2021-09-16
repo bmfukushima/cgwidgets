@@ -58,10 +58,8 @@ Data:
 """
 """
 Todo:
-    *   Moving Files
-            - Updates ALL of the master hotkeys...
-    *   Rename Files
-            - Does not update Designs
+    *   Delete... needs old/new paths
+    *   Group renaming??
     *   Hotkeys are going wonky
             - When there is more than one directory with overlapping hotkeys, it
                 seems to fail.
@@ -585,11 +583,6 @@ class ScriptTreeWidget(QTreeWidget):
             new_file_name = current_item.getFileName()
             new_file_path = old_file_path.replace(old_file_dir, new_file_dir)
 
-        # update item attrs
-        current_item.setFilepath(new_file_path)
-        current_item.setFileName(new_file_name)
-        current_item.setFileDir(new_file_dir)
-
         # rename file
         if not os.path.exists(new_file_path):
             os.rename(old_file_path, new_file_path)
@@ -601,6 +594,11 @@ class ScriptTreeWidget(QTreeWidget):
         self.updateAllItemsFileDir(old_file_path, new_file_path, current_item)
         self.updateAllButtons(old_file_path, new_file_path)
         self.updateHotkeyFile(old_file_path, new_file_path)
+
+        # update item attrs
+        current_item.setFilepath(new_file_path)
+        current_item.setFileName(new_file_name)
+        current_item.setFileDir(new_file_dir)
 
         # update design tab paths
         script_editor_widget = getWidgetAncestor(self, AbstractScriptEditorWidget)
@@ -972,7 +970,8 @@ class ScriptTreeWidget(QTreeWidget):
                             design_tab_widget.removeTab(index)
 
                 # needs to update all buttons again?
-                self.updateAllButtons()
+                # todo update buttons on delete
+                # self.updateAllButtons()
                 self.updateAllDesignPaths(file_path, "")
 
                 # del item
@@ -1049,6 +1048,9 @@ class ScriptTreeWidget(QTreeWidget):
         old_parent = current_item.parent()
 
         return_val = super(ScriptTreeWidget, self).dropEvent(event, *args, **kwargs)
+
+        # reselect item after resolve
+        self.setCurrentItem(current_item)
 
         new_parent = current_item.parent()
         item_name = current_item.getFileName()
