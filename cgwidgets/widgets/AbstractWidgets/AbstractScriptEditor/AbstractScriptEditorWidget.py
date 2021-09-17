@@ -1148,6 +1148,8 @@ class ScriptTreeWidget(QTreeWidget):
                 # reset hotkey if user presses backspace/delete
                 if event.key() in [Qt.Key_Backspace, Qt.Key_Delete]:
                     self.removeHotkeyFromItem()
+                    self.closePersistentEditor(self.currentItem(), 2)
+                    self.setAcceptInput(False)
                     return QTreeWidget.keyPressEvent(self, event, *args, **kwargs)
 
                 # get key sequence
