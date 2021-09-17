@@ -524,6 +524,7 @@ class AbstractHotkeyDesignButtonWidget(QPushButton, AbstractDesignButtonInterfac
         self.updateButtonColor()
         return QPushButton.leaveEvent(self, event)
 
+
 class HotkeyDesignEditorWidget(AbstractHotkeyDesignWidget):
     """ Hotkey designer displayed as a widget in the DesignTab
 

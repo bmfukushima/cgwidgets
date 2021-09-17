@@ -15,7 +15,10 @@ class AbstractScriptEditorPopupEventFilter(QWidget):
 
     This will need to be installed on the main window that the instance of the application is running
 
-    Args:
+    Attributes:
+        is_active (bool): determines if the hotkeys are activated or not.
+            This should be turned off when the user is setting a hotkey, so that
+            it doesn't double register.
         main_window (QMainWindow): Main window of the application (ie. widget.window())
         scripts_variable (str): Environment variable that holds the scripts directories"""
     def __init__(self, parent=None, main_window=None, scripts_variable="CGWscripts"):
@@ -25,6 +28,7 @@ class AbstractScriptEditorPopupEventFilter(QWidget):
 
         self._main_window = main_window
         self._scripts_variable = scripts_variable
+        self._is_active = True
 
     """ PROPERTIES """
     def scriptsVariable(self):
@@ -32,6 +36,12 @@ class AbstractScriptEditorPopupEventFilter(QWidget):
 
     def scriptsDirectories(self):
         return os.environ[self.scriptsVariable()].split(":")
+
+    def isActive(self):
+        return self._is_active
+
+    def setIsActive(self, enabled):
+        self._is_active = enabled
 
     """ WIDGETS """
     def mainWindow(self):
@@ -45,30 +55,42 @@ class AbstractScriptEditorPopupEventFilter(QWidget):
     def eventFilter(self, obj, event, *args, **kwargs):
         if event.type() == QEvent.KeyPress:
             # get user hotkeys
-            for directory in self.scriptsDirectories():
-                hotkeys_file_path = "{directory}/hotkeys.json".format(directory=directory)
-                self.hotkey_dict = getJSONData(hotkeys_file_path)
+            if self.isActive():
+                for directory in self.scriptsDirectories():
+                    hotkeys_file_path = "{directory}/hotkeys.json".format(directory=directory)
+                    self.hotkey_dict = getJSONData(hotkeys_file_path)
 
-                # get key input
-                user_input = QKeySequence(
-                    int(event.modifiers()) + event.key()
-                ).toString()
-                for file_path in list(self.hotkey_dict.keys()):
-                    hotkey = self.hotkey_dict[file_path]
-                    if hotkey == user_input:
-                        file_type = Locals().checkFileType(file_path)
-                        if file_type == "hotkey":
-                            main_widget = PopupHotkeyMenu(self.mainWindow(), file_path=file_path)
-                            main_widget.show()
-                        elif file_type == "gesture":
-                            main_widget = PopupGestureMenu(self.mainWindow(), file_path=file_path)
-                            main_widget.show()
-                        elif file_type == "script":
-                            if os.path.exists(file_path):
-                                environment = dict(locals(), **globals())
-                                # environment.update(self.importModules())
-                                with open(file_path) as script_descriptor:
-                                    exec(script_descriptor.read(), environment, environment)
-                        return QWidget.eventFilter(self, obj, event, *args, **kwargs)
+                    # get key input
+                    user_input = QKeySequence(
+                        int(event.modifiers()) + event.key()
+                    ).toString()
+                    for file_path in list(self.hotkey_dict.keys()):
+                        hotkey = self.hotkey_dict[file_path]
+                        if hotkey == user_input:
+                            file_type = Locals().checkFileType(file_path)
+                            if file_type == "hotkey":
+                                main_widget = PopupHotkeyMenu(self.mainWindow(), file_path=file_path)
+                                main_widget.show()
+                            elif file_type == "gesture":
+                                main_widget = PopupGestureMenu(self.mainWindow(), file_path=file_path)
+                                main_widget.show()
+                            elif file_type == "script":
+                                if os.path.exists(file_path):
+                                    environment = dict(locals(), **globals())
+                                    # environment.update(self.importModules())
+                                    with open(file_path) as script_descriptor:
+                                        exec(script_descriptor.read(), environment, environment)
+                            return QWidget.eventFilter(self, obj, event, *args, **kwargs)
 
         return QWidget.eventFilter(self, obj, event, *args, **kwargs)
+
+
+def installScriptEditorEventFilter(main_window, event_filter_widget):
+    """ Installs the event filter on the applications Main Window
+
+    Args:
+        main_window (QMainWindow): Applications main window
+        event_filter_widget (AbstractScriptEditorPopupEventFilter): widget class holding
+            event filter to be installed"""
+    main_window._script_editor_event_filter_widget = event_filter_widget(main_window)
+    main_window.installEventFilter(main_window._script_editor_event_filter_widget)

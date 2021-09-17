@@ -109,6 +109,7 @@ from qtpy.QtGui import QCursor, QKeySequence
 
 from cgwidgets.utils import getWidgetAncestor, showWarningDialogue, getJSONData
 from cgwidgets.widgets.AbstractWidgets.AbstractBaseInputWidgets import AbstractLabelWidget
+from cgwidgets.settings import iColor
 
 from .AbstractScriptEditorUtils import Utils as Locals
 from .AbstractScriptEditorWidgets import (HotkeyDesignEditorWidget, GestureDesignEditorWidget)
@@ -205,6 +206,7 @@ class AbstractScriptEditorWidget(QSplitter):
 
         # CREATE WIDGETS
         self._script_widget = ScriptTreeWidget(parent=self)
+
         self._design_tab_widget = DesignTab(parent=self, python_editor=python_editor)
         save_button = SaveButton(parent=self)
 
@@ -348,6 +350,24 @@ class ScriptTreeWidget(QTreeWidget):
         root_item = self.invisibleRootItem()
         root_item.setFlags(root_item.flags() & ~ Qt.ItemIsDropEnabled)
 
+        style_sheet = """
+        QTreeView{{
+            background-color: rgba{RGBA_BACKGROUND_00};
+            alternate-background-color: rgba{RGBA_BACKGROUND_01};
+            color: rgba{RGBA_TEXT}
+        }}
+        QTreeView::item:hover {{
+            border: 1px solid rgba{RGBA_HOVER_TEXT};
+        }}
+        """.format(
+            RGBA_TEXT=iColor["rgba_text"],
+            RGBA_BACKGROUND_00=iColor["rgba_background_01"],
+            RGBA_BACKGROUND_01=iColor["rgba_background_02"],
+            RGBA_HOVER_TEXT=iColor["rgba_text_hover"]
+        )
+
+        self.setStyleSheet(style_sheet)
+
     def __name__(self):
         return "__script_list__"
 
@@ -425,6 +445,10 @@ class ScriptTreeWidget(QTreeWidget):
                     if is_locked:
                         item.setFlags(item.flags() & ~Qt.ItemIsEditable)
 
+                    # setup item alignment
+                    item.setTextAlignment(1, Qt.AlignCenter)
+                    item.setTextAlignment(2, Qt.AlignCenter)
+
     """ ITEMS """
     def createNewItem(self, current_parent, item_type=None):
         """Creates a new item under the current parent
@@ -445,7 +469,10 @@ class ScriptTreeWidget(QTreeWidget):
                 item = GestureDesignItem(current_parent, file_dir=file_dir)
             self.itemDict()[str(item.filepath())] = item
         elif item_type == AbstractBaseItem.GROUP:
-            GroupItem(current_parent, text="Group", file_dir=file_dir)
+            item = GroupItem(current_parent, text="Group", file_dir=file_dir)
+
+        item.setTextAlignment(1, Qt.AlignCenter)
+        item.setTextAlignment(2, Qt.AlignCenter)
 
     def getAllScriptDirectoryItems(self):
         """ Gets all of the script directory items
@@ -1140,8 +1167,9 @@ class ScriptTreeWidget(QTreeWidget):
                         self.addHotkeyToItem(item=self.currentItem(), hotkey=hotkey)
 
                     def cancelOverwriteHotkey(widget):
-                        self.currentItem().setText(2, hotkey)
-                        self.addHotkeyToItem(item=self.currentItem(), hotkey=hotkey)
+                        self.currentItem().setText(2, "")
+                        self.removeHotkeyFromItem()
+                        # self.addHotkeyToItem(item=self.currentItem(), hotkey=hotkey)
 
                     display_widget = AbstractLabelWidget(text="""
 The hotkey \"{hotkey}\" exists.
@@ -1151,6 +1179,8 @@ Would you like to override it and continue?""".format(hotkey=hotkey))
                     self.currentItem().setText(2, hotkey)
                     self.addHotkeyToItem(item=self.currentItem(), hotkey=hotkey)
 
+                self.closePersistentEditor(self.currentItem(), 2)
+                self.setAcceptInput(False)
                 # need to return here to avoid the QTreeWidget from auto selecting the previous hotkeyed item
                 return
 
@@ -1294,35 +1324,44 @@ class DataTypeDelegate(QItemDelegate):
             current_item = self.parent().currentItem()
             if current_item.getItemType() != AbstractBaseItem.GROUP:
                 self.parent().setAcceptInput(True)
+
                 delegate_widget = QLabel(parent)
-                delegate_widget.setStyleSheet(
-                    "background-color: rgb(240, 200, 0);\
-                    color: rgb(15, 55, 255)"
+                delegate_widget.setAlignment(Qt.AlignCenter)
+                # todo update bg color
+                delegate_widget.setStyleSheet("""
+                    background-color: rgba{RGBA_BACKGROUND};
+                    border: 2px solid rgba{RGBA_SELECTED};
+                    color: rgba{TEXT_COLOR}""".format(
+                    TEXT_COLOR=iColor["rgba_text"],
+                    RGBA_BACKGROUND=iColor["rgba_background_00"],
+                    RGBA_SELECTED=iColor["rgba_selected"])
                 )
+                delegate_widget.setText(current_item.text(2))
+                # disable hotkey events
+                main_window = self.parent().window()
+                if hasattr(main_window, "_script_editor_event_filter_widget"):
+                    event_filter_widget = main_window._script_editor_event_filter_widget
+                    event_filter_widget.setIsActive(False)
                 return delegate_widget
         else:
             return QItemDelegate.createEditor(self, parent, option, index)
 
-    def closeEditor(self, *args, **kwargs):
-        self.parent().setAcceptInput(False)
-        return QItemDelegate.closeEditor(self, *args, **kwargs)
-
-    """ Do I need these? """
-    def setEditorData(self, editor, index):
-        text = index.model().data(index, Qt.DisplayRole)
-        editor.setText(text)
-        #editor.setText("")
-        #self.closeEditor()
-        return QItemDelegate.setEditorData(self, editor, index)
-
     def setModelData(self, editor, model, index):
         """ swap out "v" for current value"""
+        # reactivate events
+        main_window = self.parent().window()
+        if hasattr(main_window, "_script_editor_event_filter_widget"):
+            event_filter_widget = main_window._script_editor_event_filter_widget
+            event_filter_widget.setIsActive(True)
+
         # get data
         self.parent().setAcceptInput(False)
         new_value = editor.text()
         if new_value == "":
             return
         model.setData(index, QVariant(new_value))
+
+        return QItemDelegate.setModelData(self, editor, model, index)
 
 
 class AbstractBaseItem(QTreeWidgetItem):
