@@ -58,8 +58,6 @@ Data:
 """
 """
 Todo:
-    *   Delete... needs old/new paths
-    *   Group renaming??
     *   Hotkeys are going wonky
             - When there is more than one directory with overlapping hotkeys, it
                 seems to fail.
@@ -178,6 +176,8 @@ class AbstractScriptEditorWidget(QSplitter):
         """ Creates all of the directories for the script directories if they don"t exist
 
         Args:
+            locked (bool): if the directory is locked or not
+            display_name (str): Name to display to the user
             scripts_directory (str): path on disk"""
         if not os.path.exists(scripts_directory):
             os.mkdir(scripts_directory)
@@ -534,7 +534,7 @@ class ScriptTreeWidget(QTreeWidget):
 
         # update design files
         self.updateAllDesignPaths(old_file_path, new_file_path)
-        self.updateAllButtons(old_file_path, new_file_path)
+        self.updateAllButtons(old_file_path)
 
         # update meta data
         self.updateItemDictDir(old_file_path, new_file_path)
@@ -592,7 +592,7 @@ class ScriptTreeWidget(QTreeWidget):
         #self.updateAllDesignPaths(old_file_path, new_file_path)
         self.updateAllDesignPaths(old_file_dir, new_file_dir)
         self.updateAllItemsFileDir(old_file_path, new_file_path, current_item)
-        self.updateAllButtons(old_file_path, new_file_path)
+        self.updateAllButtons(old_file_path)
         self.updateHotkeyFile(old_file_path, new_file_path)
 
         # update item attrs
@@ -639,7 +639,7 @@ class ScriptTreeWidget(QTreeWidget):
         if isinstance(current_item, (ScriptItem, HotkeyDesignItem, GestureDesignItem)):
             script_editor_widget = getWidgetAncestor(self, AbstractScriptEditorWidget)
             design_tab = script_editor_widget.designTabWidget()
-            design_tab.updateAllHotkeyDesigns(old_file_path, new_file_path)
+            design_tab.updateAllHotkeyDesigns(old_file_path)
 
         # update item dict data
         self.updateItemDictDir(old_file_path, new_file_path)
@@ -728,11 +728,11 @@ class ScriptTreeWidget(QTreeWidget):
                     with open(file_path, "w") as current_file:
                         json.dump(design_data, current_file)
 
-    def updateAllButtons(self, old_file_path, new_file_path):
+    def updateAllButtons(self, old_file_path):
         """Updates the display of all of the buttons in  the Design Tab"""
         script_editor_widget = getWidgetAncestor(self, AbstractScriptEditorWidget)
         design_tab = script_editor_widget.designTabWidget()
-        design_tab.updateAllHotkeyDesigns(old_file_path, new_file_path)
+        design_tab.updateAllHotkeyDesigns(old_file_path)
 
     """ SETTINGS """
     def settingsFile(self, item=None):
@@ -942,7 +942,6 @@ class ScriptTreeWidget(QTreeWidget):
     def deleteItem(self, item):
 
         if item:
-
             if isinstance(item, GroupItem):
                 # has to recursively delete all children?
                 for index in range(item.childCount()):
@@ -971,7 +970,7 @@ class ScriptTreeWidget(QTreeWidget):
 
                 # needs to update all buttons again?
                 # todo update buttons on delete
-                # self.updateAllButtons()
+                self.updateAllButtons(item.filepath())
                 self.updateAllDesignPaths(file_path, "")
 
                 # del item
@@ -1087,6 +1086,8 @@ class ScriptTreeWidget(QTreeWidget):
         current_item = self.itemAt(event.pos())
         if current_item:
             index = self.currentIndex()
+            if self.isItemLocked(current_item): return
+
             if event.button() == Qt.LeftButton:
                 if index.column() != 2:
                     # display tab
@@ -1210,15 +1211,16 @@ class DesignTab(QTabWidget):
                     widget.setFilepath(file_path)
 
     """ HOTKEYS """
-    def updateAllHotkeyDesigns(self, old_file_path, new_file_path):
+    def updateAllHotkeyDesigns(self, old_file_path):
+        """ Updates all of the Hotkey/Gesture design buttons
+
+        Args:
+            old_file_path (str): """
         tab_bar = self.tabBar()
         for index in range(tab_bar.count()):
             widget = self.widget(index)
-            if (
-                isinstance(widget, HotkeyDesignEditorWidget)
-                or isinstance(widget, GestureDesignEditorWidget)
-            ):
-                widget.updateButtons(old_file_path, new_file_path)
+            if isinstance(widget, (HotkeyDesignEditorWidget, GestureDesignEditorWidget)):
+                widget.updateButtons(old_file_path)
 
     """ GESTURES """
     def getGestureWidgetSize(self):
