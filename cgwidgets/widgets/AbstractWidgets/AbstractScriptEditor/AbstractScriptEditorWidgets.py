@@ -368,7 +368,7 @@ class AbstractDesignButtonInterface(object):
             self.setText(self.getHotkey())
             delattr(self, "hash")
             delattr(self, "file_path")
-            delattr(self, "item")
+            # delattr(self, "item")
             delattr(self, "file_type")
 
         self.updateButtonColor()
@@ -462,59 +462,59 @@ class AbstractHotkeyDesignButtonWidget(QPushButton, AbstractDesignButtonInterfac
         Args:
             hover (bool): determines if the user is currently hovering over the widget or not
         """
-        # needs to be updated...
-        if hasattr(self, "hotkey"):
+        # get border color
+        background_color = iColor["rgba_background_01"]
+        if hover:
+            border_color = iColor["rgba_selected_hover_2"]
+            text_color = iColor["rgba_text_hover"]
+        else:
+            border_color = self.getBorderColor()
+            text_color = iColor["rgba_text"]
 
-            # get border color
-            background_color = iColor["rgba_background_01"]
-            if hover:
-                border_color = iColor["rgba_selected_hover_2"]
-                text_color = iColor["rgba_text_hover"]
+        if hasattr(self, "file_type"):
+            # hotkey
+            if self.getFileType() == "hotkey":
+                style_sheet = AbstractHotkeyDesignButtonWidget.STYLESHEET().format(
+                    BORDER_COLOR=border_color,
+                    BORDER_WIDTH=self.getBorderWidth(),
+                    BORDER_RADIUS=self.getBorderWidth() * 3,
+                    BORDER_STYLE="double",
+                    BACKGROUND_COLOR=background_color,
+                    TEXT_COLOR=text_color)
+
+            # script
+            elif self.getFileType() == "script":
+                style_sheet = AbstractHotkeyDesignButtonWidget.STYLESHEET.format(
+                    BORDER_COLOR=border_color,
+                    BORDER_WIDTH=self.getBorderWidth(),
+                    BORDER_RADIUS=self.getBorderWidth() * 3,
+                    BORDER_STYLE="solid",
+                    BACKGROUND_COLOR=background_color,
+                    TEXT_COLOR=text_color)
+
+            # inactive
             else:
-                border_color = self.getBorderColor()
-                text_color = iColor["rgba_text"]
-
-            if hasattr(self, "file_type"):
-                # hotkey
-                if self.getFileType() == "hotkey":
-                    style_sheet = AbstractHotkeyDesignButtonWidget.STYLESHEET().format(
-                        BORDER_COLOR=border_color,
-                        BORDER_WIDTH=self.getBorderWidth(),
-                        BORDER_RADIUS=self.getBorderWidth() * 3,
-                        BORDER_STYLE="double",
-                        BACKGROUND_COLOR=background_color,
-                        TEXT_COLOR=text_color)
-
-                # script
-                elif self.getFileType() == "script":
+                # DRAG ENTER COLOR
+                if drag_active:
                     style_sheet = AbstractHotkeyDesignButtonWidget.STYLESHEET.format(
                         BORDER_COLOR=border_color,
                         BORDER_WIDTH=self.getBorderWidth(),
                         BORDER_RADIUS=self.getBorderWidth() * 3,
-                        BORDER_STYLE="solid",
-                        BACKGROUND_COLOR=background_color,
+                        BORDER_STYLE="dotted",
+                        BACKGROUND_COLOR=iColor["rgba_background_01"],
                         TEXT_COLOR=text_color)
 
-                # inactive
+                # INACTIVE COLOR
                 else:
-                    if drag_active:
-                        style_sheet = AbstractHotkeyDesignButtonWidget.STYLESHEET.format(
-                            BORDER_COLOR=border_color,
-                            BORDER_WIDTH=self.getBorderWidth(),
-                            BORDER_RADIUS=self.getBorderWidth() * 3,
-                            BORDER_STYLE="dotted",
-                            BACKGROUND_COLOR=iColor["rgba_background_01"],
-                            TEXT_COLOR=text_color)
-                    else:
-                        style_sheet = AbstractHotkeyDesignButtonWidget.STYLESHEET.format(
-                            BORDER_COLOR=iColor["rgba_background_00"],
-                            BORDER_WIDTH=self.getBorderWidth(),
-                            BORDER_RADIUS=self.getBorderWidth() * 3,
-                            BORDER_STYLE="solid",
-                            BACKGROUND_COLOR=iColor["rgba_background_00"],
-                            TEXT_COLOR=iColor["rgba_text_disabled"])
+                    style_sheet = AbstractHotkeyDesignButtonWidget.STYLESHEET.format(
+                        BORDER_COLOR=iColor["rgba_background_00"],
+                        BORDER_WIDTH=self.getBorderWidth(),
+                        BORDER_RADIUS=self.getBorderWidth() * 3,
+                        BORDER_STYLE="solid",
+                        BACKGROUND_COLOR=iColor["rgba_background_00"],
+                        TEXT_COLOR=iColor["rgba_text_disabled"])
 
-            self.setStyleSheet(style_sheet)
+        self.setStyleSheet(style_sheet)
 
     def enterEvent(self, event):
         self.updateButtonColor(hover=True)
@@ -1448,11 +1448,8 @@ class HotkeyDesignPopupWidget(AbstractHotkeyDesignWidget):
 class HotkeyDesignPopupButton(AbstractHotkeyDesignButtonWidget):
     def __init__(self, parent=None, text=None, unique_hash=None):
         super(HotkeyDesignPopupButton, self).__init__(parent, text=text, unique_hash=unique_hash)
-        #self.setText(text)
-        #self.setHotkey(text)
         self.setAcceptDrops(True)
         self.clicked.connect(self.execute)
-        #self.setHash(unique_hash)
 
     def execute(self):
         if self.getFileType() == "script":
@@ -1508,11 +1505,31 @@ class PopupHotkeyMenu(QWidget):
     def paintEvent(self, event=None):
         """ Set transparency """
         painter = QPainter(self)
-        painter.setOpacity(0.5)
+        painter.setOpacity(0.75)
         bg_color = QColor(32, 32, 32, 255)
         painter.setBrush(bg_color)
         painter.setPen(QPen(bg_color))
-        painter.drawRect(self.window().rect())
+
+        # ellipse
+        painter.drawEllipse(QPoint(self.width() * 0.5, self.height() * 0.5), 900, 700)
+
+        # chamfered corners
+        # corner_radius = 75
+        # poly_points = [
+        #     QPoint(corner_radius, 0),
+        #     QPoint(self.width() - (corner_radius), 0),
+        #     QPoint(self.width(), corner_radius),
+        #     QPoint(self.width(), self.height() - (corner_radius)),
+        #     QPoint(self.width() - (corner_radius), self.height()),
+        #     QPoint(corner_radius, self.height()),
+        #     QPoint(0, self.height() - (corner_radius)),
+        #     QPoint(0, corner_radius)
+        # ]
+        # polygon = QPolygonF()
+        # for point in poly_points:
+        #     polygon.append(point)
+        # painter.drawPolygon(polygon)
+        #painter.drawRect(self.window().rect())
 
     def setSize(self, size):
         self._size = size
