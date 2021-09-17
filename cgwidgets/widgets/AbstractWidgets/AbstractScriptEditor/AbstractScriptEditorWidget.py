@@ -58,6 +58,11 @@ Data:
 """
 """
 Todo:
+    *   Dissalow Gesture from dropping in Hotkeys?
+    *   Dissalow from dropping on itself?
+    *   Gesture borders are the same as normal?
+    
+    
     *   Hotkeys are going wonky
             - When there is more than one directory with overlapping hotkeys, it
                 seems to fail.
@@ -66,6 +71,9 @@ Todo:
     * Popup Widgets
         - Add forward/backwards menu options
         - Dim unused buttons
+        - Hover enter color
+    *   TreeWidget
+        - change hotkey color from bold katana color to CGWidgets
 
 WISH LIST
     - Add support for modifiers on HotkeyDesigns
@@ -623,7 +631,7 @@ class ScriptTreeWidget(QTreeWidget):
         if not os.path.exists(new_file_path):
             os.rename(old_file_path, new_file_path)
 
-        # update active design items
+        # update active design items names
         if isinstance(current_item, (HotkeyDesignItem, GestureDesignItem)):
             script_editor_widget = getWidgetAncestor(self, AbstractScriptEditorWidget)
             design_tab = script_editor_widget.designTabWidget()
@@ -637,9 +645,7 @@ class ScriptTreeWidget(QTreeWidget):
 
         # update active buttons
         if isinstance(current_item, (ScriptItem, HotkeyDesignItem, GestureDesignItem)):
-            script_editor_widget = getWidgetAncestor(self, AbstractScriptEditorWidget)
-            design_tab = script_editor_widget.designTabWidget()
-            design_tab.updateAllHotkeyDesigns(old_file_path)
+            self.updateAllButtons(old_file_path)
 
         # update item dict data
         self.updateItemDictDir(old_file_path, new_file_path)
@@ -728,11 +734,16 @@ class ScriptTreeWidget(QTreeWidget):
                     with open(file_path, "w") as current_file:
                         json.dump(design_data, current_file)
 
-    def updateAllButtons(self, old_file_path):
-        """Updates the display of all of the buttons in  the Design Tab"""
+    def updateAllButtons(self, old_file_path, delete=False):
+        """Updates the display of all of the buttons in  the Design Tab
+
+        Args:
+            old_file_path (str):
+            delete (bool): Determines if this is a delete operation
+        """
         script_editor_widget = getWidgetAncestor(self, AbstractScriptEditorWidget)
         design_tab = script_editor_widget.designTabWidget()
-        design_tab.updateAllHotkeyDesigns(old_file_path)
+        design_tab.updateAllHotkeyDesigns(old_file_path, delete=delete)
 
     """ SETTINGS """
     def settingsFile(self, item=None):
@@ -970,7 +981,7 @@ class ScriptTreeWidget(QTreeWidget):
 
                 # needs to update all buttons again?
                 # todo update buttons on delete
-                self.updateAllButtons(item.filepath())
+                self.updateAllButtons(item.filepath(), delete=True)
                 self.updateAllDesignPaths(file_path, "")
 
                 # del item
@@ -1211,16 +1222,17 @@ class DesignTab(QTabWidget):
                     widget.setFilepath(file_path)
 
     """ HOTKEYS """
-    def updateAllHotkeyDesigns(self, old_file_path):
+    def updateAllHotkeyDesigns(self, old_file_path, delete=False):
         """ Updates all of the Hotkey/Gesture design buttons
 
         Args:
-            old_file_path (str): """
+            old_file_path (str):
+            delete (bool): Determines if this is a delete operation"""
         tab_bar = self.tabBar()
         for index in range(tab_bar.count()):
             widget = self.widget(index)
             if isinstance(widget, (HotkeyDesignEditorWidget, GestureDesignEditorWidget)):
-                widget.updateButtons(old_file_path)
+                widget.updateButtons(old_file_path, delete=delete)
 
     """ GESTURES """
     def getGestureWidgetSize(self):

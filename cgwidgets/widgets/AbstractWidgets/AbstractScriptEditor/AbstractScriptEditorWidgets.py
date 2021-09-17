@@ -186,11 +186,12 @@ class AbstractDesignWidget(object):
 
         self.setButtonSize()
 
-    def updateButtons(self, old_file_path):
+    def updateButtons(self, old_file_path, delete=False):
         """ Updates all of the buttons file paths
 
         Args:
-            old_file_path (str): items previous held filepath"""
+            old_file_path (str): items previous held filepath
+            delete (bool): Determines if this is a delete operation"""
 
         script_editor_widget = getWidgetAncestorByName(self, "AbstractScriptEditorWidget")
         item_dict = script_editor_widget.scriptWidget().itemDict()
@@ -199,8 +200,12 @@ class AbstractDesignWidget(object):
             button = button_list[key]
             if hasattr(button, 'file_path'):
                 if button.filepath() == old_file_path:
-                    # update buttons meta data if name/directory update
-                    if os.path.exists(button.filepath()):
+                    # delete button data
+                    if delete:
+                        button.updateButton(current_item=None)
+
+                    # update button data
+                    else:
                         try:
                             item = item_dict[str(button.filepath())]
                             button.updateButton(current_item=item)
@@ -209,10 +214,21 @@ class AbstractDesignWidget(object):
                             """ Need to except here, because I'm an idiot, and sometimes I'm updating
                             this multiple times... after its been reset, and I'm to lazy to clean it up"""
                             pass
-
-                    # remove buttons meta data if item has been deleted
-                    else:
-                        button.updateButton(current_item=None)
+                    #
+                    # # update buttons meta data if name/directory update
+                    # if os.path.exists(button.filepath()):
+                    #     try:
+                    #         item = item_dict[str(button.filepath())]
+                    #         button.updateButton(current_item=item)
+                    #     except KeyError:
+                    #         # item doesn't exist anymore
+                    #         """ Need to except here, because I'm an idiot, and sometimes I'm updating
+                    #         this multiple times... after its been reset, and I'm to lazy to clean it up"""
+                    #         pass
+                    #
+                    # # remove buttons meta data if item has been deleted
+                    # else:
+                    #     button.updateButton(current_item=None)
 
 
     """ PROPERTIES """
