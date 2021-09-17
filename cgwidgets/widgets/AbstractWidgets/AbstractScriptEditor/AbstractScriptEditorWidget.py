@@ -58,6 +58,9 @@ Data:
 """
 """
 Todo:
+    *   Bug
+            Pressing ESC while the delegate is activated will close the delegate, without
+            resetting the active flag... for some reason I can't figure out where this is =/
     *   Dissalow from dropping on itself?
     *   Hotkeys are stored as 
             "hotkey"
@@ -1019,6 +1022,15 @@ class ScriptTreeWidget(QTreeWidget):
                 # del key
                 del self.itemDict()[str(item.filepath())]
 
+    def closeDelegateEditor(self):
+        """ Closes the delegate editor and resets all the flags """
+        self.closePersistentEditor(self.currentItem(), 2)
+        self.setAcceptInput(False)
+        main_window = self.parent().window()
+        if hasattr(main_window, "_script_editor_event_filter_widget"):
+            event_filter_widget = main_window._script_editor_event_filter_widget
+            event_filter_widget.setIsActive(True)
+
     """ EVENTS """
     def contextMenuEvent(self, event, *args, **kwargs):
         # block if locked
@@ -1148,8 +1160,7 @@ class ScriptTreeWidget(QTreeWidget):
                 # reset hotkey if user presses backspace/delete
                 if event.key() in [Qt.Key_Backspace, Qt.Key_Delete]:
                     self.removeHotkeyFromItem()
-                    self.closePersistentEditor(self.currentItem(), 2)
-                    self.setAcceptInput(False)
+                    self.closeDelegateEditor()
                     return QTreeWidget.keyPressEvent(self, event, *args, **kwargs)
 
                 # get key sequence
@@ -1168,10 +1179,12 @@ class ScriptTreeWidget(QTreeWidget):
                         self.currentItem().setText(2, hotkey)
                         self.addHotkeyToItem(item=self.currentItem(), hotkey=hotkey)
 
+                        self.closeDelegateEditor()
+
                     def cancelOverwriteHotkey(widget):
                         self.currentItem().setText(2, "")
                         self.removeHotkeyFromItem()
-                        # self.addHotkeyToItem(item=self.currentItem(), hotkey=hotkey)
+                        self.closeDelegateEditor()
 
                     display_widget = AbstractLabelWidget(text="""
 The hotkey \"{hotkey}\" exists.
@@ -1181,8 +1194,7 @@ Would you like to override it and continue?""".format(hotkey=hotkey))
                     self.currentItem().setText(2, hotkey)
                     self.addHotkeyToItem(item=self.currentItem(), hotkey=hotkey)
 
-                self.closePersistentEditor(self.currentItem(), 2)
-                self.setAcceptInput(False)
+                    self.closeDelegateEditor()
                 # need to return here to avoid the QTreeWidget from auto selecting the previous hotkeyed item
                 return
 
