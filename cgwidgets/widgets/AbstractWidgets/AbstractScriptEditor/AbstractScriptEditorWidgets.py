@@ -1,6 +1,3 @@
-
-
-
 import math
 import json
 import os
@@ -9,7 +6,6 @@ from qtpy.QtWidgets import (
     QVBoxLayout,
     QWidget,
     QGraphicsView,
-    QGraphicsItem,
     QPushButton,
     QGraphicsItemGroup,
     QGraphicsPolygonItem,
@@ -41,6 +37,8 @@ from cgwidgets.utils import (
     setAsPopup
 )
 
+from cgwidgets.settings import iColor
+
 """ ABSTRACT CLASSES """
 class AbstractDesignWidget(object):
     """ Design Widget base class used for all Hotkey/Gesture DesignWidgets
@@ -53,7 +51,7 @@ class AbstractDesignWidget(object):
         self.button_dict = {}
 
     def __name__(self):
-        return '__design_widget__'
+        return "__design_widget__"
 
     def createButton(
         self,
@@ -66,44 +64,44 @@ class AbstractDesignWidget(object):
         if button_type is None:
             return
 
-        elif button_type == 'hotkey editor':
+        elif button_type == "hotkey editor":
             button = HotkeyDesignEditorButton(
                 parent=self,
                 text=text,
                 unique_hash=unique_hash
             )
-        elif button_type == 'hotkey gui':
+        elif button_type == "hotkey gui":
             button = HotkeyDesignPopupButton(
                 parent=self,
                 text=text,
                 unique_hash=unique_hash
             )
-        elif button_type == 'gesture editor':
+        elif button_type == "gesture editor":
             button = GestureDesignEditorButton(
-                points_list=gesture_points_dict[str(index)]['point_list'],
+                points_list=gesture_points_dict[str(index)]["point_list"],
                 text=text,
-                center_point=gesture_points_dict[str(index)]['pc'],
-                num_points=gesture_points_dict['num_points'],
+                center_point=gesture_points_dict[str(index)]["pc"],
+                num_points=gesture_points_dict["num_points"],
                 hotkey=index,
-                type_point=gesture_points_dict[str(index)]['pl']
+                type_point=gesture_points_dict[str(index)]["pl"]
             )
-            # no idea why it's not setting with the pos being sent through...
+            # no idea why it"s not setting with the pos being sent through...
             # so just using the post hack instead =\
-            button.setPos(gesture_points_dict['pos'], gesture_points_dict['pos'])
+            button.setPos(gesture_points_dict["pos"], gesture_points_dict["pos"])
             button.text_item.centerText()
             self.scene().addItem(button)
-        elif button_type == 'gesture gui':
-            button = GestureDesignGUIButton(
-                points_list=gesture_points_dict[str(index)]['point_list'],
+        elif button_type == "gesture gui":
+            button = GestureDesignPopupButton(
+                points_list=gesture_points_dict[str(index)]["point_list"],
                 text=text,
-                center_point=gesture_points_dict[str(index)]['pc'],
-                num_points=gesture_points_dict['num_points'],
+                center_point=gesture_points_dict[str(index)]["pc"],
+                num_points=gesture_points_dict["num_points"],
                 hotkey=index,
-                type_point=gesture_points_dict[str(index)]['pl']
+                type_point=gesture_points_dict[str(index)]["pl"]
             )
-            # no idea why it's not setting with the pos being sent through...
+            # no idea why it"s not setting with the pos being sent through...
             # so just using the post hack instead =\
-            button.setPos(gesture_points_dict['pos'], gesture_points_dict['pos'])
+            button.setPos(gesture_points_dict["pos"], gesture_points_dict["pos"])
             button.text_item.centerText()
             self.scene().addItem(button)
         return button
@@ -124,26 +122,26 @@ class AbstractDesignWidget(object):
             file_dict (dict): from the filepath.json for a design item
             item_dict (dict): of {filepath:item} that is stored on the AbstractScriptEditorWidget"""
         # create button layout
-        if 'hotkey' in button_type:
+        if "hotkey" in button_type:
             self.button_list = [
-                ['1', '2', '3', '4', '5'],
-                ['q', 'w', 'e', 'r', 't'],
-                ['a', 's', 'd', 'f', 'g'],
-                ['z', 'x', 'c', 'v', 'b'],
+                ["1", "2", "3", "4", "5"],
+                ["q", "w", "e", "r", "t"],
+                ["a", "s", "d", "f", "g"],
+                ["z", "x", "c", "v", "b"],
             ]
-        elif 'gesture' in button_type:
-            self.button_list = [['0', '1', '2', '3', '4', '5', '6', '7']]
+        elif "gesture" in button_type:
+            self.button_list = [["0", "1", "2", "3", "4", "5", "6", "7"]]
 
         for row in self.button_list:
             for item in row:
                 unique_hash = None
                 # create buttons that are not empty
-                if '.' in file_dict[item]:
-                    if '.py' in file_dict[item]:
-                        unique_hash, name = file_dict[item][file_dict[item].rindex('/')+1:].replace('.py', '').split('.')
-                    elif '.json' in file_dict[item]:
-                        unique_hash, name = file_dict[item][file_dict[item].rindex('/')+1:].replace('.json', '').split('.')
-                    if 'gesture' in button_type:
+                if "." in file_dict[item]:
+                    if ".py" in file_dict[item]:
+                        unique_hash, name = file_dict[item][file_dict[item].rindex("/")+1:].replace(".py", "").split(".")
+                    elif ".json" in file_dict[item]:
+                        unique_hash, name = file_dict[item][file_dict[item].rindex("/")+1:].replace(".json", "").split(".")
+                    if "gesture" in button_type:
                         text = name
                     else:
                         text = "{item}\n{name}".format(item=item, name=name)
@@ -163,12 +161,12 @@ class AbstractDesignWidget(object):
                     file_type = Locals().checkFileType(file_dict[item])
 
                     self.button_dict[item].setFileType(file_type=file_type)
-                    self.button_dict[item].setButtonColor()
+                    self.button_dict[item].updateButtonColor()
 
                 # Create Empty Buttons
                 # Will bypass for the gesture user display
                 else:
-                    if button_type != 'gesture gui':
+                    if button_type != "gesture gui":
                         text = item
                         file_type = None
                         self.button_dict[item] = self.createButton(
@@ -182,7 +180,7 @@ class AbstractDesignWidget(object):
                         self.button_dict[item].setHotkey(item)
 
                         self.button_dict[item].setFileType(file_type=file_type)
-                        self.button_dict[item].setButtonColor()
+                        self.button_dict[item].updateButtonColor()
 
         self.setButtonSize()
 
@@ -198,7 +196,7 @@ class AbstractDesignWidget(object):
         button_list = self.getButtonDict()
         for key in list(button_list.keys()):
             button = button_list[key]
-            if hasattr(button, 'file_path'):
+            if hasattr(button, "file_path"):
                 if button.filepath() == old_file_path:
                     # delete button data
                     if delete:
@@ -210,9 +208,9 @@ class AbstractDesignWidget(object):
                             item = item_dict[str(button.filepath())]
                             button.updateButton(current_item=item)
                         except KeyError:
-                            # item doesn't exist anymore
-                            """ Need to except here, because I'm an idiot, and sometimes I'm updating
-                            this multiple times... after its been reset, and I'm to lazy to clean it up"""
+                            # item doesn"t exist anymore
+                            """ Need to except here, because I"m an idiot, and sometimes I"m updating
+                            this multiple times... after its been reset, and I"m to lazy to clean it up"""
                             pass
                     #
                     # # update buttons meta data if name/directory update
@@ -221,15 +219,14 @@ class AbstractDesignWidget(object):
                     #         item = item_dict[str(button.filepath())]
                     #         button.updateButton(current_item=item)
                     #     except KeyError:
-                    #         # item doesn't exist anymore
-                    #         """ Need to except here, because I'm an idiot, and sometimes I'm updating
-                    #         this multiple times... after its been reset, and I'm to lazy to clean it up"""
+                    #         # item doesn"t exist anymore
+                    #         """ Need to except here, because I"m an idiot, and sometimes I"m updating
+                    #         this multiple times... after its been reset, and I"m to lazy to clean it up"""
                     #         pass
                     #
                     # # remove buttons meta data if item has been deleted
                     # else:
                     #     button.updateButton(current_item=None)
-
 
     """ PROPERTIES """
     def setFilepath(self, file_path):
@@ -261,12 +258,34 @@ class AbstractDesignWidget(object):
 
 
 class AbstractDesignButtonInterface(object):
-    """ Base class used for all Design Buttons (Gesture/Hotkey) """
+    """ Base class used for all Design Buttons (Gesture/Hotkey)
+
+    Attributes:
+        border_color (tuple): color of 255 strings to be displayed as the widgets border
+            (255, 255, 255)
+        border_width (int): width of border of widgets that are active
+        item (AbstractBaseItem): Current Script/Gesture/Hotkey design item
+        hash (str): unique hash identifier
+        hotkey (str): activation hotkey (if valid)
+
+        """
 
     def __name__(self):
-        return '__design_button_widget__'
+        return "__design_button_widget__"
 
     """ PROPERTIES """
+    def getBorderWidth(self):
+        return self._border_width
+
+    def setBorderWidth(self, border_width):
+        self._border_width = border_width
+
+    def getBorderColor(self):
+        return self._border_color
+
+    def setBorderColor(self, border_color):
+        self._border_color = border_color
+
     def setItem(self, item):
         self.item = item
 
@@ -292,7 +311,7 @@ class AbstractDesignButtonInterface(object):
         return self.file_path
 
     def getFileType(self):
-        if not hasattr(self, 'file_type'):
+        if not hasattr(self, "file_type"):
             return None
         return self.file_type
 
@@ -311,7 +330,7 @@ class AbstractDesignButtonInterface(object):
         hotkey_dict = self.getHotkeyDict()
         if hotkey_dict:
             if delete is True:
-                hotkey_dict[self.getHotkey()] = ''
+                hotkey_dict[self.getHotkey()] = ""
             else:
                 hotkey_dict[self.getHotkey()] = file_path
 
@@ -319,20 +338,20 @@ class AbstractDesignButtonInterface(object):
             design_path = self.getDesignPath()
             if file_path:
                 # Writing JSON data
-                with open(design_path, 'w') as f:
+                with open(design_path, "w") as f:
                     json.dump(hotkey_dict, f)
 
     def updateButton(self, current_item=None):
         if current_item:
             item_type = current_item.getItemType()
-            dropable_list = ['script', 'gesture', 'hotkey']
+            dropable_list = ["script", "gesture", "hotkey"]
             if item_type in dropable_list:
                 if isinstance(self, GestureDesignEditorButton):
-                    self.setText('%s' % (current_item.text(0)))
-                elif isinstance(self, GestureDesignGUIButton):
-                    self.setText('%s' % (current_item.text(0)))
+                    self.setText("%s" % (current_item.text(0)))
+                elif isinstance(self, GestureDesignPopupButton):
+                    self.setText("%s" % (current_item.text(0)))
                 else:
-                    self.setText(self.hotkey + '\n%s' % (current_item.text(0)))
+                    self.setText(self.hotkey + "\n%s" % (current_item.text(0)))
 
                 file_path = current_item.filepath()
                 self.updateFile(file_path=file_path)
@@ -342,31 +361,33 @@ class AbstractDesignButtonInterface(object):
                 if os.path.exists(file_path):
                     file_type = Locals().checkFileType(file_path)
                     self.setFileType(file_type)
-                    self.setButtonColor()
+
                 else:
                     self.updateButton(current_item=None)
         else:
             self.setText(self.getHotkey())
-            delattr(self, 'hash')
-            delattr(self, 'file_path')
-            # delattr(self, 'item')
-            delattr(self, 'file_type')
-            self.setButtonColor()
+            delattr(self, "hash")
+            delattr(self, "file_path")
+            delattr(self, "item")
+            delattr(self, "file_type")
+
+        self.updateButtonColor()
 
 
+""" HOTKEY WIDGETS """
 class AbstractHotkeyDesignWidget(QWidget, AbstractDesignWidget):
     """ AbstractHotkeyDesignWidget base class"""
     def __init__(
         self,
         parent=None,
         item=None,
-        file_path='',
+        file_path="",
         init_pos=None
     ):
         super(AbstractHotkeyDesignWidget, self).__init__(parent)
 
     def __name__(self):
-        return '__hotkey_editor_widget__'
+        return "__hotkey_editor_widget__"
 
     def getButtonSize(self):
         width = self.geometry().width() / 5
@@ -381,6 +402,25 @@ class AbstractHotkeyDesignWidget(QWidget, AbstractDesignWidget):
 
 
 class AbstractHotkeyDesignButtonWidget(QPushButton, AbstractDesignButtonInterface):
+    STYLESHEET = """
+        color: rgba{TEXT_COLOR};
+        border-style: {BORDER_STYLE};
+        border-width: {BORDER_WIDTH}px;
+        border-radius: {BORDER_RADIUS}px;
+        border-color: rgba{BORDER_COLOR};
+        background-color: rgba{BACKGROUND_COLOR};
+        """
+
+    COLOR_INTENSITY = 100
+
+    FINGERS_LIST = {
+        "a": ["1", "q", "a", "z"],
+        "s": ["2", "w", "s", "x"],
+        "d": ["3", "e", "d", "c"],
+        "f": ["4", "r", "f", "v"],
+        "g": ["5", "t", "g", "b"]
+    }
+
     def __init__(self, parent=None, text=None, unique_hash=None):
         super(AbstractHotkeyDesignButtonWidget, self).__init__(parent)
         self.setText(text)
@@ -388,88 +428,217 @@ class AbstractHotkeyDesignButtonWidget(QPushButton, AbstractDesignButtonInterfac
         self.setAcceptDrops(True)
         self.clicked.connect(self.execute)
         self.setHash(unique_hash)
+        self._border_width = 6
+        self.__setupBorderColor()
 
-    def setButtonColor(self):
+    def __setupBorderColor(self):
+        """ Sets the current borderColor for this button
+        """
+        # setup border color
+        color_intensity = AbstractHotkeyDesignButtonWidget.COLOR_INTENSITY
+
+        hotkey = self.getHotkey().split("\n")[0]
+        if hotkey in ["a", "s", "d", "f", "g"]:
+            color_intensity = color_intensity + (color_intensity * 2)
+            if color_intensity > 255:
+                color_intensity = 255
+
+        if hotkey in AbstractHotkeyDesignButtonWidget.FINGERS_LIST["a"]:
+            border_color = "(%s,0,0,255)" % str(float(color_intensity) * .75)
+        elif hotkey in AbstractHotkeyDesignButtonWidget.FINGERS_LIST["s"]:
+            border_color = "(0,%s,0,255)" % str(float(color_intensity) * .75)
+        elif hotkey in AbstractHotkeyDesignButtonWidget.FINGERS_LIST["d"]:
+            border_color = "(0,0,%s,255)" % str(float(color_intensity) * .75)
+        elif hotkey in AbstractHotkeyDesignButtonWidget.FINGERS_LIST["f"]:
+            border_color = "(%s,%s,0,255)" % (str(float(color_intensity) * .75), str(float(color_intensity) * .75))
+        elif hotkey in AbstractHotkeyDesignButtonWidget.FINGERS_LIST["g"]:
+            border_color = "(%s,0,%s,255)" % (str(float(color_intensity) * .75), str(float(color_intensity) * .75))
+
+        self.setBorderColor(border_color)
+
+    def updateButtonColor(self, hover=False, drag_active=False):
+        """ Updates the buttons colors.
+
+        Args:
+            hover (bool): determines if the user is currently hovering over the widget or not
+        """
         # needs to be updated...
-        if hasattr(self, 'hotkey'):
-            finger_list = {}
-            finger_list['a'] = ['1', 'q', 'a', 'z']
-            finger_list['s'] = ['2', 'w', 's', 'x']
-            finger_list['d'] = ['3', 'e', 'd', 'c']
-            finger_list['f'] = ['4', 'r', 'f', 'v']
-            finger_list['g'] = ['5', 't', 'g', 'b']
-            for finger in finger_list.keys():
-                for item in finger_list[finger]:
-                    hotkey = self.getHotkey()
-                    color = 100
-                    if hotkey in ['a', 's', 'd', 'f', 'g']:
-                        color = color + (color * 2)
-                        if color > 255:
-                            color = 255
-                    color = str(color)
-                    style_sheet_list = []
-                    style_sheet_list.append(
-                        'border-style: dotted;\
-                        border-width: 3px;\
-                        border-radius: 0px;\
-                        background-color: rgb(64,64,64);'
-                    )
+        if hasattr(self, "hotkey"):
 
-                    if hotkey in finger_list['a']:
-                        style_sheet_list.append(
-                            'border-color: rgb(%s,0,0);' % color
-                        )
-                        new_color = '(%s,0,0)' % str(float(color) * .75)
-                    elif hotkey in finger_list['s']:
-                        style_sheet_list.append(
-                            'border-color: rgb(0,%s,0);' % color
-                        )
-                        new_color = '(0,%s,0)' % str(float(color) * .75)
-                    elif hotkey in finger_list['d']:
-                        style_sheet_list.append(
-                            'border-color: rgb(0,0,%s);' % color
-                        )
-                        new_color = '(0,0,%s)' % str(float(color) * .75)
-                    elif hotkey in finger_list['f']:
-                        style_sheet_list.append(
-                            'border-color: rgb(%s,%s,0);' % (color, color)
-                        )
-                        new_color = '(%s,%s,0)' % (
-                            str(float(color) * .75), str(float(color) * .75)
-                        )
-                    elif hotkey in finger_list['g']:
-                        style_sheet_list.append(
-                            'border-color: rgb(%s,0,%s);' % (color, color)
-                        )
-                        new_color = '(%s,0,%s)' % (
-                            str(float(color) * .75), str(float(color) * .75)
-                        )
-                    if hasattr(self, 'file_type'):
-                        if self.getFileType() == 'hotkey':
-                            style_sheet_list.append(
-                                'border-style: double ;\
-                                border-width: 6px;\
-                                background-color: rgb(80,80,80);\
-                                border-color: rgb%s;'
-                                % new_color
-                            )
-                        elif self.getFileType() == 'script':
-                            style_sheet_list.append(
-                                'border-style: solid ;\
-                                background-color: rgb(80,80,80);\
-                                border-color: rgb%s;'
-                                % new_color
-                            )
+            # get border color
+            background_color = iColor["rgba_background_01"]
+            if hover:
+                border_color = iColor["rgba_selected_hover_2"]
+                text_color = iColor["rgba_text_hover"]
+            else:
+                border_color = self.getBorderColor()
+                text_color = iColor["rgba_text"]
 
-                    self.setStyleSheet(''.join(style_sheet_list))
+            if hasattr(self, "file_type"):
+                # hotkey
+                if self.getFileType() == "hotkey":
+                    style_sheet = AbstractHotkeyDesignButtonWidget.STYLESHEET().format(
+                        BORDER_COLOR=border_color,
+                        BORDER_WIDTH=self.getBorderWidth(),
+                        BORDER_RADIUS=self.getBorderWidth() * 3,
+                        BORDER_STYLE="double",
+                        BACKGROUND_COLOR=background_color,
+                        TEXT_COLOR=text_color)
+
+                # script
+                elif self.getFileType() == "script":
+                    style_sheet = AbstractHotkeyDesignButtonWidget.STYLESHEET.format(
+                        BORDER_COLOR=border_color,
+                        BORDER_WIDTH=self.getBorderWidth(),
+                        BORDER_RADIUS=self.getBorderWidth() * 3,
+                        BORDER_STYLE="solid",
+                        BACKGROUND_COLOR=background_color,
+                        TEXT_COLOR=text_color)
+
+                # inactive
+                else:
+                    if drag_active:
+                        style_sheet = AbstractHotkeyDesignButtonWidget.STYLESHEET.format(
+                            BORDER_COLOR=border_color,
+                            BORDER_WIDTH=self.getBorderWidth(),
+                            BORDER_RADIUS=self.getBorderWidth() * 3,
+                            BORDER_STYLE="dotted",
+                            BACKGROUND_COLOR=iColor["rgba_background_01"],
+                            TEXT_COLOR=text_color)
+                    else:
+                        style_sheet = AbstractHotkeyDesignButtonWidget.STYLESHEET.format(
+                            BORDER_COLOR=iColor["rgba_background_00"],
+                            BORDER_WIDTH=self.getBorderWidth(),
+                            BORDER_RADIUS=self.getBorderWidth() * 3,
+                            BORDER_STYLE="solid",
+                            BACKGROUND_COLOR=iColor["rgba_background_00"],
+                            TEXT_COLOR=iColor["rgba_text_disabled"])
+
+            self.setStyleSheet(style_sheet)
+
+    def enterEvent(self, event):
+        self.updateButtonColor(hover=True)
+        return QPushButton.enterEvent(self, event)
+
+    def leaveEvent(self, event):
+        self.updateButtonColor()
+        return QPushButton.leaveEvent(self, event)
+
+class HotkeyDesignEditorWidget(AbstractHotkeyDesignWidget):
+    """ Hotkey designer displayed as a widget in the DesignTab
+
+    Displayed on right side when user clicks on a "HotkeyDesign" item
+    The individual buttons inside of this are the HotkeyDesignEditorButtons
+    """
+    def __init__(self, parent=None, item=None, file_path=""):
+        super(HotkeyDesignEditorWidget, self).__init__(parent)
+        # set up default attributes
+        self.setFilepath(file_path)
+        # self.button_dict = {}
+        file_dict = getJSONData(self.filepath())
+
+        script_editor_widget = getWidgetAncestorByName(self.parentWidget(), "AbstractScriptEditorWidget")
+        item_dict = script_editor_widget.scriptWidget().itemDict()
+        self.item = item
+        self.populate(file_dict, item_dict=item_dict, button_type="hotkey editor")
+
+    def setButtonSize(self):
+        button_width, button_height = self.getButtonSize()
+        for row_index, row in enumerate(self.button_list):
+            for column_index, item in enumerate(row):
+                x_pos = column_index * button_width
+                y_pos = row_index * button_height
+                self.button_dict[item].setGeometry(
+                    x_pos,
+                    y_pos,
+                    button_width,
+                    button_height
+                )
+
+    def setItem(self, item):
+        self.item = item
+
+    def getItem(self):
+        return self.item
+
+    def resizeEvent(self, *args, **kwargs):
+        self.setButtonSize()
+        return QWidget.resizeEvent(self, *args, **kwargs)
 
 
+class HotkeyDesignEditorButton(AbstractHotkeyDesignButtonWidget):
+    """Individiual Buttons displayed in the HotkeyDesign Widget"""
+    def __init__(
+        self,
+        parent=None,
+        text=None,
+        unique_hash=None
+    ):
+        super(HotkeyDesignEditorButton, self).__init__(parent, text=text, unique_hash=unique_hash)
+        self.setAcceptDrops(True)
+
+    def __name__(self):
+        return "__design_button__"
+
+    def execute(self):
+        if hasattr(self, "item"):
+            tw = self.item.treeWidget()
+            item = self.getItem()
+            tw.setCurrentItem(item)
+            tw.showTab(item)
+
+    def getCurrentItem(self):
+        script_editor_widget = getWidgetAncestorByName(self, "AbstractScriptEditorWidget")
+        current_item = script_editor_widget.scriptWidget().currentItem()
+        return current_item
+
+    def getHotkeyDict(self):
+        """Returns the hotkey dictionary or None"""
+        if os.path.exists(self.parent().filepath()):
+            return getJSONData(self.parent().filepath())
+        else:
+            return None
+
+    def getDesignPath(self):
+        return self.parent().filepath()
+
+    """ EVENTS """
+    def dragEnterEvent(self, event, *args, **kwargs):
+        # update background color
+        self.updateButtonColor(hover=True, drag_active=True)
+
+        current_item = self.getCurrentItem()
+        item_type = current_item.getItemType()
+        dropable_list = ["script", "hotkey"]
+        if item_type in dropable_list:
+            event.accept()
+
+        return QPushButton.dragEnterEvent(self, event, *args, **kwargs)
+
+    def dragLeaveEvent(self, event):
+        self.updateButtonColor()
+        return QPushButton.dragLeaveEvent(self, event)
+
+    def dropEvent(self, event, *args, **kwargs):
+        self.updateButton(current_item=self.getCurrentItem())
+
+        return QPushButton.dropEvent(self, event, *args, **kwargs)
+
+    def mouseReleaseEvent(self, event, *args, **kwargs):
+        if event.button() == Qt.MiddleButton:
+            if hasattr(self, "file_path"):
+                self.updateFile(delete=True)
+                self.updateButton()
+        return QPushButton.mouseReleaseEvent(self, event, *args, **kwargs)
+
+
+""" GESTURE """
 class GestureDesignWidget(QGraphicsView, AbstractDesignWidget):
     def __init__(
         self,
         parent=None,
         item=None,
-        file_path='',
+        file_path="",
         init_pos=None,
         display_type=None,
         script_list=None,
@@ -478,18 +647,18 @@ class GestureDesignWidget(QGraphicsView, AbstractDesignWidget):
         super(GestureDesignWidget, self).__init__(parent)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.horizontalScrollBar().setStyleSheet('height:0px')
-        self.verticalScrollBar().setStyleSheet('width:0px')
+        self.horizontalScrollBar().setStyleSheet("height:0px")
+        self.verticalScrollBar().setStyleSheet("width:0px")
 
     def __name__(self):
-        return '__gesture_editor_widget__'
+        return "__gesture_editor_widget__"
 
     """ EVENTS"""
 
     def updatePolygons(
         self,
         num_points=8,
-        display_type='gesture editor',
+        display_type="gesture editor",
         size=None
     ):
         script_editor_widget = getWidgetAncestorByName(self, "AbstractScriptEditorWidget")
@@ -534,7 +703,7 @@ class GestureDesignWidget(QGraphicsView, AbstractDesignWidget):
             @return: 5 * <QPointF> , p0, p1, p2, p3, pc
             @index: <int> index number
             @num_points <int> total number of points in the primitive
-            @offset <float> the gap between each primitive 
+            @offset <float> the gap between each primitive
             """
             # ===================================================================
             # outer left
@@ -668,8 +837,8 @@ class GestureDesignWidget(QGraphicsView, AbstractDesignWidget):
         offset = -.05
         item_list = []
         polygon_points_dict = {}
-        polygon_points_dict['num_points'] = num_points
-        polygon_points_dict['pos'] = size * .5
+        polygon_points_dict["num_points"] = num_points
+        polygon_points_dict["pos"] = size * .5
         rc = (((r0 - r1) * .5) + r1)
 
         # create polygon segments
@@ -677,9 +846,9 @@ class GestureDesignWidget(QGraphicsView, AbstractDesignWidget):
             p0, p1, p2, p3, pc, p4, pl = getPoints(index, num_points, offset, r0, r1)
             points_list = [p0, p1, p3, p2, p0]
             polygon_points_dict[str(index)] = {}
-            polygon_points_dict[str(index)]['point_list'] = points_list
-            polygon_points_dict[str(index)]['pc'] = pc
-            polygon_points_dict[str(index)]['pl'] = pl
+            polygon_points_dict[str(index)]["point_list"] = points_list
+            polygon_points_dict[str(index)]["pc"] = pc
+            polygon_points_dict[str(index)]["pl"] = pl
 
         # populate
         self.populate(
@@ -774,8 +943,8 @@ class GestureDesignButtonWidget(QGraphicsItemGroup, AbstractDesignButtonInterfac
         transform = scalingTransform * rotationTransform * translationTransform;
         item.setTransform(transform)
 
-    def setButtonColor(self):
-        #self.label_item.setPlainText('None')
+    def updateButtonColor(self):
+        #self.label_item.setPlainText("None")
 
         pen = self.poly_item.pen()
         width = 2
@@ -784,7 +953,7 @@ class GestureDesignButtonWidget(QGraphicsItemGroup, AbstractDesignButtonInterfac
         file_type = self.getFileType()
         # set up morse code dots...
         if file_type is None:
-            text = 'None'
+            text = "None"
             color = QColor(0, 0, 0)
 
             morse_code = [
@@ -794,8 +963,8 @@ class GestureDesignButtonWidget(QGraphicsItemGroup, AbstractDesignButtonInterfac
                 1, 7
             ]
         else:
-            if file_type == 'hotkey':
-                text = 'hotkey'
+            if file_type == "hotkey":
+                text = "hotkey"
                 color = QColor(128, 0, 0)
                 morse_code = [
                     1, 1, 1, 1, 1, 1, 1, 3,
@@ -815,8 +984,8 @@ class GestureDesignButtonWidget(QGraphicsItemGroup, AbstractDesignButtonInterfac
                 ]
                 notatroll = [x * width for x in notatroll]
                 """
-            elif file_type == 'gesture':
-                text = 'gesture'
+            elif file_type == "gesture":
+                text = "gesture"
                 color = QColor(0, 0, 128)
                 morse_code = [
                     3, 1, 3, 1, 1, 3,
@@ -827,8 +996,8 @@ class GestureDesignButtonWidget(QGraphicsItemGroup, AbstractDesignButtonInterfac
                     1, 1, 3, 1, 1, 3,
                     1, 3,
                 ]
-            elif file_type == 'script':
-                text = 'script'
+            elif file_type == "script":
+                text = "script"
                 color = QColor(0, 128, 0)
                 morse_code = [
                     1, 1, 1, 1, 1, 3,
@@ -879,117 +1048,12 @@ class GestureDesignPolyWidget(QGraphicsPolygonItem, AbstractDesignButtonInterfac
         self.setPolygon(polygon)
 
 
-""" HOTKEY WIDGETS """
-class HotkeyDesignEditorWidget(AbstractHotkeyDesignWidget):
-    """ Hotkey designer displayed as a widget in the DesignTab
-
-    Displayed on right side when user clicks on a "HotkeyDesign" item
-    The individual buttons inside of this are the HotkeyDesignEditorButtons
-    """
-    def __init__(self, parent=None, item=None, file_path=''):
-        super(HotkeyDesignEditorWidget, self).__init__(parent)
-        # set up default attributes
-        self.setFilepath(file_path)
-        # self.button_dict = {}
-        file_dict = getJSONData(self.filepath())
-
-        script_editor_widget = getWidgetAncestorByName(self.parentWidget(), "AbstractScriptEditorWidget")
-        item_dict = script_editor_widget.scriptWidget().itemDict()
-        self.item = item
-        self.populate(file_dict, item_dict=item_dict, button_type='hotkey editor')
-
-    def setButtonSize(self):
-        button_width, button_height = self.getButtonSize()
-        for row_index, row in enumerate(self.button_list):
-            for column_index, item in enumerate(row):
-                x_pos = column_index * button_width
-                y_pos = row_index * button_height
-                self.button_dict[item].setGeometry(
-                    x_pos,
-                    y_pos,
-                    button_width,
-                    button_height
-                )
-
-    def setItem(self, item):
-        self.item = item
-
-    def getItem(self):
-        return self.item
-
-    def resizeEvent(self, *args, **kwargs):
-        self.setButtonSize()
-        return QWidget.resizeEvent(self, *args, **kwargs)
-
-
-class HotkeyDesignEditorButton(AbstractHotkeyDesignButtonWidget):
-    """Individiual Buttons displayed in the HotkeyDesign Widget"""
-    def __init__(
-        self,
-        parent=None,
-        text=None,
-        unique_hash=None
-    ):
-        super(HotkeyDesignEditorButton, self).__init__(parent)
-        self.setText(text)
-        self.setHotkey(text)
-        self.setAcceptDrops(True)
-        #self.clicked.connect(self.execute)
-        self.setHash(unique_hash)
-
-    def __name__(self):
-        return '__design_button__'
-
-    def execute(self):
-        if hasattr(self, 'item'):
-            tw = self.item.treeWidget()
-            item = self.getItem()
-            tw.setCurrentItem(item)
-            tw.showTab(item)
-
-    def getCurrentItem(self):
-        script_editor_widget = getWidgetAncestorByName(self, "AbstractScriptEditorWidget")
-        current_item = script_editor_widget.scriptWidget().currentItem()
-        return current_item
-
-    def getHotkeyDict(self):
-        """Returns the hotkey dictionary or None"""
-        if os.path.exists(self.parent().filepath()):
-            return getJSONData(self.parent().filepath())
-        else:
-            return None
-
-    def getDesignPath(self):
-        return self.parent().filepath()
-
-    """ EVENTS """
-    def dragEnterEvent(self, event, *args, **kwargs):
-        current_item = self.getCurrentItem()
-        item_type = current_item.getItemType()
-        dropable_list = ['script', 'gesture', 'hotkey']
-        if item_type in dropable_list:
-            event.accept()
-        return QPushButton.dragEnterEvent(self, event, *args, **kwargs)
-
-    def dropEvent(self, event, *args, **kwargs):
-        self.updateButton(current_item=self.getCurrentItem())
-        return QPushButton.dropEvent(self, event, *args, **kwargs)
-
-    def mouseReleaseEvent(self, event, *args, **kwargs):
-        if event.button() == Qt.MiddleButton:
-            if hasattr(self, 'file_path'):
-                self.updateFile(delete=True)
-                self.updateButton()
-        return QPushButton.mouseReleaseEvent(self, event, *args, **kwargs)
-
-
-""" GESTURE WIDGETS """
 class GestureDesignEditorWidget(GestureDesignWidget):
     def __init__(
         self,
         parent=None,
         item=None,
-        file_path='',
+        file_path="",
         init_pos=None,
         display_type=None,
         script_list=None,
@@ -1018,7 +1082,7 @@ class GestureDesignEditorWidget(GestureDesignWidget):
         item_dict = script_editor_widget.scriptWidget().itemDict()
         self.drawPolygons(
             num_points=8,
-            display_type='gesture editor',
+            display_type="gesture editor",
             r0=outer_radius,
             r1=inner_radius,
             size=size,
@@ -1048,7 +1112,7 @@ class GestureDesignEditorButton(GestureDesignButtonWidget):
         # set up items
         self.poly_item = GestureDesignPolyWidget(points_list=points_list)
 
-        self.text_item = GestureDesignGUITextItem(
+        self.text_item = GestureDesignPopupTextItem(
             text=text, hotkey=hotkey, pos=type_point
         )
         self.text_item.setPos(center_point)
@@ -1065,7 +1129,7 @@ class GestureDesignEditorButton(GestureDesignButtonWidget):
         self.setHash(unique_hash)
 
     def execute(self):
-        if hasattr(self, 'item'):
+        if hasattr(self, "item"):
             tw = self.item.treeWidget()
             item = self.getItem()
             tw.setCurrentItem(item)
@@ -1101,7 +1165,7 @@ class GestureDesignEditorButton(GestureDesignButtonWidget):
     def dragEnterEvent(self, event, *args, **kwargs):
         current_item = self.getCurrentItem()
         item_type = current_item.getItemType()
-        dropable_list = ['script', 'gesture', 'hotkey']
+        dropable_list = ["script", "gesture", "hotkey"]
         if item_type in dropable_list:
             event.accept()
 
@@ -1113,7 +1177,7 @@ class GestureDesignEditorButton(GestureDesignButtonWidget):
 
     def mousePressEvent(self, event, *args, **kwargs):
         if event.button() == Qt.MiddleButton:
-            if hasattr(self, 'file_path'):
+            if hasattr(self, "file_path"):
                 self.updateFile(delete=True)
                 self.updateButton()
         elif event.button() == Qt.LeftButton:
@@ -1162,13 +1226,13 @@ class GestureDesignEditorTextItem(QGraphicsTextItem):
         ypos = pos.y()
 
         
-        if self.hotkey in '123':
+        if self.hotkey in "123":
             ypos -= 20
-        elif self.hotkey in '567':
+        elif self.hotkey in "567":
             ypos += 20
-        elif self.hotkey == '0':
+        elif self.hotkey == "0":
             xpos -= 15
-        elif self.hotkey == '4':
+        elif self.hotkey == "4":
             xpos += 15
         
         # specific handlers to center based on awkward shapes...
@@ -1176,15 +1240,15 @@ class GestureDesignEditorTextItem(QGraphicsTextItem):
         self.setPos(new_pos)
 
 
-class GestureDesignGUIWidget(GestureDesignWidget):
+class GestureDesignPopupWidget(GestureDesignWidget):
     def __init__(
         self,
         parent=None,
-        file_path='',
+        file_path="",
         init_pos=None,
         size=None
     ):
-        super(GestureDesignGUIWidget, self).__init__(parent)
+        super(GestureDesignPopupWidget, self).__init__(parent)
         self.setFilepath(file_path)
         self.poly_width = .85
 
@@ -1203,7 +1267,7 @@ class GestureDesignGUIWidget(GestureDesignWidget):
 
         self.drawPolygons(
             num_points=8,
-            display_type='gesture gui',
+            display_type="gesture gui",
             r0=outer_radius,
             r1=inner_radius,
             size=size,
@@ -1214,7 +1278,7 @@ class GestureDesignGUIWidget(GestureDesignWidget):
         self.setMaximumSize(size*5, size*5)
 
 
-class GestureDesignGUIButton(GestureDesignButtonWidget):
+class GestureDesignPopupButton(GestureDesignButtonWidget):
     def __init__(
         self,
         parent=None,
@@ -1227,11 +1291,11 @@ class GestureDesignGUIButton(GestureDesignButtonWidget):
         hotkey=None,
         type_point=None
     ):
-        super(GestureDesignGUIButton, self).__init__(parent)
+        super(GestureDesignPopupButton, self).__init__(parent)
         # set up items
         self.poly_item = GestureDesignPolyWidget(points_list=points_list)
 
-        self.text_item = GestureDesignGUITextItem(
+        self.text_item = GestureDesignPopupTextItem(
             text=text, hotkey=hotkey, pos=type_point
         )
         self.text_item.setPos(type_point)
@@ -1249,18 +1313,18 @@ class GestureDesignGUIButton(GestureDesignButtonWidget):
         self.setHash(unique_hash)
 
     def execute(self):
-        if self.getFileType() == 'script':
+        if self.getFileType() == "script":
             if os.path.exists(self.filepath()):
                 environment = dict(locals(), **globals())
                 #environment.update(self.importModules())
                 with open(self.filepath()) as script_descriptor:
                     exec(script_descriptor.read(), environment, environment)
-        elif self.getFileType() == 'hotkey':
+        elif self.getFileType() == "hotkey":
             # katana_main = UI4.App.MainWindow.GetMainWindow()
             pos = QCursor.pos()
             popup_menu_widget = PopupHotkeyMenu(file_path=self.filepath(), pos=pos)
             popup_menu_widget.show()
-        elif self.getFileType() == 'gesture':
+        elif self.getFileType() == "gesture":
             # katana_main = UI4.App.MainWindow.GetMainWindow()
             popup_gesture_widget = PopupGestureMenu(file_path=self.filepath())
             popup_gesture_widget.show()
@@ -1268,12 +1332,12 @@ class GestureDesignGUIButton(GestureDesignButtonWidget):
         self.scene().views()[0].parent().close()
 
     def hoverEnterEvent(self, *args, **kwargs):
-        if hasattr(self, 'file_path'):
+        if hasattr(self, "file_path"):
             self.execute()
         return GestureDesignButtonWidget.hoverEnterEvent(self, *args, **kwargs)
 
 
-class GestureDesignGUITextItem(QGraphicsTextItem):
+class GestureDesignPopupTextItem(QGraphicsTextItem):
     def __init__(
         self,
         parent=None,
@@ -1282,7 +1346,7 @@ class GestureDesignGUITextItem(QGraphicsTextItem):
         pos=None
     ):
 
-        super(GestureDesignGUITextItem, self).__init__(parent)
+        super(GestureDesignPopupTextItem, self).__init__(parent)
         self.setPlainText(text)
         self.hotkey = hotkey
         self.orig_point = pos
@@ -1303,16 +1367,16 @@ class GestureDesignGUITextItem(QGraphicsTextItem):
         text_format = QTextBlockFormat()
 
         # center
-        if self.hotkey in '26':
+        if self.hotkey in "26":
             xpos = pos.x() - (width * .5)
             text_format.setAlignment(Qt.AlignCenter)
         # right
-        elif self.hotkey in '107':
+        elif self.hotkey in "107":
             xpos = pos.x()
             text_format.setAlignment(Qt.AlignRight)
             pass #align right
         # left
-        elif self.hotkey in '345':
+        elif self.hotkey in "345":
             xpos = pos.x() - (width)
             text_format.setAlignment(Qt.AlignLeft)
         cursor = self.textCursor()
@@ -1324,13 +1388,13 @@ class GestureDesignGUITextItem(QGraphicsTextItem):
         ypos = pos.y() - 15
 
         """
-        if self.hotkey in '123':
+        if self.hotkey in "123":
             ypos -= 20
-        elif self.hotkey in '567':
+        elif self.hotkey in "567":
             ypos += 20
-        elif self.hotkey == '0':
+        elif self.hotkey == "0":
             xpos -= 15
-        elif self.hotkey == '4':
+        elif self.hotkey == "4":
             xpos += 15
         """
         # specific handlers to center based on awkward shapes...
@@ -1340,7 +1404,7 @@ class GestureDesignGUITextItem(QGraphicsTextItem):
 
 """ POPUP MENUS """
 class HotkeyDesignPopupWidget(AbstractHotkeyDesignWidget):
-    def __init__(self, parent=None, item=None, file_path='', init_pos=None):
+    def __init__(self, parent=None, item=None, file_path="", init_pos=None):
         super(HotkeyDesignPopupWidget, self).__init__(parent)
         # set up default attributes
         self.setFilepath(file_path)
@@ -1348,7 +1412,7 @@ class HotkeyDesignPopupWidget(AbstractHotkeyDesignWidget):
         file_dict = getJSONData(self.filepath())
 
         self.init_pos = init_pos
-        self.populate(file_dict, button_type='hotkey gui')
+        self.populate(file_dict, button_type="hotkey gui")
 
     def setButtonSize(self):
         """Sets the button size and position, will be offset to simulate a keyboard layout"""
@@ -1383,23 +1447,23 @@ class HotkeyDesignPopupWidget(AbstractHotkeyDesignWidget):
 
 class HotkeyDesignPopupButton(AbstractHotkeyDesignButtonWidget):
     def __init__(self, parent=None, text=None, unique_hash=None):
-        super(HotkeyDesignPopupButton, self).__init__(parent)
-        self.setText(text)
-        self.setHotkey(text)
+        super(HotkeyDesignPopupButton, self).__init__(parent, text=text, unique_hash=unique_hash)
+        #self.setText(text)
+        #self.setHotkey(text)
         self.setAcceptDrops(True)
         self.clicked.connect(self.execute)
-        self.setHash(unique_hash)
+        #self.setHash(unique_hash)
 
     def execute(self):
-        if self.getFileType() == 'script':
+        if self.getFileType() == "script":
             if os.path.exists(self.filepath()):
                 environment = dict(locals(), **globals())
                 #environment.update(self.importModules())
                 with open(self.filepath()) as script_descriptor:
                     exec(script_descriptor.read(), environment, environment)
-        elif self.getFileType() == 'hotkey':
+        elif self.getFileType() == "hotkey":
             self.showHotkeyDesign(self.filepath())
-        elif self.getFileType() == 'gesture':
+        elif self.getFileType() == "gesture":
             gesture_menu = PopupGestureMenu(self, file_path=self.filepath())
             gesture_menu.show()
 
@@ -1481,7 +1545,7 @@ class PopupGestureMenu(QWidget):
         # create main layout
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
-        design_widget = GestureDesignGUIWidget(self, file_path=file_path, init_pos=pos, size=size)
+        design_widget = GestureDesignPopupWidget(self, file_path=file_path, init_pos=pos, size=size)
         main_layout.addWidget(design_widget)
 
         # set focus

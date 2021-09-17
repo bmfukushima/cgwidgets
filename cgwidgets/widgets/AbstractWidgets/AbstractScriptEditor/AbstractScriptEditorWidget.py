@@ -15,7 +15,7 @@ This organizes the data into a few different item types,
     Gesture:
         Design Widget, this creates a 8x1 design window that forms an octagon with
         the users cursor in the center.  Moving the mouse through an option will
-        activate that option.  Note... this doesn't really work all that well... lol
+        activate that option.  Note... this doesn"t really work all that well... lol
 
 Hierarchy:
 AbstractScriptEditorWidget --> (QSplitter)
@@ -58,11 +58,12 @@ Data:
 """
 """
 Todo:
-    *   Dissalow Gesture from dropping in Hotkeys?
     *   Dissalow from dropping on itself?
-    *   Gesture borders are the same as normal?
-    
-    
+    *   Hotkeys are stored as 
+            "hotkey"
+            "item name"
+        instead of just the hotkey...
+        search for getHotkey
     *   Hotkeys are going wonky
             - When there is more than one directory with overlapping hotkeys, it
                 seems to fail.
@@ -784,7 +785,7 @@ class ScriptTreeWidget(QTreeWidget):
     def addHotkeyToItem(self, item=None, hotkey=None):
         """ Adds a a hotkey to a SCRIPT | DESIGN item
 
-        The global hotkey's registry is located at the top of each Scripts directory
+        The global hotkey"s registry is located at the top of each Scripts directory
         as the file "hotkeys.json"
 
         Args:
@@ -803,7 +804,7 @@ class ScriptTreeWidget(QTreeWidget):
             json.dump(hotkey_dict, f)
 
     def removeHotkeyFromItem(self, item=None):
-        """ Removes the item's hotkey from the global registry
+        """ Removes the item"s hotkey from the global registry
 
         # todo not sure if this needs item_path...
         should be able to get it from the item provided

@@ -44,6 +44,7 @@ class Colors(dict):
         """ background """
         self["rgba_background_00"] = self["rgba_gray_2"]
         self["rgba_background_01"] = self["rgba_gray_3"]
+        self["rgba_background_02"] = self["rgba_gray_4"]
 
         """ outline """
         self["rgba_outline"] = self["rgba_blue_6"]
@@ -58,6 +59,7 @@ class Colors(dict):
         self["rgba_selected_background"] = self["rgba_cyan_5"]
         self["rgba_selected"] = self["rgba_cyan_7"]
         self["rgba_selected_hover"] = self["rgba_cyan_5"]
+        self["rgba_selected_hover_2"] = self["rgba_cyan_6"]
 
         """ accept / decline"""
         self["rgba_accept"] = self["rgba_green_desat_6"]

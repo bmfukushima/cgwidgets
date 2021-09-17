@@ -17,10 +17,10 @@ main_widget.show()
 centerWidgetOnScreen(main_widget)
 
 # popup hotkey example
-# hotkey_file_path = "/home/brian/.cgwidgets/.scripts/1540676548115043584.HotkeyDesign.json"
-# popup_widget = PopupHotkeyMenu(file_path=hotkey_file_path)
+hotkey_file_path = "/home/brian/.cgwidgets/.scripts/3641172470576247296.HotkeyDesign.json"
+popup_widget = PopupHotkeyMenu(file_path=hotkey_file_path)
 
-# popup_widget.show()
+popup_widget.show()
 
 sys.exit(app.exec_())
 main()

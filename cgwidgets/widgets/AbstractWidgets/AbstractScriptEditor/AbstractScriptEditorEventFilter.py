@@ -57,13 +57,13 @@ class AbstractScriptEditorPopupEventFilter(QWidget):
                     hotkey = self.hotkey_dict[file_path]
                     if hotkey == user_input:
                         file_type = Locals().checkFileType(file_path)
-                        if file_type == 'hotkey':
+                        if file_type == "hotkey":
                             main_widget = PopupHotkeyMenu(self.mainWindow(), file_path=file_path)
                             main_widget.show()
-                        elif file_type == 'gesture':
+                        elif file_type == "gesture":
                             main_widget = PopupGestureMenu(self.mainWindow(), file_path=file_path)
                             main_widget.show()
-                        elif file_type == 'script':
+                        elif file_type == "script":
                             if os.path.exists(file_path):
                                 environment = dict(locals(), **globals())
                                 # environment.update(self.importModules())

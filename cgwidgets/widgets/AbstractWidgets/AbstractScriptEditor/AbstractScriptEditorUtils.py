@@ -6,7 +6,7 @@ class Utils(object):
     def getFileDict(self, file_path):
         """@returns <dict> dict[hotkey]=file_path"""
         if file_path:
-            with open(file_path, 'r') as f:
+            with open(file_path, "r") as f:
                 hotkeys = json.load(f)
                 return hotkeys
 
@@ -14,17 +14,17 @@ class Utils(object):
         """@file_path <str> path on disk to file"""
         if os.path.exists(file_path):
             if os.path.isdir(file_path):
-                return 'group'
-            elif file_path.endswith('.py'):
-                return 'script'
-            elif file_path.endswith('.json'):
+                return "group"
+            elif file_path.endswith(".py"):
+                return "script"
+            elif file_path.endswith(".json"):
                 if file_path:
-                    with open(file_path, 'r') as f:
+                    with open(file_path, "r") as f:
                         hotkeys = json.load(f)
                         if len(list(hotkeys.keys())) == 20:
-                            return 'hotkey'
+                            return "hotkey"
                         elif len(list(hotkeys.keys())) == 8:
-                            return 'gesture'
+                            return "gesture"
 
 
 
