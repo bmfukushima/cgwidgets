@@ -114,7 +114,7 @@ from qtpy.QtCore import QVariant, Qt
 from qtpy.QtGui import QCursor, QKeySequence
 
 from cgwidgets.utils import getWidgetAncestor, showWarningDialogue, getJSONData
-from cgwidgets.widgets.AbstractWidgets.AbstractBaseInputWidgets import AbstractLabelWidget
+from cgwidgets.widgets.AbstractWidgets.AbstractBaseInputWidgets import AbstractLabelWidget, AbstractButtonInputWidget
 from cgwidgets.settings import iColor, stylesheets
 
 from .AbstractScriptEditorUtils import Utils as Locals
@@ -124,6 +124,9 @@ from .AbstractScriptEditorWidgets import (HotkeyDesignEditorWidget, GestureDesig
 class AbstractPythonCodeWidget(QPlainTextEdit):
     def __init__(self, parent=None):
         super(AbstractPythonCodeWidget, self).__init__(parent)
+
+    def setScript(self, script):
+        self.setPlainText(script)
 
     def keyPressEvent(self, event):
         if event.modifiers() == Qt.ControlModifier:
@@ -138,12 +141,21 @@ class AbstractPythonEditor(QWidget):
     For each DCC this will need to be subclassed.  Where the codeWidget()
     will need to return access to the QPlainTextEdit, or w/e widget holds
     the user input portion of the editor"""
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, python_ide=AbstractPythonCodeWidget):
         super(AbstractPythonEditor, self).__init__(parent)
 
         layout = QVBoxLayout(self)
-        self._code_widget = AbstractPythonCodeWidget(self)
+        self._code_widget = python_ide(self)
+        self._save_button = SaveButton(parent=self)
+
         layout.addWidget(self._code_widget)
+        layout.addWidget(self._save_button)
+
+        self.layout().setStretch(0, 1)
+        self.layout().setStretch(1, 0)
+
+    def saveButton(self):
+        return self._save_button
 
     def codeWidget(self):
         return self._code_widget
@@ -232,14 +244,14 @@ class AbstractScriptEditorWidget(QSplitter):
         self._script_widget = ScriptTreeWidget(parent=self)
 
         self._design_tab_widget = DesignTab(parent=self, python_editor=python_editor)
-        save_button = SaveButton(parent=self)
+        #save_button = SaveButton(parent=self)
 
         self._design_main_widget = QWidget()
         design_vbox = QVBoxLayout()
         design_vbox.setContentsMargins(0, 0, 0, 0)
         self._design_main_widget.setLayout(design_vbox)
         design_vbox.addWidget(self._design_tab_widget)
-        design_vbox.addWidget(save_button)
+        #design_vbox.addWidget(save_button)
 
         # ADD WIDGETS TO SPLITTER
         self.addWidget(self._script_widget)
@@ -297,20 +309,19 @@ class AbstractScriptEditorWidget(QSplitter):
         return QSplitter.resizeEvent(self, event, *args, **kwargs)
 
 
-class SaveButton(QPushButton):
+class SaveButton(AbstractButtonInputWidget):
     """ Save button at the bottom of the Designer portion.
 
     This is used to save designs/scripts.
     """
     def __init__(self, parent=None):
-        super(SaveButton, self).__init__(parent)
-        self.setText("Save")
-        self.clicked.connect(self.saveScript)
+        super(SaveButton, self).__init__(parent, title="Save")
+        self.setUserClickedEvent(self.saveScript)
 
     def __name__(self):
         return "__save_button__"
 
-    def saveScript(self):
+    def saveScript(self, widget):
         """Saves the current script to disk"""
         script_editor_widget = getWidgetAncestor(self, AbstractScriptEditorWidget)
         current_item = script_editor_widget.currentItem()
@@ -957,7 +968,7 @@ class ScriptTreeWidget(QTreeWidget):
         with open(file_path, "r") as current_file:
             text_list = current_file.readlines()
             text = "".join(text_list)
-            code_tab.setPlainText(text)
+            code_tab.setScript(text)
         script_editor_widget.setCurrentItem(current_item)
 
     def showTab(self, current_item):

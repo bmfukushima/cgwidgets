@@ -42,7 +42,7 @@ class Colors(dict):
         createColorRange("rgba_magenta", (start_color, start_color * 0.5, start_color * 0.5, 255), self, num_colors, desaturate=False)
         """ COLOR REFERENCES"""
         """ background """
-        self["rgba_background_00"] = "(48,48,48,255)"
+        self["rgba_background_00"] = (48, 48, 48, 255)
         self["rgba_background_01"] = self["rgba_gray_3"]
         self["rgba_background_02"] = self["rgba_gray_4"]
 

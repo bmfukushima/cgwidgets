@@ -15,6 +15,7 @@ from qtpy.QtWidgets import (
 )
 from qtpy.QtGui import (
     QCursor,
+    QBrush,
     QTransform,
     QColor,
     QPainter,
@@ -650,6 +651,10 @@ class GestureDesignWidget(QGraphicsView, AbstractDesignWidget):
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.horizontalScrollBar().setStyleSheet("height:0px")
         self.verticalScrollBar().setStyleSheet("width:0px")
+        #self.setStyleSheet("background-color: rgba(0,255,255,255);")
+
+        color = QColor(1,1,1,255)
+        self.setBackgroundBrush(QBrush(color, Qt.SolidPattern))
 
     def __name__(self):
         return "__gesture_editor_widget__"
@@ -757,9 +762,8 @@ class GestureDesignWidget(QGraphicsView, AbstractDesignWidget):
                 )
             )
             p2 = QPointF(x2, y2)
-            # ===================================================================
+
             # inner right
-            # ===================================================================
             # x
             x3 = (
                 r1 * math.cos(
@@ -774,9 +778,7 @@ class GestureDesignWidget(QGraphicsView, AbstractDesignWidget):
             )
             p3 = QPointF(x3, y3)
 
-            # ===================================================================
             # Center Point of polygon
-            # ===================================================================
             x4 = (
                 rc * math.cos(
                     2 * math.pi * ((index) / num_points)
@@ -790,9 +792,7 @@ class GestureDesignWidget(QGraphicsView, AbstractDesignWidget):
             )
             p4 = QPointF(x4, y4 - 20)
 
-            # ===================================================================
             # Add inner points to list for central button
-            # ===================================================================
             r2 = r1 * .85
             x5 = (
                 r2 * math.cos(
@@ -808,9 +808,7 @@ class GestureDesignWidget(QGraphicsView, AbstractDesignWidget):
             p5 = QPointF(x5, y5)
             inner_polygon_points.append(p5)
 
-            # ===================================================================
             # Type Label
-            # ===================================================================
             # x
             x6 = (
                 rl * math.cos(
@@ -955,7 +953,7 @@ class GestureDesignButtonWidget(QGraphicsItemGroup, AbstractDesignButtonInterfac
         # set up morse code dots...
         if file_type is None:
             text = "None"
-            color = QColor(0, 0, 0)
+            color = QColor(*iColor["rgba_text"])
 
             morse_code = [
                 3, 1, 1, 3,
@@ -1018,6 +1016,7 @@ class GestureDesignButtonWidget(QGraphicsItemGroup, AbstractDesignButtonInterfac
         self.text_item.centerText()
         pen.setColor(color)
         self.poly_item.setPen(pen)
+        self.text_item.setDefaultTextColor(QColor(*iColor["rgba_text"]))
 
 
 class GestureDesignPolyWidget(QGraphicsPolygonItem, AbstractDesignButtonInterface):
@@ -1128,6 +1127,11 @@ class GestureDesignEditorButton(GestureDesignButtonWidget):
         self.text_item.setAcceptDrops(False)
         self.poly_item.setAcceptDrops(False)
         self.setHash(unique_hash)
+
+        # setup default style
+        # brush = QBrush(QColor(255, 255, 255, 255))
+        # self.poly_item.setPen(brush)
+        # self.text_item.setPen(brush)
 
     def execute(self):
         if hasattr(self, "item"):
