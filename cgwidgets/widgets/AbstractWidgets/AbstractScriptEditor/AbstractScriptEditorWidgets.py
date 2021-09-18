@@ -475,7 +475,7 @@ class AbstractHotkeyDesignButtonWidget(QPushButton, AbstractDesignButtonInterfac
         if hasattr(self, "file_type"):
             # hotkey
             if self.getFileType() == "hotkey":
-                style_sheet = AbstractHotkeyDesignButtonWidget.STYLESHEET().format(
+                style_sheet = AbstractHotkeyDesignButtonWidget.STYLESHEET.format(
                     BORDER_COLOR=border_color,
                     BORDER_WIDTH=self.getBorderWidth(),
                     BORDER_RADIUS=self.getBorderWidth() * 3,
@@ -514,6 +514,15 @@ class AbstractHotkeyDesignButtonWidget(QPushButton, AbstractDesignButtonInterfac
                         BORDER_STYLE="solid",
                         BACKGROUND_COLOR=iColor["rgba_background_00"],
                         TEXT_COLOR=iColor["rgba_text_disabled"])
+
+        else:
+            style_sheet = AbstractHotkeyDesignButtonWidget.STYLESHEET.format(
+                BORDER_COLOR=iColor["rgba_background_00"],
+                BORDER_WIDTH=self.getBorderWidth(),
+                BORDER_RADIUS=self.getBorderWidth() * 3,
+                BORDER_STYLE="solid",
+                BACKGROUND_COLOR=iColor["rgba_background_00"],
+                TEXT_COLOR=iColor["rgba_text_disabled"])
 
         self.setStyleSheet(style_sheet)
 
@@ -607,12 +616,11 @@ class HotkeyDesignEditorButton(AbstractHotkeyDesignButtonWidget):
     """ EVENTS """
     def dragEnterEvent(self, event, *args, **kwargs):
         # update background color
-        self.updateButtonColor(hover=True, drag_active=True)
-
         current_item = self.getCurrentItem()
         item_type = current_item.getItemType()
         dropable_list = ["script", "hotkey"]
         if item_type in dropable_list:
+            self.updateButtonColor(hover=True, drag_active=True)
             event.accept()
 
         return QPushButton.dragEnterEvent(self, event, *args, **kwargs)

@@ -63,8 +63,8 @@ Todo:
                 entire stylesheet module could use an overhaul
             - QTabWidget
                 can be moved to stylesheet module when completed
-            - SaveButton
-                Moved to AbstractPushButton?
+    *   Delete Group
+            Update hotkeys?
     *   Bug
             Pressing ESC while the delegate is activated will close the delegate, without
             resetting the active flag... for some reason I can't figure out where this is =/
@@ -124,6 +124,9 @@ from .AbstractScriptEditorWidgets import (HotkeyDesignEditorWidget, GestureDesig
 class AbstractPythonCodeWidget(QPlainTextEdit):
     def __init__(self, parent=None):
         super(AbstractPythonCodeWidget, self).__init__(parent)
+
+    def getScript(self):
+        return self.toPlainText()
 
     def setScript(self, script):
         self.setPlainText(script)
@@ -326,8 +329,8 @@ class SaveButton(AbstractButtonInputWidget):
         script_editor_widget = getWidgetAncestor(self, AbstractScriptEditorWidget)
         current_item = script_editor_widget.currentItem()
         if current_item.getItemType() == AbstractBaseItem.SCRIPT:
-            text_block = script_editor_widget.designTabWidget().codeWidget()
-            text = text_block.toPlainText()
+            text = script_editor_widget.designTabWidget().codeWidget().getScript()
+            #text = text_block.toPlainText()
             with open(current_item.filepath(), "w") as file:
                 file.write(text)
 
@@ -1024,7 +1027,6 @@ class ScriptTreeWidget(QTreeWidget):
             design_tab.setCurrentWidget(widget)
 
     def deleteItem(self, item):
-
         if item:
             if isinstance(item, GroupItem):
                 # has to recursively delete all children?
@@ -1053,7 +1055,6 @@ class ScriptTreeWidget(QTreeWidget):
                             design_tab_widget.removeTab(index)
 
                 # needs to update all buttons again?
-                # todo update buttons on delete
                 self.updateAllButtons(item.filepath(), delete=True)
                 self.updateAllDesignPaths(file_path, "")
 
@@ -1635,8 +1636,10 @@ class GroupItem(AbstractBaseItem):
         file_dir=None
     ):
         super(GroupItem, self).__init__(parent)
-
-        self.setFlags(self.flags() | Qt.ItemIsEditable)
+        self.setFlags(
+            self.flags()
+            & ~Qt.ItemIsDragEnabled
+            | Qt.ItemIsEditable)
 
         self.setItemType(AbstractBaseItem.GROUP)
 
