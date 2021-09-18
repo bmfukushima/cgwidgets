@@ -63,8 +63,6 @@ Todo:
                 entire stylesheet module could use an overhaul
             - QTabWidget
                 can be moved to stylesheet module when completed
-    *   Delete Group
-            Update hotkeys?
     *   Bug
             Pressing ESC while the delegate is activated will close the delegate, without
             resetting the active flag... for some reason I can't figure out where this is =/
@@ -535,16 +533,20 @@ class ScriptTreeWidget(QTreeWidget):
     def getAllChildren(self, item, child_list=[]):
         """ Get all children/grandchildren of specified item
 
+        # todo make this less garbage recursion lol
+
         Args:
             item (item): to search from
             child_list (list): list of items to be returned """
         if item.childCount() > 0:
             for index in range(item.childCount()):
                 child = item.child(index)
-                child_list.append(child)
+                if child not in child_list:
+                    child_list.append(child)
                 self.getAllChildren(child, child_list=child_list)
         else:
-            child_list.append(item)
+            if item not in child_list:
+                child_list.append(item)
 
         return child_list
 
@@ -1030,9 +1032,24 @@ class ScriptTreeWidget(QTreeWidget):
         if item:
             if isinstance(item, GroupItem):
                 # has to recursively delete all children?
-                for index in range(item.childCount()):
-                    child = item.child(index)
-                    self.deleteItem(child)
+                # remove hotkeys from children
+                # get all children...
+                children = self.getAllChildren(item, child_list=[])
+
+                # run through hotkey removal
+                for child in children:
+                    if isinstance(child, (ScriptItem, GestureDesignItem, HotkeyDesignItem)):
+                        self.removeHotkeyFromItem(child)
+
+                # del item
+                shutil.rmtree(item.filepath())
+                index = item.parent().indexOfChild(item)
+                item.parent().takeChild(index)
+
+
+                # for index in range(item.childCount()):
+                #     child = item.child(index)
+                #     self.deleteItem(child)
 
             else:
                 script_editor_widget = getWidgetAncestor(self, AbstractScriptEditorWidget)
@@ -1215,6 +1232,7 @@ class ScriptTreeWidget(QTreeWidget):
                 if hotkey_exists is True:
                     def acceptOverwriteHotkey(widget):
                         # remove old hotkey
+                        # if this fails, then the hotkey.jsons meta data is out of sync
                         old_hotkey_item = self.findItems(hotkey, Qt.MatchRecursive | Qt.MatchExactly, column=2)[0]
                         self.removeHotkeyFromItem(item=old_hotkey_item)
 
@@ -1249,10 +1267,10 @@ Would you like to override it and continue?""".format(hotkey=hotkey))
                     item = self.currentItem()
                     self.removeHotkeyFromItem()
                     self.deleteItem(item)
-                    if isinstance(item, GroupItem):
-                        shutil.rmtree(item.filepath())
-                        index = item.parent().indexOfChild(item)
-                        item.parent().takeChild(index)
+                    # if isinstance(item, GroupItem):
+                    #     shutil.rmtree(item.filepath())
+                    #     index = item.parent().indexOfChild(item)
+                    #     item.parent().takeChild(index)
 
                 def cancel(widget):
                     pass
