@@ -58,26 +58,29 @@ Data:
 """
 """
 Todo:
+    *   Update StyleSheets
+            - QSplitter needs full stylesheet module update...
+                entire stylesheet module could use an overhaul
+            - QTabWidget
+                can be moved to stylesheet module when completed
+            - SaveButton
+                Moved to AbstractPushButton?
     *   Bug
             Pressing ESC while the delegate is activated will close the delegate, without
             resetting the active flag... for some reason I can't figure out where this is =/
     *   Dissalow from dropping on itself?
-    *   Hotkeys are stored as 
-            "hotkey"
-            "item name"
-        instead of just the hotkey...
-        search for getHotkey
-    *   Hotkeys are going wonky
-            - When there is more than one directory with overlapping hotkeys, it
-                seems to fail.
-            - Need to find all, and send a different flag notification...
-            - How to handle locked overwrites?  Disallow?
+    *   Hotkeys
+            - Hotkeys are stored as 
+                "hotkey"
+                "item name"
+            instead of just the hotkey... search for getHotkey
+            -Hotkeys are going wonky
+                - When there is more than one directory with overlapping hotkeys, it
+                    seems to fail.
+                - Need to find all, and send a different flag notification...
+                - How to handle locked overwrites?  Disallow?
     * Popup Widgets
         - Add forward/backwards menu options
-        - Dim unused buttons
-        - Hover enter color
-    *   TreeWidget
-        - change hotkey color from bold katana color to CGWidgets
 
 WISH LIST
     - Add support for modifiers on HotkeyDesigns
@@ -112,7 +115,7 @@ from qtpy.QtGui import QCursor, QKeySequence
 
 from cgwidgets.utils import getWidgetAncestor, showWarningDialogue, getJSONData
 from cgwidgets.widgets.AbstractWidgets.AbstractBaseInputWidgets import AbstractLabelWidget
-from cgwidgets.settings import iColor
+from cgwidgets.settings import iColor, stylesheets
 
 from .AbstractScriptEditorUtils import Utils as Locals
 from .AbstractScriptEditorWidgets import (HotkeyDesignEditorWidget, GestureDesignEditorWidget)
@@ -165,6 +168,24 @@ class AbstractScriptEditorWidget(QSplitter):
 
         # create main gui
         self.__setupGUI(python_editor)
+
+        style_sheet = """
+        QSplitter{{
+            background-color:rgba{RGBA_BACKGROUND};
+        }}
+        QSplitter::handle{{
+            border: 2px dotted rgba{RGBA_HANDLE};
+            /*background-color: rgba{RGBA_HANDLE};*/
+            margin: 2px;
+        }}
+        QSplitter::handle:hover{{
+            border: 2px dotted rgba{RGBA_HANDLE_HOVER};
+        }}""".format(
+            RGBA_BACKGROUND=iColor["rgba_background_00"],
+            RGBA_HANDLE=iColor["rgba_outline"],
+            RGBA_HANDLE_HOVER=iColor["rgba_selected_hover_2"]
+        )
+        self.setStyleSheet(style_sheet)
 
     # @staticmethod
     # def updateAllDesignFiles(filepath, old_path, new_path):
@@ -353,6 +374,7 @@ class ScriptTreeWidget(QTreeWidget):
         root_item = self.invisibleRootItem()
         root_item.setFlags(root_item.flags() & ~ Qt.ItemIsDropEnabled)
 
+        """ STYLE SHEETS"""
         style_sheet = """
         QTreeView{{
             background-color: rgba{RGBA_BACKGROUND_00};
@@ -360,16 +382,25 @@ class ScriptTreeWidget(QTreeWidget):
             color: rgba{RGBA_TEXT}
         }}
         QTreeView::item:hover {{
-            border: 1px solid rgba{RGBA_HOVER_TEXT};
+            color: rgba{RGBA_HOVER_TEXT};
         }}
+        {SCROLL_BAR_SS}
         """.format(
             RGBA_TEXT=iColor["rgba_text"],
-            RGBA_BACKGROUND_00=iColor["rgba_background_01"],
-            RGBA_BACKGROUND_01=iColor["rgba_background_02"],
-            RGBA_HOVER_TEXT=iColor["rgba_text_hover"]
+            RGBA_BACKGROUND_00=iColor["rgba_background_00"],
+            RGBA_BACKGROUND_01=iColor["rgba_background_01"],
+            RGBA_HOVER_TEXT=iColor["rgba_text_hover"],
+            SCROLL_BAR_SS=stylesheets.scroll_bar_ss
         )
 
+        header_style_sheet = """
+            background-color: rgba{RGBA_BACKGROUND};
+            color: rgba{RGBA_TEXT}""".format(
+            RGBA_TEXT=iColor["rgba_text"],
+            RGBA_BACKGROUND=iColor["rgba_background_00"])
+
         self.setStyleSheet(style_sheet)
+        self.header().setStyleSheet(header_style_sheet)
 
     def __name__(self):
         return "__script_list__"
@@ -1235,6 +1266,43 @@ class DesignTab(QTabWidget):
         self._python_editor_widget = python_editor()
         self.addTab(self._python_editor_widget, "Python")
 
+        style_sheet = """
+        QTabWidget{{
+            color: rgba{RGBA_TEXT};
+            background-color: rgba{RGBA_BACKGROUND}
+        }}
+        QTabBar::tab{{
+            border: 2px solid rgba{RGBA_OUTLINE};
+            border-bottom-color: rgba{RGBA_BACKGROUND};
+            border-top-left-radius: 5px;
+            border-top-right-radius: 5px;
+            padding: 5px;
+            margin-top: 6px;
+            color: rgba{RGBA_TEXT};
+            background-color: rgba{RGBA_BACKGROUND}
+        }}
+        QTabBar::tab::hover{{
+            color: rgba{RGBA_TEXT_HOVER};
+            background-color: rgba{RGBA_BACKGROUND}
+        }}
+        QTabBar::tab::!selected{{
+            margin-top: 15px;
+            margin-left: -1px;
+            margin-right: -1px;
+        }}
+        QTabBar::tab::selected{{
+            color: rgba{RGBA_TEXT_SELECT};
+            background-color: rgba{RGBA_BACKGROUND}
+        }}
+        """.format(
+            RGBA_TEXT=iColor["rgba_text"],
+            RGBA_TEXT_HOVER=iColor["rgba_text_hover"],
+            RGBA_TEXT_SELECT=iColor["rgba_text_hover"],
+            RGBA_OUTLINE=iColor["rgba_outline"],
+            RGBA_BACKGROUND=iColor["rgba_background_00"]
+        )
+        self.setStyleSheet(style_sheet)
+
     def __name__(self):
         return "__main_tab__"
 
@@ -1357,6 +1425,10 @@ class DataTypeDelegate(QItemDelegate):
                     event_filter_widget = main_window._script_editor_event_filter_widget
                     event_filter_widget.setIsActive(False)
                 return delegate_widget
+        elif index.column() == 1:
+            return
+
+
         else:
             return QItemDelegate.createEditor(self, parent, option, index)
 

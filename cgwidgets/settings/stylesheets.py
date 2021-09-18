@@ -11,7 +11,6 @@ Note:
 """
 
 from .colors import iColor
-#from colors import iColor
 
 def createRadialGradientSS(radius, center_radius, focal_radius, stops):
     """

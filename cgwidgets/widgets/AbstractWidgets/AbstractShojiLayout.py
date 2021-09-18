@@ -44,7 +44,7 @@ from qtpy.QtCore import Qt, QEvent
 from qtpy.QtGui import QCursor
 
 from cgwidgets.settings import iColor
-from cgwidgets.settings.stylesheets import (splitter_handle_ss)
+from cgwidgets.settings.stylesheets import splitter_handle_ss
 from cgwidgets.settings.hover_display import installHoverDisplaySS
 from cgwidgets.utils import updateStyleSheet, getWidgetUnderCursor
 
