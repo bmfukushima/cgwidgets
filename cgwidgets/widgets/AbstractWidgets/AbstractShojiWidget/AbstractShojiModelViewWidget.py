@@ -297,6 +297,17 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         """
         self.headerWidget().setDelegateToggleEvent(function)
 
+    def setHeaderItemMimeDataFunction(self, function):
+        """ During drag/drop of a header item.  This will add additional mimedata
+
+        Args:
+            function (func): to add mimedata to the drag events
+                mimedata (QMimedata):
+                indexes (list): of QModelIndexes that are currently selected
+
+        Returns (QMimeData) """
+        self.model().setAddMimeDataFunction(function)
+
     """ SET FLAGS """
     def headerItemIsDraggable(self):
         return self.headerWidget().isDraggable()

@@ -195,6 +195,17 @@ class AbstractModelViewWidget(AbstractShojiLayout):
     def clearModel(self):
         self.model().clearModel()
 
+    def setAddMimeDataFunction(self, function):
+        """ During drag/drop of a header item.  This will add additional mimedata
+
+        Args:
+            function (func): to add mimedata to the drag events
+                mimedata (QMimedata):
+                indexes (list): of QModelIndexes that are currently selected
+
+        Returns (QMimedata) """
+        self.model().setAddMimeDataFunction(function)
+
     """ SELECTION """
     def selectionModel(self):
         return self.view().selectionModel()

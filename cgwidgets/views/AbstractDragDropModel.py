@@ -710,6 +710,7 @@ class AbstractDragDropModel(QAbstractItemModel):
 
         mimedata = QMimeData()
         mimedata.setData('application/x-qabstractitemmodeldatalist', QByteArray())
+        mimedata = self.addMimeData(mimedata, indexes)
 
         # run virtual function
         self.dragStartEvent(self.indexes, self)
@@ -781,6 +782,22 @@ class AbstractDragDropModel(QAbstractItemModel):
         return False
 
     """ VIRTUAL FUNCTIONS """
+    def setAddMimeDataFunction(self, function):
+        """ During drag/drop of a header item.  This will add additional mimedata
+
+        Args:
+            mimedata (QMimedata):
+            indexes (list): of QModelIndexes that are currently selected
+
+        Returns (QMimeData) """
+        self._add_mimedata = function
+
+    def addMimeData(self, mimedata, indexes):
+        return self._add_mimedata(mimedata, indexes)
+
+    def _add_mimedata(self, mimedata, indexes):
+        return mimedata
+
     def setItemDeleteEvent(self, function):
         self.__itemDeleteEvent = function
 

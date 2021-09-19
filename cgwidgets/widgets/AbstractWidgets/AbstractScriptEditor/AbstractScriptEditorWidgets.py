@@ -1326,6 +1326,8 @@ class GestureDesignPopupButton(GestureDesignButtonWidget):
         self.setHash(unique_hash)
 
     def execute(self):
+        self.scene().views()[0].parent().close()
+
         if self.getFileType() == "script":
             if os.path.exists(self.filepath()):
                 environment = dict(locals(), **globals())
@@ -1341,8 +1343,6 @@ class GestureDesignPopupButton(GestureDesignButtonWidget):
             # katana_main = UI4.App.MainWindow.GetMainWindow()
             popup_gesture_widget = PopupGestureMenu(file_path=self.filepath())
             popup_gesture_widget.show()
-
-        self.scene().views()[0].parent().close()
 
     def hoverEnterEvent(self, *args, **kwargs):
         if hasattr(self, "file_path"):
@@ -1465,6 +1465,8 @@ class HotkeyDesignPopupButton(AbstractHotkeyDesignButtonWidget):
         self.clicked.connect(self.execute)
 
     def execute(self):
+        getWidgetAncestor(self, PopupHotkeyMenu).close()
+
         if self.getFileType() == "script":
             if os.path.exists(self.filepath()):
                 environment = dict(locals(), **globals())
@@ -1476,8 +1478,6 @@ class HotkeyDesignPopupButton(AbstractHotkeyDesignButtonWidget):
         elif self.getFileType() == "gesture":
             gesture_menu = PopupGestureMenu(self, file_path=self.filepath())
             gesture_menu.show()
-
-        getWidgetAncestor(self, PopupHotkeyMenu).close()
 
     def showHotkeyDesign(self, file_path):
         pos = self.parentWidget().init_pos

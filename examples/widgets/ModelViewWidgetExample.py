@@ -1,11 +1,13 @@
 import sys
 import os
-os.environ['QT_API'] = 'pyside2'
+# os.environ['QT_API'] = 'pyside2'
 from qtpy.QtWidgets import QApplication, QLabel
 from qtpy.QtGui import QCursor
 from qtpy.QtCore import Qt
 
 from cgwidgets.widgets import ModelViewWidget, AbstractLabelWidget
+
+from cgwidgets.utils import centerWidgetOnCursor, setAsAlwaysOnTop
 
 app = QApplication(sys.argv)
 
@@ -106,8 +108,43 @@ def contextMenu(index, selected_indexes):
     print(index, selected_indexes)
 
 main_widget.addContextMenuEvent('test', contextMenu)
-main_widget.move(QCursor.pos())
+
+# # add mime data
+from qtpy.QtCore import QByteArray
+def addMimedata(mimedata, indexes):
+    #for index in indexes:
+    ba = QByteArray()
+    ba.append("test")
+
+    mimedata.setData("something/something", ba)
+    return mimedata
+main_widget.setAddMimeDataFunction(addMimedata)
+
+
+# show widget
+
 main_widget.show()
+centerWidgetOnCursor(main_widget)
+
+class DropButton(QLabel):
+    def __init__(self, parent=None):
+        super(DropButton, self).__init__(parent)
+        self.setAcceptDrops(True)
+
+    def dragEnterEvent(self, event):
+        event.accept()
+        return QLabel.dragEnterEvent(self, event)
+
+    def dropEvent(self, event):
+        for format in event.mimeData().formats():
+            print(format, " == ", event.mimeData().data(format))
+        return QLabel.dropEvent(self, event)
+
+drop_widget = DropButton()
+setAsAlwaysOnTop(drop_widget)
+drop_widget.show()
+drop_widget.resize(256,256)
+centerWidgetOnCursor(drop_widget)
 # self.model().setItemEnabled(item, enabled)
 
 sys.exit(app.exec_())

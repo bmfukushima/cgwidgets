@@ -446,7 +446,7 @@ class ScriptTreeWidget(QTreeWidget):
                     # create design/script item
                     elif os.path.isfile(file_path):
                         if ".pyc" in file:
-                            pass
+                            item = None
                         else:
                             file_type = Locals().checkFileType(file_path)
                             # create new item
@@ -483,17 +483,20 @@ class ScriptTreeWidget(QTreeWidget):
                             else:
                                 print(file_path, "is not valid")
 
-                    # set display hotkey
-                    hotkey_dict = getJSONData(orig_dir + "/hotkeys.json")
-                    is_locked = self.getSetting("locked", item)
-                    if file_path in list(hotkey_dict.keys()):
-                        item.setText(2, hotkey_dict[file_path])
-                    if is_locked:
-                        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                    # setup item metadata (locked/hotkeys/alignment/etc)
+                    if item:
+                        # set display hotkey
+                        hotkey_dict = getJSONData(orig_dir + "/hotkeys.json")
+                        is_locked = self.getSetting("locked", item)
 
-                    # setup item alignment
-                    item.setTextAlignment(1, Qt.AlignCenter)
-                    item.setTextAlignment(2, Qt.AlignCenter)
+                        if file_path in list(hotkey_dict.keys()):
+                            item.setText(2, hotkey_dict[file_path])
+                        if is_locked:
+                            item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+
+                        # setup item alignment
+                        item.setTextAlignment(1, Qt.AlignCenter)
+                        item.setTextAlignment(2, Qt.AlignCenter)
 
     """ ITEMS """
     def createNewItem(self, current_parent, item_type=None):
@@ -1656,7 +1659,6 @@ class GroupItem(AbstractBaseItem):
         super(GroupItem, self).__init__(parent)
         self.setFlags(
             self.flags()
-            & ~Qt.ItemIsDragEnabled
             | Qt.ItemIsEditable)
 
         self.setItemType(AbstractBaseItem.GROUP)
