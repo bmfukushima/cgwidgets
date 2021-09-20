@@ -72,10 +72,11 @@ for x in range(0, 4):
     index = main_widget.model().insertNewIndex(x, name=str('node%s'%x))
     for i, char in enumerate('abc'):
         main_widget.model().insertNewIndex(i, name=char, parent=index)
-    # if x == 0:
-    #     index.internalPointer().setIsEditable(True)
-    #     index.internalPointer().setIsSelectable(False)
-    #     index.internalPointer().setIsDroppable(False)
+    if x == 0:
+        index.internalPointer().setIsEditable(True)
+        index.internalPointer().setIsSelectable(True)
+        index.internalPointer().setIsDroppable(False)
+        index.internalPointer().setIsDraggable(True)
 
 # set delete on drop...
 """ This will make it so that when an item is dropped, it can be duplicated
@@ -95,7 +96,7 @@ main_widget.setIndexSelectedEvent(testSelect)
 #
 # set flags
 main_widget.setIsRootDroppable(True)
-main_widget.setIsEditable(False)
+main_widget.setIsEditable(True)
 main_widget.setIsDraggable(True)
 main_widget.setIsDroppable(True)
 main_widget.setIsEnableable(True)
@@ -106,6 +107,8 @@ indexes = main_widget.model().findItems("node1", Qt.MatchExactly)
 for index in indexes:
     main_widget.setIndexSelected(index, True)
     index.internalPointer().setIsDroppable(False)
+    index.internalPointer().setIsSelectable(False)
+    index.internalPointer().setIsEditable(True)
 
 # set selection mode
 main_widget.setMultiSelect(True)
