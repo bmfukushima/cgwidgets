@@ -212,7 +212,7 @@ class AbstractDragDropModel(QAbstractItemModel):
         self._is_draggable = Qt.ItemIsDragEnabled
         self._is_droppable = Qt.ItemIsDropEnabled
         self._is_editable = Qt.ItemIsEditable
-        self._isEnableable = True
+        self._is_enableable = True
         self._is_deletable = True
 
         #
@@ -614,10 +614,10 @@ class AbstractDragDropModel(QAbstractItemModel):
             self._is_droppable = 0
 
     def isEnableable(self):
-        return self._isEnableable
+        return self._is_enableable
 
-    def setIsEnableable(self, _isEnableable):
-        self._isEnableable = _isEnableable
+    def setIsEnableable(self, _is_enableable):
+        self._is_enableable = _is_enableable
 
     def isRootDroppable(self):
         return self._root_drop_enabled

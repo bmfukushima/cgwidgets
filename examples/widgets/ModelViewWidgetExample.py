@@ -159,7 +159,9 @@ drop_widget = DropButton()
 setAsAlwaysOnTop(drop_widget)
 drop_widget.show()
 drop_widget.resize(256, 256)
+
 centerWidgetOnCursor(drop_widget)
+drop_widget.move(drop_widget.pos().x() + 256, drop_widget.pos().y())
 # self.model().setItemEnabled(item, enabled)
 
 sys.exit(app.exec_())

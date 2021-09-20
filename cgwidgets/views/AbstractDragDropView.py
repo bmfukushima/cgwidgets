@@ -9,6 +9,8 @@ from qtpy.QtGui import QColor, QPen, QBrush, QCursor, QPolygonF, QPainterPath
 
 from cgwidgets.utils import showWarningDialogue
 from cgwidgets.settings import iColor, attrs, icons
+from cgwidgets.views import AbstractDragDropModel
+
 
 """ VIEWS """
 class AbstractDragDropAbstractView(object):
@@ -30,11 +32,14 @@ class AbstractDragDropAbstractView(object):
         self._is_droppable = False
         self._is_draggable = False
         self._is_editable = False
-        self._isEnableable = False
+        self._is_enableable = False
         #self._isSelectable = True
 
         style_sheet_args = iColor.style_sheet_args
         self.createAbstractStyleSheet(style_sheet_args)
+
+        model = AbstractDragDropModel()
+        self.setModel(model)
 
     def createAbstractStyleSheet(self, style_sheet_args, header_position=None, outline_width=1):
         """
@@ -738,19 +743,19 @@ class AbstractDragDropIndicator(QProxyStyle):
         if option.rect.height() == 0:
             # create indicators
             l_indicator = self.createTriangle(size, attrs.EAST)
-            l_indicator.translate(QPoint(size + (width / 2), y_pos))
+            l_indicator.translate(QPoint(int(size + (width / 2)), y_pos))
 
             r_indicator = self.createTriangle(size, attrs.WEST)
             r_indicator.translate(QPoint(
-                widget.width() - size - (width / 2), y_pos)
+                int(widget.width() - size - (width / 2)), y_pos)
             )
 
             # draw
             painter.drawPolygon(l_indicator)
             painter.drawPolygon(r_indicator)
             painter.drawLine(
-                QPoint(size + (width / 2), y_pos),
-                QPoint(widget.width() - size - (width / 2), y_pos)
+                QPoint(int(size + (width / 2)), y_pos),
+                QPoint(int(widget.width() - size - (width / 2)), y_pos)
             )
 
             # set fill color
@@ -889,10 +894,10 @@ if __name__ == '__main__':
         QApplication, QTreeView, QListView, QAbstractItemView)
     from qtpy.QtGui import QCursor
 
-    from cgwidgets.views import AbstractDragDropModel
+
     app = QApplication(sys.argv)
 
-    def testDrag(indexes):
+    def testDrag(indexes, model):
         " test drag..."
         print(indexes)
 
