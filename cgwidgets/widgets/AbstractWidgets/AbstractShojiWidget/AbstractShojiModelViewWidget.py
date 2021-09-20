@@ -220,6 +220,7 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         return new_index
 
     def getAllSelectedIndexes(self):
+        """ Returns all of the selected INDEXES"""
         # selected_indexes = []
         # for index in self.headerWidget().selectionModel().selectedIndexes():
         #     if index.column() == 0:
@@ -397,6 +398,9 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         self.model().clearModel(event_update=event_update)
         # for child in reversed(self.rootItem().children()):
         #     self.model().deleteItem(child, event_update=event_update)
+
+    def deleteItem(self, item, event_update=False):
+        self.model().deleteItem(item, event_update=event_update)
 
     """ VIEW """
     def headerWidget(self):

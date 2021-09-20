@@ -111,7 +111,13 @@ main_widget.addContextMenuEvent('test', contextMenu)
 
 # # add mime data
 from qtpy.QtCore import QByteArray
-def addMimedata(mimedata, indexes):
+def addMimedata(mimedata, items):
+    """ Adds the mimedata to the drag event
+
+    Args:
+        mimedata (QMimedata): from dragEvent
+        items (list): of NodeViewWidgetItem"""
+
     #for index in indexes:
     ba = QByteArray()
     ba.append("test")
@@ -122,7 +128,6 @@ main_widget.setAddMimeDataFunction(addMimedata)
 
 
 # show widget
-
 main_widget.show()
 centerWidgetOnCursor(main_widget)
 

@@ -710,7 +710,7 @@ class AbstractDragDropModel(QAbstractItemModel):
 
         mimedata = QMimeData()
         mimedata.setData('application/x-qabstractitemmodeldatalist', QByteArray())
-        mimedata = self.addMimeData(mimedata, indexes)
+        mimedata = self.addMimeData(mimedata, self.indexes)
 
         # run virtual function
         self.dragStartEvent(self.indexes, self)
