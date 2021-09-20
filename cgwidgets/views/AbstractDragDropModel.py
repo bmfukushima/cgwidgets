@@ -671,27 +671,6 @@ class AbstractDragDropModel(QAbstractItemModel):
             if item.isEditable() is not None: editable = item.isEditable()
             else: editable = self.isEditable()
 
-            # selectable = self.isSelectable()
-            #
-            # drop_enabled = self.isDroppable()
-            #
-            # drag_enabled = self.isDraggable()
-            #
-            # editable = self.isEditable()
-            # if self.isSelectable(): selectable = item.isSelectable()
-            # else: selectable = 0
-            #
-            # if self.isDroppable(): drop_enabled = item.isDroppable()
-            # else: drop_enabled = 0
-            #
-            # if self.isDraggable(): drag_enabled = item.isDraggable()
-            # else: drag_enabled = 0
-            #
-            # if self.isEditable(): editable = item.isEditable()
-            # else: editable = 0
-
-            # return flag values
-            # Qt.ItemIsEnabled
             return (
                 Qt.ItemIsEnabled
                 | selectable
