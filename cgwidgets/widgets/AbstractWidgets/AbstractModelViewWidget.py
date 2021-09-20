@@ -221,6 +221,9 @@ class AbstractModelViewWidget(AbstractShojiLayout):
         selected_indexes = self.selectionModel().selectedRows(0)
         return selected_indexes
 
+    def setIndexSelected(self, index, selected):
+        self.view().setIndexSelected(index, selected)
+
     """ DELEGATE """
     def delegateInputManifest(self):
         """

@@ -27,9 +27,9 @@ class AbstractDragDropAbstractView(object):
 
         # setup flags
         self.setDragDropMode(QAbstractItemView.InternalMove)
-        self._isDroppable = False
-        self._isDraggable = False
-        self._isEditable = False
+        self._is_droppable = False
+        self._is_draggable = False
+        self._is_editable = False
         self._isEnableable = False
         #self._isSelectable = True
 
@@ -342,7 +342,7 @@ class AbstractDragDropListView(QListView, AbstractDragDropAbstractView):
         if API_NAME == "PySide2":
             AbstractDragDropAbstractView.__init__(self)
         self.setEditTriggers(QAbstractItemView.DoubleClicked)
-        self._isDroppable = False
+        self._is_droppable = False
 
     def createStyleSheet(self, header_position, style_sheet_args):
         """

@@ -72,9 +72,11 @@ for x in range(0, 4):
     index = main_widget.model().insertNewIndex(x, name=str('node%s'%x))
     for i, char in enumerate('abc'):
         main_widget.model().insertNewIndex(i, name=char, parent=index)
-    if x == 0:
-        index.internalPointer().setIsEditable(True)
-        index.internalPointer().setIsSelectable(False)
+    # if x == 0:
+    #     index.internalPointer().setIsEditable(True)
+    #     index.internalPointer().setIsSelectable(False)
+    #     index.internalPointer().setIsDroppable(False)
+
 # set delete on drop...
 """ This will make it so that when an item is dropped, it can be duplicated
 
@@ -95,10 +97,15 @@ main_widget.setIndexSelectedEvent(testSelect)
 main_widget.setIsRootDroppable(True)
 main_widget.setIsEditable(False)
 main_widget.setIsDraggable(True)
-main_widget.setIsDroppable(False)
+main_widget.setIsDroppable(True)
 main_widget.setIsEnableable(True)
 main_widget.setIsDeletable(True)
 main_widget.setDelegateToggleEvent(testDelegateToggle)
+
+indexes = main_widget.model().findItems("node1", Qt.MatchExactly)
+for index in indexes:
+    main_widget.setIndexSelected(index, True)
+    index.internalPointer().setIsDroppable(False)
 
 # set selection mode
 main_widget.setMultiSelect(True)
@@ -148,7 +155,7 @@ class DropButton(QLabel):
 drop_widget = DropButton()
 setAsAlwaysOnTop(drop_widget)
 drop_widget.show()
-drop_widget.resize(256,256)
+drop_widget.resize(256, 256)
 centerWidgetOnCursor(drop_widget)
 # self.model().setItemEnabled(item, enabled)
 
