@@ -50,7 +50,7 @@ Hierachy
 
 """
 import sys, os
-os.environ['QT_API'] = 'pyside2'
+# os.environ['QT_API'] = 'pyside2'
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QApplication, QLabel, QLineEdit, QWidget, QVBoxLayout
 from qtpy.QtGui import QCursor
@@ -448,9 +448,8 @@ shoji_widget.setHeaderItemDragStartEvent(testDrag)
 shoji_widget.setHeaderItemDropEvent(testDrop)
 shoji_widget.setHeaderItemTextChangedEvent(testEdit)
 shoji_widget.setHeaderItemSelectedEvent(testSelect)
-#####################################################
+
 # Header Delegates
-#####################################################
 """
 In the Tree/List view this is a widget that will pop up when
 the user presses a specific key/modifier combination

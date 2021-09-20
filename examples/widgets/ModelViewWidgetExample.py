@@ -53,6 +53,8 @@ class ModelViewWidgetSubclass(ModelViewWidget):
         #         self.model().insertNewIndex(i, name=char, parent=index)
 
 main_widget = ModelViewWidgetSubclass()
+
+
 # create main Model View Widget
 #main_widget = ModelViewWidget()
 
@@ -97,7 +99,7 @@ main_widget.setIndexSelectedEvent(testSelect)
 # set flags
 main_widget.setIsRootDroppable(True)
 main_widget.setIsEditable(True)
-main_widget.setIsDraggable(True)
+main_widget.setIsDraggable(False)
 main_widget.setIsDroppable(True)
 main_widget.setIsEnableable(True)
 main_widget.setIsDeletable(True)

@@ -153,7 +153,7 @@ class AbstractDragDropModelItem(object):
 
     def setIsDraggable(self, _is_draggable):
         if _is_draggable is None: self._is_draggable = None
-        if _is_draggable: self._is_draggable = Qt.ItemIsDragEnabled
+        elif _is_draggable: self._is_draggable = Qt.ItemIsDragEnabled
         elif not _is_draggable: self._is_draggable = 0
         else: self._is_draggable = Qt.ItemIsDragEnabled
 
@@ -669,7 +669,7 @@ class AbstractDragDropModel(QAbstractItemModel):
             if item.isDroppable() is not None: drop_enabled = item.isDroppable()
             else: drop_enabled = self.isDroppable()
 
-            if item.isDraggable() is not None: drag_enabled = item.isDraggable()
+            if item.isDraggable() is not None:drag_enabled = item.isDraggable()
             else: drag_enabled = self.isDraggable()
 
             if item.isEditable() is not None: editable = item.isEditable()

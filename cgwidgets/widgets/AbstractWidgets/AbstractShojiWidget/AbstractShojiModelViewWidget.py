@@ -1014,6 +1014,7 @@ class AbstractShojiHeader(AbstractModelViewWidget):
         model = AbstractShojiModel()
         self.setModel(model)
         self.setIsDroppable(False)
+        self.setIsDraggable(False)
 
     # def showEvent(self, event):
     #     """todo is this necessary... show events causing a lot of excess updates..."""
