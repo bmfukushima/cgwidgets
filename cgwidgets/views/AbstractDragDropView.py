@@ -253,44 +253,44 @@ class AbstractDragDropAbstractView(object):
         return QAbstractItemView.enterEvent(self, event)
 
     def keyPressEvent(self, event):
+        if event.modifiers() == Qt.NoModifier:
+            # Clear Selection
+            if event.key() == Qt.Key_Escape:
+                # from qtpy.QtWidgets import qApp
+                # if qApp.widgetAt(QCursor.pos()) == self:
+                self.clearItemSelection()
 
-        # Clear Selection
-        if event.key() == Qt.Key_Escape:
-            # from qtpy.QtWidgets import qApp
-            # if qApp.widgetAt(QCursor.pos()) == self:
-            self.clearItemSelection()
+            # Delete Item
+            if self.model().isDeletable():
+                if event.key() in [Qt.Key_Delete, Qt.Key_Backspace]:
+                    # delete events
+                    def deleteItems(widget):
+                        indexes = self.selectionModel().selectedRows(0)
+                        for index in indexes:
+                            item = index.internalPointer()
+                            self.model().deleteItem(item, event_update=True)
 
-        # Delete Item
-        if self.model().isDeletable():
-            if event.key() in [Qt.Key_Delete, Qt.Key_Backspace]:
-                # delete events
-                def deleteItems(widget):
+                    def dontDeleteItem(widget):
+                        return
+
+                    # delete item
+                    if self.deleteWarningWidget():
+                        showWarningDialogue(self, self.deleteWarningWidget(), deleteItems, dontDeleteItem)
+                    else:
+                        deleteItems(None)
+
+            # Disable Item
+            if self.model().isEnableable():
+                if event.key() == Qt.Key_D:
                     indexes = self.selectionModel().selectedRows(0)
                     for index in indexes:
+                        #if index.column() == 0:
                         item = index.internalPointer()
-                        self.model().deleteItem(item, event_update=True)
+                        enabled = False if item.isEnabled() else True
+                        self.model().setItemEnabled(item, enabled)
+                    self.model().layoutChanged.emit()
 
-                def dontDeleteItem(widget):
-                    return
-
-                # delete item
-                if self.deleteWarningWidget():
-                    showWarningDialogue(self, self.deleteWarningWidget(), deleteItems, dontDeleteItem)
-                else:
-                    deleteItems(None)
-
-        # Disable Item
-        if self.model().isEnableable():
-            if event.key() == Qt.Key_D:
-                indexes = self.selectionModel().selectedRows(0)
-                for index in indexes:
-                    #if index.column() == 0:
-                    item = index.internalPointer()
-                    enabled = False if item.isEnabled() else True
-                    self.model().setItemEnabled(item, enabled)
-                self.model().layoutChanged.emit()
-
-        #self.__keyPressEvent(event)
+            #self.__keyPressEvent(event)
 
         return QAbstractItemView.keyPressEvent(self, event)
 
@@ -437,42 +437,43 @@ class AbstractDragDropListView(QListView, AbstractDragDropAbstractView):
                 self.model().itemSelectedEvent(item, False)
 
     def keyPressEvent(self, event):
-        # Clear Selection
-        if event.key() == Qt.Key_Escape:
-            # from qtpy.QtWidgets import qApp
-            # if qApp.widgetAt(QCursor.pos()) == self:
-            self.clearItemSelection()
+        if event.modifiers() == Qt.NoModifier:
+            # Clear Selection
+            if event.key() == Qt.Key_Escape:
+                # from qtpy.QtWidgets import qApp
+                # if qApp.widgetAt(QCursor.pos()) == self:
+                self.clearItemSelection()
 
-        # Delete Item
-        if self.model().isDeletable():
-            if event.key() in [Qt.Key_Delete, Qt.Key_Backspace]:
-                # delete events
-                def deleteItems(widget):
-                    #indexes = self.selectionModel().selectedRows(0)
+            # Delete Item
+            if self.model().isDeletable():
+                if event.key() in [Qt.Key_Delete, Qt.Key_Backspace]:
+                    # delete events
+                    def deleteItems(widget):
+                        #indexes = self.selectionModel().selectedRows(0)
+                        indexes = self.selectionModel().selectedIndexes()
+                        for index in indexes:
+                            item = index.internalPointer()
+                            if item.isDeletable() or item.isDeletable() is None:
+                                self.model().deleteItem(item, event_update=True)
+
+                    def dontDeleteItem(widget):
+                        return
+                    # delete item
+                    if self.deleteWarningWidget():
+                        showWarningDialogue(self, self.deleteWarningWidget(), deleteItems, dontDeleteItem)
+                    else:
+                        deleteItems(None)
+
+            # Disable Item
+            if self.model().isEnableable():
+                if event.key() == Qt.Key_D:
                     indexes = self.selectionModel().selectedIndexes()
                     for index in indexes:
                         item = index.internalPointer()
-                        if item.isDeletable() or item.isDeletable() is None:
-                            self.model().deleteItem(item, event_update=True)
-
-                def dontDeleteItem(widget):
-                    return
-                # delete item
-                if self.deleteWarningWidget():
-                    showWarningDialogue(self, self.deleteWarningWidget(), deleteItems, dontDeleteItem)
-                else:
-                    deleteItems(None)
-
-        # Disable Item
-        if self.model().isEnableable():
-            if event.key() == Qt.Key_D:
-                indexes = self.selectionModel().selectedIndexes()
-                for index in indexes:
-                    item = index.internalPointer()
-                    if item.isEnableable() or item.isEnableable() is None:
-                        enabled = False if item.isEnabled() else True
-                        self.model().setItemEnabled(item, enabled)
-                self.model().layoutChanged.emit()
+                        if item.isEnableable() or item.isEnableable() is None:
+                            enabled = False if item.isEnabled() else True
+                            self.model().setItemEnabled(item, enabled)
+                    self.model().layoutChanged.emit()
 
         #self.__keyPressEvent(event)
 
@@ -546,41 +547,42 @@ class AbstractDragDropTreeView(QTreeView, AbstractDragDropAbstractView):
                 self.model().itemSelectedEvent(item, False)
 
     def keyPressEvent(self, event):
-        # Clear Selection
-        if event.key() == Qt.Key_Escape:
-            # from qtpy.QtWidgets import qApp
-            # if qApp.widgetAt(QCursor.pos()) == self:
-            self.clearItemSelection()
+        if event.modifiers() == Qt.NoModifier:
+            # Clear Selection
+            if event.key() == Qt.Key_Escape:
+                # from qtpy.QtWidgets import qApp
+                # if qApp.widgetAt(QCursor.pos()) == self:
+                self.clearItemSelection()
 
-        # Delete Item
-        if self.model().isDeletable():
-            if event.key() in [Qt.Key_Delete, Qt.Key_Backspace]:
-                # delete events
-                def deleteItems(widget):
+            # Delete Item
+            if self.model().isDeletable():
+                if event.key() in [Qt.Key_Delete, Qt.Key_Backspace]:
+                    # delete events
+                    def deleteItems(widget):
+                        indexes = self.selectionModel().selectedRows(0)
+                        for index in indexes:
+                            item = index.internalPointer()
+                            self.model().deleteItem(item, event_update=True)
+
+                    def dontDeleteItem(widget):
+                        return
+
+                    # delete item
+                    if self.deleteWarningWidget():
+                        showWarningDialogue(self, self.deleteWarningWidget(), deleteItems, dontDeleteItem)
+                    else:
+                        deleteItems(None)
+
+            # Disable Item
+            if self.model().isEnableable():
+                if event.key() == Qt.Key_D:
                     indexes = self.selectionModel().selectedRows(0)
                     for index in indexes:
+                        #if index.column() == 0:
                         item = index.internalPointer()
-                        self.model().deleteItem(item, event_update=True)
-
-                def dontDeleteItem(widget):
-                    return
-
-                # delete item
-                if self.deleteWarningWidget():
-                    showWarningDialogue(self, self.deleteWarningWidget(), deleteItems, dontDeleteItem)
-                else:
-                    deleteItems(None)
-
-        # Disable Item
-        if self.model().isEnableable():
-            if event.key() == Qt.Key_D:
-                indexes = self.selectionModel().selectedRows(0)
-                for index in indexes:
-                    #if index.column() == 0:
-                    item = index.internalPointer()
-                    enabled = False if item.isEnabled() else True
-                    self.model().setItemEnabled(item, enabled)
-                self.model().layoutChanged.emit()
+                        enabled = False if item.isEnabled() else True
+                        self.model().setItemEnabled(item, enabled)
+                    self.model().layoutChanged.emit()
 
         #self.__keyPressEvent(event)
 

@@ -229,6 +229,12 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         #
         return selected_indexes
 
+    def getAllSelectedItems(self):
+        return self.headerWidget().getAllSelectedItems()
+
+    def getIndexFromItem(self, item):
+        return self.model().getIndexFromItem(item)
+
     def rootItem(self):
         """
         Returns (ShojiModelViewItem): root item for the model

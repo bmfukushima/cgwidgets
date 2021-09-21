@@ -41,6 +41,7 @@ class AbstractDragDropModelItem(object):
 
         #self._is_selected = False
         self._is_enabled = True
+        self._is_enableable = None
         self._is_selectable = None
         self._is_draggable = None
         self._is_droppable = None
@@ -128,10 +129,10 @@ class AbstractDragDropModelItem(object):
         self._is_enabled = enable
 
     def isEnableable(self):
-        return self._isEnableble
+        return self._is_enableable
 
     def setIsEnableable(self, enable):
-        self._isEnableble = enable
+        self._is_enableable = enable
 
     def isDeletable(self):
         return self._is_deletable

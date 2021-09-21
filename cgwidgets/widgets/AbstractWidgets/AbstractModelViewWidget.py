@@ -221,6 +221,16 @@ class AbstractModelViewWidget(AbstractShojiLayout):
         selected_indexes = self.selectionModel().selectedRows(0)
         return selected_indexes
 
+    def getAllSelectedItems(self):
+        item_list = []
+        for index in self.getAllSelectedIndexes():
+            item_list.append(index.internalPointer())
+
+        return item_list
+
+    def getIndexFromItem(self, item):
+        self.model().getIndexFromItem(item)
+
     def setIndexSelected(self, index, selected):
         self.view().setIndexSelected(index, selected)
 
