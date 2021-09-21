@@ -209,9 +209,9 @@ class AbstractDragDropAbstractView(object):
 
         """
         if selected:
-            self.selectionModel().select(index, QItemSelectionModel.Select)
+            self.selectionModel().select(index, QItemSelectionModel.Select | QItemSelectionModel.Rows)
         else:
-            self.selectionModel().select(index, QItemSelectionModel.Deselect)
+            self.selectionModel().select(index, QItemSelectionModel.Deselect | QItemSelectionModel.Rows)
         return True
 
     def clearItemSelection(self):
@@ -256,8 +256,6 @@ class AbstractDragDropAbstractView(object):
 
     """ VIRTUAL """
     def abstractSelectionChanged(self, selected, deselected):
-        print('=================')
-
         for index in selected.indexes():
             if index.column() == 0:
                 item = index.internalPointer()
@@ -268,7 +266,6 @@ class AbstractDragDropAbstractView(object):
                 item = index.internalPointer()
                 self.model().itemSelectedEvent(item, False)
                 self.model().setLastSelectedItem(item)
-        print('last item ===', self.model().lastSelectedItem())
 
     def abstractKeyPressEvent(self, event):
         if event.modifiers() == Qt.NoModifier:
