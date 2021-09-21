@@ -517,10 +517,10 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         self.updateStyleSheet()
 
     def headerData(self):
-        return self.model()._header_data
+        return self.model().headerData()
 
     def setHeaderData(self, _header_data):
-        self.model()._header_data = _header_data
+        self.model().setHeaderData(_header_data)
 
     def setHeaderWidgetToDefaultSize(self):
         """
