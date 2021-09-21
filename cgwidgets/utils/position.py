@@ -142,6 +142,7 @@ def getCenterOfScreen():
     ypos = (screen_resolution.height() * 0.5)
     return QPoint(xpos, ypos)
 
+
 def getCenterOfWidget(widget):
     """ Returns the center of the widget
 
@@ -152,6 +153,7 @@ def getCenterOfWidget(widget):
     xpos = widget.geometry().width() * 0.5
     ypos = widget.geometry().height() * 0.5
     return QPoint(xpos, ypos)
+
 
 def checkMousePos(pos, widget):
     """
@@ -224,7 +226,6 @@ def getBottomLeftPos(widget):
         pos = QPoint(0, 0)
 
     return pos
-
 
 
 # TODO Combine these into an uber function

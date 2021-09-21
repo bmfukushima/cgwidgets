@@ -219,6 +219,7 @@ class AbstractDragDropModel(QAbstractItemModel):
         #
         self._dropping = False
         self._delete_item_on_drop = True
+        self._last_selected_item = None
 
     """ UTILS """
     def setItemEnabled(self, item, enabled):
@@ -564,6 +565,12 @@ class AbstractDragDropModel(QAbstractItemModel):
         return success
 
     """ PROPERTIES """
+    def lastSelectedItem(self):
+        return self._last_selected_item
+
+    def setLastSelectedItem(self, _last_selected_item):
+        self._last_selected_item = _last_selected_item
+
     @property
     def item_height(self):
         return self._item_height
