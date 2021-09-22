@@ -214,19 +214,10 @@ class AbstractModelViewWidget(AbstractShojiLayout):
         return self.model().getAllIndexes()
 
     def getAllSelectedIndexes(self):
-        # selected_indexes = []
-        # for index in self.headerWidget().selectionModel().selectedIndexes():
-        #     if index.column() == 0:
-        #         selected_indexes.append(index)
-        selected_indexes = self.selectionModel().selectedRows(0)
-        return selected_indexes
+        return self.view().getAllSelectedIndexes()
 
     def getAllSelectedItems(self):
-        item_list = []
-        for index in self.getAllSelectedIndexes():
-            item_list.append(index.internalPointer())
-
-        return item_list
+        return self.view().getAllSelectedItems()
 
     def getIndexFromItem(self, item):
         self.model().getIndexFromItem(item)

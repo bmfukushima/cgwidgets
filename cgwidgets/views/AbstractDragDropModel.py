@@ -40,14 +40,16 @@ class AbstractDragDropModelItem(object):
         # flags
 
         #self._is_selected = False
-        self._is_enabled = True
-        self._is_enableable = None
-        self._is_selectable = None
-        self._is_draggable = None
-        self._is_droppable = None
-        self._is_editable = None
+        self._is_copyable = None
         self._is_deletable = None
         self._delete_on_drop = None
+        self._is_draggable = None
+        self._is_droppable = None
+        self._is_enabled = True
+        self._is_enableable = None
+        self._is_editable = None
+        self._is_selectable = None
+
         # default parent
         if parent is not None:
             parent.addChild(self)
@@ -122,32 +124,17 @@ class AbstractDragDropModelItem(object):
     def setDeleteOnDrop(self, _delete_on_drop):
         self._delete_on_drop = _delete_on_drop
 
-    def isEnabled(self):
-        return self._is_enabled
+    def isCopyable(self):
+        return self._is_copyable
 
-    def setIsEnabled(self, enable):
-        self._is_enabled = enable
-
-    def isEnableable(self):
-        return self._is_enableable
-
-    def setIsEnableable(self, enable):
-        self._is_enableable = enable
+    def setIsCopyable(self, is_copyable):
+        self._is_copyable = is_copyable
 
     def isDeletable(self):
         return self._is_deletable
 
     def setIsDeletable(self, enable):
         self._is_deletable = enable
-
-    def isSelectable(self):
-        return self._is_selectable
-
-    def setIsSelectable(self, _is_selectable):
-        if _is_selectable is None: self._is_selectable = None
-        elif _is_selectable: self._is_selectable = Qt.ItemIsSelectable
-        elif not _is_selectable: self._is_selectable = 0
-        else: self._is_selectable = False
 
     def isDraggable(self):
         return self._is_draggable
@@ -175,6 +162,27 @@ class AbstractDragDropModelItem(object):
         elif _is_editable: self._is_editable = Qt.ItemIsEditable
         elif not _is_editable: self._is_editable = 0
         else: self._is_editable = Qt.ItemIsEditable
+
+    def isEnabled(self):
+        return self._is_enabled
+
+    def setIsEnabled(self, enable):
+        self._is_enabled = enable
+
+    def isEnableable(self):
+        return self._is_enableable
+
+    def setIsEnableable(self, enable):
+        self._is_enableable = enable
+
+    def isSelectable(self):
+        return self._is_selectable
+
+    def setIsSelectable(self, _is_selectable):
+        if _is_selectable is None: self._is_selectable = None
+        elif _is_selectable: self._is_selectable = Qt.ItemIsSelectable
+        elif not _is_selectable: self._is_selectable = 0
+        else: self._is_selectable = False
 
 
 class AbstractDragDropModel(QAbstractItemModel):
@@ -215,6 +223,7 @@ class AbstractDragDropModel(QAbstractItemModel):
         self._is_editable = Qt.ItemIsEditable
         self._is_enableable = True
         self._is_deletable = True
+        self._is_copyable = True
 
         #
         self._dropping = False
@@ -286,6 +295,29 @@ class AbstractDragDropModel(QAbstractItemModel):
        """
         return len(self._header_data)
 
+    def isItemCopyable(self, item):
+        """ Determines if an item is copyable or not
+
+        Args:
+            item (AbstractDragDropModelItem): Item to check"""
+        if item.isCopyable():
+            return True
+        elif self.isCopyable() and (item.isCopyable() or item.isCopyable() is None):
+            return True
+        return False
+
+    def isItemDroppable(self, item):
+        """ Determines if an item is droppable or not
+
+        Args:
+            item (AbstractDragDropModelItem): Item to check"""
+        if item.isDroppable():
+            return True
+        elif self.isDroppable() and (item.isDroppable() or item.isDroppable() is None):
+            return True
+
+        return False
+
     def deleteItemOnDrop(self):
         return self._delete_item_on_drop
 
@@ -310,7 +342,7 @@ class AbstractDragDropModel(QAbstractItemModel):
             for i in range(self.columnCount(item)):
                 if index.column() == i:
                     try:
-                        return_val = item.columnData()[self._header_data[i]]
+                        return_val = item.columnData()[self.getHeaderData()[i]]
                     except KeyError:
                         return_val = None
                     return return_val
@@ -362,6 +394,14 @@ class AbstractDragDropModel(QAbstractItemModel):
         """
         if role == Qt.DisplayRole:
             return self._header_data[column]
+
+    def getHeaderData(self):
+        """ Returns a list of the header names
+
+        Note:
+            not to be confused with headerData() which is the internal call
+            for the model to get the data at the associated header position"""
+        return self._header_data
 
     def setHeaderData(self, _header_data):
         self._header_data = _header_data
@@ -434,7 +474,7 @@ class AbstractDragDropModel(QAbstractItemModel):
         return self._root_item
 
     def getItemName(self, item):
-        name = item.columnData()[self._header_data[0]]
+        name = item.columnData()[self.getHeaderData()[0]]
         return name
 
     """ ITEM SEARCHING """
@@ -597,6 +637,12 @@ class AbstractDragDropModel(QAbstractItemModel):
         else:
             self._is_selectable = 0
 
+    def isCopyable(self):
+        return self._is_copyable
+
+    def setIsCopyable(self, _is_copyable):
+        self._is_copyable = _is_copyable
+
     def isDeletable(self):
         return self._is_deletable
 
@@ -683,27 +729,6 @@ class AbstractDragDropModel(QAbstractItemModel):
             if item.isEditable() is not None: editable = item.isEditable()
             else: editable = self.isEditable()
 
-            # selectable = self.isSelectable()
-            #
-            # drop_enabled = self.isDroppable()
-            #
-            # drag_enabled = self.isDraggable()
-            #
-            # editable = self.isEditable()
-            # if self.isSelectable(): selectable = item.isSelectable()
-            # else: selectable = 0
-            #
-            # if self.isDroppable(): drop_enabled = item.isDroppable()
-            # else: drop_enabled = 0
-            #
-            # if self.isDraggable(): drag_enabled = item.isDraggable()
-            # else: drag_enabled = 0
-            #
-            # if self.isEditable(): editable = item.isEditable()
-            # else: editable = 0
-
-            # return flag values
-            # Qt.ItemIsEnabled
             return (
                 Qt.ItemIsEnabled
                 | selectable

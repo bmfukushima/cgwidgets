@@ -92,9 +92,9 @@ def setupCustomView():
     view = CustomView()
     shoji_widget.setHeaderViewWidget(view)
 
-# shoji_widget.setHeaderViewType(ModelViewWidget.TREE_VIEW)
+shoji_widget.setHeaderViewType(ModelViewWidget.TREE_VIEW)
 # shoji_widget.setHeaderViewType(ModelViewWidget.LIST_VIEW)
-setupCustomView()
+# setupCustomView()
 
 
 # SETUP CUSTOM MODEL
@@ -360,7 +360,7 @@ shoji_widget.setDelegateTitleIsShown(True)
 #####################################################
 # SET EVENT FLAGS
 #####################################################
-shoji_widget.setHeaderItemIsDroppable(False)
+shoji_widget.setHeaderItemIsDroppable(True)
 shoji_widget.setHeaderItemIsDraggable(True)
 shoji_widget.setHeaderItemIsEditable(True)
 shoji_widget.setHeaderItemIsEnableable(True)
