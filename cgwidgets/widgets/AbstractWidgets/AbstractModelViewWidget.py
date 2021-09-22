@@ -300,6 +300,18 @@ class AbstractModelViewWidget(AbstractShojiLayout):
         self.__delegateToggleEvent(enabled, event, widget)
         pass
 
+    def setCopyEvent(self, function):
+        self.view().setCopyEvent(function)
+
+    def setCutEvent(self, function):
+        self.view().setCutEvent(function)
+
+    def setDuplicateEvent(self, function):
+        self.view().setDuplicateEvent(function)
+
+    def setPasteEvent(self, function):
+        self.view().setPasteEvent(function)
+
     def setDelegateToggleEvent(self, function):
         self.__delegateToggleEvent = function
 

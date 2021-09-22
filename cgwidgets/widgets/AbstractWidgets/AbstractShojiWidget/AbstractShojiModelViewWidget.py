@@ -107,8 +107,8 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
 
         # setup model / view
         self._header_widget = AbstractShojiHeader(self)
-        self._model = self.headerViewWidget().model()
-        self._header_widget.setModel(self._model)
+        #self._model = self.headerViewWidget().model()
+        #self._header_widget.setModel(self._model)
         self._header_widget.setIndexSelectedEvent(self._header_widget.selectionChanged)
 
         # setup delegate
@@ -257,11 +257,14 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         """
         self.headerWidget().setDragDropMode(drag_drop_mode)
 
+    def setHeaderItemDeleteEvent(self, function):
+        self.headerWidget().setItemDeleteEvent(function)
+
     def setHeaderItemDragStartEvent(self, function):
         """
         Sets the function to be run after the drag has been initiated
         """
-        self.model().setDragStartEvent(function)
+        self.headerWidget().setDragStartEvent(function)
 
     def setHeaderItemDropEvent(self, function):
         """
@@ -269,16 +272,13 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         This function should take one arg which is a list of items that
         have been dropped
         """
-        self.model().setDropEvent(function)
-
-    def setHeaderItemTextChangedEvent(self, function):
-        self.model().setTextChangedEvent(function)
+        self.headerWidget().setDropEvent(function)
 
     def setHeaderItemEnabledEvent(self, function):
-        self.model().setItemEnabledEvent(function)
+        self.headerWidget().setItemEnabledEvent(function)
 
-    def setHeaderItemDeleteEvent(self, function):
-        self.model().setItemDeleteEvent(function)
+    def setHeaderItemTextChangedEvent(self, function):
+        self.headerWidget().setTextChangedEvent(function)
 
     def setHeaderItemSelectedEvent(self, function):
         """
@@ -292,7 +292,20 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         self.itemSelectedEvent = function
 
     def itemSelectedEvent(self, item, enabled):
+        """ Virtual function to ensure this exists """
         pass
+
+    def setHeaderItemCopyEvent(self, function):
+        self.headerWidget().setCopyEvent(function)
+
+    def setHeaderItemCutEvent(self, function):
+        self.headerWidget().setCutEvent(function)
+
+    def setHeaderItemDuplicateEvent(self, function):
+        self.headerWidget().setDuplicateEvent(function)
+
+    def setHeaderItemPasteEvent(self, function):
+        self.headerWidget().setPasteEvent(function)
 
     def setHeaderDelegateToggleEvent(self, function):
         """
@@ -386,11 +399,12 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
 
     """ MODEL """
     def model(self):
-        return self._model
+        return self.headerWidget().model()
+        #return self._model
 
     def setModel(self, model):
-        self._model = model
-        self._model.setItemType(AbstractShojiModelItem)
+        #self._model = model
+        model.setItemType(AbstractShojiModelItem)
         self._header_widget.setModel(model)
         self._header_widget.setIndexSelectedEvent(self._header_widget.selectionChanged)
 
@@ -1043,8 +1057,7 @@ class AbstractShojiHeader(AbstractModelViewWidget):
         return return_val
 
     def selectionChanged(self, item, enabled):
-        """
-        Determines whether or not an items delegateWidget() should be
+        """ Determines whether or not an items delegateWidget() should be
         displayed/updated/destroyed.
         """
         # todo for some reason this double registers the selection even
@@ -1066,7 +1079,6 @@ class AbstractShojiHeader(AbstractModelViewWidget):
 
         # custom input event | need this as we're overriding the models input
         top_level_widget.itemSelectedEvent(item, enabled)
-
         # Todo causing multiple selection bug...
         # update full screen selection
         # selected

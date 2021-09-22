@@ -112,7 +112,7 @@ def setupCustomModel():
     model.setItemType(item_type)
     shoji_widget.setModel(model)
 
-setupCustomModel()
+#setupCustomModel()
 
 
 # Set column names

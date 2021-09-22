@@ -286,11 +286,14 @@ class AbstractDragDropAbstractView(object):
                 item = index.internalPointer()
                 self.model().itemSelectedEvent(item, True)
                 self.model().setLastSelectedItem(item)
+                #print('setting last item too...', item.columnData()["name"])
+
         for index in deselected.indexes():
             if index.column() == 0:
                 item = index.internalPointer()
                 self.model().itemSelectedEvent(item, False)
                 self.model().setLastSelectedItem(item)
+                print('setting last item too...', item.columnData()["name"])
 
     def abstractKeyPressEvent(self, event):
         if event.modifiers() == Qt.NoModifier:
@@ -352,9 +355,10 @@ class AbstractDragDropAbstractView(object):
 
     def abstractMouseMoveEvent(self, event):
         if self.__pressed:
-            event.pos()
+            index_under_cursor = self.indexAt(event.pos())
             index = self.model().getIndexFromItem(self.model().lastSelectedItem())
-            self.setIndexSelected(index, True)
+            if index_under_cursor == index:
+                self.setIndexSelected(index, True)
             self.__pressed = False
 
     def setKeyPressEvent(self, function):

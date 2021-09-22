@@ -100,7 +100,7 @@ main_widget.setIndexSelectedEvent(testSelect)
 # set flags
 main_widget.setIsRootDroppable(True)
 main_widget.setIsEditable(True)
-main_widget.setIsDraggable(False)
+main_widget.setIsDraggable(True)
 main_widget.setIsDroppable(False)
 main_widget.setIsEnableable(True)
 main_widget.setIsDeletable(True)
