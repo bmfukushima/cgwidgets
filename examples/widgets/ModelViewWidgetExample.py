@@ -140,6 +140,32 @@ def addMimedata(mimedata, items):
 main_widget.setAddMimeDataFunction(addMimedata)
 
 
+# COPY / PASTE FUNCTIONS
+def copyEvent(copied_items):
+    print("COPYING --> ", )
+    for item in copied_items:
+        print("\t|- {item_name}".format(item_name=item.columnData()["name"]))
+
+def pasteEvent(copied_items):
+    print("PASTING -->")
+    for item in copied_items:
+        print("\t|- {item_name}".format(item_name=item.columnData()["name"]))
+
+def duplicateEvent(copied_items):
+    print("DUPLICATE -->")
+    for item in copied_items:
+        print("\t|- {item_name}".format(item_name=item.columnData()["name"]))
+
+def cutEvent(copied_items):
+    print("CUT -->")
+    for item in copied_items:
+        print("\t|- {item_name}".format(item_name=item.columnData()["name"]))
+
+main_widget.setCopyEvent(copyEvent)
+main_widget.setPasteEvent(pasteEvent)
+main_widget.setCutEvent(cutEvent)
+main_widget.setDuplicateEvent(duplicateEvent)
+
 # show widget
 main_widget.show()
 centerWidgetOnCursor(main_widget)

@@ -274,6 +274,19 @@ class AbstractDragDropAbstractView(object):
         else:
             return
 
+    def getAllCopyableIndexes(self):
+        """ Gets all of the currently selected indexes that can be copied.
+
+        Returns (list): of QModelIndex"""
+        selected_indexes = self.getAllSelectedIndexes()
+        copyable_indexes = []
+        for index in selected_indexes:
+            item = index.internalPointer()
+            if self.model().isItemCopyable(item):
+                copyable_indexes.append(index)
+
+        return copyable_indexes
+
     """ EVENTS """
     def enterEvent(self, event):
         self.setFocus()
@@ -286,14 +299,12 @@ class AbstractDragDropAbstractView(object):
                 item = index.internalPointer()
                 self.model().itemSelectedEvent(item, True)
                 self.model().setLastSelectedItem(item)
-                #print('setting last item too...', item.columnData()["name"])
 
         for index in deselected.indexes():
             if index.column() == 0:
                 item = index.internalPointer()
                 self.model().itemSelectedEvent(item, False)
                 self.model().setLastSelectedItem(item)
-                print('setting last item too...', item.columnData()["name"])
 
     def abstractKeyPressEvent(self, event):
         if event.modifiers() == Qt.NoModifier:
@@ -374,17 +385,13 @@ class AbstractDragDropAbstractView(object):
 
     def copyEvent(self):
         """ Copies all of the indexes selected to an internal clipboard"""
-        selected_indexes = self.getAllSelectedIndexes()
-        copyable_indexes = []
-        for index in selected_indexes:
-            item = index.internalPointer()
-            if self.model().isItemCopyable(item):
-                copyable_indexes.append(index)
-
+        copyable_indexes = self.getAllCopyableIndexes()
         self.setCopiedIndexes(copyable_indexes)
-        self.__copyEvent(copyable_indexes)
 
-    def __copyEvent(self, selected_indexes):
+        copyable_items = [index.internalPointer() for index in self.copiedIndexes()]
+        self.__copyEvent(copyable_items)
+
+    def __copyEvent(self, copied_items):
         pass
 
     def setPasteEvent(self, function):
@@ -409,7 +416,7 @@ class AbstractDragDropAbstractView(object):
                     parent_item = current_item.parent()
             # no objects selected
             else:
-                parent_item = self.rootItem()
+                parent_item = self.model().getRootItem()
 
             parent_index = self.model().getIndexFromItem(parent_item)
 
@@ -421,9 +428,10 @@ class AbstractDragDropAbstractView(object):
             self.model().insertNewIndex(row, name=name, column_data=item.columnData(), parent=parent_index)
 
         # user defined paste event
-        self.__pasteEvent(self.copiedIndexes())
+        copyable_items = [index.internalPointer() for index in self.copiedIndexes()]
+        self.__pasteEvent(copyable_items)
 
-    def __pasteEvent(self, copied_indexes):
+    def __pasteEvent(self, copied_items):
         pass
 
     def setCutEvent(self, function):
@@ -432,18 +440,19 @@ class AbstractDragDropAbstractView(object):
     def cutEvent(self):
         """ Copies all of the indexes selected to an internal clipboard"""
         # copy to clipboard
-        selected_indexes = self.getAllSelectedIndexes()
-        self.setCopiedIndexes(selected_indexes)
+        copyable_indexes = self.getAllCopyableIndexes()
+        self.setCopiedIndexes(copyable_indexes)
 
         # run user defined cut event
-        self.__cutEvent(selected_indexes)
+        copyable_items = [index.internalPointer() for index in self.copiedIndexes()]
+        self.__cutEvent(copyable_items)
 
         # delete indexes
-        for index in selected_indexes:
+        for index in copyable_indexes:
             item = index.internalPointer()
             self.model().deleteItem(item, event_update=True)
 
-    def __cutEvent(self, selected_indexes):
+    def __cutEvent(self, copied_items):
         pass
 
     def setDuplicateEvent(self, function):
@@ -451,14 +460,16 @@ class AbstractDragDropAbstractView(object):
 
     def duplicateEvent(self):
         """ Copies all of the indexes selected to an internal clipboard"""
-        selected_indexes = self.getAllSelectedIndexes()
-        for index in selected_indexes:
+        copyable_indexes = self.getAllCopyableIndexes()
+        for index in copyable_indexes:
             item = index.internalPointer()
             name = item.columnData()[self.model().getHeaderData()[0]]
             self.model().insertNewIndex(index.row()+1, name=name, column_data=item.columnData(), parent=index.parent())
-        self.__duplicateEvent(selected_indexes)
 
-    def __duplicateEvent(self, selected_indexes):
+        copyable_items = [index.internalPointer() for index in copyable_indexes]
+        self.__duplicateEvent(copyable_items)
+
+    def __duplicateEvent(self, copied_items):
         pass
 
     """ CONTEXT MENU """
