@@ -20,6 +20,7 @@ class AbstractDragDropAbstractView(object):
     """
     def __init__(self):
         # attrs
+        self._copy_data = []
         self._context_menu_manifest = {}
         self._delete_warning_widget = None
         self.setMouseTracking(True)
@@ -212,6 +213,28 @@ class AbstractDragDropAbstractView(object):
     def setCopiedIndexes(self, copied_indexes):
         self._copied_indexes = copied_indexes
 
+    def copyData(self):
+        return self._copy_data
+
+    def setCopyData(self, copy_data):
+        self._copy_data = copy_data
+
+    def copyCurrentSelectionToInternalClipboard(self):
+        copyable_indexes = self.getAllCopyableIndexes()
+        copyable_items = [index.internalPointer() for index in copyable_indexes]
+
+        copy_data = []
+        for item in copyable_items:
+            new_data = {}
+            new_data["data"] = item.columnData()
+            new_data["row"] = item.row()
+            new_data["parent"] = item.parent()
+            copy_data.append(new_data)
+
+        self.setCopyData(copy_data)
+
+        return copyable_items
+
     """ SELECTION """
     def setIndexSelected(self, index, selected):
         """
@@ -385,10 +408,7 @@ class AbstractDragDropAbstractView(object):
 
     def copyEvent(self):
         """ Copies all of the indexes selected to an internal clipboard"""
-        copyable_indexes = self.getAllCopyableIndexes()
-        self.setCopiedIndexes(copyable_indexes)
-
-        copyable_items = [index.internalPointer() for index in self.copiedIndexes()]
+        copyable_items = self.copyCurrentSelectionToInternalClipboard()
         self.__copyEvent(copyable_items)
 
     def __copyEvent(self, copied_items):
@@ -419,19 +439,20 @@ class AbstractDragDropAbstractView(object):
                 parent_item = self.model().getRootItem()
 
             parent_index = self.model().getIndexFromItem(parent_item)
+        else:
+            parent_item = parent_index.internalPointer()
 
+        pasted_items = []
         row = parent_item.childCount()
-
-        for index in self.copiedIndexes():
-            item = index.internalPointer()
-            name = item.columnData()[self.model().getHeaderData()[0]]
-            self.model().insertNewIndex(row, name=name, column_data=item.columnData(), parent=parent_index)
+        for copy_data in self.copyData():
+            name = copy_data["data"][self.model().getHeaderData()[0]]
+            new_index = self.model().insertNewIndex(row, name=name, column_data=copy_data["data"], parent=parent_index)
+            pasted_items.append(new_index.internalPointer())
 
         # user defined paste event
-        copyable_items = [index.internalPointer() for index in self.copiedIndexes()]
-        self.__pasteEvent(copyable_items)
+        self.__pasteEvent(pasted_items, parent_item)
 
-    def __pasteEvent(self, copied_items):
+    def __pasteEvent(self, copied_items, parent_item):
         pass
 
     def setCutEvent(self, function):
@@ -439,17 +460,11 @@ class AbstractDragDropAbstractView(object):
 
     def cutEvent(self):
         """ Copies all of the indexes selected to an internal clipboard"""
-        # copy to clipboard
-        copyable_indexes = self.getAllCopyableIndexes()
-        self.setCopiedIndexes(copyable_indexes)
-
-        # run user defined cut event
-        copyable_items = [index.internalPointer() for index in self.copiedIndexes()]
+        copyable_items = self.copyCurrentSelectionToInternalClipboard()
         self.__cutEvent(copyable_items)
 
         # delete indexes
-        for index in copyable_indexes:
-            item = index.internalPointer()
+        for item in copyable_items:
             self.model().deleteItem(item, event_update=True)
 
     def __cutEvent(self, copied_items):
@@ -460,13 +475,12 @@ class AbstractDragDropAbstractView(object):
 
     def duplicateEvent(self):
         """ Copies all of the indexes selected to an internal clipboard"""
-        copyable_indexes = self.getAllCopyableIndexes()
-        for index in copyable_indexes:
-            item = index.internalPointer()
-            name = item.columnData()[self.model().getHeaderData()[0]]
-            self.model().insertNewIndex(index.row()+1, name=name, column_data=item.columnData(), parent=index.parent())
+        copyable_items = self.copyCurrentSelectionToInternalClipboard()
+        for item in self.copyData():
+            name = item["data"][self.model().getHeaderData()[0]]
+            parent = self.model().getIndexFromItem(item["parent"])
+            self.model().insertNewIndex(item["row"]+1, name=name, column_data=item["data"], parent=parent)
 
-        copyable_items = [index.internalPointer() for index in copyable_indexes]
         self.__duplicateEvent(copyable_items)
 
     def __duplicateEvent(self, copied_items):

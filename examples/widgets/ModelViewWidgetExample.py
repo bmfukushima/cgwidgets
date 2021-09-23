@@ -147,7 +147,7 @@ def copyEvent(copied_items):
     for item in copied_items:
         print("\t|- {item_name}".format(item_name=item.columnData()["name"]))
 
-def pasteEvent(copied_items):
+def pasteEvent(copied_items, parent_item):
     print("PASTING -->")
     for item in copied_items:
         print("\t|- {item_name}".format(item_name=item.columnData()["name"]))

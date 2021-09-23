@@ -100,32 +100,6 @@ class AbstractShojiModelItem(AbstractDragDropModelItem, iShojiDynamicWidget):
     def setDelegateWidget(self, _delegate_widget):
         self._delegate_widget = _delegate_widget
 
-    """ args """
-    def args(self):
-        return self.columnData()
-
-    def setArg(self, arg, value):
-        self.columnData()[arg] = value
-
-    def getArg(self, arg):
-        return self.columnData()[arg]
-
-    def getArgsList(self):
-        return list(self.columnData().keys())
-
-    def removeArg(self, arg):
-        self.columnData().pop(arg, None)
-
-    def clearArgsList(self):
-        for key in list(self.columnData().keys()):
-            self.columnData().pop(key, None)
-
-    def name(self):
-        try:
-            return self.columnData()["name"]
-        except KeyError:
-            return self.columnData()[self.columnData().keys()[0]]
-
 
 class AbstractShojiModel(AbstractDragDropModel):
     """

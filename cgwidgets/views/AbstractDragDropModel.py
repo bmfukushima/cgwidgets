@@ -76,12 +76,6 @@ class AbstractDragDropModelItem(object):
 
         return True
 
-    def columnData(self):
-        return self._column_data
-
-    def setColumnData(self, _column_data):
-        self._column_data = _column_data
-
     def childCount(self):
         return len(self._children)
 
@@ -116,6 +110,38 @@ class AbstractDragDropModelItem(object):
         output += "\n"
 
         return output
+
+    """ ARGS """
+    def columnData(self):
+        return self._column_data
+
+    def setColumnData(self, _column_data):
+        self._column_data = _column_data
+
+    def args(self):
+        return self.columnData()
+
+    def setArg(self, arg, value):
+        self.columnData()[arg] = value
+
+    def getArg(self, arg):
+        return self.columnData()[arg]
+
+    def getArgsList(self):
+        return list(self.columnData().keys())
+
+    def removeArg(self, arg):
+        self.columnData().pop(arg, None)
+
+    def clearArgsList(self):
+        for key in list(self.columnData().keys()):
+            self.columnData().pop(key, None)
+
+    def name(self):
+        try:
+            return self.columnData()["name"]
+        except KeyError:
+            return self.columnData()[self.columnData().keys()[0]]
 
     """ DRAG / DROP PROPERTIES """
     def deleteOnDrop(self):
@@ -524,6 +550,11 @@ class AbstractDragDropModel(QAbstractItemModel):
     """ Create index/items"""
     def setItemType(self, item_type):
         self._item_type = item_type
+
+        # update root item
+        root_item = item_type()
+        root_item.setColumnData({"name":"root"})
+        self.setRootItem(root_item)
 
     def itemType(self):
         return self._item_type
