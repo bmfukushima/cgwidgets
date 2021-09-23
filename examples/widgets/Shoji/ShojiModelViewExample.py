@@ -474,6 +474,7 @@ for index in indexes:
 print(shoji_widget.getAllSelectedIndexes())
 print(shoji_widget.getAllIndexes())
 
+# shoji_widget.setHeaderItemIsCopyable(True)
 # display widget
 shoji_widget.resize(500, 500)
 shoji_widget.show()

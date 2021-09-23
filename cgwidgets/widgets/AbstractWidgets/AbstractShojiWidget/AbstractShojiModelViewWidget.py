@@ -329,6 +329,12 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         self.model().setAddMimeDataFunction(function)
 
     """ SET FLAGS """
+    def headerItemIsCopyable(self):
+        return self.headerWidget().isCopyable()
+
+    def setHeaderItemIsCopyable(self, enabled):
+        self.headerWidget().setIsCopyable(enabled)
+
     def headerItemIsDraggable(self):
         return self.headerWidget().isDraggable()
 

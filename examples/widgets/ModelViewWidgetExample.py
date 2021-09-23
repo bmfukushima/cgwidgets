@@ -104,6 +104,7 @@ main_widget.setIsDraggable(True)
 main_widget.setIsDroppable(False)
 main_widget.setIsEnableable(True)
 main_widget.setIsDeletable(True)
+main_widget.setIsCopyable(True)
 main_widget.setDelegateToggleEvent(testDelegateToggle)
 
 indexes = main_widget.model().findItems("node1", Qt.MatchExactly)

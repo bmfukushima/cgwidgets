@@ -395,6 +395,12 @@ class AbstractModelViewWidget(AbstractShojiLayout):
         """
         self.view().setDragDropMode(drag_drop_mode)
 
+    def isCopyable(self):
+        return self.view().isCopyable()
+
+    def setIsCopyable(self, enabled):
+        self.view().setIsCopyable(enabled)
+
     def isDraggable(self):
         return self.view().isDraggable()
 

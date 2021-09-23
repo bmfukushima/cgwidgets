@@ -223,7 +223,7 @@ class AbstractDragDropModel(QAbstractItemModel):
         self._is_editable = Qt.ItemIsEditable
         self._is_enableable = True
         self._is_deletable = True
-        self._is_copyable = True
+        self._is_copyable = False
 
         #
         self._dropping = False
