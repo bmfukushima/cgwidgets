@@ -451,6 +451,23 @@ class AbstractDragDropAbstractView(object):
         return QAbstractItemView.keyPressEvent(self, index, bool)
 
     """ COPY / PASTE """
+    def deepCopyItem(self, item, parent_index, row=0):
+        """ Duplicates an item from the one provided
+
+        Args:
+            item (AbstractDragDropModelItem):
+            parent_index (QModelIndex):
+            row (int)
+
+        Returns (QModelIndex): of new item
+        """
+        name = copy.deepcopy(item.name())
+        column_data = copy.deepcopy(item.columnData())
+
+        # create new index
+        new_index = self.model().insertNewIndex(row, name=name, column_data=column_data, parent=parent_index)
+        return new_index
+
     def setCopyEvent(self, function):
         self.__copyEvent = function
 
@@ -491,18 +508,21 @@ class AbstractDragDropAbstractView(object):
 
         parent_index = self.model().getIndexFromItem(parent_item)
 
+        # paste items
         pasted_items = []
         for item in self.copiedItems():
+            # get attrs
             if item == parent_item:
                 parent_item = item.parent()
                 parent_index = self.model().getIndexFromItem(parent_item)
-            row = parent_item.childCount()
-            name = item.name()
-
-            # create new index
-            new_index = self.model().insertNewIndex(row, name=name, column_data=item.columnData(), parent=parent_index)
+            row = copy.deepcopy(parent_item.childCount())
+            new_index = self.deepCopyItem(item, parent_index, row)
             new_item = new_index.internalPointer()
+
+            # check for group item
             self.__pasteGroupItem(item, new_index)
+
+            # store new item
             pasted_items.append(new_item)
 
         # user defined paste event
@@ -513,9 +533,13 @@ class AbstractDragDropAbstractView(object):
         # check for children
         if 0 < item.childCount():
             for child in item.children():
-                name = child.name()
-                new_index = self.model().insertNewIndex(
-                    child.row(), name=name, column_data=child.columnData(), parent=parent_index)
+                row = copy.deepcopy(child.row())
+
+                new_index = self.deepCopyItem(child, parent_index, row)
+                # name = copy.deepcopy(item.name())
+                # column_data = copy.deepcopy(item.columnData())
+                # new_index = self.model().insertNewIndex(
+                #     row, name=name, column_data=column_data, parent=parent_index)
                 if 0 < child.childCount():
                     self.__pasteGroupItem(child, new_index)
 
@@ -544,9 +568,16 @@ class AbstractDragDropAbstractView(object):
         """ Copies all of the indexes selected to an internal clipboard"""
         copyable_items = self.copyCurrentSelectionToInternalClipboard()
         for item in self.copiedItems():
-            name = item.name()
+
+            row = copy.deepcopy(item.row())
             parent = self.model().getIndexFromItem(item.parent())
-            new_index = self.model().insertNewIndex(item.row()+1, name=name, column_data=item.columnData(), parent=parent)
+            new_index = self.deepCopyItem(item, parent, row)
+
+            # name = copy.deepcopy(item.name())
+            # column_data = copy.deepcopy(item.columnData())
+            #
+
+            # new_index = self.model().insertNewIndex(row+1, name=name, column_data=column_data, parent=parent)
             self.__pasteGroupItem(item, new_index)
 
         self.__duplicateEvent(copyable_items)
