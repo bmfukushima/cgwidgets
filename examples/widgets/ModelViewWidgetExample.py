@@ -56,7 +56,8 @@ main_widget = ModelViewWidgetSubclass()
 
 
 # create main Model View Widget
-#main_widget = ModelViewWidget()
+main_widget = ModelViewWidget()
+main_widget.setPresetViewType(ModelViewWidget.TREE_VIEW)
 
 # setup deletion warning
 delete_warning_widget = AbstractLabelWidget(text="Are you sure you want to delete this?\n You cannot undo it...")
@@ -147,7 +148,7 @@ def copyEvent(copied_items):
     for item in copied_items:
         print("\t|- {item_name}".format(item_name=item.columnData()["name"]))
 
-def pasteEvent(copied_items, parent_item):
+def pasteEvent(copied_items, pasted_items, parent_item):
     print("PASTING -->")
     for item in copied_items:
         print("\t|- {item_name}".format(item_name=item.columnData()["name"]))
@@ -162,8 +163,8 @@ def cutEvent(copied_items):
     for item in copied_items:
         print("\t|- {item_name}".format(item_name=item.columnData()["name"]))
 
-main_widget.setCopyEvent(copyEvent)
-main_widget.setPasteEvent(pasteEvent)
+#main_widget.setCopyEvent(copyEvent)
+#main_widget.setPasteEvent(pasteEvent)
 main_widget.setCutEvent(cutEvent)
 main_widget.setDuplicateEvent(duplicateEvent)
 
