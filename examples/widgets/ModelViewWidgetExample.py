@@ -111,8 +111,8 @@ main_widget.setDelegateToggleEvent(testDelegateToggle)
 indexes = main_widget.model().findItems("node1", Qt.MatchExactly)
 for index in indexes:
     main_widget.setIndexSelected(index, True)
-    index.internalPointer().setIsDroppable(False)
-    index.internalPointer().setIsSelectable(False)
+    index.internalPointer().setIsDroppable(True)
+    index.internalPointer().setIsSelectable(True)
     index.internalPointer().setIsEditable(True)
 
 # set selection mode
@@ -153,7 +153,7 @@ def pasteEvent(copied_items, pasted_items, parent_item):
     for item in copied_items:
         print("\t|- {item_name}".format(item_name=item.columnData()["name"]))
 
-def duplicateEvent(copied_items):
+def duplicateEvent(copied_items, pasted_items):
     print("DUPLICATE -->")
     for item in copied_items:
         print("\t|- {item_name}".format(item_name=item.columnData()["name"]))

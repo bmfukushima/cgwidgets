@@ -482,29 +482,39 @@ class AbstractDragDropAbstractView(object):
     def setPasteEvent(self, function):
         self.__pasteEvent = function
 
-    def pasteEvent(self, parent_index=None):
+    def getPasteLocation(self):
+        """ Returns the current location where a paste event should occur
+
+        Returns (AbstractDragDropModelItem)"""
+        # default paste location
+        if 0 < len(self.getAllSelectedItems()):
+            current_item = self.getAllSelectedItems()[-1]
+            if self.isItemDroppable(current_item):
+                parent_item = current_item
+            # paste on non-group
+            else:
+                parent_item = current_item.parent()
+        # no objects selected
+        else:
+            parent_item = self.model().getRootItem()
+
+        # check is not pasting under current selection
+        for item in self.copiedItems():
+            if self.isItemDescendantOf(parent_item, item):
+                parent_item = item
+        return parent_item
+
+    def isItemDescendantOf(self, item, ancestor):
+        return self.model().isItemDescendantOf(item, ancestor)
+
+    def pasteEvent(self):
         """
         Arg:
             copied_indexes (list): of QModelIndexes
             parent_index (QModelIndex):
         """
         # Get parent node/item
-        if not parent_index or not isinstance(parent_index, QModelIndex):
-            if 0 < len(self.getAllSelectedItems()):
-                current_item = self.getAllSelectedItems()[-1]
-                if current_item.isDroppable():
-                    parent_item = current_item
-                elif self.model().isDroppable() and (current_item.isDroppable() or current_item is not None):
-                    parent_item = current_item
-                # paste on non-group
-                else:
-                    parent_item = current_item.parent()
-            # no objects selected
-            else:
-                parent_item = self.model().getRootItem()
-
-        else:
-            parent_item = parent_index.internalPointer()
+        parent_item = self.getPasteLocation()
 
         parent_index = self.model().getIndexFromItem(parent_item)
 
@@ -567,12 +577,13 @@ class AbstractDragDropAbstractView(object):
     def duplicateEvent(self):
         """ Copies all of the indexes selected to an internal clipboard"""
         copyable_items = self.copyCurrentSelectionToInternalClipboard()
+        new_items = []
         for item in self.copiedItems():
 
             row = copy.deepcopy(item.row())
             parent = self.model().getIndexFromItem(item.parent())
             new_index = self.deepCopyItem(item, parent, row)
-
+            new_items.append(new_index.internalPointer())
             # name = copy.deepcopy(item.name())
             # column_data = copy.deepcopy(item.columnData())
             #
@@ -580,9 +591,9 @@ class AbstractDragDropAbstractView(object):
             # new_index = self.model().insertNewIndex(row+1, name=name, column_data=column_data, parent=parent)
             self.__pasteGroupItem(item, new_index)
 
-        self.__duplicateEvent(copyable_items)
+        self.__duplicateEvent(copyable_items, new_items)
 
-    def __duplicateEvent(self, copied_items):
+    def __duplicateEvent(self, copied_items, new_items):
         pass
 
     """ CONTEXT MENU """

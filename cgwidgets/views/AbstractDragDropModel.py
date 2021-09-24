@@ -503,6 +503,22 @@ class AbstractDragDropModel(QAbstractItemModel):
         name = item.columnData()[self.getHeaderData()[0]]
         return name
 
+    def isItemDescendantOf(self, item, ancestor):
+        """ Determines if an item is a descendant of another item
+
+        Args:
+            item (AbstractDragDropModelItem): to look for ancestor
+            ancestor (AbstractDragDropModelItem): to see if the item is a descendant of
+
+        Returns (bool)"""
+        if item.parent():
+            if item.parent() == ancestor:
+                return True
+            else:
+                return self.isItemDescendantOf(item.parent(), ancestor)
+        else:
+            return False
+
     """ ITEM SEARCHING """
     # TODO Add get selected items...
     # add this handler into the AbstractShojiModelViewWidget
