@@ -19,6 +19,8 @@ class AbstractScriptEditorPopupEventFilter(QWidget):
         is_active (bool): determines if the hotkeys are activated or not.
             This should be turned off when the user is setting a hotkey, so that
             it doesn't double register.
+        is_setting_hotkey (bool): determines if the user is currently setting a hotkey.
+            This is used to block the signal to run the script/design when the hotkey is set
         main_window (QMainWindow): Main window of the application (ie. widget.window())
         scripts_variable (str): Environment variable that holds the scripts directories"""
     def __init__(self, parent=None, main_window=None, scripts_variable="CGWscripts"):
@@ -29,6 +31,7 @@ class AbstractScriptEditorPopupEventFilter(QWidget):
         self._main_window = main_window
         self._scripts_variable = scripts_variable
         self._is_active = True
+        self._is_setting_hotkey = False
 
     """ PROPERTIES """
     def scriptsVariable(self):
@@ -36,6 +39,12 @@ class AbstractScriptEditorPopupEventFilter(QWidget):
 
     def scriptsDirectories(self):
         return os.environ[self.scriptsVariable()].split(":")
+
+    def isSettingHotkey(self):
+        return self._is_setting_hotkey
+
+    def setIsSettingHotkey(self, enabled):
+        self._is_setting_hotkey = enabled
 
     def isActive(self):
         return self._is_active
@@ -54,6 +63,9 @@ class AbstractScriptEditorPopupEventFilter(QWidget):
 
     def eventFilter(self, obj, event, *args, **kwargs):
         if event.type() == QEvent.KeyPress:
+            if self.isSettingHotkey():
+                self.setIsSettingHotkey(False)
+                return True
             # get user hotkeys
             if self.isActive():
                 for directory in self.scriptsDirectories():
@@ -80,9 +92,9 @@ class AbstractScriptEditorPopupEventFilter(QWidget):
                                     # environment.update(self.importModules())
                                     with open(file_path) as script_descriptor:
                                         exec(script_descriptor.read(), environment, environment)
-                            return QWidget.eventFilter(self, obj, event, *args, **kwargs)
+                            return True
 
-        return QWidget.eventFilter(self, obj, event, *args, **kwargs)
+        return False
 
 
 def installScriptEditorEventFilter(main_window, event_filter_widget):

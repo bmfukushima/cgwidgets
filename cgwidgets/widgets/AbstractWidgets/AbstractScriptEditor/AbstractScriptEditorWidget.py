@@ -1220,6 +1220,15 @@ class ScriptTreeWidget(QTreeWidget):
 
         if self.acceptInput() is True:
             if event.text() != "":
+                # escape pressed out of delegate editor
+                if event.key() == Qt.Key_Escape:
+                    self.setAcceptInput(False)
+                    main_window = self.parent().window()
+                    if hasattr(main_window, "_script_editor_event_filter_widget"):
+                        event_filter_widget = main_window._script_editor_event_filter_widget
+                        event_filter_widget.setIsActive(True)
+                    return QTreeWidget.keyPressEvent(self, event, *args, **kwargs)
+
                 # reset hotkey if user presses backspace/delete
                 if event.key() in [Qt.Key_Backspace, Qt.Key_Delete]:
                     self.removeHotkeyFromItem()
@@ -1255,10 +1264,22 @@ The hotkey \"{hotkey}\" exists.
 Would you like to override it and continue?""".format(hotkey=hotkey))
                     showWarningDialogue(self, display_widget, acceptOverwriteHotkey, cancelOverwriteHotkey)
                 else:
+                    self.closeDelegateEditor()
+
                     self.currentItem().setText(2, hotkey)
                     self.addHotkeyToItem(item=self.currentItem(), hotkey=hotkey)
 
-                    self.closeDelegateEditor()
+                    # disable script running on hotkey press
+                    main_window = self.parent().window()
+                    if hasattr(main_window, "_script_editor_event_filter_widget"):
+                        main_window._script_editor_event_filter_widget.setIsSettingHotkey(True)
+                    # # while editing, update the delegates text
+                    # try:
+                    #     self.itemDelegate().delegateWidget().setText(hotkey)
+                    # except RuntimeError:
+                    #
+                    #     pass
+
                 # need to return here to avoid the QTreeWidget from auto selecting the previous hotkeyed item
                 return
 
@@ -1423,8 +1444,10 @@ class DesignTab(QTabWidget):
 class DataTypeDelegate(QItemDelegate):
     def __init__(self, parent=None):
         super(DataTypeDelegate, self).__init__(parent)
-        # self.katana_main = UI4.App.AbstractScriptEditorWidget.GetScriptEditor()
-        #self.katana_main.removeEventFilter(self.katana_main.event_filter_widget)
+        self._delegate_widget = None
+
+    def delegateWidget(self):
+        return self._delegate_widget
 
     """ Do I need this"""
     def sizeHint(self, *args, **kwargs):
@@ -1440,10 +1463,10 @@ class DataTypeDelegate(QItemDelegate):
             if current_item.getItemType() != AbstractBaseItem.GROUP:
                 self.parent().setAcceptInput(True)
 
-                delegate_widget = QLabel(parent)
-                delegate_widget.setAlignment(Qt.AlignCenter)
+                self._delegate_widget = QLabel(parent)
+                self._delegate_widget.setAlignment(Qt.AlignCenter)
                 # todo update bg color
-                delegate_widget.setStyleSheet("""
+                self._delegate_widget.setStyleSheet("""
                     background-color: rgba{RGBA_BACKGROUND};
                     border: 2px solid rgba{RGBA_SELECTED};
                     color: rgba{TEXT_COLOR}""".format(
@@ -1451,13 +1474,13 @@ class DataTypeDelegate(QItemDelegate):
                     RGBA_BACKGROUND=iColor["rgba_background_00"],
                     RGBA_SELECTED=iColor["rgba_selected"])
                 )
-                delegate_widget.setText(current_item.text(2))
+                self._delegate_widget.setText(current_item.text(2))
                 # disable hotkey events
                 main_window = self.parent().window()
                 if hasattr(main_window, "_script_editor_event_filter_widget"):
                     event_filter_widget = main_window._script_editor_event_filter_widget
                     event_filter_widget.setIsActive(False)
-                return delegate_widget
+                return self._delegate_widget
         elif index.column() == 1:
             return
 
