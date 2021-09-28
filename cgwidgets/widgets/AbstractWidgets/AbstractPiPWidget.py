@@ -1428,12 +1428,12 @@ class PiPMiniViewer(AbstractSplitterWidget):
         return self._spacer_widget
 
     """ UTILS """
-    def _swappingToFastCheck(self, widget):
-        if widget == self.widget(widget.index()): return True
-        if not self.widget(widget.index()): return True
-        if widget.parent() == self.widget(widget.index()).parent(): return True
-
-        return False
+    # def _swappingToFastCheck(self, widget):
+    #     if widget == self.widget(widget.index()): return True
+    #     if not self.widget(widget.index()): return True
+    #     if widget.parent() == self.widget(widget.index()).parent(): return True
+    #
+    #     return False
 
     def _resetSpacerWidget(self):
         """ Places the enlarged widget back into its original index.

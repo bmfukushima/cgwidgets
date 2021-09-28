@@ -58,7 +58,6 @@ class AbstractListInputWidget(AbstractStringInputWidget):
         # setup custom completer
         self.setupCustomModelCompleter(item_list)
 
-
         # setup style
         self.updateStyleSheet()
 

@@ -56,11 +56,7 @@ class NodeTypeListWidget(ListInputWidget):
         return ListInputWidget.mousePressEvent(self, *args, **kwargs)
 
     def indexChanged(self, widget, value):
-        """
-        When the user changes the value in the GSV dropdown menu,
-        this event is run.  It will first ask the user if they wish to proceed,
-        as doing so will essentially reinstated this node back to an initial setting.
-        """
+        """ When the user selects a node type this will update the display"""
         # preflight
         if self.previous_text == self.text(): return
         """
