@@ -134,6 +134,7 @@ import os
 from qtpy.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QScrollArea, QSplitter, QSplitterHandle, QApplication)
 from qtpy.QtCore import QEvent, Qt
+from qtpy.QtGui import QKeySequence
 
 from cgwidgets.views import AbstractDragDropModelItem
 from cgwidgets.utils import (
@@ -626,7 +627,8 @@ class AbstractPiPDisplayWidget(QWidget):
         self._is_mini_viewer_widget = is_mini_viewer_widget
         self._is_standalone = True
         self._direction = attrs.SOUTH
-        self._swap_key = Qt.Key_Space
+        #self._swap_key = Qt.Key_Space
+        self._swap_key = QKeySequence(int(Qt.NoModifier) + Qt.Key_Space)
         self._hotkey_swap_keys = [Qt.Key_1, Qt.Key_2, Qt.Key_3, Qt.Key_4, Qt.Key_5]
 
         # create widgets
@@ -1134,7 +1136,9 @@ class AbstractPiPDisplayWidget(QWidget):
 
     def keyPressEvent(self, event):
         # swap between this and previous
-        if event.key() == self.swapKey():
+        # key = QKeySequence(int(event.modifiers()) + event.key()).toString()
+        user_input = QKeySequence(int(event.modifiers()) + event.key())
+        if user_input == self.swapKey():
             self.swapEvent()
             return
 
