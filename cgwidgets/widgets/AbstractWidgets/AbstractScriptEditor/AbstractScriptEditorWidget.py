@@ -268,6 +268,9 @@ class AbstractScriptEditorWidget(QSplitter):
     def designTabWidget(self):
         return self._design_tab_widget
 
+    def pythonWidget(self):
+        return self.designTabWidget().pythonEditorWidget()
+
     def scriptWidget(self):
         return self._script_widget
 
@@ -1010,7 +1013,6 @@ class ScriptTreeWidget(QTreeWidget):
                     file_path=current_item.filepath(),
                     script_list=self,
                     size=size
-
                 )
 
             # add tab
@@ -1442,6 +1444,7 @@ class DesignTab(QTabWidget):
 
 """ ITEMS """
 class DataTypeDelegate(QItemDelegate):
+    """ Item delegate for the TreeWidget which holds all of the scripts/designs"""
     def __init__(self, parent=None):
         super(DataTypeDelegate, self).__init__(parent)
         self._delegate_widget = None
@@ -1481,10 +1484,9 @@ class DataTypeDelegate(QItemDelegate):
                     event_filter_widget = main_window._script_editor_event_filter_widget
                     event_filter_widget.setIsActive(False)
                 return self._delegate_widget
+
         elif index.column() == 1:
             return
-
-
         else:
             return QItemDelegate.createEditor(self, parent, option, index)
 

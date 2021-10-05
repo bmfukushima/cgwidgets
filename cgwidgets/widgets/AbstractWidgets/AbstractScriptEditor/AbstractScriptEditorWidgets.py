@@ -552,6 +552,7 @@ class HotkeyDesignEditorWidget(AbstractHotkeyDesignWidget):
         item_dict = script_editor_widget.scriptWidget().itemDict()
         self.item = item
         self.populate(file_dict, item_dict=item_dict, button_type="hotkey editor")
+        # self.setStyleSheet("background-color:rgba(255,0,0,255);")
 
     def setButtonSize(self):
         button_width, button_height = self.getButtonSize()
