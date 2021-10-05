@@ -72,14 +72,14 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
     PIP = 0
     TASKBAR = 1
 
-    def __init__(self, parent=None, orientation=Qt.Vertical, overlay_widget=None):
+    def __init__(self, parent=None, direction=attrs.NORTH, orientation=Qt.Horizontal, overlay_widget=None):
         super(AbstractPopupBarWidget, self).__init__(parent, orientation)
 
         self._is_frozen = False
         self._is_dragging = False
         self._is_enlarged = False
         self._enlarged_scale = 0.85
-        self._direction = attrs.NORTH
+        self._direction = direction
         self._display_mode = AbstractPopupBarWidget.TASKBAR
 
         self._enlarged_widget = None

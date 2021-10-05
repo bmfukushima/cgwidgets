@@ -340,7 +340,7 @@ class AbstractPiPOrganizerWidget(AbstractShojiModelViewWidget):
         return self._settings_widget
 
     """ WIDGETS """
-    def createNewWidgetFromConstructorCode(self, constructor_code):
+    def createNewWidgetFromConstructorCode(self, constructor_code, name="", resize_mini_viewer=True):
         """
         Retuns a QWidget from the constructor code provided.
 
@@ -348,11 +348,14 @@ class AbstractPiPOrganizerWidget(AbstractShojiModelViewWidget):
         Args:
             constructor_code (code):
 
-        Returns (QWidget):
+        Returns (QModelIndex):
         """
-        return self.pipDisplayWidget().createNewWidgetFromConstructorCode(constructor_code)
+        widget = self.pipDisplayWidget().createWidgetFromConstructorCode(constructor_code)
+        index = self.createNewWidget(widget, name, resize_mini_viewer)
+        index.internalPointer().setConstructorCode(constructor_code)
+        return index
 
-    def createNewWidget(self, constructor_code, name="", resize_mini_viewer=True):
+    def createNewWidget(self, widget, name="", resize_mini_viewer=True):
         """
         Args:
             constructor_code (str):
@@ -363,14 +366,15 @@ class AbstractPiPOrganizerWidget(AbstractShojiModelViewWidget):
 
         """
         # create mini viewer widget
-        mini_viewer_widget = self.pipDisplayWidget().createNewWidgetFromConstructorCode(constructor_code, name, resize_mini_viewer)
+        mini_viewer_widget = self.pipDisplayWidget().createNewWidget(widget, name, resize_mini_viewer)
+
 
         # create new index
         index = self.miniViewerOrganizerWidget().model().insertNewIndex(0, name=name)
 
         item = index.internalPointer()
         item.setWidget(mini_viewer_widget)
-        item.setConstructorCode(constructor_code)
+        #item.setConstructorCode(constructor_code)
 
         # mini_viewer_widget.setIndex(0)
         mini_viewer_widget.setItem(item)
@@ -425,7 +429,7 @@ widget = AbstractLabelWidget(self, text)
 widget.setWordWrap(True)
         """
 
-        index = self.createNewWidget(constructor_code, "")
+        index = self.createNewWidgetFromConstructorCode(constructor_code, "")
 
         # setup item
         item = index.internalPointer()
@@ -856,6 +860,20 @@ class AbstractPiPDisplayWidget(QWidget):
                 widget.headerWidget().hide()
 
     """ WIDGETS ( CREATION )"""
+    def createWidgetFromConstructorCode(self, constructor_code):
+        """ Creates a new widget from the code provided
+
+        Args:
+            constructor_code (code):
+
+        Returns (QWidget): created by code"""
+        loc = {}
+        loc['self'] = self
+
+        exec(compile(constructor_code, "constructor_code", "exec"), globals(), loc)
+        widget = loc['widget']
+        return widget
+
     def createNewWidgetFromConstructorCode(self, constructor_code, name="", resize_mini_viewer=True):
         """
         Retuns a QWidget from the constructor code provided.
@@ -864,14 +882,10 @@ class AbstractPiPDisplayWidget(QWidget):
         Args:
             constructor_code (code):
 
-        Returns (QWidget):
+        Returns (AbstractPopupBarItemWidget):
         """
-        loc = {}
-        loc['self'] = self
 
-        exec(compile(constructor_code, "constructor_code", "exec"), globals(), loc)
-        widget = loc['widget']
-
+        widget = self.createWidgetFromConstructorCode(constructor_code)
         mini_viewer_widget = self.createNewWidget(widget, name, resize_mini_viewer)
         return mini_viewer_widget
 
@@ -885,7 +899,7 @@ class AbstractPiPDisplayWidget(QWidget):
             name (str):
             resize_mini_viewer (bool): if the miniViewerWidget should be updated or not
 
-        Returns (QModelIndex):
+        Returns (AbstractPopupBarItemWidget):
 
         """
 
@@ -966,7 +980,7 @@ class AbstractPiPDisplayWidget(QWidget):
                 self.createNewWidgetFromConstructorCode(constructor_code, name=widget_name, resize_mini_viewer=False)
             else:
                 organizer_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
-                organizer_widget.createNewWidget(constructor_code, name=widget_name, resize_mini_viewer=False)
+                organizer_widget.createNewWidgetFromConstructorCode(constructor_code, name=widget_name, resize_mini_viewer=False)
 
         # update settings
         self.updateSettings(settings)
@@ -2421,7 +2435,7 @@ class PiPMiniViewerWidgetCreator(AbstractListInputWidget):
         main_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
 
         # get constructor
-        main_widget.createNewWidget(self.widgetTypes()[value], name=str(value))
+        main_widget.createNewWidgetFromConstructorCode(self.widgetTypes()[value], name=str(value))
 
         # reset widget
         self.setText('')
