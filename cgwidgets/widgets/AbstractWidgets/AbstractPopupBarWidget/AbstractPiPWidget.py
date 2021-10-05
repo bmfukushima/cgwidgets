@@ -363,7 +363,7 @@ class AbstractPiPOrganizerWidget(AbstractShojiModelViewWidget):
 
         """
         # create mini viewer widget
-        mini_viewer_widget = self.pipDisplayWidget().createNewWidget(constructor_code, name, resize_mini_viewer)
+        mini_viewer_widget = self.pipDisplayWidget().createNewWidgetFromConstructorCode(constructor_code, name, resize_mini_viewer)
 
         # create new index
         index = self.miniViewerOrganizerWidget().model().insertNewIndex(0, name=name)
@@ -856,7 +856,7 @@ class AbstractPiPDisplayWidget(QWidget):
                 widget.headerWidget().hide()
 
     """ WIDGETS ( CREATION )"""
-    def createNewWidgetFromConstructorCode(self, constructor_code):
+    def createNewWidgetFromConstructorCode(self, constructor_code, name="", resize_mini_viewer=True):
         """
         Retuns a QWidget from the constructor code provided.
 
@@ -872,9 +872,10 @@ class AbstractPiPDisplayWidget(QWidget):
         exec(compile(constructor_code, "constructor_code", "exec"), globals(), loc)
         widget = loc['widget']
 
-        return widget
+        mini_viewer_widget = self.createNewWidget(widget, name, resize_mini_viewer)
+        return mini_viewer_widget
 
-    def createNewWidget(self, constructor_code, name="", resize_mini_viewer=True):
+    def createNewWidget(self, widget, name="", resize_mini_viewer=True):
         """ Creates a new widget from the constructor code provided.
 
         This widget is inserted into the AbstractPopupBarWidget
@@ -889,7 +890,7 @@ class AbstractPiPDisplayWidget(QWidget):
         """
 
         # create widget from constructor code
-        widget = self.createNewWidgetFromConstructorCode(constructor_code)
+        # widget = self.createNewWidgetFromConstructorCode(constructor_code)
         # setup recursion for PiPWidgets
         if isinstance(widget, AbstractPiPOrganizerWidget) or isinstance(widget, AbstractPiPDisplayWidget):
             widget.setIsMiniViewerWidget(True)
@@ -962,7 +963,7 @@ class AbstractPiPDisplayWidget(QWidget):
         # load widgets
         for widget_name, constructor_code in reversed_widgets.items():
             if self.isStandalone():
-                self.createNewWidget(constructor_code, name=widget_name, resize_mini_viewer=False)
+                self.createNewWidgetFromConstructorCode(constructor_code, name=widget_name, resize_mini_viewer=False)
             else:
                 organizer_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
                 organizer_widget.createNewWidget(constructor_code, name=widget_name, resize_mini_viewer=False)
