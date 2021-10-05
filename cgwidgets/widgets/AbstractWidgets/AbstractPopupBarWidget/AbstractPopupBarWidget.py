@@ -40,6 +40,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
     This widget is an overlay of the MainWidget, and sits at a parallel hierarchy to the PiPMainViewer
 
     Attributes:
+        direction (attrs.DIRECTION): direction that the popup will be displayed on
         display_mode (AbstractPopupBarWidget.TYPE): Determines what type of widget this should be displayed as
             valid options are
                 PIP | TASKBAR
@@ -78,6 +79,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         self._is_dragging = False
         self._is_enlarged = False
         self._enlarged_scale = 0.85
+        self._direction = attrs.NORTH
         self._display_mode = AbstractPopupBarWidget.TASKBAR
 
         self._enlarged_widget = None
@@ -111,6 +113,16 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
 
         if not parent:
             return pip_display_widget
+
+    def direction(self):
+        return self._direction
+
+    def setDirection(self, direction):
+        self._direction = direction
+        if direction in [attrs.EAST, attrs.WEST]:
+            self.setOrientation(Qt.Vertical)
+        elif direction in [attrs.NORTH, attrs.SOUTH]:
+            self.setOrientation(Qt.Horizontal)
 
     def displayMode(self):
         return self._display_mode
@@ -456,49 +468,48 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         offset = int(min(pip_display_widget.width(), pip_display_widget.height()) * half_neg_space)
         num_widgets = self.count()
         if num_widgets == 1:
-            #yoffset = int(pip_display_widget.width() * negative_space)
             width = int(pip_display_widget.width() - offset)
             height = int(pip_display_widget.height() - offset)
 
             # NORTH WEST
-            if pip_display_widget.direction() == attrs.NORTH:
+            if self.direction() == attrs.SOUTH:
                 xpos = 0
                 ypos = 0
             # SOUTH EAST
-            if pip_display_widget.direction() == attrs.SOUTH:
+            if self.direction() == attrs.NORTH:
                 xpos = offset
                 ypos = offset
             # NORTH EAST
-            if pip_display_widget.direction() == attrs.EAST:
+            if self.direction() == attrs.WEST:
                 xpos = offset
                 ypos = 0
             # SOUTH WEST
-            if pip_display_widget.direction() == attrs.WEST:
+            if self.direction() == attrs.EAST:
                 xpos = 0
                 ypos = offset
 
         # if there are 2 or more mini viewer widgets
         if 1 < num_widgets:
             # get widget position / size
-            if pip_display_widget.direction() in [attrs.EAST, attrs.WEST]:
+            if self.direction() in [attrs.EAST, attrs.WEST]:
                 height = int(pip_display_widget.height() - (offset * 2))
                 ypos = int(offset)
                 width = int(pip_display_widget.width() - offset - self.width())
-                if pip_display_widget.direction() == attrs.EAST:
+                if self.direction() == attrs.WEST:
                     xpos = offset
-                if pip_display_widget.direction() == attrs.WEST:
+                if self.direction() == attrs.EAST:
                     xpos = self.width()
 
-            if pip_display_widget.direction() in [attrs.NORTH, attrs.SOUTH]:
+            if self.direction() in [attrs.NORTH, attrs.SOUTH]:
                 xpos = int(pip_display_widget.width() * half_neg_space)
                 width = int(pip_display_widget.width() * scale)
                 height = int(
                     pip_display_widget.height()
                     - self.height()
                     - offset)
-                if pip_display_widget.direction() == attrs.NORTH:
+                if self.direction() == attrs.SOUTH:
                     ypos = self.height()
-                if pip_display_widget.direction() == attrs.SOUTH:
+                if self.direction() == attrs.NORTH:
                     ypos = offset
 
         return xpos, ypos, width, height
