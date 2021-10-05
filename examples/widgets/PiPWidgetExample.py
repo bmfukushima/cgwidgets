@@ -2,7 +2,7 @@
 import sys
 import os
 
-os.environ['QT_API'] = 'pyside2'
+# os.environ['QT_API'] = 'pyside2'
 from qtpy import API_NAME
 print(API_NAME)
 #import PySide2
@@ -79,7 +79,7 @@ pip_organizer_widget.resize(512, 512)
 pip_display_widget = PiPDisplayWidget()
 pip_display_widget.loadPiPWidgetFromFile(
     getDefaultSavePath() + '/.PiPWidgets_02.json',
-    "recursion"
+    "single"
 )
 
 pip_organizer_widget.setPiPScale(.55)

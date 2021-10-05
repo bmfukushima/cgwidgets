@@ -15,7 +15,8 @@ from .AbstractWidgets.AbstractWarningWidget import AbstractWarningWidget
 from .AbstractWidgets.AbstractLabelledInputWidget import AbstractLabelledInputWidget
 from .AbstractWidgets.AbstractOverlayInputWidget import AbstractOverlayInputWidget
 from .AbstractWidgets.AbstractShojiWidget import *
-from .AbstractWidgets.AbstractPiPWidget import AbstractPiPOrganizerWidget, AbstractPiPDisplayWidget
+from .AbstractWidgets.AbstractPopupBarWidget import *
+# from .AbstractWidgets.AbstractPiPWidget import AbstractPiPOrganizerWidget, AbstractPiPDisplayWidget
 
 """ MODEL VIEW WIDGET"""
 from .ModelViewWidget import ModelViewWidget as ModelViewWidget

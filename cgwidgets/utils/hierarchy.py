@@ -3,7 +3,8 @@ def isWidgetDescendantOf(widget, parent, ancestor):
     Determines if a widget is a descendant of another widget
     Args:
         widget (QWidget): widget to start searching from
-        parent (QWidget): widget to check if it is an ancestor of
+        parent (QWidget): parent of the widget... need this to avoid garbage cleanup
+        ancestor (QWidget): widget to see if it is an ancestor of
 
     Returns:
 
