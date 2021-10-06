@@ -10,14 +10,14 @@ Hierarchy:
         |- AbstractPiPDisplayWidget --> (QWidget)
         |    |- QVBoxLayout
         |    |    |- PiPMainViewer --> (QWidget)
-        |    |    |- PiPMiniViewerWidgetCreator --> (AbstractListInputWidget)
+        |    |    |- PiPPopupBarWidgetCreator --> (AbstractListInputWidget)
         |    |- spacer_widget (QLabel)
-        |    |- MiniViewer (QWidget)
+        |    |- PopupBar (QWidget)
         |        |- QBoxLayout
         |            |-* AbstractPopupBarItemWidget --> QWidget
         |                    |- QVBoxLayout
         |                    |- AbstractLabelledInputWidget
-        |- miniViewerOrganizerWidget --> AbstractModelViewWidget
+        |- popupBarOrganizerWidget --> AbstractModelViewWidget
         |- CreatorWidget (Extended...)
         |- GlobalOrganizerWidget --> AbstractModelViewWidget
         |- SettingsWidget --> FrameInputWidgetContainer
@@ -60,7 +60,7 @@ Signals:
 
     Swap (Key Press):
         Upon user key press on widget, that widget becomes the main widget.
-        If the key is pressed over a MiniViewerWidget, it will become the main widget.
+        If the key is pressed over a PopupBarWidget, it will become the main widget.
         If it is pressed over the MainWidget, it will swap it with the previous widget
 
         Default is "Space"
@@ -94,7 +94,7 @@ Signals:
             tempWidgets()
             removeTempWidget()
 
-    miniViewerCreatorWidget:
+    popupBarCreatorWidget:
         show (c):
             keyPressEvent --> toggleCreatorVisibility --> show
         hide (esc)
@@ -115,16 +115,16 @@ Signals:
     * Clean up mini viewer resize
         PiPGlobalOrganizerWidget --> loadPiPWidgetFromSelection ( This runs twice for some reason)
         PiPSaveWidget --> loadPiPWidgetFromItem
-        AbstractPiPOrganizerWidget --> createNewWidget --> resizeMiniViewer
+        AbstractPiPOrganizerWidget --> createNewWidget --> resizePopupBar
     * Display Name (bug)
         When display names is active, when leaving the mini viewer, the widgets
         will "wobble" for a few seconds.  This is only when display names is active...
         
         Potentially a resize in the actual labelled widget?
     * Display Name
-        Remove ability to adjust display name in MiniViewerWidgets
+        Remove ability to adjust display name in PopupBarWidgets
             .headerWidget().setName(new_value) ?
-            MiniViewerWidget --> headerWidget()
+            PopupBarWidget --> headerWidget()
         For now this is just force disabled, I think
 """
 import json
@@ -213,7 +213,7 @@ class AbstractPiPOrganizerWidget(AbstractShojiModelViewWidget):
         self._pip_display_widget = AbstractPiPDisplayWidget(self)
         self._pip_display_widget.setIsStandalone(False)
         # setup local organizer widget
-        self._local_organizer_widget = PiPMiniViewerOrganizerWidget(self, widget_types)
+        self._local_organizer_widget = PiPPopupBarOrganizerWidget(self, widget_types)
         self._is_local_organizer_visible = False
 
         # setup global organizer widget
@@ -245,7 +245,7 @@ class AbstractPiPOrganizerWidget(AbstractShojiModelViewWidget):
 
     """ UTILS """
     def widgets(self):
-        return self.miniViewerOrganizerWidget().widgets()
+        return self.popupBarOrganizerWidget().widgets()
 
     def items(self):
         """
@@ -254,7 +254,7 @@ class AbstractPiPOrganizerWidget(AbstractShojiModelViewWidget):
         Returns (list)
         """
 
-        model = self.miniViewerOrganizerWidget().model()
+        model = self.popupBarOrganizerWidget().model()
         root_item = model.getRootItem()
         return root_item.children()
 
@@ -321,26 +321,26 @@ class AbstractPiPOrganizerWidget(AbstractShojiModelViewWidget):
     def pipDisplayWidget(self):
         return self._pip_display_widget
 
-    def miniViewerWidget(self):
-        return self.pipDisplayWidget().miniViewerWidget()
+    def popupBarWidget(self):
+        return self.pipDisplayWidget().popupBarWidget()
 
     def mainViewerWidget(self):
         return self.pipDisplayWidget().mainViewerWidget()
 
-    def miniViewerOrganizerWidget(self):
+    def popupBarOrganizerWidget(self):
         return self._local_organizer_widget
 
     def globalOrganizerWidget(self):
         return self._global_organizer_widget
 
-    def miniViewerCreatorWidget(self):
+    def popupBarCreatorWidget(self):
         return self.pipDisplayWidget()._panel_creator_widget
 
     def settingsWidget(self):
         return self._settings_widget
 
     """ WIDGETS """
-    def createNewWidgetFromConstructorCode(self, constructor_code, name="", resize_mini_viewer=True):
+    def createNewWidgetFromConstructorCode(self, constructor_code, name="", resize_popup_bar=True):
         """
         Retuns a QWidget from the constructor code provided.
 
@@ -351,36 +351,36 @@ class AbstractPiPOrganizerWidget(AbstractShojiModelViewWidget):
         Returns (QModelIndex):
         """
         widget = self.pipDisplayWidget().createWidgetFromConstructorCode(constructor_code)
-        index = self.createNewWidget(widget, name, resize_mini_viewer)
+        index = self.createNewWidget(widget, name, resize_popup_bar)
         index.internalPointer().setConstructorCode(constructor_code)
         return index
 
-    def createNewWidget(self, widget, name="", resize_mini_viewer=True):
+    def createNewWidget(self, widget, name="", resize_popup_bar=True):
         """
         Args:
             constructor_code (str):
             name (str):
-            resize_mini_viewer (bool): if the miniViewerWidget should be updated or not
+            resize_popup_bar (bool): if the popupBarWidget should be updated or not
 
         Returns (QModelIndex):
 
         """
         # create mini viewer widget
-        mini_viewer_widget = self.pipDisplayWidget().createNewWidget(widget, name, resize_mini_viewer)
+        popup_bar_widget = self.pipDisplayWidget().createNewWidget(widget, name, resize_popup_bar)
 
 
         # create new index
-        index = self.miniViewerOrganizerWidget().model().insertNewIndex(0, name=name)
+        index = self.popupBarOrganizerWidget().model().insertNewIndex(0, name=name)
 
         item = index.internalPointer()
-        item.setWidget(mini_viewer_widget)
+        item.setWidget(popup_bar_widget)
         #item.setConstructorCode(constructor_code)
 
-        # mini_viewer_widget.setIndex(0)
-        mini_viewer_widget.setItem(item)
+        # popup_bar_widget.setIndex(0)
+        popup_bar_widget.setItem(item)
 
         # update indexes
-        self.miniViewerWidget().updateWidgetIndexes()
+        self.popupBarWidget().updateWidgetIndexes()
         # self.updateWidgetIndexes()
 
         # # destroy temp widgets
@@ -396,7 +396,7 @@ class AbstractPiPOrganizerWidget(AbstractShojiModelViewWidget):
 
         This will need to be done every time a new widget is added
         """
-        for index in self.miniViewerOrganizerWidget().model().getAllIndexes():
+        for index in self.popupBarOrganizerWidget().model().getAllIndexes():
             item = index.internalPointer()
             if hasattr(item, "_widget"):
                 item.widget().setIndex(index.row())
@@ -404,7 +404,7 @@ class AbstractPiPOrganizerWidget(AbstractShojiModelViewWidget):
     def removeAllWidgets(self):
         """ Clears all of the widgets from the current AbstractPiPOrganizerWidget"""
         self.pipDisplayWidget().removeAllWidgets()
-        self.miniViewerOrganizerWidget().model().clearModel()
+        self.popupBarOrganizerWidget().model().clearModel()
 
     """ WIDGETS (TEMP)"""
     def createTempWidget(self):
@@ -445,21 +445,21 @@ widget.setWordWrap(True)
         """
         Removes the first temp widget from the tempWidgets list
         """
-        model = self.miniViewerOrganizerWidget().model()
+        model = self.popupBarOrganizerWidget().model()
         indexes = model.findItems("", match_type=Qt.MatchExactly)
         if 0 < len(indexes):
             model.deleteItem(indexes[0].internalPointer(), event_update=True)
 
     """ PROPERTIES """
-    def isMiniViewerWidget(self):
-        return self.pipDisplayWidget().isMiniViewerWidget()
+    def isPopupBarWidget(self):
+        return self.pipDisplayWidget().isPopupBarWidget()
 
-    def setIsMiniViewerWidget(self, is_mini_viewer_widget):
-        self.pipDisplayWidget().setIsMiniViewerWidget(is_mini_viewer_widget)
+    def setIsPopupBarWidget(self, is_popup_bar_widget):
+        self.pipDisplayWidget().setIsPopupBarWidget(is_popup_bar_widget)
 
     """ VIRTUAL PROPERTIES """
     def setSavePath(self, file_paths):
-        self.miniViewerOrganizerWidget().saveWidget().setPiPSaveData(file_paths)
+        self.popupBarOrganizerWidget().saveWidget().setPiPSaveData(file_paths)
 
     def direction(self):
         return self.pipDisplayWidget().direction()
@@ -519,13 +519,13 @@ widget.setWordWrap(True)
         Note: This is currently hard coded to "Q"
         """
 
-        # if self.miniViewerWidget()._is_frozen:
-        # if self.miniViewerWidget().isEnlarged():
+        # if self.popupBarWidget()._is_frozen:
+        # if self.popupBarWidget().isEnlarged():
         # close enlarged view
         # obj = getWidgetUnderCursor(QCursor.pos())
         # widget = getWidgetAncestor(obj, AbstractPopupBarItemWidget)
-        # self.miniViewerWidget().closeEnlargedView(widget)
-        self.miniViewerWidget().closeEnlargedView()
+        # self.popupBarWidget().closeEnlargedView(widget)
+        self.popupBarWidget().closeEnlargedView()
 
         # toggle visibility
         self._is_local_organizer_visible = not self.isLocalOrganizerVisible()
@@ -544,12 +544,12 @@ widget.setWordWrap(True)
         Note: This is currently hard coded to "Q"
         """
 
-        # if self.miniViewerWidget()._is_frozen:
-        # if self.miniViewerWidget().isEnlarged():
+        # if self.popupBarWidget()._is_frozen:
+        # if self.popupBarWidget().isEnlarged():
         # obj = getWidgetUnderCursor(QCursor.pos())
         # widget = getWidgetAncestor(obj, AbstractPopupBarItemWidget)
-        # self.miniViewerWidget().closeEnlargedView(widget)
-        self.miniViewerWidget().closeEnlargedView()
+        # self.popupBarWidget().closeEnlargedView(widget)
+        self.popupBarWidget().closeEnlargedView()
 
         # toggle visibility
         self._is_global_organizer_visible = not self.isGlobalOrganizerVisible()
@@ -568,11 +568,11 @@ widget.setWordWrap(True)
         Note: This is currently hard coded to "Q"
         """
 
-        # if self.miniViewerWidget().isEnlarged():
+        # if self.popupBarWidget().isEnlarged():
         #     obj = getWidgetUnderCursor(QCursor.pos())
         #     widget = getWidgetAncestor(obj, AbstractPopupBarItemWidget)
-        #     self.miniViewerWidget().closeEnlargedView(widget)
-        self.miniViewerWidget().closeEnlargedView()
+        #     self.popupBarWidget().closeEnlargedView(widget)
+        self.popupBarWidget().closeEnlargedView()
 
         # toggle visibility
         self._is_settings_visible = not self.isSettingsVisible()
@@ -602,13 +602,16 @@ class AbstractPiPDisplayWidget(QWidget):
     Attributes:
         current_widget (QWidget): the widget that is currently set as the main display
         direction (attrs.DIRECTION): what side the mini viewer will be displayed on.
-        hotkey_swap_key (list): of Qt.Key that will swap to the corresponding widget in the miniViewerWidget().
+        hotkey_swap_key (list): of Qt.Key that will swap to the corresponding widget in the popupBarWidget().
 
             The index of the Key in the list, is the index of the widget that will be swapped to.
-        is_mini_viewer_widget (bool): determines if this is a child of a MiniViewerWidget.
-        is_mini_viewer_shown (bool): if the mini viewer is currently visible.
+        is_popup_bar_widget (bool): determines if this is a child of a PopupBarWidget.
+        is_popup_bar_shown (bool): if the mini viewer is currently visible.
             This is normally toggled with the "Q" key
-        is_standalone (bool): determines if this is a child of the PiPAbstractOrganizer.
+        is_standalone (bool): determines if this is a child of the PiPAbstractOrganizer or if it
+            is an individual PiPDisplay.  This is necessary as the PiPAbstractOrganizer and the PiPDisplay
+            have slightly different constructors.
+
             If True, this means that this display is a standalone..
         pip_scale ((float, float)):  fractional percentage of the amount of space that
             the mini viewer will take up in relation to the overall size of the widget.
@@ -616,7 +619,7 @@ class AbstractPiPDisplayWidget(QWidget):
         widgets (list): of widgets
     """
 
-    def __init__(self, parent=None, is_mini_viewer_widget=False):
+    def __init__(self, parent=None, is_popup_bar_widget=False):
         super(AbstractPiPDisplayWidget, self).__init__(parent)
 
         # setup attrs
@@ -626,10 +629,10 @@ class AbstractPiPDisplayWidget(QWidget):
         self._previous_widget = None
         self._pip_scale = (0.35, 0.35)
 
-        self._mini_viewer_min_size = (100, 100)
+        self._popup_bar_min_size = (100, 100)
         self._is_dragging = True
-        self._is_mini_viewer_shown = True
-        self._is_mini_viewer_widget = is_mini_viewer_widget
+        self._is_popup_bar_shown = True
+        self._is_popup_bar_widget = is_popup_bar_widget
         self._is_standalone = True
 
         self._swap_key = Qt.Key_Space
@@ -637,8 +640,8 @@ class AbstractPiPDisplayWidget(QWidget):
 
         # create widgets
         self._main_viewer_widget = PiPMainViewer(self)
-        self._mini_viewer_widget = AbstractPopupBarWidget(self)
-        self._mini_viewer_widget.setDisplayMode(AbstractPopupBarWidget.PIP)
+        self._popup_bar_widget = AbstractPopupBarWidget(self)
+        self._popup_bar_widget.setDisplayMode(AbstractPopupBarWidget.PIP)
 
         # create layout
         """Not using a stacked layout as the enter/leave events get borked"""
@@ -652,15 +655,15 @@ class AbstractPiPDisplayWidget(QWidget):
         self._is_frozen = False
 
     """ UTILS (SWAP) """
-    def swapMainViewer(self, mini_viewer_widget):
+    def swapMainViewer(self, popup_bar_widget):
         """ Swaps the PiPMainViewerWidget from the AbstractPopupBarItemWidget provided
 
         Note: The AbstractPopupBarItemWidget MUST be a AbstractPiPDisplayWidget
 
         Args:
-            mini_viewer_widget (AbstractPopupBarItemWidget):
+            popup_bar_widget (AbstractPopupBarItemWidget):
         """
-        new_display_widget = mini_viewer_widget.delegateWidget()
+        new_display_widget = popup_bar_widget.delegateWidget()
 
         # swap current widgets
         self.mainViewerWidget().setWidget(new_display_widget.currentWidget())
@@ -673,15 +676,15 @@ class AbstractPiPDisplayWidget(QWidget):
         self._current_widget = new_display_widget.currentWidget()
         new_display_widget._current_widget = _temp
 
-    def swapMiniViewer(self, mini_viewer_widget):
+    def swapPopupBar(self, popup_bar_widget):
         """ Swaps the AbstractPopupBarWidget from the AbstractPopupBarItemWidget provided.
 
         Note: The AbstractPopupBarItemWidget MUST be a AbstractPiPDisplayWidget
 
         Args:
-            mini_viewer_widget (AbstractPopupBarItemWidget):
+            popup_bar_widget (AbstractPopupBarItemWidget):
         """
-        new_display_widget = mini_viewer_widget.delegateWidget()
+        new_display_widget = popup_bar_widget.delegateWidget()
 
         # preflight
         if not isinstance(new_display_widget, AbstractPiPDisplayWidget): return
@@ -690,31 +693,31 @@ class AbstractPiPDisplayWidget(QWidget):
         _temp_num_widgets = new_display_widget.numWidgets()
 
         # set main mini viewer
-        for mini_widget in reversed(new_display_widget.miniViewerWidget().widgets()):
-            new_display_widget.miniViewerWidget().removeWidget(mini_widget)
-            # new_display_widget.miniViewerWidget().removeWidget(mini_widget)
-            self.miniViewerWidget().insertWidget(0, mini_widget)
+        for mini_widget in reversed(new_display_widget.popupBarWidget().widgets()):
+            new_display_widget.popupBarWidget().removeWidget(mini_widget)
+            # new_display_widget.popupBarWidget().removeWidget(mini_widget)
+            self.popupBarWidget().insertWidget(0, mini_widget)
 
         # set docked mini viewer
         for i in reversed(range(_temp_num_widgets, self.numWidgets())):
-            if i != mini_viewer_widget.index() + _temp_num_widgets:
-                mini_widget = self.miniViewerWidget().widget(i)
-                self.miniViewerWidget().removeWidget(mini_widget)
-                new_display_widget.miniViewerWidget().insertWidget(0, mini_widget)
+            if i != popup_bar_widget.index() + _temp_num_widgets:
+                mini_widget = self.popupBarWidget().widget(i)
+                self.popupBarWidget().removeWidget(mini_widget)
+                new_display_widget.popupBarWidget().insertWidget(0, mini_widget)
 
         # reset mini viewer widget indexes
-        self.miniViewerWidget().updateWidgetIndexes()
-        new_display_widget.miniViewerWidget().updateWidgetIndexes()
+        self.popupBarWidget().updateWidgetIndexes()
+        new_display_widget.popupBarWidget().updateWidgetIndexes()
 
-    def swapSettings(self, mini_viewer_widget):
+    def swapSettings(self, popup_bar_widget):
         """ Swaps the settings from the AbstractPopupBarItemWidget provided.
 
         Note: The AbstractPopupBarItemWidget MUST be a AbstractPiPDisplayWidget
 
         Args:
-            mini_viewer_widget (AbstractPopupBarItemWidget):
+            popup_bar_widget (AbstractPopupBarItemWidget):
         """
-        new_display_widget = mini_viewer_widget.delegateWidget()
+        new_display_widget = popup_bar_widget.delegateWidget()
         _old_settings = self.settings()
         _new_settings = new_display_widget.settings()
         self.updateSettings(_new_settings)
@@ -736,13 +739,13 @@ class AbstractPiPDisplayWidget(QWidget):
             "Enlarged Scale": self.enlargedScale(),
             "Display Titles": self.isDisplayNamesShown(),
             "Direction": self.direction(),
-            "sizes": self.miniViewerWidget().sizes()
+            "sizes": self.popupBarWidget().sizes()
         }
 
     def updateSettings(self, settings):
         """ Updates all of the settings from the settings provided.
 
-        Note that you may need to call "resizeMiniViewer" afterwards in order
+        Note that you may need to call "resizePopupBar" afterwards in order
         to trigger a display update.
 
         Args:
@@ -753,7 +756,7 @@ class AbstractPiPDisplayWidget(QWidget):
         self.setIsDisplayNamesShown(settings["Display Titles"])
         self.setDirection(settings["Direction"])
         if "sizes" in list(settings.keys()):
-            self.miniViewerWidget().setSizes(settings["sizes"])
+            self.popupBarWidget().setSizes(settings["sizes"])
 
     """ PROPERTIES """
     def pipScale(self):
@@ -776,13 +779,13 @@ class AbstractPiPDisplayWidget(QWidget):
             pip_scale = (float(pip_scale[0]), float(pip_scale[1]))
 
         self._pip_scale = pip_scale
-        self.resizeMiniViewer()
+        self.resizePopupBar()
 
     def enlargedScale(self):
-        return self.miniViewerWidget().enlargedScale()
+        return self.popupBarWidget().enlargedScale()
 
     def setEnlargedScale(self, _enlarged_scale):
-        self.miniViewerWidget().setEnlargedScale(_enlarged_scale)
+        self.popupBarWidget().setEnlargedScale(_enlarged_scale)
 
     def hotkeySwapKeys(self):
         return self._hotkey_swap_keys
@@ -802,21 +805,21 @@ class AbstractPiPDisplayWidget(QWidget):
     def setIsFrozen(self, is_frozen):
         self._is_frozen = is_frozen
 
-    def isMiniViewerShown(self):
-        return self._is_mini_viewer_shown
+    def isPopupBarShown(self):
+        return self._is_popup_bar_shown
 
-    def setIsMiniViewerShown(self, enabled):
-        self._is_mini_viewer_shown = enabled
+    def setIsPopupBarShown(self, enabled):
+        self._is_popup_bar_shown = enabled
         if enabled:
-            self.miniViewerWidget().show()
+            self.popupBarWidget().show()
         else:
-            self.miniViewerWidget().hide()
+            self.popupBarWidget().hide()
 
-    def isMiniViewerWidget(self):
-        return self._is_mini_viewer_widget
+    def isPopupBarWidget(self):
+        return self._is_popup_bar_widget
 
-    def setIsMiniViewerWidget(self, is_mini_viewer_widget):
-        self._is_mini_viewer_widget = is_mini_viewer_widget
+    def setIsPopupBarWidget(self, is_popup_bar_widget):
+        self._is_popup_bar_widget = is_popup_bar_widget
 
     def isStandalone(self):
         return self._is_standalone
@@ -824,10 +827,10 @@ class AbstractPiPDisplayWidget(QWidget):
     def setIsStandalone(self, is_standalone):
         self._is_standalone = is_standalone
 
-    def miniViewerMinSize(self):
-        return self._mini_viewer_min_size
+    def popupBarMinSize(self):
+        return self._popup_bar_min_size
 
-    def setMiniViewerMinimumSize(self, size):
+    def setPopupBarMinimumSize(self, size):
         """
         Sets the minimum size the mini viewer can go to
 
@@ -835,8 +838,8 @@ class AbstractPiPDisplayWidget(QWidget):
             size (tuple): (x, y)
 
         """
-        self._mini_viewer_min_size = size
-        self.miniViewerWidget().setMinimumSize(size)
+        self._popup_bar_min_size = size
+        self.popupBarWidget().setMinimumSize(size)
 
     def swapKey(self):
         return self._swap_key
@@ -846,13 +849,13 @@ class AbstractPiPDisplayWidget(QWidget):
 
     def numWidgets(self):
         """ Number of widgets currently in this PiPDisplay"""
-        return self.miniViewerWidget().count()
+        return self.popupBarWidget().count()
 
     def isDisplayNamesShown(self):
-        return self._are_widget_names_shown
+        return self.popupBarWidget().isDisplayNamesShown()
 
     def setIsDisplayNamesShown(self, enabled):
-        self._are_widget_names_shown = enabled
+        self.popupBarWidget().setIsDisplayNamesShown(enabled)
         for widget in self.widgets():
             if enabled:
                 widget.headerWidget().show()
@@ -874,7 +877,7 @@ class AbstractPiPDisplayWidget(QWidget):
         widget = loc['widget']
         return widget
 
-    def createNewWidgetFromConstructorCode(self, constructor_code, name="", resize_mini_viewer=True):
+    def createNewWidgetFromConstructorCode(self, constructor_code, name="", resize_popup_bar=True):
         """
         Retuns a QWidget from the constructor code provided.
 
@@ -886,10 +889,10 @@ class AbstractPiPDisplayWidget(QWidget):
         """
 
         widget = self.createWidgetFromConstructorCode(constructor_code)
-        mini_viewer_widget = self.createNewWidget(widget, name, resize_mini_viewer)
-        return mini_viewer_widget
+        popup_bar_widget = self.createNewWidget(widget, name, resize_popup_bar)
+        return popup_bar_widget
 
-    def createNewWidget(self, widget, name="", resize_mini_viewer=True):
+    def createNewWidget(self, widget, name="", resize_popup_bar=True):
         """ Creates a new widget from the constructor code provided.
 
         This widget is inserted into the AbstractPopupBarWidget
@@ -897,7 +900,7 @@ class AbstractPiPDisplayWidget(QWidget):
         Args:
             constructor_code (str):
             name (str):
-            resize_mini_viewer (bool): if the miniViewerWidget should be updated or not
+            resize_popup_bar (bool): if the popupBarWidget should be updated or not
 
         Returns (AbstractPopupBarItemWidget):
 
@@ -907,33 +910,33 @@ class AbstractPiPDisplayWidget(QWidget):
         # widget = self.createNewWidgetFromConstructorCode(constructor_code)
         # setup recursion for PiPWidgets
         if isinstance(widget, AbstractPiPOrganizerWidget) or isinstance(widget, AbstractPiPDisplayWidget):
-            widget.setIsMiniViewerWidget(True)
+            widget.setIsPopupBarWidget(True)
 
-        """ Note: This can't install in the MiniViewer then remove.  It will still register
+        """ Note: This can't install in the PopupBar then remove.  It will still register
         in the count, even if you process the events."""
         # create main widget
         if self.currentWidget():
-            mini_viewer_widget = self.miniViewerWidget().createNewWidget(widget, name=name)
+            popup_bar_widget = self.popupBarWidget().createNewWidget(widget, name=name)
 
         # create mini viewer widgets
         else:
-            mini_viewer_widget = AbstractPopupBarItemWidget(self.mainViewerWidget(), direction=Qt.Vertical, delegate_widget=widget, name=name)
-            self.setCurrentWidget(mini_viewer_widget)
+            popup_bar_widget = AbstractPopupBarItemWidget(self.mainViewerWidget(), direction=Qt.Vertical, delegate_widget=widget, name=name)
+            self.setCurrentWidget(popup_bar_widget)
 
         # TODO This is probably causing some slowness on loading
         # as it is resizing the mini viewer EVERY time a widget is created
-        if resize_mini_viewer:
-            self.resizeMiniViewer()
+        if resize_popup_bar:
+            self.resizePopupBar()
 
         # update indexes
-        self.miniViewerWidget().updateWidgetIndexes()
+        self.popupBarWidget().updateWidgetIndexes()
 
-        return mini_viewer_widget
+        return popup_bar_widget
 
     def removeAllWidgets(self):
         if self.mainViewerWidget().widget():
             self.mainViewerWidget().widget().setParent(None)
-        self.miniViewerWidget().removeAllWidgets()
+        self.popupBarWidget().removeAllWidgets()
 
     def loadPiPWidgetFromFile(self, filepath, pip_name):
         """ Loads the PiPWidget from the file/name provided
@@ -977,10 +980,10 @@ class AbstractPiPDisplayWidget(QWidget):
         # load widgets
         for widget_name, constructor_code in reversed_widgets.items():
             if self.isStandalone():
-                self.createNewWidgetFromConstructorCode(constructor_code, name=widget_name, resize_mini_viewer=False)
+                self.createNewWidgetFromConstructorCode(constructor_code, name=widget_name, resize_popup_bar=False)
             else:
                 organizer_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
-                organizer_widget.createNewWidgetFromConstructorCode(constructor_code, name=widget_name, resize_mini_viewer=False)
+                organizer_widget.createNewWidgetFromConstructorCode(constructor_code, name=widget_name, resize_popup_bar=False)
 
         # update settings
         self.updateSettings(settings)
@@ -989,9 +992,9 @@ class AbstractPiPDisplayWidget(QWidget):
         self.setIsFrozen(False)
 
         # resize
-        self.resizeMiniViewer()
+        self.resizePopupBar()
         if "sizes" in list(settings.keys()):
-            self.miniViewerWidget().setSizes(settings["sizes"])
+            self.popupBarWidget().setSizes(settings["sizes"])
 
     """ WIDGETS """
     def mainViewerWidget(self):
@@ -1000,11 +1003,11 @@ class AbstractPiPDisplayWidget(QWidget):
     def setMainViewerWidget(self, widget):
         self._main_viewer_widget = widget
 
-    def miniViewerWidget(self):
-        return self._mini_viewer_widget
+    def popupBarWidget(self):
+        return self._popup_bar_widget
 
-    def setMiniViewerWidget(self, widget):
-        self._mini_viewer_widget = widget
+    def setPopupBarWidget(self, widget):
+        self._popup_bar_widget = widget
 
     def currentWidget(self):
         return self._current_widget
@@ -1014,7 +1017,7 @@ class AbstractPiPDisplayWidget(QWidget):
         Sets the current full screen widget
 
         Args:
-            widget (QMiniViewerWidget): widget to be set as full screen
+            widget (QPopupBarWidget): widget to be set as full screen
         """
         # todo multi recursive swapping cleanup
         if widget.isPiPWidget():
@@ -1033,35 +1036,35 @@ class AbstractPiPDisplayWidget(QWidget):
                 """
                 # get sizes info
                 new_display_widget = widget.delegateWidget()
-                old_sizes = self.miniViewerWidget().sizes()
-                new_sizes = new_display_widget.miniViewerWidget().sizes()
+                old_sizes = self.popupBarWidget().sizes()
+                new_sizes = new_display_widget.popupBarWidget().sizes()
                 del old_sizes[widget.index()]
                 new_sizes.append(50)
 
                 self.swapMainViewer(widget)
 
-                self.swapMiniViewer(widget)
+                self.swapPopupBar(widget)
 
                 self.swapSettings(widget)
 
                 # resize mini viewers
-                self.miniViewerWidget().setSizes(new_sizes)
-                new_display_widget.miniViewerWidget().setSizes(old_sizes)
-                self.resizeMiniViewer()
+                self.popupBarWidget().setSizes(new_sizes)
+                new_display_widget.popupBarWidget().setSizes(old_sizes)
+                self.resizePopupBar()
             return
 
-        self.miniViewerWidget().setIsFrozen(True)
-        sizes = self.miniViewerWidget().sizes()
+        self.popupBarWidget().setIsFrozen(True)
+        sizes = self.popupBarWidget().sizes()
         # reset current widget
         if self._current_widget:
             # Close enlarged widget
             """ Need to ensure the spacer is swapped out"""
-            if self.miniViewerWidget().isEnlarged():
-                self.miniViewerWidget()._resetSpacerWidget()
-                self.miniViewerWidget().setIsEnlarged(False)
+            if self.popupBarWidget().isEnlarged():
+                self.popupBarWidget()._resetSpacerWidget()
+                self.popupBarWidget().setIsEnlarged(False)
 
             # setup mini viewer widget
-            self.miniViewerWidget().insertWidget(widget.index(), self._current_widget)
+            self.popupBarWidget().insertWidget(widget.index(), self._current_widget)
             self._current_widget.setIndex(widget.index())
             # self._current_widget.removeEventFilter(self)
 
@@ -1072,14 +1075,14 @@ class AbstractPiPDisplayWidget(QWidget):
         # set widget as current
         self._current_widget = widget
 
-        #self.miniViewerWidget().removeWidget(widget)
-        #widget.removeEventFilter(self.miniViewerWidget())
+        #self.popupBarWidget().removeWidget(widget)
+        #widget.removeEventFilter(self.popupBarWidget())
         self.mainViewerWidget().setWidget(widget)
-        self._current_widget.installEventFilter(self.miniViewerWidget())
+        self._current_widget.installEventFilter(self.popupBarWidget())
 
         # update mini viewer widget
-        self.miniViewerWidget().setSizes(sizes)
-        self.miniViewerWidget().setIsFrozen(False)
+        self.popupBarWidget().setSizes(sizes)
+        self.popupBarWidget().setIsFrozen(False)
 
     def clearCurrentWidget(self):
         self._current_widget = None
@@ -1094,23 +1097,23 @@ class AbstractPiPDisplayWidget(QWidget):
         self._previous_widget = None
 
     def widgets(self):
-        """ Returns a list of all child widgtes
+        """ Returns a list of all child widgets
 
         This list will include the currently viewed main widget, aswell
-        as all of the widgets in the miniViewerWidget()"""
+        as all of the widgets in the popupBarWidget()"""
         widgets = []
         if self.mainViewerWidget().widget():
             widgets.append(self.mainViewerWidget().widget())
-        widgets += self.miniViewerWidget().widgets()
+        widgets += self.popupBarWidget().widgets()
 
         return widgets
 
     """ DIRECTION """
     def direction(self):
-        return self.miniViewerWidget().direction()
+        return self.popupBarWidget().direction()
 
     def setDirection(self, direction):
-        self.miniViewerWidget().setDirection(direction)
+        self.popupBarWidget().setDirection(direction)
 
     """ EVENTS """
     # def eventFilter(self, obj, event):
@@ -1128,15 +1131,15 @@ class AbstractPiPDisplayWidget(QWidget):
             # select user input
             for i, swap_key in enumerate(self.hotkeySwapKeys()):
                 if swap_key == key:
-                    widget = self.miniViewerWidget().widget(i)
+                    widget = self.popupBarWidget().widget(i)
 
             # swap with enlarged widget
-            if self.miniViewerWidget().isEnlarged():
+            if self.popupBarWidget().isEnlarged():
                 # Todo for some reason the PRINT makes it so that the IF clause below actually works... tf
-                # print(widget.name(), self.miniViewerWidget().enlargedWidget().name())
-                if widget != self.miniViewerWidget().enlargedWidget():
-                    self.miniViewerWidget().closeEnlargedView()
-                    self.miniViewerWidget().enlargeWidget(widget)
+                # print(widget.name(), self.popupBarWidget().enlargedWidget().name())
+                if widget != self.popupBarWidget().enlargedWidget():
+                    self.popupBarWidget().closeEnlargedView()
+                    self.popupBarWidget().enlargeWidget(widget)
 
             # swap with main widget
             else:
@@ -1159,41 +1162,41 @@ class AbstractPiPDisplayWidget(QWidget):
 
         # hide PiP
         if event.key() == Qt.Key_Q:
-            if not self.miniViewerWidget().isEnlarged():
-                self.setIsMiniViewerShown(not self.isMiniViewerShown())
+            if not self.popupBarWidget().isEnlarged():
+                self.setIsPopupBarShown(not self.isPopupBarShown())
                 return
 
         # escape
         if event.key() == Qt.Key_Escape:
             # close this mini viewer
-            if self.miniViewerWidget().isEnlarged():
-                self.miniViewerWidget().closeEnlargedView()
+            if self.popupBarWidget().isEnlarged():
+                self.popupBarWidget().closeEnlargedView()
                 return
 
             # close parent mini viewer (if open recursively)
-            if self.isMiniViewerWidget():
+            if self.isPopupBarWidget():
                 parent_main_widget = getWidgetAncestor(self.parent(), AbstractPiPDisplayWidget)
-                parent_main_widget.miniViewerWidget().closeEnlargedView()
+                parent_main_widget.popupBarWidget().closeEnlargedView()
             return
 
         return QWidget.keyPressEvent(self, event)
 
     def leaveEvent(self, event):
         """ Blocks the error that occurs when switching between different PiPDisplays"""
-        if self.miniViewerWidget().isEnlarged():
+        if self.popupBarWidget().isEnlarged():
             if not isCursorOverWidget(self):
-                self.miniViewerWidget().closeEnlargedView()
+                self.popupBarWidget().closeEnlargedView()
         return QWidget.leaveEvent(self, event)
 
     def resizeEvent(self, event):
         """ After a delay in the resize, this will update the display"""
         def updateDisplay():
-            self.resizeMiniViewer()
-            self.miniViewerWidget().closeEnlargedView()
+            self.resizePopupBar()
+            self.popupBarWidget().closeEnlargedView()
         installResizeEventFinishedEvent(self, 100, updateDisplay, '_timer')
         return QWidget.resizeEvent(self, event)
 
-    def resizeMiniViewer(self):
+    def resizePopupBar(self):
         """
         Main function for resizing the mini viewer
 
@@ -1203,7 +1206,7 @@ class AbstractPiPDisplayWidget(QWidget):
         """
 
         if self.isFrozen(): return True
-        if not self.miniViewerWidget(): return True
+        if not self.popupBarWidget(): return True
         # todo this is 1 greater than the actual number during load?
         num_widgets = self.numWidgets()
 
@@ -1220,10 +1223,10 @@ class AbstractPiPDisplayWidget(QWidget):
             height = self.height() * self.pipScale()[1]
 
             # check for min size
-            if width < self.miniViewerMinSize()[0]:
-                width = self.miniViewerMinSize()[0]
-            if height < self.miniViewerMinSize()[1]:
-                height = self.miniViewerMinSize()[1]
+            if width < self.popupBarMinSize()[0]:
+                width = self.popupBarMinSize()[0]
+            if height < self.popupBarMinSize()[1]:
+                height = self.popupBarMinSize()[1]
 
             if self.direction() in [attrs.EAST, attrs.WEST]:
                 # NORTH EAST
@@ -1231,15 +1234,15 @@ class AbstractPiPDisplayWidget(QWidget):
                     ypos = 0
                     xpos = self.width() * (1 - self.pipScale()[0])
                     # check minimums
-                    if (self.width() - xpos) < self.miniViewerMinSize()[0]:
-                        xpos = self.width() - self.miniViewerMinSize()[0]
+                    if (self.width() - xpos) < self.popupBarMinSize()[0]:
+                        xpos = self.width() - self.popupBarMinSize()[0]
 
                 # SOUTH WEST
                 if self.direction() == attrs.EAST:
                     ypos = self.height() * (1 - self.pipScale()[1])
                     xpos = 0
-                    if (self.height() - ypos) < self.miniViewerMinSize()[1]:
-                        ypos = self.height() - self.miniViewerMinSize()[1]
+                    if (self.height() - ypos) < self.popupBarMinSize()[1]:
+                        ypos = self.height() - self.popupBarMinSize()[1]
 
             if self.direction() in [attrs.NORTH, attrs.SOUTH]:
                 # SOUTH EAST
@@ -1248,11 +1251,11 @@ class AbstractPiPDisplayWidget(QWidget):
                     ypos = self.height() * (1 - self.pipScale()[1])
 
                     # check minimums
-                    if (self.width() - xpos) < self.miniViewerMinSize()[0]:
-                        xpos = self.width() - self.miniViewerMinSize()[0]
+                    if (self.width() - xpos) < self.popupBarMinSize()[0]:
+                        xpos = self.width() - self.popupBarMinSize()[0]
 
-                    if (self.height() - ypos) < self.miniViewerMinSize()[1]:
-                        ypos = self.height() - self.miniViewerMinSize()[1]
+                    if (self.height() - ypos) < self.popupBarMinSize()[1]:
+                        ypos = self.height() - self.popupBarMinSize()[1]
 
                 # NORTH WEST
                 if self.direction() == attrs.SOUTH:
@@ -1271,9 +1274,9 @@ class AbstractPiPDisplayWidget(QWidget):
                     ypos = 0
                     xpos = self.width() * pip_offset
                     # check minimum size...
-                    if (self.width() - xpos) < self.miniViewerMinSize()[0]:
-                        xpos = self.width() - self.miniViewerMinSize()[0]
-                        width = self.miniViewerMinSize()[0]
+                    if (self.width() - xpos) < self.popupBarMinSize()[0]:
+                        xpos = self.width() - self.popupBarMinSize()[0]
+                        width = self.popupBarMinSize()[0]
 
                 if self.direction() == attrs.EAST:
                     ypos = 0
@@ -1289,13 +1292,13 @@ class AbstractPiPDisplayWidget(QWidget):
                     xpos = 0
                     ypos = self.height() * pip_offset
                     # check minimum size...
-                    if (self.height() - ypos) < self.miniViewerMinSize()[1]:
-                        ypos = self.height() - self.miniViewerMinSize()[1]
-                        height = self.miniViewerMinSize()[1]
+                    if (self.height() - ypos) < self.popupBarMinSize()[1]:
+                        ypos = self.height() - self.popupBarMinSize()[1]
+                        height = self.popupBarMinSize()[1]
 
         # move/resize mini viewer
-        self.miniViewerWidget().move(int(xpos), int(ypos))
-        self.miniViewerWidget().resize(int(width), int(height))
+        self.popupBarWidget().move(int(xpos), int(ypos))
+        self.popupBarWidget().resize(int(width), int(height))
 
     def swapEvent(self):
         """ Swaps the widget that is being displayed.
@@ -1308,26 +1311,26 @@ class AbstractPiPDisplayWidget(QWidget):
         the previously enlarged widget."""
         # pre flight
         widget = getWidgetUnderCursor()
-        if widget == self.miniViewerWidget(): return
-        if isWidgetDescendantOf(widget, widget.parent(), self.miniViewerWidget()): return
-        if widget == self.miniViewerWidget().spacerWidget(): return
+        if widget == self.popupBarWidget(): return
+        if isWidgetDescendantOf(widget, widget.parent(), self.popupBarWidget()): return
+        if widget == self.popupBarWidget().spacerWidget(): return
         if isinstance(widget, QSplitterHandle): return
 
         # set currently enlarged widget as the main widget
-        """Freezing here to avoid the cursor being over the MiniViewerWidget
+        """Freezing here to avoid the cursor being over the PopupBarWidget
         If this happens, it will close, then try to enlarge, then get stuck in
         Qts event queue and have unexpected behavior"""
-        self.miniViewerWidget().setIsFrozen(True)
+        self.popupBarWidget().setIsFrozen(True)
 
-        if self.miniViewerWidget().isEnlarged():
-            self.setCurrentWidget(self.miniViewerWidget().enlargedWidget())
-            self.miniViewerWidget().setIsEnlarged(False)
+        if self.popupBarWidget().isEnlarged():
+            self.setCurrentWidget(self.popupBarWidget().enlargedWidget())
+            self.popupBarWidget().setIsEnlarged(False)
 
         # swap previous widget widgets
         else:
             self.swapWidgets()
 
-        self.miniViewerWidget().setIsFrozen(False)
+        self.popupBarWidget().setIsFrozen(False)
 
 
 class PiPMainViewer(QWidget):
@@ -1388,7 +1391,7 @@ class SettingsWidget(AbstractFrameInputWidgetContainer):
 #print(organizer_widget)
 #print(organizer_widget.pipDisplayWidget())
 organizer_widget.pipDisplayWidget().setDirection(value)
-organizer_widget.pipDisplayWidget().resizeMiniViewer()"""}
+organizer_widget.pipDisplayWidget().resizePopupBar()"""}
     }
 
     def __init__(self, parent=None):
@@ -2039,7 +2042,7 @@ class PiPSaveWidget(QWidget):
             settings[setting] = main_widget.settingsWidget().settings()[setting]["value"]
 
         # store sizes from AbstractPopupBarWidget
-        settings["sizes"] = main_widget.miniViewerWidget().sizes()
+        settings["sizes"] = main_widget.popupBarWidget().sizes()
 
         item_dict["settings"] = settings
 
@@ -2273,9 +2276,9 @@ class PiPSaveWidget(QWidget):
 
 
 """ ORGANIZER (LOCAL) """
-class PiPMiniViewerOrganizerItem(AbstractDragDropModelItem):
+class PiPPopupBarOrganizerItem(AbstractDragDropModelItem):
     def __init__(self, parent=None):
-        super(PiPMiniViewerOrganizerItem, self).__init__(parent)
+        super(PiPPopupBarOrganizerItem, self).__init__(parent)
 
     def widget(self):
         return self._widget
@@ -2290,7 +2293,7 @@ class PiPMiniViewerOrganizerItem(AbstractDragDropModelItem):
         self._constructor_code = constructor_code
 
 
-class PiPMiniViewerOrganizerWidget(AbstractModelViewWidget):
+class PiPPopupBarOrganizerWidget(AbstractModelViewWidget):
     """
     This widget is in charge of organizing widgets that will be visible in the AbstractPiPOrganizerWidget
         Abilities include:
@@ -2307,10 +2310,10 @@ class PiPMiniViewerOrganizerWidget(AbstractModelViewWidget):
         Delete Widget -->
     """
     def __init__(self, parent=None, widget_types=None):
-        super(PiPMiniViewerOrganizerWidget, self).__init__(parent=parent)
+        super(PiPPopupBarOrganizerWidget, self).__init__(parent=parent)
 
         # setup model
-        self.model().setItemType(PiPMiniViewerOrganizerItem)
+        self.model().setItemType(PiPPopupBarOrganizerItem)
 
         # install events
         self.setItemDeleteEvent(self.deleteWidget)
@@ -2321,7 +2324,7 @@ class PiPMiniViewerOrganizerWidget(AbstractModelViewWidget):
         if not widget_types:
             widget_types = {}
 
-        self._panel_creator_widget = PiPMiniViewerWidgetCreator(self, widget_types=widget_types)
+        self._panel_creator_widget = PiPPopupBarWidgetCreator(self, widget_types=widget_types)
         self.addDelegate([Qt.Key_C], self._panel_creator_widget, modifier=Qt.AltModifier, focus=True)
         self._panel_creator_widget.show()
 
@@ -2339,18 +2342,18 @@ class PiPMiniViewerOrganizerWidget(AbstractModelViewWidget):
         # get default attrs
 
         main_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
-        mini_viewer = main_widget.miniViewerWidget()
+        popup_bar = main_widget.popupBarWidget()
         widget = items[0].widget()
 
         # if in mini viewer
         # reset parent and insert back into mini viewer
-        if widget.parent() == mini_viewer:
+        if widget.parent() == popup_bar:
             widget.setParent(None)
             widget.setIndex(row)
-            mini_viewer.addWidget(widget)
+            popup_bar.addWidget(widget)
 
         # update all widget indexes
-        mini_viewer.updateWidgetIndexes()
+        popup_bar.updateWidgetIndexes()
         # main_widget.updateWidgetIndexes()
 
     def editWidget(self, item, old_value, new_value):
@@ -2398,7 +2401,7 @@ class PiPMiniViewerOrganizerWidget(AbstractModelViewWidget):
         item.widget().setParent(None)
         item.widget().deleteLater()
         # resize
-        organizer_widget.pipDisplayWidget().resizeMiniViewer()
+        organizer_widget.pipDisplayWidget().resizePopupBar()
 
     """ EVENTS """
     def showEvent(self, event):
@@ -2413,10 +2416,10 @@ class PiPMiniViewerOrganizerWidget(AbstractModelViewWidget):
         AbstractModelViewWidget.hideEvent(self, event)
 
 
-class PiPMiniViewerWidgetCreator(AbstractListInputWidget):
+class PiPPopupBarWidgetCreator(AbstractListInputWidget):
     """ Creates the widgets that are available in the current AbstractPiPDisplayWidget"""
     def __init__(self, parent=None, widget_types=None):
-        super(PiPMiniViewerWidgetCreator, self).__init__(parent)
+        super(PiPPopupBarWidgetCreator, self).__init__(parent)
 
         self._widget_types = widget_types
         self.populate([[key] for key in sorted(widget_types.keys())])
@@ -2472,7 +2475,7 @@ Hotkeys:
 < Q >Hold to hide all widgets
 
 < Space >
-Swap current display widget with previously displayed widget.  If this is pressed when the MiniViewer is active, then the widget that is currently enlarged will be set as the actively displayed widget.
+Swap current display widget with previously displayed widget.  If this is pressed when the PopupBar is active, then the widget that is currently enlarged will be set as the actively displayed widget.
 
 < 1 | 2 | 3 | 4 | 5 >
 Sets the current display widget relative to the number pressed, and the widget available to be viewed in the Mini Viewer.

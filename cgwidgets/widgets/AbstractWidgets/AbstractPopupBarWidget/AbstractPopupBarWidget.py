@@ -136,6 +136,23 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
     def setEnlargedScale(self, enlarged_scale):
         self._enlarged_scale = enlarged_scale
 
+    def enlargedWidget(self):
+        return self._enlarged_widget
+
+    def setEnlargedWidget(self, widget):
+        self._enlarged_widget = widget
+
+    def isDisplayNamesShown(self):
+        return self._are_widget_names_shown
+
+    def setIsDisplayNamesShown(self, enabled):
+        self._are_widget_names_shown = enabled
+        for widget in self.widgets():
+            if enabled:
+                widget.headerWidget().show()
+            else:
+                widget.headerWidget().hide()
+
     def isDragging(self):
         return self.getTopMostPiPDisplay(self, self.parent()).isDragging()
 
@@ -154,12 +171,6 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
 
     def setIsFrozen(self, frozen):
         self._is_frozen = frozen
-
-    def enlargedWidget(self):
-        return self._enlarged_widget
-
-    def setEnlargedWidget(self, widget):
-        self._enlarged_widget = widget
 
     def spacerWidget(self):
         return self._spacer_widget
@@ -244,7 +255,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             _enlarged_object (AbstractPopupBarItemWidget): when exiting, this is the current object that has
                 been enlarged for use.
             _entered_object (AbstractPopupBarItemWidget): when exiting, this is the object that is under the cursor
-                if the user exits into the MiniViewerWidget
+                if the user exits into the PopupBarWidget
                 will be set to None
             _is_dragging (bool): determines if a drag operation is currently happening
             Signals:
@@ -289,7 +300,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
                     # enlarge widget
                     self.enlargeWidget(obj)
 
-            # Enlarge MiniViewerWidget
+            # Enlarge PopupBarWidget
             else:
                 if not obj.isMainViewerWidget():
                     # reset widget to default params
@@ -340,12 +351,12 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
     def __dragMoveEvent(self, obj):
         modifiers = QApplication.keyboardModifiers()
         if modifiers == Qt.AltModifier:
-            obj.pipMiniViewerWidget().closeEnlargedView()
+            obj.pipPopupBarWidget().closeEnlargedView()
             return True
         if not self.isDragging():
             self.setIsDragging(True)
             # self.setIsFrozen(True)
-            obj.pipMiniViewerWidget().closeEnlargedView()
+            obj.pipPopupBarWidget().closeEnlargedView()
             return True
 
     def __dragEnterEvent(self, obj):
@@ -366,11 +377,11 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
 
                 # enlarge widget
                 self.enlargeWidget(obj)
-        # Enlarge MiniViewerWidget
+        # Enlarge PopupBarWidget
         else:
             # enlarge widget
             if not obj.isMainViewerWidget():
-                obj.pipMiniViewerWidget().closeEnlargedView()
+                obj.pipPopupBarWidget().closeEnlargedView()
                 self.enlargeWidget(obj)
 
     def __dragEvent(self, obj, event):
@@ -388,7 +399,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         # on drop, close and reset
         if event.type() == QEvent.Drop:
             self.setIsDragging(False)
-            obj.pipMiniViewerWidget().closeEnlargedView()
+            obj.pipPopupBarWidget().closeEnlargedView()
 
     def __splitterMoved(self, *args):
         """ Sets the __temp_sizes list after the splitter has finished moving
@@ -457,7 +468,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
 
         # show mini viewer widgets
         # if widget.isPiPWidget():
-        #     widget.delegateWidget().setIsMiniViewerShown(True)
+        #     widget.delegateWidget().setIsPopupBarShown(True)
 
         self.setIsFrozen(False)
 
@@ -550,21 +561,21 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
                 from .AbstractPiPWidget import AbstractPiPDisplayWidget, PiPMainViewer
                 # enlarge mini viewer
                 display_widget = getWidgetAncestor(widget_under_cursor, AbstractPiPDisplayWidget)
-                mini_viewer_widget = getWidgetAncestor(widget_under_cursor, AbstractPopupBarItemWidget)
+                popup_bar_widget = getWidgetAncestor(widget_under_cursor, AbstractPopupBarItemWidget)
                 if not display_widget:
-                    self.enlargeWidget(mini_viewer_widget)
-                elif display_widget.isMiniViewerWidget():
+                    self.enlargeWidget(popup_bar_widget)
+                elif display_widget.isPopupBarWidget():
                     # exit over recursive mini viewer
-                    if isinstance(mini_viewer_widget.parent(), AbstractPiPDisplayWidget):
-                        display_widget.miniViewerWidget().closeEnlargedView()
+                    if isinstance(popup_bar_widget.parent(), AbstractPiPDisplayWidget):
+                        display_widget.popupBarWidget().closeEnlargedView()
                         self.enlargeWidget(getWidgetAncestor(display_widget, AbstractPopupBarItemWidget))
 
                     # exit over recursive main viewer
-                    elif isinstance(mini_viewer_widget.parent(), PiPMainViewer):
+                    elif isinstance(popup_bar_widget.parent(), PiPMainViewer):
                         self.enlargeWidget(getWidgetAncestor(display_widget, AbstractPopupBarItemWidget))
                 else:
                     # exit over normal widget
-                    self.enlargeWidget(mini_viewer_widget)
+                    self.enlargeWidget(popup_bar_widget)
 
         # exited over main viewer
         else:
@@ -576,7 +587,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         # show mini viewer widgets
         # if self.enlargedWidget().isPiPWidget():
         #     # pip_display_widget = getWidgetAncestor(self.enlargedWidget(), AbstractPiPDisplayWidget)
-        #     self.enlargedWidget().delegateWidget().setIsMiniViewerShown(False)
+        #     self.enlargedWidget().delegateWidget().setIsPopupBarShown(False)
 
         """ Unfreezing as a delayed event to help to avoid the segfaults that occur
         when PyQt tries to do things to fast..."""
@@ -731,9 +742,9 @@ class AbstractPopupBarItemWidget(QWidget):
     def delegateWidget(self):
         return self.mainWidget().delegateWidget()
 
-    def pipMiniViewerWidget(self):
+    def pipPopupBarWidget(self):
         from .AbstractPiPWidget import AbstractPiPDisplayWidget
-        return getWidgetAncestor(self, AbstractPiPDisplayWidget).miniViewerWidget()
+        return getWidgetAncestor(self, AbstractPiPDisplayWidget).popupBarWidget()
 
     """ PROPERTIES """
     def isPiPWidget(self):

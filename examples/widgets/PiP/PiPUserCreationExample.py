@@ -79,7 +79,7 @@ pip_organizer_widget.resize(512, 512)
 pip_display_widget = PiPDisplayWidget()
 pip_display_widget.loadPiPWidgetFromFile(
     getDefaultSavePath() + '/.PiPWidgets_02.json',
-    "recursion"
+    "double"
 )
 
 pip_organizer_widget.setPiPScale(.55)

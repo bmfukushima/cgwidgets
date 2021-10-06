@@ -11,11 +11,11 @@ class PiPDisplayWidget(AbstractPiPDisplayWidget):
     Attributes:
         current_widget (QWidget): the widget that is currently set as the main display
         direction (attrs.DIRECTION): what side the mini viewer will be displayed on.
-        hotkey_swap_key (list): of Qt.Key that will swap to the corresponding widget in the miniViewerWidget().
+        hotkey_swap_key (list): of Qt.Key that will swap to the corresponding widget in the popupBarWidget().
 
             The index of the Key in the list, is the index of the widget that will be swapped to.
-        is_mini_viewer_widget (bool): determines if this is a child of a MiniViewerWidget.
-        is_mini_viewer_shown (bool): if the mini viewer is currently visible.
+        is_popup_bar_widget (bool): determines if this is a child of a PopupBarWidget.
+        is_popup_bar_shown (bool): if the mini viewer is currently visible.
             This is normally toggled with the "Q" key
         is_standalone (bool): determines if this is a child of the PiPAbstractOrganizer.
             If True, this means that this display is a standalone..
@@ -25,7 +25,7 @@ class PiPDisplayWidget(AbstractPiPDisplayWidget):
         widgets (list): of widgets
     """
 
-    def __init__(self, parent=None, is_mini_viewer_widget=False):
+    def __init__(self, parent=None, is_popup_bar_widget=False):
         super(PiPDisplayWidget, self).__init__(parent)
 
 
@@ -51,10 +51,10 @@ class PiPOrganizerWidget(AbstractPiPOrganizerWidget):
         |- PiPMainWidget --> QWidget
         |    |- QVBoxLayout
         |    |    |- PiPMainViewer --> QWidget
-        |    |    |- PiPMiniViewerWidgetCreator --> AbstractListInputWidget
-        |    |- MiniViewer (QWidget)
+        |    |    |- PiPPopupBarWidgetCreator --> AbstractListInputWidget
+        |    |- PopupBar (QWidget)
         |        |- QBoxLayout
-        |            |-* PiPMiniViewerWidget --> QWidget
+        |            |-* PiPPopupBarWidget --> QWidget
         |                    |- QVBoxLayout
         |                    |- AbstractLabelledInputWidget
         |- LocalOrganizerWidget --> AbstractModelViewWidget
@@ -66,10 +66,10 @@ class PiPOrganizerWidget(AbstractPiPOrganizerWidget):
         Swap (Enter):
             Upon user cursor entering a widget, that widget becomes the main widget
 
-            PiPMiniViewer --> EventFilter --> EnterEvent
+            PiPPopupBar --> EventFilter --> EnterEvent
                 - swap widget
                 - freeze swapping (avoid recursion)
-            PiPMiniViewer --> LeaveEvent
+            PiPPopupBar --> LeaveEvent
                 - unfreeze swapping
         Swap (Key Press):
             Upon user key press on widget, that widget becomces the main widget
@@ -79,7 +79,7 @@ class PiPOrganizerWidget(AbstractPiPOrganizerWidget):
             PiPMainWidget --> keyPressEvent --> setCurrentWidget
         Quick Drag ( Drag Enter ):
             Upon user drag enter, the mini widget becomes large to allow easier dropping
-            PiPMiniViewer --> EventFilter --> Drag Enter
+            PiPPopupBar --> EventFilter --> Drag Enter
                                           --> Enter
                                           --> Drop
                                           --> Drag Leave
