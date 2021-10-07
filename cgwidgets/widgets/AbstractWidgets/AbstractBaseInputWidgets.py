@@ -596,6 +596,10 @@ class AbstractBooleanInputWidget(AbstractLabelWidget):
         self.setProperty('is_selected', is_selected)
         updateStyleSheet(self)
 
+    def setIsSelected(self, is_selected):
+        self._is_selected = is_selected
+        self.setProperty('is_selected', is_selected)
+        updateStyleSheet(self)
 
 class AbstractButtonInputWidget(AbstractBooleanInputWidget):
     """
