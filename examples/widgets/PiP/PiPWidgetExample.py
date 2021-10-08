@@ -8,7 +8,7 @@ print(API_NAME)
 #import PySide2
 #print(PySide2.__version__)
 from qtpy.QtWidgets import (QApplication, QWidget, QLabel)
-from cgwidgets.widgets import PiPDisplayWidget
+from cgwidgets.widgets import PiPDisplayWidget, AbstractPopupBarWidget
 from cgwidgets.utils import centerWidgetOnCursor, setAsAlwaysOnTop, getDefaultSavePath
 from cgwidgets.settings import attrs
 
@@ -18,6 +18,8 @@ widget = PiPDisplayWidget()
 
 widget.setEnlargedScale(0.75)
 widget.setPiPScale(0.25)
+widget.setDisplayMode(AbstractPopupBarWidget.PIPTASKBAR)
+
 #widget.setDirection(attrs.NORTH)
 for x in range(3):
     label = QLabel(str(x))

@@ -179,7 +179,7 @@ class AbstractPiPOrganizerWidget(AbstractShojiModelViewWidget):
 
     Attributes:
         current_widget (QWidget): the widget that is currently set as the main display
-        direction (attrs.DIRECTION): what side the mini viewer will be displayed on.
+        direction (attrs.DIRECTION): what direction/side the popup will be displayed on
         pip_scale ((float, float)):  fractional percentage of the amount of space that
             the mini viewer will take up in relation to the overall size of the widget.
         swap_key (Qt.KEY): this key will trigger the popup
@@ -601,7 +601,9 @@ class AbstractPiPDisplayWidget(QWidget):
 
     Attributes:
         current_widget (QWidget): the widget that is currently set as the main display
-        direction (attrs.DIRECTION): what side the mini viewer will be displayed on.
+        display_mode (AbstractPopupBarWidget.DISPLAYMODE): how this PiPWidget should be displayed
+            PIP | PIPTASKBAR
+        direction (attrs.DIRECTION): what side of the widget the popup will be displayed on
         hotkey_swap_key (list): of Qt.Key that will swap to the corresponding widget in the popupBarWidget().
 
             The index of the Key in the list, is the index of the widget that will be swapped to.
@@ -759,6 +761,12 @@ class AbstractPiPDisplayWidget(QWidget):
             self.popupBarWidget().setSizes(settings["sizes"])
 
     """ PROPERTIES """
+    def displayMode(self):
+        return self.popupBarWidget().displayMode()
+
+    def setDisplayMode(self, display_mode):
+        self.popupBarWidget().setDisplayMode(display_mode)
+
     def pipScale(self):
         return self._pip_scale
 
@@ -1207,6 +1215,18 @@ class AbstractPiPDisplayWidget(QWidget):
 
         if self.isFrozen(): return True
         if not self.popupBarWidget(): return True
+
+        if self.displayMode() == AbstractPopupBarWidget.PIP:
+            xpos, ypos, width, height = self.__resizePiP()
+        elif self.displayMode() == AbstractPopupBarWidget.PIPTASKBAR:
+            xpos, ypos, width, height = self.__resizeTaskbar()
+        else:
+            xpos, ypos, width, height = self.__resizeTaskbar()
+        # move/resize mini viewer
+        self.popupBarWidget().move(int(xpos), int(ypos))
+        self.popupBarWidget().resize(int(width), int(height))
+
+    def __resizePiP(self):
         # todo this is 1 greater than the actual number during load?
         num_widgets = self.numWidgets()
 
@@ -1296,9 +1316,35 @@ class AbstractPiPDisplayWidget(QWidget):
                         ypos = self.height() - self.popupBarMinSize()[1]
                         height = self.popupBarMinSize()[1]
 
-        # move/resize mini viewer
-        self.popupBarWidget().move(int(xpos), int(ypos))
-        self.popupBarWidget().resize(int(width), int(height))
+        return xpos, ypos, width, height
+
+    def __resizeTaskbar(self):
+        size = 50
+        handle_width = self.popupBarWidget().handleWidth()
+        total_size = (self.popupBarWidget().count() * size) + ((self.popupBarWidget().count()-1) * handle_width)
+
+        if self.direction() in [attrs.NORTH, attrs.SOUTH]:
+            offset = (self.width() - total_size) * 0.5
+            xpos = offset
+            width = total_size
+            height = size
+            if self.direction() == attrs.NORTH:
+                ypos = self.height() - size
+            if self.direction() == attrs.SOUTH:
+                ypos = 0
+
+        if self.direction() in [attrs.EAST, attrs.WEST]:
+            offset = (self.height() - total_size) * 0.5
+            ypos = offset
+            height = total_size
+            width = size
+            if self.direction() == attrs.EAST:
+                xpos = 0
+            if self.direction() == attrs.WEST:
+                xpos = self.width() - size
+
+        return xpos, ypos, width, height
+        pass
 
     def swapEvent(self):
         """ Swaps the widget that is being displayed.
