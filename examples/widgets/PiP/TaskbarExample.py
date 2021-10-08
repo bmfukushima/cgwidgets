@@ -3,6 +3,7 @@ from qtpy.QtWidgets import QApplication, QLabel, QHBoxLayout, QWidget
 from qtpy.QtCore import Qt
 
 from cgwidgets.utils import centerWidgetOnCursor, setAsAlwaysOnTop, centerWidgetOnScreen
+from cgwidgets.settings import attrs
 
 from cgwidgets.widgets import AbstractPopupBarWidget
 
@@ -11,7 +12,7 @@ app = QApplication(sys.argv)
 
 # create popup bar
 popup_bar_widget = AbstractPopupBarWidget()
-popup_bar_widget.setOrientation(Qt.Vertical)
+popup_bar_widget.setDirection(attrs.EAST)
 for x in range(3):
     label = QLabel(str(x))
     label.setFixedWidth(50)
