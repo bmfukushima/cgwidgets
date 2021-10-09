@@ -27,6 +27,6 @@ for x in range(3):
 widget.setIsDisplayNamesShown(True)
 setAsAlwaysOnTop(widget)
 widget.show()
-widget.resize(512,512)
+widget.resize(512, 512)
 centerWidgetOnCursor(widget)
 sys.exit(app.exec_())

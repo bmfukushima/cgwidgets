@@ -301,7 +301,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
                 else:
                     # reset display label
                     self._resetSpacerWidget()
-
+                    self.enlargedWidget().setIsOverlayDisplayed(False)
                     # reset widget to default params
                     self.setIsDragging(False)
 
@@ -452,9 +452,11 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             Not sure if you'll even need another handler... as the 
             pip handler might work fine here... and its merely the resize
             display which needs the handling"""
+            widget.setIsOverlayDisplayed(True)
             xpos, ypos, width, height = self.__enlargePiPWidget()
 
         elif self.displayMode() == AbstractPopupBarWidget.TASKBAR:
+            widget.setIsOverlayDisplayed(True)
             xpos, ypos, width, height = self.__enlargeTaskbar()
 
         # Swap spacer widget
@@ -589,6 +591,8 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         if not widget_under_cursor:
             self._resetSpacerWidget()
             self.setIsEnlarged(False)
+            self.enlargedWidget().setIsOverlayDisplayed(False)
+
         # exited over the mini viewer
         elif isWidgetDescendantOf(widget_under_cursor, widget_under_cursor.parent(), self):
             if widget_under_cursor == self._spacer_widget:
@@ -599,6 +603,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             else:
                 # reset display label
                 self.__temp_sizes = self.sizes()
+
                 self._resetSpacerWidget()
 
                 """ Enable different display modes based off of the type of widget.
@@ -630,6 +635,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             # reset display label
             self._resetSpacerWidget()
             self.setIsEnlarged(False)
+            self.enlargedWidget().setIsOverlayDisplayed(False)
 
         # self.setIsFrozen(False)
         # show mini viewer widgets
@@ -640,6 +646,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         """ Unfreezing as a delayed event to help to avoid the segfaults that occur
         when PyQt tries to do things to fast..."""
         # self.setEnlargedWidget(None)
+
         runDelayedEvent(self, self.unfreeze, delay_amount=10)
 
     def unfreeze(self):
@@ -724,11 +731,21 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         self._overlay_widget = overlay_widget
 
 
-class AbstractPopupBarItemWidget(QWidget):
+class AbstractPopupBarItemWidget(AbstractOverlayInputWidget):
     """
     One PiP Widget that is displayed in the AbstractPopupBarWidget
 
+    Args:
+        acronym (string): text to be displayed if the overlay is enabled
+        delegate_widget (QWidget): Widget to be used as popup
+
     Attributes:
+        is_overlay_enabled (bool): determines if the overlay is displayed.  This is used with
+            the PopupBar to show text instead of the widget to the user.
+        is_overlay_displayed (bool): determines if the overlay is currently displayed.  If set to
+            True, this will display the "acronym", if False, will display the delegate widget.
+        is_pip_widget (bool): determines if this widgets delegate widget is inherited from the
+            AbstractPiPDisplayWidget.  This is for handling recursive viewing
         index (int): current index in model
         item (AbstractPopupBarWidgetOrganizerItem)
     """
@@ -738,36 +755,32 @@ class AbstractPopupBarItemWidget(QWidget):
         name="None",
         direction=Qt.Horizontal,
         delegate_widget=None,
-        is_pip_widget=False
+        is_pip_widget=False,
+        is_overlay_enabled=True,
+        acronym=None
     ):
-        super(AbstractPopupBarItemWidget, self).__init__(parent)
-        QVBoxLayout(self)
+        if not acronym:
+            acronym = name
+        super(AbstractPopupBarItemWidget, self).__init__(parent, title=acronym)
 
-        # setup flag for if this is a pip widget (for recursive purposes
-        # if isinstance(delegate_widget, AbstractPiPOrganizerWidget) or isinstance(delegate_widget, AbstractPiPDisplayWidget):
-        #     self._is_pip_widget = True
-        # else:
-        #     self._is_pip_widget = False
-
+        self._is_overlay_enabled = is_overlay_enabled
         self._is_pip_widget = is_pip_widget
         self._is_main_viewer_widget = False
         self._name = name
         self._index = 0
-        self._main_widget = AbstractLabelledInputWidget(
-            self, name=name, direction=direction, delegate_widget=delegate_widget)
-        #self._main_widget.viewWidget().delegateWidget().setUserFinishedEditingEvent(self.updateItemDisplayName)
 
-        self.layout().addWidget(self._main_widget)
-        self.layout().setContentsMargins(0, 0, 0, 0)
+        # create delegate widget
+        delegate_widget = AbstractLabelledInputWidget(
+            self, name=name, direction=direction, delegate_widget=delegate_widget)
+
+        self.setDelegateWidget(delegate_widget)
 
         # Todo find all of these handlers and remove them?
         # this is just a forced override for now
         # disable editable header
-        self.headerWidget().setDisplayMode(AbstractOverlayInputWidget.DISABLED)
-
-        #
+        delegate_widget.viewWidget().setDisplayMode(AbstractOverlayInputWidget.DISABLED)
+        self.setDisplayMode(AbstractOverlayInputWidget.DISABLED)
         self.setAcceptDrops(True)
-
 
     # def updateItemDisplayName(self, widget, value):
     #     """
@@ -781,14 +794,14 @@ class AbstractPopupBarItemWidget(QWidget):
     #     self.headerWidget().setName(value)
 
     """ WIDGETS """
-    def mainWidget(self):
-        return self._main_widget
-
+    # def mainWidget(self):
+    #     return self._main_widget
+    #
     def headerWidget(self):
-        return self.mainWidget().viewWidget()
-
-    def delegateWidget(self):
-        return self.mainWidget().delegateWidget()
+        return self.delegateWidget().viewWidget()
+    #
+    # def delegateWidget(self):
+    #     return self.mainWidget().delegateWidget()
 
     def pipPopupBarWidget(self):
         from .AbstractPiPWidget import AbstractPiPDisplayWidget
@@ -800,6 +813,20 @@ class AbstractPopupBarItemWidget(QWidget):
 
     def setIsPiPWidget(self, is_pip_widget):
         self._is_pip_widget = is_pip_widget
+
+    def isOverlayEnabled(self):
+        return self._is_overlay_enabled
+
+    def setIsOverlayEnabled(self, enabled):
+        self._is_overlay_enabled = enabled
+
+    def isOverlayDisplayed(self):
+        return self._is_overlay_displayed
+
+    def setIsOverlayDisplayed(self, enabled):
+        if self.isOverlayEnabled():
+            self._is_overlay_displayed = enabled
+            self.setCurrentIndex(enabled)
 
     def isMainViewerWidget(self):
         return self._is_main_viewer_widget

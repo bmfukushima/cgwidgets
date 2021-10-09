@@ -1344,7 +1344,6 @@ class AbstractPiPDisplayWidget(QWidget):
                 xpos = self.width() - size
 
         return xpos, ypos, width, height
-        pass
 
     def swapEvent(self):
         """ Swaps the widget that is being displayed.
