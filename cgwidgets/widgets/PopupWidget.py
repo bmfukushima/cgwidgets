@@ -1,5 +1,7 @@
-from cgwidgets.widgets import AbstractPiPOrganizerWidget, AbstractPiPDisplayWidget
+from qtpy.QtCore import Qt
 
+from cgwidgets.widgets import AbstractPiPOrganizerWidget, AbstractPiPDisplayWidget, AbstractPopupBarWidget, AbstractPopupBarItemWidget
+from cgwidgets.settings import attrs
 
 class PiPDisplayWidget(AbstractPiPDisplayWidget):
     """The PiPWidget is designed to display multiple widgets simultaneously to the user.
@@ -112,7 +114,69 @@ class PiPOrganizerWidget(AbstractPiPOrganizerWidget):
         #, widget_types=widget_types
 
 
+class PopupBarWidget(AbstractPopupBarWidget):
+    """
+    Widget that contains all of the PiPWidgets.
 
+    This widget is an overlay of the MainWidget, and sits at a parallel hierarchy to the PiPMainViewer
+
+    Attributes:
+        direction (attrs.DIRECTION): direction that the popup will be displayed on
+        display_mode (PopupBarWidget.TYPE): Determines what type of widget this should be displayed as
+            valid options are
+                PIP | PIPTASKBAR | TASKBAR
+            The PIP mode will be displayed over an existing widget.  While the TASKBAR mode will be displayed
+            as a standalone widget.
+        is_dragging (bool): determines if this widget is currently in a drag/drop operation
+        is_enlarged (bool): If there is currently an widget enlarged.
+            Widgets are enlarged by the user hovering over them.  And closed
+            be pressing "esc" or having the mouse exit the boundries of the widget.
+        if_frozen (bool): Determines if events should be handled or not.
+
+        enlarged_widget (QWidget): The widget that is currently enlarged
+        overlay_widget (QWidget): Widget that the popup will be overlaid on.  If none is specified,
+            then this will return the main window.
+        popup_widget (QWidget): The widget that is displayed if the enlarged widget
+            has opened a subwidget (popup) menu.
+        spacer_widget (QLabel): Widget that holds the space in the QSplitter where
+            the currently enlarged widget normally lives.
+        __temp_sizes (list): of ints, that are the sizes of the individual widgets.
+            This is normally gotten through the "sizes()" call, but needs a temp one,
+            for swapping the spacer widget in/out.
+        __last_object_entered (PopupBarItemWidget): placeholder to determine the last object
+            that was entered.  This is mainly used when enlarging widgets to ensure that the
+            enlarged widget can be entered, as if the bounds are not great enough, you can enter
+            the Main Viewer, thus closing the enlarged widget.
+        widgets (list): Of PopupBarWidget widgets that are currently displayed.
+            This does not include the currently enlarged widget
+    """
+    def __init__(self, parent=None, direction=attrs.EAST, orientation=Qt.Vertical, overlay_widget=None):
+        super(PopupBarWidget, self).__init__(parent=parent, direction=direction, orientation=orientation, overlay_widget=overlay_widget)
+
+
+class PopupBarItemWidget(AbstractPopupBarItemWidget):
+    """
+    One PiP Widget that is displayed in the PopupBarWidget
+
+    Attributes:
+        index (int): current index in model
+        item (PopupBarWidgetOrganizerItem)
+    """
+
+    def __init__(
+            self,
+            parent=None,
+            name="None",
+            direction=Qt.Horizontal,
+            delegate_widget=None,
+            is_pip_widget=False
+    ):
+        super(PopupBarItemWidget, self).__init__(
+            parent=parent,
+            name=name,
+            direction=direction,
+            delegate_widget=delegate_widget,
+            is_pip_widget=is_pip_widget)
 
 
 if __name__ == '__main__':

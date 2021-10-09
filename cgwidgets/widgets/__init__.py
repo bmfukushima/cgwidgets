@@ -35,7 +35,7 @@ from .ShojiWidget import ShojiModelDelegateWidget as ShojiModelDelegateWidget
 from .ScriptEditorWidget import ScriptEditorWidget, ScriptEditorPopupEventFilter
 
 """ PiP """
-from .PiPWidget import PiPOrganizerWidget, PiPDisplayWidget
+from .PopupWidget import PiPOrganizerWidget, PiPDisplayWidget, PopupBarWidget, PopupBarItemWidget
 
 """ INPUT WIDGETS """
 from .InputWidgets import *
