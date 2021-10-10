@@ -1,10 +1,9 @@
 """
 TODO
-    *   This is all now randomly working? Wtf...
-    *   isDisplayNameShown
-            Move to AbstractPopupBarWidget
-                - property
-                - handler
-    *   savePiPWidgets...
-            errors... sometimes?
+    *   On load...
+            PIPTASKBAR Overlay not set correctly in PopupBar
+    *   Organizer
+            - Add acronym
+            - Add PIPTASKBAR Size
+            - Standalone?
 """

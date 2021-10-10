@@ -168,6 +168,19 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
 
     def setIsOverlayEnabled(self, enabled):
         self._is_overlay_enabled = enabled
+        self.setIsOverlayDisplayed(enabled)
+        # if self.displayMode() == AbstractPopupBarWidget.PIP:
+        #     self.setWidgetOverlayDisplay(True)
+        # elif self.displayMode() == AbstractPopupBarWidget.PIPTASKBAR:
+        #     self.setWidgetOverlayDisplay(False)
+        # elif self.displayMode() == AbstractPopupBarWidget.TASKBAR:
+        #     self.setWidgetOverlayDisplay(False)
+
+    def setWidgetOverlayDisplay(self, enabled):
+        for widget in self.widgets():
+            widget.setCurrentIndex(enabled)
+
+    def setIsOverlayDisplayed(self, enabled):
         for widget in self.widgets():
             widget.setIsOverlayEnabled(enabled)
             if widget != self.enlargedWidget():
@@ -633,8 +646,11 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
                 # enlarge mini viewer
                 display_widget = getWidgetAncestor(widget_under_cursor, AbstractPiPDisplayWidget)
                 popup_bar_widget = getWidgetAncestor(widget_under_cursor, AbstractPopupBarItemWidget)
+                # taskbar?
                 if not display_widget:
+                    self.enlargedWidget().setIsOverlayDisplayed(False)
                     self.enlargeWidget(popup_bar_widget)
+                # pip
                 elif display_widget.isPopupBarWidget():
                     # exit over recursive mini viewer
                     if isinstance(popup_bar_widget.parent(), AbstractPiPDisplayWidget):
@@ -646,6 +662,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
                         self.enlargeWidget(getWidgetAncestor(display_widget, AbstractPopupBarItemWidget))
                 else:
                     # exit over normal widget
+                    self.enlargedWidget().setIsOverlayDisplayed(False)
                     self.enlargeWidget(popup_bar_widget)
 
         # exited over main viewer

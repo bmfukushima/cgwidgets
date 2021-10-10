@@ -785,6 +785,8 @@ class AbstractPiPDisplayWidget(QWidget):
 
         elif display_mode == AbstractPopupBarWidget.PIPTASKBAR:
             self.popupBarWidget().setIsOverlayEnabled(True)
+            self.popupBarWidget().setWidgetOverlayDisplay(False)
+            # self.popupBarWidget().setIsOverlayDisplayed()
 
     def pipScale(self):
         return self._pip_scale
