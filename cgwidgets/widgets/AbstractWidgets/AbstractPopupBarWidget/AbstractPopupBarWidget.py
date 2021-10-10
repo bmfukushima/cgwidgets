@@ -169,6 +169,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
     def setIsOverlayEnabled(self, enabled):
         self._is_overlay_enabled = enabled
         for widget in self.widgets():
+            widget.setIsOverlayEnabled(enabled)
             if widget != self.enlargedWidget():
                 widget.setIsOverlayDisplayed(enabled)
 
@@ -670,7 +671,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         self.setIsFrozen(False)
 
     """ WIDGETS """
-    def createNewWidget(self, widget, name="", is_pip_widget=False, index=0):
+    def createNewWidget(self, widget, name="", is_pip_widget=False, index=0, is_overlay_enabled=True):
         """
         Creates a new widget in the mini widget.  This is only when a new widget needs to be instantiated.
 
@@ -683,8 +684,11 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         """
         mini_widget = AbstractPopupBarItemWidget(self, direction=Qt.Vertical, delegate_widget=widget, is_pip_widget=is_pip_widget, name=name)
 
-        # mini_widget.setIsOverlayEnabled(self.isOverlayEnabled())
-        # mini_widget.setIsOverlayDisplayed(self.isOverlayEnabled())
+        mini_widget.setIsOverlayEnabled(self.isOverlayEnabled())
+        if self.displayMode() == AbstractPopupBarWidget.PIP:
+            mini_widget.setIsOverlayDisplayed(self.isOverlayEnabled())
+        elif self.displayMode() in [AbstractPopupBarWidget.PIPTASKBAR, AbstractPopupBarWidget.TASKBAR]:
+            pass
         # self.installDragEnterMonkeyPatch(mini_widget.delegateWidget())
         # self.installDragLeaveMonkeyPatch(mini_widget.delegateWidget())
         # self.installDragMoveMonkeyPatch(mini_widget.delegateWidget())
@@ -844,6 +848,10 @@ class AbstractPopupBarItemWidget(AbstractOverlayInputWidget):
         return self.isOverlayDisplayed()
 
     def setIsOverlayDisplayed(self, enabled):
+        """ Sets if the overlay is currently displayed or not.
+
+
+        """
         if self.isOverlayEnabled():
             self._is_overlay_displayed = enabled
             self.setCurrentIndex(enabled)

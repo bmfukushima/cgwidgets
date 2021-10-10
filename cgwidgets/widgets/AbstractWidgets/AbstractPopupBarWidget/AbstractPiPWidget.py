@@ -819,6 +819,12 @@ class AbstractPiPDisplayWidget(QWidget):
     def setIsFrozen(self, is_frozen):
         self._is_frozen = is_frozen
 
+    def isOverlayEnabled(self):
+        return self.popupBarWidget().isOverlayEnabled()
+
+    def setIsOverlayEnabled(self, enabled):
+        self.popupBarWidget().setIsOverlayEnabled(enabled)
+
     def isPopupBarShown(self):
         return self._is_popup_bar_shown
 
@@ -930,11 +936,13 @@ class AbstractPiPDisplayWidget(QWidget):
         in the count, even if you process the events."""
         # create mini viewer widgets
         if self.currentWidget():
-            popup_bar_widget = self.popupBarWidget().createNewWidget(widget, name=name)
+            popup_bar_widget = self.popupBarWidget().createNewWidget(widget, name=name, is_overlay_enabled=self.isOverlayEnabled())
 
         # create main widget
         else:
-            popup_bar_widget = AbstractPopupBarItemWidget(self.mainViewerWidget(), direction=Qt.Vertical, delegate_widget=widget, name=name)
+            popup_bar_widget = AbstractPopupBarItemWidget(
+                self.mainViewerWidget(), direction=Qt.Vertical, delegate_widget=widget, name=name, is_overlay_enabled=self.isOverlayEnabled())
+            popup_bar_widget.setIsOverlayDisplayed(self.isOverlayEnabled())
             #popup_bar_widget.setIsOverlayEnabled(self.popupBarWidget().isOverlayEnabled())
             #popup_bar_widget.setIsOverlayDisplayed(self.popupBarWidget().isOverlayEnabled())
             self.setCurrentWidget(popup_bar_widget)
