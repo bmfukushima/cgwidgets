@@ -618,6 +618,7 @@ class AbstractPiPDisplayWidget(QWidget):
         pip_scale ((float, float)):  fractional percentage of the amount of space that
             the mini viewer will take up in relation to the overall size of the widget.
         swap_key (Qt.KEY): this key will trigger the popup
+        taskbar_size (int): The size of the collapsed widgets when in TASKBAR mode.
         widgets (list): of widgets
     """
 
@@ -631,6 +632,7 @@ class AbstractPiPDisplayWidget(QWidget):
         self._previous_widget = None
         self._pip_scale = (0.35, 0.35)
         self._display_mode = AbstractPopupBarWidget.PIP
+        self._taskbar_size = 100
 
         self._popup_bar_min_size = (100, 100)
         self._is_dragging = True
@@ -846,6 +848,12 @@ class AbstractPiPDisplayWidget(QWidget):
 
     def setIsStandalone(self, is_standalone):
         self._is_standalone = is_standalone
+
+    def taskbarSize(self):
+        return self._taskbar_size
+
+    def setTaskbarSize(self, taskbar_size):
+        self._taskbar_size = taskbar_size
 
     def popupBarMinSize(self):
         return self._popup_bar_min_size
@@ -1335,7 +1343,7 @@ class AbstractPiPDisplayWidget(QWidget):
         return xpos, ypos, width, height
 
     def __resizeTaskbar(self):
-        size = 50
+        size = self.taskbarSize()
         handle_width = self.popupBarWidget().handleWidth()
         total_size = (self.popupBarWidget().count() * size) + ((self.popupBarWidget().count()-1) * handle_width)
 
