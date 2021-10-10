@@ -51,7 +51,8 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             Widgets are enlarged by the user hovering over them.  And closed
             be pressing "esc" or having the mouse exit the boundries of the widget.
         if_frozen (bool): Determines if events should be handled or not.
-
+        is_overlay_displayed (bool): determines if the overlay is currently displayed.  If set to
+            True, this will display the "acronym", if False, will display the delegate widget.
         enlarged_widget (QWidget): The widget that is currently enlarged
         overlay_widget (QWidget): Widget to overlay the popup over.  If none is specified,
             then this will return the main window.
@@ -79,6 +80,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         self._is_frozen = False
         self._is_dragging = False
         self._is_enlarged = False
+        self._is_overlay_enabled = True
         self._is_standalone = True
         self._enlarged_scale = 0.85
         self._direction = direction
@@ -131,6 +133,12 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
 
     def setDisplayMode(self, display_mode):
         self._display_mode = display_mode
+        if display_mode == AbstractPopupBarWidget.PIP:
+            self.setIsOverlayEnabled(False)
+        if display_mode == AbstractPopupBarWidget.PIPTASKBAR:
+            self.setIsOverlayEnabled(True)
+        if display_mode == AbstractPopupBarWidget.TASKBAR:
+            self.setIsOverlayEnabled(True)
 
     def enlargedScale(self):
         return self._enlarged_scale
@@ -154,6 +162,15 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
                 widget.headerWidget().show()
             else:
                 widget.headerWidget().hide()
+
+    def isOverlayEnabled(self):
+        return self._is_overlay_enabled
+
+    def setIsOverlayEnabled(self, enabled):
+        self._is_overlay_enabled = enabled
+        for widget in self.widgets():
+            if widget != self.enlargedWidget():
+                widget.setIsOverlayDisplayed(enabled)
 
     def isDragging(self):
         return self.getTopMostPiPDisplay(self, self.parent()).isDragging()
@@ -665,6 +682,9 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         Returns (AbstractPopupBarItemWidget):
         """
         mini_widget = AbstractPopupBarItemWidget(self, direction=Qt.Vertical, delegate_widget=widget, is_pip_widget=is_pip_widget, name=name)
+
+        # mini_widget.setIsOverlayEnabled(self.isOverlayEnabled())
+        # mini_widget.setIsOverlayDisplayed(self.isOverlayEnabled())
         # self.installDragEnterMonkeyPatch(mini_widget.delegateWidget())
         # self.installDragLeaveMonkeyPatch(mini_widget.delegateWidget())
         # self.installDragMoveMonkeyPatch(mini_widget.delegateWidget())
@@ -779,7 +799,7 @@ class AbstractPopupBarItemWidget(AbstractOverlayInputWidget):
         # this is just a forced override for now
         # disable editable header
         delegate_widget.viewWidget().setDisplayMode(AbstractOverlayInputWidget.DISABLED)
-        self.setDisplayMode(AbstractOverlayInputWidget.DISABLED)
+        # self.setDisplayMode(AbstractOverlayInputWidget.DISABLED)
         self.setAcceptDrops(True)
 
     # def updateItemDisplayName(self, widget, value):
@@ -821,12 +841,14 @@ class AbstractPopupBarItemWidget(AbstractOverlayInputWidget):
         self._is_overlay_enabled = enabled
 
     def isOverlayDisplayed(self):
-        return self._is_overlay_displayed
+        return self.isOverlayDisplayed()
 
     def setIsOverlayDisplayed(self, enabled):
         if self.isOverlayEnabled():
             self._is_overlay_displayed = enabled
             self.setCurrentIndex(enabled)
+        else:
+            self.setCurrentIndex(1)
 
     def isMainViewerWidget(self):
         return self._is_main_viewer_widget

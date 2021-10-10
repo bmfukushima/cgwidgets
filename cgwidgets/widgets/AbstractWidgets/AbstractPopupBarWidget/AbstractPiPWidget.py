@@ -630,6 +630,7 @@ class AbstractPiPDisplayWidget(QWidget):
         self._current_widget = None
         self._previous_widget = None
         self._pip_scale = (0.35, 0.35)
+        self._display_mode = AbstractPopupBarWidget.PIP
 
         self._popup_bar_min_size = (100, 100)
         self._is_dragging = True
@@ -766,6 +767,11 @@ class AbstractPiPDisplayWidget(QWidget):
 
     def setDisplayMode(self, display_mode):
         self.popupBarWidget().setDisplayMode(display_mode)
+        if display_mode == AbstractPopupBarWidget.PIP:
+            self.popupBarWidget().setIsOverlayEnabled(False)
+
+        elif display_mode == AbstractPopupBarWidget.PIPTASKBAR:
+            self.popupBarWidget().setIsOverlayEnabled(True)
 
     def pipScale(self):
         return self._pip_scale
@@ -922,13 +928,15 @@ class AbstractPiPDisplayWidget(QWidget):
 
         """ Note: This can't install in the PopupBar then remove.  It will still register
         in the count, even if you process the events."""
-        # create main widget
+        # create mini viewer widgets
         if self.currentWidget():
             popup_bar_widget = self.popupBarWidget().createNewWidget(widget, name=name)
 
-        # create mini viewer widgets
+        # create main widget
         else:
             popup_bar_widget = AbstractPopupBarItemWidget(self.mainViewerWidget(), direction=Qt.Vertical, delegate_widget=widget, name=name)
+            #popup_bar_widget.setIsOverlayEnabled(self.popupBarWidget().isOverlayEnabled())
+            #popup_bar_widget.setIsOverlayDisplayed(self.popupBarWidget().isOverlayEnabled())
             self.setCurrentWidget(popup_bar_widget)
 
         # TODO This is probably causing some slowness on loading

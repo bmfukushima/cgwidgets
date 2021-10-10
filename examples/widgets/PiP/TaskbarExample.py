@@ -27,7 +27,7 @@ main_layout.addWidget(other_widget)
 
 # set popup bar widget
 popup_bar_widget.setOverlayWidget(other_widget)
-popup_bar_widget.setIsDisplayNamesShown(False)
+popup_bar_widget.setIsDisplayNamesShown(True)
 
 # show widget
 setAsAlwaysOnTop(main_widget)

@@ -81,7 +81,9 @@ pip_display_widget.loadPiPWidgetFromFile(
     getDefaultSavePath() + '/.PiPWidgets_02.json',
     "double"
 )
-
+pip_display_widget.setIsDisplayNamesShown(True)
+from cgwidgets.widgets import PopupBarWidget
+pip_display_widget.setDisplayMode(PopupBarWidget.PIP)
 pip_organizer_widget.setPiPScale(.55)
 pip_organizer_widget.setEnlargedScale(0.35)
 pip_organizer_widget.setDirection(attrs.WEST)
