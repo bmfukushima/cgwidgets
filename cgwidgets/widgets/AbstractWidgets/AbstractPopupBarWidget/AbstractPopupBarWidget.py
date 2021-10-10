@@ -70,9 +70,9 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         widgets (list): Of AbstractPopupBarWidget widgets that are currently displayed.
             This does not include the currently enlarged widget
     """
-    PIP = 0
-    PIPTASKBAR = 1
-    TASKBAR = 2
+    PIP = "PIP"
+    PIPTASKBAR = "TASKBAR"
+    TASKBAR = "TASKBAR_STANDALONE"
 
     def __init__(self, parent=None, direction=attrs.EAST, orientation=Qt.Vertical, overlay_widget=None):
         super(AbstractPopupBarWidget, self).__init__(parent, orientation)

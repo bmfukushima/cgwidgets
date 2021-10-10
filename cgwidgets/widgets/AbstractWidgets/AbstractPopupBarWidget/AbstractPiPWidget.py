@@ -744,6 +744,7 @@ class AbstractPiPDisplayWidget(QWidget):
             "Enlarged Scale": self.enlargedScale(),
             "Display Titles": self.isDisplayNamesShown(),
             "Direction": self.direction(),
+            "Display Mode": self.displayMode(),
             "sizes": self.popupBarWidget().sizes()
         }
 
@@ -760,6 +761,16 @@ class AbstractPiPDisplayWidget(QWidget):
         self.setEnlargedScale(float(settings["Enlarged Scale"]))
         self.setIsDisplayNamesShown(settings["Display Titles"])
         self.setDirection(settings["Direction"])
+
+        # set Display mode
+        """ This needs a special clause as it was added later, so not all of the
+        files will have the "Display Mode" setting """
+        if "Display Mode" in settings.keys():
+            self.setDisplayMode(settings["Display Mode"])
+        else:
+            self.setDisplayMode(AbstractPopupBarWidget.PIP)
+
+        #
         if "sizes" in list(settings.keys()):
             self.popupBarWidget().setSizes(settings["sizes"])
 
@@ -1460,7 +1471,16 @@ class SettingsWidget(AbstractFrameInputWidgetContainer):
 #print(organizer_widget)
 #print(organizer_widget.pipDisplayWidget())
 organizer_widget.pipDisplayWidget().setDirection(value)
-organizer_widget.pipDisplayWidget().resizePopupBar()"""}
+organizer_widget.pipDisplayWidget().resizePopupBar()"""},
+        "Display Mode":{
+            "type": attrs.LIST,
+            "value": AbstractPopupBarWidget.PIP,
+            "items": [[AbstractPopupBarWidget.PIP], [AbstractPopupBarWidget.PIPTASKBAR]],
+            "code": """
+organizer_widget.pipDisplayWidget().setDisplayMode(value)       
+organizer_widget.pipDisplayWidget().resizePopupBar()
+            """
+        }
     }
 
     def __init__(self, parent=None):
@@ -2320,7 +2340,10 @@ class PiPSaveWidget(QWidget):
         self.nameWidget().delegateWidget().setText('')
         self.updateSaveButtonText()
 
-        print('saving to... ', self.getPiPSaveData())
+        # log
+        parent_name = parent_index.internalPointer().name()
+        print("saving ", parent_name + "/" + name, "to", self.currentSaveFilePath())
+        #print('saving to... ', self.getPiPSaveData())
         return item
 
     def updatePiPWidgetItemInFile(self):
