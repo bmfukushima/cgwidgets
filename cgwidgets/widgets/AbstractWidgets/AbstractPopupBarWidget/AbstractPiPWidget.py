@@ -1540,7 +1540,7 @@ organizer_widget.pipDisplayWidget().resizePopupBar()
             "code": """
 items = organizer_widget.popupBarOrganizerWidget().getAllSelectedItems()
 if 0 < len(items):
-    item[0].setTitle(value)
+    items[0].setOverlayText(value)
 # update overlay text
                 """
         },
@@ -1550,7 +1550,7 @@ if 0 < len(items):
             "code": """
 items = organizer_widget.popupBarOrganizerWidget().getAllSelectedItems()
 if 0 < len(items):
-    item[0].setOverlayText(value)
+    items[0].setOverlayImage(value)
             """
         }
     }
@@ -2452,6 +2452,18 @@ class PiPPopupBarOrganizerItem(AbstractDragDropModelItem):
     def setWidget(self, widget):
         self._widget = widget
 
+    def overlayText(self):
+        return self.widget().title()
+
+    def setOverlayText(self, text):
+        self.widget().setTitle(text)
+
+    def overlayImage(self):
+        return self.widget().image()
+
+    def setOverlayImage(self, image_path):
+        self.widget().setImage(image_path)
+
     def constructorCode(self):
         return self._constructor_code
 
@@ -2485,6 +2497,7 @@ class PiPPopupBarOrganizerWidget(AbstractModelViewWidget):
         self.setItemDeleteEvent(self.deleteWidget)
         self.setTextChangedEvent(self.editWidget)
         self.setDropEvent(self.itemReordered)
+        self.setIndexSelectedEvent(self.updateGlobalSettings)
 
         # panel creator widget
         if not widget_types:
@@ -2499,6 +2512,14 @@ class PiPPopupBarOrganizerWidget(AbstractModelViewWidget):
         return [index.internalPointer().widget() for index in self.model().getAllIndexes() if hasattr(index.internalPointer(), "_widget")]
 
     """ EVENTS """
+    def updateGlobalSettings(self, item, enabled):
+        if enabled:
+            print(item.name())
+            organizer_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
+            settings_widget = organizer_widget.settingsWidget()
+            settings_widget.widgets()["Overlay Text"].delegateWidget().setText(item.overlayText())
+            settings_widget.widgets()["Overlay Image"].delegateWidget().setText(item.overlayImage())
+
     def itemReordered(self, data, items, model, row, parent):
         """When an item is drag/dropped, this will update the widget indexes, and reinsert
         the widget into the mini viewer if it is not currently the active widget.
