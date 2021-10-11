@@ -615,6 +615,10 @@ class AbstractPiPDisplayWidget(QWidget):
             have slightly different constructors.
 
             If True, this means that this display is a standalone..
+        is_taskbar_standalone (bool): When set to taskbar, determines if it is in Standalone mode, or
+            if it will be the child of a PiPWidget.
+
+            Todo: this is not currently set up, and will only work in PiP Mode
         pip_scale ((float, float)):  fractional percentage of the amount of space that
             the mini viewer will take up in relation to the overall size of the widget.
         swap_key (Qt.KEY): this key will trigger the popup
@@ -633,6 +637,7 @@ class AbstractPiPDisplayWidget(QWidget):
         self._pip_scale = (0.35, 0.35)
         self._display_mode = AbstractPopupBarWidget.PIP
         self._taskbar_size = 100
+        self._is_taskbar_standalone = False
 
         self._popup_bar_min_size = (100, 100)
         self._is_dragging = True
@@ -745,6 +750,10 @@ class AbstractPiPDisplayWidget(QWidget):
             "Display Titles": self.isDisplayNamesShown(),
             "Direction": self.direction(),
             "Display Mode": self.displayMode(),
+            "Taskbar Size": self.taskbarSize(),
+            "Standalone": self.isTaskbarStandalone(),
+            "Overlay Text": self.currentWidget().title(),
+            "Overlay Image": self.currentWidget().image(),
             "sizes": self.popupBarWidget().sizes()
         }
 
@@ -770,6 +779,9 @@ class AbstractPiPDisplayWidget(QWidget):
         else:
             self.setDisplayMode(AbstractPopupBarWidget.PIP)
 
+        # Overlay Image
+        # Overlay Text
+        # Taskbar Size
         #
         if "sizes" in list(settings.keys()):
             self.popupBarWidget().setSizes(settings["sizes"])
@@ -861,6 +873,12 @@ class AbstractPiPDisplayWidget(QWidget):
 
     def setIsStandalone(self, is_standalone):
         self._is_standalone = is_standalone
+
+    def isTaskbarStandalone(self):
+        return self._is_taskbar_standalone
+
+    def setIsTaskbarStandalone(self, is_taskbar_standalone):
+        self._is_taskbar_standalone = is_taskbar_standalone
 
     def taskbarSize(self):
         return self._taskbar_size
@@ -1480,7 +1498,59 @@ organizer_widget.pipDisplayWidget().resizePopupBar()"""},
             "items": [[AbstractPopupBarWidget.PIP], [AbstractPopupBarWidget.PIPTASKBAR]],
             "code": """
 organizer_widget.pipDisplayWidget().setDisplayMode(value)       
+
+# hide/show all widgets
+from cgwidgets.widgets import PopupBarWidget
+
+# todo get all widgets to show / hide
+widgets = [
+    organizer_widget.settingsWidget().widgets()["Taskbar Size"],
+    organizer_widget.settingsWidget().widgets()["Standalone"],
+    organizer_widget.settingsWidget().widgets()["Overlay Text"],
+    organizer_widget.settingsWidget().widgets()["Overlay Image"],
+]
+for widget in widgets:
+    if value == PopupBarWidget.PIP:
+        widget.hide()
+    elif value == PopupBarWidget.PIPTASKBAR:
+        widget.show()
+
+# update popup bar size
 organizer_widget.pipDisplayWidget().resizePopupBar()
+            """
+        },
+        "Taskbar Size": {
+            "type": attrs.FLOAT,
+            "value": 100,
+            "value_list": [1, 5, 10, 25],
+            "range": [False],
+            "code": """
+organizer_widget.pipDisplayWidget().setTaskbarSize(float(value))
+organizer_widget.pipDisplayWidget().resizePopupBar()
+            """
+        },
+        "Standalone": {
+            "type": attrs.BOOLEAN,
+            "value": False,
+            "code": """pass""" # todo setup standalone setting pressed code
+        },
+        "Overlay Text": {
+            "type": attrs.STRING,
+            "value": "",
+            "code": """
+items = organizer_widget.popupBarOrganizerWidget().getAllSelectedItems()
+if 0 < len(items):
+    item[0].setTitle(value)
+# update overlay text
+                """
+        },
+        "Overlay Image": {
+            "type": attrs.STRING,
+            "value": "",
+            "code": """
+items = organizer_widget.popupBarOrganizerWidget().getAllSelectedItems()
+if 0 < len(items):
+    item[0].setOverlayText(value)
             """
         }
     }
@@ -1534,6 +1604,9 @@ organizer_widget.pipDisplayWidget().resizePopupBar()
             delegate_widget.filter_results = False
             # delegate_widget.setUserFinishedEditingEvent(self.userUpdate)
 
+        elif setting["type"] == attrs.STRING:
+            delegate_widget = AbstractStringInputWidget(self)
+
         input_widget = AbstractLabelledInputWidget(parent=self, name=name, delegate_widget=delegate_widget)
         input_widget.viewWidget().setDisplayMode(AbstractOverlayInputWidget.DISABLED)
         input_widget.setDefaultLabelLength(125)
@@ -1556,7 +1629,6 @@ organizer_widget.pipDisplayWidget().resizePopupBar()
         # get attrs
         labelled_input_widget = getWidgetAncestor(widget, AbstractLabelledInputWidget)
         name = labelled_input_widget.name()
-
         self.setSetting(name, value)
 
     def setSetting(self, name, value):

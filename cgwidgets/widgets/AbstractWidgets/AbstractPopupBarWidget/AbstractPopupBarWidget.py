@@ -646,7 +646,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
                 # enlarge mini viewer
                 display_widget = getWidgetAncestor(widget_under_cursor, AbstractPiPDisplayWidget)
                 popup_bar_widget = getWidgetAncestor(widget_under_cursor, AbstractPopupBarItemWidget)
-                # taskbar?
+                # taskbar
                 if not display_widget:
                     self.enlargedWidget().setIsOverlayDisplayed(False)
                     self.enlargeWidget(popup_bar_widget)
@@ -902,6 +902,19 @@ class AbstractPopupBarItemWidget(AbstractOverlayInputWidget):
         self.item().columnData()["name"] = name
         self.headerWidget().viewWidget().setText(name)
 
+    # setTitle
+    # setImage
+    # def overlayName(self):
+    #     return self._overlay_name
+    #
+    # def setOverlayName(self, overlay_name):
+    #     self._overlay_name = overlay_name
+    #
+    # def image(self):
+    #     return self._image
+    #
+    # def setImage(self, image):
+    #     self._image = image
 
 if __name__ == "__main__":
     import sys
