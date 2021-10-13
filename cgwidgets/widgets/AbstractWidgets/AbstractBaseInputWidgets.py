@@ -601,6 +601,7 @@ class AbstractBooleanInputWidget(AbstractLabelWidget):
         self.setProperty('is_selected', is_selected)
         updateStyleSheet(self)
 
+
 class AbstractButtonInputWidget(AbstractBooleanInputWidget):
     """
     Toggleable button designed to work with the AbstractButtonInputWidgetContainer.
