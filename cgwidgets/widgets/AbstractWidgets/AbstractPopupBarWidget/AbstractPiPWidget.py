@@ -14,7 +14,7 @@ Hierarchy:
         |    |- spacer_widget (QLabel)
         |    |- PopupBar (QWidget)
         |        |- QBoxLayout
-        |            |-* AbstractPopupBarItemWidget --> QWidget
+        |            |-* AbstractPopupBarItemWidget --> AbstractOverlayInputWidget
         |                    |- QVBoxLayout
         |                    |- AbstractLabelledInputWidget
         |- popupBarOrganizerWidget --> AbstractModelViewWidget
@@ -2514,7 +2514,6 @@ class PiPPopupBarOrganizerWidget(AbstractModelViewWidget):
     """ EVENTS """
     def updateGlobalSettings(self, item, enabled):
         if enabled:
-            print(item.name())
             organizer_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
             settings_widget = organizer_widget.settingsWidget()
             settings_widget.widgets()["Overlay Text"].delegateWidget().setText(item.overlayText())
