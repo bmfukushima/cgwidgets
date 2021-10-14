@@ -39,15 +39,27 @@ Data Structure (save widget):
         currentPiPFileData()
             {"PiPName": {
                 "widgets": [
-                    {"widget name": "constructor code"},
-                    {"widget name": "constructor code"},
-                    {"widget name": "constructor code"}],
+                    {"widget name": {
+                        "code": "constructor_code",
+                        "overlay_text": "text",
+                        "overlay_image": "path/on/disk/to/image"},
+                    {"widget name": {
+                        "code": "constructor_code",
+                        "overlay_text": "text",
+                        "overlay_image": "path/on/disk/to/image"},
+                    ],
                 "settings": {"setting name": "value"}},
             "PiPName2": {
                 "widgets": [
-                    {"widget name": "constructor code"},
-                    {"widget name": "constructor code"},
-                    {"widget name": "constructor code"}],
+                    {"widget name": {
+                        "code": "constructor_code",
+                        "overlay_text": "text",
+                        "overlay_image": "path/on/disk/to/image"},
+                    {"widget name": {
+                        "code": "constructor_code",
+                        "overlay_text": "text",
+                        "overlay_image": "path/on/disk/to/image"},
+                    ],
                 "settings": {"setting name": "value"}}
             }
 
@@ -1042,7 +1054,6 @@ class AbstractPiPDisplayWidget(QWidget):
         # populate pip view
         # load widgets
         for widget_name, widget_data in reversed_widgets.items():
-            print(widget_data)
             constructor_code = widget_data["code"]
             if self.isStandalone():
                 widget = self.createNewWidgetFromConstructorCode(constructor_code, name=widget_name, resize_popup_bar=False)
@@ -1051,12 +1062,11 @@ class AbstractPiPDisplayWidget(QWidget):
                 index = organizer_widget.createNewWidgetFromConstructorCode(constructor_code, name=widget_name, resize_popup_bar=False)
                 widget = index.internalPointer().widget()
 
+            # update widget overlay text/image if set in Taskbar mode
             if settings["Display Mode"] == AbstractPopupBarWidget.PIPTASKBAR:
-                # setTitle
-                # setImage
                 widget.setTitle(widget_data["overlay_text"])
                 widget.setImage(widget_data["overlay_image"])
-            # update widget overlay text/image if set in Taskbar mode
+
 
         # update settings
         self.updateSettings(settings)
@@ -1994,8 +2004,13 @@ class PiPSaveButtonWidget(AbstractButtonInputWidget):
 
 
 class PiPSaveWidget(QWidget):
-    """
-    constructor is a required arg in the constructor code
+    """ The widget that will be handling the saving.
+
+    This has the list of names of the individual items, as well
+    as the save button.
+
+    Note:
+        constructor is a required arg in the constructor code
 
     Signals:
         save
@@ -2023,15 +2038,27 @@ class PiPSaveWidget(QWidget):
         currentPiPFileData()
             {"PiPName": {
                 "widgets": [
-                    {"widget name": "constructor code"},
-                    {"widget name": "constructor code"},
-                    {"widget name": "constructor code"}],
+                    {"widget name": {
+                        "code": "constructor_code",
+                        "overlay_text": "text",
+                        "overlay_image": "path/on/disk/to/image"},
+                    {"widget name": {
+                        "code": "constructor_code",
+                        "overlay_text": "text",
+                        "overlay_image": "path/on/disk/to/image"},
+                    ],
                 "settings": {"setting name": "value"}},
             "PiPName2": {
                 "widgets": [
-                    {"widget name": "constructor code"},
-                    {"widget name": "constructor code"},
-                    {"widget name": "constructor code"}],
+                    {"widget name": {
+                        "code": "constructor_code",
+                        "overlay_text": "text",
+                        "overlay_image": "path/on/disk/to/image"},
+                    {"widget name": {
+                        "code": "constructor_code",
+                        "overlay_text": "text",
+                        "overlay_image": "path/on/disk/to/image"},
+                    ],
                 "settings": {"setting name": "value"}}
             }
     """

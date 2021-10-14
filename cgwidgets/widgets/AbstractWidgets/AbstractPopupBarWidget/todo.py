@@ -2,16 +2,6 @@
 TODO
     *   Organizer
             - Add acronym/image
-                - Save
-                    {"PiPName": {
-                        "widgets": [
-                            {"widget name": "constructor code"},
-                                to
-                            {"widget name": {
-                                "code": "constructor code",
-                                overlay_text": "",
-                                "image_path": ""}
-                        "settings": {"setting name": "value"}},
                 - Reset overlay text when switching between PiPWidgets
                 - Default needs to be passed?
                 - Acronym reloaded?
