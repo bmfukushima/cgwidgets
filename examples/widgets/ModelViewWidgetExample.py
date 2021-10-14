@@ -1,6 +1,6 @@
 import sys
 import os
-# os.environ['QT_API'] = 'pyside2'
+os.environ['QT_API'] = 'pyside2'
 from qtpy.QtWidgets import QApplication, QLabel
 from qtpy.QtGui import QCursor
 from qtpy.QtCore import Qt

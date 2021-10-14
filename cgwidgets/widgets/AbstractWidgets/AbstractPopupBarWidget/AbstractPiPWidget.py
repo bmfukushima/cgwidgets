@@ -1924,8 +1924,6 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
             enabled (bool):
         """
         if enabled:
-
-
             """ All items are of type PIP except for the groups"""
             if item.itemType() == PiPGlobalOrganizerItem.PIP:
                 organizer_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
