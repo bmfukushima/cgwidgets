@@ -1045,10 +1045,18 @@ class AbstractPiPDisplayWidget(QWidget):
             print(widget_data)
             constructor_code = widget_data["code"]
             if self.isStandalone():
-                self.createNewWidgetFromConstructorCode(constructor_code, name=widget_name, resize_popup_bar=False)
+                widget = self.createNewWidgetFromConstructorCode(constructor_code, name=widget_name, resize_popup_bar=False)
             else:
                 organizer_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
-                organizer_widget.createNewWidgetFromConstructorCode(constructor_code, name=widget_name, resize_popup_bar=False)
+                index = organizer_widget.createNewWidgetFromConstructorCode(constructor_code, name=widget_name, resize_popup_bar=False)
+                widget = index.internalPointer().widget()
+
+            if settings["Display Mode"] == AbstractPopupBarWidget.PIPTASKBAR:
+                # setTitle
+                # setImage
+                widget.setTitle(widget_data["overlay_text"])
+                widget.setImage(widget_data["overlay_image"])
+            # update widget overlay text/image if set in Taskbar mode
 
         # update settings
         self.updateSettings(settings)
@@ -2204,13 +2212,12 @@ class PiPSaveWidget(QWidget):
             item_dict["widgets"][item_name]["code"] = item_code
             item_dict["widgets"][item_name]["overlay_text"] = item.overlayText()
             item_dict["widgets"][item_name]["overlay_image"] = item.overlayImage()
-            #item_dict["widgets"][item_name] = item_code
-
 
         # store settings in dict
         settings = {}
         for setting in main_widget.settingsWidget().settings().keys():
-            settings[setting] = main_widget.settingsWidget().settings()[setting]["value"]
+            if setting not in ["Overlay Text", "Overlay Image"]:
+                settings[setting] = main_widget.settingsWidget().settings()[setting]["value"]
 
         # store sizes from AbstractPopupBarWidget
         settings["sizes"] = main_widget.popupBarWidget().sizes()
