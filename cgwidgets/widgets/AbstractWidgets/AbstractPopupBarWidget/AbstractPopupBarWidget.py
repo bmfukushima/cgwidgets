@@ -83,6 +83,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         self._is_overlay_enabled = True
         self._is_standalone = True
         self._enlarged_scale = 0.85
+        self._filepath = ""
         self._direction = direction
         self._display_mode = AbstractPopupBarWidget.TASKBAR
 
@@ -151,6 +152,12 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
 
     def setEnlargedWidget(self, widget):
         self._enlarged_widget = widget
+
+    def filepath(self):
+        return self._filepath
+
+    def setFilepath(self, filepath):
+        self._filepath = filepath
 
     def isDisplayNamesShown(self):
         return self._are_widget_names_shown
@@ -787,6 +794,10 @@ class AbstractPopupBarItemWidget(AbstractOverlayInputWidget):
             True, this will display the "acronym", if False, will display the delegate widget.
         is_pip_widget (bool): determines if this widgets delegate widget is inherited from the
             AbstractPiPDisplayWidget.  This is for handling recursive viewing
+        overlay_image (str): Relative path on disk to file path.
+
+            This can start with a ../ to denote that the image is located in the same directory
+                as the current PiPWidget json file
         index (int): current index in model
         item (AbstractPopupBarWidgetOrganizerItem)
     """
@@ -808,6 +819,7 @@ class AbstractPopupBarItemWidget(AbstractOverlayInputWidget):
         self._is_pip_widget = is_pip_widget
         self._is_main_viewer_widget = False
         self._name = name
+        self._overlay_image = ""
         self._index = 0
 
         # create delegate widget
@@ -911,11 +923,25 @@ class AbstractPopupBarItemWidget(AbstractOverlayInputWidget):
     # def setOverlayName(self, overlay_name):
     #     self._overlay_name = overlay_name
     #
-    # def image(self):
-    #     return self._image
-    #
-    # def setImage(self, image):
-    #     self._image = image
+    def overlayImage(self):
+        return self._overlay_image
+
+
+    def setOverlayImage(self, image_path):
+        # get current directory
+        self._overlay_image = image_path
+        if image_path:
+            if image_path.startswith("../"):
+                popup_bar_widget = getWidgetAncestor(self, AbstractPopupBarWidget)
+                if popup_bar_widget:
+                    filepath = "/".join(popup_bar_widget.filepath().split("/")[:-1])
+                else:
+                    from .AbstractPiPWidget import AbstractPiPDisplayWidget
+                    main_widget = getWidgetAncestor(self, AbstractPiPDisplayWidget)
+                    filepath = "/".join(main_widget.filepath().split("/")[:-1])
+                image_path = image_path.replace("../", filepath + "/")
+        self.setImage(image_path)
+
 
 if __name__ == "__main__":
     import sys

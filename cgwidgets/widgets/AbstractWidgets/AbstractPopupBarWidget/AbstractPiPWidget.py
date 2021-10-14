@@ -619,6 +619,7 @@ class AbstractPiPDisplayWidget(QWidget):
         hotkey_swap_key (list): of Qt.Key that will swap to the corresponding widget in the popupBarWidget().
 
             The index of the Key in the list, is the index of the widget that will be swapped to.
+        filepath (str): the current filepath that has been used to load this widget
         is_popup_bar_widget (bool): determines if this is a child of a PopupBarWidget.
         is_popup_bar_shown (bool): if the mini viewer is currently visible.
             This is normally toggled with the "Q" key
@@ -637,7 +638,6 @@ class AbstractPiPDisplayWidget(QWidget):
         taskbar_size (int): The size of the collapsed widgets when in TASKBAR mode.
         widgets (list): of widgets
     """
-
     def __init__(self, parent=None, is_popup_bar_widget=False):
         super(AbstractPiPDisplayWidget, self).__init__(parent)
 
@@ -650,6 +650,7 @@ class AbstractPiPDisplayWidget(QWidget):
         self._display_mode = AbstractPopupBarWidget.PIP
         self._taskbar_size = 100
         self._is_taskbar_standalone = False
+        self._filepath = ""
 
         self._popup_bar_min_size = (100, 100)
         self._is_dragging = True
@@ -765,7 +766,7 @@ class AbstractPiPDisplayWidget(QWidget):
             "Taskbar Size": self.taskbarSize(),
             "Standalone": self.isTaskbarStandalone(),
             "Overlay Text": self.currentWidget().title(),
-            "Overlay Image": self.currentWidget().image(),
+            "Overlay Image": self.currentWidget().overlayImage(),
             "sizes": self.popupBarWidget().sizes()
         }
 
@@ -811,6 +812,12 @@ class AbstractPiPDisplayWidget(QWidget):
             self.popupBarWidget().setIsOverlayEnabled(True)
             self.popupBarWidget().setWidgetOverlayDisplay(False)
             # self.popupBarWidget().setIsOverlayDisplayed()
+
+    def filepath(self):
+        return self._filepath
+
+    def setFilepath(self, filepath):
+        self._filepath = filepath
 
     def pipScale(self):
         return self._pip_scale
@@ -1021,8 +1028,9 @@ class AbstractPiPDisplayWidget(QWidget):
             pip_name (str): name of pip in filepath to load
         """
         # load json data
+        self._filepath = filepath
         data = getJSONData(filepath)
-
+        self.popupBarWidget().setFilepath(filepath)
         # preflight
         if not pip_name in data.keys():
             print("{pip_name} not find in {filepath}".format(pip_name=pip_name, filepath=filepath))
@@ -1065,8 +1073,7 @@ class AbstractPiPDisplayWidget(QWidget):
             # update widget overlay text/image if set in Taskbar mode
             if settings["Display Mode"] == AbstractPopupBarWidget.PIPTASKBAR:
                 widget.setTitle(widget_data["overlay_text"])
-                widget.setImage(widget_data["overlay_image"])
-
+                widget.setOverlayImage(widget_data["overlay_image"])
 
         # update settings
         self.updateSettings(settings)
@@ -1824,6 +1831,7 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
         self.setItemDeleteEvent(self.deleteItemEvent)
         self.setIndexSelectedEvent(self.loadPiPWidgetFromSelection)
         self.setDropEvent(self.duplicateItemOnDrop)
+        self.addContextMenuEvent("Get File Path", self.printFilepath)
 
         # setup deletion warning
         delete_warning_widget = AbstractLabelWidget(text="Are you sure you want to delete this?\n You cannot undo it...")
@@ -1850,6 +1858,7 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
             for widget_name in reversed(pip_data.keys()):
                 self.createNewPiPIndex(
                     widget_name,
+                    file_path,
                     pip_data[widget_name]["widgets"],
                     pip_data[widget_name]["settings"],
                     parent_index)
@@ -1877,14 +1886,15 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
 
         return container_index
 
-    def createNewPiPIndex(self, widget_name, widgets, settings, parent, index=0):
+    def createNewPiPIndex(self, widget_name, file_path, widgets, settings, parent, index=0):
         """
         Creates a new PiP Index
         Args:
-            widget_name:
-            widgets:
-            settings:
-            index:
+            file_path (str):
+            widget_name (str):
+            widgets ():
+            settings ():
+            index (int):
             parent:
 
         Returns:
@@ -1895,6 +1905,7 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
         item.setWidgetsList(widgets)
         item.setSettings(settings)
         item.setItemType(PiPGlobalOrganizerItem.PIP)
+        item.setFilePath(file_path)
 
         # set flags
         item.setIsDroppable(False)
@@ -1902,6 +1913,10 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
             item.setIsLocked(True)
 
         return item
+
+    def printFilepath(self, index, selected_indexes):
+        """ Prints the filepath of the currently selected item"""
+        print(index.internalPointer().filePath())
 
     """ SAVE ( VIRTUAL ) """
     def getAllPiPWidgetsNames(self):
@@ -1940,6 +1955,8 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
             if item.itemType() == PiPGlobalOrganizerItem.PIP:
                 organizer_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
                 organizer_widget.removeAllWidgets()
+                organizer_widget.pipDisplayWidget().setFilepath(item.filePath())
+                organizer_widget.pipDisplayWidget().popupBarWidget().setFilepath(item.filePath())
                 organizer_widget.pipDisplayWidget().loadPiPWidgetFromData(item.widgetsList(), item.settings())
 
                 # load settings
@@ -2465,7 +2482,7 @@ class PiPSaveWidget(QWidget):
         else:
             parent_index = selected_index
         item = main_widget.globalOrganizerWidget().createNewPiPIndex(
-            name, pip_data[name]["widgets"], pip_data[name]["settings"], parent_index, index=index)
+            name, self.currentSaveFilePath(), pip_data[name]["widgets"], pip_data[name]["settings"], parent_index, index=index)
 
         # reset text
         self.nameWidget().delegateWidget().setText('')
@@ -2516,10 +2533,10 @@ class PiPPopupBarOrganizerItem(AbstractDragDropModelItem):
         self.widget().setTitle(text)
 
     def overlayImage(self):
-        return self.widget().image()
+        return self.widget().overlayImage()
 
     def setOverlayImage(self, image_path):
-        self.widget().setImage(image_path)
+        self.widget().setOverlayImage(image_path)
 
     def constructorCode(self):
         return self._constructor_code

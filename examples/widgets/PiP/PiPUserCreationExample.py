@@ -72,7 +72,7 @@ pip_organizer_widget.setDirection(attrs.WEST)
 setAsAlwaysOnTop(pip_organizer_widget)
 pip_organizer_widget.show()
 centerWidgetOnCursor(pip_organizer_widget)
-pip_organizer_widget.resize(512, 512)
+pip_organizer_widget.resize(1512, 512)
 
 # setup display widget
 pip_display_widget = PiPDisplayWidget()
