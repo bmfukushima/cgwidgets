@@ -35,17 +35,16 @@ from qtpy.QtWidgets import QListWidget
 from qtpy.QtWidgets import QAbstractItemView
 widget = QListWidget()
 widget.setDragDropMode(QAbstractItemView.DragDrop)
-widget.setAcceptDrop(True)
+widget.setAcceptDrops(True)
 widget.addItems(['a', 'b', 'c', 'd'])
 # widget.setFixedWidth(100)
 """,
     "Recursion":"""
-
 from cgwidgets.widgets import PiPDisplayWidget
 widget = PiPDisplayWidget()
 widget.loadPiPWidgetFromFile(
     getDefaultSavePath() + '/.PiPWidgets_02.json',
-    "test02"
+    "RecursionWidget"
 )
 """,
     "Popup":"""
@@ -79,7 +78,7 @@ pip_organizer_widget.resize(512, 512)
 pip_display_widget = PiPDisplayWidget()
 pip_display_widget.loadPiPWidgetFromFile(
     getDefaultSavePath() + '/.PiPWidgets_02.json',
-    "double"
+    "Double"
 )
 pip_display_widget.setIsDisplayNamesShown(True)
 from cgwidgets.widgets import PopupBarWidget

@@ -1014,7 +1014,7 @@ class AbstractPiPDisplayWidget(QWidget):
         # preflight
         if not pip_name in data.keys():
             print("{pip_name} not find in {filepath}".format(pip_name=pip_name, filepath=filepath))
-
+            return
         # update pip display
         self.removeAllWidgets()
         self.loadPiPWidgetFromData(
@@ -1041,7 +1041,9 @@ class AbstractPiPDisplayWidget(QWidget):
 
         # populate pip view
         # load widgets
-        for widget_name, constructor_code in reversed_widgets.items():
+        for widget_name, widget_data in reversed_widgets.items():
+            print(widget_data)
+            constructor_code = widget_data["code"]
             if self.isStandalone():
                 self.createNewWidgetFromConstructorCode(constructor_code, name=widget_name, resize_popup_bar=False)
             else:
@@ -2197,7 +2199,13 @@ class PiPSaveWidget(QWidget):
         for item in main_widget.items():
             item_name = item.columnData()['name']
             item_code = item.constructorCode()
-            item_dict["widgets"][item_name] = item_code
+
+            item_dict["widgets"][item_name] = {}
+            item_dict["widgets"][item_name]["code"] = item_code
+            item_dict["widgets"][item_name]["overlay_text"] = item.overlayText()
+            item_dict["widgets"][item_name]["overlay_image"] = item.overlayImage()
+            #item_dict["widgets"][item_name] = item_code
+
 
         # store settings in dict
         settings = {}

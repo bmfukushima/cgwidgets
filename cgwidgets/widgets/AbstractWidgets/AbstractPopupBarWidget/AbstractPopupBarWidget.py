@@ -904,6 +904,7 @@ class AbstractPopupBarItemWidget(AbstractOverlayInputWidget):
 
     # setTitle
     # setImage
+
     # def overlayName(self):
     #     return self._overlay_name
     #
