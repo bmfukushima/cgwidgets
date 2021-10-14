@@ -1924,6 +1924,9 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
             enabled (bool):
         """
         if enabled:
+
+
+            """ All items are of type PIP except for the groups"""
             if item.itemType() == PiPGlobalOrganizerItem.PIP:
                 organizer_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
                 organizer_widget.removeAllWidgets()
@@ -1931,6 +1934,8 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
 
                 # load settings
                 organizer_widget.settingsWidget().loadSettings(item.settings())
+                organizer_widget.settingsWidget().widgets()["Overlay Text"].delegateWidget().setText("")
+                organizer_widget.settingsWidget().widgets()["Overlay Image"].delegateWidget().setText("")
 
             # toggle save button lock
             is_locked = item.isLocked()
