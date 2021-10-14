@@ -12,5 +12,4 @@ TODO
             - Standalone?
                 Reloading/Creating
                 - need a separate class for creating the widget.
-            - Setting help text
 """

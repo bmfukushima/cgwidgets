@@ -1492,17 +1492,20 @@ class SettingsWidget(AbstractFrameInputWidgetContainer):
             "value": 0.25,
             "value_list": [0.01, 0.025, 0.05, 0.1],
             "range": [True, 0.1, 1],
-            "code": """organizer_widget.pipDisplayWidget().setPiPScale(float(value))"""},
+            "code": """organizer_widget.pipDisplayWidget().setPiPScale(float(value))""",
+            "help": "The amount of space the PiPWidget will take up when not enlarged"},
         "Enlarged Scale": {
             "type": attrs.FLOAT,
             "value": 0.8,
             "value_list": [0.01, 0.025, 0.05, 0.1],
             "range": [True, 0.1, 0.9],
-            "code": """organizer_widget.pipDisplayWidget().setEnlargedScale(float(value))"""},
+            "code": """organizer_widget.pipDisplayWidget().setEnlargedScale(float(value))""",
+            "help": "The amount of space (percent) the PiPWidget will take when enlarged"},
         "Display Titles": {
             "type": attrs.BOOLEAN,
             "value": True,
-            "code": """organizer_widget.pipDisplayWidget().setIsDisplayNamesShown(value)"""},
+            "code": """organizer_widget.pipDisplayWidget().setIsDisplayNamesShown(value)""",
+            "help": "Determines if the titles will be displayed or not"},
         "Direction": {
             "type": attrs.LIST,
             "value": attrs.SOUTH,
@@ -1511,7 +1514,8 @@ class SettingsWidget(AbstractFrameInputWidgetContainer):
 #print(organizer_widget)
 #print(organizer_widget.pipDisplayWidget())
 organizer_widget.pipDisplayWidget().setDirection(value)
-organizer_widget.pipDisplayWidget().resizePopupBar()"""},
+organizer_widget.pipDisplayWidget().resizePopupBar()""",
+            "help": "Which direction the popup will occur."},
         "Display Mode":{
             "type": attrs.LIST,
             "value": AbstractPopupBarWidget.PIP,
@@ -1537,8 +1541,8 @@ for widget in widgets:
 
 # update popup bar size
 organizer_widget.pipDisplayWidget().resizePopupBar()
-            """
-        },
+            """,
+            "help": "The type of display that this will use"},
         "Taskbar Size": {
             "type": attrs.FLOAT,
             "value": 100,
@@ -1547,13 +1551,13 @@ organizer_widget.pipDisplayWidget().resizePopupBar()
             "code": """
 organizer_widget.pipDisplayWidget().setTaskbarSize(float(value))
 organizer_widget.pipDisplayWidget().resizePopupBar()
-            """
-        },
+            """,
+            "help": "The size (pixels) of the taskbar when not enlarged"},
         "Standalone": {
             "type": attrs.BOOLEAN,
             "value": False,
-            "code": """pass""" # todo setup standalone setting pressed code
-        },
+            "code": """pass""", # todo setup standalone setting pressed code,
+            "help": "If True, this popup will be meant to be its own widget to be added to a layout"},
         "Overlay Text": {
             "type": attrs.STRING,
             "value": "",
@@ -1562,8 +1566,9 @@ items = organizer_widget.popupBarOrganizerWidget().getAllSelectedItems()
 if 0 < len(items):
     items[0].setOverlayText(value)
 # update overlay text
-                """
-        },
+                """,
+            "help": """The text to be overlaid while not enlarged.
+This will set the overlay text for the item currently selected in the views tab"""},
         "Overlay Image": {
             "type": attrs.STRING,
             "value": "",
@@ -1571,8 +1576,10 @@ if 0 < len(items):
 items = organizer_widget.popupBarOrganizerWidget().getAllSelectedItems()
 if 0 < len(items):
     items[0].setOverlayImage(value)
-            """
-        }
+            """,
+            "help": """The overlay image while not enlarged.
+This will set the overlay image for the item currently selected in the views tab.
+You can use ../ to access the current directory"""}
     }
 
     def __init__(self, parent=None):
@@ -1630,6 +1637,7 @@ if 0 < len(items):
         input_widget = AbstractLabelledInputWidget(parent=self, name=name, delegate_widget=delegate_widget)
         input_widget.viewWidget().setDisplayMode(AbstractOverlayInputWidget.DISABLED)
         input_widget.setDefaultLabelLength(125)
+        input_widget.setToolTip(setting["help"])
 
         # add entry into this widget
         self.addInputWidget(input_widget, finished_editing_function=self.userUpdate)
@@ -2703,7 +2711,8 @@ PiPWidgets can be saved/loaded through this tab.  This Tab Shows all of the PiPW
 Any changes made will require you to hit the save/update button at the bottom to store these changes to disk.  By default this button will save/update the selected item.  If a Group is selected, then this will update the entire Group, while if an individual item is selected, it will update that singular entry. 
 
 Hotkeys:
-< Q >Hold to hide all widgets
+< Q >
+Hold to hide all widgets
 
 < Space >
 Swap current display widget with previously displayed widget.  If this is pressed when the PopupBar is active, then the widget that is currently enlarged will be set as the actively displayed widget.
