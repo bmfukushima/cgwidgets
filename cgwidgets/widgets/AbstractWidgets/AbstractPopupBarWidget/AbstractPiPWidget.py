@@ -1487,13 +1487,6 @@ class SettingsWidget(AbstractFrameInputWidgetContainer):
             {"widget name": widget}
     """
     DEFAULT_SETTINGS = {
-        "PiP Scale": {
-            "type": attrs.FLOAT,
-            "value": 0.25,
-            "value_list": [0.01, 0.025, 0.05, 0.1],
-            "range": [True, 0.1, 1],
-            "code": """organizer_widget.pipDisplayWidget().setPiPScale(float(value))""",
-            "help": "The amount of space the PiPWidget will take up when not enlarged"},
         "Enlarged Scale": {
             "type": attrs.FLOAT,
             "value": 0.8,
@@ -1518,7 +1511,7 @@ organizer_widget.pipDisplayWidget().resizePopupBar()""",
             "help": "Which direction the popup will occur."},
         "Display Mode":{
             "type": attrs.LIST,
-            "value": AbstractPopupBarWidget.PIP,
+            "value": AbstractPopupBarWidget.PIPTASKBAR,
             "items": [[AbstractPopupBarWidget.PIP], [AbstractPopupBarWidget.PIPTASKBAR]],
             "code": """
 organizer_widget.pipDisplayWidget().setDisplayMode(value)       
@@ -1535,17 +1528,26 @@ widgets = [
 ]
 for widget in widgets:
     if value == PopupBarWidget.PIP:
+        organizer_widget.settingsWidget().widgets()["PiP Scale"].show()
         widget.hide()
     elif value == PopupBarWidget.PIPTASKBAR:
+        organizer_widget.settingsWidget().widgets()["PiP Scale"].hide()
         widget.show()
 
 # update popup bar size
 organizer_widget.pipDisplayWidget().resizePopupBar()
             """,
             "help": "The type of display that this will use"},
+        "PiP Scale": {
+            "type": attrs.FLOAT,
+            "value": 0.25,
+            "value_list": [0.01, 0.025, 0.05, 0.1],
+            "range": [True, 0.1, 1],
+            "code": """organizer_widget.pipDisplayWidget().setPiPScale(float(value))""",
+            "help": "The amount of space the PiPWidget will take up when not enlarged"},
         "Taskbar Size": {
             "type": attrs.FLOAT,
-            "value": 100,
+            "value": 100.00,
             "value_list": [1, 5, 10, 25],
             "range": [False],
             "code": """
@@ -1600,6 +1602,8 @@ You can use ../ to access the current directory"""}
         for name, setting in self.settings().items():
             input_widget = self.createSettingWidget(name, setting)
             self.widgets()[name] = input_widget
+
+        self.widgets()["PiP Scale"].hide()
 
     def widgets(self):
         return self._widgets
