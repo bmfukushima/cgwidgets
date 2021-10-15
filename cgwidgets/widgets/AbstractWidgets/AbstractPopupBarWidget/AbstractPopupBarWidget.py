@@ -70,9 +70,6 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         widgets (list): Of AbstractPopupBarWidget widgets that are currently displayed.
             This does not include the currently enlarged widget
     """
-    PIP = "PIP"
-    PIPTASKBAR = "TASKBAR"
-    TASKBAR = "TASKBAR_STANDALONE"
 
     def __init__(self, parent=None, direction=attrs.EAST, orientation=Qt.Vertical, overlay_widget=None):
         super(AbstractPopupBarWidget, self).__init__(parent, orientation)
@@ -85,7 +82,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         self._enlarged_scale = 0.85
         self._filepath = ""
         self._direction = direction
-        self._display_mode = AbstractPopupBarWidget.TASKBAR
+        self._display_mode = AbstractPopupBarDisplayWidget.TASKBAR
 
         self._enlarged_widget = None
         self._createSpacerWidget()
@@ -134,11 +131,11 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
 
     def setDisplayMode(self, display_mode):
         self._display_mode = display_mode
-        if display_mode == AbstractPopupBarWidget.PIP:
+        if display_mode == AbstractPopupBarDisplayWidget.PIP:
             self.setIsOverlayEnabled(False)
-        if display_mode == AbstractPopupBarWidget.PIPTASKBAR:
+        if display_mode == AbstractPopupBarDisplayWidget.PIPTASKBAR:
             self.setIsOverlayEnabled(True)
-        if display_mode == AbstractPopupBarWidget.TASKBAR:
+        if display_mode == AbstractPopupBarDisplayWidget.TASKBAR:
             self.setIsOverlayEnabled(True)
 
     def enlargedScale(self):
@@ -176,11 +173,11 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
     def setIsOverlayEnabled(self, enabled):
         self._is_overlay_enabled = enabled
         self.setIsOverlayDisplayed(enabled)
-        # if self.displayMode() == AbstractPopupBarWidget.PIP:
+        # if self.displayMode() == AbstractPopupBarDisplayWidget.PIP:
         #     self.setWidgetOverlayDisplay(True)
-        # elif self.displayMode() == AbstractPopupBarWidget.PIPTASKBAR:
+        # elif self.displayMode() == AbstractPopupBarDisplayWidget.PIPTASKBAR:
         #     self.setWidgetOverlayDisplay(False)
-        # elif self.displayMode() == AbstractPopupBarWidget.TASKBAR:
+        # elif self.displayMode() == AbstractPopupBarDisplayWidget.TASKBAR:
         #     self.setWidgetOverlayDisplay(False)
 
     def setWidgetOverlayDisplay(self, enabled):
@@ -197,7 +194,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         return self.getTopMostPiPDisplay(self, self.parent()).isDragging()
 
     def setIsDragging(self, _pip_widget_is_dragging):
-        if self.displayMode() == AbstractPopupBarWidget.PIP:
+        if self.displayMode() == AbstractPopupBarDisplayWidget.PIP:
             self.getTopMostPiPDisplay(self, self.parent()).setIsDragging(_pip_widget_is_dragging)
 
     def isEnlarged(self):
@@ -482,10 +479,10 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         self.__temp_sizes = self.sizes()
 
         # enlarge widget based on the current display mode
-        if self.displayMode() == AbstractPopupBarWidget.PIP:
+        if self.displayMode() == AbstractPopupBarDisplayWidget.PIP:
             xpos, ypos, width, height = self.__enlargePiPWidget()
 
-        elif self.displayMode() == AbstractPopupBarWidget.PIPTASKBAR:
+        elif self.displayMode() == AbstractPopupBarDisplayWidget.PIPTASKBAR:
             """ This is just a clone of the pip widget atm.
             Not sure if you'll even need another handler... as the 
             pip handler might work fine here... and its merely the resize
@@ -493,7 +490,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             widget.setIsOverlayDisplayed(True)
             xpos, ypos, width, height = self.__enlargePiPWidget()
 
-        elif self.displayMode() == AbstractPopupBarWidget.TASKBAR:
+        elif self.displayMode() == AbstractPopupBarDisplayWidget.TASKBAR:
             widget.setIsOverlayDisplayed(True)
             xpos, ypos, width, height = self.__enlargeTaskbar()
 
@@ -502,7 +499,10 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         self.spacerWidget().show()
 
         # reparent widget
-        widget.setParent(self.parent())
+        if self.displayMode() == AbstractPopupBarDisplayWidget.TASKBAR:
+            widget.setParent(self.window())
+        else:
+            widget.setParent(self.parent())
         widget.show()
 
         # move / resize enlarged widget
@@ -525,28 +525,43 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         negative_space = 1 - scale
         half_neg_space = negative_space * 0.5
 
-        if self.direction() == attrs.NORTH:
-            top_left = self.geometry().topLeft()
-            ypos = top_left.y() - self.overlayWidget().height() + (self.overlayWidget().height() * negative_space)
-            xpos = top_left.x() + (self.overlayWidget().width() * half_neg_space)
+        if self.direction() in [attrs.NORTH, attrs.SOUTH]:
+            if self.direction() == attrs.NORTH:
+                top_left = self.mapTo(self.window(), self.geometry().topLeft())
+                ypos = top_left.y() - self.overlayWidget().height() + (self.overlayWidget().height() * negative_space)
+                xpos = top_left.x() + (self.overlayWidget().width() * half_neg_space)
 
-        if self.direction() == attrs.SOUTH:
-            bot_left = self.geometry().bottomLeft()
-            ypos = bot_left.y()
-            xpos = bot_left.x() + (self.overlayWidget().width() * half_neg_space)
+            if self.direction() == attrs.SOUTH:
+                bot_left = self.mapTo(self.window(), self.geometry().bottomLeft())
+                ypos = bot_left.y()
+                xpos = bot_left.x() + (self.overlayWidget().width() * half_neg_space)
 
-        if self.direction() == attrs.EAST:
-            top_right = self.geometry().topRight()
-            xpos = top_right.x()
-            ypos = top_right.y() + (self.overlayWidget().height() * half_neg_space)
+            if hasattr(self, "_overlay_widget"):
+                width = self.overlayWidget().width() - (self.overlayWidget().width() * negative_space)
+                height = self.overlayWidget().height() - (self.overlayWidget().height() * half_neg_space)
+            else:
+                width = self.width() - (self.width() * negative_space)
+                height = 500
+                # todo fill remaining space
 
-        if self.direction() == attrs.WEST:
-            top_left = self.geometry().topLeft()
-            xpos = top_left.x() - self.overlayWidget().width() + (self.overlayWidget().width() * negative_space)
-            ypos = top_left.y() + (self.overlayWidget().height() * half_neg_space)
+        if self.direction() in [attrs.EAST, attrs.WEST]:
+            if self.direction() == attrs.EAST:
+                top_right = self.mapTo(self.window(), self.geometry().topRight())
+                xpos = top_right.x()
+                ypos = top_right.y() + (self.overlayWidget().height() * half_neg_space)
 
-        width = self.overlayWidget().width() - (self.overlayWidget().width() * negative_space)
-        height = self.overlayWidget().height() - (self.overlayWidget().height() * negative_space)
+            if self.direction() == attrs.WEST:
+                top_left = self.mapTo(self.window(), self.geometry().topLeft())
+                xpos = top_left.x() - self.overlayWidget().width() + (self.overlayWidget().width() * negative_space)
+                ypos = top_left.y() + (self.overlayWidget().height() * half_neg_space)
+
+            if hasattr(self, "_overlay_widget"):
+                width = self.overlayWidget().width() - (self.overlayWidget().width() * half_neg_space)
+                height = self.overlayWidget().height() - (self.overlayWidget().height() * negative_space)
+            else:
+                # todo fill remaining space
+                height = self.height() - (self.height() * negative_space)
+                width = 500
 
         return xpos, ypos, width, height
 
@@ -709,9 +724,9 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         mini_widget = AbstractPopupBarItemWidget(self, direction=Qt.Vertical, delegate_widget=widget, is_pip_widget=is_pip_widget, name=name)
 
         mini_widget.setIsOverlayEnabled(self.isOverlayEnabled())
-        if self.displayMode() == AbstractPopupBarWidget.PIP:
+        if self.displayMode() == AbstractPopupBarDisplayWidget.PIP:
             mini_widget.setIsOverlayDisplayed(self.isOverlayEnabled())
-        elif self.displayMode() in [AbstractPopupBarWidget.PIPTASKBAR, AbstractPopupBarWidget.TASKBAR]:
+        elif self.displayMode() in [AbstractPopupBarDisplayWidget.PIPTASKBAR, AbstractPopupBarDisplayWidget.TASKBAR]:
             pass
         # self.installDragEnterMonkeyPatch(mini_widget.delegateWidget())
         # self.installDragLeaveMonkeyPatch(mini_widget.delegateWidget())
@@ -943,6 +958,117 @@ class AbstractPopupBarItemWidget(AbstractOverlayInputWidget):
         self.setImage(image_path)
 
 
+class AbstractPopupBarDisplayWidget(QWidget):
+    """ Abstract class for displaying all PopupWidget types (PIP | PIPTASKBAR | TASKBAR)
+
+    Attributes:
+        display_mode (AbstractPopupBarDisplayWidget.DISPLAYMODE): what mode should
+            be displayed
+        display_widget (AbstractPopupBarWidget | AbstractPiPDisplayWidget): The current popup widget
+        popup_bar_widget (AbstractPopupBarWidget):
+        widgets (list): of AbstractPopupBarItemWidget's.
+
+    """
+
+    PIP = "PIP"
+    PIPTASKBAR = "TASKBAR"
+    TASKBAR = "TASKBAR_STANDALONE"
+
+    def __init__(self, parent=None):
+        super(AbstractPopupBarDisplayWidget, self).__init__(parent)
+
+        # setup default attrs
+        self._display_mode = AbstractPopupBarDisplayWidget.TASKBAR
+        self._display_widget = AbstractPopupBarWidget()
+        self._popup_bar_widget = self._display_widget
+        self._widgets = []
+
+        # setup layout
+        QVBoxLayout(self)
+        self.layout().addWidget(self._display_widget)
+
+        self.setContentsMargins(0,0,0,0)
+        self.layout().setContentsMargins(0,0,0,0)
+
+    """ WIDGETS """
+    def displayWidget(self):
+        return self._display_widget
+
+    def popupBarWidget(self):
+        return self._popup_bar_widget
+
+    def widgets(self):
+        return self._widgets
+
+    """ UTILS """
+    def addWidget(self, widget, name="", is_pip_widget=False, index=0):
+        # Setup attrs for creation
+        """ Needs to do this as different modes will require different attributes"""
+        if self.displayMode() in [AbstractPopupBarDisplayWidget.PIP, AbstractPopupBarDisplayWidget.PIPTASKBAR]:
+            if self.displayMode() == AbstractPopupBarDisplayWidget.PIP:
+                is_overlay_enabled = False
+            if self.displayMode() == AbstractPopupBarDisplayWidget.PIPTASKBAR:
+                is_overlay_enabled = True
+        elif self.displayMode() == AbstractPopupBarDisplayWidget.TASKBAR:
+            is_overlay_enabled = True
+
+        # create widget
+        widget = self.displayWidget().createNewWidget(
+            widget, is_pip_widget=is_pip_widget, name=name, index=index, is_overlay_enabled=is_overlay_enabled)
+
+        self.widgets().append(widget)
+
+    def insertWidget(self, index, widget, name="", is_pip_widget=False):
+        self.addWidget(widget, index=index, name=name, is_pip_widget=is_pip_widget)
+
+    """ PROPERTIES"""
+    def displayMode(self):
+        return self._display_mode
+
+    def setDisplayMode(self, display_mode):
+        """ Sets the display mode to the one provided
+
+        Args:
+            display_mode (AbstractPopupBarDisplayWidget.DISPLAY_MODE):"""
+        # preflight
+        if display_mode not in [
+            AbstractPopupBarDisplayWidget.PIP,
+            AbstractPopupBarDisplayWidget.PIPTASKBAR,
+            AbstractPopupBarDisplayWidget.TASKBAR
+        ]:
+            print(display_mode, "is not a valid option.")
+            return
+        if display_mode == self.displayMode(): return
+
+        from .AbstractPiPWidget import AbstractPiPDisplayWidget
+
+        # create new display widget
+        if display_mode in [AbstractPopupBarDisplayWidget.PIP, AbstractPopupBarDisplayWidget.PIPTASKBAR]:
+            _display_widget = AbstractPiPDisplayWidget()
+            _popup_bar_widget = _display_widget.popupBarWidget()
+        elif display_mode == AbstractPopupBarDisplayWidget.TASKBAR:
+            _display_widget = AbstractPopupBarWidget()
+            _popup_bar_widget = _display_widget
+
+        # update
+        if display_mode == AbstractPopupBarDisplayWidget.PIP:
+            _popup_bar_widget.setIsOverlayEnabled(False)
+        elif display_mode in [AbstractPopupBarDisplayWidget.PIPTASKBAR, AbstractPopupBarDisplayWidget.TASKBAR]:
+            _popup_bar_widget.setIsOverlayEnabled(True)
+
+        self.layout().addWidget(_display_widget)
+
+        # reparent existing widgets
+        for widget in reversed(self.widgets()):
+            _display_widget.addWidget(widget)
+        self.displayWidget().setParent(None)
+
+        # update attrs
+        self._display_mode = display_mode
+        self._display_widget = _display_widget
+        self._popup_bar_widget = _popup_bar_widget
+
+
 if __name__ == "__main__":
     import sys
     from qtpy.QtWidgets import QApplication, QLabel, QHBoxLayout
@@ -954,7 +1080,7 @@ if __name__ == "__main__":
     popup_bar_widget = AbstractPopupBarWidget()
     for x in range(3):
         label = QLabel(str(x))
-        popup_bar_widget.createNewWidget(label, str(x))
+        popup_bar_widget.createNewWidget(label, name=str(x))
 
     # create main widget
     main_widget = QWidget()
@@ -967,7 +1093,8 @@ if __name__ == "__main__":
 
     popup_bar_widget.setOverlayWidget(other_widget)
     popup_bar_widget.setFixedWidth(50)
-    popup_bar_widget.setDirection(attrs.SOUTH)
+    popup_bar_widget.setDisplayMode(AbstractPopupBarDisplayWidget.PIP)
+    # popup_bar_widget.setDirection(attrs.SOUTH)
 
     # show widget
     setAsAlwaysOnTop(main_widget)

@@ -1,2 +1,2 @@
 from .AbstractPiPWidget import AbstractPiPOrganizerWidget, AbstractPiPDisplayWidget
-from .AbstractPopupBarWidget import AbstractPopupBarWidget, AbstractPopupBarItemWidget
+from .AbstractPopupBarWidget import AbstractPopupBarWidget, AbstractPopupBarDisplayWidget, AbstractPopupBarItemWidget

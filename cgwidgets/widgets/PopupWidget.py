@@ -1,7 +1,13 @@
 from qtpy.QtCore import Qt
 
-from cgwidgets.widgets import AbstractPiPOrganizerWidget, AbstractPiPDisplayWidget, AbstractPopupBarWidget, AbstractPopupBarItemWidget
+from cgwidgets.widgets import (
+    AbstractPiPOrganizerWidget,
+    AbstractPiPDisplayWidget,
+    AbstractPopupBarWidget,
+    AbstractPopupBarItemWidget,
+    AbstractPopupBarDisplayWidget)
 from cgwidgets.settings import attrs
+
 
 class PiPDisplayWidget(AbstractPiPDisplayWidget):
     """The PiPWidget is designed to display multiple widgets simultaneously to the user.
@@ -112,6 +118,11 @@ class PiPOrganizerWidget(AbstractPiPOrganizerWidget):
     def __init__(self, parent=None, widget_types=None, save_data=None):
         super(PiPOrganizerWidget, self).__init__(parent, widget_types=widget_types, save_data=save_data)
         #, widget_types=widget_types
+
+
+class PopupBarDisplayWidget(AbstractPopupBarDisplayWidget):
+    def __init__(self, parent=None):
+        super(PopupBarDisplayWidget, self).__init__(parent)
 
 
 class PopupBarWidget(AbstractPopupBarWidget):

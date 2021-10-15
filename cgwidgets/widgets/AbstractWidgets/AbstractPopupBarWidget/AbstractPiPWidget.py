@@ -176,7 +176,7 @@ from cgwidgets.widgets import (
     AbstractSplitterWidget
     )
 
-from .AbstractPopupBarWidget import AbstractPopupBarWidget, AbstractPopupBarItemWidget
+from .AbstractPopupBarWidget import AbstractPopupBarWidget, AbstractPopupBarItemWidget, AbstractPopupBarDisplayWidget
 
 
 class AbstractPiPOrganizerWidget(AbstractShojiModelViewWidget):
@@ -647,7 +647,7 @@ class AbstractPiPDisplayWidget(QWidget):
         self._current_widget = None
         self._previous_widget = None
         self._pip_scale = (0.35, 0.35)
-        self._display_mode = AbstractPopupBarWidget.PIP
+        self._display_mode = AbstractPopupBarDisplayWidget.PIP
         self._taskbar_size = 100
         self._is_taskbar_standalone = False
         self._filepath = ""
@@ -664,7 +664,7 @@ class AbstractPiPDisplayWidget(QWidget):
         # create widgets
         self._main_viewer_widget = PiPMainViewer(self)
         self._popup_bar_widget = AbstractPopupBarWidget(self)
-        self._popup_bar_widget.setDisplayMode(AbstractPopupBarWidget.PIP)
+        self._popup_bar_widget.setDisplayMode(AbstractPopupBarDisplayWidget.PIP)
 
         # create layout
         """Not using a stacked layout as the enter/leave events get borked"""
@@ -790,7 +790,7 @@ class AbstractPiPDisplayWidget(QWidget):
         if "Display Mode" in settings.keys():
             self.setDisplayMode(settings["Display Mode"])
         else:
-            self.setDisplayMode(AbstractPopupBarWidget.PIP)
+            self.setDisplayMode(AbstractPopupBarDisplayWidget.PIP)
 
         # Overlay Image
         # Overlay Text
@@ -805,10 +805,10 @@ class AbstractPiPDisplayWidget(QWidget):
 
     def setDisplayMode(self, display_mode):
         self.popupBarWidget().setDisplayMode(display_mode)
-        if display_mode == AbstractPopupBarWidget.PIP:
+        if display_mode == AbstractPopupBarDisplayWidget.PIP:
             self.popupBarWidget().setIsOverlayEnabled(False)
 
-        elif display_mode == AbstractPopupBarWidget.PIPTASKBAR:
+        elif display_mode == AbstractPopupBarDisplayWidget.PIPTASKBAR:
             self.popupBarWidget().setIsOverlayEnabled(True)
             self.popupBarWidget().setWidgetOverlayDisplay(False)
             # self.popupBarWidget().setIsOverlayDisplayed()
@@ -1015,6 +1015,23 @@ class AbstractPiPDisplayWidget(QWidget):
 
         return popup_bar_widget
 
+    def addWidget(self, widget, resize_popup_bar=True):
+        # create mini viewer widgets
+        if self.currentWidget():
+            self.popupBarWidget().addWidget(widget)
+
+        # create main widget
+        else:
+            self.setCurrentWidget(widget)
+
+        # TODO This is probably causing some slowness on loading
+        # as it is resizing the mini viewer EVERY time a widget is created
+        if resize_popup_bar:
+            self.resizePopupBar()
+
+        # update indexes
+        self.popupBarWidget().updateWidgetIndexes()
+
     def removeAllWidgets(self):
         if self.mainViewerWidget().widget():
             self.mainViewerWidget().widget().setParent(None)
@@ -1071,7 +1088,7 @@ class AbstractPiPDisplayWidget(QWidget):
                 widget = index.internalPointer().widget()
 
             # update widget overlay text/image if set in Taskbar mode
-            if settings["Display Mode"] == AbstractPopupBarWidget.PIPTASKBAR:
+            if settings["Display Mode"] == AbstractPopupBarDisplayWidget.PIPTASKBAR:
                 widget.setTitle(widget_data["overlay_text"])
                 widget.setOverlayImage(widget_data["overlay_image"])
 
@@ -1298,9 +1315,9 @@ class AbstractPiPDisplayWidget(QWidget):
         if self.isFrozen(): return True
         if not self.popupBarWidget(): return True
 
-        if self.displayMode() == AbstractPopupBarWidget.PIP:
+        if self.displayMode() == AbstractPopupBarDisplayWidget.PIP:
             xpos, ypos, width, height = self.__resizePiP()
-        elif self.displayMode() == AbstractPopupBarWidget.PIPTASKBAR:
+        elif self.displayMode() == AbstractPopupBarDisplayWidget.PIPTASKBAR:
             xpos, ypos, width, height = self.__resizeTaskbar()
         else:
             xpos, ypos, width, height = self.__resizeTaskbar()
@@ -1518,13 +1535,13 @@ organizer_widget.pipDisplayWidget().resizePopupBar()""",
             "help": "Which direction the popup will occur."},
         "Display Mode":{
             "type": attrs.LIST,
-            "value": AbstractPopupBarWidget.PIPTASKBAR,
-            "items": [[AbstractPopupBarWidget.PIP], [AbstractPopupBarWidget.PIPTASKBAR]],
+            "value": AbstractPopupBarDisplayWidget.PIPTASKBAR,
+            "items": [[AbstractPopupBarDisplayWidget.PIP], [AbstractPopupBarDisplayWidget.PIPTASKBAR]],
             "code": """
 organizer_widget.pipDisplayWidget().setDisplayMode(value)       
 
 # hide/show all widgets
-from cgwidgets.widgets import PopupBarWidget
+from cgwidgets.widgets import PopupBarDisplayWidget
 
 # todo get all widgets to show / hide
 widgets = [
@@ -1534,10 +1551,10 @@ widgets = [
     organizer_widget.settingsWidget().widgets()["Overlay Image"],
 ]
 for widget in widgets:
-    if value == PopupBarWidget.PIP:
+    if value == PopupBarDisplayWidget.PIP:
         organizer_widget.settingsWidget().widgets()["PiP Scale"].show()
         widget.hide()
-    elif value == PopupBarWidget.PIPTASKBAR:
+    elif value == PopupBarDisplayWidget.PIPTASKBAR:
         organizer_widget.settingsWidget().widgets()["PiP Scale"].hide()
         widget.show()
 
