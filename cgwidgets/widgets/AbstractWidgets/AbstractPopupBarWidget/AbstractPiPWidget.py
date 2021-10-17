@@ -981,7 +981,6 @@ class AbstractPiPDisplayWidget(QWidget):
             resize_popup_bar (bool): if the popupBarWidget should be updated or not
 
         Returns (AbstractPopupBarItemWidget):
-
         """
 
         # create widget from constructor code
@@ -990,8 +989,6 @@ class AbstractPiPDisplayWidget(QWidget):
         if isinstance(widget, AbstractPiPOrganizerWidget) or isinstance(widget, AbstractPiPDisplayWidget):
             widget.setIsPopupBarWidget(True)
 
-        """ Note: This can't install in the PopupBar then remove.  It will still register
-        in the count, even if you process the events."""
         # create mini viewer widgets
         if self.currentWidget():
             popup_bar_widget = self.popupBarWidget().createNewWidget(widget, name=name, is_overlay_enabled=self.isOverlayEnabled())
@@ -1001,8 +998,6 @@ class AbstractPiPDisplayWidget(QWidget):
             popup_bar_widget = AbstractPopupBarItemWidget(
                 self.mainViewerWidget(), direction=Qt.Vertical, delegate_widget=widget, name=name, is_overlay_enabled=self.isOverlayEnabled())
             popup_bar_widget.setIsOverlayDisplayed(self.isOverlayEnabled())
-            #popup_bar_widget.setIsOverlayEnabled(self.popupBarWidget().isOverlayEnabled())
-            #popup_bar_widget.setIsOverlayDisplayed(self.popupBarWidget().isOverlayEnabled())
             self.setCurrentWidget(popup_bar_widget)
 
         # TODO This is probably causing some slowness on loading

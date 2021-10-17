@@ -22,6 +22,7 @@ from cgwidgets.utils import (
     isWidgetDescendantOf,
     isCursorOverWidget,
     getWidgetAncestor,
+    getJSONData,
     runDelayedEvent)
 
 from cgwidgets.settings import attrs
@@ -961,13 +962,16 @@ class AbstractPopupBarItemWidget(AbstractOverlayInputWidget):
 class AbstractPopupBarDisplayWidget(QWidget):
     """ Abstract class for displaying all PopupWidget types (PIP | PIPTASKBAR | TASKBAR)
 
+    Note:
+        This is acting as an abstraction layer right now.
+        Todo: need to clean up the underlying API for these calls?
+
     Attributes:
         display_mode (AbstractPopupBarDisplayWidget.DISPLAYMODE): what mode should
             be displayed
         display_widget (AbstractPopupBarWidget | AbstractPiPDisplayWidget): The current popup widget
         popup_bar_widget (AbstractPopupBarWidget):
         widgets (list): of AbstractPopupBarItemWidget's.
-
     """
 
     PIP = "PIP"
@@ -1020,6 +1024,58 @@ class AbstractPopupBarDisplayWidget(QWidget):
 
     def insertWidget(self, index, widget, name="", is_pip_widget=False):
         self.addWidget(widget, index=index, name=name, is_pip_widget=is_pip_widget)
+
+    """ LOAD (file)"""
+    def loadPiPWidgetFromFile(self, filepath, pip_name):
+        """ Loads the PiPWidget from the file/name provided
+
+        Args:
+            filepath (str): path on disk to pipfile to load
+            pip_name (str): name of pip in filepath to load
+        """
+        data = getJSONData(filepath)[pip_name]
+        is_standalone = data["settings"]["Standalone"]
+
+        # load stand alone taskbar
+        if is_standalone:
+            self.__loadStandaloneTaskbar(data)
+
+        # load pip/piptaskbar
+        else:
+            self.__loadPiPWidget(data, filepath, pip_name)
+
+    def __loadStandaloneTaskbar(self, data):
+        """ Loads a standalone taskbar from the data provided
+
+        Args:
+            data (dict): An individual PopupBar widgets data located in the
+                JSON file.
+                    ie: getJSONData(filepath)[pip_name]"""
+        self.setDisplayMode(AbstractPopupBarDisplayWidget.TASKBAR)
+        self.popupBarWidget().removeAllWidgets()
+        for widget_name, widget_data in data["widgets"].items():
+            constructor_code = widget_data["code"]
+
+            loc = {}
+            loc['self'] = self
+
+            exec(compile(constructor_code, "constructor_code", "exec"), globals(), loc)
+            widget = loc['widget']
+
+            self.addWidget(widget, name=widget_name)
+
+    def __loadPiPWidget(self, data, filepath, pip_name):
+        """ Loads a PiP Widget from the data provided
+
+        Args:
+            data (dict): An individual PopupBar widgets data located in the
+                JSON file.
+                    ie: getJSONData(filepath)[pip_name]
+            filepath (str): path on disk to JSON file
+            pip_name (str: name of PiPWidget to load"""
+        display_mode = data["settings"]["Display Mode"]
+        self.setDisplayMode(display_mode)
+        self.displayWidget().loadPiPWidgetFromFile(filepath, pip_name)
 
     """ PROPERTIES"""
     def displayMode(self):
