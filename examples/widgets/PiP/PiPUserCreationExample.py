@@ -78,7 +78,7 @@ pip_organizer_widget.resize(1512, 512)
 pip_display_widget = PiPDisplayWidget()
 pip_display_widget.loadPiPWidgetFromFile(
     getDefaultSavePath() + '/.PiPWidgets_02.json',
-    "Taskbar"
+    "test"
 )
 # pip_display_widget.setIsDisplayNamesShown(True)
 from cgwidgets.widgets import PopupBarWidget

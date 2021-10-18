@@ -41,24 +41,24 @@ Data Structure (save widget):
                 "widgets": [
                     {"widget name": {
                         "code": "constructor_code",
-                        "overlay_text": "text",
-                        "overlay_image": "path/on/disk/to/image"},
+                        "Overlay Text": "text",
+                        "Overlay Image": "path/on/disk/to/image"},
                     {"widget name": {
                         "code": "constructor_code",
-                        "overlay_text": "text",
-                        "overlay_image": "path/on/disk/to/image"},
+                        "Overlay Text": "text",
+                        "Overlay Image": "path/on/disk/to/image"},
                     ],
                 "settings": {"setting name": "value"}},
             "PiPName2": {
                 "widgets": [
                     {"widget name": {
                         "code": "constructor_code",
-                        "overlay_text": "text",
-                        "overlay_image": "path/on/disk/to/image"},
+                        "Overlay Text": "text",
+                        "Overlay Image": "path/on/disk/to/image"},
                     {"widget name": {
                         "code": "constructor_code",
-                        "overlay_text": "text",
-                        "overlay_image": "path/on/disk/to/image"},
+                        "Overlay Text": "text",
+                        "Overlay Image": "path/on/disk/to/image"},
                     ],
                 "settings": {"setting name": "value"}}
             }
@@ -616,6 +616,8 @@ class AbstractPiPDisplayWidget(QWidget):
         display_mode (AbstractPopupBarWidget.DISPLAYMODE): how this PiPWidget should be displayed
             PIP | PIPTASKBAR
         direction (attrs.DIRECTION): what side of the widget the popup will be displayed on
+        enlarged_scale (float): size of widget (percent) when enlarged in PiP Mode
+        enlarged_size (float): size of widget (pixels) when enlarged in Taskbar mode
         hotkey_swap_key (list): of Qt.Key that will swap to the corresponding widget in the popupBarWidget().
 
             The index of the Key in the list, is the index of the widget that will be swapped to.
@@ -647,7 +649,7 @@ class AbstractPiPDisplayWidget(QWidget):
         self._current_widget = None
         self._previous_widget = None
         self._pip_scale = (0.35, 0.35)
-        self._display_mode = AbstractPopupBarDisplayWidget.PIP
+        # self._display_mode = AbstractPopupBarDisplayWidget.PIP
         self._taskbar_size = 100
         self._is_taskbar_standalone = False
         self._filepath = ""
@@ -760,11 +762,11 @@ class AbstractPiPDisplayWidget(QWidget):
         return {
             "PiP Scale": self.pipScale(),
             "Enlarged Scale": self.enlargedScale(),
+            "Enlarged Size": self.enlargedSize(),
             "Display Titles": self.isDisplayNamesShown(),
             "Direction": self.direction(),
             "Display Mode": self.displayMode(),
             "Taskbar Size": self.taskbarSize(),
-            "Standalone": self.isTaskbarStandalone(),
             "Overlay Text": self.currentWidget().title(),
             "Overlay Image": self.currentWidget().overlayImage(),
             "sizes": self.popupBarWidget().sizes()
@@ -780,24 +782,7 @@ class AbstractPiPDisplayWidget(QWidget):
             settings (dict): of {setting_name (str): value}
         """
         self.setPiPScale(settings["PiP Scale"])
-        self.setEnlargedScale(float(settings["Enlarged Scale"]))
-        self.setIsDisplayNamesShown(settings["Display Titles"])
-        self.setDirection(settings["Direction"])
-
-        # set Display mode
-        """ This needs a special clause as it was added later, so not all of the
-        files will have the "Display Mode" setting """
-        if "Display Mode" in settings.keys():
-            self.setDisplayMode(settings["Display Mode"])
-        else:
-            self.setDisplayMode(AbstractPopupBarDisplayWidget.PIP)
-
-        # Overlay Image
-        # Overlay Text
-        # Taskbar Size
-        #
-        if "sizes" in list(settings.keys()):
-            self.popupBarWidget().setSizes(settings["sizes"])
+        self.popupBarWidget().updateSettings(settings)
 
     """ PROPERTIES """
     def displayMode(self):
@@ -847,6 +832,12 @@ class AbstractPiPDisplayWidget(QWidget):
     def setEnlargedScale(self, _enlarged_scale):
         self.popupBarWidget().setEnlargedScale(_enlarged_scale)
 
+    def enlargedSize(self):
+        return self.popupBarWidget().enlargedSize()
+
+    def setEnlargedSize(self, enlarged_size):
+        self.popupBarWidget().setEnlargedSize(enlarged_size)
+
     def hotkeySwapKeys(self):
         return self._hotkey_swap_keys
 
@@ -892,12 +883,6 @@ class AbstractPiPDisplayWidget(QWidget):
 
     def setIsStandalone(self, is_standalone):
         self._is_standalone = is_standalone
-
-    def isTaskbarStandalone(self):
-        return self._is_taskbar_standalone
-
-    def setIsTaskbarStandalone(self, is_taskbar_standalone):
-        self._is_taskbar_standalone = is_taskbar_standalone
 
     def taskbarSize(self):
         return self._taskbar_size
@@ -1084,8 +1069,8 @@ class AbstractPiPDisplayWidget(QWidget):
 
             # update widget overlay text/image if set in Taskbar mode
             if settings["Display Mode"] == AbstractPopupBarDisplayWidget.PIPTASKBAR:
-                widget.setTitle(widget_data["overlay_text"])
-                widget.setOverlayImage(widget_data["overlay_image"])
+                widget.setTitle(widget_data["Overlay Text"])
+                widget.setOverlayImage(widget_data["Overlay Image"])
 
         # update settings
         self.updateSettings(settings)
@@ -1144,15 +1129,19 @@ class AbstractPiPDisplayWidget(QWidget):
                 new_sizes.append(50)
 
                 self.swapMainViewer(widget)
-
                 self.swapPopupBar(widget)
-
                 self.swapSettings(widget)
 
                 # resize mini viewers
                 self.popupBarWidget().setSizes(new_sizes)
                 new_display_widget.popupBarWidget().setSizes(old_sizes)
                 self.resizePopupBar()
+
+                # update overlays
+                if self.displayMode() == AbstractPopupBarDisplayWidget.PIPTASKBAR:
+                    if self.previousWidget():
+                        self.previousWidget().setIsOverlayDisplayed(True)
+                    self.currentWidget().setIsOverlayDisplayed(False)
             return
 
         self.popupBarWidget().setIsFrozen(True)
@@ -1168,7 +1157,6 @@ class AbstractPiPDisplayWidget(QWidget):
             # setup mini viewer widget
             self.popupBarWidget().insertWidget(widget.index(), self._current_widget)
             self._current_widget.setIndex(widget.index())
-            # self._current_widget.removeEventFilter(self)
 
             # update previous widget
             self.setPreviousWidget(self._current_widget)
@@ -1176,15 +1164,18 @@ class AbstractPiPDisplayWidget(QWidget):
 
         # set widget as current
         self._current_widget = widget
-
-        #self.popupBarWidget().removeWidget(widget)
-        #widget.removeEventFilter(self.popupBarWidget())
         self.mainViewerWidget().setWidget(widget)
         self._current_widget.installEventFilter(self.popupBarWidget())
 
         # update mini viewer widget
         self.popupBarWidget().setSizes(sizes)
         self.popupBarWidget().setIsFrozen(False)
+
+        # update overlays
+        if self.displayMode() == AbstractPopupBarDisplayWidget.PIPTASKBAR:
+            if self.previousWidget():
+                self.previousWidget().setIsOverlayDisplayed(True)
+            self.currentWidget().setIsOverlayDisplayed(False)
 
     def clearCurrentWidget(self):
         self._current_widget = None
@@ -1506,13 +1497,6 @@ class SettingsWidget(AbstractFrameInputWidgetContainer):
             {"widget name": widget}
     """
     DEFAULT_SETTINGS = {
-        "Enlarged Scale": {
-            "type": attrs.FLOAT,
-            "value": 0.8,
-            "value_list": [0.01, 0.025, 0.05, 0.1],
-            "range": [True, 0.1, 0.9],
-            "code": """organizer_widget.pipDisplayWidget().setEnlargedScale(float(value))""",
-            "help": "The amount of space (percent) the PiPWidget will take when enlarged"},
         "Display Titles": {
             "type": attrs.BOOLEAN,
             "value": True,
@@ -1531,7 +1515,7 @@ organizer_widget.pipDisplayWidget().resizePopupBar()""",
         "Display Mode":{
             "type": attrs.LIST,
             "value": AbstractPopupBarDisplayWidget.PIPTASKBAR,
-            "items": [[AbstractPopupBarDisplayWidget.PIP], [AbstractPopupBarDisplayWidget.PIPTASKBAR]],
+            "items": [[AbstractPopupBarDisplayWidget.PIP], [AbstractPopupBarDisplayWidget.PIPTASKBAR], [AbstractPopupBarDisplayWidget.STANDALONETASKBAR]],
             "code": """
 organizer_widget.pipDisplayWidget().setDisplayMode(value)       
 
@@ -1539,19 +1523,28 @@ organizer_widget.pipDisplayWidget().setDisplayMode(value)
 from cgwidgets.widgets import PopupBarDisplayWidget
 
 # todo get all widgets to show / hide
-widgets = [
+taskbar_widgets = [
     organizer_widget.settingsWidget().widgets()["Taskbar Size"],
-    organizer_widget.settingsWidget().widgets()["Standalone"],
+    organizer_widget.settingsWidget().widgets()["Enlarged Size"],
     organizer_widget.settingsWidget().widgets()["Overlay Text"],
     organizer_widget.settingsWidget().widgets()["Overlay Image"],
 ]
-for widget in widgets:
-    if value == PopupBarDisplayWidget.PIP:
-        organizer_widget.settingsWidget().widgets()["PiP Scale"].show()
-        widget.hide()
-    elif value == PopupBarDisplayWidget.PIPTASKBAR:
-        organizer_widget.settingsWidget().widgets()["PiP Scale"].hide()
-        widget.show()
+
+pip_widgets = [
+    organizer_widget.settingsWidget().widgets()["Enlarged Scale"],
+    organizer_widget.settingsWidget().widgets()["PiP Scale"]
+]
+
+if value == PopupBarDisplayWidget.PIP:
+    for taskbar_widget in taskbar_widgets:
+        taskbar_widget.hide()
+    for pip_widget in pip_widgets:
+        pip_widget.show()
+elif value in PopupBarDisplayWidget.TASKBARS:
+    for taskbar_widget in taskbar_widgets:
+        taskbar_widget.show()
+    for pip_widget in pip_widgets:
+        pip_widget.hide()
 
 # update popup bar size
 organizer_widget.pipDisplayWidget().resizePopupBar()
@@ -1564,6 +1557,22 @@ organizer_widget.pipDisplayWidget().resizePopupBar()
             "range": [True, 0.1, 1],
             "code": """organizer_widget.pipDisplayWidget().setPiPScale(float(value))""",
             "help": "The amount of space the PiPWidget will take up when not enlarged"},
+        "Enlarged Scale": {
+            "type": attrs.FLOAT,
+            "value": 0.8,
+            "value_list": [0.01, 0.025, 0.05, 0.1],
+            "range": [True, 0.1, 0.9],
+            "code": """organizer_widget.pipDisplayWidget().setEnlargedScale(float(value))""",
+            "help": "The amount of space (percent) the PiPWidget will take when enlarged"},
+        "Enlarged Size": {
+            "type": attrs.FLOAT,
+            "value": 500.0,
+            "value_list": [1, 5, 10, 25, 50],
+            "range": [False],
+            "code": """organizer_widget.pipDisplayWidget().setEnlargedSize(float(value))""",
+            "help": """The size (pixels) in the expanding direction of the enlarged widget.
+    ie. if the expanding direction is set to East, this will be the width in pixels"""
+        },
         "Taskbar Size": {
             "type": attrs.FLOAT,
             "value": 100.00,
@@ -1574,11 +1583,6 @@ organizer_widget.pipDisplayWidget().setTaskbarSize(float(value))
 organizer_widget.pipDisplayWidget().resizePopupBar()
             """,
             "help": "The size (pixels) of the taskbar when not enlarged"},
-        "Standalone": {
-            "type": attrs.BOOLEAN,
-            "value": False,
-            "code": """pass""", # todo setup standalone setting pressed code,
-            "help": "If True, this popup will be meant to be its own widget to be added to a layout"},
         "Overlay Text": {
             "type": attrs.STRING,
             "value": "",
@@ -2084,24 +2088,24 @@ class PiPSaveWidget(QWidget):
                 "widgets": [
                     {"widget name": {
                         "code": "constructor_code",
-                        "overlay_text": "text",
-                        "overlay_image": "path/on/disk/to/image"},
+                        "Overlay Text": "text",
+                        "Overlay Image": "path/on/disk/to/image"},
                     {"widget name": {
                         "code": "constructor_code",
-                        "overlay_text": "text",
-                        "overlay_image": "path/on/disk/to/image"},
+                        "Overlay Text": "text",
+                        "Overlay Image": "path/on/disk/to/image"},
                     ],
                 "settings": {"setting name": "value"}},
             "PiPName2": {
                 "widgets": [
                     {"widget name": {
                         "code": "constructor_code",
-                        "overlay_text": "text",
-                        "overlay_image": "path/on/disk/to/image"},
+                        "Overlay Text": "text",
+                        "Overlay Image": "path/on/disk/to/image"},
                     {"widget name": {
                         "code": "constructor_code",
-                        "overlay_text": "text",
-                        "overlay_image": "path/on/disk/to/image"},
+                        "Overlay Text": "text",
+                        "Overlay Image": "path/on/disk/to/image"},
                     ],
                 "settings": {"setting name": "value"}}
             }
@@ -2281,8 +2285,8 @@ class PiPSaveWidget(QWidget):
 
             item_dict["widgets"][item_name] = {}
             item_dict["widgets"][item_name]["code"] = item_code
-            item_dict["widgets"][item_name]["overlay_text"] = item.overlayText()
-            item_dict["widgets"][item_name]["overlay_image"] = item.overlayImage()
+            item_dict["widgets"][item_name]["Overlay Text"] = item.overlayText()
+            item_dict["widgets"][item_name]["Overlay Image"] = item.overlayImage()
 
         # store settings in dict
         settings = {}

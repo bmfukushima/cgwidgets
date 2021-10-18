@@ -29,13 +29,13 @@ main_layout.addWidget(other_widget)
 
 # set popup bar widget
 
-# popup_bar_widget.popupBarWidget().setOverlayWidget(other_widget)
+#popup_bar_widget.popupBarWidget().setOverlayWidget(other_widget)
 
 # popup_bar_widget.setFixedWidth(50)
-popup_bar_widget.loadPiPWidgetFromFile(
-    getDefaultSavePath() + '/.PiPWidgets_02.json',
-    "TaskbarStandalone"
-)
+# popup_bar_widget.loadPiPWidgetFromFile(
+#     getDefaultSavePath() + '/.PiPWidgets_02.json',
+#     "standalone_taskbar"
+# )
 # popup_bar_widget.setDisplayMode(PopupBarDisplayWidget.PIPTASKBAR)
 # popup_bar_widget.setDirection(attrs.SOUTH)
 

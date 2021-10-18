@@ -5,18 +5,18 @@ from qtpy.QtCore import Qt
 from cgwidgets.utils import centerWidgetOnCursor, setAsAlwaysOnTop, centerWidgetOnScreen
 from cgwidgets.settings import attrs
 
-from cgwidgets.widgets import PopupBarWidget
+from cgwidgets.widgets import PopupBarWidget, PopupBarDisplayWidget
 
 
 app = QApplication(sys.argv)
 
 # create popup bar
-popup_bar_widget = PopupBarWidget()
-popup_bar_widget.setDirection(attrs.EAST)
+popup_bar_widget = PopupBarDisplayWidget()
+# popup_bar_widget.setDirection(attrs.EAST)
 for x in range(3):
     label = QLabel(str(x))
     label.setFixedWidth(50)
-    popup_bar_widget.createNewWidget(label, str(x))
+    popup_bar_widget.addWidget(label, str(x))
 
 # create main widget
 main_widget = QWidget()
@@ -26,8 +26,8 @@ main_layout.addWidget(popup_bar_widget)
 main_layout.addWidget(other_widget)
 
 # set popup bar widget
-popup_bar_widget.setOverlayWidget(other_widget)
-popup_bar_widget.setIsDisplayNamesShown(True)
+# popup_bar_widget.setEnlargedSize(250)
+# popup_bar_widget.setIsDisplayNamesShown(True)
 
 # show widget
 setAsAlwaysOnTop(main_widget)
