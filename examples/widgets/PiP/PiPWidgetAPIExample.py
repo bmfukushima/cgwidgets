@@ -43,6 +43,6 @@ popup_bar_widget.loadPopupDisplayFromFile(
 setAsAlwaysOnTop(main_widget)
 main_widget.show()
 main_widget.resize(512, 512)
-#centerWidgetOnScreen(main_widget)
+centerWidgetOnScreen(main_widget)
 
 sys.exit(app.exec_())

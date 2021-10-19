@@ -15,7 +15,7 @@ import os
 
 from qtpy.QtWidgets import (
     QWidget, QVBoxLayout, QLabel, QSplitter, QSplitterHandle, QApplication)
-from qtpy.QtCore import QEvent, Qt
+from qtpy.QtCore import QEvent, Qt, QPoint
 
 from cgwidgets.utils import (
     getWidgetUnderCursor,
@@ -23,7 +23,8 @@ from cgwidgets.utils import (
     isCursorOverWidget,
     getWidgetAncestor,
     getJSONData,
-    runDelayedEvent)
+    runDelayedEvent,
+    setAsTool)
 
 from cgwidgets.settings import attrs
 
@@ -239,19 +240,21 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         It does this by swapping out the spacer widget, with the currently
         enlarged widget.  This swap is done when closing the enlarged view."""
         widget = self.enlargedWidget()
-
         # preflight
         if not self.isEnlarged(): return
         if not widget: return
         if widget == self.widget(widget.index()): return True
         if not self.widget(widget.index()): return True
         if widget.parent() == self.widget(widget.index()).parent(): return True
+        setAsTool(self.enlargedWidget(), False)
+        #self.enlargedWidget().setWindowFlags(self.enlargedWidget().windowFlags() & ~Qt.Tool)
 
         # swap widgets
         self.replaceWidget(widget.index(), widget)
         self.spacerWidget().setParent(self.parent())
         self.widgets().append(widget)
         self.setSizes(self.__temp_sizes)
+
 
     def updateWidgetIndexes(self):
         """ Updates all of the widget indexes to their current position """
@@ -500,7 +503,6 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         Args:
             widget (AbstractPopupBarItemWidget): Widget to be enlarged
         """
-
         # preflight
         if not widget: return
         if not self.widget(widget.index()): return
@@ -541,11 +543,14 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             widget.setParent(self.window())
         else:
             widget.setParent(self.parent())
+
+        setAsTool(widget, True)
         widget.show()
 
         # move / resize enlarged widget
+        pos = widget.parent().mapToGlobal(QPoint(int(xpos), int(ypos)))
         widget.resize(int(width), int(height))
-        widget.move(int(xpos), int(ypos))
+        widget.move(pos)
 
         #
         self.insertWidget(widget.index(), self._spacer_widget)
@@ -661,7 +666,6 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
 
         # preflight
         if not self.isEnlarged(): return
-
         if self.enlargedWidget().isMainViewerWidget(): return
 
         # setup attrs
