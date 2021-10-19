@@ -930,6 +930,15 @@ class AbstractPiPDisplayWidget(QWidget):
         return popup_bar_widget
 
     def addWidget(self, widget, resize_popup_bar=True):
+        """ Adds a widget to the PiPDisplay
+
+        Args:
+            widget (AbstractPopupBarItemWidget):
+            resize_popup_bar (bool):
+
+        Returns:
+
+        """
         # create mini viewer widgets
         if self.currentWidget():
             self.popupBarWidget().addWidget(widget)

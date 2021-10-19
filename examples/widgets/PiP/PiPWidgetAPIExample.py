@@ -34,7 +34,7 @@ main_layout.addWidget(other_widget)
 popup_bar_widget.setFixedWidth(150)
 popup_bar_widget.loadPopupDisplayFromFile(
     getDefaultSavePath() + '/.PiPWidgets_02.json',
-    "test"
+    "standalone_taskbar"
 )
 # popup_bar_widget.setDisplayMode(PopupBarDisplayWidget.PIPTASKBAR)
 # popup_bar_widget.setDirection(attrs.SOUTH)
@@ -43,6 +43,6 @@ popup_bar_widget.loadPopupDisplayFromFile(
 setAsAlwaysOnTop(main_widget)
 main_widget.show()
 main_widget.resize(512, 512)
-centerWidgetOnScreen(main_widget)
+#centerWidgetOnScreen(main_widget)
 
 sys.exit(app.exec_())

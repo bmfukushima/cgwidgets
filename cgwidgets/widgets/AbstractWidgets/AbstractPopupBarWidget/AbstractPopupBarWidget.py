@@ -738,15 +738,17 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         self.setIsFrozen(False)
 
     """ WIDGETS """
-    def addWidget(self, widget):
+    def addWidget(self, widget, name="", is_pip_widget=False, index=0):
+        if widget == self.spacerWidget():
+            return
+        if not isinstance(widget, AbstractPopupBarItemWidget):
+            widget = self.createNewWidget(widget, index=index, is_pip_widget=is_pip_widget, name=name)
         if isinstance(widget, AbstractPopupBarItemWidget):
             widget.installEventFilter(self)
             self.installDragEnterMonkeyPatch(widget.delegateWidget())
             self.installDragMoveMonkeyPatch(widget.delegateWidget())
             widget.delegateWidget().setAcceptDrops(True)
             return QSplitter.addWidget(self, widget)
-        elif widget == self.spacerWidget():
-            return
         else:
             print("{widget_type} is not valid.".format(widget_type=type(widget)))
             return
@@ -780,15 +782,18 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         self.updateWidgetIndexes()
         return mini_widget
 
-    def insertWidget(self, index, widget):
+    def insertWidget(self, index, widget, name="", is_pip_widget=False):
+        if widget == self.spacerWidget():
+            return
+        if not isinstance(widget, AbstractPopupBarItemWidget):
+            widget = self.createNewWidget(widget, index=index, is_pip_widget=is_pip_widget, name=name)
         if isinstance(widget, AbstractPopupBarItemWidget):
             widget.installEventFilter(self)
             self.installDragEnterMonkeyPatch(widget.delegateWidget())
             self.installDragMoveMonkeyPatch(widget.delegateWidget())
             widget.delegateWidget().setAcceptDrops(True)
             return QSplitter.insertWidget(self, index, widget)
-        elif widget == self.spacerWidget():
-            pass
+
         else:
             print ("{widget_type} is not valid.".format(widget_type=type(widget)))
             return
@@ -1044,7 +1049,11 @@ class AbstractPopupBarDisplayWidget(QWidget):
         if not isinstance(widget, AbstractPopupBarItemWidget):
             widget = self.displayWidget().createNewWidget(
                 widget, is_pip_widget=is_pip_widget, name=name, index=index)
-
+        else:
+            # todo direct add into display widget
+            self.displayWidget().addWidget(widget)
+            pass
+        return widget
         # self.widgets().append(widget)
 
     def insertWidget(self, index, widget, name="", is_pip_widget=False):
@@ -1134,9 +1143,23 @@ class AbstractPopupBarDisplayWidget(QWidget):
         # load widgets
         for widget_name, widget_data in data["widgets"].items():
             widget = self.createWidgetFromConstructorCode(widget_data["code"])
-            self.addWidget(widget, name=widget_name)
+            widget = self.addWidget(widget, name=widget_name)
 
-            # create organizer widgets
+            # create popup bar items
+            if organizer:
+                from .AbstractPiPWidget import AbstractPiPOrganizerWidget
+                organizer_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
+                index = organizer_widget.popupBarOrganizerWidget().model().insertNewIndex(0, name=widget_name)
+
+                item = index.internalPointer()
+                item.setWidget(widget)
+                item.setConstructorCode(widget_data["code"])
+
+                # widget.setIndex(0)
+                widget.setItem(item)
+
+                # update indexes
+                organizer_widget.popupBarWidget().updateWidgetIndexes()
             # todo create organizer widgets
 
     def __loadPiPWidget(self, data, filepath, pip_name, organizer=False):

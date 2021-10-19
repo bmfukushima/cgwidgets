@@ -2,7 +2,6 @@
 TODO
     *   Update Organizer Display Widget
             AbstractPopupBarDisplayWidget
-                - Add local items when loading
                 - Enable/disable enlarge mode
     *   PiP
         Swap widgets
