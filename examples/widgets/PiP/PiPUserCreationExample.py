@@ -62,9 +62,9 @@ l.addWidget(b)
 }
 pip_organizer_widget = PiPOrganizerWidget(save_data=save_data, widget_types=widget_types)
 
-pip_organizer_widget.setPiPScale((0.25, 0.25))
-pip_organizer_widget.setEnlargedScale(0.75)
-pip_organizer_widget.setDirection(attrs.WEST)
+# pip_organizer_widget.setPiPScale((0.25, 0.25))
+# pip_organizer_widget.setEnlargedScale(0.75)
+# pip_organizer_widget.setDirection(attrs.WEST)
 #pip_widget.setIsDisplayNamesShown(False)
 
 
@@ -73,25 +73,11 @@ setAsAlwaysOnTop(pip_organizer_widget)
 pip_organizer_widget.show()
 centerWidgetOnCursor(pip_organizer_widget)
 pip_organizer_widget.resize(1512, 512)
+# pip_organizer_widget.setPiPScale(.55)
+# pip_organizer_widget.setEnlargedScale(0.35)
+# pip_organizer_widget.setDirection(attrs.WEST)
 
-# setup display widget
-pip_display_widget = PiPDisplayWidget()
-pip_display_widget.loadPiPWidgetFromFile(
-    getDefaultSavePath() + '/.PiPWidgets_02.json',
-    "test"
-)
-# pip_display_widget.setIsDisplayNamesShown(True)
-from cgwidgets.widgets import PopupBarWidget
-#pip_display_widget.setDisplayMode(PopupBarWidget.PIP)
-pip_organizer_widget.setPiPScale(.55)
-pip_organizer_widget.setEnlargedScale(0.35)
-pip_organizer_widget.setDirection(attrs.WEST)
-
-centerWidgetOnCursor(pip_display_widget)
-#pip_display_widget.resize(1024, 1024)
-setAsAlwaysOnTop(pip_display_widget)
-pip_display_widget.show()
-
+centerWidgetOnCursor(pip_organizer_widget)
 
 
 sys.exit(app.exec_())

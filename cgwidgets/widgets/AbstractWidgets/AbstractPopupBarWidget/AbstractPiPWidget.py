@@ -199,14 +199,10 @@ class AbstractPiPOrganizerWidget(AbstractShojiModelViewWidget):
 
     """
 
-    CREATE = 0
-    DISPLAY = 1
-
     def __init__(self, parent=None, save_data=None, widget_types=None):
         super(AbstractPiPOrganizerWidget, self).__init__(parent)
 
         # setup default attrs
-        self._creation_mode = AbstractPiPOrganizerWidget.CREATE
         self.setHeaderPosition(attrs.NORTH)
         self.setMultiSelectDirection(Qt.Horizontal)
         self.setMultiSelect(True)
@@ -222,8 +218,8 @@ class AbstractPiPOrganizerWidget(AbstractShojiModelViewWidget):
 
         """ create widgets """
         # create main pip widget
-        self._pip_display_widget = AbstractPiPDisplayWidget(self)
-        self._pip_display_widget.setIsStandalone(False)
+        self._pip_display_widget = AbstractPopupBarDisplayWidget(self, display_mode=AbstractPopupBarDisplayWidget.PIP)
+
         # setup local organizer widget
         self._local_organizer_widget = PiPPopupBarOrganizerWidget(self, widget_types)
         self._is_local_organizer_visible = False
@@ -269,31 +265,6 @@ class AbstractPiPOrganizerWidget(AbstractShojiModelViewWidget):
         model = self.popupBarOrganizerWidget().model()
         root_item = model.getRootItem()
         return root_item.children()
-
-    def creationMode(self):
-        return self._creation_mode
-
-    def setCreationMode(self, mode):
-        """
-        Sets the current display mode.  If this is set to DISPLAY, then all of the organizers at the top will
-        be hidden.  If this is set to DISPLAY, then all of the organizers will be shown to the user.
-
-        The default mode is CREATE
-
-        Args:
-            mode (AbstractPiPOrganizerWidget.MODE):
-                DISPLAY | CREATE
-        """
-        self._creation_mode = mode
-        if mode == AbstractPiPOrganizerWidget.DISPLAY:
-            self.headerWidget().hide()
-            for widget in self.widgets():
-                widget.headerWidget().setDisplayMode(AbstractOverlayInputWidget.DISABLED)
-
-        if mode == AbstractPiPOrganizerWidget.CREATE:
-            self.headerWidget().show()
-            for widget in self.widgets():
-                widget.headerWidget().setDisplayMode(AbstractOverlayInputWidget.RELEASE)
 
     def setDisplayWidget(self, file_name, widget_name):
         """
@@ -363,7 +334,7 @@ class AbstractPiPOrganizerWidget(AbstractShojiModelViewWidget):
         Returns (QModelIndex):
         """
         widget = self.pipDisplayWidget().createWidgetFromConstructorCode(constructor_code)
-        index = self.createNewWidget(widget, name, resize_popup_bar)
+        index = self.createNewWidget(widget, name=name, resize_popup_bar=resize_popup_bar)
         index.internalPointer().setConstructorCode(constructor_code)
         return index
 
@@ -378,8 +349,7 @@ class AbstractPiPOrganizerWidget(AbstractShojiModelViewWidget):
 
         """
         # create mini viewer widget
-        popup_bar_widget = self.pipDisplayWidget().createNewWidget(widget, name, resize_popup_bar)
-
+        popup_bar_widget = self.pipDisplayWidget().createNewWidget(widget, name=name, resize_popup_bar=resize_popup_bar)
 
         # create new index
         index = self.popupBarOrganizerWidget().model().insertNewIndex(0, name=name)
@@ -650,7 +620,7 @@ class AbstractPiPDisplayWidget(QWidget):
         self._previous_widget = None
         self._pip_scale = (0.35, 0.35)
         # self._display_mode = AbstractPopupBarDisplayWidget.PIP
-        self._taskbar_size = 100
+        self._taskbar_size = 100.0
         self._is_taskbar_standalone = False
         self._filepath = ""
 
@@ -658,7 +628,6 @@ class AbstractPiPDisplayWidget(QWidget):
         self._is_dragging = True
         self._is_popup_bar_shown = True
         self._is_popup_bar_widget = is_popup_bar_widget
-        self._is_standalone = True
 
         self._swap_key = Qt.Key_Space
         self._hotkey_swap_keys = [Qt.Key_1, Qt.Key_2, Qt.Key_3, Qt.Key_4, Qt.Key_5]
@@ -759,18 +728,14 @@ class AbstractPiPDisplayWidget(QWidget):
 
     def settings(self):
         """ returns a dict of the current settings which can be set with updateSettings()"""
-        return {
+        popupbar_settings = self.popupBarWidget().settings()
+        current_settings = {
             "PiP Scale": self.pipScale(),
-            "Enlarged Scale": self.enlargedScale(),
-            "Enlarged Size": self.enlargedSize(),
-            "Display Titles": self.isDisplayNamesShown(),
-            "Direction": self.direction(),
-            "Display Mode": self.displayMode(),
             "Taskbar Size": self.taskbarSize(),
             "Overlay Text": self.currentWidget().title(),
             "Overlay Image": self.currentWidget().overlayImage(),
-            "sizes": self.popupBarWidget().sizes()
         }
+        return {**popupbar_settings, **current_settings}
 
     def updateSettings(self, settings):
         """ Updates all of the settings from the settings provided.
@@ -782,27 +747,15 @@ class AbstractPiPDisplayWidget(QWidget):
             settings (dict): of {setting_name (str): value}
         """
         self.setPiPScale(settings["PiP Scale"])
+        self.setTaskbarSize(float(settings["Taskbar Size"]))
         self.popupBarWidget().updateSettings(settings)
 
     """ PROPERTIES """
-    def displayMode(self):
-        return self.popupBarWidget().displayMode()
-
-    def setDisplayMode(self, display_mode):
-        self.popupBarWidget().setDisplayMode(display_mode)
-        if display_mode == AbstractPopupBarDisplayWidget.PIP:
-            self.popupBarWidget().setIsOverlayEnabled(False)
-
-        elif display_mode == AbstractPopupBarDisplayWidget.PIPTASKBAR:
-            self.popupBarWidget().setIsOverlayEnabled(True)
-            self.popupBarWidget().setWidgetOverlayDisplay(False)
-            # self.popupBarWidget().setIsOverlayDisplayed()
-
     def filepath(self):
-        return self._filepath
+        return self.popupBarWidget().filepath()
 
     def setFilepath(self, filepath):
-        self._filepath = filepath
+        self.popupBarWidget().setFilepath(filepath)
 
     def pipScale(self):
         return self._pip_scale
@@ -825,18 +778,6 @@ class AbstractPiPDisplayWidget(QWidget):
 
         self._pip_scale = pip_scale
         self.resizePopupBar()
-
-    def enlargedScale(self):
-        return self.popupBarWidget().enlargedScale()
-
-    def setEnlargedScale(self, _enlarged_scale):
-        self.popupBarWidget().setEnlargedScale(_enlarged_scale)
-
-    def enlargedSize(self):
-        return self.popupBarWidget().enlargedSize()
-
-    def setEnlargedSize(self, enlarged_size):
-        self.popupBarWidget().setEnlargedSize(enlarged_size)
 
     def hotkeySwapKeys(self):
         return self._hotkey_swap_keys
@@ -878,16 +819,20 @@ class AbstractPiPDisplayWidget(QWidget):
     def setIsPopupBarWidget(self, is_popup_bar_widget):
         self._is_popup_bar_widget = is_popup_bar_widget
 
-    def isStandalone(self):
-        return self._is_standalone
-
-    def setIsStandalone(self, is_standalone):
-        self._is_standalone = is_standalone
-
     def taskbarSize(self):
         return self._taskbar_size
 
     def setTaskbarSize(self, taskbar_size):
+        if isinstance(taskbar_size, str):
+            taskbar_size = float(taskbar_size)
+        # this will probably fail in python 3...
+        try:
+            # python 2.7
+            if isinstance(taskbar_size, unicode):
+                taskbar_size = float(taskbar_size)
+        except NameError:
+            # python 3+
+            pass
         self._taskbar_size = taskbar_size
 
     def popupBarMinSize(self):
@@ -913,17 +858,6 @@ class AbstractPiPDisplayWidget(QWidget):
     def numWidgets(self):
         """ Number of widgets currently in this PiPDisplay"""
         return self.popupBarWidget().count()
-
-    def isDisplayNamesShown(self):
-        return self.popupBarWidget().isDisplayNamesShown()
-
-    def setIsDisplayNamesShown(self, enabled):
-        self.popupBarWidget().setIsDisplayNamesShown(enabled)
-        for widget in self.widgets():
-            if enabled:
-                widget.headerWidget().show()
-            else:
-                widget.headerWidget().hide()
 
     """ WIDGETS ( CREATION )"""
     def createWidgetFromConstructorCode(self, constructor_code):
@@ -976,7 +910,7 @@ class AbstractPiPDisplayWidget(QWidget):
 
         # create mini viewer widgets
         if self.currentWidget():
-            popup_bar_widget = self.popupBarWidget().createNewWidget(widget, name=name, is_overlay_enabled=self.isOverlayEnabled())
+            popup_bar_widget = self.popupBarWidget().createNewWidget(widget, name=name)
 
         # create main widget
         else:
@@ -1017,12 +951,13 @@ class AbstractPiPDisplayWidget(QWidget):
             self.mainViewerWidget().widget().setParent(None)
         self.popupBarWidget().removeAllWidgets()
 
-    def loadPiPWidgetFromFile(self, filepath, pip_name):
+    def loadPiPWidgetFromFile(self, filepath, pip_name, organizer=False):
         """ Loads the PiPWidget from the file/name provided
 
         Args:
             filepath (str): path on disk to pipfile to load
             pip_name (str): name of pip in filepath to load
+            organizer (bool): determines if this is loading from the organizer widget
         """
         # load json data
         self._filepath = filepath
@@ -1036,14 +971,16 @@ class AbstractPiPDisplayWidget(QWidget):
         self.removeAllWidgets()
         self.loadPiPWidgetFromData(
             data[pip_name]["widgets"],
-            data[pip_name]["settings"])
+            data[pip_name]["settings"],
+            organizer=organizer)
 
-    def loadPiPWidgetFromData(self, widgets, settings):
+    def loadPiPWidgetFromData(self, widgets, settings, organizer=False):
         """ Loads the PiPWidget from the data provided.
 
         Args:
             widgets (dict): of {widget_name(str): constructor_code(str)}
             settings (dict): of {setting (str): value}
+            organizer (bool): determines if this is loading from the organizer widget
         """
         reversed_widgets = OrderedDict(reversed(list(widgets.items())))
 
@@ -1060,12 +997,12 @@ class AbstractPiPDisplayWidget(QWidget):
         # load widgets
         for widget_name, widget_data in reversed_widgets.items():
             constructor_code = widget_data["code"]
-            if self.isStandalone():
-                widget = self.createNewWidgetFromConstructorCode(constructor_code, name=widget_name, resize_popup_bar=False)
-            else:
+            if organizer:
                 organizer_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
                 index = organizer_widget.createNewWidgetFromConstructorCode(constructor_code, name=widget_name, resize_popup_bar=False)
                 widget = index.internalPointer().widget()
+            else:
+                widget = self.createNewWidgetFromConstructorCode(constructor_code, name=widget_name, resize_popup_bar=False)
 
             # update widget overlay text/image if set in Taskbar mode
             if settings["Display Mode"] == AbstractPopupBarDisplayWidget.PIPTASKBAR:
@@ -1172,7 +1109,7 @@ class AbstractPiPDisplayWidget(QWidget):
         self.popupBarWidget().setIsFrozen(False)
 
         # update overlays
-        if self.displayMode() == AbstractPopupBarDisplayWidget.PIPTASKBAR:
+        if self.popupBarWidget().displayMode() == AbstractPopupBarDisplayWidget.PIPTASKBAR:
             if self.previousWidget():
                 self.previousWidget().setIsOverlayDisplayed(True)
             self.currentWidget().setIsOverlayDisplayed(False)
@@ -1301,9 +1238,9 @@ class AbstractPiPDisplayWidget(QWidget):
         if self.isFrozen(): return True
         if not self.popupBarWidget(): return True
 
-        if self.displayMode() == AbstractPopupBarDisplayWidget.PIP:
+        if self.popupBarWidget().displayMode() == AbstractPopupBarDisplayWidget.PIP:
             xpos, ypos, width, height = self.__resizePiP()
-        elif self.displayMode() == AbstractPopupBarDisplayWidget.PIPTASKBAR:
+        elif self.popupBarWidget().displayMode() == AbstractPopupBarDisplayWidget.PIPTASKBAR:
             xpos, ypos, width, height = self.__resizeTaskbar()
         else:
             xpos, ypos, width, height = self.__resizeTaskbar()
@@ -1523,8 +1460,16 @@ organizer_widget.pipDisplayWidget().setDisplayMode(value)
 from cgwidgets.widgets import PopupBarDisplayWidget
 
 # todo get all widgets to show / hide
-taskbar_widgets = [
+all_widgets = [
+    organizer_widget.settingsWidget().widgets()["Enlarged Scale"],
+    organizer_widget.settingsWidget().widgets()["Enlarged Size"],
+    organizer_widget.settingsWidget().widgets()["Overlay Text"],
+    organizer_widget.settingsWidget().widgets()["Overlay Image"],
+    organizer_widget.settingsWidget().widgets()["PiP Scale"],
     organizer_widget.settingsWidget().widgets()["Taskbar Size"],
+]
+
+taskbar_widgets = [
     organizer_widget.settingsWidget().widgets()["Enlarged Size"],
     organizer_widget.settingsWidget().widgets()["Overlay Text"],
     organizer_widget.settingsWidget().widgets()["Overlay Image"],
@@ -1535,16 +1480,26 @@ pip_widgets = [
     organizer_widget.settingsWidget().widgets()["PiP Scale"]
 ]
 
+pip_taskbar_widgets = [
+    organizer_widget.settingsWidget().widgets()["Enlarged Scale"],
+    organizer_widget.settingsWidget().widgets()["Taskbar Size"],
+    organizer_widget.settingsWidget().widgets()["Overlay Text"],
+    organizer_widget.settingsWidget().widgets()["Overlay Image"],
+]
+
+# hide all
+for widget in all_widgets:
+    widget.hide()
+# show widget
 if value == PopupBarDisplayWidget.PIP:
-    for taskbar_widget in taskbar_widgets:
-        taskbar_widget.hide()
     for pip_widget in pip_widgets:
         pip_widget.show()
-elif value in PopupBarDisplayWidget.TASKBARS:
+if value == PopupBarDisplayWidget.PIPTASKBAR:
+    for pip_taskbar_widget in pip_taskbar_widgets:
+        pip_taskbar_widget.show()
+if value == PopupBarDisplayWidget.STANDALONETASKBAR:
     for taskbar_widget in taskbar_widgets:
         taskbar_widget.show()
-    for pip_widget in pip_widgets:
-        pip_widget.hide()
 
 # update popup bar size
 organizer_widget.pipDisplayWidget().resizePopupBar()
@@ -1973,7 +1928,7 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
                 organizer_widget.removeAllWidgets()
                 organizer_widget.pipDisplayWidget().setFilepath(item.filePath())
                 organizer_widget.pipDisplayWidget().popupBarWidget().setFilepath(item.filePath())
-                organizer_widget.pipDisplayWidget().loadPiPWidgetFromData(item.widgetsList(), item.settings())
+                organizer_widget.pipDisplayWidget().loadPopupDisplayFromFile(item.filePath(), item.name(), organizer=True)
 
                 # load settings
                 organizer_widget.settingsWidget().loadSettings(item.settings())
@@ -2858,11 +2813,6 @@ l.addWidget(b)
     #main_widget.move(2000,700)
     centerWidgetOnCursor(main_widget)
     main_widget.resize(512, 512)
-
-    # setup display widget
-    # pip_widget.setDisplayWidget("Bar", "recursion")
-    # pip_widget.setDelegateTitleIsShown(True)
-    # pip_widget.setCreationMode(AbstractPiPOrganizerWidget.DISPLAY)
 
     # display test
     display_test = AbstractPiPDisplayWidget()
