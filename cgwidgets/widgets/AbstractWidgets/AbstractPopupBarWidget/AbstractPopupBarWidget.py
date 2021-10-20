@@ -649,7 +649,6 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
 
         return self.parent().mapToGlobal(QPoint(xpos, ypos)), width, height
 
-
     def closeEnlargedView(self):
         """Closes the enlarged viewer, and returns it back to normal PiP mode"""
 
@@ -665,7 +664,10 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         if not widget_under_cursor:
             self._resetSpacerWidget()
             self.setIsEnlarged(False)
-            self.enlargedWidget().setIsOverlayDisplayed(False)
+            if self.displayMode() in AbstractPopupBarDisplayWidget.TASKBARS:
+                self.enlargedWidget().setIsOverlayDisplayed(True)
+            else:
+                self.enlargedWidget().setIsOverlayDisplayed(False)
 
         # exited over the mini viewer
         elif isWidgetDescendantOf(widget_under_cursor, widget_under_cursor.parent(), self):
@@ -1305,8 +1307,6 @@ if __name__ == "__main__":
     main_layout.addWidget(other_widget)
 
     # set popup bar widget
-
-    popup_bar_widget.setOverlayWidget(other_widget)
     popup_bar_widget.setFixedWidth(50)
     popup_bar_widget.setDisplayMode(AbstractPopupBarDisplayWidget.PIP)
     # popup_bar_widget.setDirection(attrs.SOUTH)
