@@ -44,7 +44,7 @@ popup_bar_widget.loadPopupDisplayFromFile(
     getDefaultSavePath() + '/.PiPWidgets_02.json',
     "standalone_taskbar"
 )
-# popup_bar_widget.setDisplayMode(PopupBarDisplayWidget.PIP)
+popup_bar_widget.setDisplayMode(PopupBarDisplayWidget.PIP)
 # popup_bar_widget.setDirection(attrs.SOUTH)
 
 # show widget

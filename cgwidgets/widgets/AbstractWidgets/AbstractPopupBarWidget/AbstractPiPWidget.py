@@ -221,7 +221,7 @@ class AbstractPiPOrganizerWidget(AbstractShojiModelViewWidget):
 
         """ create widgets """
         # create main pip widget
-        self._pip_display_widget = AbstractPopupBarDisplayWidget(self, display_mode=AbstractPopupBarDisplayWidget.PIP)
+        self._popup_bar_display_widget = AbstractPopupBarDisplayWidget(self, display_mode=AbstractPopupBarDisplayWidget.PIP)
 
         # setup local organizer widget
         self._local_organizer_widget = PiPPopupBarOrganizerWidget(self, widget_types)
@@ -242,7 +242,7 @@ class AbstractPiPOrganizerWidget(AbstractShojiModelViewWidget):
         self.insertShojiWidget(0, column_data={'name': 'Settings'}, widget=self._settings_widget)
         self.insertShojiWidget(0, column_data={'name': 'Organizer'}, widget=self._global_organizer_widget)
         self.insertShojiWidget(0, column_data={'name': 'Views'}, widget=self._local_organizer_widget)
-        self.insertShojiWidget(0, column_data={'name': 'PiP'}, widget=self._pip_display_widget)
+        self.insertShojiWidget(0, column_data={'name': 'Widget'}, widget=self._popup_bar_display_widget)
 
         # create temp widget
         self.createTempWidget()
@@ -304,14 +304,14 @@ class AbstractPiPOrganizerWidget(AbstractShojiModelViewWidget):
         print('No widgets found in {file_name} --> {widget_name}'.format(file_name=file_name, widget_name=widget_name))
 
     """ WIDGETS (DISPLAY)"""
-    def pipDisplayWidget(self):
-        return self._pip_display_widget
+    def popupBarDisplayWidget(self):
+        return self._popup_bar_display_widget
 
     def popupBarWidget(self):
-        return self.pipDisplayWidget().popupBarWidget()
+        return self.popupBarDisplayWidget().popupBarWidget()
 
     def mainViewerWidget(self):
-        return self.pipDisplayWidget().mainViewerWidget()
+        return self.popupBarDisplayWidget().mainViewerWidget()
 
     def popupBarOrganizerWidget(self):
         return self._local_organizer_widget
@@ -320,7 +320,7 @@ class AbstractPiPOrganizerWidget(AbstractShojiModelViewWidget):
         return self._global_organizer_widget
 
     def popupBarCreatorWidget(self):
-        return self.pipDisplayWidget()._panel_creator_widget
+        return self.popupBarDisplayWidget()._panel_creator_widget
 
     def settingsWidget(self):
         return self._settings_widget
@@ -336,7 +336,7 @@ class AbstractPiPOrganizerWidget(AbstractShojiModelViewWidget):
 
         Returns (QModelIndex):
         """
-        widget = self.pipDisplayWidget().createWidgetFromConstructorCode(constructor_code)
+        widget = self.popupBarDisplayWidget().createWidgetFromConstructorCode(constructor_code)
         index = self.createNewWidget(widget, name=name, resize_popup_bar=resize_popup_bar)
         index.internalPointer().setConstructorCode(constructor_code)
         return index
@@ -352,7 +352,7 @@ class AbstractPiPOrganizerWidget(AbstractShojiModelViewWidget):
 
         """
         # create mini viewer widget
-        popup_bar_widget = self.pipDisplayWidget().createNewWidget(widget, name=name, resize_popup_bar=resize_popup_bar)
+        popup_bar_widget = self.popupBarDisplayWidget().createNewWidget(widget, name=name, resize_popup_bar=resize_popup_bar)
 
         # create new index
         index = self.popupBarOrganizerWidget().model().insertNewIndex(0, name=name)
@@ -369,7 +369,7 @@ class AbstractPiPOrganizerWidget(AbstractShojiModelViewWidget):
         # self.updateWidgetIndexes()
 
         # # destroy temp widgets
-        if 1 < self.pipDisplayWidget().numWidgets():
+        if 1 < self.popupBarDisplayWidget().numWidgets():
             if name != "":
                 self.removeTempWidget()
 
@@ -388,7 +388,7 @@ class AbstractPiPOrganizerWidget(AbstractShojiModelViewWidget):
 
     def removeAllWidgets(self):
         """ Clears all of the widgets from the current AbstractPiPOrganizerWidget"""
-        self.pipDisplayWidget().removeAllWidgets()
+        self.popupBarDisplayWidget().removeAllWidgets()
         self.popupBarOrganizerWidget().model().clearModel()
 
     """ WIDGETS (TEMP)"""
@@ -437,53 +437,53 @@ widget.setWordWrap(True)
 
     """ PROPERTIES """
     def isPopupBarWidget(self):
-        return self.pipDisplayWidget().isPopupBarWidget()
+        return self.popupBarDisplayWidget().isPopupBarWidget()
 
     def setIsPopupBarWidget(self, is_popup_bar_widget):
-        self.pipDisplayWidget().setIsPopupBarWidget(is_popup_bar_widget)
+        self.popupBarDisplayWidget().setIsPopupBarWidget(is_popup_bar_widget)
 
     """ VIRTUAL PROPERTIES """
     def setSavePath(self, file_paths):
         self.popupBarOrganizerWidget().saveWidget().setPiPSaveData(file_paths)
 
     def direction(self):
-        return self.pipDisplayWidget().direction()
+        return self.popupBarDisplayWidget().direction()
 
     def setDirection(self, direction):
-        self.pipDisplayWidget().setDirection(direction)
+        self.popupBarDisplayWidget().setDirection(direction)
 
     def swapKey(self):
-        return self.pipDisplayWidget().swapKey()
+        return self.popupBarDisplayWidget().swapKey()
 
     def setSwapKey(self, key):
-        self.pipDisplayWidget().setSwapKey(key)
+        self.popupBarDisplayWidget().setSwapKey(key)
 
     def pipScale(self):
-        return self.pipDisplayWidget().pipScale()
+        return self.popupBarDisplayWidget().pipScale()
 
     def setPiPScale(self, pip_scale):
-        self.pipDisplayWidget().setPiPScale(pip_scale)
+        self.popupBarDisplayWidget().setPiPScale(pip_scale)
 
     def enlargedScale(self):
-        return self.pipDisplayWidget().enlargedScale()
+        return self.popupBarDisplayWidget().enlargedScale()
 
     def setEnlargedScale(self, _enlarged_scale):
-        self.pipDisplayWidget().setEnlargedScale(_enlarged_scale)
+        self.popupBarDisplayWidget().setEnlargedScale(_enlarged_scale)
 
     def setIsDisplayNamesShown(self, enabled):
-        self.pipDisplayWidget().setIsDisplayNamesShown(enabled)
+        self.popupBarDisplayWidget().setIsDisplayNamesShown(enabled)
 
     def currentWidget(self):
-        return self.pipDisplayWidget().currentWidget()
+        return self.popupBarDisplayWidget().currentWidget()
 
     def setCurrentWidget(self, current_widget):
-        self.pipDisplayWidget().setCurrentWidget(current_widget)
+        self.popupBarDisplayWidget().setCurrentWidget(current_widget)
 
     def previousWidget(self):
-        return self.pipDisplayWidget().previousWidget()
+        return self.popupBarDisplayWidget().previousWidget()
 
     def setPreviousWidget(self, previous_widget):
-        self.pipDisplayWidget().setPreviousWidget(previous_widget)
+        self.popupBarDisplayWidget().setPreviousWidget(previous_widget)
 
     """ ORGANIZER / CREATOR """
     def toggleItemVisibility(self, item_name, visibility):
@@ -1436,7 +1436,7 @@ class SettingsWidget(AbstractFrameInputWidgetContainer):
         "Display Titles": {
             "type": attrs.BOOLEAN,
             "value": True,
-            "code": """organizer_widget.pipDisplayWidget().setIsDisplayNamesShown(value)""",
+            "code": """organizer_widget.popupBarDisplayWidget().setIsDisplayNamesShown(value)""",
             "help": "Determines if the titles will be displayed or not"},
         "Direction": {
             "type": attrs.LIST,
@@ -1444,16 +1444,20 @@ class SettingsWidget(AbstractFrameInputWidgetContainer):
             "items": [[attrs.NORTH], [attrs.SOUTH], [attrs.EAST], [attrs.WEST]],
             "code": """
 #print(organizer_widget)
-#print(organizer_widget.pipDisplayWidget())
-organizer_widget.pipDisplayWidget().setDirection(value)
-organizer_widget.pipDisplayWidget().resizePopupBar()""",
+#print(organizer_widget.popupBarDisplayWidget())
+organizer_widget.popupBarDisplayWidget().setDirection(value)
+organizer_widget.popupBarDisplayWidget().resizePopupBar()""",
             "help": "Which direction the popup will occur."},
         "Display Mode":{
             "type": attrs.LIST,
             "value": AbstractPopupBarDisplayWidget.PIPTASKBAR,
-            "items": [[AbstractPopupBarDisplayWidget.PIP], [AbstractPopupBarDisplayWidget.PIPTASKBAR], [AbstractPopupBarDisplayWidget.STANDALONETASKBAR]],
+            "items": [
+                [AbstractPopupBarDisplayWidget.PIP],
+                [AbstractPopupBarDisplayWidget.PIPTASKBAR],
+                [AbstractPopupBarDisplayWidget.STANDALONETASKBAR]
+            ],
             "code": """
-organizer_widget.pipDisplayWidget().setDisplayMode(value)       
+organizer_widget.popupBarDisplayWidget().setDisplayMode(value)       
 
 # hide/show all widgets
 from cgwidgets.widgets import PopupBarDisplayWidget
@@ -1501,7 +1505,7 @@ if value == PopupBarDisplayWidget.STANDALONETASKBAR:
         taskbar_widget.show()
 
 # update popup bar size
-organizer_widget.pipDisplayWidget().resizePopupBar()
+organizer_widget.popupBarDisplayWidget().resizePopupBar()
             """,
             "help": "The type of display that this will use"},
         "PiP Scale": {
@@ -1509,21 +1513,21 @@ organizer_widget.pipDisplayWidget().resizePopupBar()
             "value": 0.25,
             "value_list": [0.01, 0.025, 0.05, 0.1],
             "range": [True, 0.1, 1],
-            "code": """organizer_widget.pipDisplayWidget().setPiPScale(float(value))""",
+            "code": """organizer_widget.popupBarDisplayWidget().setPiPScale(float(value))""",
             "help": "The amount of space the PiPWidget will take up when not enlarged"},
         "Enlarged Scale": {
             "type": attrs.FLOAT,
             "value": 0.8,
             "value_list": [0.01, 0.025, 0.05, 0.1],
             "range": [True, 0.1, 0.9],
-            "code": """organizer_widget.pipDisplayWidget().setEnlargedScale(float(value))""",
+            "code": """organizer_widget.popupBarDisplayWidget().setEnlargedScale(float(value))""",
             "help": "The amount of space (percent) the PiPWidget will take when enlarged"},
         "Enlarged Size": {
             "type": attrs.FLOAT,
             "value": 500.0,
             "value_list": [1, 5, 10, 25, 50],
             "range": [False],
-            "code": """organizer_widget.pipDisplayWidget().setEnlargedSize(float(value))""",
+            "code": """organizer_widget.popupBarDisplayWidget().setEnlargedSize(float(value))""",
             "help": """The size (pixels) in the expanding direction of the enlarged widget.
     ie. if the expanding direction is set to East, this will be the width in pixels"""
         },
@@ -1533,8 +1537,8 @@ organizer_widget.pipDisplayWidget().resizePopupBar()
             "value_list": [1, 5, 10, 25],
             "range": [False],
             "code": """
-organizer_widget.pipDisplayWidget().setTaskbarSize(float(value))
-organizer_widget.pipDisplayWidget().resizePopupBar()
+organizer_widget.popupBarDisplayWidget().setTaskbarSize(float(value))
+organizer_widget.popupBarDisplayWidget().resizePopupBar()
             """,
             "help": "The size (pixels) of the taskbar when not enlarged"},
         "Overlay Text": {
@@ -1924,14 +1928,11 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
             """ All items are of type PIP except for the groups"""
             if item.itemType() == PiPGlobalOrganizerItem.PIP:
                 organizer_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
-
-                # remove all existing widgets
-                organizer_widget.pipDisplayWidget().popupBarWidget().closeEnlargedView()
-                organizer_widget.removeAllWidgets()
+                organizer_widget.popupBarDisplayWidget().popupBarWidget().closeEnlargedView()
 
                 # load file
-                organizer_widget.pipDisplayWidget().setFilepath(item.filepath())
-                organizer_widget.pipDisplayWidget().loadPopupDisplayFromFile(item.filepath(), item.name(), organizer=True)
+                organizer_widget.popupBarDisplayWidget().setFilepath(item.filepath())
+                organizer_widget.popupBarDisplayWidget().loadPopupDisplayFromFile(item.filepath(), item.name(), organizer=True)
 
                 # load settings
                 organizer_widget.settingsWidget().loadSettings(item.settings())
@@ -2628,14 +2629,14 @@ class PiPPopupBarOrganizerWidget(AbstractModelViewWidget):
             organizer_widget.setPreviousWidget(None)
 
         # create temp widget
-        if organizer_widget.pipDisplayWidget().numWidgets() < 2:
+        if organizer_widget.popupBarDisplayWidget().numWidgets() < 2:
             organizer_widget.createTempWidget()
 
         # delete widget
         item.widget().setParent(None)
         item.widget().deleteLater()
         # resize
-        organizer_widget.pipDisplayWidget().resizePopupBar()
+        organizer_widget.popupBarDisplayWidget().resizePopupBar()
 
     """ EVENTS """
     def showEvent(self, event):
