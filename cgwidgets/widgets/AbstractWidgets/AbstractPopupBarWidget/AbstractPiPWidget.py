@@ -7,16 +7,18 @@ widget.
 
 Hierarchy:
     AbstractPiPOrganizerWidget --> (AbstractShojiModelViewWidget)
-        |- AbstractPiPDisplayWidget --> (QWidget)
-        |    |- QVBoxLayout
-        |    |    |- PiPMainViewer --> (QWidget)
-        |    |    |- PiPPopupBarWidgetCreator --> (AbstractListInputWidget)
-        |    |- spacer_widget (QLabel)
-        |    |- PopupBar (QWidget)
-        |        |- QBoxLayout
-        |            |-* AbstractPopupBarItemWidget --> AbstractOverlayInputWidget
-        |                    |- QVBoxLayout
-        |                    |- AbstractLabelledInputWidget
+        |- AbstractPopupBarDisplayWidget
+        |    |- AbstractPopupBarWidget
+        |    |- AbstractPiPDisplayWidget --> (QWidget)
+        |        |- QVBoxLayout
+        |        |    |- PiPMainViewer --> (QWidget)
+        |        |    |- PiPPopupBarWidgetCreator --> (AbstractListInputWidget)
+        |        |- spacer_widget (QLabel)
+        |        |- AbstractPopupBarWidget (QWidget)
+        |            |- QBoxLayout
+        |                |-* AbstractPopupBarItemWidget --> AbstractOverlayInputWidget
+        |                        |- QVBoxLayout
+        |                        |- AbstractLabelledInputWidget
         |- popupBarOrganizerWidget --> AbstractModelViewWidget
         |- CreatorWidget (Extended...)
         |- GlobalOrganizerWidget --> AbstractModelViewWidget
@@ -559,19 +561,6 @@ widget.setWordWrap(True)
         # toggle visibility
         self._is_settings_visible = not self.isSettingsVisible()
         self.toggleItemVisibility("Settings", self.isSettingsVisible())
-
-    """ EVENTS """
-    def keyPressEvent(self, event):
-        # if event.key() == self.swapKey():
-        #     self.pipDisplayWidget().swapWidgets()
-        # these are registering???
-        # if event.key() == Qt.Key_F:
-        #     self.toggleLocalOrganizerVisibility()
-        # if event.key() == Qt.Key_G:
-        #     self.toggleGlobalOrganizerVisibility()
-        # if event.key() == Qt.Key_S:
-        #     self.toggleSettingsVisibility()
-        return AbstractShojiModelViewWidget.keyPressEvent(self, event)
 
 
 class AbstractPiPDisplayWidget(QWidget):

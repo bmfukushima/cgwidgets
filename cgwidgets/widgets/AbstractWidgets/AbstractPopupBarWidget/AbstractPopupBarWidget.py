@@ -247,14 +247,12 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         if not self.widget(widget.index()): return True
         if widget.parent() == self.widget(widget.index()).parent(): return True
         setAsTool(self.enlargedWidget(), False)
-        #self.enlargedWidget().setWindowFlags(self.enlargedWidget().windowFlags() & ~Qt.Tool)
 
         # swap widgets
         self.replaceWidget(widget.index(), widget)
         self.spacerWidget().setParent(self.parent())
         self.widgets().append(widget)
         self.setSizes(self.__temp_sizes)
-
 
     def updateWidgetIndexes(self):
         """ Updates all of the widget indexes to their current position """
@@ -366,7 +364,6 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             self.__last_object_entered = obj
             #
             if self.isEnlarged():
-
                 # Block from re-enlarging itself
                 if self.enlargedWidget() == obj:
                     obj.setFocus()
@@ -510,60 +507,51 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         if self.widget(widget.index()).parent() == self.spacerWidget().parent(): return
         self.setIsFrozen(True)
 
+        from .AbstractPiPWidget import AbstractPiPOrganizerWidget
+        _organizer_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
+
         # set/get attrs
         self.setIsEnlarged(True)
         self.setEnlargedWidget(widget)
-
-        """temp sizes holds the current size of widgets
-        so that they can be added/removed and restored to their original state"""
         self.__temp_sizes = self.sizes()
-
-        # enlarge widget based on the current display mode
-        if self.displayMode() == AbstractPopupBarDisplayWidget.PIP:
-            xpos, ypos, width, height = self.__enlargePiPWidget()
-
-        elif self.displayMode() == AbstractPopupBarDisplayWidget.PIPTASKBAR:
-            """ This is just a clone of the pip widget atm.
-            Not sure if you'll even need another handler... as the 
-            pip handler might work fine here... and its merely the resize
-            display which needs the handling"""
-            widget.setIsOverlayDisplayed(False)
-            xpos, ypos, width, height = self.__enlargePiPWidget()
-
-        elif self.displayMode() == AbstractPopupBarDisplayWidget.STANDALONETASKBAR:
-            widget.setIsOverlayDisplayed(False)
-            xpos, ypos, width, height = self.__enlargeTaskbar()
 
         # Swap spacer widget
         self.replaceWidget(widget.index(), self.spacerWidget())
         self.spacerWidget().show()
 
-        # reparent widget
-        if self.displayMode() == AbstractPopupBarDisplayWidget.STANDALONETASKBAR:
-            widget.setParent(self.window())
-        else:
-            widget.setParent(self.parent())
-
+        # reparent widget, and set as tool
+        """ As it will be displayed outside of the boundries of the current widget.
+        It needs to be set as a tool, so incase it is displayed outside the boundries
+        of the main application."""
+        widget.setParent(self.parent())
         setAsTool(widget, True)
         widget.show()
 
+        # enlarge widget based on the current display mode
+        if self.displayMode() == AbstractPopupBarDisplayWidget.PIP:
+            pos, width, height = self.__enlargePiPWidget()
+
+        if self.displayMode() == AbstractPopupBarDisplayWidget.PIPTASKBAR:
+            widget.setIsOverlayDisplayed(False)
+            pos, width, height = self.__enlargePiPWidget()
+
+        if self.displayMode() == AbstractPopupBarDisplayWidget.STANDALONETASKBAR:
+            widget.setIsOverlayDisplayed(False)
+            pos, width, height = self.__enlargeTaskbar()
+
         # move / resize enlarged widget
-        pos = widget.parent().mapToGlobal(QPoint(int(xpos), int(ypos)))
         widget.resize(int(width), int(height))
         widget.move(pos)
 
         #
         self.insertWidget(widget.index(), self._spacer_widget)
         self.setSizes(self.__temp_sizes)
-
-        # show mini viewer widgets
-        # if widget.isPiPWidget():
-        #     widget.delegateWidget().setIsPopupBarShown(True)
-
         self.setIsFrozen(False)
 
     def __enlargeTaskbar(self):
-        """ Popups the widget when it is in taskbar mode """
+        """ Popups the widget when it is in taskbar mode
+
+        returns (QPoint, width, height)"""
         scale = self.enlargedScale()
         negative_space = 1 - scale
         half_neg_space = negative_space * 0.5
@@ -573,12 +561,12 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             height = self.enlargedSize()
 
             if self.direction() == attrs.NORTH:
-                top_left = self.mapTo(self.window(), self.geometry().topLeft())
+                top_left = self.parent().mapToGlobal(self.geometry().topLeft())
                 ypos = top_left.y() - height
                 xpos = top_left.x() + (self.width() * half_neg_space)
 
             if self.direction() == attrs.SOUTH:
-                bot_left = self.mapTo(self.window(), self.geometry().bottomLeft())
+                bot_left = self.parent().mapToGlobal(self.geometry().bottomLeft())
                 ypos = bot_left.y()
                 xpos = bot_left.x() + (self.width() * half_neg_space)
 
@@ -587,19 +575,22 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             width = self.enlargedSize()
 
             if self.direction() == attrs.EAST:
-                top_right = self.mapTo(self.window(), self.geometry().topRight())
+
+                top_right = self.parent().mapToGlobal(self.geometry().topRight())
                 xpos = top_right.x()
                 ypos = top_right.y() + (self.height() * half_neg_space)
 
             if self.direction() == attrs.WEST:
-                top_left = self.mapTo(self.window(), self.geometry().topLeft())
+                top_left = self.parent().mapToGlobal(self.geometry().topLeft())
                 xpos = top_left.x() - width
                 ypos = top_left.y() + (self.height() * half_neg_space)
 
-        return xpos, ypos, width, height
+        return QPoint(xpos, ypos), width, height
 
     def __enlargePiPWidget(self):
-        """ Popups up the widget when it is in PiPMode"""
+        """ Popups up the widget when it is in PiPMode
+
+        returns (QPoint, width, height)"""
         from .AbstractPiPWidget import AbstractPiPDisplayWidget
 
         # get attrs
@@ -656,10 +647,8 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
                 if self.direction() == attrs.NORTH:
                     ypos = offset
 
-        return xpos, ypos, width, height
+        return self.parent().mapToGlobal(QPoint(xpos, ypos)), width, height
 
-    def __enlargePiPTaskbar(self):
-        pass
 
     def closeEnlargedView(self):
         """Closes the enlarged viewer, and returns it back to normal PiP mode"""
