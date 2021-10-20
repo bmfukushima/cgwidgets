@@ -717,16 +717,9 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             self.setIsEnlarged(False)
             self.enlargedWidget().setIsOverlayDisplayed(True)
 
-        # self.setIsFrozen(False)
-        # show mini viewer widgets
-        # if self.enlargedWidget().isPiPWidget():
-        #     # pip_display_widget = getWidgetAncestor(self.enlargedWidget(), AbstractPiPDisplayWidget)
-        #     self.enlargedWidget().delegateWidget().setIsPopupBarShown(False)
-
+        # unfreeze
         """ Unfreezing as a delayed event to help to avoid the segfaults that occur
         when PyQt tries to do things to fast..."""
-        # self.setEnlargedWidget(None)
-
         runDelayedEvent(self, self.unfreeze, delay_amount=10)
 
     def unfreeze(self):

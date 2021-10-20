@@ -9,6 +9,7 @@ Hierarchy:
     AbstractPiPOrganizerWidget --> (AbstractShojiModelViewWidget)
         |- AbstractPopupBarDisplayWidget
         |    |- AbstractPopupBarWidget
+        |    |      or
         |    |- AbstractPiPDisplayWidget --> (QWidget)
         |        |- QVBoxLayout
         |        |    |- PiPMainViewer --> (QWidget)
@@ -1746,10 +1747,10 @@ class PiPGlobalOrganizerItem(AbstractDragDropModelItem):
         self.setIsEditable(not _is_locked)
         self.setDeleteOnDrop(not _is_locked)
 
-    def filePath(self):
+    def filepath(self):
         return self._file_path
 
-    def setFilePath(self, file_path):
+    def setFilepath(self, file_path):
         self._file_path = file_path
 
     def itemType(self):
@@ -1846,7 +1847,7 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
         container_index = self.model().insertNewIndex(0, name=name)
         container_item = container_index.internalPointer()
         container_item.setItemType(PiPGlobalOrganizerItem.GROUP)
-        container_item.setFilePath(file_path)
+        container_item.setFilepath(file_path)
 
         # setup flags
         container_item.setIsDraggable(False)
@@ -1874,7 +1875,7 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
         item.setWidgetsList(widgets)
         item.setSettings(settings)
         item.setItemType(PiPGlobalOrganizerItem.PIP)
-        item.setFilePath(file_path)
+        item.setFilepath(file_path)
 
         # set flags
         item.setIsDroppable(False)
@@ -1885,7 +1886,7 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
 
     def printFilepath(self, index, selected_indexes):
         """ Prints the filepath of the currently selected item"""
-        print(index.internalPointer().filePath())
+        print(index.internalPointer().filepath())
 
     """ SAVE ( VIRTUAL ) """
     def getAllPiPWidgetsNames(self):
@@ -1923,10 +1924,14 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
             """ All items are of type PIP except for the groups"""
             if item.itemType() == PiPGlobalOrganizerItem.PIP:
                 organizer_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
+
+                # remove all existing widgets
+                organizer_widget.pipDisplayWidget().popupBarWidget().closeEnlargedView()
                 organizer_widget.removeAllWidgets()
-                organizer_widget.pipDisplayWidget().setFilepath(item.filePath())
-                organizer_widget.pipDisplayWidget().popupBarWidget().setFilepath(item.filePath())
-                organizer_widget.pipDisplayWidget().loadPopupDisplayFromFile(item.filePath(), item.name(), organizer=True)
+
+                # load file
+                organizer_widget.pipDisplayWidget().setFilepath(item.filepath())
+                organizer_widget.pipDisplayWidget().loadPopupDisplayFromFile(item.filepath(), item.name(), organizer=True)
 
                 # load settings
                 organizer_widget.settingsWidget().loadSettings(item.settings())
@@ -2279,7 +2284,7 @@ class PiPSaveWidget(QWidget):
                 item = item.parent()
 
             # get file path
-            file_path = item.filePath()
+            file_path = item.filepath()
 
             return file_path
 
