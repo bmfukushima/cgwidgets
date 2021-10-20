@@ -42,6 +42,9 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
     This widget is an overlay of the MainWidget, and sits at a parallel hierarchy to the PiPMainViewer
 
     Attributes:
+        current_widget (AbstractPopupBarItemWidget): Current widget being displayed full screen in this widget.
+            This is only active if the display mode is set to:
+                PIP | PIPTASKBAR
         direction (attrs.DIRECTION): direction that the popup will be displayed on
         display_mode (AbstractPopupBarWidget.TYPE): Determines what type of widget this should be displayed as
             valid options are
@@ -86,8 +89,9 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         self._filepath = ""
         self._direction = direction
         self._display_mode = AbstractPopupBarDisplayWidget.STANDALONETASKBAR
-
+        self._current_widget = None
         self._enlarged_widget = None
+
         self._createSpacerWidget()
         if overlay_widget:
             self._overlay_widget = overlay_widget
@@ -138,8 +142,17 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             self.setIsOverlayEnabled(False)
         if display_mode == AbstractPopupBarDisplayWidget.PIPTASKBAR:
             self.setIsOverlayEnabled(True)
+            self.currentWidget().setIsOverlayDisplayed(False)
         if display_mode == AbstractPopupBarDisplayWidget.STANDALONETASKBAR:
             self.setIsOverlayEnabled(True)
+
+    def currentWidget(self):
+        if self.displayMode() in AbstractPopupBarDisplayWidget.PIPDISPLAYS:
+            return self._current_widget
+        return None
+
+    def setCurrentWidget(self, current_widget):
+        self._current_widget = current_widget
 
     def enlargedScale(self):
         return self._enlarged_scale

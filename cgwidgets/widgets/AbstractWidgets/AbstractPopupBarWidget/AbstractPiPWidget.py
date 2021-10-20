@@ -249,7 +249,7 @@ class AbstractPiPOrganizerWidget(AbstractShojiModelViewWidget):
         self.createTempWidget()
 
     def showEvent(self, event):
-        indexes = self.model().findItems("PiP", Qt.MatchExactly)
+        indexes = self.model().findItems("Widget", Qt.MatchExactly)
         for index in indexes:
             self.setIndexSelected(index, True)
         return AbstractShojiModelViewWidget.showEvent(self, event)
@@ -906,6 +906,9 @@ class AbstractPiPDisplayWidget(QWidget):
         else:
             popup_bar_widget = AbstractPopupBarItemWidget(
                 self.mainViewerWidget(), direction=Qt.Vertical, delegate_widget=widget, name=name, is_overlay_enabled=self.isOverlayEnabled())
+            # if self.popupBarWidget().displayMode() == AbstractPopupBarDisplayWidget.PIPTASKBAR:
+            #     popup_bar_widget.setIsOverlayDisplayed(False)
+            # else:
             popup_bar_widget.setIsOverlayDisplayed(self.isOverlayEnabled())
             self.setCurrentWidget(popup_bar_widget)
 
@@ -1048,6 +1051,8 @@ class AbstractPiPDisplayWidget(QWidget):
                 print("multi recursive swapping is disabled for OrganizerWidgets")
                 # won't be supporting this probably
                 pass
+
+            # todo this may need to be redone for the AbstractPopupDisplayWidget
             elif isinstance(widget.delegateWidget(), AbstractPiPDisplayWidget):
                 # update settings
                 """ sizes doesn't swap... probably due to the add/remove of widgets
@@ -1102,6 +1107,7 @@ class AbstractPiPDisplayWidget(QWidget):
         self._current_widget = widget
         self.mainViewerWidget().setWidget(widget)
         self._current_widget.installEventFilter(self.popupBarWidget())
+        self.popupBarWidget().setCurrentWidget(widget)
 
         # update mini viewer widget
         self.popupBarWidget().setSizes(sizes)
