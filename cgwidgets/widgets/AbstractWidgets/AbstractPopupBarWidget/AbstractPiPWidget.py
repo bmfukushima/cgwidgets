@@ -1101,7 +1101,7 @@ class AbstractPiPDisplayWidget(QWidget):
 
             # update previous widget
             self.setPreviousWidget(self._current_widget)
-            self._current_widget.setIsMainViewerWidget(False)
+            self._current_widget.setIsCurrentWidget(False)
 
         # set widget as current
         self._current_widget = widget
@@ -1242,7 +1242,6 @@ class AbstractPiPDisplayWidget(QWidget):
 
         if self.isFrozen(): return True
         if not self.popupBarWidget(): return True
-
         if self.popupBarWidget().displayMode() == AbstractPopupBarDisplayWidget.PIP:
             xpos, ypos, width, height = self.__resizePiP()
         elif self.popupBarWidget().displayMode() == AbstractPopupBarDisplayWidget.PIPTASKBAR:
@@ -1419,7 +1418,7 @@ class PiPMainViewer(QWidget):
     def setWidget(self, widget):
         self._widget = widget
         self.layout().addWidget(widget)
-        widget.setIsMainViewerWidget(True)
+        widget.setIsCurrentWidget(True)
         widget.layout().setContentsMargins(0, 0, 0, 0)
 
     def removeWidget(self):
@@ -1463,7 +1462,9 @@ organizer_widget.popupBarDisplayWidget().resizePopupBar()""",
                 [AbstractPopupBarDisplayWidget.STANDALONETASKBAR]
             ],
             "code": """
+# print(organizer_widget.popupBarDisplayWidget())
 organizer_widget.popupBarDisplayWidget().setDisplayMode(value)       
+
 
 # hide/show all widgets
 from cgwidgets.widgets import PopupBarDisplayWidget

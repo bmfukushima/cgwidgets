@@ -42,6 +42,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
     This widget is an overlay of the MainWidget, and sits at a parallel hierarchy to the PiPMainViewer
 
     Attributes:
+        are_widget_names_shown (bool): Determines if the titles are shown above the items
         current_widget (AbstractPopupBarItemWidget): Current widget being displayed full screen in this widget.
             This is only active if the display mode is set to:
                 PIP | PIPTASKBAR
@@ -83,6 +84,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         self._is_dragging = False
         self._is_enlarged = False
         self._is_overlay_enabled = True
+        self._are_widget_names_shown = True
         self._is_standalone = True
         self._enlarged_scale = 0.85
         self._enlarged_size = 500
@@ -275,15 +277,26 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
 
     def settings(self):
         """ returns a dict of the current settings which can be set with updateSettings()"""
+        if self.currentWidget():
+            overlay_text = self.currentWidget().title()
+            overlay_image = self.currentWidget().overlayImage()
+        else:
+            overlay_text = ""
+            overlay_image = ""
+        try:
+            sizes = self.popupBarWidget().sizes()
+        except AttributeError:
+            sizes = []
+
         return {
             "Enlarged Scale": self.enlargedScale(),
             "Enlarged Size": self.enlargedSize(),
             "Display Titles": self.isDisplayNamesShown(),
             "Direction": self.direction(),
             "Display Mode": self.displayMode(),
-            "Overlay Text": self.currentWidget().title(),
-            "Overlay Image": self.currentWidget().overlayImage(),
-            "sizes": self.popupBarWidget().sizes()
+            "Overlay Text": overlay_text,
+            "Overlay Image": overlay_image,
+            "sizes": sizes
         }
 
     def updateSettings(self, settings):
@@ -381,7 +394,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
                 if self.enlargedWidget() == obj:
                     obj.setFocus()
                     return True
-                elif obj.isMainViewerWidget():
+                elif obj.isCurrentWidget():
                     return True
                 # Has just enlarged the widget, but the cursor never entered it
                 else:
@@ -396,7 +409,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
 
             # Enlarge PopupBarWidget
             else:
-                if not obj.isMainViewerWidget():
+                if not obj.isCurrentWidget():
                     # reset widget to default params
                     self.setIsDragging(False)
 
@@ -405,6 +418,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             return True
 
         if event.type() == QEvent.Leave:
+            # print("leave == ", obj.name())
             # leaves over mini viewer widget
             """ Check to see if the cursor is over the object, because the drag
             events will trigger a leave event"""
@@ -436,7 +450,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
                 if obj == self.spacerWidget():
                     self.__last_object_entered = self.spacerWidget()
                     return True
-            if obj.isMainViewerWidget():
+            if obj.isCurrentWidget():
                 if self.__last_object_entered == self.spacerWidget():
                     return True
         else:
@@ -460,7 +474,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             if self.enlargedWidget() == obj:
                 return True
             # Has just enlarged the widget, but the cursor never entered it
-            elif obj.isMainViewerWidget():
+            elif obj.isCurrentWidget():
                 self.closeEnlargedView()
             else:
                 # reset display label
@@ -474,7 +488,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         # Enlarge PopupBarWidget
         else:
             # enlarge widget
-            if not obj.isMainViewerWidget():
+            if not obj.isCurrentWidget():
                 obj.pipPopupBarWidget().closeEnlargedView()
                 self.enlargeWidget(obj)
 
@@ -520,8 +534,8 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         if self.widget(widget.index()).parent() == self.spacerWidget().parent(): return
         self.setIsFrozen(True)
 
-        from .AbstractPiPWidget import AbstractPiPOrganizerWidget
-        _organizer_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
+        # from .AbstractPiPWidget import AbstractPiPOrganizerWidget
+        # _organizer_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
 
         # set/get attrs
         self.setIsEnlarged(True)
@@ -667,7 +681,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
 
         # preflight
         if not self.isEnlarged(): return
-        if self.enlargedWidget().isMainViewerWidget(): return
+        if self.enlargedWidget().isCurrentWidget(): return
 
         # setup attrs
         self.setIsFrozen(True)
@@ -775,7 +789,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         # self.installDragEnterMonkeyPatch(mini_widget.delegateWidget())
         # self.installDragLeaveMonkeyPatch(mini_widget.delegateWidget())
         # self.installDragMoveMonkeyPatch(mini_widget.delegateWidget())
-        mini_widget.installEventFilter(self)
+        # mini_widget.installEventFilter(self)
         mini_widget.delegateWidget().setAcceptDrops(True)
 
         self.insertWidget(index, mini_widget)
@@ -828,6 +842,9 @@ class AbstractPopupBarItemWidget(AbstractOverlayInputWidget):
         delegate_widget (QWidget): Widget to be used as popup
 
     Attributes:
+        is_current_widget (bool): Determines if this widget is currently the widget displayed
+            in the main viewer.  Note, this is only valid if the displayMode() is set to
+                PIP | PIPTASKBAR
         is_overlay_enabled (bool): determines if the overlay is displayed.  This is used with
             the PopupBar to show text instead of the widget to the user.
         is_overlay_displayed (bool): determines if the overlay is currently displayed.  If set to
@@ -857,7 +874,7 @@ class AbstractPopupBarItemWidget(AbstractOverlayInputWidget):
 
         self._is_overlay_enabled = is_overlay_enabled
         self._is_pip_widget = is_pip_widget
-        self._is_main_viewer_widget = False
+        self._is_current_widget = False
         self._name = name
         self._overlay_image = ""
         self._index = 0
@@ -927,11 +944,11 @@ class AbstractPopupBarItemWidget(AbstractOverlayInputWidget):
         else:
             self.setCurrentIndex(1)
 
-    def isMainViewerWidget(self):
-        return self._is_main_viewer_widget
+    def isCurrentWidget(self):
+        return self._is_current_widget
 
-    def setIsMainViewerWidget(self, _is_main_viewer_widget):
-        self._is_main_viewer_widget = _is_main_viewer_widget
+    def setIsCurrentWidget(self, _is_current_widget):
+        self._is_current_widget = _is_current_widget
 
     def item(self):
         return self._item
@@ -1070,6 +1087,12 @@ class AbstractPopupBarDisplayWidget(QWidget):
         if self.displayMode() in AbstractPopupBarDisplayWidget.PIPDISPLAYS:
             self.displayWidget().resizePopupBar()
 
+    def closeEnlargedView(self):
+        self.popupBarWidget().closeEnlargedView()
+
+    def enlargeWidget(self, widget):
+        self.popupBarWidget().enlargeWidget(widget)
+
     """ WIDGETS (CREATE) """
     def createWidgetFromConstructorCode(self, constructor_code):
         """ Creates a new widget from the code provided
@@ -1200,6 +1223,7 @@ class AbstractPopupBarDisplayWidget(QWidget):
             return
         if display_mode == self.displayMode(): return
 
+        self.closeEnlargedView()
         from .AbstractPiPWidget import AbstractPiPDisplayWidget
 
         # create new display widget
@@ -1211,23 +1235,36 @@ class AbstractPopupBarDisplayWidget(QWidget):
             _display_widget = AbstractPopupBarWidget()
             _popup_bar_widget = _display_widget
 
-        # update
+        # update settings
         if display_mode == AbstractPopupBarDisplayWidget.PIP:
             _popup_bar_widget.setIsOverlayEnabled(False)
         elif display_mode in AbstractPopupBarDisplayWidget.TASKBARS:
             _popup_bar_widget.setIsOverlayEnabled(True)
-
-        self.layout().addWidget(_display_widget)
+        _popup_bar_widget.setEnlargedScale(self.popupBarWidget().enlargedScale())
+        _popup_bar_widget.setEnlargedSize(self.popupBarWidget().enlargedSize())
+        _popup_bar_widget.setIsDisplayNamesShown(self.popupBarWidget().isDisplayNamesShown())
+        _popup_bar_widget.setDirection(self.popupBarWidget().direction())
+        _popup_bar_widget.setSizes(self.popupBarWidget().sizes())
+        """ This won't work for a double toggle, ie if the use goes from PiP --> Taskbar --> PiP"""
+        if isinstance(self.displayWidget(), AbstractPiPDisplayWidget):
+            if isinstance(_display_widget, AbstractPiPDisplayWidget):
+                _display_widget.setPiPScale(self.pipScale())
+                _display_widget.setTaskbarSize(self.taskbarSize())
 
         # reparent existing widgets
-        for widget in reversed(self.widgets()):
+        for widget in self.widgets():
+            widget.setIsCurrentWidget(False)
             _display_widget.addWidget(widget)
+
+        # display mode has to be set after the widgets so that there can be a "current widget"
+        _popup_bar_widget.setDisplayMode(display_mode)
+
+        self.layout().addWidget(_display_widget)
         self.displayWidget().setParent(None)
 
         # update attrs
         self._display_widget = _display_widget
         self._popup_bar_widget = _popup_bar_widget
-        self._popup_bar_widget.setDisplayMode(display_mode)
 
     def enlargedScale(self):
         return self.popupBarWidget().enlargedScale()
