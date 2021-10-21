@@ -1,8 +1,8 @@
 
-import sys
+import sys, os
 
 
-# os.environ['QT_API'] = 'pyside2'
+os.environ['QT_API'] = 'pyside2'
 from qtpy import API_NAME
 print(API_NAME)
 #import PySide2
@@ -36,17 +36,16 @@ test_layout.addWidget(test_label)
 test_layout.addWidget(main_widget)
 
 # set popup bar widget
-
-#popup_bar_widget.popupBarWidget().setOverlayWidget(other_widget)
-
 popup_bar_widget.setFixedWidth(150)
 popup_bar_widget.loadPopupDisplayFromFile(
     getDefaultSavePath() + '/.PiPWidgets_02.json',
     "standalone_taskbar"
 )
-popup_bar_widget.setDisplayMode(PopupBarDisplayWidget.PIPTASKBAR)
-popup_bar_widget.setDisplayMode(PopupBarDisplayWidget.STANDALONETASKBAR)
 # popup_bar_widget.setDisplayMode(PopupBarDisplayWidget.PIPTASKBAR)
+popup_bar_widget.setDisplayMode(PopupBarDisplayWidget.PIP)
+popup_bar_widget.setDisplayMode(PopupBarDisplayWidget.PIPTASKBAR)
+popup_bar_widget.setSizes([50, 50])
+print(popup_bar_widget.popupBarWidget().sizes())
 # popup_bar_widget.setDirection(attrs.SOUTH)
 
 # show widget

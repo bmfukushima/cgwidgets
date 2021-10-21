@@ -285,7 +285,8 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             overlay_text = ""
             overlay_image = ""
         try:
-            sizes = self.popupBarWidget().sizes()
+            sizes = self.sizes()
+            # print("sizes == ", sizes)
         except AttributeError:
             sizes = []
 
@@ -1071,15 +1072,16 @@ class AbstractPopupBarDisplayWidget(QWidget):
     def numWidgets(self):
         return self.popupBarWidget().count()
 
-    def resizePopupBar(self):
-        if self.displayMode() in AbstractPopupBarDisplayWidget.PIPDISPLAYS:
-            self.displayWidget().resizePopupBar()
-
     def closeEnlargedView(self):
         self.popupBarWidget().closeEnlargedView()
 
     def enlargeWidget(self, widget):
         self.popupBarWidget().enlargeWidget(widget)
+
+    """ UTILS (PIP)"""
+    def resizePopupBar(self):
+        if self.displayMode() in AbstractPopupBarDisplayWidget.PIPDISPLAYS:
+            self.displayWidget().resizePopupBar()
 
     """ WIDGETS (CREATE) """
     def createWidgetFromConstructorCode(self, constructor_code):
@@ -1144,7 +1146,7 @@ class AbstractPopupBarDisplayWidget(QWidget):
 
         # load pip/piptaskbar
         elif display_mode in AbstractPopupBarDisplayWidget.PIPDISPLAYS:
-            self.__loadPiPWidget(data, filepath, pip_name, organizer=organizer)
+            self.__loadPiPWidget(filepath, pip_name, organizer=organizer)
 
         # load settings
         self.popupBarWidget().updateSettings(data["settings"])
@@ -1178,7 +1180,7 @@ class AbstractPopupBarDisplayWidget(QWidget):
                 organizer_widget.popupBarWidget().updateWidgetIndexes()
             # todo create organizer widgets
 
-    def __loadPiPWidget(self, data, filepath, pip_name, organizer=False):
+    def __loadPiPWidget(self, filepath, pip_name, organizer=False):
         """ Loads a PiP Widget from the data provided
 
         Args:
@@ -1202,6 +1204,11 @@ class AbstractPopupBarDisplayWidget(QWidget):
 
     def setDisplayMode(self, display_mode):
         """ Sets the display mode to the one provided
+
+        This works by creating a new AbstractPiPDisplayWidget or AbstractPopupBarWidget
+        which is then reparented into this widget as the displayWidget() and popupBarWidget().
+        All of the existing children of the popupBarWidget(), are reparented into the newly
+        created AbstractPopupBarWidget.
 
         Args:
             display_mode (AbstractPopupBarDisplayWidget.DISPLAY_MODE):"""
@@ -1227,25 +1234,20 @@ class AbstractPopupBarDisplayWidget(QWidget):
             _display_widget = AbstractPopupBarWidget()
             _popup_bar_widget = _display_widget
 
-        # update settings
-        # if display_mode == AbstractPopupBarDisplayWidget.PIP:
-        #     _popup_bar_widget.setIsOverlayEnabled(False)
-        # elif display_mode in AbstractPopupBarDisplayWidget.TASKBARS:
-        #     _popup_bar_widget.setIsOverlayEnabled(True)
+        # update layout
+        for widget in self.widgets():
+            widget.setIsCurrentWidget(False)
+            _display_widget.addWidget(widget, resize_popup_bar=False)
 
+        # update settings
         _popup_bar_widget.updateSettings(self.popupBarWidget().settings())
+        _popup_bar_widget.setDisplayMode(display_mode)
         """ This won't work for a double toggle, ie if the use goes from PiP --> Taskbar --> PiP"""
         if isinstance(self.displayWidget(), AbstractPiPDisplayWidget):
             if isinstance(_display_widget, AbstractPiPDisplayWidget):
                 _display_widget.setPiPScale(self.pipScale())
                 _display_widget.setTaskbarSize(self.taskbarSize())
-
-        _popup_bar_widget.setDisplayMode(display_mode)
-
-        # reparent existing widgets
-        for widget in self.widgets():
-            widget.setIsCurrentWidget(False)
-            _display_widget.addWidget(widget)
+        # print(self.popupBarWidget().sizes())
         _popup_bar_widget.updateWidgetIndexes()
 
         self.layout().addWidget(_display_widget)
@@ -1322,6 +1324,14 @@ class AbstractPopupBarDisplayWidget(QWidget):
     def setPreviousWidget(self, previous_widget):
         if self.displayMode() in AbstractPopupBarDisplayWidget.PIPDISPLAYS:
             self.displayWidget().setPreviousWidget(previous_widget)
+
+    def sizes(self):
+        if self.displayMode() in AbstractPopupBarDisplayWidget.PIPDISPLAYS:
+            return self.popupBarWidget().sizes()
+
+    def setSizes(self, sizes):
+        if self.displayMode() in AbstractPopupBarDisplayWidget.PIPDISPLAYS:
+            self.popupBarWidget().setSizes(sizes)
 
 
 if __name__ == "__main__":
