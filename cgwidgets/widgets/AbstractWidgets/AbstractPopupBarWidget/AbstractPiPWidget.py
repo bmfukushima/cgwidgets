@@ -1448,8 +1448,7 @@ class SettingsWidget(AbstractFrameInputWidgetContainer):
             "value": attrs.SOUTH,
             "items": [[attrs.NORTH], [attrs.SOUTH], [attrs.EAST], [attrs.WEST]],
             "code": """
-#print(organizer_widget)
-#print(organizer_widget.popupBarDisplayWidget())
+organizer_widget.popupBarDisplayWidget().closeEnlargedView()
 organizer_widget.popupBarDisplayWidget().setDirection(value)
 organizer_widget.popupBarDisplayWidget().resizePopupBar()""",
             "help": "Which direction the popup will occur."},
@@ -1462,9 +1461,7 @@ organizer_widget.popupBarDisplayWidget().resizePopupBar()""",
                 [AbstractPopupBarDisplayWidget.STANDALONETASKBAR]
             ],
             "code": """
-# print(organizer_widget.popupBarDisplayWidget())
 organizer_widget.popupBarDisplayWidget().setDisplayMode(value)       
-
 
 # hide/show all widgets
 from cgwidgets.widgets import PopupBarDisplayWidget

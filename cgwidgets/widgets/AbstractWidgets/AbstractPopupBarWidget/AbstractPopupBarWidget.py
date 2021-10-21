@@ -89,12 +89,13 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         self._enlarged_scale = 0.85
         self._enlarged_size = 500
         self._filepath = ""
+        self._pip_name = ""
         self._direction = direction
         self._display_mode = AbstractPopupBarDisplayWidget.STANDALONETASKBAR
         self._current_widget = None
         self._enlarged_widget = None
 
-        self._createSpacerWidget()
+        self.__createSpacerWidget()
         if overlay_widget:
             self._overlay_widget = overlay_widget
 
@@ -102,7 +103,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         self.__last_object_entered = None
         self.addDelayedSplitterMovedEvent("set_temp_sizes", self.__splitterMoved, 100)
 
-    def _createSpacerWidget(self):
+    def __createSpacerWidget(self):
         """ Creates the invisible widget that will be swapped in/out when a widget is enlarged"""
         self._spacer_widget = QLabel("")
         self._spacer_widget.setParent(self.parent())
@@ -144,7 +145,8 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             self.setIsOverlayEnabled(False)
         if display_mode == AbstractPopupBarDisplayWidget.PIPTASKBAR:
             self.setIsOverlayEnabled(True)
-            self.currentWidget().setIsOverlayDisplayed(False)
+            if self.currentWidget():
+                self.currentWidget().setIsOverlayDisplayed(False)
         if display_mode == AbstractPopupBarDisplayWidget.STANDALONETASKBAR:
             self.setIsOverlayEnabled(True)
 
@@ -179,6 +181,12 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
 
     def setFilepath(self, filepath):
         self._filepath = filepath
+
+    def pipName(self):
+        return self._pip_name
+
+    def setPiPName(self, pip_name):
+        self._pip_name = pip_name
 
     def isDisplayNamesShown(self):
         return self._are_widget_names_shown
@@ -242,13 +250,6 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         return self._spacer_widget
 
     """ UTILS """
-    # def _swappingToFastCheck(self, widget):
-    #     if widget == self.widget(widget.index()): return True
-    #     if not self.widget(widget.index()): return True
-    #     if widget.parent() == self.widget(widget.index()).parent(): return True
-    #
-    #     return False
-
     def _resetSpacerWidget(self):
         """ Places the enlarged widget back into its original index.
 
@@ -463,7 +464,6 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             return True
         if not self.isDragging():
             self.setIsDragging(True)
-            # self.setIsFrozen(True)
             obj.pipPopupBarWidget().closeEnlargedView()
             return True
 
@@ -533,7 +533,6 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         if self.widget(widget.index()) == self.spacerWidget(): return
         if self.widget(widget.index()).parent() == self.spacerWidget().parent(): return
         self.setIsFrozen(True)
-
         # from .AbstractPiPWidget import AbstractPiPOrganizerWidget
         # _organizer_widget = getWidgetAncestor(self, AbstractPiPOrganizerWidget)
 
@@ -914,8 +913,7 @@ class AbstractPopupBarItemWidget(AbstractOverlayInputWidget):
     #     return self.mainWidget().delegateWidget()
 
     def pipPopupBarWidget(self):
-        from .AbstractPiPWidget import AbstractPiPDisplayWidget
-        return getWidgetAncestor(self, AbstractPiPDisplayWidget).popupBarWidget()
+        return getWidgetAncestor(self, AbstractPopupBarDisplayWidget).popupBarWidget()
 
     """ PROPERTIES """
     def isPiPWidget(self):
@@ -1053,16 +1051,6 @@ class AbstractPopupBarDisplayWidget(QWidget):
 
     """ UTILS """
     def addWidget(self, widget, name="", is_pip_widget=False, index=0):
-        # Setup attrs for creation
-        """ Needs to do this as different modes will require different attributes"""
-        if self.displayMode() in AbstractPopupBarDisplayWidget.PIPDISPLAYS:
-            if self.displayMode() == AbstractPopupBarDisplayWidget.PIP:
-                is_overlay_enabled = False
-            if self.displayMode() == AbstractPopupBarDisplayWidget.PIPTASKBAR:
-                is_overlay_enabled = True
-        elif self.displayMode() == AbstractPopupBarDisplayWidget.STANDALONETASKBAR:
-            is_overlay_enabled = True
-
         # create widget if it isn't a popup bar item
         if not isinstance(widget, AbstractPopupBarItemWidget):
             widget = self.displayWidget().createNewWidget(
@@ -1143,8 +1131,12 @@ class AbstractPopupBarDisplayWidget(QWidget):
             organizer (bool): determines if this is loading from the organizer widget
         """
         data = getJSONData(filepath)[pip_name]
+
         display_mode = data["settings"]["Display Mode"]
+        self.setPiPName(pip_name)
+        self.setFilepath(filepath)
         self.setDisplayMode(display_mode)
+
         self.removeAllWidgets()
         # load stand alone taskbar
         if display_mode == AbstractPopupBarDisplayWidget.STANDALONETASKBAR:
@@ -1236,28 +1228,25 @@ class AbstractPopupBarDisplayWidget(QWidget):
             _popup_bar_widget = _display_widget
 
         # update settings
-        if display_mode == AbstractPopupBarDisplayWidget.PIP:
-            _popup_bar_widget.setIsOverlayEnabled(False)
-        elif display_mode in AbstractPopupBarDisplayWidget.TASKBARS:
-            _popup_bar_widget.setIsOverlayEnabled(True)
-        _popup_bar_widget.setEnlargedScale(self.popupBarWidget().enlargedScale())
-        _popup_bar_widget.setEnlargedSize(self.popupBarWidget().enlargedSize())
-        _popup_bar_widget.setIsDisplayNamesShown(self.popupBarWidget().isDisplayNamesShown())
-        _popup_bar_widget.setDirection(self.popupBarWidget().direction())
-        _popup_bar_widget.setSizes(self.popupBarWidget().sizes())
+        # if display_mode == AbstractPopupBarDisplayWidget.PIP:
+        #     _popup_bar_widget.setIsOverlayEnabled(False)
+        # elif display_mode in AbstractPopupBarDisplayWidget.TASKBARS:
+        #     _popup_bar_widget.setIsOverlayEnabled(True)
+
+        _popup_bar_widget.updateSettings(self.popupBarWidget().settings())
         """ This won't work for a double toggle, ie if the use goes from PiP --> Taskbar --> PiP"""
         if isinstance(self.displayWidget(), AbstractPiPDisplayWidget):
             if isinstance(_display_widget, AbstractPiPDisplayWidget):
                 _display_widget.setPiPScale(self.pipScale())
                 _display_widget.setTaskbarSize(self.taskbarSize())
 
+        _popup_bar_widget.setDisplayMode(display_mode)
+
         # reparent existing widgets
         for widget in self.widgets():
             widget.setIsCurrentWidget(False)
             _display_widget.addWidget(widget)
-
-        # display mode has to be set after the widgets so that there can be a "current widget"
-        _popup_bar_widget.setDisplayMode(display_mode)
+        _popup_bar_widget.updateWidgetIndexes()
 
         self.layout().addWidget(_display_widget)
         self.displayWidget().setParent(None)
@@ -1283,6 +1272,12 @@ class AbstractPopupBarDisplayWidget(QWidget):
 
     def setFilepath(self, filepath):
         self.popupBarWidget().setFilepath(filepath)
+
+    def pipName(self):
+        return self.popupBarWidget().pipName()
+
+    def setPiPName(self, pip_name):
+        self.popupBarWidget().setPiPName(pip_name)
 
     def isDisplayNamesShown(self):
         return self.popupBarWidget().isDisplayNamesShown()
