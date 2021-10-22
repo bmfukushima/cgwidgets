@@ -1493,7 +1493,8 @@ class AbstractPiPDisplayWidget(QWidget):
             "Overlay Text": self.currentWidget().title(),
             "Overlay Image": self.currentWidget().overlayImage(),
         }
-        return {**popupbar_settings, **current_settings}
+        return popupbar_settings.update(current_settings)
+        # return {**popupbar_settings, **current_settings}
 
     def updateSettings(self, settings):
         """ Updates all of the settings from the settings provided.
