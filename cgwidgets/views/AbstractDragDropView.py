@@ -438,9 +438,10 @@ class AbstractDragDropAbstractView(object):
         if self.__pressed:
             index_under_cursor = self.indexAt(event.pos())
             if index_under_cursor.internalPointer():
-                index = self.model().getIndexFromItem(self.model().lastSelectedItem())
-                if index_under_cursor == index:
-                    self.setIndexSelected(index, True)
+                if self.model().lastSelectedItem():
+                    index = self.model().getIndexFromItem(self.model().lastSelectedItem())
+                    if index_under_cursor == index:
+                        self.setIndexSelected(index, True)
             self.__pressed = False
 
     def setKeyPressEvent(self, function):

@@ -1,35 +1,14 @@
-from cgwidgets.widgets import AbstractPiPOrganizerWidget, AbstractPiPDisplayWidget
+from qtpy.QtCore import Qt
+
+from cgwidgets.widgets import (
+    AbstractPopupBarOrganizerWidget,
+    AbstractPopupBarWidget,
+    AbstractPopupBarItemWidget,
+    AbstractPopupBarDisplayWidget)
+from cgwidgets.settings import attrs
 
 
-class PiPDisplayWidget(AbstractPiPDisplayWidget):
-    """The PiPWidget is designed to display multiple widgets simultaneously to the user.
-
-    Similar to the function that was provided to TV's in the mid 1970's.  This widget is
-    designed to allow the user to create multiple hot swappable widgets inside of the same
-    widget.
-
-    Attributes:
-        current_widget (QWidget): the widget that is currently set as the main display
-        direction (attrs.DIRECTION): what side the mini viewer will be displayed on.
-        hotkey_swap_key (list): of Qt.Key that will swap to the corresponding widget in the miniViewerWidget().
-
-            The index of the Key in the list, is the index of the widget that will be swapped to.
-        is_mini_viewer_widget (bool): determines if this is a child of a MiniViewerWidget.
-        is_mini_viewer_shown (bool): if the mini viewer is currently visible.
-            This is normally toggled with the "Q" key
-        is_standalone (bool): determines if this is a child of the PiPAbstractOrganizer.
-            If True, this means that this display is a standalone..
-        pip_scale ((float, float)):  fractional percentage of the amount of space that
-            the mini viewer will take up in relation to the overall size of the widget.
-        swap_key (Qt.KEY): this key will trigger the popup
-        widgets (list): of widgets
-    """
-
-    def __init__(self, parent=None, is_mini_viewer_widget=False):
-        super(PiPDisplayWidget, self).__init__(parent)
-
-
-class PiPOrganizerWidget(AbstractPiPOrganizerWidget):
+class PopupBarOrganizerWidget(AbstractPopupBarOrganizerWidget):
     """
     The PiPWidget is designed to display multiple widgets simultaneously to the user.
 
@@ -51,10 +30,10 @@ class PiPOrganizerWidget(AbstractPiPOrganizerWidget):
         |- PiPMainWidget --> QWidget
         |    |- QVBoxLayout
         |    |    |- PiPMainViewer --> QWidget
-        |    |    |- PiPMiniViewerWidgetCreator --> AbstractListInputWidget
-        |    |- MiniViewer (QWidget)
+        |    |    |- PiPPopupBarWidgetCreator --> AbstractListInputWidget
+        |    |- PopupBar (QWidget)
         |        |- QBoxLayout
-        |            |-* PiPMiniViewerWidget --> QWidget
+        |            |-* PiPPopupBarWidget --> QWidget
         |                    |- QVBoxLayout
         |                    |- AbstractLabelledInputWidget
         |- LocalOrganizerWidget --> AbstractModelViewWidget
@@ -66,10 +45,10 @@ class PiPOrganizerWidget(AbstractPiPOrganizerWidget):
         Swap (Enter):
             Upon user cursor entering a widget, that widget becomes the main widget
 
-            PiPMiniViewer --> EventFilter --> EnterEvent
+            PiPPopupBar --> EventFilter --> EnterEvent
                 - swap widget
                 - freeze swapping (avoid recursion)
-            PiPMiniViewer --> LeaveEvent
+            PiPPopupBar --> LeaveEvent
                 - unfreeze swapping
         Swap (Key Press):
             Upon user key press on widget, that widget becomces the main widget
@@ -79,7 +58,7 @@ class PiPOrganizerWidget(AbstractPiPOrganizerWidget):
             PiPMainWidget --> keyPressEvent --> setCurrentWidget
         Quick Drag ( Drag Enter ):
             Upon user drag enter, the mini widget becomes large to allow easier dropping
-            PiPMiniViewer --> EventFilter --> Drag Enter
+            PiPPopupBar --> EventFilter --> Drag Enter
                                           --> Enter
                                           --> Drop
                                           --> Drag Leave
@@ -108,11 +87,78 @@ class PiPOrganizerWidget(AbstractPiPOrganizerWidget):
     """
 
     def __init__(self, parent=None, widget_types=None, save_data=None):
-        super(PiPOrganizerWidget, self).__init__(parent, widget_types=widget_types, save_data=save_data)
+        super(PopupBarOrganizerWidget, self).__init__(parent, widget_types=widget_types, save_data=save_data)
         #, widget_types=widget_types
 
 
+class PopupBarDisplayWidget(AbstractPopupBarDisplayWidget):
+    def __init__(self, parent=None):
+        super(PopupBarDisplayWidget, self).__init__(parent)
 
+
+class PopupBarWidget(AbstractPopupBarWidget):
+    """
+    Widget that contains all of the PiPWidgets.
+
+    This widget is an overlay of the MainWidget, and sits at a parallel hierarchy to the PiPMainViewer
+
+    Attributes:
+        direction (attrs.DIRECTION): direction that the popup will be displayed on
+        display_mode (PopupBarWidget.TYPE): Determines what type of widget this should be displayed as
+            valid options are
+                PIP | PIPTASKBAR | TASKBAR
+            The PIP mode will be displayed over an existing widget.  While the TASKBAR mode will be displayed
+            as a standalone widget.
+        is_dragging (bool): determines if this widget is currently in a drag/drop operation
+        is_enlarged (bool): If there is currently an widget enlarged.
+            Widgets are enlarged by the user hovering over them.  And closed
+            be pressing "esc" or having the mouse exit the boundries of the widget.
+        if_frozen (bool): Determines if events should be handled or not.
+
+        enlarged_widget (QWidget): The widget that is currently enlarged
+        overlay_widget (QWidget): Widget that the popup will be overlaid on.  If none is specified,
+            then this will return the main window.
+        popup_widget (QWidget): The widget that is displayed if the enlarged widget
+            has opened a subwidget (popup) menu.
+        spacer_widget (QLabel): Widget that holds the space in the QSplitter where
+            the currently enlarged widget normally lives.
+        __temp_sizes (list): of ints, that are the sizes of the individual widgets.
+            This is normally gotten through the "sizes()" call, but needs a temp one,
+            for swapping the spacer widget in/out.
+        __last_object_entered (PopupBarItemWidget): placeholder to determine the last object
+            that was entered.  This is mainly used when enlarging widgets to ensure that the
+            enlarged widget can be entered, as if the bounds are not great enough, you can enter
+            the Main Viewer, thus closing the enlarged widget.
+        widgets (list): Of PopupBarWidget widgets that are currently displayed.
+            This does not include the currently enlarged widget
+    """
+    def __init__(self, parent=None, direction=attrs.EAST, orientation=Qt.Vertical, overlay_widget=None):
+        super(PopupBarWidget, self).__init__(parent=parent, direction=direction, orientation=orientation, overlay_widget=overlay_widget)
+
+
+class PopupBarItemWidget(AbstractPopupBarItemWidget):
+    """
+    One PiP Widget that is displayed in the PopupBarWidget
+
+    Attributes:
+        index (int): current index in model
+        item (PopupBarWidgetOrganizerItem)
+    """
+
+    def __init__(
+            self,
+            parent=None,
+            name="None",
+            direction=Qt.Horizontal,
+            delegate_widget=None,
+            is_pip_widget=False
+    ):
+        super(PopupBarItemWidget, self).__init__(
+            parent=parent,
+            name=name,
+            direction=direction,
+            delegate_widget=delegate_widget,
+            is_pip_widget=is_pip_widget)
 
 
 if __name__ == '__main__':
@@ -137,7 +183,7 @@ widget = QLabel(\"TEST\") """,
 from qtpy.QtWidgets import QPushButton
 widget = QPushButton(\"TESTBUTTON\") """
     }
-    pip_widget = PiPOrganizerWidget(widget_types=widget_types)
+    pip_widget = PopupBarOrganizerWidget(widget_types=widget_types)
 
     pip_widget.setPiPScale((0.25, 0.25))
     pip_widget.setEnlargedScale(0.75)

@@ -15,7 +15,8 @@ from .AbstractWidgets.AbstractWarningWidget import AbstractWarningWidget
 from .AbstractWidgets.AbstractLabelledInputWidget import AbstractLabelledInputWidget
 from .AbstractWidgets.AbstractOverlayInputWidget import AbstractOverlayInputWidget
 from .AbstractWidgets.AbstractShojiWidget import *
-from .AbstractWidgets.AbstractPiPWidget import AbstractPiPOrganizerWidget, AbstractPiPDisplayWidget
+from .AbstractWidgets.AbstractPopupBarWidget import *
+# from .AbstractWidgets.AbstractPopupBarOrganizerWidget import AbstractPopupBarOrganizerWidget, AbstractPiPDisplayWidget
 
 """ MODEL VIEW WIDGET"""
 from .ModelViewWidget import ModelViewWidget as ModelViewWidget
@@ -34,7 +35,11 @@ from .ShojiWidget import ShojiModelDelegateWidget as ShojiModelDelegateWidget
 from .ScriptEditorWidget import ScriptEditorWidget, ScriptEditorPopupEventFilter
 
 """ PiP """
-from .PiPWidget import PiPOrganizerWidget, PiPDisplayWidget
+from .PopupWidget import (
+    PopupBarOrganizerWidget,
+    PopupBarDisplayWidget,
+    PopupBarWidget,
+    PopupBarItemWidget)
 
 """ INPUT WIDGETS """
 from .InputWidgets import *

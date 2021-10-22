@@ -1,6 +1,6 @@
 import sys
 import os
-# os.environ['QT_API'] = 'pyside2'
+os.environ['QT_API'] = 'pyside2'
 from qtpy.QtWidgets import QApplication, QLabel
 from qtpy.QtGui import QCursor
 from qtpy.QtCore import Qt
@@ -71,7 +71,7 @@ delegate_widget = QLabel("Q")
 main_widget.addDelegate([Qt.Key_Q], delegate_widget)
 
 # insert indexes
-for x in range(0, 4):
+for x in range(0, 7):
     index = main_widget.model().insertNewIndex(x, name=str('node%s'%x))
     for i, char in enumerate('abc'):
         main_widget.model().insertNewIndex(i, name=char, parent=index)

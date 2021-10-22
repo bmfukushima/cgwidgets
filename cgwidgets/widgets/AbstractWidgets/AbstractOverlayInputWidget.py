@@ -110,8 +110,7 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
         self.disableHoverDisplay(self.viewWidget())
 
         # setup image
-        if image_path:
-            self.setImage(image_path)
+        self.setImage(image_path)
 
     """ WIDGETS """
     def delegateWidget(self):
@@ -223,10 +222,15 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
         self.viewWidget().setTextColor(color)
         self.disableHoverDisplay(self.viewWidget())
 
+    def image(self):
+        return self._image_path
+
     def setImage(self, image_path):
-        self.viewWidget().setImage(image_path)
-        self.disableHoverDisplay(self.viewWidget())
-        self.setContentsMargins(0, 0, 0, 0)
+        if image_path:
+            self.viewWidget().setImage(image_path)
+            self.disableHoverDisplay(self.viewWidget())
+            self.setContentsMargins(0, 0, 0, 0)
+        self._image_path = image_path
 
     def showImage(self, enabled):
         self.viewWidget().showImage(enabled)

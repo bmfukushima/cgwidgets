@@ -92,6 +92,7 @@ import os
 import math
 import shutil
 import json
+from qtpy import API_NAME
 
 from qtpy.QtWidgets import (
     QHeaderView,
@@ -108,7 +109,11 @@ from qtpy.QtWidgets import (
     QMenu
 
 )
-from qtpy.QtCore import QVariant, Qt
+""" QVariants don't exist in PySide2, so will need to not import"""
+try:
+    from qtpy.QtCore import QVariant, Qt
+except ImportError:
+    from qtpy.QtCore import Qt
 from qtpy.QtGui import QCursor, QKeySequence
 
 from cgwidgets.utils import getWidgetAncestor, showWarningDialogue, getJSONData
@@ -1503,7 +1508,11 @@ class DataTypeDelegate(QItemDelegate):
         new_value = editor.text()
         if new_value == "":
             return
-        model.setData(index, QVariant(new_value))
+
+        if API_NAME == "PySide2":
+            model.setData(index, str(new_value))
+        else:
+            model.setData(index, QVariant(new_value))
 
         return QItemDelegate.setModelData(self, editor, model, index)
 

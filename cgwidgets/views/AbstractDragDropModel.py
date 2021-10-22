@@ -477,9 +477,12 @@ class AbstractDragDropModel(QAbstractItemModel):
         Returns:
 
         """
-        row = item.row()
-        if item and row != None:
-            index = self.createIndex(row, 0, item)
+        if item:
+            row = item.row()
+            if item and row != None:
+                index = self.createIndex(row, 0, item)
+            else:
+                index = QModelIndex()
         else:
             index = QModelIndex()
 
