@@ -36,16 +36,17 @@ test_layout.addWidget(test_label)
 test_layout.addWidget(main_widget)
 
 # set popup bar widget
-popup_bar_widget.setFixedWidth(150)
+# popup_bar_widget.setFixedWidth(150)
 popup_bar_widget.loadPopupDisplayFromFile(
     getDefaultSavePath() + '/.PiPWidgets_02.json',
     "standalone_taskbar"
 )
 # popup_bar_widget.setDisplayMode(PopupBarDisplayWidget.PIPTASKBAR)
 popup_bar_widget.setDisplayMode(PopupBarDisplayWidget.PIP)
+popup_bar_widget.setPiPScale(0.55)
 popup_bar_widget.setSizes([150, 50])
 popup_bar_widget.setDisplayMode(PopupBarDisplayWidget.PIPTASKBAR)
-
+popup_bar_widget.setDisplayMode(PopupBarDisplayWidget.PIP)
 # popup_bar_widget.popupBarWidget().setSizes([1, 500])
 print(popup_bar_widget.popupBarWidget().sizes())
 # popup_bar_widget.setDirection(attrs.SOUTH)

@@ -1500,16 +1500,28 @@ for widget in all_widgets:
     widget.hide()
 # show widget
 if value == PopupBarDisplayWidget.PIP:
+    # show widgets
     for pip_widget in pip_widgets:
         pip_widget.show()
+    # update settings
+    pip_scale = organizer_widget.settingsWidget().widgets()["PiP Scale"].delegateWidget().text()
+    organizer_widget.popupBarDisplayWidget().setPiPScale(float(pip_scale))
+
 if value == PopupBarDisplayWidget.PIPTASKBAR:
+    # show widgets
     for pip_taskbar_widget in pip_taskbar_widgets:
         pip_taskbar_widget.show()
+    
+    # update settings
+    taskbar_size = organizer_widget.settingsWidget().widgets()["Taskbar Size"].delegateWidget().text()
+    organizer_widget.popupBarDisplayWidget().setTaskbarSize(float(taskbar_size))
+    
 if value == PopupBarDisplayWidget.STANDALONETASKBAR:
     for taskbar_widget in taskbar_widgets:
         taskbar_widget.show()
 
 # update popup bar size
+
 organizer_widget.popupBarDisplayWidget().resizePopupBar()
             """,
             "help": "The type of display that this will use"},
