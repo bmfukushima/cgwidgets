@@ -1258,7 +1258,8 @@ class AbstractPiPDisplayWidget(QWidget):
 
         # preflight
         if num_widgets < 1:
-            return
+            # Need to return xpos, ypos, size, width here to ensure valid options are returned
+            return 0, 0, 500, 500
 
         # get xpos, ypos, width, height
 

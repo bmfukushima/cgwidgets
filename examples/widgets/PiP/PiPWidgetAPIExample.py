@@ -43,8 +43,10 @@ popup_bar_widget.loadPopupDisplayFromFile(
 )
 # popup_bar_widget.setDisplayMode(PopupBarDisplayWidget.PIPTASKBAR)
 popup_bar_widget.setDisplayMode(PopupBarDisplayWidget.PIP)
+popup_bar_widget.setSizes([150, 50])
 popup_bar_widget.setDisplayMode(PopupBarDisplayWidget.PIPTASKBAR)
-popup_bar_widget.setSizes([50, 50])
+
+# popup_bar_widget.popupBarWidget().setSizes([1, 500])
 print(popup_bar_widget.popupBarWidget().sizes())
 # popup_bar_widget.setDirection(attrs.SOUTH)
 

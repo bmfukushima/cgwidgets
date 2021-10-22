@@ -284,12 +284,10 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         else:
             overlay_text = ""
             overlay_image = ""
-        try:
-            sizes = self.sizes()
-            # print("sizes == ", sizes)
-        except AttributeError:
-            sizes = []
-
+        # try:
+        #     sizes = self.sizes()
+        # except AttributeError:
+        #     sizes = []
         return {
             "Enlarged Scale": self.enlargedScale(),
             "Enlarged Size": self.enlargedSize(),
@@ -298,7 +296,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             "Display Mode": self.displayMode(),
             "Overlay Text": overlay_text,
             "Overlay Image": overlay_image,
-            "sizes": sizes
+            "sizes": self.sizes()
         }
 
     def updateSettings(self, settings):
@@ -316,8 +314,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         self.setIsDisplayNamesShown(settings["Display Titles"])
         self.setDirection(settings["Direction"])
         self.setDisplayMode(settings["Display Mode"])
-        if "sizes" in list(settings.keys()):
-            self.setSizes(settings["sizes"])
+        self.setSizes(settings["sizes"])
 
     def installDragMoveMonkeyPatch(self, widget):
         """ Monkey patch for bug with widgets that already have drag/drop enabled.
@@ -1224,6 +1221,7 @@ class AbstractPopupBarDisplayWidget(QWidget):
 
         self.closeEnlargedView()
         from .AbstractPiPWidget import AbstractPiPDisplayWidget
+        _sizes = self.popupBarWidget().sizes()
 
         # create new display widget
         if display_mode in [AbstractPopupBarDisplayWidget.PIPTASKBAR, AbstractPopupBarDisplayWidget.PIP]:
@@ -1237,17 +1235,19 @@ class AbstractPopupBarDisplayWidget(QWidget):
         # update layout
         for widget in self.widgets():
             widget.setIsCurrentWidget(False)
-            _display_widget.addWidget(widget, resize_popup_bar=False)
+            #_display_widget.addWidget(widget, resize_popup_bar=False)
+            _display_widget.addWidget(widget)
 
         # update settings
-        _popup_bar_widget.updateSettings(self.popupBarWidget().settings())
+        settings = self.popupBarWidget().settings()
+        settings["sizes"] = _sizes
+        _popup_bar_widget.updateSettings(settings)
         _popup_bar_widget.setDisplayMode(display_mode)
         """ This won't work for a double toggle, ie if the use goes from PiP --> Taskbar --> PiP"""
         if isinstance(self.displayWidget(), AbstractPiPDisplayWidget):
             if isinstance(_display_widget, AbstractPiPDisplayWidget):
                 _display_widget.setPiPScale(self.pipScale())
                 _display_widget.setTaskbarSize(self.taskbarSize())
-        # print(self.popupBarWidget().sizes())
         _popup_bar_widget.updateWidgetIndexes()
 
         self.layout().addWidget(_display_widget)
