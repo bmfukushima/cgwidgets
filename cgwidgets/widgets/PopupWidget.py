@@ -1,43 +1,14 @@
 from qtpy.QtCore import Qt
 
 from cgwidgets.widgets import (
-    AbstractPiPOrganizerWidget,
-    AbstractPiPDisplayWidget,
+    AbstractPopupBarOrganizerWidget,
     AbstractPopupBarWidget,
     AbstractPopupBarItemWidget,
     AbstractPopupBarDisplayWidget)
 from cgwidgets.settings import attrs
 
 
-class PiPDisplayWidget(AbstractPiPDisplayWidget):
-    """The PiPWidget is designed to display multiple widgets simultaneously to the user.
-
-    Similar to the function that was provided to TV's in the mid 1970's.  This widget is
-    designed to allow the user to create multiple hot swappable widgets inside of the same
-    widget.
-
-    Attributes:
-        current_widget (QWidget): the widget that is currently set as the main display
-        direction (attrs.DIRECTION): what side the mini viewer will be displayed on.
-        hotkey_swap_key (list): of Qt.Key that will swap to the corresponding widget in the popupBarWidget().
-
-            The index of the Key in the list, is the index of the widget that will be swapped to.
-        is_popup_bar_widget (bool): determines if this is a child of a PopupBarWidget.
-        is_popup_bar_shown (bool): if the mini viewer is currently visible.
-            This is normally toggled with the "Q" key
-        is_standalone (bool): determines if this is a child of the PiPAbstractOrganizer.
-            If True, this means that this display is a standalone..
-        pip_scale ((float, float)):  fractional percentage of the amount of space that
-            the mini viewer will take up in relation to the overall size of the widget.
-        swap_key (Qt.KEY): this key will trigger the popup
-        widgets (list): of widgets
-    """
-
-    def __init__(self, parent=None, is_popup_bar_widget=False):
-        super(PiPDisplayWidget, self).__init__(parent)
-
-
-class PiPOrganizerWidget(AbstractPiPOrganizerWidget):
+class PopupBarOrganizerWidget(AbstractPopupBarOrganizerWidget):
     """
     The PiPWidget is designed to display multiple widgets simultaneously to the user.
 
@@ -116,7 +87,7 @@ class PiPOrganizerWidget(AbstractPiPOrganizerWidget):
     """
 
     def __init__(self, parent=None, widget_types=None, save_data=None):
-        super(PiPOrganizerWidget, self).__init__(parent, widget_types=widget_types, save_data=save_data)
+        super(PopupBarOrganizerWidget, self).__init__(parent, widget_types=widget_types, save_data=save_data)
         #, widget_types=widget_types
 
 
@@ -212,7 +183,7 @@ widget = QLabel(\"TEST\") """,
 from qtpy.QtWidgets import QPushButton
 widget = QPushButton(\"TESTBUTTON\") """
     }
-    pip_widget = PiPOrganizerWidget(widget_types=widget_types)
+    pip_widget = PopupBarOrganizerWidget(widget_types=widget_types)
 
     pip_widget.setPiPScale((0.25, 0.25))
     pip_widget.setEnlargedScale(0.75)

@@ -8,7 +8,7 @@ print(API_NAME)
 #import PySide2
 #print(PySide2.__version__)
 from qtpy.QtWidgets import (QApplication, QWidget)
-from cgwidgets.widgets import PiPOrganizerWidget, PiPDisplayWidget
+from cgwidgets.widgets import PopupBarOrganizerWidget
 from cgwidgets.utils import centerWidgetOnCursor, setAsAlwaysOnTop, getDefaultSavePath
 from cgwidgets.settings import attrs
 app = QApplication(sys.argv)
@@ -60,7 +60,7 @@ b.addItems([char for char in string.ascii_letters])
 l.addWidget(b)
 """
 }
-pip_organizer_widget = PiPOrganizerWidget(save_data=save_data, widget_types=widget_types)
+pip_organizer_widget = PopupBarOrganizerWidget(save_data=save_data, widget_types=widget_types)
 
 # pip_organizer_widget.setPiPScale((0.25, 0.25))
 # pip_organizer_widget.setEnlargedScale(0.75)
