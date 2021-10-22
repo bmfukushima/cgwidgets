@@ -1152,6 +1152,13 @@ class AbstractPopupBarDisplayWidget(QWidget):
             data (dict): An individual PopupBar widgets data located in the
                 JSON file.
                     ie: getJSONData(filepath)[pip_name]"""
+
+        # clear popupbar organizer
+        if organizer:
+            from .AbstractPopupBarOrganizerWidget import AbstractPopupBarOrganizerWidget
+            organizer_widget = getWidgetAncestor(self, AbstractPopupBarOrganizerWidget)
+            organizer_widget.clearPopupBarOrganizerIndexes()
+
         # load widgets
         for widget_name, widget_data in data["widgets"].items():
             widget = self.createWidgetFromConstructorCode(widget_data["code"])
@@ -1763,6 +1770,11 @@ class AbstractPiPDisplayWidget(QWidget):
 
         # clear pip view
         self.removeAllWidgets()
+        if organizer:
+            from .AbstractPopupBarOrganizerWidget import AbstractPopupBarOrganizerWidget
+            organizer_widget = getWidgetAncestor(self, AbstractPopupBarOrganizerWidget)
+            organizer_widget.clearPopupBarOrganizerIndexes()
+            # clear all items from the view
 
         # reset previous widget
         self.clearPreviousWidget()
@@ -1775,8 +1787,8 @@ class AbstractPiPDisplayWidget(QWidget):
             if organizer:
                 from .AbstractPopupBarOrganizerWidget import AbstractPopupBarOrganizerWidget
                 organizer_widget = getWidgetAncestor(self, AbstractPopupBarOrganizerWidget)
-                index = organizer_widget.createNewWidgetFromConstructorCode(constructor_code, name=widget_name,
-                                                                            resize_popup_bar=False)
+                index = organizer_widget.createNewWidgetFromConstructorCode(
+                    constructor_code, name=widget_name, resize_popup_bar=False)
                 widget = index.internalPointer().widget()
             else:
                 widget = self.createNewWidgetFromConstructorCode(constructor_code, name=widget_name,

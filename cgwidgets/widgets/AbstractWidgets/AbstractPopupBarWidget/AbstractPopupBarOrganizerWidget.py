@@ -303,6 +303,9 @@ class AbstractPopupBarOrganizerWidget(AbstractShojiModelViewWidget):
 
         print('No widgets found in {file_name} --> {widget_name}'.format(file_name=file_name, widget_name=widget_name))
 
+    def clearPopupBarOrganizerIndexes(self):
+        self.popupBarOrganizerWidget().clearModel()
+
     """ WIDGETS (DISPLAY)"""
     def popupBarDisplayWidget(self):
         return self._popup_bar_display_widget
