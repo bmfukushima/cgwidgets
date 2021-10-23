@@ -23,6 +23,7 @@ from cgwidgets.utils import (
     isCursorOverWidget,
     getWidgetAncestor,
     getJSONData,
+    getWidgetUnderCursor,
     runDelayedEvent,
     setAsTool,
     installResizeEventFinishedEvent)
@@ -421,10 +422,17 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             # leaves over mini viewer widget
             """ Check to see if the cursor is over the object, because the drag
             events will trigger a leave event"""
-            from cgwidgets.utils import getWidgetUnderCursor
             if not isCursorOverWidget(obj):
                 widget_under_cursor = getWidgetUnderCursor()
-                if not isWidgetDescendantOf(widget_under_cursor, widget_under_cursor.parent(), obj):
+
+                # left widget, but cursor is under another widget
+                if widget_under_cursor:
+                    if not isWidgetDescendantOf(widget_under_cursor, widget_under_cursor.parent(), obj):
+                        if obj == self.enlargedWidget():
+                            self.closeEnlargedView()
+
+                # left widget and entire application
+                else:
                     if obj == self.enlargedWidget():
                         self.closeEnlargedView()
             return True
