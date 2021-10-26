@@ -16,23 +16,23 @@ app = QApplication(sys.argv)
 
 # create popup bar
 popup_bar_widget = PopupBarDisplayWidget()
-for x in range(3):
-    label = QLabel(str(x))
-    popup_bar_widget.addWidget(label, name=str(x))
+# for x in range(3):
+#     label = QLabel(str(x))
+#     popup_bar_widget.addWidget(label, name=str(x))
 
 # load widgets
-# popup_bar_widget.loadPopupDisplayFromFile(
-#     getDefaultSavePath() + '/.PiPWidgets_02.json',
-#     "standalone_taskbar"
-# )
+popup_bar_widget.loadPopupDisplayFromFile(
+    getDefaultSavePath() + '/.PiPWidgets_02.json',
+    "standalone_taskbar"
+)
 
 
 # set popup bar widget
 popup_bar_widget.setPiPScale(0.55)
-popup_bar_widget.setSizes([50, 50])
+# popup_bar_widget.setSizes([50, 50])
 popup_bar_widget.setTaskbarSize(150)
 popup_bar_widget.setDirection(attrs.SOUTH)
-popup_bar_widget.setDisplayMode(PopupBarDisplayWidget.PIP)
+popup_bar_widget.setDisplayMode(PopupBarDisplayWidget.PIPTASKBAR)
 
 # create main widget
 main_widget = QWidget()

@@ -2,6 +2,7 @@
     Drag:
         Drag Leave not closing popups (Standalone)
         Drag Enter's close event showing wrong display
+            - standalone, when opening mini widgets
 """
 
 import json
@@ -110,15 +111,15 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         self._spacer_widget.setAcceptDrops(True)
 
     """ PROPERTIES """
-    def getTopMostPiPDisplay(self, widget, parent, pip_display_widget=None):
-        """ Gets the top most pip display
+    def getTopMostPopupBarDisplay(self, widget, parent, pip_display_widget=None):
+        """ Gets the top most PopupBarDisplay
 
         This should only be used if the widgets displayMode is set to PIP"""
-        if isinstance(widget, AbstractPiPDisplayWidget):
+        if isinstance(widget, AbstractPopupBarDisplayWidget):
             pip_display_widget = widget
 
         if parent:
-            return self.getTopMostPiPDisplay(widget.parent(), parent.parent(), pip_display_widget)
+            return self.getTopMostPopupBarDisplay(widget.parent(), parent.parent(), pip_display_widget)
 
         if not parent:
             return pip_display_widget
@@ -221,11 +222,11 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
                 widget.setIsOverlayDisplayed(enabled)
 
     def isDragging(self):
-        return self.getTopMostPiPDisplay(self, self.parent()).isDragging()
+        return self.getTopMostPopupBarDisplay(self, self.parent()).isDragging()
 
     def setIsDragging(self, _pip_widget_is_dragging):
         if self.displayMode() == AbstractPopupBarDisplayWidget.PIP:
-            self.getTopMostPiPDisplay(self, self.parent()).setIsDragging(_pip_widget_is_dragging)
+            self.getTopMostPopupBarDisplay(self, self.parent()).setIsDragging(_pip_widget_is_dragging)
 
     def isEnlarged(self):
         return self._is_enlarged
@@ -315,7 +316,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         self.setDirection(settings["Direction"])
         self.setSizes(settings["sizes"])
 
-    def installDragMoveMonkeyPatch(self, widget):
+    def __installDragMoveMonkeyPatch(self, widget):
         """ Monkey patch for bug with widgets that already have drag/drop enabled.
 
         This bypasses a bug/limitation of Qt, where EventFilters will not work on
@@ -331,7 +332,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             widget._old_dragMoveEvent = widget.dragMoveEvent
         widget.dragMoveEvent = _dragMoveEvent
 
-    def installDragEnterMonkeyPatch(self, widget):
+    def __installDragEnterMonkeyPatch(self, widget):
         """ Monkey patch for bug with widgets that already have drag/drop enabled.
 
         This bypasses a bug/limitation of Qt, where EventFilters will not work on
@@ -341,7 +342,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         Args:
             widget (QWidget): to install pseudoevent on"""
         def _dragEnterEvent(event):
-            # event.accept()
+            event.accept()
             widget._old_dragEnterEvent(event)
             self.__dragEnterEvent(getWidgetAncestor(widget, AbstractPopupBarItemWidget))
         if not hasattr(widget, "_old_dragEnterEvent"):
@@ -470,9 +471,10 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         if modifiers == Qt.AltModifier:
             obj.pipPopupBarWidget().closeEnlargedView()
             return True
+
         if not self.isDragging():
             self.setIsDragging(True)
-            obj.pipPopupBarWidget().closeEnlargedView()
+            # obj.pipPopupBarWidget().closeEnlargedView()
             return True
 
     def __dragEnterEvent(self, obj):
@@ -508,6 +510,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         """
         if event.type() == QEvent.DragEnter:
             # print('enter')
+            event.accept()
             self.__dragEnterEvent(obj)
 
         if event.type() == QEvent.DragMove:
@@ -778,8 +781,8 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             widget = self.createNewWidget(widget, index=index, is_pip_widget=is_pip_widget, name=name)
         if isinstance(widget, AbstractPopupBarItemWidget):
             widget.installEventFilter(self)
-            self.installDragEnterMonkeyPatch(widget.delegateWidget())
-            self.installDragMoveMonkeyPatch(widget.delegateWidget())
+            self.__installDragEnterMonkeyPatch(widget.popupWidget())
+            self.__installDragMoveMonkeyPatch(widget.popupWidget())
             widget.delegateWidget().setAcceptDrops(True)
             return QSplitter.addWidget(self, widget)
         else:
@@ -804,9 +807,9 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             mini_widget.setIsOverlayDisplayed(self.isOverlayEnabled())
         elif self.displayMode() in [AbstractPopupBarDisplayWidget.PIPTASKBAR, AbstractPopupBarDisplayWidget.STANDALONETASKBAR]:
             pass
-        # self.installDragEnterMonkeyPatch(mini_widget.delegateWidget())
+        # self.__installDragEnterMonkeyPatch(mini_widget.delegateWidget())
         # self.installDragLeaveMonkeyPatch(mini_widget.delegateWidget())
-        # self.installDragMoveMonkeyPatch(mini_widget.delegateWidget())
+        # self.__installDragMoveMonkeyPatch(mini_widget.delegateWidget())
         # mini_widget.installEventFilter(self)
         mini_widget.delegateWidget().setAcceptDrops(True)
 
@@ -822,8 +825,8 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             widget = self.createNewWidget(widget, index=index, is_pip_widget=is_pip_widget, name=name)
         if isinstance(widget, AbstractPopupBarItemWidget):
             widget.installEventFilter(self)
-            self.installDragEnterMonkeyPatch(widget.delegateWidget())
-            self.installDragMoveMonkeyPatch(widget.delegateWidget())
+            self.__installDragEnterMonkeyPatch(widget.popupWidget())
+            self.__installDragMoveMonkeyPatch(widget.popupWidget())
             widget.delegateWidget().setAcceptDrops(True)
             return QSplitter.insertWidget(self, index, widget)
 
@@ -1069,9 +1072,10 @@ class AbstractPopupBarDisplayWidget(QWidget):
         super(AbstractPopupBarDisplayWidget, self).__init__(parent)
 
         # setup default attrs
-        self._display_widget = AbstractPopupBarWidget()
+        self._display_widget = AbstractPopupBarWidget(parent=self)
         self._popup_bar_widget = self._display_widget
         self._widgets = []
+        self._is_dragging = True
 
         # setup layout
         QVBoxLayout(self)
@@ -1280,17 +1284,16 @@ class AbstractPopupBarDisplayWidget(QWidget):
 
         # create new display widget
         if display_mode in [AbstractPopupBarDisplayWidget.PIPTASKBAR, AbstractPopupBarDisplayWidget.PIP]:
-            _display_widget = AbstractPiPDisplayWidget()
+            _display_widget = AbstractPiPDisplayWidget(parent=self)
             _popup_bar_widget = _display_widget.popupBarWidget()
             _display_widget.setPopupBarWidget(_popup_bar_widget)
         elif display_mode == AbstractPopupBarDisplayWidget.STANDALONETASKBAR:
-            _display_widget = AbstractPopupBarWidget()
+            _display_widget = AbstractPopupBarWidget(parent=self)
             _popup_bar_widget = _display_widget
 
         # update layout
         for widget in self.widgets():
             widget.setIsCurrentWidget(False)
-            #_display_widget.addWidget(widget, resize_popup_bar=False)
             _display_widget.addWidget(widget)
 
         # update settings
@@ -1311,6 +1314,11 @@ class AbstractPopupBarDisplayWidget(QWidget):
         # update attrs
         self._display_widget = _display_widget
         self._popup_bar_widget = _popup_bar_widget
+
+        """need to reset the current widget here to make sure the correct event handler is installed
+        If this is not done, the old popupBarWidget() will be installed onto the handlers, which will
+        break things."""
+        self.displayWidget().setCurrentWidget(self.displayWidget().currentWidget())
 
     def enlargedScale(self):
         return self.popupBarWidget().enlargedScale()
@@ -1335,6 +1343,12 @@ class AbstractPopupBarDisplayWidget(QWidget):
 
     def setPiPName(self, pip_name):
         self.popupBarWidget().setPiPName(pip_name)
+
+    def isDragging(self):
+        return self._is_dragging
+
+    def setIsDragging(self, dragging):
+        self._is_dragging = dragging
 
     def isDisplayNamesShown(self):
         return self.popupBarWidget().isDisplayNamesShown()
@@ -1442,7 +1456,6 @@ class AbstractPiPDisplayWidget(QWidget):
         self._filepath = ""
 
         self._popup_bar_min_size = (100, 100)
-        self._is_dragging = True
         self._is_popup_bar_shown = True
         self._is_popup_bar_widget = is_popup_bar_widget
 
@@ -1604,12 +1617,6 @@ class AbstractPiPDisplayWidget(QWidget):
 
     def setHotkeySwapKeys(self, hotkey_swap_keys):
         self._hotkey_swap_keys = hotkey_swap_keys
-
-    def isDragging(self):
-        return self._is_dragging
-
-    def setIsDragging(self, dragging):
-        self._is_dragging = dragging
 
     def isFrozen(self):
         return self._is_frozen
@@ -2272,6 +2279,7 @@ class PiPMainViewer(QWidget):
     def removeWidget(self):
         self.widget().setParent(None)
         # self.widget().deleteLater()
+
 
 if __name__ == "__main__":
     import sys
