@@ -400,6 +400,8 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
                 else:
                     # reset display label
                     self._resetSpacerWidget()
+                    """ Need to reset the display here, or somewhere to handle
+                    the enter/leave dynamic nature."""
                     self.enlargedWidget().setIsOverlayDisplayed(True)
                     # reset widget to default params
                     self.setIsDragging(False)
@@ -415,6 +417,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
 
                     # enlarge widget
                     self.enlargeWidget(obj)
+
             return True
 
         if event.type() == QEvent.Leave:
@@ -424,17 +427,17 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             events will trigger a leave event"""
             if not isCursorOverWidget(obj):
                 widget_under_cursor = getWidgetUnderCursor()
+                if widget_under_cursor != self.spacerWidget():
+                    # left widget, but cursor is under another widget
+                    if widget_under_cursor:
+                        if not isWidgetDescendantOf(widget_under_cursor, widget_under_cursor.parent(), obj):
+                            if obj == self.enlargedWidget():
+                                self.closeEnlargedView()
 
-                # left widget, but cursor is under another widget
-                if widget_under_cursor:
-                    if not isWidgetDescendantOf(widget_under_cursor, widget_under_cursor.parent(), obj):
+                    # left widget and entire application
+                    else:
                         if obj == self.enlargedWidget():
                             self.closeEnlargedView()
-
-                # left widget and entire application
-                else:
-                    if obj == self.enlargedWidget():
-                        self.closeEnlargedView()
             return True
 
         return False
@@ -489,6 +492,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             else:
                 # reset display label
                 self._resetSpacerWidget()
+                self.enlargedWidget().setIsOverlayDisplayed(True)
 
                 # reset widget to default params
                 self.setIsDragging(False)
@@ -553,7 +557,6 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         There is a minor delay associated with reparenting, and setting the widget as a tool."""
         # self._start = time.time()
         # print("0", (time.time() - self._start) * 1000)
-
         if not widget: return
         if not self.widget(widget.index()): return
         if self.widget(widget.index()) == self.spacerWidget(): return
@@ -586,7 +589,6 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         if self.displayMode() == AbstractPopupBarDisplayWidget.PIPTASKBAR:
             pos, width, height = self.__enlargePiPWidget()
         if self.displayMode() == AbstractPopupBarDisplayWidget.STANDALONETASKBAR:
-            widget.setIsOverlayDisplayed(False)
             pos, width, height = self.__enlargeTaskbar()
 
         # move / resize enlarged widget
@@ -700,7 +702,6 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
 
     def closeEnlargedView(self):
         """Closes the enlarged viewer, and returns it back to normal PiP mode"""
-
         # preflight
         if not self.isEnlarged(): return
         if self.enlargedWidget().isCurrentWidget(): return
@@ -709,14 +710,19 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         self.setIsFrozen(True)
         widget_under_cursor = getWidgetUnderCursor()
 
+        if self.displayMode() in AbstractPopupBarDisplayWidget.TASKBARS:
+            self.enlargedWidget().setIsOverlayDisplayed(True)
+        else:
+            self.enlargedWidget().setIsOverlayDisplayed(False)
+
         # exitted out of widget
         if not widget_under_cursor:
             self._resetSpacerWidget()
             self.setIsEnlarged(False)
-            if self.displayMode() in AbstractPopupBarDisplayWidget.TASKBARS:
-                self.enlargedWidget().setIsOverlayDisplayed(True)
-            else:
-                self.enlargedWidget().setIsOverlayDisplayed(False)
+            # if self.displayMode() in AbstractPopupBarDisplayWidget.TASKBARS:
+            #     self.enlargedWidget().setIsOverlayDisplayed(True)
+            # else:
+            #     self.enlargedWidget().setIsOverlayDisplayed(False)
 
         # exited over the mini viewer
         elif isWidgetDescendantOf(widget_under_cursor, widget_under_cursor.parent(), self):
@@ -741,7 +747,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
                 popup_bar_widget = getWidgetAncestor(widget_under_cursor, AbstractPopupBarItemWidget)
                 # taskbar
                 if not display_widget:
-                    self.enlargedWidget().setIsOverlayDisplayed(True)
+                    # self.enlargedWidget().setIsOverlayDisplayed(True)
                     self.enlargeWidget(popup_bar_widget)
                 # pip
                 elif display_widget.isPopupBarWidget():
@@ -755,7 +761,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
                         self.enlargeWidget(getWidgetAncestor(display_widget, AbstractPopupBarItemWidget))
                 else:
                     # exit over normal widget
-                    self.enlargedWidget().setIsOverlayDisplayed(True)
+                    # self.enlargedWidget().setIsOverlayDisplayed(True)
                     self.enlargeWidget(popup_bar_widget)
 
         # exited over main viewer
@@ -763,7 +769,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             # reset display label
             self._resetSpacerWidget()
             self.setIsEnlarged(False)
-            self.enlargedWidget().setIsOverlayDisplayed(True)
+            # self.enlargedWidget().setIsOverlayDisplayed(True)
 
         # unfreeze
         """ Unfreezing as a delayed event to help to avoid the segfaults that occur
@@ -1318,7 +1324,8 @@ class AbstractPopupBarDisplayWidget(QWidget):
         """need to reset the current widget here to make sure the correct event handler is installed
         If this is not done, the old popupBarWidget() will be installed onto the handlers, which will
         break things."""
-        self.displayWidget().setCurrentWidget(self.displayWidget().currentWidget())
+        if self.currentWidget():
+            self.setCurrentWidget(self.currentWidget())
 
     def enlargedScale(self):
         return self.popupBarWidget().enlargedScale()
