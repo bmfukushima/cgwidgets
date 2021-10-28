@@ -1,8 +1,8 @@
 """ TODO
     Drag:
         Drag Leave not closing popups (Standalone)
-        Drag Enter's close event showing wrong display
-            - standalone, when opening mini widgets
+            segfaults?
+            weird qt.qpa.xcb error? (BadWindow)
 """
 
 import json
@@ -316,7 +316,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         self.setDirection(settings["Direction"])
         self.setSizes(settings["sizes"])
 
-    def __installDragMoveMonkeyPatch(self, widget):
+    def installDragMoveMonkeyPatch(self, widget):
         """ Monkey patch for bug with widgets that already have drag/drop enabled.
 
         This bypasses a bug/limitation of Qt, where EventFilters will not work on
@@ -332,7 +332,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             widget._old_dragMoveEvent = widget.dragMoveEvent
         widget.dragMoveEvent = _dragMoveEvent
 
-    def __installDragEnterMonkeyPatch(self, widget):
+    def installDragEnterMonkeyPatch(self, widget):
         """ Monkey patch for bug with widgets that already have drag/drop enabled.
 
         This bypasses a bug/limitation of Qt, where EventFilters will not work on
@@ -512,6 +512,15 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             obj (QWidget):
             event (QEvent):
         """
+        # if event.type() == QEvent.DragLeave:
+        #     print("drag leave", obj.name())
+        #     if self.displayMode() == AbstractPopupBarDisplayWidget.STANDALONETASKBAR:
+        #         widget_under_cursor = getWidgetUnderCursor()
+        #         if widget_under_cursor != self.spacerWidget():
+        #             self.closeEnlargedView()
+        #             return True
+        #     pass
+
         if event.type() == QEvent.DragEnter:
             # print('enter')
             event.accept()
@@ -527,8 +536,6 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             self.setIsDragging(False)
             obj.pipPopupBarWidget().closeEnlargedView()
 
-        if event.type() == QEvent.DragLeave:
-            pass
             # print('drag leave')
 
     def __splitterMoved(self, *args):
@@ -787,8 +794,8 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             widget = self.createNewWidget(widget, index=index, is_pip_widget=is_pip_widget, name=name)
         if isinstance(widget, AbstractPopupBarItemWidget):
             widget.installEventFilter(self)
-            self.__installDragEnterMonkeyPatch(widget.popupWidget())
-            self.__installDragMoveMonkeyPatch(widget.popupWidget())
+            self.installDragEnterMonkeyPatch(widget.popupWidget())
+            self.installDragMoveMonkeyPatch(widget.popupWidget())
             widget.delegateWidget().setAcceptDrops(True)
             return QSplitter.addWidget(self, widget)
         else:
@@ -813,9 +820,9 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             mini_widget.setIsOverlayDisplayed(self.isOverlayEnabled())
         elif self.displayMode() in [AbstractPopupBarDisplayWidget.PIPTASKBAR, AbstractPopupBarDisplayWidget.STANDALONETASKBAR]:
             pass
-        # self.__installDragEnterMonkeyPatch(mini_widget.delegateWidget())
+        # self.installDragEnterMonkeyPatch(mini_widget.delegateWidget())
         # self.installDragLeaveMonkeyPatch(mini_widget.delegateWidget())
-        # self.__installDragMoveMonkeyPatch(mini_widget.delegateWidget())
+        # self.installDragMoveMonkeyPatch(mini_widget.delegateWidget())
         # mini_widget.installEventFilter(self)
         mini_widget.delegateWidget().setAcceptDrops(True)
 
@@ -831,8 +838,8 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             widget = self.createNewWidget(widget, index=index, is_pip_widget=is_pip_widget, name=name)
         if isinstance(widget, AbstractPopupBarItemWidget):
             widget.installEventFilter(self)
-            self.__installDragEnterMonkeyPatch(widget.popupWidget())
-            self.__installDragMoveMonkeyPatch(widget.popupWidget())
+            self.installDragEnterMonkeyPatch(widget.popupWidget())
+            self.installDragMoveMonkeyPatch(widget.popupWidget())
             widget.delegateWidget().setAcceptDrops(True)
             return QSplitter.insertWidget(self, index, widget)
 
@@ -1081,7 +1088,7 @@ class AbstractPopupBarDisplayWidget(QWidget):
         self._display_widget = AbstractPopupBarWidget(parent=self)
         self._popup_bar_widget = self._display_widget
         self._widgets = []
-        self._is_dragging = True
+        self._is_dragging = False
 
         # setup layout
         QVBoxLayout(self)
@@ -1960,10 +1967,18 @@ class AbstractPiPDisplayWidget(QWidget):
             self.setPreviousWidget(self._current_widget)
             self._current_widget.setIsCurrentWidget(False)
 
+        else:
+            """ If no current widget is set, this will install the drag patches for the widget 
+            This is needed for the first time, as this does not get installed when added
+            to the popup bar widget"""
+            self.popupBarWidget().installDragEnterMonkeyPatch(widget.popupWidget())
+            self.popupBarWidget().installDragMoveMonkeyPatch(widget.popupWidget())
         # set widget as current
         self._current_widget = widget
         self.mainViewerWidget().setWidget(widget)
         self._current_widget.installEventFilter(self.popupBarWidget())
+
+
         self.popupBarWidget().setCurrentWidget(widget)
 
         # update mini viewer widget
