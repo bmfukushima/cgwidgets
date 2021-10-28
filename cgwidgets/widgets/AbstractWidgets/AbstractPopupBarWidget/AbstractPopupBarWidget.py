@@ -1977,8 +1977,6 @@ class AbstractPiPDisplayWidget(QWidget):
         self._current_widget = widget
         self.mainViewerWidget().setWidget(widget)
         self._current_widget.installEventFilter(self.popupBarWidget())
-
-
         self.popupBarWidget().setCurrentWidget(widget)
 
         # update mini viewer widget
@@ -2024,12 +2022,6 @@ class AbstractPiPDisplayWidget(QWidget):
         self.popupBarWidget().setDirection(direction)
 
     """ EVENTS """
-
-    # def eventFilter(self, obj, event):
-    #     if event.type() == QEvent.DragEnter:
-    #         event.accept()
-    #     return False
-
     def hotkeySwapEvent(self, key):
         """ Swaps the widgets when a hotkey (1-5) is pressed.
 
