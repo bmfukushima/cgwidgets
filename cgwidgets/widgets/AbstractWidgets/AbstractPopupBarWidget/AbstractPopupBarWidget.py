@@ -4,6 +4,7 @@
             Settings
     Close children not working in Katana, of course
     Update reversing order
+        only for standalone taskbars
     Swapping recursive widgets
 """
 
@@ -1247,7 +1248,9 @@ class AbstractPopupBarDisplayWidget(QWidget):
             organizer_widget.clearPopupBarOrganizerIndexes()
 
         # load widgets
-        for widget_name, widget_data in data["widgets"].items():
+        reversed_widgets = OrderedDict(reversed(list(data["widgets"].items())))
+        #for widget_name, widget_data in data["widgets"].items():
+        for widget_name, widget_data in reversed_widgets.items():
             widget = self.createWidgetFromConstructorCode(widget_data["code"])
             widget = self.addWidget(widget, name=widget_name)
 
