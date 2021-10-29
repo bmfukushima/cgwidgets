@@ -261,8 +261,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         if widget == self.widget(widget.index()): return True
         if not self.widget(widget.index()): return True
         if widget.parent() == self.widget(widget.index()).parent(): return True
-        setAsTool(self.enlargedWidget(), False)
-
+        setAsTool(widget, False)
         # swap widgets
         self.replaceWidget(widget.index(), widget)
         self.spacerWidget().setParent(self.parent())
@@ -512,6 +511,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             obj (QWidget):
             event (QEvent):
         """
+        # todo for some reason this is causing segfaults...
         # if event.type() == QEvent.DragLeave:
         #     print("drag leave", obj.name())
         #     if self.displayMode() == AbstractPopupBarDisplayWidget.STANDALONETASKBAR:
@@ -716,7 +716,17 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         # setup attrs
         self.setIsFrozen(True)
         widget_under_cursor = getWidgetUnderCursor()
+        _enlarged_widget = self.enlargedWidget()
+        # close children
+        """ If this is stuck in recursion, this will close all child views.  Note this is
+        only valid when closing a Standalone Taskbar
+        # todo for some reason this doesn't appear to put the widget back...
+        """
+        if _enlarged_widget.isPiPWidget():
+            if _enlarged_widget.popupWidget().displayMode() == AbstractPopupBarDisplayWidget.STANDALONETASKBAR:
+                _enlarged_widget.popupWidget().closeEnlargedView()
 
+        # update overlay displays
         if self.displayMode() in AbstractPopupBarDisplayWidget.TASKBARS:
             self.enlargedWidget().setIsOverlayDisplayed(True)
         else:
@@ -726,10 +736,6 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         if not widget_under_cursor:
             self._resetSpacerWidget()
             self.setIsEnlarged(False)
-            # if self.displayMode() in AbstractPopupBarDisplayWidget.TASKBARS:
-            #     self.enlargedWidget().setIsOverlayDisplayed(True)
-            # else:
-            #     self.enlargedWidget().setIsOverlayDisplayed(False)
 
         # exited over the mini viewer
         elif isWidgetDescendantOf(widget_under_cursor, widget_under_cursor.parent(), self):
@@ -776,22 +782,22 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             # reset display label
             self._resetSpacerWidget()
             self.setIsEnlarged(False)
-            # self.enlargedWidget().setIsOverlayDisplayed(True)
 
         # unfreeze
         """ Unfreezing as a delayed event to help to avoid the segfaults that occur
         when PyQt tries to do things to fast..."""
+        # self.setIsFrozen(False)
         runDelayedEvent(self, self.unfreeze, delay_amount=10)
 
     def unfreeze(self):
         self.setIsFrozen(False)
 
     """ WIDGETS """
-    def addWidget(self, widget, name="", is_pip_widget=False, index=0):
+    def addWidget(self, widget, name="", index=0):
         if widget == self.spacerWidget():
             return
         if not isinstance(widget, AbstractPopupBarItemWidget):
-            widget = self.createNewWidget(widget, index=index, is_pip_widget=is_pip_widget, name=name)
+            widget = self.createNewWidget(widget, index=index, name=name)
         if isinstance(widget, AbstractPopupBarItemWidget):
             widget.installEventFilter(self)
             self.installDragEnterMonkeyPatch(widget.popupWidget())
@@ -802,18 +808,17 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             print("{widget_type} is not valid.".format(widget_type=type(widget)))
             return
 
-    def createNewWidget(self, widget, name="", is_pip_widget=False, index=0):
+    def createNewWidget(self, widget, name="", index=0):
         """
         Creates a new widget in the mini widget.  This is only when a new widget needs to be instantiated.
 
         Args:
-            is_pip_widget (bool): determines if this is a PiPWidget
             widget:
             name:
 
         Returns (AbstractPopupBarItemWidget):
         """
-        mini_widget = AbstractPopupBarItemWidget(self, direction=Qt.Vertical, delegate_widget=widget, is_pip_widget=is_pip_widget, name=name)
+        mini_widget = AbstractPopupBarItemWidget(self, direction=Qt.Vertical, delegate_widget=widget, name=name)
 
         mini_widget.setIsOverlayEnabled(self.isOverlayEnabled())
         if self.displayMode() == AbstractPopupBarDisplayWidget.PIP:
@@ -831,11 +836,11 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         self.updateWidgetIndexes()
         return mini_widget
 
-    def insertWidget(self, index, widget, name="", is_pip_widget=False):
+    def insertWidget(self, index, widget, name=""):
         if widget == self.spacerWidget():
             return
         if not isinstance(widget, AbstractPopupBarItemWidget):
-            widget = self.createNewWidget(widget, index=index, is_pip_widget=is_pip_widget, name=name)
+            widget = self.createNewWidget(widget, index=index, name=name)
         if isinstance(widget, AbstractPopupBarItemWidget):
             widget.installEventFilter(self)
             self.installDragEnterMonkeyPatch(widget.popupWidget())
@@ -884,7 +889,7 @@ class AbstractPopupBarItemWidget(AbstractOverlayInputWidget):
         is_overlay_displayed (bool): determines if the overlay is currently displayed.  If set to
             True, this will display the "acronym", if False, will display the delegate widget.
         is_pip_widget (bool): determines if this widgets delegate widget is inherited from the
-            AbstractPiPDisplayWidget.  This is for handling recursive viewing
+            AbstractPopupBarDisplayWidget.  This is for handling recursive viewing
         Overlay Image (str): Relative path on disk to file path.
 
             This can start with a ../ to denote that the image is located in the same directory
@@ -898,7 +903,6 @@ class AbstractPopupBarItemWidget(AbstractOverlayInputWidget):
         name="None",
         direction=Qt.Horizontal,
         delegate_widget=None,
-        is_pip_widget=False,
         is_overlay_enabled=True,
         acronym=None
     ):
@@ -907,7 +911,6 @@ class AbstractPopupBarItemWidget(AbstractOverlayInputWidget):
         super(AbstractPopupBarItemWidget, self).__init__(parent, title=acronym)
 
         self._is_overlay_enabled = is_overlay_enabled
-        self._is_pip_widget = is_pip_widget
         self._is_current_widget = False
         self._name = name
         self._is_display_name_shown = True
@@ -969,10 +972,10 @@ class AbstractPopupBarItemWidget(AbstractOverlayInputWidget):
 
     """ PROPERTIES """
     def isPiPWidget(self):
-        return self._is_pip_widget
-
-    def setIsPiPWidget(self, is_pip_widget):
-        self._is_pip_widget = is_pip_widget
+        if isinstance(self.popupWidget(), AbstractPopupBarDisplayWidget):
+            return True
+        else:
+            return False
 
     def isDisplayNameShown(self):
         return self._is_display_name_shown
@@ -1114,11 +1117,11 @@ class AbstractPopupBarDisplayWidget(QWidget):
         # return self._widgets
 
     """ UTILS """
-    def addWidget(self, widget, name="", is_pip_widget=False, index=0):
+    def addWidget(self, widget, name="", index=0):
         # create widget if it isn't a popup bar item
         if not isinstance(widget, AbstractPopupBarItemWidget):
             widget = self.displayWidget().createNewWidget(
-                widget, is_pip_widget=is_pip_widget, name=name, index=index)
+                widget, name=name, index=index)
         else:
             # todo direct add into display widget
             self.displayWidget().addWidget(widget)
@@ -1126,8 +1129,8 @@ class AbstractPopupBarDisplayWidget(QWidget):
         return widget
         # self.widgets().append(widget)
 
-    def insertWidget(self, index, widget, name="", is_pip_widget=False):
-        self.addWidget(widget, index=index, name=name, is_pip_widget=is_pip_widget)
+    def insertWidget(self, index, widget, name=""):
+        self.addWidget(widget, index=index, name=name)
 
     def removeAllWidgets(self):
         self.displayWidget().removeAllWidgets()
@@ -1165,7 +1168,7 @@ class AbstractPopupBarDisplayWidget(QWidget):
         widget = loc['widget']
         return widget
 
-    def createNewWidget(self, widget, name="", resize_popup_bar=True, is_pip_widget=False, index=0):
+    def createNewWidget(self, widget, name="", resize_popup_bar=True, index=0):
         """ Creates a new widget
 
         Args:
@@ -1173,8 +1176,6 @@ class AbstractPopupBarDisplayWidget(QWidget):
             name (str):
             resize_popup_bar (bool): Determines if the Popupbar should be resized
                 only valid if displayMode() is set to PIPDISPLAYS
-            is_pip_widget (bool): Determines if this is a PiPWidget
-                only valid if displayMode() is set to STANDALONETASKBAR
             index (int): The index to insert the widget at
                 only valid if displayMode() is set to STANDALONETASKBAR
 
@@ -1182,7 +1183,7 @@ class AbstractPopupBarDisplayWidget(QWidget):
 
         """
         if self.displayMode() == AbstractPopupBarDisplayWidget.STANDALONETASKBAR:
-            return self.displayWidget().createNewWidget(widget, name=name, is_pip_widget=is_pip_widget, index=index)
+            return self.displayWidget().createNewWidget(widget, name=name, index=index)
         elif self.displayMode() in AbstractPopupBarDisplayWidget.PIPDISPLAYS:
             return self.displayWidget().createNewWidget(widget, name=name, resize_popup_bar=resize_popup_bar)
 
@@ -1916,8 +1917,8 @@ class AbstractPiPDisplayWidget(QWidget):
                 # won't be supporting this probably
                 pass
 
-            # todo this may need to be redone for the AbstractPopupDisplayWidget
-            elif isinstance(widget.delegateWidget(), AbstractPiPDisplayWidget):
+            # todo this may need to be redone for the AbstractPopupBarDisplayWidget
+            elif isinstance(widget.delegateWidget(), AbstractPopupBarDisplayWidget):
                 # update settings
                 """ sizes doesn't swap... probably due to the add/remove of widgets
                 Is not calculating the fact that the mini viewer widget will have

@@ -40,9 +40,11 @@ widget.addItems(['a', 'b', 'c', 'd'])
 # widget.setFixedWidth(100)
 """,
     "Recursion":"""
-from cgwidgets.widgets import PiPDisplayWidget
-widget = PiPDisplayWidget()
-widget.loadPiPWidgetFromFile(
+from cgwidgets.widgets import PopupBarDisplayWidget
+from cgwidgets.utils import getDefaultSavePath
+
+widget = PopupBarDisplayWidget()
+widget.loadPopupDisplayFromFile(
     getDefaultSavePath() + '/.PiPWidgets_02.json',
     "RecursionWidget"
 )
