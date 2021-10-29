@@ -618,6 +618,7 @@ all_widgets = [
 ]
 
 taskbar_widgets = [
+    organizer_widget.settingsWidget().widgets()["Enlarged Scale"],
     organizer_widget.settingsWidget().widgets()["Enlarged Size"],
     organizer_widget.settingsWidget().widgets()["Overlay Text"],
     organizer_widget.settingsWidget().widgets()["Overlay Image"],
@@ -676,7 +677,7 @@ organizer_widget.popupBarDisplayWidget().resizePopupBar()
             "type": attrs.FLOAT,
             "value": 0.8,
             "value_list": [0.01, 0.025, 0.05, 0.1],
-            "range": [True, 0.1, 0.9],
+            "range": [True, 0.1, 0.95],
             "code": """organizer_widget.popupBarDisplayWidget().setEnlargedScale(float(value))""",
             "help": "The amount of space (percent) the PiPWidget will take when enlarged"},
         "Enlarged Size": {

@@ -1,8 +1,7 @@
 """ TODO
-    Drag:
-        Drag Leave not closing popups (Standalone)
-            segfaults?
-            weird qt.qpa.xcb error? (BadWindow)
+    Enlarged Scale
+        Not available in StandaloneTaskbar
+            Settings
 """
 
 import json
@@ -723,8 +722,9 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         # todo for some reason this doesn't appear to put the widget back...
         """
         if _enlarged_widget.isPiPWidget():
-            if _enlarged_widget.popupWidget().displayMode() == AbstractPopupBarDisplayWidget.STANDALONETASKBAR:
-                _enlarged_widget.popupWidget().closeEnlargedView()
+            if _enlarged_widget.popupWidget().isEnlarged():
+                if _enlarged_widget.popupWidget().displayMode() == AbstractPopupBarDisplayWidget.STANDALONETASKBAR:
+                    _enlarged_widget.popupWidget().closeEnlargedView()
 
         # update overlay displays
         if self.displayMode() in AbstractPopupBarDisplayWidget.TASKBARS:
@@ -1334,6 +1334,9 @@ class AbstractPopupBarDisplayWidget(QWidget):
         break things."""
         if self.currentWidget():
             self.setCurrentWidget(self.currentWidget())
+
+    def isEnlarged(self):
+        return self.popupBarWidget().isEnlarged()
 
     def enlargedScale(self):
         return self.popupBarWidget().enlargedScale()
