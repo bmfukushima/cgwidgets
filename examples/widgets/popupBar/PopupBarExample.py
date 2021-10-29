@@ -23,7 +23,7 @@ popup_bar_widget = PopupBarDisplayWidget()
 # load widgets
 popup_bar_widget.loadPopupDisplayFromFile(
     getDefaultSavePath() + '/.PiPWidgets_02.json',
-    "recursion"
+    "recursion2"
 )
 
 

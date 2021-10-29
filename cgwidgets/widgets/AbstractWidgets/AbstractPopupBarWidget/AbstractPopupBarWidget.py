@@ -2,6 +2,9 @@
     Enlarged Scale
         Not available in StandaloneTaskbar
             Settings
+    Close children not working in Katana, of course
+    Update reversing order
+    Swapping recursive widgets
 """
 
 import json
@@ -721,7 +724,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         only valid when closing a Standalone Taskbar
         # todo for some reason this doesn't appear to put the widget back...
         """
-        if _enlarged_widget.isPiPWidget():
+        if _enlarged_widget.isPopupWidget():
             if _enlarged_widget.popupWidget().isEnlarged():
                 if _enlarged_widget.popupWidget().displayMode() == AbstractPopupBarDisplayWidget.STANDALONETASKBAR:
                     _enlarged_widget.popupWidget().closeEnlargedView()
@@ -971,8 +974,16 @@ class AbstractPopupBarItemWidget(AbstractOverlayInputWidget):
         return getWidgetAncestor(self, AbstractPopupBarDisplayWidget).popupBarWidget()
 
     """ PROPERTIES """
-    def isPiPWidget(self):
+    def isPopupWidget(self):
+        """ Determines if this item is a popup widget.
+
+        This is done by
+            Checking to see if it is a subclass of "AbstractPopupBarDisplayWidget"
+                or
+            If it has the attr "_is_popup_widget" """
         if isinstance(self.popupWidget(), AbstractPopupBarDisplayWidget):
+            return True
+        elif hasattr(self.popupWidget(), "_is_popup_widget"):
             return True
         else:
             return False
@@ -1076,14 +1087,20 @@ class AbstractPopupBarDisplayWidget(QWidget):
         display_widget (AbstractPopupBarWidget | AbstractPiPDisplayWidget): The current popup widget
         popup_bar_widget (AbstractPopupBarWidget):
         widgets (list): of AbstractPopupBarItemWidget's.
-    """
 
+    Attributes (class):
+        PIP | PIPTASKBAR | STANDALONETASKBAR (string): flags to determine the display mode
+        TASKBARS | PIPDISPLAYS (list): of flags (PIP | PIPTASKBAR | STANDALONETASKBAR) which
+            act as containers for easier calling of different modes.
+        _is_popup_display (bool): flag to say this is a popup display widget
+            This is more useful when subclassing
+    """
     PIP = "PIP"
     PIPTASKBAR = "PIP TASKBAR"
     STANDALONETASKBAR = "STANDALONE TASKBAR"
     TASKBARS = [PIPTASKBAR, STANDALONETASKBAR]
     PIPDISPLAYS = [PIP, PIPTASKBAR]
-
+    _is_popup_widget = True
     def __init__(self, parent=None, display_mode=STANDALONETASKBAR):
         super(AbstractPopupBarDisplayWidget, self).__init__(parent)
 
@@ -1913,7 +1930,7 @@ class AbstractPiPDisplayWidget(QWidget):
             widget (QPopupBarWidget): widget to be set as full screen
         """
         # todo multi recursive swapping cleanup
-        if widget.isPiPWidget():
+        if widget.isPopupWidget():
             from .AbstractPopupBarOrganizerWidget import AbstractPopupBarOrganizerWidget
             if isinstance(widget.delegateWidget(), AbstractPopupBarOrganizerWidget):
                 print("multi recursive swapping is disabled for OrganizerWidgets")
