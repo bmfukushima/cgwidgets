@@ -615,10 +615,12 @@ all_widgets = [
     organizer_widget.settingsWidget().widgets()["Overlay Image"],
     organizer_widget.settingsWidget().widgets()["PiP Scale"],
     organizer_widget.settingsWidget().widgets()["Taskbar Size"],
+    organizer_widget.settingsWidget().widgets()["Enlarged Offset"],
+    
 ]
 
-taskbar_widgets = [
-    organizer_widget.settingsWidget().widgets()["Enlarged Scale"],
+standalone_taskbar_widgets = [
+    organizer_widget.settingsWidget().widgets()["Enlarged Offset"],
     organizer_widget.settingsWidget().widgets()["Enlarged Size"],
     organizer_widget.settingsWidget().widgets()["Overlay Text"],
     organizer_widget.settingsWidget().widgets()["Overlay Image"],
@@ -658,7 +660,7 @@ if value == PopupBarDisplayWidget.PIPTASKBAR:
     organizer_widget.popupBarDisplayWidget().setTaskbarSize(float(taskbar_size))
     
 if value == PopupBarDisplayWidget.STANDALONETASKBAR:
-    for taskbar_widget in taskbar_widgets:
+    for taskbar_widget in standalone_taskbar_widgets:
         taskbar_widget.show()
 
 # update popup bar size
@@ -684,10 +686,18 @@ organizer_widget.popupBarDisplayWidget().resizePopupBar()
             "type": attrs.FLOAT,
             "value": 500.0,
             "value_list": [1, 5, 10, 25, 50],
-            "range": [False],
+            "range": [True, 25, 2000],
             "code": """organizer_widget.popupBarDisplayWidget().setEnlargedSize(float(value))""",
             "help": """The size (pixels) in the expanding direction of the enlarged widget.
     ie. if the expanding direction is set to East, this will be the width in pixels"""
+        },
+        "Enlarged Offset": {
+            "type": attrs.FLOAT,
+            "value": 50.0,
+            "value_list": [1, 5, 10, 25, 50],
+            "range": [True, 0, 500],
+            "code": """organizer_widget.popupBarDisplayWidget().setEnlargedOffset(float(value))""",
+            "help": """The size (pixels) of the offset of the direction perpendicular to the direction."""
         },
         "Taskbar Size": {
             "type": attrs.FLOAT,
@@ -743,6 +753,8 @@ You can use ../ to access the current directory"""}
             self.widgets()[name] = input_widget
 
         self.widgets()["PiP Scale"].hide()
+        self.widgets()["Enlarged Size"].hide()
+        self.widgets()["Enlarged Offset"].hide()
 
     def widgets(self):
         return self._widgets

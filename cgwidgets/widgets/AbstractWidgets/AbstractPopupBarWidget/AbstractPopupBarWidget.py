@@ -1,8 +1,6 @@
 """ TODO
-    *   Enlarged Scale
-            Not available in StandaloneTaskbar
-                Settings
-    *   Swapping recursive widgets
+    *   Enlarged Scale | standalone taskbar should go to 1
+            - might just add another setting?
     *   Standalone Taskbar --> PiP
             When loading a standalone taskbar with a recursive widget, and switching to a PiP display,
             this will not reload the recursive widget
@@ -55,12 +53,18 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
                 PIP | PIPTASKBAR | TASKBAR
             The PIP mode will be displayed over an existing widget.  While the TASKBAR mode will be displayed
             as a standalone widget.
+        enlarged_offset (float): the amount of offset (pixels) displayed when the widget is enlarged and the
+            displayMode() is set to STANDALONETASKBAR
+        enlarged_scale (float): the amount of space (percent) the widget takes up when it is enlarged and the
+            displayMode() is set to a PIP DISPLAY (PIP | PIPTASKBAR)
+        enlarged_size (float): How far the widget extends (pixels) when the widget is enlarged and the
+            displayMode() is set to STANDALONETASKBAR
         is_dragging (bool): determines if this widget is currently in a drag/drop operation
         is_enlarged (bool): If there is currently an widget enlarged.
             Widgets are enlarged by the user hovering over them.  And closed
             be pressing "esc" or having the mouse exit the boundries of the widget.
         if_frozen (bool): Determines if events should be handled or not.
-        is_overlay_displayed (bool): determines if the overlay is currently displayed.  If set to
+        is_overlay_enabled (bool): determines if the overlay is currently displayed.  If set to
             True, this will display the "acronym", if False, will display the delegate widget.
         enlarged_widget (QWidget): The widget that is currently enlarged
         overlay_widget (QWidget): Widget to overlay the popup over.  If none is specified,
@@ -91,6 +95,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         self._is_standalone = True
         self._enlarged_scale = 0.85
         self._enlarged_size = 500
+        self._enlarged_offset = 50.0
         self._filepath = ""
         self._pip_name = ""
         self._direction = direction
@@ -160,6 +165,12 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
     def setCurrentWidget(self, current_widget):
         self._current_widget = current_widget
 
+    def enlargedOffset(self):
+        return self._enlarged_offset
+
+    def setEnlargedOffset(self, _enlarged_offset):
+        self._enlarged_offset = _enlarged_offset
+
     def enlargedScale(self):
         return self._enlarged_scale
 
@@ -215,11 +226,21 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         # elif self.displayMode() == AbstractPopupBarDisplayWidget.STANDALONETASKBAR:
         #     self.setWidgetOverlayDisplay(False)
 
-    def setWidgetOverlayDisplay(self, enabled):
-        for widget in self.widgets():
-            widget.setCurrentIndex(enabled)
+    # def setWidgetOverlayDisplay(self, enabled):
+    #     """ Sets all of the widgets to either show or hide the overlay
+    #
+    #     Args:
+    #         enabled (bool): If True, will show the delegate, if False, will show the overlay"""
+    #     for widget in self.widgets():
+    #         widget.setCurrentIndex(enabled)
 
     def setIsOverlayDisplayed(self, enabled):
+        """ Determines if the overlay is displayed for each child widget
+
+        Args:
+            enabled (bool): If True, will show the overlays, if False, will show the delegates.
+
+        """
         for widget in self.widgets():
             widget.setIsOverlayEnabled(enabled)
             if widget != self.enlargedWidget():
@@ -600,7 +621,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         if self.displayMode() == AbstractPopupBarDisplayWidget.PIPTASKBAR:
             pos, width, height = self.__enlargePiPWidget()
         if self.displayMode() == AbstractPopupBarDisplayWidget.STANDALONETASKBAR:
-            pos, width, height = self.__enlargeTaskbar()
+            pos, width, height = self.__enlargeStandaloneTaskbar()
 
         # move / resize enlarged widget
         widget.resize(int(width), int(height))
@@ -612,42 +633,43 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         self.setIsFrozen(False)
         widget.setIsOverlayDisplayed(False)
 
-    def __enlargeTaskbar(self):
+    def __enlargeStandaloneTaskbar(self):
         """ Popups the widget when it is in taskbar mode
 
         returns (QPoint, width, height)"""
-        scale = self.enlargedScale()
-        negative_space = 1 - scale
-        half_neg_space = negative_space * 0.5
-
+        # scale = self.enlargedScale()
+        # negative_space = 1 - scale
+        # half_neg_space = negative_space * 0.5
+        negative_space = self.enlargedOffset() * 2
+        half_neg_space = self.enlargedOffset()
         if self.direction() in [attrs.NORTH, attrs.SOUTH]:
-            width = self.width() - (self.width() * negative_space)
+            width = self.width() - negative_space
             height = self.enlargedSize()
 
             if self.direction() == attrs.NORTH:
                 top_left = self.parent().mapToGlobal(self.geometry().topLeft())
                 ypos = top_left.y() - height
-                xpos = top_left.x() + (self.width() * half_neg_space)
+                xpos = top_left.x() + half_neg_space
 
             if self.direction() == attrs.SOUTH:
                 bot_left = self.parent().mapToGlobal(self.geometry().bottomLeft())
                 ypos = bot_left.y()
-                xpos = bot_left.x() + (self.width() * half_neg_space)
+                xpos = bot_left.x() + half_neg_space
 
         if self.direction() in [attrs.EAST, attrs.WEST]:
-            height = self.height() - (self.height() * negative_space)
+            height = self.height() - negative_space
             width = self.enlargedSize()
 
             if self.direction() == attrs.EAST:
 
                 top_right = self.parent().mapToGlobal(self.geometry().topRight())
                 xpos = top_right.x()
-                ypos = top_right.y() + (self.height() * half_neg_space)
+                ypos = top_right.y() + half_neg_space
 
             if self.direction() == attrs.WEST:
                 top_left = self.parent().mapToGlobal(self.geometry().topLeft())
                 xpos = top_left.x() - width
-                ypos = top_left.y() + (self.height() * half_neg_space)
+                ypos = top_left.y() + half_neg_space
 
         return QPoint(xpos, ypos), width, height
 
@@ -1369,17 +1391,17 @@ class AbstractPopupBarDisplayWidget(QWidget):
     def isEnlarged(self):
         return self.popupBarWidget().isEnlarged()
 
-    def enlargedScale(self):
-        return self.popupBarWidget().enlargedScale()
-
-    def setEnlargedScale(self, _enlarged_scale):
-        self.popupBarWidget().setEnlargedScale(_enlarged_scale)
-
     def enlargedSize(self):
         return self.popupBarWidget().enlargedSize()
 
     def setEnlargedSize(self, enlarged_size):
         self.popupBarWidget().setEnlargedSize(enlarged_size)
+
+    def enlargedOffset(self):
+        return self.popupBarWidget().enlargedOffset()
+
+    def setEnlargedOffset(self, _enlarged_offset):
+        self.popupBarWidget().setEnlargedOffset(_enlarged_offset)
 
     def filepath(self):
         return self.popupBarWidget().filepath()
@@ -1411,6 +1433,14 @@ class AbstractPopupBarDisplayWidget(QWidget):
                 widget.headerWidget().hide()
 
     """ PROPERTIES (PIP)"""
+    def enlargedScale(self):
+        if self.displayMode() in AbstractPopupBarDisplayWidget.PIPDISPLAYS:
+            return self.popupBarWidget().enlargedScale()
+
+    def setEnlargedScale(self, _enlarged_scale):
+        if self.displayMode() in AbstractPopupBarDisplayWidget.PIPDISPLAYS:
+            self.popupBarWidget().setEnlargedScale(_enlarged_scale)
+
     def pipScale(self):
         if self.displayMode() in AbstractPopupBarDisplayWidget.PIPDISPLAYS:
             return self.displayWidget().pipScale()
