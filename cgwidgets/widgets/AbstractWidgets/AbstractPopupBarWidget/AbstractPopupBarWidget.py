@@ -1,12 +1,13 @@
-""" TODO
-    *   Enlarged Scale | standalone taskbar should go to 1
-            - might just add another setting?
-    *   Standalone Taskbar --> PiP
-            When loading a standalone taskbar with a recursive widget, and switching to a PiP display,
-            this will not reload the recursive widget
-            Seems wonky...
+""" Todo:
+        *   Check multiple recursion...
+                Specifically in STANDALONE TASKBAR
+        *   Enable swapping of STANDALONE TASKBAR when in PiPView (1989, 23)
+        *   Drag Leave causing segfaults with STANDALONE TASKBAR (538, 11)
+        *   Delays when enlarging (584, 11)
+        *   AbstractPiPDisplayWidget change is_standalone to is_organizer (1513, 15)
+        *   Setting (Enlarged Offset) does not allow a 0.0 value
+                This is probably a problem on the ladder widget
 """
-
 import json
 from collections import OrderedDict
 import os
@@ -536,7 +537,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             obj (QWidget):
             event (QEvent):
         """
-        # todo for some reason this is causing segfaults...
+        # todo (538, 11) for some reason this is causing segfaults...
         # if event.type() == QEvent.DragLeave:
         #     print("drag leave", obj.name())
         #     if self.displayMode() == AbstractPopupBarDisplayWidget.STANDALONETASKBAR:
@@ -582,7 +583,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             widget (AbstractPopupBarItemWidget): Widget to be enlarged
         """
         # preflight
-        # todo figure out delay
+        # todo (584, 11) Major delays occur in the show/resize
         """ Seems like a lot of the delay is coming from the show/resize of the widget
         that is being enlarged.
         
@@ -955,7 +956,6 @@ class AbstractPopupBarItemWidget(AbstractOverlayInputWidget):
         # disable editable header
         self._is_shown = False
         delegate_widget.viewWidget().setDisplayMode(AbstractOverlayInputWidget.DISABLED)
-        # self.setDisplayMode(AbstractOverlayInputWidget.DISABLED)
         self.setAcceptDrops(True)
     #     self.popupWidget().installEventFilter(self)
     #
@@ -1168,9 +1168,7 @@ class AbstractPopupBarDisplayWidget(QWidget):
             widget = self.displayWidget().createNewWidget(
                 widget, name=name, index=index)
         else:
-            # todo direct add into display widget
             self.displayWidget().addWidget(widget)
-            pass
         return widget
         # self.widgets().append(widget)
 
@@ -1302,7 +1300,6 @@ class AbstractPopupBarDisplayWidget(QWidget):
 
                 # update indexes
                 organizer_widget.popupBarWidget().updateWidgetIndexes()
-            # todo create organizer widgets
 
     def __loadPiPWidget(self, filepath, pip_name, organizer=False):
         """ Loads a PiP Widget from the data provided
@@ -1509,10 +1506,9 @@ class AbstractPiPDisplayWidget(QWidget):
             have slightly different constructors.
 
             If True, this means that this display is a standalone..
+            # todo (1513, 15) change this to "is_organizer"
         is_taskbar_standalone (bool): When set to taskbar, determines if it is in Standalone mode, or
             if it will be the child of a PiPWidget.
-
-            Todo: this is not currently set up, and will only work in PiP Mode
         pip_scale ((float, float)):  fractional percentage of the amount of space that
             the mini viewer will take up in relation to the overall size of the widget.
         swap_key (Qt.KEY): this key will trigger the popup
@@ -1984,10 +1980,9 @@ class AbstractPiPDisplayWidget(QWidget):
                 # won't be supporting this probably
                 pass
 
-            # todo this may need to be redone for the AbstractPopupBarDisplayWidget
             elif isinstance(widget.popupWidget(), AbstractPopupBarDisplayWidget):
                 if widget.popupWidget().displayMode() == AbstractPopupBarDisplayWidget.STANDALONETASKBAR:
-                    # todo setup swapping for standalone taskbars
+                    # todo (1989, 23) setup swapping for standalone taskbars
                     """ This should in theory swap this to a PiPTaskbar"""
                     print("Cannot swap standalone taskbars.")
                     return
@@ -2009,7 +2004,6 @@ class AbstractPiPDisplayWidget(QWidget):
                 self.swapMainViewer(new_display_widget)
                 self.swapPopupBar(widget)
                 self.swapSettings(new_display_widget)
-                # todo update settings
 
                 # resize mini viewers
                 self.popupBarWidget().setSizes(new_sizes)
@@ -2021,7 +2015,6 @@ class AbstractPiPDisplayWidget(QWidget):
                     if self.previousWidget():
                         self.previousWidget().setIsOverlayDisplayed(True)
                     self.currentWidget().setIsOverlayDisplayed(False)
-                print('end')
             return
 
         self.popupBarWidget().setIsFrozen(True)
@@ -2111,8 +2104,6 @@ class AbstractPiPDisplayWidget(QWidget):
 
             # swap with enlarged widget
             if self.popupBarWidget().isEnlarged():
-                # Todo for some reason the PRINT makes it so that the IF clause below actually works... tf
-                # print(widget.name(), self.popupBarWidget().enlargedWidget().name())
                 if widget != self.popupBarWidget().enlargedWidget():
                     self.popupBarWidget().closeEnlargedView()
                     self.popupBarWidget().enlargeWidget(widget)
@@ -2196,7 +2187,7 @@ class AbstractPiPDisplayWidget(QWidget):
         self.popupBarWidget().resize(int(width), int(height))
 
     def __resizePiP(self):
-        # todo this is 1 greater than the actual number during load?
+        """ Resizes the PiP view when a resize event has occurred on the parent widget"""
         num_widgets = self.numWidgets()
 
         # preflight
@@ -2289,6 +2280,7 @@ class AbstractPiPDisplayWidget(QWidget):
         return xpos, ypos, width, height
 
     def __resizeTaskbar(self):
+        """ Resizes the PiPTaskbar when a resize event has occurred on the parent widget"""
         size = self.taskbarSize()
         handle_width = self.popupBarWidget().handleWidth()
         total_size = (self.popupBarWidget().count() * size) + ((self.popupBarWidget().count() - 1) * handle_width)

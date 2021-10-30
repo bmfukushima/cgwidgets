@@ -951,13 +951,8 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
     This widget will read all of the AbstractPopupBarOrganizerWidgets that the user has created.
 
     The user can then select an item from this list to have their gui updated.
-
-    Todo:
-        populate model
-        dynamic updates
-        Allow grouping?
-        Custom model item?
     """
+
     def __init__(self, parent=None, save_data=None):
         super(PiPGlobalOrganizerWidget, self).__init__(parent=parent)
         self.setPresetViewType(AbstractModelViewWidget.TREE_VIEW)
@@ -1741,8 +1736,6 @@ class PiPPopupBarOrganizerWidget(AbstractModelViewWidget):
     def itemReordered(self, data, items, model, row, parent):
         """When an item is drag/dropped, this will update the widget indexes, and reinsert
         the widget into the mini viewer if it is not currently the active widget.
-
-        # todo this will probably need work...
         """
         # get default attrs
 
