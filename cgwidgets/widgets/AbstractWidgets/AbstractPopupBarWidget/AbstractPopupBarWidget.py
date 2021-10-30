@@ -1592,18 +1592,8 @@ class AbstractPiPDisplayWidget(QWidget):
         Args:
             popup_bar_widget (AbstractPopupBarItemWidget):
         """
-        # new_display_widget = popup_bar_widget.popupWidget()
-        # _old_settings = self.settings()
-        # _new_settings = new_display_widget.settings()
-        # print(new_display_widget)
-        # print(new_display_widget.popupWidget())
-        # print(_new_settings)
-        # self.updateSettings(_new_settings)
-        # new_display_widget.updateSettings(_old_settings)
-        return
         _old_settings = self.settings()
         _new_settings = popup_bar_widget.settings()
-
         self.updateSettings(_new_settings)
         popup_bar_widget.updateSettings(_old_settings)
 
@@ -1625,7 +1615,9 @@ class AbstractPiPDisplayWidget(QWidget):
             "Overlay Text": self.currentWidget().title(),
             "Overlay Image": self.currentWidget().overlayImage(),
         }
-        return popupbar_settings.update(current_settings)
+        popupbar_settings.update(current_settings)
+
+        return popupbar_settings
         # return {**popupbar_settings, **current_settings}
 
     def updateSettings(self, settings):
@@ -1637,8 +1629,8 @@ class AbstractPiPDisplayWidget(QWidget):
         Args:
             settings (dict): of {setting_name (str): value}
         """
-
         self.setPiPScale(settings["PiP Scale"])
+
         self.setTaskbarSize(float(settings["Taskbar Size"]))
         self.popupBarWidget().updateSettings(settings)
 
@@ -1965,6 +1957,8 @@ class AbstractPiPDisplayWidget(QWidget):
             # todo this may need to be redone for the AbstractPopupBarDisplayWidget
             elif isinstance(widget.popupWidget(), AbstractPopupBarDisplayWidget):
                 if widget.popupWidget().displayMode() == AbstractPopupBarDisplayWidget.STANDALONETASKBAR:
+                    # todo setup swapping for standalone taskbars
+                    """ This should in theory swap this to a PiPTaskbar"""
                     print("Cannot swap standalone taskbars.")
                     return
                 # update settings
