@@ -1,11 +1,12 @@
 """ TODO
-    Enlarged Scale
-        Not available in StandaloneTaskbar
-            Settings
-    Close children not working in Katana, of course
-    Update reversing order
-        only for standalone taskbars
-    Swapping recursive widgets
+    *   Enlarged Scale
+            Not available in StandaloneTaskbar
+                Settings
+    *   Swapping recursive widgets
+    *   Standalone Taskbar --> PiP
+            When loading a standalone taskbar with a recursive widget, and switching to a PiP display,
+            this will not reload the recursive widget
+            Seems wonky...
 """
 
 import json
@@ -1134,6 +1135,10 @@ class AbstractPopupBarDisplayWidget(QWidget):
         return self.displayWidget().widgets()
         # return self._widgets
 
+    def mainViewerWidget(self):
+        if self.displayMode() in AbstractPopupBarDisplayWidget.PIPDISPLAYS:
+            return self.displayWidget().mainViewerWidget()
+
     """ UTILS """
     def addWidget(self, widget, name="", index=0):
         # create widget if it isn't a popup bar item
@@ -1166,6 +1171,12 @@ class AbstractPopupBarDisplayWidget(QWidget):
     def resizePopupBar(self):
         if self.displayMode() in AbstractPopupBarDisplayWidget.PIPDISPLAYS:
             self.displayWidget().resizePopupBar()
+
+    def settings(self):
+        return self.displayWidget().settings()
+
+    def updateSettings(self, settings):
+        self.displayWidget().updateSettings(settings)
 
     """ WIDGETS (CREATE) """
     def createWidgetFromConstructorCode(self, constructor_code):
@@ -1518,7 +1529,7 @@ class AbstractPiPDisplayWidget(QWidget):
 
     """ UTILS (SWAP) """
 
-    def swapMainViewer(self, popup_bar_widget):
+    def swapMainViewer(self, new_display_widget):
         """ Swaps the PiPMainViewerWidget from the AbstractPopupBarItemWidget provided
 
         Note: The AbstractPopupBarItemWidget MUST be a AbstractPiPDisplayWidget
@@ -1526,7 +1537,7 @@ class AbstractPiPDisplayWidget(QWidget):
         Args:
             popup_bar_widget (AbstractPopupBarItemWidget):
         """
-        new_display_widget = popup_bar_widget.delegateWidget()
+        #new_display_widget = popup_bar_widget.popupWidget()
 
         # swap current widgets
         self.mainViewerWidget().setWidget(new_display_widget.currentWidget())
@@ -1535,9 +1546,10 @@ class AbstractPiPDisplayWidget(QWidget):
         # reset currentWidget meta data
         self.setPreviousWidget(None)
         new_display_widget.setPreviousWidget(None)
+
         _temp = self._current_widget
         self._current_widget = new_display_widget.currentWidget()
-        new_display_widget._current_widget = _temp
+        new_display_widget.displayWidget()._current_widget = _temp
 
     def swapPopupBar(self, popup_bar_widget):
         """ Swaps the AbstractPopupBarWidget from the AbstractPopupBarItemWidget provided.
@@ -1547,10 +1559,10 @@ class AbstractPiPDisplayWidget(QWidget):
         Args:
             popup_bar_widget (AbstractPopupBarItemWidget):
         """
-        new_display_widget = popup_bar_widget.delegateWidget()
+        new_display_widget = popup_bar_widget.popupWidget()
 
         # preflight
-        if not isinstance(new_display_widget, AbstractPiPDisplayWidget): return
+        if not isinstance(new_display_widget, AbstractPopupBarDisplayWidget): return
 
         # get temp attrs
         _temp_num_widgets = new_display_widget.numWidgets()
@@ -1580,11 +1592,20 @@ class AbstractPiPDisplayWidget(QWidget):
         Args:
             popup_bar_widget (AbstractPopupBarItemWidget):
         """
-        new_display_widget = popup_bar_widget.delegateWidget()
+        # new_display_widget = popup_bar_widget.popupWidget()
+        # _old_settings = self.settings()
+        # _new_settings = new_display_widget.settings()
+        # print(new_display_widget)
+        # print(new_display_widget.popupWidget())
+        # print(_new_settings)
+        # self.updateSettings(_new_settings)
+        # new_display_widget.updateSettings(_old_settings)
+        return
         _old_settings = self.settings()
-        _new_settings = new_display_widget.settings()
+        _new_settings = popup_bar_widget.settings()
+
         self.updateSettings(_new_settings)
-        new_display_widget.updateSettings(_old_settings)
+        popup_bar_widget.updateSettings(_old_settings)
 
     def swapWidgets(self):
         """
@@ -1616,6 +1637,7 @@ class AbstractPiPDisplayWidget(QWidget):
         Args:
             settings (dict): of {setting_name (str): value}
         """
+
         self.setPiPScale(settings["PiP Scale"])
         self.setTaskbarSize(float(settings["Taskbar Size"]))
         self.popupBarWidget().updateSettings(settings)
@@ -1935,13 +1957,16 @@ class AbstractPiPDisplayWidget(QWidget):
         # todo multi recursive swapping cleanup
         if widget.isPopupWidget():
             from .AbstractPopupBarOrganizerWidget import AbstractPopupBarOrganizerWidget
-            if isinstance(widget.delegateWidget(), AbstractPopupBarOrganizerWidget):
+            if isinstance(widget.popupWidget(), AbstractPopupBarOrganizerWidget):
                 print("multi recursive swapping is disabled for OrganizerWidgets")
                 # won't be supporting this probably
                 pass
 
             # todo this may need to be redone for the AbstractPopupBarDisplayWidget
-            elif isinstance(widget.delegateWidget(), AbstractPopupBarDisplayWidget):
+            elif isinstance(widget.popupWidget(), AbstractPopupBarDisplayWidget):
+                if widget.popupWidget().displayMode() == AbstractPopupBarDisplayWidget.STANDALONETASKBAR:
+                    print("Cannot swap standalone taskbars.")
+                    return
                 # update settings
                 """ sizes doesn't swap... probably due to the add/remove of widgets
                 Is not calculating the fact that the mini viewer widget will have
@@ -1951,15 +1976,16 @@ class AbstractPiPDisplayWidget(QWidget):
                 going to minimized = sizes - 1
                 """
                 # get sizes info
-                new_display_widget = widget.delegateWidget()
+                new_display_widget = widget.popupWidget()
                 old_sizes = self.popupBarWidget().sizes()
                 new_sizes = new_display_widget.popupBarWidget().sizes()
                 del old_sizes[widget.index()]
                 new_sizes.append(50)
 
-                self.swapMainViewer(widget)
+                self.swapMainViewer(new_display_widget)
                 self.swapPopupBar(widget)
-                self.swapSettings(widget)
+                self.swapSettings(new_display_widget)
+                # todo update settings
 
                 # resize mini viewers
                 self.popupBarWidget().setSizes(new_sizes)
@@ -1971,6 +1997,7 @@ class AbstractPiPDisplayWidget(QWidget):
                     if self.previousWidget():
                         self.previousWidget().setIsOverlayDisplayed(True)
                     self.currentWidget().setIsOverlayDisplayed(False)
+                print('end')
             return
 
         self.popupBarWidget().setIsFrozen(True)

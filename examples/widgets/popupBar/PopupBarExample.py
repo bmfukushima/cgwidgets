@@ -23,15 +23,15 @@ popup_bar_widget = PopupBarDisplayWidget()
 # load widgets
 popup_bar_widget.loadPopupDisplayFromFile(
     getDefaultSavePath() + '/.PiPWidgets_02.json',
-    "recursion2"
+    "recursion"
 )
 
 
 # set popup bar widget
 popup_bar_widget.setPiPScale(0.55)
 # popup_bar_widget.setSizes([50, 50])
-popup_bar_widget.setTaskbarSize(150)
-popup_bar_widget.setFixedWidth(150)
+#popup_bar_widget.setTaskbarSize(150)
+# popup_bar_widget.setFixedWidth(150)
 # popup_bar_widget.setDirection(attrs.SOUTH)
 # popup_bar_widget.setDisplayMode(PopupBarDisplayWidget.PIPTASKBAR)
 
