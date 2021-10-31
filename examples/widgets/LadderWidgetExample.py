@@ -1,5 +1,5 @@
 
-from cgwidgets.widgets import FloatInputWidget
+from cgwidgets.widgets import FloatInputWidget, IntInputWidget
 from qtpy.QtWidgets import QLabel, QApplication
 
 
@@ -26,10 +26,12 @@ if __name__ == '__main__':
     main_widget.setUseLadder(
         True,
         user_input=QEvent.MouseButtonRelease,
-        value_list=[0.01, 0.1, 1, 10],)
-
+        value_list=[0.01, 5, 1.0, 10],)
+    main_widget.setValue(7)
     main_widget.setLiveInputEvent(liveEditing)
     main_widget.setUserFinishedEditingEvent(finishedEditing)
+    main_widget.setRange(True, 0, 100)
+    main_widget.setAllowNegative(True)
 
     # show widget
     main_widget.show()

@@ -121,6 +121,7 @@ class AbstractNumberInputWidget(AbstractInputLineEdit):
         """
         This is only used for the ladder if it is setup
         """
+        print('setting value', value)
         self.setText(str(value))
 
     def setUseLadder(
@@ -212,12 +213,14 @@ class AbstractNumberInputWidget(AbstractInputLineEdit):
         Returns (str):
         """
         try:
-            if int(self.text()) == 0:
+            if int(float(self.text())) == 0:
                 return "0"
         except ValueError:
+            print("for some reason this is an error...")
             pass
 
-        text = self.text().strip("0")
+        # text = self.text().strip("0")
+        text = self.text()
         try:
             value = eval(text)
             value = checkNegative(self.getAllowNegative(), value)

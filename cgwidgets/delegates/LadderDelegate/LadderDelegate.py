@@ -31,6 +31,14 @@
     * Horizontal Delegate?
 
 """
+"""
+Ladder Item has the StickyDrag delegate installed on it
+The values are updated by...
+    LadderItem.setValue()
+    LadderDelegate.setValue()
+        -> LadderMiddleItem.setValue()
+        -> inputWidget.setText() or inputWidget.setValue()
+"""
 import math
 from decimal import Decimal, getcontext
 
@@ -52,9 +60,7 @@ from cgwidgets.utils import (
 
 from cgwidgets.delegates import SlideDelegate
 
-from cgwidgets.settings.colors import (
-    iColor
-)
+from cgwidgets.settings.colors import (iColor)
 
 from cgwidgets.widgets import AbstractFloatInputWidget #AbstractFloatInputWidget
 
@@ -171,15 +177,16 @@ Notes:
         if value is not None:
             # preflight checks on value
             value = checkNegative(self._allow_negative, value)
-            value = checkIfValueInRange(self.range_enabled, value, self.range_min, self.range_max)
-
+            value = checkIfValueInRange(self.range_enabled, float(value), float(self.range_min), float(self.range_max))
             # set value
             self._value = value
+
             parent = self.parent()
 
             # update other widgets
             self.middle_item.setValue(str(self._value))
-            self.middle_item.setCursorPosition(0)
+
+            # self.middle_item.setCursorPosition(0)
             try:
                 parent.setText(str(self._value))
             except AttributeError:

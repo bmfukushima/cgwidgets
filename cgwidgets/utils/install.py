@@ -142,8 +142,7 @@ def installSlideDelegate(
     ):
     """
     Args:
-        widget (QWidget): the PyQt widget to install this delegate
-            on to.
+        widget (QWidget): the PyQt widget to install this delegate on to.
         getSliderPos (method): returns the position of the slider
             as a percentage (0-1)
             Returns:
@@ -227,9 +226,9 @@ def installStickyAdjustDelegate(
     ):
     """
     Args:
+        active_object (QWidget | QGraphicsItem): widget to set the value on.
         activation_event (function): run every time the activation object is clicked
             active_object, drag_widget, event
-        active_object (QWidget | QGraphicsItem): widget to set the value on.
         activation_object (QWidget | QGraphicsItem): widget when clicked on will start this delegate
         deactivation_event (function): run when the sticky adjust is deactivated
             active_object, activation_widget, event

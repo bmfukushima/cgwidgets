@@ -703,7 +703,7 @@ organizer_widget.popupBarDisplayWidget().resizePopupBar()
             "type": attrs.FLOAT,
             "value": 100.00,
             "value_list": [1, 5, 10, 25],
-            "range": [False],
+            "range": [True, 25, 500],
             "code": """
 organizer_widget.popupBarDisplayWidget().setTaskbarSize(float(value))
 organizer_widget.popupBarDisplayWidget().resizePopupBar()
