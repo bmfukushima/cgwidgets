@@ -43,6 +43,9 @@ from cgwidgets.utils import (
     setAsTransparent, setAsTool, getGlobalPos, setAsAlwaysOnTop
 )
 
+NEGATIVE = -1
+POSITIVE = 1
+
 
 class iStickyValueAdjustDelegate(object):
     """
@@ -304,6 +307,13 @@ class StickyDragWindowWidget(QWidget, iStickyValueAdjustDelegate):
         self._drag_STICKY = False
         self.setMouseTracking(True)
 
+        # range attrs
+        self._range_enabled = False
+        self._range_min = 0.0
+        self._range_max = 1.0
+        self._direction = 0
+        self._is_passed_range = False
+
         # setup display attrs
         self.hide()
         setAsTool(self)
@@ -365,6 +375,22 @@ class StickyDragWindowWidget(QWidget, iStickyValueAdjustDelegate):
 
         QCursor.setPos(cursor_display_pos)
 
+    """ RANGE """
+    def setRange(self, enabled, range_min=0, range_max=1):
+        """
+        Determines if this widget has a specified range.  Going over this
+        range will clip values into that range
+        """
+        self._range_enabled = enabled
+        self._range_min = range_min
+        self._range_max = range_max
+
+    def direction(self):
+        return self._direction
+
+    def setDirection(self, direction):
+        self._direction = direction
+
     """ VALUE UPDATERS / SETTERS"""
     def __setValue(self):
         """
@@ -373,9 +399,11 @@ class StickyDragWindowWidget(QWidget, iStickyValueAdjustDelegate):
         the valueUpdateEvent
         """
         current_pos = QCursor.pos()
+        # print(self._calc_pos)
         self._magnitude = getMagnitude(self._calc_pos, current_pos, magnitude_type=self._magnitude_type)
         # has magnitude type set
         if not isinstance(self._magnitude, Magnitude):
+            self._previous_num_ticks = self._num_ticks
             self._slider_pos, self._num_ticks = math.modf(self._magnitude / self.pixelsPerTick())
 
             # update values
@@ -399,17 +427,48 @@ class StickyDragWindowWidget(QWidget, iStickyValueAdjustDelegate):
         logging.debug(new_value)
         self.activeObject().setValue(new_value)
 
+        # range
+        """
+        goes under/over range, set position.
+        When hits a tick in the opposite direction
+            restores that position
+        """
+
+        # todo range enabled | make it so you don't have to drag a billion times to get back to the orig value
+        """ Still a little bit wonky... sometimes seems to go out of sync.  Seems to be an issue with the
+        ypos? Or potentially the cursor leaving the drag window?"""
+        if self._range_enabled:
+            if self._is_passed_range:
+                # get the current direction of the cursor
+                direction = None
+                if self._previous_num_ticks < self._num_ticks:
+                    direction = NEGATIVE
+                if self._num_ticks < self._previous_num_ticks:
+                    direction = POSITIVE
+
+                if direction:
+                    if direction != self.direction():
+                        # restore attributes when cursor starts moving the other direction
+                        self._calc_pos = self._passed_range_calc_pos
+                        if direction == NEGATIVE:
+                            QCursor.setPos(self._passed_range_pos.x() + 10, self._passed_range_pos.y() + 10)
+                        if direction == POSITIVE:
+                            QCursor.setPos(self._passed_range_pos.x() - 10, self._passed_range_pos.y() - 10)
+                        self._is_passed_range = False
+
+            elif not self._is_passed_range:
+                # value passes range
+                if new_value < self._range_min or self._range_max < new_value:
+                    self._is_passed_range = True
+                    self._passed_range_pos = QCursor.pos()
+                    self._passed_range_calc_pos = self._calc_pos
+                    if self._previous_num_ticks < self._num_ticks:
+                        self.setDirection(NEGATIVE)
+                    if self._num_ticks < self._previous_num_ticks:
+                        self.setDirection(POSITIVE)
+
     """ VIRTUAL FUNCTIONS"""
     def __valueUpdateEvent(self, obj, original_value, slider_pos, num_ticks, magnitude):
-        """
-        Traceback (most recent call last):
-  File "/media/ssd01/dev/python/cgwidgets/cgwidgets/delegates/StickyValueAdjustDelegate.py", line 249, in eventFilter
-    self.penDownEvent(activation_obj, event)
-  File "/media/ssd01/dev/python/cgwidgets/cgwidgets/delegates/StickyValueAdjustDelegate.py", line 212, in penDownEvent
-    drag_widget.setValueUpdateEvent(self.__valueUpdateEvent)
-AttributeError: 'StickyValueAdjustWidgetDelegate' object has no attribute '_iStickyActivationDelegate__valueUpdateEvent'
-
-        """
         # todo why does this not inherit from iStickyValueAdjustDelegate
         pass
 
@@ -458,6 +517,7 @@ AttributeError: 'StickyValueAdjustWidgetDelegate' object has no attribute '_iSti
         so that one drag seems seemless.
         """
         if not self._drag_STICKY: return
+
         current_pos = QCursor.pos()
         offset = (current_pos - self._cursor_pos)
         self._calc_pos = self._calc_pos - offset

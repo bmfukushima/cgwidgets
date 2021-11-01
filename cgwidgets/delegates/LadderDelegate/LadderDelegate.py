@@ -100,6 +100,8 @@ Attributes:
     item_height (int): The height of each individual adjustable item.
             The middle item will always have the same geometry as the
             parent widget.
+    middle_item (LadderMiddleItem):
+    ladder_items (list): of LadderItems
     middle_item_border_color (rgba int 0-255):
         The border color that is displayed to the user on the middle item
             ( value display widget )
@@ -134,11 +136,16 @@ Notes:
         # default attrs
         self._slider_pos = 0
         self._updating = False
+        self._ladder_items = []
         self.setUserInputTrigger(user_input)
         self.setMiddleItemBorderColor((18, 18, 18))
         self.setMiddleItemBorderWidth(5)
         self.setPixelsPerTick(100)
         self.setItemHeight(50)
+
+        self.range_enabled = False
+        self.range_min = 0.0
+        self.range_max = 1.0
 
         # setup default colors
         self.rgba_selection = iColor["rgba_selected_hover"]
@@ -223,6 +230,20 @@ Notes:
         self.range_max = range_max
 
         self.middle_item.setRange(enabled, range_min, range_max)
+        from cgwidgets.utils import removeStickyAdjustDelegate
+        for widget in self.ladderItems():
+            removeStickyAdjustDelegate(widget)
+
+            installStickyAdjustDelegate(
+                widget,
+                pixels_per_tick=self.getPixelsPerTick(),
+                value_per_tick=widget.valueMult(),
+                activation_event=widget.activationEvent,
+                deactivation_event=widget.deactivationEvent,
+                range_enabled=self.range_enabled,
+                range_min=self.range_min,
+                range_max=self.range_max
+            )
 
     def setAllowNegative(self, enabled):
         self._allow_negative = enabled
@@ -504,8 +525,12 @@ Notes:
                 pixels_per_tick=self.getPixelsPerTick(),
                 value_per_tick=value,
                 activation_event=widget.activationEvent,
-                deactivation_event=widget.deactivationEvent
+                deactivation_event=widget.deactivationEvent,
+                range_enabled=self.range_enabled,
+                range_min=self.range_min,
+                range_max=self.range_max
             )
+            self.ladderItems().append(widget)
 
         self.__createMiddleItem()
 
@@ -603,6 +628,15 @@ Notes:
                         removeSlideDelegate(item, item.slidebar)
                     except AttributeError:
                         pass
+
+    """ WIDGETS """
+    def ladderItems(self):
+        return self._ladder_items
+        return
+
+    def middleItem(self):
+        return self.middle_item
+
 
     """ EVENTS """
     def leaveEvent(self, event, *args, **kwargs):
@@ -749,8 +783,12 @@ Args:
 
         # set default attrs
         self.setProperty("is_drag_STICKY", False)
+        self._value_mult = value_mult
         self.setText(str(value_mult))
         self.setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
+
+    def valueMult(self):
+        return self._value_mult
 
     def setGradientEnable(self, enable):
         """

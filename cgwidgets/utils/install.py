@@ -212,6 +212,14 @@ def installLadderDelegate(
 
 
 """ STICKY VALUE DRAG"""
+def getObjectType(active_object):
+    object_type = 'widget'
+    for c in type(active_object).__mro__:
+        if c == QGraphicsItem:
+            object_type = 'item'
+
+    return object_type
+
 def installStickyAdjustDelegate(
         active_object,
         activation_event=None,
@@ -222,7 +230,10 @@ def installStickyAdjustDelegate(
         magnitude_type=Magnitude.m,
         pixels_per_tick=200,
         value_per_tick=0.01,
-        value_update_event=None
+        value_update_event=None,
+        range_enabled=False,
+        range_min=0.0,
+        range_max=1.0
     ):
     """
     Args:
@@ -256,10 +267,7 @@ def installStickyAdjustDelegate(
     from cgwidgets.utils import setAsTool
 
     # get object type
-    object_type = 'widget'
-    for c in type(active_object).__mro__:
-        if c == QGraphicsItem:
-            object_type = 'item'
+    object_type = getObjectType(active_object)
 
     # SET UP // Drag Widget
     # get the drag widget
@@ -274,6 +282,8 @@ def installStickyAdjustDelegate(
 
     drag_widget = main_application_widget._sticky_drag_window_widget
     drag_widget._magnitude_type = magnitude_type
+    if range_enabled:
+        drag_widget.setRange(range_enabled, range_min, range_max)
     # check activation widget
     if not activation_object:
         activation_object = active_object
@@ -284,6 +294,8 @@ def installStickyAdjustDelegate(
         sticky_widget_filter = StickyValueAdjustWidgetDelegate(active_object)
     elif object_type == 'item':
         sticky_widget_filter = StickyValueAdjustItemDelegate(active_object)
+
+    active_object._sticky_widget_filter = sticky_widget_filter
 
     sticky_widget_filter.setPixelsPerTick(pixels_per_tick)
     sticky_widget_filter.setValuePerTick(value_per_tick)
@@ -316,6 +328,19 @@ def installStickyAdjustDelegate(
     # return
     drag_widget.hide()
     return sticky_widget_filter
+
+
+def removeStickyAdjustDelegate(active_object):
+    object_type = getObjectType(active_object)
+
+    # SET UP // Drag Widget
+    # get the drag widget
+    if object_type == 'widget':
+        active_object.removeEventFilter(active_object._sticky_widget_filter)
+    elif object_type == 'item':
+        active_object.removeSceneEventFilter(active_object._sticky_widget_filter)
+
+    active_object._sticky_widget_filter.setParent(None)
 
 
 if __name__ == '__main__':
