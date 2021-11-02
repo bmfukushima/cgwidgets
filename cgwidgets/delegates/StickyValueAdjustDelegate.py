@@ -1,10 +1,8 @@
-# TODO
 """
 TODO:
-    IDEA
-        Return cursor to center of ACTIVE widget...
-            - This will make it so that after the cursor disappears it is shown where
-            the user is already looking
+    *   Issues with snapping values.
+            - Seems to occur when the original value is at the beginning/end of the defined range.
+            - Potentially something to do with leave events going vertically?
     PER TICK UPDATE (default is batch update)
         def getInput(self):
             self._temp = 0.0
@@ -43,10 +41,6 @@ from cgwidgets.utils import (
     setAsTransparent, setAsTool, getGlobalPos, setAsAlwaysOnTop
 )
 
-NEGATIVE = -1
-POSITIVE = 1
-
-
 class iStickyValueAdjustDelegate(object):
     """
     The interface for all of the sticky drag delegates, by default they will
@@ -75,7 +69,6 @@ class iStickyValueAdjustDelegate(object):
         - Interface for the activation objects
 
     """
-    # todo key press events
     input_events = [
         QEvent.MouseButtonPress,
         QEvent.KeyPress,
@@ -225,6 +218,7 @@ class iStickyValueAdjustDelegate(object):
         obj._calc_pos = QCursor.pos()
         obj._drag_STICKY = not obj._drag_STICKY
         obj._num_ticks = 0
+        obj._previous_num_ticks = 0
         obj._pixels_per_tick = self.pixelsPerTick()
         obj._value_per_tick = self.valuePerTick()
 
@@ -391,33 +385,56 @@ class StickyDragWindowWidget(QWidget, iStickyValueAdjustDelegate):
     def setDirection(self, direction):
         self._direction = direction
 
+    def updateDirection(self):
+        """ Updates the direction.
+
+        Returns (bool): True if the direction has changed, False if otherwise"""
+
+        direction = None
+        if self._previous_num_ticks < self._num_ticks:
+            direction = Magnitude.POSITIVE
+        elif self._num_ticks < self._previous_num_ticks:
+            direction = Magnitude.NEGATIVE
+
+        direction_changed = False
+        if direction:
+            if direction != self.direction():
+                direction_changed = True
+                self.setDirection(direction)
+
+        return direction_changed
+
     """ VALUE UPDATERS / SETTERS"""
+    def updateMousePosAttrs(self):
+        """ Will update the attributes associated with a mouse move
+        slider_pos, num_ticks, previous_num_ticks
+
+        """
+        _magnitude = getMagnitude(self._calc_pos, QCursor.pos())
+        self._magnitude = _magnitude.xoffset() + _magnitude.yoffset()
+        self._previous_num_ticks = self._num_ticks
+        self._slider_pos, self._num_ticks = math.modf(self._magnitude / self.pixelsPerTick())
+
     def __setValue(self):
         """
         This function is run to update the value on the parent widget.
         This will update the value on the widget, and then run
         the valueUpdateEvent
         """
-        current_pos = QCursor.pos()
-        # print(self._calc_pos)
-        self._magnitude = getMagnitude(self._calc_pos, current_pos, magnitude_type=self._magnitude_type)
-        # has magnitude type set
-        if not isinstance(self._magnitude, Magnitude):
-            self._previous_num_ticks = self._num_ticks
-            self._slider_pos, self._num_ticks = math.modf(self._magnitude / self.pixelsPerTick())
+
+        self.updateMousePosAttrs()
+
+        if self._previous_num_ticks != self._num_ticks:
+            # if self._num_ticks != self._previous_num_ticks:
+            direction_changed = self.updateDirection()
 
             # update values
             self.valueUpdateEvent()
-            self.__updateValue()
-        # no type set
-        else:
-            self._slider_pos = None
-            self._num_ticks = None
-            self.valueUpdateEvent()
+            self.__updateValue(direction_changed=direction_changed)
 
         return
 
-    def __updateValue(self):
+    def __updateValue(self, direction_changed=False):
         """
         Sets the current value on the widget/item provided
         to the new value based off of how far the cursor has moved
@@ -427,34 +444,30 @@ class StickyDragWindowWidget(QWidget, iStickyValueAdjustDelegate):
         logging.debug(new_value)
         self.activeObject().setValue(new_value)
 
-        # range
-        """
-        goes under/over range, set position.
-        When hits a tick in the opposite direction
-            restores that position
-        """
-
         # todo range enabled | make it so you don't have to drag a billion times to get back to the orig value
-        """ Still a little bit wonky... sometimes seems to go out of sync.  Seems to be an issue with the
-        ypos? Or potentially the cursor leaving the drag window?"""
+        """     goes under/over range, set position.
+                When hits a tick in the opposite direction
+                restores that position
+                
+                Issue when starting/stopping on the end of a range
+                Seems that the direction changed or range passed is being set"""
         if self._range_enabled:
             if self._is_passed_range:
                 # get the current direction of the cursor
-                direction = None
-                if self._previous_num_ticks < self._num_ticks:
-                    direction = NEGATIVE
-                if self._num_ticks < self._previous_num_ticks:
-                    direction = POSITIVE
+                if direction_changed:
+                    # restore attributes when cursor starts moving the other direction
 
-                if direction:
-                    if direction != self.direction():
-                        # restore attributes when cursor starts moving the other direction
-                        self._calc_pos = self._passed_range_calc_pos
-                        if direction == NEGATIVE:
-                            QCursor.setPos(self._passed_range_pos.x() + 10, self._passed_range_pos.y() + 10)
-                        if direction == POSITIVE:
-                            QCursor.setPos(self._passed_range_pos.x() - 10, self._passed_range_pos.y() - 10)
-                        self._is_passed_range = False
+                    self._calc_pos = self._passed_range_calc_pos
+                    self._previous_num_ticks = self._num_ticks
+                    if self.direction() == Magnitude.POSITIVE:
+                        QCursor.setPos(self._passed_range_pos.x() + 10, self._passed_range_pos.y() + 10)
+                    if self.direction() == Magnitude.NEGATIVE:
+                        QCursor.setPos(self._passed_range_pos.x() - 10, self._passed_range_pos.y() - 10)
+
+                    # update num ticks
+                    self.updateMousePosAttrs()
+                    self._previous_num_ticks = self._num_ticks
+                    self._is_passed_range = False
 
             elif not self._is_passed_range:
                 # value passes range
@@ -462,10 +475,6 @@ class StickyDragWindowWidget(QWidget, iStickyValueAdjustDelegate):
                     self._is_passed_range = True
                     self._passed_range_pos = QCursor.pos()
                     self._passed_range_calc_pos = self._calc_pos
-                    if self._previous_num_ticks < self._num_ticks:
-                        self.setDirection(NEGATIVE)
-                    if self._num_ticks < self._previous_num_ticks:
-                        self.setDirection(POSITIVE)
 
     """ VIRTUAL FUNCTIONS"""
     def __valueUpdateEvent(self, obj, original_value, slider_pos, num_ticks, magnitude):
@@ -520,6 +529,7 @@ class StickyDragWindowWidget(QWidget, iStickyValueAdjustDelegate):
 
         current_pos = QCursor.pos()
         offset = (current_pos - self._cursor_pos)
+        _old_calc_pos = self._calc_pos
         self._calc_pos = self._calc_pos - offset
 
         # reset cursor
@@ -544,6 +554,12 @@ class StickyDragWindowWidget(QWidget, iStickyValueAdjustDelegate):
         width, height = screen_resolution.width() - (offset*2), screen_resolution.height() - (offset*2)
         self.setFixedSize(width, height)
         self.move(offset, offset)
+
+        # reset attrs
+        # self._direction = 0
+        # self._num_ticks = 0
+        # self._previous_num_ticks = 0
+        self._is_passed_range = False
         #self.setStyleSheet("background-color: rgba(255,0,0,255)")
 
         return QWidget.showEvent(self, event)

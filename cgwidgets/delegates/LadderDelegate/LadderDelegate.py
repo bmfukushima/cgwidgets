@@ -18,17 +18,12 @@
     *** need to figure out how to make eventFilter more robust...
         ie support CTRL+ALT+CLICK / RMB, etc
             rather than just a QEvent.Type
-
-    *** set range
-        allow ladder widget to only go between a specifc range
-            ie
-                Only allow this to work in the 0-1 range
-
     *** Detect if close to edge...
         - Detect center point function
         - only needs to handle y pos
 
     * Horizontal Delegate?
+        installStickyAdjustDelegate, will need to set the magnitude?
 
 """
 """
@@ -128,6 +123,9 @@ Notes:
             parent=None,
             value_list=[0.001, 0.01, 0.1, 1, 10, 100, 1000],
             user_input=QEvent.MouseButtonRelease,
+            range_enabled=False,
+            range_min=0.0,
+            range_max=1.0
     ):
         super(LadderDelegate, self).__init__(parent)
         layout = QVBoxLayout()
@@ -142,10 +140,9 @@ Notes:
         self.setMiddleItemBorderWidth(5)
         self.setPixelsPerTick(100)
         self.setItemHeight(50)
-
-        self.range_enabled = False
-        self.range_min = 0.0
-        self.range_max = 1.0
+        self.range_enabled = range_enabled
+        self.range_min = range_min
+        self.range_max = range_max
 
         # setup default colors
         self.rgba_selection = iColor["rgba_selected_hover"]
@@ -171,7 +168,7 @@ Notes:
         self.updateStyleSheet()
 
         # post flight attr set
-        self.setRange(False)
+        self.middle_item.setRange(range_enabled, range_min, range_max)
         self._allow_negative = True
 
     """ API """
@@ -550,9 +547,9 @@ Notes:
         item_list.insert(self.middle_item_index, self.middle_item)
         self.item_list = item_list
 
-    def __updateUserInputs(self):
-        """
-        Updates any user inputs using the getter/setter methods.
+    def __updateDelegateGeometry(self):
+        """ Updates any user inputs using the getter/setter methods.
+
         This is necessary because we are created this widget on
         demand, so if we do not manually update during the
         show event, it will not update the user set attributes.
@@ -561,12 +558,13 @@ Notes:
         self.__updatePosition()
 
     def __updateItemSize(self):
-        """
-        Sets each individual item's size according to the
-        getItemHeight and parents widgets width
+        """ Sets each individual item's size's.
 
-        This is also probably where I will be installing a delegate
-        for a horizontal ladder layout...
+        These sizes will correspond to the getItemHeight and parents widgets width
+
+        Note:
+            This is also probably where I will be installing a delegate
+            for a horizontal ladder layout...
         """
         # set adjustable items
         height = self.getItemHeight()
@@ -582,10 +580,7 @@ Notes:
         self.middle_item.setFixedSize(width, self.parent().height())
 
     def __updatePosition(self):
-        """
-        sets the position of the delegate relative to the
-        widget that it is adjusting
-        """
+        """ sets the position of the delegate relative to the widget that it is adjusting """
         pos = getGlobalPos(self.parentWidget())
         # set position
         offset = self.middle_item_index * self.getItemHeight()
@@ -637,7 +632,6 @@ Notes:
     def middleItem(self):
         return self.middle_item
 
-
     """ EVENTS """
     def leaveEvent(self, event, *args, **kwargs):
         """
@@ -666,7 +660,7 @@ Notes:
         self.middle_item.setFocus()
         self.middle_item.setCursorPosition(cursor_position)
 
-        self.__updateUserInputs()
+        self.__updateDelegateGeometry()
         return QWidget.showEvent(self, *args, **kwargs)
 
     def mouseMoveEvent(self, event):

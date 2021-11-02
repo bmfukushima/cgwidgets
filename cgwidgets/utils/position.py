@@ -81,6 +81,8 @@ class Magnitude(object):
     x = 0
     y = 1
     m = 2
+    NEGATIVE = -1
+    POSITIVE = 1
     """
     Object containing the offset/magnitude between two points
     Properties:
@@ -89,9 +91,18 @@ class Magnitude(object):
         yoffset (float):
     """
     def __init__(self, magnitude, xoffset, yoffset):
-        self.magnitude = magnitude
-        self.xoffset = xoffset
-        self.yoffset = yoffset
+        self._magnitude = magnitude
+        self._xoffset = xoffset
+        self._yoffset = yoffset
+
+    def yoffset(self):
+        return self._yoffset
+
+    def xoffset(self):
+        return self._xoffset
+
+    def magnitude(self):
+        return self._magnitude
 
 
 def centerCursorOnWidget(widget):
@@ -330,16 +341,19 @@ def getMagnitude(start_pos, current_pos, magnitude_type=None, multiplier=1):
 
     """
     # get magnitude
-    xoffset = start_pos.x() - current_pos.x()
-    yoffset = start_pos.y() - current_pos.y()
+    # xoffset = start_pos.x() - current_pos.x()
+    # yoffset = start_pos.y() - current_pos.y()
+    xoffset = current_pos.x() - start_pos.x()
+    yoffset = -(current_pos.y() - start_pos.y())
+
     magnitude = math.sqrt(
         pow(xoffset, 2)
         + pow(yoffset, 2)
     )
 
-    # direction of magnitude
-    if xoffset > 0:
-        magnitude *= -1
+    # set direction
+    # if 0 < xoffset:
+    #     magnitude *= -1
 
     # user mult
     magnitude *= multiplier

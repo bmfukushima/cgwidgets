@@ -179,7 +179,10 @@ def removeSlideDelegate(item, slide_delegate):
 def installLadderDelegate(
     widget,
     user_input=QEvent.MouseButtonRelease,
-    value_list=None
+    value_list=None,
+    range_enabled=False,
+    range_min=0.0,
+    range_max=1.0
 ):
     """
     Args:
@@ -205,7 +208,10 @@ def installLadderDelegate(
     ladder = LadderDelegate(
         parent=widget,
         value_list=value_list,
-        user_input=user_input
+        user_input=user_input,
+        range_enabled=range_enabled,
+        range_min=range_min,
+        range_max=range_max
     )
     widget.installEventFilter(ladder)
     return ladder
@@ -227,7 +233,6 @@ def installStickyAdjustDelegate(
         deactivation_event=None,
         input_buttons=[Qt.LeftButton],
         input_modifier=Qt.NoModifier,
-        magnitude_type=Magnitude.m,
         pixels_per_tick=200,
         value_per_tick=0.01,
         value_update_event=None,
@@ -281,7 +286,7 @@ def installStickyAdjustDelegate(
         main_application_widget._sticky_drag_window_widget = StickyDragWindowWidget(main_application_widget)
 
     drag_widget = main_application_widget._sticky_drag_window_widget
-    drag_widget._magnitude_type = magnitude_type
+    # drag_widget._magnitude_type = magnitude_type
     if range_enabled:
         drag_widget.setRange(range_enabled, range_min, range_max)
     # check activation widget

@@ -27,10 +27,10 @@ if __name__ == '__main__':
         True,
         user_input=QEvent.MouseButtonRelease,
         value_list=[0.01, 5, 1.0, 10],)
-    main_widget.setValue(7)
+    main_widget.setValue(92.0)
     # main_widget.setLiveInputEvent(liveEditing)
     main_widget.setUserFinishedEditingEvent(finishedEditing)
-    main_widget.setRange(True, 0, 100)
+    main_widget.setRange(True, 0.0, 100.0)
     main_widget.setAllowNegative(True)
 
     # show widget
