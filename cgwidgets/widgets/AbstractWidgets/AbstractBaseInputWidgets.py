@@ -121,7 +121,6 @@ class AbstractNumberInputWidget(AbstractInputLineEdit):
         """
         This is only used for the ladder if it is setup
         """
-        print('setting value', value)
         self.setText(str(value))
 
     def setUseLadder(
