@@ -222,6 +222,9 @@ class AbstractDragDropAbstractView(object):
     def setCopiedItems(self, copied_items):
         self._copied_items = copied_items
 
+    def rootItem(self):
+        return self.model().getRootItem()
+
     """ SELECTION """
     def setItemSelected(self, item, selected):
         """ Selects the item provided
@@ -297,6 +300,13 @@ class AbstractDragDropAbstractView(object):
                 descendants += self.getAllDescendants(child)
 
         return descendants
+
+    """ EXPORT DATA """
+    def setItemExportDataFunction(self, func):
+        self.model().setItemExportDataFunction(func)
+
+    def exportModelToDict(self, item, item_data=None):
+        return self.model().exportModelToDict(item, item_data=item_data)
 
     """ DELETE """
     def deleteWarningWidget(self):
@@ -871,9 +881,7 @@ class AbstractDragDropModelDelegate(QStyledItemDelegate):
         return QStyledItemDelegate.setEditorData(self, editor, index)
 
     def setModelData(self, editor, model, index):
-        '''
-        # swap out 'v' for current value
-        '''
+        """# swap out 'v' for current value"""
         # =======================================================================
         # get data
         # =======================================================================

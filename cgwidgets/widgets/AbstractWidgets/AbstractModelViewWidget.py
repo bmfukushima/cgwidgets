@@ -2,7 +2,7 @@ import sys
 import os
 
 from qtpy.QtWidgets import (QSplitterHandle, QApplication, QLabel, QCompleter, QTreeView, QWidget, QVBoxLayout)
-from qtpy.QtCore import Qt
+from qtpy.QtCore import Qt, QModelIndex
 from qtpy.QtGui import QCursor
 
 from cgwidgets.widgets import AbstractStringInputWidget, AbstractListInputWidget
@@ -94,6 +94,10 @@ class AbstractModelViewWidget(AbstractShojiLayout):
         self.setIsSoloViewEnabled(False)
         self.not_soloable = True
         self.setProperty('is_soloable', True)
+
+    """ HEADER """
+    def setHeaderData(self, _header_data):
+        self.model().setHeaderData(_header_data)
 
     """ VIEW """
     def view(self):
@@ -192,6 +196,34 @@ class AbstractModelViewWidget(AbstractShojiLayout):
     def setModel(self, model):
         self.view().setModel(model)
 
+    def insertNewIndex(
+        self,
+        row,
+        name="None",
+        column_data=None,
+        parent=QModelIndex(),
+        is_editable=None,
+        is_selectable=None,
+        is_enableable=None,
+        is_deletable=None,
+        is_dragable=None,
+        is_dropable=None
+    ):
+        new_index = self.model().insertNewIndex(
+            row,
+            name=name,
+            column_data=column_data,
+            parent=parent,
+            is_editable=is_editable,
+            is_selectable=is_selectable,
+            is_enableable=is_enableable,
+            is_deletable=is_deletable,
+            is_dragable=is_dragable,
+            is_dropable=is_dropable
+        )
+
+        return new_index
+
     def clearModel(self):
         self.model().clearModel()
 
@@ -224,6 +256,9 @@ class AbstractModelViewWidget(AbstractShojiLayout):
 
     def setIndexSelected(self, index, selected):
         self.view().setIndexSelected(index, selected)
+
+    def getRootItem(self):
+        return self.model().getRootItem()
 
     """ DELEGATE """
     def delegateInputManifest(self):
@@ -442,6 +477,13 @@ class AbstractModelViewWidget(AbstractShojiLayout):
 
     def setIsDeletable(self, enabled):
         self.view().setIsDeletable(enabled)
+
+    """ EXPORT DATA """
+    def setItemExportDataFunction(self, func):
+        self.model().setItemExportDataFunction(func)
+
+    def exportModelToDict(self, item, item_data=None):
+        return self.model().exportModelToDict(item, item_data=item_data)
 
     """ EVENTS """
     def enterEvent(self, event):

@@ -428,6 +428,13 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
     def deleteItem(self, item, event_update=False):
         self.model().deleteItem(item, event_update=event_update)
 
+    """ EXPORT DATA """
+    def setItemExportDataFunction(self, func):
+        self.model().setItemExportDataFunction(func)
+
+    def exportModelToDict(self, item, item_data=None):
+        return self.model().exportModelToDict(item, item_data=item_data)
+
     """ VIEW """
     def headerWidget(self):
         return self._header_widget

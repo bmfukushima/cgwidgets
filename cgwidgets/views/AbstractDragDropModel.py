@@ -1,9 +1,7 @@
 # https://doc.qt.io/qt-5/model-view-programming.html#model-view-classes
 """
 Todo:
-    * Flags not updating correctly
-        When setting model to True, and then the item to False, it doesn't work
-        When setting model to False, and then item to True, it works...
+    *   Unique item names for each child?
 """
 import copy
 from qtpy.QtWidgets import (
@@ -58,7 +56,6 @@ class AbstractDragDropModelItem(object):
         self._children.append(child)
 
     def insertChild(self, position, child):
-
         if position < 0 or position > len(self._children):
             return False
 
@@ -67,7 +64,6 @@ class AbstractDragDropModelItem(object):
         return True
 
     def removeChild(self, position):
-
         if position < 0 or position > len(self._children):
             return False
 
@@ -90,6 +86,9 @@ class AbstractDragDropModelItem(object):
 
     def parent(self):
         return self._parent
+
+    def setParent(self, parent):
+        self._parent = parent
 
     def row(self):
         if self._parent is not None:
@@ -141,7 +140,10 @@ class AbstractDragDropModelItem(object):
         try:
             return self.columnData()["name"]
         except KeyError:
-            return self.columnData()[self.columnData().keys()[0]]
+            return self.columnData()[list(self.columnData().keys())[0]]
+
+    def setName(self, name):
+        self.columnData()[list(self.columnData().keys())[0]] = name
 
     """ DRAG / DROP PROPERTIES """
     def deleteOnDrop(self):
@@ -221,6 +223,24 @@ class AbstractDragDropModel(QAbstractItemModel):
     Attributes:
         item_type (Item): Data item to be stored on each index.  By default this
             set to the AbstractDragDropModelItem
+
+    Export Data
+        Uses the "exportModelToDict()" function to return the entire tree as a dictionary.
+            {data : [
+                        {"children": [
+                            {"children": [], "name": item.getName()},
+                            {"children": [], "name": item.getName()}], "name": item.getName()},
+                        {"children": [], "name": item.getName()}
+                    ]
+            }
+        Each child/location in the tree will be exported under the following structure
+            {"children": [], "name": item.getName()}
+
+        Additional data can be saved to each location by setting the "setItemExportDataFunction()"
+        This function will:
+            Take one arg, which is a function which should return a dictionary.
+            Have the given function return a dictionary, which must include a the keypair
+                "children": []
     """
     ITEM_HEIGHT = 35
     ITEM_WIDTH = 100
@@ -257,6 +277,29 @@ class AbstractDragDropModel(QAbstractItemModel):
         self._last_selected_item = None
 
     """ UTILS """
+    @staticmethod
+    def getUniqueItemName(item):
+        """ Finds a unique name for an item
+
+        Note:
+            The unique name refers to the string that is stored as the data in the first column
+
+        Args:
+            item (AbstractDragDropModelItem): item to find unique name for"""
+        child_names = [child.name() for child in item.parent().children()]
+        child_names.remove(item.name())
+        item_name = item.name()
+
+        while item_name in child_names:
+            try:
+                suffix = int(item_name[-1])
+                suffix += 1
+                item_name = item_name[:-1] + str(suffix)
+            except ValueError:
+                item_name = item_name + "0"
+
+        return item_name
+
     def setItemEnabled(self, item, enabled):
         item.setIsEnabled(enabled)
         self.itemEnabledEvent(item, enabled)
@@ -579,15 +622,24 @@ class AbstractDragDropModel(QAbstractItemModel):
         return self._item_type
 
     def createNewItem(self, *args, **kwargs):
-        """
-        Creates a new item of the specified type
-        """
+        """Creates a new item of the specified type"""
         item_type = self.itemType()
         new_item = item_type(*args, **kwargs)
 
         return new_item
 
-    def insertNewIndex(self, row, name="None", column_data=None, parent=QModelIndex()):
+    def insertNewIndex(
+        self,
+        row,
+        name="None",
+        column_data=None,
+        parent=QModelIndex(),
+        is_editable=None,
+        is_selectable=None,
+        is_enableable=None,
+        is_deletable=None,
+        is_dragable=None,
+        is_dropable=None):
         """
 
         Args:
@@ -616,6 +668,14 @@ class AbstractDragDropModel(QAbstractItemModel):
         if not column_data:
             column_data = {"name":name}
         view_item.setColumnData(column_data)
+
+        # setup flags
+        view_item.setIsEditable(is_editable)
+        view_item.setIsSelectable(is_selectable)
+        view_item.setIsDraggable(is_dragable)
+        view_item.setIsDroppable(is_dropable)
+        view_item.setIsEnableable(is_enableable)
+        view_item.setIsDeletable(is_deletable)
 
         return new_index
 
@@ -653,6 +713,15 @@ class AbstractDragDropModel(QAbstractItemModel):
         self.endRemoveRows()
 
         return success
+
+    def setItemParent(self, row, item, parent_index):
+        """ Sets the items parent to a new parent"""
+        new_item = item
+        self.deleteItem(item, event_update=False)
+
+        self.beginInsertRows(parent_index, row, row + 1)
+        parent_index.internalPointer().insertChild(row, new_item)
+        self.endInsertRows()
 
     """ PROPERTIES """
     def lastSelectedItem(self):
@@ -879,6 +948,47 @@ class AbstractDragDropModel(QAbstractItemModel):
         # select new indexes?
         #self.layoutChanged.emit()
         return False
+
+    """ EXPORT DATA """
+    def setItemExportDataFunction(self, func):
+        print('setting this functino???')
+        self.__getItemExportData = func
+
+    def getItemExportData(self, item):
+        return self.__getItemExportData(item)
+
+    def __getItemExportData(self, item):
+        return {"children": [], "name": item.name()}
+
+    def setDragStartEvent(self, function):
+        self.__startDragEvent = function
+
+    def dragStartEvent(self, items, model):
+        self.__startDragEvent(items, model)
+
+    def __startDragEvent(self, items, model):
+        pass
+
+    def exportModelToDict(self, item, item_data=None):
+        """ Recursive call to generate a dictionary from the entire model.
+
+        Args:
+            item (AbstractDragDropModelItem):
+            args (list): of strings of arg item arg names to be stored
+            item_data (list): of children, each child is returned as a dictionary of
+                {"arg_name":<arg_value>, "arg_name2":<arg_value2>}
+            """
+        if item == self.getRootItem():
+            item_data = []
+
+        for child in item.children():
+            new_data = self.getItemExportData(child)
+            #new_data = {"children": [], "item_type": child.getArg("item_type"), "node": child.getArg("node")}
+            item_data.append(new_data)
+            if 0 < child.childCount():
+                self.exportModelToDict(child, item_data=new_data["children"])
+
+        return {"data":item_data}
 
     """ VIRTUAL FUNCTIONS """
     def setAddMimeDataFunction(self, function):

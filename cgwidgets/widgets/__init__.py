@@ -51,11 +51,12 @@ from .BaseWidgets import *
 #from .InputWidgets.ColorInputWidgets import ColorGradientDelegate, ColorInputWidget
 
 """ NODE WIDGETS """
+""" This needs to hit a try/except for local testing and to ensure the launches are correct?"""
 try:
     from .NodeWidgets import NodeTypeListWidget
 except ModuleNotFoundError:
     pass
-# from .NodeTreeWidget import NodeViewWidget
+# from .NodeWidgets import NodeTypeListWidget
 # old stuff
 from .LibraryWidget import LibraryWidget as LibraryWidget
 from .LadderWidget import LadderWidget as LadderWidget
