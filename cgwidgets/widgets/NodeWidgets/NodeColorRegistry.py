@@ -12,8 +12,6 @@ TODO ( cgwidgets )
     *   Move str converter
             color = index.internalPointer().getArg("color")[1:-1].split(", ")
             color = [int(c) for c in color]
-    *   Color Widget
-            Fix handlers relating to ladder widget
 
 TODO ( wish list )
     *   Create Duplicate NodeType (DUPLICATE NODE TYPE)
@@ -90,7 +88,7 @@ from cgwidgets.widgets import (
 )
 from cgwidgets.views import AbstractDragDropModelDelegate, AbstractDragDropTreeView, AbstractDragDropModel
 from cgwidgets.utils import setAsTool, setAsAlwaysOnTop, centerWidgetOnCursor, getWidgetAncestor
-from cgwidgets.settings import iColor
+from cgwidgets.settings import iColor, attrs
 
 COLOR = "COLOR"
 GROUP = "GROUP"
@@ -100,6 +98,7 @@ TEMP_FILE_DIR = "/home/brian/.cgwidgets/nodeColors.json"
 class ColorDelegate(ColorInputWidget):
     def __init__(self, parent=None):
         super(ColorDelegate, self).__init__(parent=parent)
+        self.setHeaderPosition(position=attrs.NORTH)
 
     def text(self):
         return repr(self.getColor().getRgb())
@@ -185,7 +184,7 @@ class NodeColorItemDelegate(AbstractDragDropModelDelegate):
             setAsAlwaysOnTop(delegate)
             delegate.show()
             setAsTool(delegate)
-            delegate.resize(500, 500)
+            delegate.resize(512+256, 512)
             centerWidgetOnCursor(delegate)
             # delegate.move(QCursor.pos())
             return delegate
@@ -230,13 +229,13 @@ class NodeColorItemDelegate(AbstractDragDropModelDelegate):
             painter.drawLine(option.rect.topRight(), option.rect.bottomRight())
 
             # draw text color
-            int_color = math.fabs(int(128 - bg_color.value()))
+            int_color = int(math.fabs(128 - bg_color.value()))
             text_color = [int_color, int_color, int_color, 255]
-
             painter.setPen(QColor(*text_color))
             text = index.data(Qt.DisplayRole)
             option.rect.setLeft(option.rect.left() + 5)
-            painter.drawText(option.rect, (Qt.AlignLeft | Qt.AlignVCenter), text)
+            painter.drawText(option.rect, int(Qt.AlignLeft | Qt.AlignVCenter), text)
+            # painter.drawText(option.rect, (Qt.AlignLeft | Qt.AlignVCenter), text)
 
             painter.restore()
         else:

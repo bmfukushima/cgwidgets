@@ -1,12 +1,16 @@
 """
 TODO:
-    Hue adjust -->
-        Shift + LMB?
-    CLOCK ( Display Label )
-        * background
+    *   Value Adjust
+            Update colors/display when dragging slider.
+    *   Auto resize header
+            Seems to start magically resizing when moving the cursor around
+    *   Hue adjust -->
+            Shift + LMB?
+    *   CLOCK ( Display Label )
+            * background
                 - semi transparent?
                 - middle gray?
-        * idea of placing over image to select colors?
+            * idea of placing over image to select colors?
 """
 
 import sys
