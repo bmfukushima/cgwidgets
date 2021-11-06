@@ -201,10 +201,10 @@ class NodeViewWidget(ShojiModelViewWidget):
                 else:
                     group_item = parent_index.internalPointer()
                     if not group_item:
-                        group_item = self.model().getRootItem()
+                        group_item = self.model().rootItem()
 
             else:
-                group_item = self.model().getRootItem()
+                group_item = self.model().rootItem()
                 parent_node = self.node
 
             # get node list

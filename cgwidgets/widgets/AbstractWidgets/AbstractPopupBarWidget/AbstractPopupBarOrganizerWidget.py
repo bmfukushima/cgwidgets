@@ -266,7 +266,7 @@ class AbstractPopupBarOrganizerWidget(AbstractShojiModelViewWidget):
         """
 
         model = self.popupBarOrganizerWidget().model()
-        root_item = model.getRootItem()
+        root_item = model.rootItem()
         return root_item.children()
 
     def setDisplayWidget(self, file_name, widget_name):
@@ -286,7 +286,7 @@ class AbstractPopupBarOrganizerWidget(AbstractShojiModelViewWidget):
         model = self.globalOrganizerWidget().model()
 
         # for each file
-        for pip_file_item in model.getRootItem().children():
+        for pip_file_item in model.rootItem().children():
             # match file name
             if model.getItemName(pip_file_item) == file_name:
                 # for each PiPWidget in file

@@ -297,7 +297,6 @@ class AbstractDragDropModel(QAbstractItemModel):
                 item_name = item_name[:-1] + str(suffix)
             except ValueError:
                 item_name = item_name + "0"
-
         return item_name
 
     def setItemEnabled(self, item, enabled):
@@ -342,7 +341,7 @@ class AbstractDragDropModel(QAbstractItemModel):
             update_event (bool): determines if user event should be
                 run on each item during the deletion process.
         """
-        for child in reversed(self.getRootItem().children()):
+        for child in reversed(self.rootItem().children()):
             self.deleteItem(child, event_update=event_update)
 
     def rowCount(self, parent):
@@ -590,7 +589,7 @@ class AbstractDragDropModel(QAbstractItemModel):
         if index:
             children = index.internalPointer().children()
         else:
-            children = self.getRootItem().children()
+            children = self.rootItem().children()
 
         # get list
         for child in children:
@@ -603,7 +602,7 @@ class AbstractDragDropModel(QAbstractItemModel):
         all_indexes = self.findItems(".*", match_type=Qt.MatchRegExp)
         return list(set(all_indexes))
 
-    def getRootItem(self):
+    def rootItem(self):
         return self._root_item
 
     def setRootItem(self, root_item):
@@ -819,7 +818,7 @@ class AbstractDragDropModel(QAbstractItemModel):
         Returns (QModelIndex)
         """
         parent_item = item.parent()
-        if parent_item == self.getRootItem():
+        if parent_item == self.rootItem():
             parent_index = QModelIndex()
         elif not parent_item:
             parent_index = QModelIndex()
@@ -894,7 +893,7 @@ class AbstractDragDropModel(QAbstractItemModel):
         # get parent item
         parent_item = parent.internalPointer()
         if not parent_item:
-            parent_item = self.getRootItem()
+            parent_item = self.rootItem()
 
         # iterate through index list
         indexes = self.indexes
@@ -951,7 +950,6 @@ class AbstractDragDropModel(QAbstractItemModel):
 
     """ EXPORT DATA """
     def setItemExportDataFunction(self, func):
-        print('setting this functino???')
         self.__getItemExportData = func
 
     def getItemExportData(self, item):
@@ -978,7 +976,7 @@ class AbstractDragDropModel(QAbstractItemModel):
             item_data (list): of children, each child is returned as a dictionary of
                 {"arg_name":<arg_value>, "arg_name2":<arg_value2>}
             """
-        if item == self.getRootItem():
+        if item == self.rootItem():
             item_data = []
 
         for child in item.children():

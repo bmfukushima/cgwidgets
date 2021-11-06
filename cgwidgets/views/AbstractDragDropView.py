@@ -223,7 +223,7 @@ class AbstractDragDropAbstractView(object):
         self._copied_items = copied_items
 
     def rootItem(self):
-        return self.model().getRootItem()
+        return self.model().rootItem()
 
     """ SELECTION """
     def setItemSelected(self, item, selected):
@@ -271,7 +271,7 @@ class AbstractDragDropAbstractView(object):
 
         return item_list
 
-    def getAllSelectedDescendants(self, item, descendants=None):
+    def getItemsSelectedDescendants(self, item, descendants=None):
         """ Gets all of the selected descendants from the item provided
 
         Returns (list): of AbstractDragDropModelItem"""
@@ -282,11 +282,11 @@ class AbstractDragDropAbstractView(object):
             if child in self.getAllSelectedItems():
                 descendants.append(child)
             if 0 < item.childCount():
-                descendants += self.getAllDescendants(child)
+                descendants += self.getItemsDescendants(child)
 
         return descendants
 
-    def getAllDescendants(self, item, descendants=None):
+    def getItemsDescendants(self, item, descendants=None):
         """ Gets all of the descendants from the item provided
 
         Returns (list): of AbstractDragDropModelItem"""
@@ -297,9 +297,32 @@ class AbstractDragDropAbstractView(object):
             # todo check if copyable?
             descendants.append(child)
             if 0 < item.childCount():
-                descendants += self.getAllDescendants(child)
+                descendants += self.getItemsDescendants(child)
 
         return descendants
+
+    def getAllBaseItems(self, items=None):
+        """ Takes a list of items, and returns only the top most item of each branch
+
+        Args:
+            items (list): of AbstractDragDropModelItem
+
+        Returns (list): of AbstractDragDropModelItem
+
+        """
+
+        # get attrs
+        if not items:
+            items = self.getAllSelectedItems()
+        base_items = self.getAllSelectedItems()
+
+        # remove all selected descendants
+        for item in items:
+            for child in self.getItemsSelectedDescendants(item):
+                if child in base_items:
+                    base_items.remove(child)
+
+        return base_items
 
     """ EXPORT DATA """
     def setItemExportDataFunction(self, func):
@@ -343,16 +366,7 @@ class AbstractDragDropAbstractView(object):
 
         Returns (list): of AbstractDragDropModelItem"""
 
-        # get attrs
-        selected_indexes = self.getAllSelectedIndexes()
-        copyable_items = self.getAllSelectedItems()
-
-        # remove all selected descendants
-        for index in selected_indexes:
-            item = index.internalPointer()
-            for child in self.getAllSelectedDescendants(item):
-                if child in copyable_items:
-                    copyable_items.remove(child)
+        copyable_items = self.getAllBaseItems()
 
         # check to see if items are copyable
         for item in copyable_items:
@@ -399,9 +413,8 @@ class AbstractDragDropAbstractView(object):
                 if event.key() in [Qt.Key_Delete, Qt.Key_Backspace]:
                     # delete events
                     def deleteItems(widget):
-                        indexes = self.getAllSelectedIndexes()
-                        for index in indexes:
-                            item = index.internalPointer()
+                        deletable_items = self.getAllBaseItems()
+                        for item in deletable_items:
                             self.model().deleteItem(item, event_update=True)
 
                     def dontDeleteItem(widget):
@@ -507,7 +520,7 @@ class AbstractDragDropAbstractView(object):
                 parent_item = current_item.parent()
         # no objects selected
         else:
-            parent_item = self.model().getRootItem()
+            parent_item = self.model().rootItem()
 
         # check is not pasting under current selection
         for item in self.copiedItems():

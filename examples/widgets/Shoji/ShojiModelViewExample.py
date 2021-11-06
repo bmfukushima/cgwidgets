@@ -58,7 +58,7 @@ from qtpy.QtGui import QCursor
 from cgwidgets.widgets import (
     ShojiModelViewWidget, ShojiModelItem, ShojiModel,
     ModelViewWidget, FloatInputWidget, LabelledInputWidget, StringInputWidget)
-from cgwidgets.views import AbstractDragDropListView, AbstractDragDropTreeView
+from cgwidgets.views import AbstractDragDropListView, AbstractDragDropTreeView, AbstractDragDropModelDelegate
 from cgwidgets.widgets import ShojiLayout
 from cgwidgets.settings import attrs
 from cgwidgets.settings import icons
@@ -122,6 +122,82 @@ note:
     index is required, and is the text displayed to the user by default
 """
 shoji_widget.setHeaderData(['name', 'SINE.', "woowoo"])
+
+# SETUP CUSTOM DELEGATE
+# todo: Note this will error when setting column 1, as the column data doesn't exist to be set.
+class CustomDelegate(AbstractDragDropModelDelegate):
+    """ The delegate for the main view.  This will open/close all of the different views
+    that the user can open by double clicking on an item/column.
+
+    Attributes:
+        current_item (DragDropModelItem): currently being manipulated"""
+
+    def __init__(self, parent=None):
+        super(CustomDelegate, self).__init__(parent)
+
+    def createEditor(self, parent, option, index):
+        """ Creates the editor widget.
+
+        This is needed to set a different delegate for different columns"""
+        if index.column() == 0:
+            item = index.internalPointer()
+            return AbstractDragDropModelDelegate.createEditor(self, parent, option, index)
+
+        elif index.column() == 1:
+            delegate = QLabel("test delegate", parent)
+            return delegate
+        pass
+
+    # def paint(self, painter, option, index):
+    #     """ Custom paint event to override the existing handler for this style
+    #
+    #     This is needed as StyleSheets/Data won't mix, and the stylesheet will
+    #     automatically overwrite the data() set on the model
+    #
+    #     https://stackoverflow.com/questions/39995688/set-different-color-to-specifc-items-in-qlistwidget
+    #     """
+    #     if index.column() == 1:
+    #         painter.save()
+    #
+    #         # draw BG
+    #         try:
+    #             color = index.internalPointer().getArg("color")[1:-1].split(", ")
+    #             color = [int(c) for c in color]
+    #         except:
+    #             color = iColor["rgba_background_01"]
+    #         bg_color = QColor(*color)
+    #         painter.setBrush(bg_color)
+    #         painter.drawRect(option.rect)
+    #
+    #         # draw selection border
+    #         if option.state & QStyle.State_Selected:
+    #             # If the item is selected, always draw background red
+    #             color = iColor["rgba_selected"]
+    #         else:
+    #             color = iColor["rgba_black"]
+    #
+    #         painter.setPen(QPen(QColor(*color)))
+    #         painter.drawLine(option.rect.bottomLeft(), option.rect.bottomRight())
+    #         painter.drawLine(option.rect.topLeft(), option.rect.topRight())
+    #         painter.drawLine(option.rect.topRight(), option.rect.bottomRight())
+    #
+    #         # draw text color
+    #         int_color = math.fabs(int(128 - bg_color.value()))
+    #         text_color = [int_color, int_color, int_color, 255]
+    #
+    #         painter.setPen(QColor(*text_color))
+    #         text = index.data(Qt.DisplayRole)
+    #         option.rect.setLeft(option.rect.left()+5)
+    #         painter.drawText(option.rect, (Qt.AlignLeft | Qt.AlignVCenter), text)
+    #
+    #         painter.restore()
+    #     else:
+    #         super(NodeColorItemDelegate, self).paint(painter, option, index)
+    #     return
+
+delegate = CustomDelegate(shoji_widget)
+shoji_widget.headerViewWidget().setItemDelegate(delegate)
+
 
 # CREATE ITEMS / TABS
 def setupAsStacked():

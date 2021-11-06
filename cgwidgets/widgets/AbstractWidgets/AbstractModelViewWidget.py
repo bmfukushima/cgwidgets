@@ -2,7 +2,7 @@ import sys
 import os
 
 from qtpy.QtWidgets import (QSplitterHandle, QApplication, QLabel, QCompleter, QTreeView, QWidget, QVBoxLayout)
-from qtpy.QtCore import Qt, QModelIndex
+from qtpy.QtCore import Qt, QModelIndex, QItemSelectionModel
 from qtpy.QtGui import QCursor
 
 from cgwidgets.widgets import AbstractStringInputWidget, AbstractListInputWidget
@@ -239,26 +239,61 @@ class AbstractModelViewWidget(AbstractShojiLayout):
         self.model().setAddMimeDataFunction(function)
 
     """ SELECTION """
+    def clearItemSelection(self):
+        self.view().clearItemSelection()
+
     def selectionModel(self):
         return self.view().selectionModel()
+
+    def getAllBaseItems(self, items=None):
+        """ Takes a list of items, and returns only the top most item of each branch
+
+        Args:
+            items (list): of AbstractDragDropModelItem
+
+        Returns (list): of AbstractDragDropModelItem
+
+        """
+        return self.view().getAllBaseItems(items)
 
     def getAllIndexes(self):
         return self.model().getAllIndexes()
 
+    def getAllSelectedItems(self):
+        return self.view().getAllSelectedItems()
+
     def getAllSelectedIndexes(self):
         return self.view().getAllSelectedIndexes()
 
-    def getAllSelectedItems(self):
-        return self.view().getAllSelectedItems()
+    def getItemsDescendants(self, item, descendants=None):
+        """ Gets all of the descendants from the item provided
+
+        Returns (list): of AbstractDragDropModelItem"""
+        return self.view().getItemsDescendants(item, descendants)
+
+    def getItemsSelectedDescendants(self, item, descendants=None):
+        """ Gets all of the selected descendants from the item provided
+
+        Returns (list): of AbstractDragDropModelItem"""
+        return self.view().getItemsSelectedDescendants(item, descendants)
 
     def getIndexFromItem(self, item):
         self.model().getIndexFromItem(item)
 
+    def rootItem(self):
+        return self.model().rootItem()
+
     def setIndexSelected(self, index, selected):
         self.view().setIndexSelected(index, selected)
 
-    def getRootItem(self):
-        return self.model().getRootItem()
+    def setItemSelected(self, item, selected):
+        """ Selects the item provided
+        Args:
+            item (QModelIndex):
+            selected (bool):
+
+        Returns (True)"""
+        return self.view().setItemSelected(item, selected)
 
     """ DELEGATE """
     def delegateInputManifest(self):

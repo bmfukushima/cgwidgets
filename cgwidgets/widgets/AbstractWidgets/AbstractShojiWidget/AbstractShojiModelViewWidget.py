@@ -143,12 +143,6 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
     def normalizeWidgetSizes(self):
         self.delegateWidget().normalizeWidgetSizes()
 
-    def getAllIndexes(self):
-        return self.headerWidget().getAllIndexes()
-
-    def setIndexSelected(self, index, selected):
-        self.headerViewWidget().setIndexSelected(index, selected)
-
     def insertShojiWidget(
         self, row, column_data={}, parent=None, widget=None,
         image_path=None, display_overlay=None, text_color=None,
@@ -219,32 +213,74 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
 
         return new_index
 
-    def getAllSelectedIndexes(self):
-        """ Returns all of the selected INDEXES"""
-        # selected_indexes = []
-        # for index in self.headerWidget().selectionModel().selectedIndexes():
-        #     if index.column() == 0:
-        #         selected_indexes.append(index)
-        selected_indexes = self.headerWidget().getAllSelectedIndexes()
-        #
-        return selected_indexes
+    def rootItem(self):
+        """Returns (ShojiModelViewItem): root item for the model"""
+        return self.model().rootItem()
+
+    def setItemType(self, item_type):
+        """ Sets the models item type
+
+        The item type is the Item class that is used to store data for each index
+
+        Args:
+            item_type (AbstractShojiModelItem): constructor to be used, this should inherit from AbstractShojiModelItem"""
+        self.model().setItemType(item_type)
+
+    def clearItemSelection(self):
+        self.headerWidget().clearItemSelection()
+
+    def selectionModel(self):
+        return self.headerWidget().selectionModel()
+
+    def getAllBaseItems(self, items=None):
+        """ Takes a list of items, and returns only the top most item of each branch
+
+        Args:
+            items (list): of AbstractDragDropModelItem
+
+        Returns (list): of AbstractDragDropModelItem
+
+        """
+        return self.headerWidget().getAllBaseItems(items)
+
+    def getAllIndexes(self):
+        return self.model().getAllIndexes()
 
     def getAllSelectedItems(self):
         return self.headerWidget().getAllSelectedItems()
 
+    def getAllSelectedIndexes(self):
+        return self.headerWidget().getAllSelectedIndexes()
+
+    def getItemsDescendants(self, item, descendants=None):
+        """ Gets all of the descendants from the item provided
+
+        Returns (list): of AbstractDragDropModelItem"""
+        return self.headerWidget().getItemsDescendants(item, descendants)
+
+    def getItemsSelectedDescendants(self, item, descendants=None):
+        """ Gets all of the selected descendants from the item provided
+
+        Returns (list): of AbstractDragDropModelItem"""
+        return self.headerWidget().getItemsSelectedDescendants(item, descendants)
+
     def getIndexFromItem(self, item):
-        return self.model().getIndexFromItem(item)
+        self.model().getIndexFromItem(item)
 
     def rootItem(self):
-        """
-        Returns (ShojiModelViewItem): root item for the model
-        """
-        model = self.model()
-        root_item = model.getRootItem()
-        return root_item
+        return self.model().rootItem()
 
-    def setItemType(self, item_type):
-        self.model().setItemType(item_type)
+    def setIndexSelected(self, index, selected):
+        self.headerWidget().setIndexSelected(index, selected)
+
+    def setItemSelected(self, item, selected):
+        """ Selects the item provided
+        Args:
+            item (QModelIndex):
+            selected (bool):
+
+        Returns (True)"""
+        return self.headerWidget().setItemSelected(item, selected)
 
     """ HEADER EVENT SIGNALS"""
     def setHeaderItemDragDropMode(self, drag_drop_mode):
@@ -738,7 +774,7 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
     def updateHeaderItemSizes(self):
         """ Updates all of the header items to fit into the space provided"""
         model = self.model()
-        num_items = model.getRootItem().childCount()
+        num_items = model.rootItem().childCount()
         if 0 < num_items:
             # update width
             if self.headerPosition() in [

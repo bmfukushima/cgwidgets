@@ -444,7 +444,7 @@ class StickyDragWindowWidget(QWidget, iStickyValueAdjustDelegate):
         logging.debug(new_value)
         self.activeObject().setValue(new_value)
 
-        # todo range enabled | make it so you don't have to drag a billion times to get back to the orig value
+        # enable range
         """     goes under/over range, set position.
                 When hits a tick in the opposite direction
                 restores that position
