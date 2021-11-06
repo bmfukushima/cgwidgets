@@ -187,8 +187,8 @@ class ColorGraphicsView(QGraphicsView):
         crosshair_ypos = rgba_crosshair_pos.y() / old_height
 
         # get new crosshair position
-        xpos = crosshair_xpos * self.geometry().width()
-        ypos = crosshair_ypos * self.geometry().height()
+        xpos = int(crosshair_xpos * self.geometry().width())
+        ypos = int(crosshair_ypos * self.geometry().height())
         new_pos = QPoint(xpos, ypos)
         self.scene().setRGBACrosshairPos(new_pos)
         #self.scene().linear_crosshair_item.setCrosshairPos(new_pos)
@@ -720,8 +720,8 @@ class ColorGraphicsScene(QGraphicsScene):
 
     def updateRGBACrosshair(self):
         main_widget = getWidgetAncestor(self, ColorGradientDelegate)
-        xpos = (main_widget.color().hueF() * self.width())
-        ypos = math.fabs((main_widget.color().saturationF() * self.height()) - self.height())
+        xpos = int(main_widget.color().hueF() * self.width())
+        ypos = int(math.fabs((main_widget.color().saturationF() * self.height()) - self.height()))
         pos = QPoint(xpos, ypos)
         self.setRGBACrosshairPos(pos)
 

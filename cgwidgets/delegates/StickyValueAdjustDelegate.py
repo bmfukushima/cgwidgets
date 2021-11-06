@@ -451,6 +451,7 @@ class StickyDragWindowWidget(QWidget, iStickyValueAdjustDelegate):
                 
                 Issue when starting/stopping on the end of a range
                 Seems that the direction changed or range passed is being set"""
+
         if self._range_enabled:
             if self._is_passed_range:
                 # get the current direction of the cursor

@@ -1,4 +1,5 @@
 
+import logging
 from cgwidgets.widgets import FloatInputWidget, IntInputWidget
 from qtpy.QtWidgets import QLabel, QApplication
 
@@ -10,6 +11,8 @@ from qtpy.QtWidgets import QApplication
 from qtpy.QtCore import QEvent
 from qtpy.QtGui import QCursor
 app = QApplication(sys.argv)
+
+logging.basicConfig(level=logging.DEBUG)
 
 def finishedEditing(widget, value):
     print('------ FINISHED EDITING --------')
@@ -24,12 +27,12 @@ main_widget = FloatInputWidget()
 main_widget.setUseLadder(
     True,
     user_input=QEvent.MouseButtonRelease,
-    value_list=[0.01, 5, 1.0, 10],)
-main_widget.setValue(92.0)
+    value_list=[0.01, 0.05, 0.1],)
+main_widget.setValue(1.0)
 # main_widget.setLiveInputEvent(liveEditing)
 main_widget.setUserFinishedEditingEvent(finishedEditing)
-main_widget.setRange(True, 0.0, 100.0)
-main_widget.setAllowNegative(True)
+# main_widget.setRange(True, 0.0, 1.0)
+# main_widget.setAllowNegative(True)
 
 # show widget
 main_widget.show()

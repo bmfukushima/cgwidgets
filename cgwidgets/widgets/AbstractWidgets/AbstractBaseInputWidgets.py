@@ -211,15 +211,16 @@ class AbstractNumberInputWidget(AbstractInputLineEdit):
 
         Returns (str):
         """
+        text = self.text()
+
+        # check for values between 0-1
         try:
-            if int(float(self.text())) == 0:
-                return "0"
+            if int(float(text)) == 0:
+                return (str(float(text)))
         except ValueError:
             print("for some reason this is an error...")
             pass
 
-        # text = self.text().strip("0")
-        text = self.text()
         try:
             value = eval(text)
             value = checkNegative(self.getAllowNegative(), value)

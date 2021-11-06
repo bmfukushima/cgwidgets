@@ -76,7 +76,8 @@ class ColorHeaderWidget(QScrollArea):
         return new_item
 
     def createHeaderItems(self, color_args_list, abbreviated_title=False):
-        """
+        """ Creates all of the header items for adjusting RGBA/HSV
+
         Args:
             color_args_list (list): of attrs.COLOR_ARG, which will have a header
                 item (ColorHeaderWidgetItem) craeted for it and stored in
@@ -197,7 +198,7 @@ class ColorHeaderWidgetItem(AbstractInputGroup):
 
         # setup ladder
         self.value_widget.setUseLadder(True, value_list=[0.0001, 0.001, 0.01, 0.1])
-        self.setRange(True, 0, 1)
+        self.setRange(True, 0.0, 1.0)
         self.value_widget.setAlignment(Qt.AlignLeft)
         self.insertWidget(1, self.value_widget)
 
