@@ -3,7 +3,9 @@
 Todo:
     *   Unique item names for each child?
 """
+from collections import OrderedDict
 import copy
+
 from qtpy.QtWidgets import (
     QStyledItemDelegate, QApplication, QWidget, QStyle, QStyleOptionViewItem)
 from qtpy.QtCore import (
@@ -29,7 +31,7 @@ class AbstractDragDropModelItem(object):
     """
     def __init__(self, parent=None):
         #self._data = data
-        self._column_data = {}
+        self._column_data = OrderedDict()
         self._children = []
         self._parent = parent
         self._delegate_widget = None
@@ -137,6 +139,7 @@ class AbstractDragDropModelItem(object):
             self.columnData().pop(key, None)
 
     def name(self):
+        """ Note: If name is not found, then it will return the first key in the dictionary."""
         try:
             return self.columnData()["name"]
         except KeyError:
@@ -289,7 +292,6 @@ class AbstractDragDropModel(QAbstractItemModel):
         child_names = [child.name() for child in item.parent().children()]
         child_names.remove(item.name())
         item_name = item.name()
-
         while item_name in child_names:
             try:
                 suffix = int(item_name[-1])
