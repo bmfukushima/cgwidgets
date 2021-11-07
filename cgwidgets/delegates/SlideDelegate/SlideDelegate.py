@@ -28,6 +28,7 @@ To Do...
 
 """
 import math
+import logging
 
 from qtpy.QtWidgets import QDesktopWidget, QApplication, QWidget, QFrame
 from qtpy.QtCore import Qt, QPoint, QEvent

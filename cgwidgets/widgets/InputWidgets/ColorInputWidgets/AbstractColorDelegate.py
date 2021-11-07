@@ -44,7 +44,6 @@ class AbstractColorDelegate(QWidget):
         # set user input
         self.userInputFunction(self, color)
 
-
     """ VIRTUAL FUNCTION """
     def setUserInput(self, function):
         """

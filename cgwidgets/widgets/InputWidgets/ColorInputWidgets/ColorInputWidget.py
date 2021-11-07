@@ -1,7 +1,11 @@
 """
 TODO:
-    *   Value Adjust
-            Update colors/display when dragging slider.
+    *   Cleanup/Document...
+            Hierarchy?
+    *   HSV Adjust
+            - Need to update the color gradient
+            - Don't adjust the color gradient when user is dragging in it, only when the user
+            is dragging a slider.
     *   Auto resize header
             Seems to start magically resizing when moving the cursor around
     *   Hue adjust -->
@@ -135,6 +139,7 @@ class ColorInputWidget(QStackedWidget):
         self.updateDisplay()
         # update user set function
         self.userInputFunction(self, color)
+        # self.color_picker_widget.view_widget.scene.updateRGBACrosshair()
 
     def getColor(self):
         if not hasattr(self, '_color'):

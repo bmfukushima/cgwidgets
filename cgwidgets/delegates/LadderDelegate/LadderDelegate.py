@@ -746,9 +746,6 @@ Attributes:
         return AbstractFloatInputWidget.keyPressEvent(self, event)
 
     def setMiddleValue(self):
-        # print(self)
-        # print(self.parent())
-        # print (self.parent().parent())
         self.parent().parent().setValue(str(self.text()))
 
     def setValue(self, value):

@@ -1,5 +1,6 @@
 import unittest
 import sys
+import logging
 
 from qtpy.QtWidgets import QApplication, QLineEdit
 from qtpy.QtGui import QCursor, QMouseEvent
@@ -41,7 +42,7 @@ class iTest():
                 parent_value = parent.getValue()
                 test.assertEqual(parent_value, value)
             except:
-                print ('{} needs to have \"getValue()" implemented'.format(parent))
+                print('{} needs to have \"getValue()" implemented'.format(parent))
 
     @staticmethod
     def userClickDrag(test, distance, delegate):

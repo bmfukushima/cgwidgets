@@ -12,32 +12,49 @@ TODO ( cgwidgets )
     *   Move str converter
             color = index.internalPointer().getArg("color")[1:-1].split(", ")
             color = [int(c) for c in color]
-
+    *   Update color widget (194)
+            Show correct color values when delegate is displayed
 TODO ( wish list )
     *   Create Duplicate NodeType (DUPLICATE NODE TYPE)
             Expand to existing
 """
 """
+The NodeColorRegistryWidget Widget allows users to easily set up node/color combinations and save
+them out to a JSON file.  The purpose for these JSON files is that the map can then be
+reused when nodes are created to create default node colors for various DCC's.
+
 Reset Color:
     Control + MMB on any item
 
 Data Locations:
-    Data is stored under $KATANA_RESOURCES/settings/nodeColorConfigs/name.json
+    Data locations are stored under an environment variable.
+    
+    This environment variable can be set using "NodeColorRegistryWidget.setConfigsEnvar()", by default it is set
+    to "CGWNODECOLORCONFIGS".  If the envar is not valid, it will default to the default save directory.  
+    Which is set to cgwidgets.utils.getDefaultSavePath(), and can also be set using
+    NodeColorRegistryWidget.setDefaultSaveLocation().
 
-    Note:
-        This is currently saved under TEMP_FILE_DIR
+    will have all of its files checked for the extension ".json" and the key "COLORCONFIG" to determine
+    if it is a valid color config.  Please note that subdirectories are not supported.
+    
+    The users can save/load these files using the UI provided in the NodeColorIOWidget.  An important thing to
+    note about how the save paths are determines is that the "Dir" widget, is stored as a map called "envarMap"
+    which contains the key/pairs for each directory name, and the full path on disk.  This means, that each
+    directory name must be unique.
 
 Data Structure:
     each item is stored as a dictionary which should look like:
     {
         "children": [],
-        "color":"(255,255,255,255)",
+        "color":"255, 255, 255, 255",
         "enabled": bool,
         "item_type":COLOR|GROUP,
         "name": item.getName()
     }
 
-    {data : 
+    {
+    COLORCONFIG: TRUE,
+    data : 
         [
             {
                 "children": [dict(child_a), dict(child_b)],
@@ -52,16 +69,25 @@ Data Structure:
     }
 
 Hierarchy
-    NodeColorRegistry --> (QWidget | UI4.Tabs.BaseTab)
+    NodeColorRegistryWidget --> (QWidget | UI4.Tabs.BaseTab)
         |- QVBoxLayout
             |- node_colors_widget --> (ModelViewWidget)
-                |- _node_type_creation_widget --> (NodeTypeListWidget)
-                |- node_color_view --> (AbstractDragDropTreeView)
-                    |- delegate --> (NodeColorItemDelegate --> AbstractDragDropModelDelegate)
-                        |- column0 delegate --> (Default | NodeTypeListWidget)
-                        |- column1 delegate --> (ColorDelegate --> ColorInputWidget)
+            |    |- _node_type_creation_widget --> (NodeTypeListWidget)
+            |    |- node_color_view --> (AbstractDragDropTreeView)
+            |        |- delegate --> (NodeColorItemDelegate --> AbstractDragDropModelDelegate)
+            |             |- column0 delegate --> (Default | NodeTypeListWidget)
+            |             |- column1 delegate --> (ColorDelegate --> ColorInputWidget)
+            | - _io_widget --> (NodeColorIOWidget)
+                 |- QVBoxLayout
+                     |- _color_configs_directory_labelled_widget --> (LabelledInputWidget)
+                     |    |- _color_configs_directory_widget --> (ListInputWidget)
+                     |- color_configs_files_labelled_widget --> (LabelledInputWidget)
+                     |    |- _color_configs_files_widget --> (ListInputWidget)
+                     |- QHBoxLayout
+                          |- _load_button_widget --> (ButtonInputWidget)
+                          |- _save_button_widget --> (ButtonInputWidget)
 
-NodeColorViewItems have three args:
+NodeColorViewItems args:
     node (str): name of the current node type or group
     item_type (int): GROUP | COLOR
     color (str): rgba255 ie (255,255,255,255)
@@ -71,6 +97,7 @@ NodeColorViewItems have three args:
 """
 import json
 import math
+import os
 
 from qtpy.QtWidgets import QWidget, QVBoxLayout, QStyle, QHBoxLayout
 from qtpy.QtCore import Qt, QModelIndex
@@ -84,15 +111,15 @@ from cgwidgets.widgets import (
     ModelViewItem,
     ColorInputWidget,
     ButtonInputWidget,
-    ListInputWidget
+    ListInputWidget,
+    LabelledInputWidget
 )
 from cgwidgets.views import AbstractDragDropModelDelegate, AbstractDragDropTreeView, AbstractDragDropModel
-from cgwidgets.utils import setAsTool, setAsAlwaysOnTop, centerWidgetOnCursor, getWidgetAncestor
+from cgwidgets.utils import setAsTool, setAsAlwaysOnTop, centerWidgetOnCursor, getWidgetAncestor, getDefaultSavePath
 from cgwidgets.settings import iColor, attrs
 
 COLOR = "COLOR"
 GROUP = "GROUP"
-TEMP_FILE_DIR = "/home/brian/.cgwidgets/nodeColors.json"
 
 
 class ColorDelegate(ColorInputWidget):
@@ -101,7 +128,7 @@ class ColorDelegate(ColorInputWidget):
         self.setHeaderPosition(position=attrs.NORTH)
 
     def text(self):
-        return repr(self.getColor().getRgb())
+        return repr([str(x).zfill(3) for x in self.getColor().getRgb()])[1:-1].replace('\'', '')
 
 
 class NodeColorItemDelegate(AbstractDragDropModelDelegate):
@@ -119,7 +146,7 @@ class NodeColorItemDelegate(AbstractDragDropModelDelegate):
 
     def __userFinishedUpdatingNodeType(self, widget, node_type):
         """ Run whenever the user finishes editing this delegate"""
-        color_registry_widget = getWidgetAncestor(self, NodeColorRegistry)
+        color_registry_widget = getWidgetAncestor(self, NodeColorRegistryWidget)
         node_types = color_registry_widget.nodeTypes()
 
         if node_type not in widget.getAllTypes():
@@ -183,10 +210,20 @@ class NodeColorItemDelegate(AbstractDragDropModelDelegate):
             delegate = ColorDelegate(parent)
             setAsAlwaysOnTop(delegate)
             delegate.show()
+
             setAsTool(delegate)
             delegate.resize(512+256, 512)
             centerWidgetOnCursor(delegate)
-            # delegate.move(QCursor.pos())
+
+            # set color
+            # todo (194) update color input widget on show
+            """ This needs to set the crosshair at the correct position, and update the display
+            of the gradient for the correct HSV values"""
+            color = index.internalPointer().getArg("color").split(", ")
+            color = [int(c) for c in color]
+            delegate.setColor(QColor(*color))
+            # delegate.updateDisplay()
+
             return delegate
         pass
 
@@ -208,7 +245,7 @@ class NodeColorItemDelegate(AbstractDragDropModelDelegate):
 
             # draw BG
             try:
-                color = index.internalPointer().getArg("color")[1:-1].split(", ")
+                color = index.internalPointer().getArg("color").split(", ")
                 color = [int(c) for c in color]
             except:
                 color = iColor["rgba_background_01"]
@@ -229,9 +266,26 @@ class NodeColorItemDelegate(AbstractDragDropModelDelegate):
             painter.drawLine(option.rect.topRight(), option.rect.bottomRight())
 
             # draw text color
-            int_color = int(math.fabs(128 - bg_color.value()))
-            text_color = [int_color, int_color, int_color, 255]
-            painter.setPen(QColor(*text_color))
+            """ Text color will be drawn dynamically based off of the value
+            of the existing widget."""
+            if bg_color.value() < 64 or 192 < bg_color.value():
+                text_color = [
+                    int(math.fabs(bg_color.red() - 255)),
+                    int(math.fabs(bg_color.green() - 255)),
+                    int(math.fabs(bg_color.blue() - 255)),
+                    255]
+                text_color = QColor(*text_color)
+                text_color = QColor(text_color.value(), text_color.value(), text_color.value(), 255)
+            else:
+                int_color = int(math.fabs(bg_color.value() - 128))
+                text_color = [
+                    int_color,
+                    int_color,
+                    int_color,
+                    255
+                ]
+                text_color = QColor(*text_color)
+            painter.setPen(text_color)
             text = index.data(Qt.DisplayRole)
             option.rect.setLeft(option.rect.left() + 5)
             painter.drawText(option.rect, int(Qt.AlignLeft | Qt.AlignVCenter), text)
@@ -306,41 +360,224 @@ class NodeColorView(AbstractDragDropTreeView):
 
 
 class NodeColorIOWidget(QWidget):
-    def __init__(self, parent=None):
+    """ Widget that will contain all of the I/O functionality.
+
+    Attributes:
+        configs_directory (str): the current path on disk to a directory containing color config files
+        default_save_location (str): path on disk that will be the default save directory
+            if the environment variable is not valid.
+        envar (str): environment variable that contains directories that will hold config files
+        envar_map (dict): a map of names/locations to map the envar directory to its full path.
+            This is used when saving/loading.
+        file_name (str): name of the current file
+        save_path (str): full path on disk to current save directory
+    TODO
+            *   Set environment variable
+            *   Get directories from environment variable
+            *   Store a dictionary of keypair values, for the environment variable,
+                and the directory names
+            *   On Load / save
+                    Get directory path that should be loaded / saved."""
+    def __init__(self, parent=None, envar="CGWNODECOLORCONFIGS"):
         super(NodeColorIOWidget, self).__init__(parent)
 
-        # create widgets
-        self._color_files_widget = ListInputWidget()
-        self._load_button_widget = ButtonInputWidget(title="LOAD", user_clicked_event=self.loadEvent, flag=False,
-                                                     is_toggleable=False)
-        self._save_button_widget = ButtonInputWidget(title="SAVE", user_clicked_event=self.saveEvent, flag=False,
-                                                     is_toggleable=False)
+        # setup default attrs
+        self._envar = envar
+        self._envar_map = {}
+        self._default_save_location = getDefaultSavePath()
+        self._configs_directory = ""
+        self._file_name = ""
 
-        # setup layout
-        QHBoxLayout(self)
+        # create widgets
+        self._color_configs_directory_widget = ListInputWidget()
+        self._color_configs_directory_widget.setCleanItemsFunction(self.__getConfigDirectories)
+        self._color_configs_directory_widget.setUserFinishedEditingEvent(self.__userUpdatedColorDirectories)
+        self._color_configs_directory_labelled_widget = LabelledInputWidget(
+            name="Dir", delegate_widget=self._color_configs_directory_widget)
+
+        self._color_configs_files_widget = ListInputWidget()
+        self._color_configs_files_widget.setCleanItemsFunction(self.__getAllColorConfigFiles)
+        self._color_configs_files_widget.setUserFinishedEditingEvent(self.__userUpdatedColorFile)
+        self._color_configs_files_labelled_widget = LabelledInputWidget(
+            name="File", delegate_widget=self._color_configs_files_widget)
+
+        self._load_button_widget = ButtonInputWidget(
+            title="LOAD", user_clicked_event=self.loadEvent, flag=False, is_toggleable=False)
+        self._save_button_widget = ButtonInputWidget(
+            title="SAVE", user_clicked_event=self.saveEvent, flag=False, is_toggleable=False)
+
+        # setup layout IO Layout
+        self._io_layout = QHBoxLayout()
+        self._io_layout.addWidget(self._load_button_widget)
+        self._io_layout.addWidget(self._save_button_widget)
+
+        # setup main layout
+        QVBoxLayout(self)
         self.layout().setContentsMargins(0, 0, 0, 0)
-        self.layout().addWidget(self._load_button_widget)
-        self.layout().addWidget(self._color_files_widget)
-        self.layout().addWidget(self._save_button_widget)
-        self.layout().setStretch(0, 0)
-        self.layout().setStretch(1, 1)
-        self.layout().setStretch(2, 0)
+        self.layout().addWidget(self._color_configs_directory_labelled_widget)
+        self.layout().addWidget(self._color_configs_files_labelled_widget)
+        self.layout().addLayout(self._io_layout)
+
+    """ PROPERTIES """
+    def defaultSaveLocation(self):
+        return self._default_save_location
+
+    def setDefaultSaveLocation(self, default_save_location):
+        self._default_save_location = default_save_location
+
+    def configsDir(self):
+        return self._configs_directory
+
+    def setConfigsDir(self, configs_dir):
+        self._configs_directory = configs_dir
+
+    def configsEnvar(self):
+        return self._envar
+
+    def setConfigsEnvar(self, envar):
+        """ Sets the name of the environment variable to search for configs in
+
+        This envar will have a list of directories that will contain config (json) files.
+
+        Args:
+            envar (str): environment variable
+                By default this is set to CGWNODECOLORCONFIGS"""
+        self._envar = envar
+
+    def envarMap(self):
+        return self._envar_map
+
+    def addEnvarMapItem(self, directory_name, full_path):
+        self.envarMap()[directory_name] = full_path
+
+    def fileName(self):
+        return self._file_name
+
+    def setFileName(self, file_name):
+        self._file_name = file_name
+
+    def savePath(self):
+        """ The full path on disk for the config to be loaded/saved"""
+        if self.configsDir() in self.envarMap().keys():
+            save_path = "{directory}/{file_name}.json".format(
+                directory=self.envarMap()[self.configsDir()],
+                file_name=self.fileName()
+            )
+            return save_path
+
+        return None
+    """ UTILS """
+    @staticmethod
+    def isColorConfigFile(path):
+        """ Determines if the path provided is a Color Config or not
+
+        Args (path): Full path on disk to color config file
+
+        Returns (bool)"""
+        if path:
+            if os.path.isfile(path):
+                if path.endswith(".json"):
+                    with open(path, "r") as filepath:
+                        data = json.load(filepath)
+                        if "COLORCONFIG" in data.keys():
+                            return True
+        return False
 
     """ EVENTS """
-
     def saveEvent(self, widget):
         export_data = self.nodeColorRegistryWidget().getExportData()
-        with open(TEMP_FILE_DIR, "w") as filepath:
-            json.dump(export_data, filepath)
+        if self.savePath():
+            if self.configsDir() and self.fileName():
+                with open(self.savePath(), "w") as filepath:
+                    json.dump(export_data, filepath)
+                    print("Saving color config to \n\t|-{path}".format(path=self.savePath()))
+                    return
+        print("{path} is not a valid color config file".format(path=self.savePath()))
         # todo (285) KATANA on save, set filepath parameter on RootNode
 
     def loadEvent(self, widget):
-        self.nodeColorRegistryWidget().loadColorFile(TEMP_FILE_DIR)
+        if self.configsDir() and self.fileName():
+            if NodeColorIOWidget.isColorConfigFile(self.savePath()):
+                if os.path.isfile(self.savePath()):
+                    self.nodeColorRegistryWidget().loadColorFile(self.savePath())
+                    print("Loading color config from \n\t|-{path}".format(path=self.savePath()))
+                    return
+
+        print("{path} is not a valid color config file".format(path=self.savePath()))
+
+    def __getConfigDirectories(self):
+        """ When the user clicks on the Directories widget, this will:
+                1.) populate the directories list
+                2.) Update the envar map
+        """
+        # if envar doesn't exist
+        if self.configsEnvar() not in os.environ.keys():
+            directories = [self.defaultSaveLocation()]
+
+        # if envar exists
+        else:
+            directories = os.environ[self.configsEnvar()].split(";")
+
+        # run through the full directories and:
+        #   1.) make the envar map
+        #   2.) make the returnable directories list
+        _dir_list = []
+        for full_path in directories:
+            full_path = full_path.rstrip("/").rstrip("\\")
+            dir_name = os.path.basename(full_path)
+            self.addEnvarMapItem(dir_name, full_path)
+            _dir_list.append([dir_name])
+
+        return _dir_list
+
+    def __userUpdatedColorDirectories(self, widget, value):
+        """ When the user updates the directories widget, this will update the files available."""
+        if value not in self.envarMap().keys():
+            widget.setText(self.configsDir())
+            return
+        if value == self.configsDir(): return
+
+        self.setConfigsDir(value)
+        self.colorConfigsFilesListWidget().setText("")
+
+    def __getAllColorConfigFiles(self):
+        """ Gets all of the color config files in the directory provided.
+
+        This will check each file to see if its:
+            1.) A JSON File
+            2.) Has the key COLORCONFIG
+
+        Args:
+            path (str): path on disk to directory to check
+        """
+        # key exists
+        if self.configsDir() in self.envarMap().keys():
+            dir = self.envarMap()[self.configsDir()]
+
+            color_configs = []
+            for file_name in os.listdir(dir):
+                full_path = "{dir}/{name}".format(dir=dir, name=file_name)
+                if NodeColorIOWidget.isColorConfigFile(full_path):
+                    color_configs.append([file_name.replace(".json", "")])
+
+            return color_configs
+        # key doesn't exist
+        else:
+            return []
+
+    def __userUpdatedColorFile(self, widget, value):
+        """ User has just finished updating the file path"""
+        self.setFileName(value)
 
     """ WIDGETS """
+    def colorConfigsFilesListWidget(self):
+        return self._color_configs_files_widget
+
+    def colorConfigsDirectoriesListWidget(self):
+        return self._color_configs_directory_widget
 
     def nodeColorRegistryWidget(self):
-        return getWidgetAncestor(self, NodeColorRegistry)
+        return getWidgetAncestor(self, NodeColorRegistryWidget)
 
     def colorFilesWidget(self):
         return self._color_files_widget
@@ -352,21 +589,19 @@ class NodeColorIOWidget(QWidget):
         return self._load_button_widget
 
 
-# class NodeColorRegistry(UI4.Tabs.BaseTab):
-class NodeColorRegistry(QWidget):
-    """Main tab widget for the desirable widgets"""
-    NAME = "Node Color Registry"
+class NodeColorRegistryWidget(QWidget):
+    """Main widget for the Node Color Registry."""
 
-    def __init__(self, parent=None):
-        super(NodeColorRegistry, self).__init__(parent)
+    def __init__(self, parent=None, envar="CGWNODECOLORCONFIGS"):
+        super(NodeColorRegistryWidget, self).__init__(parent)
 
         # setup default attributes
         self._node_types = []
 
         # create GUI
-        self.__setupGUI()
+        self.__setupGUI(envar)
 
-    def __setupGUI(self):
+    def __setupGUI(self, envar):
         """ Sets up the main GUI for this widget """
         # create main view widget
         self._node_colors_widget = ModelViewWidget(self)
@@ -394,7 +629,7 @@ class NodeColorRegistry(QWidget):
         self._node_type_creation_widget.setUserFinishedEditingEvent(self.createNewColorEvent)
 
         # setup load / save buttons
-        self._io_widget = NodeColorIOWidget(self)
+        self._io_widget = NodeColorIOWidget(self, envar=envar)
 
         # setup layout
         QVBoxLayout(self)
@@ -404,6 +639,24 @@ class NodeColorRegistry(QWidget):
         self.layout().setStretch(1, 0)
 
     """ PROPERTIES """
+    def configsEnvar(self):
+        return self.ioWidget().configsEnvar()
+
+    def setConfigsEnvar(self, envar):
+        """ Sets the name of the environment variable to search for configs in
+
+        This envar will have a list of directories that will contain config (json) files.
+
+        Args:
+            envar (str): environment variable
+                By default this is set to CGWNODECOLORCONFIGS"""
+        self.ioWidget().setConfigsEnvar(envar)
+
+    def defaultSaveLocation(self):
+        return self.ioWidget().defaultSaveLocation()
+
+    def setDefaultSaveLocation(self, default_save_location):
+        self.ioWidget().setDefaultSaveLocation(default_save_location)
 
     def nodeTypes(self):
         return self._node_types
@@ -418,9 +671,10 @@ class NodeColorRegistry(QWidget):
         self._node_types = []
 
     """ UTILS """
-
     def getExportData(self):
-        return self.nodeColorsWidget().exportModelToDict(self.nodeColorsWidget().rootItem())
+        export_data = {"COLORCONFIG": True}
+        export_data.update(self.nodeColorsWidget().exportModelToDict(self.nodeColorsWidget().rootItem()))
+        return export_data
 
     def populate(self, children, parent=QModelIndex()):
         """ Populates the view
@@ -446,8 +700,8 @@ class NodeColorRegistry(QWidget):
 
     def loadColorFile(self, filepath):
         try:
-            with open(TEMP_FILE_DIR, "r") as filepath:
-                data = json.load(filepath)["data"]
+            with open(filepath, "r") as f:
+                data = json.load(f)["data"]
 
                 # clear model
                 self.nodeColorsWidget().clearModel()
@@ -463,7 +717,6 @@ class NodeColorRegistry(QWidget):
             pass
 
     """ EVENTS """
-
     def deleteItem(self, item):
         """ Removes the selected item from the model.
 
@@ -546,8 +799,10 @@ if __name__ == "__main__":
     from cgwidgets.utils import centerWidgetOnScreen
 
     app = QApplication(sys.argv)
+    os.environ["CGWNODECOLORCONFIGS"] = "/home/brian/.cgwidgets/colorConfigs_01/;/home/brian/.cgwidgets/colorConfigs_02"
+    #os.environ["CGWNODECOLORCONFIGS"] = "/home/brian/.cgwidgets/colorConfigs_01/;/home/brian/.cgwidgets/colorConfigs_02"
 
-    node_color_registry = NodeColorRegistry()
+    node_color_registry = NodeColorRegistryWidget()
     setAsAlwaysOnTop(node_color_registry)
     node_color_registry.show()
     centerWidgetOnScreen(node_color_registry)
