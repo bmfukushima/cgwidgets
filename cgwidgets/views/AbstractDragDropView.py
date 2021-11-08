@@ -405,8 +405,8 @@ class AbstractDragDropAbstractView(object):
 
     def expandToIndex(self, index):
         """ Expands to the index provided.  Assuming this is a TreeView"""
-        def expandIndex(view, expand_index, expanded=True):
-            view.setExpanded(expand_index, expanded)
+        def expandIndex(expand_index, expanded=True):
+            self.setExpanded(expand_index, expanded)
 
         self.setIndexSelected(index, True)
         self.recurseFromIndexToRoot(index, expandIndex, expanded=True)
