@@ -2,7 +2,6 @@
 TODO (node color registry):
     *   Data containers
         *   How to store / load
-                - How to handle filepaths?
                 - Store data on KatanaProjectSettings
                     NodeColorRegistryWidget.setUserSaveEvent / setUserLoadEvent
                 - Callback/Event on init.py to check for this param, and on node create, set the color
@@ -32,8 +31,9 @@ Data Locations:
     Which is set to cgwidgets.utils.getDefaultSavePath(), and can also be set using
     NodeColorRegistryWidget.setDefaultSaveLocation().
 
-    will have all of its files checked for the extension ".json" and the key "COLORCONFIG" to determine
-    if it is a valid color config.  Please note that subdirectories are not supported.
+    This directory will have all of its files checked for the extension ".json" and the
+    key "COLORCONFIG" to determine if it is a valid color config.  Please note that subdirectories
+    are not supported.
     
     The users can save/load these files using the UI provided in the NodeColorIOWidget.  An important thing to
     note about how the save paths are determines is that the "Dir" widget, is stored as a map called "envarMap"
@@ -108,16 +108,21 @@ from qtpy.QtCore import Qt, QModelIndex
 from qtpy.QtGui import QColor, QPen
 # from Katana import UI4
 
+from .NodeTypeListWidget import NodeTypeListWidget
 from cgwidgets.widgets import (
-    NodeTypeListWidget,
     ModelViewWidget,
     ColorInputWidget,
     ButtonInputWidget,
     ListInputWidget,
-    LabelledInputWidget
-)
+    LabelledInputWidget)
+
 from cgwidgets.views import AbstractDragDropModelDelegate, AbstractDragDropTreeView, AbstractDragDropModel
-from cgwidgets.utils import setAsTool, setAsAlwaysOnTop, centerWidgetOnCursor, getWidgetAncestor, getDefaultSavePath
+from cgwidgets.utils import (
+    setAsTool,
+    setAsAlwaysOnTop,
+    centerWidgetOnCursor,
+    getWidgetAncestor,
+    getDefaultSavePath)
 from cgwidgets.settings import iColor, attrs
 
 COLOR = "COLOR"
@@ -507,7 +512,7 @@ class NodeColorIOWidget(QWidget):
 
                     # update save icon
                     NodeColorRegistryWidget.updateSaveIcon(self, is_dirty=False)
-                    print("Saving color config to \n\t|-{path}".format(path=self.savePath()))
+                    print("Saving color config:\t{path}".format(path=self.savePath()))
                     return
         print("{path} is not a valid color config file".format(path=self.savePath()))
 
@@ -519,7 +524,7 @@ class NodeColorIOWidget(QWidget):
                     self.userLoadEvent(self.savePath())
                     # update save icon
                     NodeColorRegistryWidget.updateSaveIcon(self, is_dirty=False)
-                    print("Loading color config from \n\t|-{path}".format(path=self.savePath()))
+                    print("Loading color config:\t{path}".format(path=self.savePath()))
                     return
 
         print("{path} is not a valid color config file".format(path=self.savePath()))
