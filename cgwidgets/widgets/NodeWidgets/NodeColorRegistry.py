@@ -3,7 +3,8 @@ TODO (node color registry):
     *   Data containers
         *   How to store / load
                 - How to handle filepaths?
-                - Store data on KatanaProjectSettings (285, 293)
+                - Store data on KatanaProjectSettings
+                    NodeColorRegistryWidget.setUserSaveEvent / setUserLoadEvent
                 - Callback/Event on init.py to check for this param, and on node create, set the color
                     - This param, will just be a filepath
                     - default filepath?  Create an environment variable to host the default filepath
@@ -14,9 +15,6 @@ TODO ( cgwidgets )
             color = [int(c) for c in color]
     *   Update color widget (194)
             Show correct color values when delegate is displayed
-TODO ( wish list )
-    *   Create Duplicate NodeType (DUPLICATE NODE TYPE)
-            Expand to existing
 """
 """
 The NodeColorRegistryWidget Widget allows users to easily set up node/color combinations and save
@@ -68,6 +66,13 @@ Data Structure:
         ]
     }
 
+Data Item Args (NodeColorViewItems) args:
+    node (str): name of the current node type or group
+    item_type (int): GROUP | COLOR
+    color (str): rgba255 ie (255,255,255,255)
+    children (list): 
+    enabled (bool): if the item is enabled or not
+
 Hierarchy
     NodeColorRegistryWidget --> (QWidget | UI4.Tabs.BaseTab)
         |- QVBoxLayout
@@ -87,13 +92,12 @@ Hierarchy
                           |- _load_button_widget --> (ButtonInputWidget)
                           |- _save_button_widget --> (ButtonInputWidget)
 
-NodeColorViewItems args:
-    node (str): name of the current node type or group
-    item_type (int): GROUP | COLOR
-    color (str): rgba255 ie (255,255,255,255)
-    children (list): 
-    enabled (bool): if the item is enabled or not
-
+Events:
+    Custom Save/Load events can be setup with
+        NodeColorRegistryWidget.setUserSaveEvent(function)
+        NodeColorRegistryWidget.setUserLoadEvent(function)
+    Each function will take 1 arg, str(filepath) which will be the
+    path on disk for the file to be loaded
 """
 import json
 import math
@@ -106,9 +110,7 @@ from qtpy.QtGui import QColor, QPen
 
 from cgwidgets.widgets import (
     NodeTypeListWidget,
-    ShojiModelViewWidget,
     ModelViewWidget,
-    ModelViewItem,
     ColorInputWidget,
     ButtonInputWidget,
     ListInputWidget,
@@ -128,6 +130,10 @@ class ColorDelegate(ColorInputWidget):
         self.setHeaderPosition(position=attrs.NORTH)
 
     def text(self):
+        """ Function run when this data is set """
+
+        # update save icon
+        NodeColorRegistryWidget.updateSaveIcon(self, is_dirty=True)
         return repr([str(x).zfill(3) for x in self.getColor().getRgb()])[1:-1].replace('\'', '')
 
 
@@ -157,16 +163,21 @@ class NodeColorItemDelegate(AbstractDragDropModelDelegate):
 
         # node_type already exists, reset
         if node_type in node_types:
-            # todo DUPLICATE NODE TYPE
             """ User has attempted to create a node type that already exists, go to
             the existing one"""
             self._current_item.setArg("name", self._previous_node_type)
             widget.setText(self._previous_node_type)
 
+            # expand to node
+            NodeColorRegistryWidget.expandToItem(self, node_type)
+
         # update node type
         else:
             color_registry_widget.appendNodeType(node_type)
             color_registry_widget.removeNodeType(self._previous_node_type)
+
+            # update save icon
+            NodeColorRegistryWidget.updateSaveIcon(self, is_dirty=True)
 
     def updateEditorGeometry(self, editor, option, index):
         """ Updates the editors geometry.
@@ -348,6 +359,8 @@ class NodeColorView(AbstractDragDropTreeView):
             # update new group items unique name
             unique_name = AbstractDragDropModel.getUniqueItemName(new_group_item)
             new_group_item.setArg("name", unique_name)
+
+            NodeColorRegistryWidget.updateSaveIcon(self, is_dirty=True)
             # self.model().layoutChanged.emit()
 
             # self.update(new_group_index)
@@ -490,20 +503,46 @@ class NodeColorIOWidget(QWidget):
             if self.configsDir() and self.fileName():
                 with open(self.savePath(), "w") as filepath:
                     json.dump(export_data, filepath)
+                    self.userSaveEvent(self.savePath())
+
+                    # update save icon
+                    NodeColorRegistryWidget.updateSaveIcon(self, is_dirty=False)
                     print("Saving color config to \n\t|-{path}".format(path=self.savePath()))
                     return
         print("{path} is not a valid color config file".format(path=self.savePath()))
-        # todo (285) KATANA on save, set filepath parameter on RootNode
 
     def loadEvent(self, widget):
         if self.configsDir() and self.fileName():
             if NodeColorIOWidget.isColorConfigFile(self.savePath()):
                 if os.path.isfile(self.savePath()):
                     self.nodeColorRegistryWidget().loadColorFile(self.savePath())
+                    self.userLoadEvent(self.savePath())
+                    # update save icon
+                    NodeColorRegistryWidget.updateSaveIcon(self, is_dirty=False)
                     print("Loading color config from \n\t|-{path}".format(path=self.savePath()))
                     return
 
         print("{path} is not a valid color config file".format(path=self.savePath()))
+
+    def userSaveEvent(self, filepath):
+        """ Event that is ran when the user saves a file path"""
+        pass
+
+    def setUserSaveEvent(self, function):
+        self.__userSaveEvent = function
+
+    def __userSaveEvent(self, file):
+        pass
+
+    def userLoadEvent(self, filepath):
+        """ Event that is ran when the user loads a file path"""
+        pass
+
+    def setUserLoadEvent(self, function):
+        self.__userLoadEvent = function
+
+    def __userLoadEvent(self, file):
+        pass
 
     def __getConfigDirectories(self):
         """ When the user clicks on the Directories widget, this will:
@@ -607,9 +646,9 @@ class NodeColorRegistryWidget(QWidget):
         self._node_colors_widget = ModelViewWidget(self)
 
         # setup view
-        self._node_color_view = NodeColorView(self)
-        self._node_colors_widget.setView(self._node_color_view)
-        self._node_color_view.setItemExportDataFunction(self.getItemExportData)
+        self._node_colors_widget_view = NodeColorView(self)
+        self._node_colors_widget.setView(self._node_colors_widget_view)
+        self._node_colors_widget_view.setItemExportDataFunction(self.getItemExportData)
         self._node_colors_widget.model().setHeaderData(['name', 'color'])
         self._node_colors_widget.setMultiSelect(True)
 
@@ -637,6 +676,29 @@ class NodeColorRegistryWidget(QWidget):
         self.layout().addWidget(self.ioWidget())
         self.layout().setStretch(0, 1)
         self.layout().setStretch(1, 0)
+
+    @staticmethod
+    def updateSaveIcon(widget, is_dirty):
+        node_color_registry_widget = getWidgetAncestor(widget, NodeColorRegistryWidget)
+        io_widget = node_color_registry_widget.ioWidget()
+        save_widget = io_widget.saveWidget()
+        if is_dirty:
+            color = iColor["rgba_text_is_dirty"]
+        else:
+            color = iColor["rgba_text"]
+
+        save_widget.setTextColor(color)
+
+    @staticmethod
+    def expandToItem(widget, item_name):
+        node_color_registry_widget = getWidgetAncestor(widget, NodeColorRegistryWidget)
+        node_colors_widget = node_color_registry_widget.nodeColorsWidget()
+        view_widget = node_color_registry_widget.nodeColorsWidgetView()
+        indexes = node_colors_widget.findItems(item_name, match_type=Qt.MatchExactly)
+
+        for index in indexes:
+            view_widget.setIndexSelected(index, True)
+            view_widget.expandToIndex(index)
 
     """ PROPERTIES """
     def configsEnvar(self):
@@ -710,7 +772,6 @@ class NodeColorRegistryWidget(QWidget):
                 # populate model
                 self.populate(data)
 
-            # todo (293) KATANA on load, set filepath parameter on RootNode
         except FileNotFoundError:
             # Todo file does not exist.
 
@@ -723,12 +784,15 @@ class NodeColorRegistryWidget(QWidget):
         This will check all of the descendants for any node types,
         and remove them from the internal nodeTypes list"""
         # get all children
-        descendents = self.nodeColorView().getItemsDescendants(item)
+        descendents = self.nodeColorsWidgetView().getItemsDescendants(item)
         descendents.append(item)
         for child in descendents:
             if child.getArg("item_type") == COLOR:
-                print("removing ...", child.getArg("name"))
                 self.removeNodeType(child.getArg("name"))
+
+        # update save icon
+        NodeColorRegistryWidget.updateSaveIcon(self, is_dirty=True)
+        self.userDeleteEvent(item)
 
     def getItemExportData(self, item):
         """ Individual items dictionary when exported.
@@ -749,10 +813,11 @@ class NodeColorRegistryWidget(QWidget):
         item_name = AbstractDragDropModel.getUniqueItemName(item)
         if new_value != item_name:
             item.setName(item_name)
+        NodeColorRegistryWidget.updateSaveIcon(self, is_dirty=True)
 
-    def selectionChanged(self, item, enabled):
-        if enabled:
-            print(item.getArg("name"), item.getArg("color"), item.getArg("item_type"))
+    # def selectionChanged(self, item, enabled):
+    #     if enabled:
+    #         print(item.getArg("name"), item.getArg("color"), item.getArg("item_type"))
 
     def createNewColorEvent(self, widget, value):
         """ Creates a new node type index """
@@ -760,9 +825,8 @@ class NodeColorRegistryWidget(QWidget):
 
         if self.nodeTypeCreationWidget().text() == "": return
         if value in self.nodeTypes():
-            # todo DUPLICATE NODE TYPE
-            """ User has attempted to create a node type that already exists, go to
-            the existing one"""
+            # duplicate node, expand to existing
+            NodeColorRegistryWidget.expandToItem(self, value)
             return
 
         # all_nodes = NodegraphAPI.GetNodeTypes()
@@ -773,13 +837,29 @@ class NodeColorRegistryWidget(QWidget):
             new_index = self.nodeColorsWidget().insertNewIndex(
                 0, name=node_type, column_data=column_data, is_dropable=False)
             self.appendNodeType(node_type)
+
+            NodeColorRegistryWidget.updateSaveIcon(self, is_dirty=True)
         self._node_type_creation_widget.setText("")
 
     def __createNewNodeColorItem(self, node_type, default_color=None):
         pass
 
-    """ WIDGETS """
+    def setUserDeleteEvent(self, function):
+        self.__userDeleteEvent = function
 
+    def __userDeleteEvent(self, item):
+        pass
+
+    def userDeleteEvent(self, item):
+        pass
+
+    def setUserSaveEvent(self, function):
+        self.ioWidget().setUserSaveEvent(function)
+
+    def setUserLoadEvent(self, function):
+        self.ioWidget().setUserLoadEvent(function)
+
+    """ WIDGETS """
     def ioWidget(self):
         return self._io_widget
 
@@ -789,8 +869,8 @@ class NodeColorRegistryWidget(QWidget):
     def nodeColorsWidget(self):
         return self._node_colors_widget
 
-    def nodeColorView(self):
-        return self._node_color_view
+    def nodeColorsWidgetView(self):
+        return self._node_colors_widget_view
 
 
 if __name__ == "__main__":

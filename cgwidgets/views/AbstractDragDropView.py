@@ -260,6 +260,23 @@ class AbstractDragDropAbstractView(object):
         # for index in self.selectedIndexes():
         #     self.selectionModel().select(index, QItemSelectionModel.Deselect)
 
+    def findItems(self, value, index=None, role=Qt.DisplayRole, match_type=Qt.MatchExactly):
+        """
+        Finds all of the indexes of the value provided that are descendents of the index provided.
+        If no index is provided, the default index will be the root.
+
+        Args:
+            value (string): to search for
+            index (QModelIndex): to search from
+            role (Qt.DisplayRole): to search data of
+            match_type (Qt.MatchFlags): Flags to match with...
+                Qt.MatchExactly | Qt.MatchStartsWith
+                https://doc.qt.io/archives/qtjambi-4.5.2_01/com/trolltech/qt/core/Qt.MatchFlag.html
+        Returns (list): of QModelIndex
+
+        """
+        return self.model().findItems(value, index=index, role=role, match_type=match_type)
+
     def getAllSelectedIndexes(self):
         selected_indexes = self.selectionModel().selectedRows(0)
         return selected_indexes
@@ -386,6 +403,14 @@ class AbstractDragDropAbstractView(object):
         self.setFocus()
         return QAbstractItemView.enterEvent(self, event)
 
+    def expandToIndex(self, index):
+        """ Expands to the index provided.  Assuming this is a TreeView"""
+        def expandIndex(view, expand_index, expanded=True):
+            view.setExpanded(expand_index, expanded)
+
+        self.setIndexSelected(index, True)
+        self.recurseFromIndexToRoot(index, expandIndex, expanded=True)
+
     """ VIRTUAL """
     def abstractSelectionChanged(self, selected, deselected):
         for index in selected.indexes():
@@ -471,7 +496,10 @@ class AbstractDragDropAbstractView(object):
         self.__keyPressEvent = function
 
     def setExpanded(self, index, bool):
-        """ override for list views """
+        """ override for list views
+
+        I actually have no idea how this works, but somehow,
+        it magically works"""
         return QAbstractItemView.keyPressEvent(self, index, bool)
 
     """ COPY / PASTE """

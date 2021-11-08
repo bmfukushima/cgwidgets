@@ -40,6 +40,7 @@ class Colors(dict):
         createColorRange("rgba_yellow", (start_color, start_color, start_color*0.5, 255), self, num_colors, desaturate=False)
         createColorRange("rgba_cyan", (start_color * 0.5, start_color, start_color, 255), self, num_colors, desaturate=False)
         createColorRange("rgba_magenta", (start_color, start_color * 0.5, start_color * 0.5, 255), self, num_colors, desaturate=False)
+
         """ COLOR REFERENCES"""
         """ background """
         self["rgba_background_00"] = (48, 48, 48, 255)
@@ -47,13 +48,13 @@ class Colors(dict):
         self["rgba_background_02"] = self["rgba_gray_4"]
 
         """ outline """
-        self["rgba_outline"] = self["rgba_blue_6"]
-        self["rgba_outline_hover"] = self["rgba_blue_7"]
+        self["rgba_outline"]        = self["rgba_blue_6"]
+        self["rgba_outline_hover"]  = self["rgba_blue_7"]
 
         """ text """
-        self["rgba_text"] = self["rgba_gray_7"]
-        self["rgba_text_disabled"] = Colors.multiplyRGBAValues(self["rgba_text"], golden_ratio=False, alpha=255)
-        self["rgba_text_hover"] = self["rgba_cyan_7"]
+        self["rgba_text"]           = self["rgba_gray_7"]
+        self["rgba_text_disabled"]  = Colors.multiplyRGBAValues(self["rgba_text"], golden_ratio=False, alpha=255)
+        self["rgba_text_hover"]     = self["rgba_cyan_7"]
 
         """ hover / select"""
         self["rgba_selected_background"] = self["rgba_cyan_5"]
@@ -64,12 +65,15 @@ class Colors(dict):
         """ accept / decline"""
         self["rgba_accept"] = self["rgba_green_desat_6"]
         self["rgba_cancel"] = self["rgba_red_desat_6"]
-        self["rgba_maybe"] =  self["rgba_yellow_5"]
-        self["rgba_error"] =  self["rgba_red_7"]
+        self["rgba_maybe"]  = self["rgba_yellow_5"]
+        self["rgba_error"]  = self["rgba_red_7"]
         self["rgba_accept_hover"] = Colors.multiplyRGBAValues(self["rgba_accept"], golden_ratio=True)
         self["rgba_cancel_hover"] = Colors.multiplyRGBAValues(self["rgba_cancel"], golden_ratio=True)
-        self["rgba_maybe_hover"] = Colors.multiplyRGBAValues(self["rgba_maybe"], golden_ratio=True)
-        self["rgba_error_hover"] = Colors.multiplyRGBAValues(self["rgba_error"], golden_ratio=True)
+        self["rgba_maybe_hover"]  = Colors.multiplyRGBAValues(self["rgba_maybe"], golden_ratio=True)
+        self["rgba_error_hover"]  = Colors.multiplyRGBAValues(self["rgba_error"], golden_ratio=True)
+
+        """ dirty """
+        self["rgba_text_is_dirty"] = self["rgba_yellow_6"]
 
         self.style_sheet_args = self.createStyleSheetArgs()
 
@@ -77,6 +81,8 @@ class Colors(dict):
         args = {}
         for color in list(self.keys()):
             args[color] = repr(self[color])
+            setattr(self, color, self[color])
+            # print(color, self[color])
         return args
 
     @staticmethod

@@ -232,6 +232,23 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
     def selectionModel(self):
         return self.headerWidget().selectionModel()
 
+    def findItems(self, value, index=None, role=Qt.DisplayRole, match_type=Qt.MatchExactly):
+        """
+        Finds all of the indexes of the value provided that are descendents of the index provided.
+        If no index is provided, the default index will be the root.
+
+        Args:
+            value (string): to search for
+            index (QModelIndex): to search from
+            role (Qt.DisplayRole): to search data of
+            match_type (Qt.MatchFlags): Flags to match with...
+                Qt.MatchExactly | Qt.MatchStartsWith
+                https://doc.qt.io/archives/qtjambi-4.5.2_01/com/trolltech/qt/core/Qt.MatchFlag.html
+        Returns (list): of QModelIndex
+
+        """
+        return self.model().findItems(value, index=index, role=role, match_type=match_type)
+
     def getAllBaseItems(self, items=None):
         """ Takes a list of items, and returns only the top most item of each branch
 
@@ -442,7 +459,6 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
     """ MODEL """
     def model(self):
         return self.headerWidget().model()
-        #return self._model
 
     def setModel(self, model):
         #self._model = model
