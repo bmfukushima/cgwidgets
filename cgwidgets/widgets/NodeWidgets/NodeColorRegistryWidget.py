@@ -20,8 +20,10 @@ The NodeColorRegistryWidget Widget allows users to easily set up node/color comb
 them out to a JSON file.  The purpose for these JSON files is that the map can then be
 reused when nodes are created to create default node colors for various DCC's.
 
-Reset Color:
-    Control + MMB on any item
+Controls:
+    Reset Item Color to None (Ctrl + MMB)
+    Display export options (Alt + S)
+        
 
 Data Locations:
     Data locations are stored under an environment variable.
@@ -41,18 +43,19 @@ Data Locations:
     directory name must be unique.
 
 Data Structure:
-    each item is stored as a dictionary which should look like:
-    {
-        "children": [],
-        "color":"255, 255, 255, 255",
-        "enabled": bool,
-        "item_type":COLOR|GROUP,
-        "name": item.getName()
-    }
-
+    The overall data structure of the config files should be a json file which has 3 keys:
+        COLORCONFIG (bool): Flag to determine that this is a ColorConfig file.
+            Note: This just has to exist.  It doesn't need to be set to True or False.
+        data (list): List of items, each item will have the same metadata as an individual
+            item in the model.  This is used for repopulating the model/loading files.
+        colors (dict): Mapping of node types to colors ie
+            {str(node_type): list(255,255,255,255)}
     {
     COLORCONFIG: TRUE,
-    data : 
+    "colors":{
+        str(node_name): list(255, 255, 255, 255),
+    }
+    "data" : 
         [
             {
                 "children": [dict(child_a), dict(child_b)],
@@ -67,11 +70,14 @@ Data Structure:
     }
 
 Data Item Args (NodeColorViewItems) args:
-    node (str): name of the current node type or group
-    item_type (int): GROUP | COLOR
-    color (str): rgba255 ie (255,255,255,255)
-    children (list): 
-    enabled (bool): if the item is enabled or not
+    each item is stored as a dictionary which should look like:
+        {
+            "children": [],
+            "color":"255, 255, 255, 255",
+            "enabled": bool,
+            "item_type":COLOR|GROUP,
+            "name": item.getName()
+        }
 
 Hierarchy
     NodeColorRegistryWidget --> (QWidget | UI4.Tabs.BaseTab)
@@ -391,13 +397,7 @@ class NodeColorIOWidget(QWidget):
             This is used when saving/loading.
         file_name (str): name of the current file
         save_path (str): full path on disk to current save directory
-    TODO
-            *   Set environment variable
-            *   Get directories from environment variable
-            *   Store a dictionary of keypair values, for the environment variable,
-                and the directory names
-            *   On Load / save
-                    Get directory path that should be loaded / saved."""
+    """
     def __init__(self, parent=None, envar="CGWNODECOLORCONFIGS"):
         super(NodeColorIOWidget, self).__init__(parent)
 
@@ -490,25 +490,10 @@ class NodeColorIOWidget(QWidget):
             return save_path
 
         return None
-    """ UTILS """
-    @staticmethod
-    def isColorConfigFile(path):
-        """ Determines if the path provided is a Color Config or not
-
-        Args (path): Full path on disk to color config file
-
-        Returns (bool)"""
-        if path:
-            if os.path.isfile(path):
-                if path.endswith(".json"):
-                    with open(path, "r") as filepath:
-                        data = json.load(filepath)
-                        if "COLORCONFIG" in data.keys():
-                            return True
-        return False
 
     """ EVENTS """
     def saveEvent(self, widget):
+        self.nodeColorRegistryWidget().resetNodeColorsMap()
         export_data = self.nodeColorRegistryWidget().getExportData()
         if self.savePath():
             if self.configsDir() and self.fileName():
@@ -524,7 +509,7 @@ class NodeColorIOWidget(QWidget):
 
     def loadEvent(self, widget):
         if self.configsDir() and self.fileName():
-            if NodeColorIOWidget.isColorConfigFile(self.savePath()):
+            if NodeColorRegistryWidget.isColorConfigFile(self.savePath()):
                 if os.path.isfile(self.savePath()):
                     self.nodeColorRegistryWidget().loadColorFile(self.savePath())
                     self.userLoadEvent(self.savePath())
@@ -607,7 +592,7 @@ class NodeColorIOWidget(QWidget):
             color_configs = []
             for file_name in os.listdir(dir):
                 full_path = "{dir}/{name}".format(dir=dir, name=file_name)
-                if NodeColorIOWidget.isColorConfigFile(full_path):
+                if NodeColorRegistryWidget.isColorConfigFile(full_path):
                     color_configs.append([file_name.replace(".json", "")])
 
             return color_configs
@@ -640,19 +625,27 @@ class NodeColorIOWidget(QWidget):
 
 
 class NodeColorRegistryWidget(QWidget):
-    """Main widget for the Node Color Registry."""
+    """Main widget for the Node Color Registry.
+
+    Attributes:
+        node_types (list): of strings of all node types in the scene
+        node_colors_map (dict): of all the node/color mappings.
+            This is dynamically generated on export"""
 
     def __init__(self, parent=None, envar="CGWNODECOLORCONFIGS"):
         super(NodeColorRegistryWidget, self).__init__(parent)
 
         # setup default attributes
         self._node_types = []
+        self._node_colors_map = {}
 
         # create GUI
         self.__setupGUI(envar)
 
         # setup tool tip
-        self.setToolTip("Press Alt+S to bring up save/export menu")
+        self.setToolTip("""ALT + S to bring up save/export menu
+
+CTRL+MMB to clear an items color""")
 
     def __setupGUI(self, envar):
         """ Sets up the main GUI for this widget """
@@ -700,6 +693,8 @@ class NodeColorRegistryWidget(QWidget):
         node_color_registry_widget = getWidgetAncestor(widget, NodeColorRegistryWidget)
         io_widget = node_color_registry_widget.ioWidget()
         save_widget = io_widget.saveWidget()
+
+        # todo update color, for some reason this sets ALL the widgets colors =\
         if is_dirty:
             text = "SAVE*"
             color = iColor["rgba_text_is_dirty"]
@@ -719,6 +714,22 @@ class NodeColorRegistryWidget(QWidget):
         for index in indexes:
             view_widget.setIndexSelected(index, True)
             view_widget.expandToIndex(index)
+
+    @staticmethod
+    def isColorConfigFile(path):
+        """ Determines if the path provided is a Color Config or not
+
+        Args (path): Full path on disk to color config file
+
+        Returns (bool)"""
+        if path:
+            if os.path.isfile(path):
+                if path.endswith(".json"):
+                    with open(path, "r") as filepath:
+                        data = json.load(filepath)
+                        if "COLORCONFIG" in data.keys():
+                            return True
+        return False
 
     """ PROPERTIES """
     def configsEnvar(self):
@@ -740,6 +751,15 @@ class NodeColorRegistryWidget(QWidget):
     def setDefaultSaveLocation(self, default_save_location):
         self.ioWidget().setDefaultSaveLocation(default_save_location)
 
+    def nodeColorsMap(self):
+        return self._node_colors_map
+
+    def updateNodeColor(self, node, color):
+        self.nodeColorsMap()[node] = color
+
+    def resetNodeColorsMap(self):
+        self._node_colors_map = {}
+
     def nodeTypes(self):
         return self._node_types
 
@@ -756,6 +776,7 @@ class NodeColorRegistryWidget(QWidget):
     def getExportData(self):
         export_data = {"COLORCONFIG": True}
         export_data.update(self.nodeColorsWidget().exportModelToDict(self.nodeColorsWidget().rootItem()))
+        export_data["colors"] = self.nodeColorsMap()
         return export_data
 
     def populate(self, children, parent=QModelIndex()):
@@ -814,12 +835,32 @@ class NodeColorRegistryWidget(QWidget):
         NodeColorRegistryWidget.updateSaveIcon(self, is_dirty=True)
         self.userDeleteEvent(item)
 
+    def getItemAbsoluteColor(self, item):
+        if item == self.nodeColorsWidgetView().rootItem(): return None
+        if item.getArg("color") == "":
+            if item.parent():
+                self.getItemAbsoluteColor(item.parent())
+        else:
+            color = item.getArg("color").split(", ")
+            if len(color) == 4:
+                color = [int(c) for c in color]
+
+            return color
+
     def getItemExportData(self, item):
         """ Individual items dictionary when exported.
 
         Note:
             node has to come first.  This is due to how the item.name() function is called.
             As if no "name" arg is found, it will return the first key in the dict"""
+
+        # store data in dictionary for the actual export data
+        if item.getArg("item_type") == COLOR:
+            absolute_color = self.getItemAbsoluteColor(item)
+
+            self.updateNodeColor(item.getArg("name"), absolute_color)
+
+        # return the export data for the rebuild file
         return {
             "name": item.getArg("name"),
             "children": [],
