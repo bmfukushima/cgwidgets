@@ -95,6 +95,9 @@ class AbstractModelViewWidget(AbstractShojiLayout):
         self.not_soloable = True
         self.setProperty('is_soloable', True)
 
+        # todo set delegate stretch factor
+        # self.setStretchFactor(0, 1)
+
     """ HEADER """
     def setHeaderData(self, _header_data):
         self.model().setHeaderData(_header_data)
@@ -352,6 +355,8 @@ class AbstractModelViewWidget(AbstractShojiLayout):
 
         self._delegate_manifest.append(delegate_manifest)
 
+        # todo set delegate stretch factor
+        # self.setStretchFactor(len(self._delegate_manifest), 0)
         # add widget
         self.addWidget(widget)
         widget.hide()
@@ -666,13 +671,9 @@ class ModelViewSearchBox(AbstractStringInputWidget):
         view.clearItemSelection()
 
         # select / expand
-        def expandIndex(view, index, expanded=True):
-            view.setExpanded(index, expanded)
-
         for index in indexes:
             view.setIndexSelected(index, True)
             view.expandToIndex(index)
-            # view.recurseFromIndexToRoot(index, expandIndex, expanded=True)
 
     def keyPressEvent(self, event):
         from cgwidgets.settings.keylist import ACCEPT_KEYS

@@ -121,6 +121,7 @@ from cgwidgets.utils import (
     setAsTool,
     setAsAlwaysOnTop,
     centerWidgetOnCursor,
+    getFontSize,
     getWidgetAncestor,
     getDefaultSavePath)
 from cgwidgets.settings import iColor, attrs
@@ -236,8 +237,9 @@ class NodeColorItemDelegate(AbstractDragDropModelDelegate):
             """ This needs to set the crosshair at the correct position, and update the display
             of the gradient for the correct HSV values"""
             color = index.internalPointer().getArg("color").split(", ")
-            color = [int(c) for c in color]
-            delegate.setColor(QColor(*color))
+            if len(color) == 4:
+                color = [int(c) for c in color]
+                delegate.setColor(QColor(*color))
             # delegate.updateDisplay()
 
             return delegate
@@ -435,9 +437,13 @@ class NodeColorIOWidget(QWidget):
         self.layout().addWidget(self._color_configs_directory_labelled_widget)
         self.layout().addWidget(self._color_configs_files_labelled_widget)
         self.layout().addLayout(self._io_layout)
+        self.setFixedHeight(getFontSize() * 9)
+        self.layout().setSpacing(0)
 
     """ PROPERTIES """
     def defaultSaveLocation(self):
+        if not os.path.exists(self._default_save_location):
+            os.mkdir(self._default_save_location)
         return self._default_save_location
 
     def setDefaultSaveLocation(self, default_save_location):
@@ -645,6 +651,9 @@ class NodeColorRegistryWidget(QWidget):
         # create GUI
         self.__setupGUI(envar)
 
+        # setup tool tip
+        self.setToolTip("Press Alt+S to bring up save/export menu")
+
     def __setupGUI(self, envar):
         """ Sets up the main GUI for this widget """
         # create main view widget
@@ -665,6 +674,7 @@ class NodeColorRegistryWidget(QWidget):
         self._node_type_creation_widget = NodeTypeListWidget(self)
         self._node_colors_widget.addDelegate([], self._node_type_creation_widget, modifier=Qt.NoModifier, focus=True)
         self._node_type_creation_widget.show()
+        self._node_type_creation_widget.setFixedHeight(getFontSize()*3)
 
         # setup events
         # self._node_colors_widget.setIndexSelectedEvent(self.selectionChanged)
@@ -674,13 +684,16 @@ class NodeColorRegistryWidget(QWidget):
 
         # setup load / save buttons
         self._io_widget = NodeColorIOWidget(self, envar=envar)
+        self._node_colors_widget.addDelegate([Qt.Key_S], self._io_widget, modifier=Qt.AltModifier)
+        self._io_widget.hide()
+        self._node_type_creation_widget.setFixedHeight(getFontSize()*3)
 
         # setup layout
         QVBoxLayout(self)
         self.layout().addWidget(self.nodeColorsWidget())
-        self.layout().addWidget(self.ioWidget())
-        self.layout().setStretch(0, 1)
-        self.layout().setStretch(1, 0)
+        #self.layout().addWidget(self.ioWidget())
+        #self.layout().setStretch(0, 1)
+        #self.layout().setStretch(1, 0)
 
     @staticmethod
     def updateSaveIcon(widget, is_dirty):
@@ -688,11 +701,13 @@ class NodeColorRegistryWidget(QWidget):
         io_widget = node_color_registry_widget.ioWidget()
         save_widget = io_widget.saveWidget()
         if is_dirty:
+            text = "SAVE*"
             color = iColor["rgba_text_is_dirty"]
         else:
+            text = "SAVE"
             color = iColor["rgba_text"]
-
-        save_widget.setTextColor(color)
+        save_widget.setText(text)
+        # save_widget.setTextColor(color)
 
     @staticmethod
     def expandToItem(widget, item_name):
