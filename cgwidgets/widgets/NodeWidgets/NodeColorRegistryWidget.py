@@ -1,13 +1,6 @@
 """
-TODO (node color registry):
-    *   Data containers
-        *   How to store / load
-                - Store data on KatanaProjectSettings
-                    NodeColorRegistryWidget.setUserSaveEvent / setUserLoadEvent
-                - Callback/Event on init.py to check for this param, and on node create, set the color
-                    - This param, will just be a filepath
-                    - default filepath?  Create an environment variable to host the default filepath
-
+TODO
+    *   Default header size
 TODO ( cgwidgets )
     *   Move str converter
             color = index.internalPointer().getArg("color")[1:-1].split(", ")
@@ -334,6 +327,7 @@ class NodeColorView(AbstractDragDropTreeView):
                 item = index.internalPointer()
                 if item:
                     item.setArg("color", "")
+                    NodeColorRegistryWidget.updateSaveIcon(self, True)
 
         return AbstractDragDropTreeView.mouseReleaseEvent(self, event)
 
