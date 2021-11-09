@@ -3,6 +3,9 @@ TODO
     *   Default header size
     *   Set Color Config
             set default color config
+    *   When finding node type, deselect existing
+            NodeColorRegistryWidget.expandToItem
+    *   Inherited colors not working
 TODO ( cgwidgets )
     *   Move str converter
             color = index.internalPointer().getArg("color")[1:-1].split(", ")
@@ -853,17 +856,17 @@ CTRL+MMB to clear an items color""")
         NodeColorRegistryWidget.updateSaveIcon(self, is_dirty=True)
         self.userDeleteEvent(item)
 
-    def getItemAbsoluteColor(self, item):
+    def getAbsoluteItemColor(self, item):
         if item == self.nodeColorsWidgetView().rootItem(): return None
         if item.getArg("color") == "":
             if item.parent():
-                self.getItemAbsoluteColor(item.parent())
+                return self.getAbsoluteItemColor(item.parent())
         else:
             color = item.getArg("color").split(", ")
             if len(color) == 4:
                 color = [int(c) for c in color]
 
-            return color
+                return color
 
     def getItemExportData(self, item):
         """ Individual items dictionary when exported.
@@ -874,7 +877,7 @@ CTRL+MMB to clear an items color""")
 
         # store data in dictionary for the actual export data
         if item.getArg("item_type") == COLOR:
-            absolute_color = self.getItemAbsoluteColor(item)
+            absolute_color = self.getAbsoluteItemColor(item)
 
             self.updateNodeColor(item.getArg("name"), absolute_color)
 
