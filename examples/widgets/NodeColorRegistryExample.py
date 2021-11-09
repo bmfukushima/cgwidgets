@@ -13,6 +13,9 @@ os.environ["CGWNODECOLORCONFIGS"] = "/home/brian/.cgwidgets/colorConfigs_01/;/ho
 node_color_registry = NodeColorRegistryWidget()
 setAsAlwaysOnTop(node_color_registry)
 node_color_registry.show()
+file = "/home/brian/.cgwidgets/colorConfigs_01/test.json"
+
+node_color_registry.setColorFile(file)
 centerWidgetOnScreen(node_color_registry, width=512)
 # node_color_registry.resize(1024,1024)
 # centerWidgetOnScreen(node_color_registry)

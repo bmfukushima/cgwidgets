@@ -1,8 +1,4 @@
 """
-TODO
-    *   Default header size
-    *   Set Color Config
-            set default color config
 TODO ( cgwidgets )
     *   Move str converter
             color = index.internalPointer().getArg("color")[1:-1].split(", ")
@@ -333,6 +329,7 @@ class NodeColorItemDelegate(AbstractDragDropModelDelegate):
 class NodeColorView(AbstractDragDropTreeView):
     def __init__(self, parent=None):
         super(NodeColorView, self).__init__(parent)
+        self.header().resizeSection(0, 350)
         # self.setIsDeletable(True)
 
     def mouseReleaseEvent(self, event):
@@ -417,6 +414,7 @@ class NodeColorIOWidget(QWidget):
         self._default_save_location = getDefaultSavePath()
         self._configs_directory = ""
         self._file_name = ""
+        self.__getConfigDirectories()
 
         # create widgets
         self._color_configs_directory_widget = ListInputWidget()
@@ -772,6 +770,9 @@ CTRL+MMB to clear an items color""")
     def setDefaultSaveLocation(self, default_save_location):
         self.ioWidget().setDefaultSaveLocation(default_save_location)
 
+    def envarMap(self):
+        return self.ioWidget().envarMap()
+
     def nodeColorsMap(self):
         return self._node_colors_map
 
@@ -793,68 +794,12 @@ CTRL+MMB to clear an items color""")
     def resetNodeTypes(self):
         self._node_types = []
 
-    """ UTILS """
+    """ UTILS (I/O)"""
     def getExportData(self):
         export_data = {"COLORCONFIG": True}
         export_data.update(self.nodeColorsWidget().exportModelToDict(self.nodeColorsWidget().rootItem()))
         export_data["colors"] = self.nodeColorsMap()
         return export_data
-
-    def populate(self, children, parent=QModelIndex()):
-        """ Populates the view
-
-        Args:
-            children (list): of item data"""
-        for child in reversed(children):
-            if child["item_type"] == COLOR:
-                # column_data = child
-                new_index = self.nodeColorsWidget().insertNewIndex(
-                    0, name=child["name"], column_data=child, is_dropable=False, parent=parent)
-                self.appendNodeType(child["name"])
-            elif child["item_type"] == GROUP:
-                new_index = self.nodeColorsWidget().insertNewIndex(
-                    0, name="group", column_data=child, is_dropable=True, parent=parent)
-                self.populate(child["children"], parent=new_index)
-                pass
-
-            # setup enable/disabled
-            if not child["enabled"]:
-                new_item = new_index.internalPointer()
-                new_item.setIsEnabled(child["enabled"])
-
-    def loadColorFile(self, filepath):
-        try:
-            with open(filepath, "r") as f:
-                data = json.load(f)["data"]
-
-                # clear model
-                self.nodeColorsWidget().clearModel()
-                self.resetNodeTypes()
-
-                # populate model
-                self.populate(data)
-
-        except FileNotFoundError:
-            # Todo file does not exist.
-
-            pass
-
-    """ EVENTS """
-    def deleteItem(self, item):
-        """ Removes the selected item from the model.
-
-        This will check all of the descendants for any node types,
-        and remove them from the internal nodeTypes list"""
-        # get all children
-        descendents = self.nodeColorsWidgetView().getItemsDescendants(item)
-        descendents.append(item)
-        for child in descendents:
-            if child.getArg("item_type") == COLOR:
-                self.removeNodeType(child.getArg("name"))
-
-        # update save icon
-        NodeColorRegistryWidget.updateSaveIcon(self, is_dirty=True)
-        self.userDeleteEvent(item)
 
     def getAbsoluteItemColor(self, item):
         if item == self.nodeColorsWidgetView().rootItem(): return None
@@ -890,6 +835,89 @@ CTRL+MMB to clear an items color""")
             "item_type": item.getArg("item_type")
 
         }
+
+    def populate(self, children, parent=QModelIndex()):
+        """ Populates the view
+
+        Args:
+            children (list): of item data"""
+        for child in reversed(children):
+            if child["item_type"] == COLOR:
+                # column_data = child
+                new_index = self.nodeColorsWidget().insertNewIndex(
+                    0, name=child["name"], column_data=child, is_dropable=False, parent=parent)
+                self.appendNodeType(child["name"])
+            elif child["item_type"] == GROUP:
+                new_index = self.nodeColorsWidget().insertNewIndex(
+                    0, name="group", column_data=child, is_dropable=True, parent=parent)
+                self.populate(child["children"], parent=new_index)
+                pass
+
+            # setup enable/disabled
+            if not child["enabled"]:
+                new_item = new_index.internalPointer()
+                new_item.setIsEnabled(child["enabled"])
+
+    def loadColorFile(self, filepath):
+        """ Loads the color config file provided
+
+        Note:
+            This will only populate the model, it will not set the actual
+            the dir/filename values in the save menu.  To do this use
+            setColorFile(filepath)
+
+        Args:
+            filepath (str): path on disk to color config file"""
+        try:
+            with open(filepath, "r") as f:
+                data = json.load(f)["data"]
+
+                # clear model
+                self.nodeColorsWidget().clearModel()
+                self.resetNodeTypes()
+
+                # populate model
+                self.populate(data)
+                return True
+
+        except FileNotFoundError:
+            # Todo file does not exist.
+            pass
+
+        return False
+
+    def setColorFile(self, filepath):
+        """ This will set the widget to the current filepath provided
+
+        Args:
+            filepath (str): path on disk to file to be loaded """
+        if self.loadColorFile(filepath):
+            dirname = os.path.basename(os.path.dirname(filepath))
+            filename = os.path.basename(filepath).rstrip(".json")
+
+            if dirname in self.envarMap().keys():
+
+                self.ioWidget().colorConfigsDirectoriesListWidget().setText(dirname)
+                self.ioWidget().setConfigsDir(dirname)
+            if filename:
+                self.ioWidget().colorConfigsFilesListWidget().setText(filename)
+
+    """ EVENTS """
+    def deleteItem(self, item):
+        """ Removes the selected item from the model.
+
+        This will check all of the descendants for any node types,
+        and remove them from the internal nodeTypes list"""
+        # get all children
+        descendents = self.nodeColorsWidgetView().getItemsDescendants(item)
+        descendents.append(item)
+        for child in descendents:
+            if child.getArg("item_type") == COLOR:
+                self.removeNodeType(child.getArg("name"))
+
+        # update save icon
+        NodeColorRegistryWidget.updateSaveIcon(self, is_dirty=True)
+        self.userDeleteEvent(item)
 
     def nameChangedEvent(self, item, old_value, new_value):
         item_name = AbstractDragDropModel.getUniqueItemName(item)
