@@ -285,7 +285,19 @@ class NodeColorItemDelegate(AbstractDragDropModelDelegate):
             # draw text color
             """ Text color will be drawn dynamically based off of the value
             of the existing widget."""
-            if bg_color.value() < 64 or 192 < bg_color.value():
+            # BRIGHT YELLOW / GREEN
+            if 192 < bg_color.green() and bg_color.blue() < 128:
+                int_color = int(math.fabs(bg_color.value() - 255))
+                text_color = [
+                    int_color,
+                    int_color,
+                    int_color,
+                    255
+                ]
+                text_color = QColor(*text_color)
+
+            # LIGHT / DARK COLORS
+            elif bg_color.value() < 64 or 192 < bg_color.value():
                 text_color = [
                     int(math.fabs(bg_color.red() - 255)),
                     int(math.fabs(bg_color.green() - 255)),
@@ -293,6 +305,8 @@ class NodeColorItemDelegate(AbstractDragDropModelDelegate):
                     255]
                 text_color = QColor(*text_color)
                 text_color = QColor(text_color.value(), text_color.value(), text_color.value(), 255)
+
+            # MID COLORS
             else:
                 int_color = int(math.fabs(bg_color.value() - 128))
                 text_color = [
