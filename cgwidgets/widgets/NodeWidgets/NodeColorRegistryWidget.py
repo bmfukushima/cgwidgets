@@ -1,6 +1,8 @@
 """
 TODO
     *   Default header size
+    *   Set Color Config
+            set default color config
 TODO ( cgwidgets )
     *   Move str converter
             color = index.internalPointer().getArg("color")[1:-1].split(", ")
