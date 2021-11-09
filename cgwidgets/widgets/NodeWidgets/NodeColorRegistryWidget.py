@@ -498,7 +498,9 @@ class NodeColorIOWidget(QWidget):
         if self.savePath():
             if self.configsDir() and self.fileName():
                 # create directory if it doesnt exist
-                os.makedirs(os.path.dirname(self.savePath()))
+                save_dir = os.path.dirname(self.savePath())
+                if not os.path.exists(save_dir):
+                    os.makedirs(save_dir)
 
                 # export data
                 with open(self.savePath(), "w") as filepath:
@@ -525,23 +527,25 @@ class NodeColorIOWidget(QWidget):
         print("{path} is not a valid color config file".format(path=self.savePath()))
 
     def userSaveEvent(self, filepath):
+        self.__userSaveEvent(filepath)
         """ Event that is ran when the user saves a file path"""
         pass
 
     def setUserSaveEvent(self, function):
         self.__userSaveEvent = function
 
-    def __userSaveEvent(self, file):
+    def __userSaveEvent(self, filepath):
         pass
 
     def userLoadEvent(self, filepath):
         """ Event that is ran when the user loads a file path"""
+        self.__userLoadEvent(filepath)
         pass
 
     def setUserLoadEvent(self, function):
         self.__userLoadEvent = function
 
-    def __userLoadEvent(self, file):
+    def __userLoadEvent(self, filepath):
         pass
 
     def __getConfigDirectories(self):
