@@ -12,7 +12,7 @@ them out to a JSON file.  The purpose for these JSON files is that the map can t
 reused when nodes are created to create default node colors for various DCC's.
 
 Controls:
-    Reset Item Color to None (Ctrl + MMB)
+    Reset Item Color to None (MMB)
     Display export options (Alt + S)
         
 
@@ -333,14 +333,15 @@ class NodeColorView(AbstractDragDropTreeView):
         # self.setIsDeletable(True)
 
     def mouseReleaseEvent(self, event):
-        """ Reset color on CTRL+MMB"""
-        if event.modifiers() == Qt.ControlModifier:
-            if event.button() == Qt.MiddleButton:
-                index = self.indexAt(event.pos())
-                item = index.internalPointer()
-                if item:
-                    item.setArg("color", "")
-                    NodeColorRegistryWidget.updateSaveIcon(self, True)
+        """ Reset color on
+        MMB"""
+        # if event.modifiers() == Qt.ControlModifier:
+        if event.button() == Qt.MiddleButton:
+            index = self.indexAt(event.pos())
+            item = index.internalPointer()
+            if item:
+                item.setArg("color", "")
+                NodeColorRegistryWidget.updateSaveIcon(self, True)
 
         return AbstractDragDropTreeView.mouseReleaseEvent(self, event)
 
@@ -660,8 +661,7 @@ class NodeColorRegistryWidget(QWidget):
 
         # setup tool tip
         self.setToolTip("""ALT + S to bring up save/export menu
-
-CTRL+MMB to clear an items color""")
+MMB to clear an items color""")
 
     def __setupGUI(self, envar):
         """ Sets up the main GUI for this widget """
