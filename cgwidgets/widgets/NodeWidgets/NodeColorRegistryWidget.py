@@ -451,7 +451,7 @@ class NodeColorIOWidget(QWidget):
     """ PROPERTIES """
     def defaultSaveLocation(self):
         if not os.path.exists(self._default_save_location):
-            os.mkdir(self._default_save_location)
+            os.makedirs(self._default_save_location)
         return self._default_save_location
 
     def setDefaultSaveLocation(self, default_save_location):
