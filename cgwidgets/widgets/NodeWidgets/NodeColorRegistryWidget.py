@@ -3,9 +3,6 @@ TODO
     *   Default header size
     *   Set Color Config
             set default color config
-    *   When finding node type, deselect existing
-            NodeColorRegistryWidget.expandToItem
-    *   Inherited colors not working
 TODO ( cgwidgets )
     *   Move str converter
             color = index.internalPointer().getArg("color")[1:-1].split(", ")
@@ -731,6 +728,9 @@ CTRL+MMB to clear an items color""")
         node_colors_widget = node_color_registry_widget.nodeColorsWidget()
         view_widget = node_color_registry_widget.nodeColorsWidgetView()
         indexes = node_colors_widget.findItems(item_name, match_type=Qt.MatchExactly)
+
+        # clear selection
+        node_colors_widget.clearItemSelection()
 
         for index in indexes:
             view_widget.setIndexSelected(index, True)
