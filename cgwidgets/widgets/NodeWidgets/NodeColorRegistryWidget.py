@@ -497,6 +497,10 @@ class NodeColorIOWidget(QWidget):
         export_data = self.nodeColorRegistryWidget().getExportData()
         if self.savePath():
             if self.configsDir() and self.fileName():
+                # create directory if it doesnt exist
+                os.makedirs(os.path.dirname(self.savePath()))
+
+                # export data
                 with open(self.savePath(), "w") as filepath:
                     json.dump(export_data, filepath)
                     self.userSaveEvent(self.savePath())
