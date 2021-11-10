@@ -568,7 +568,7 @@ class NodeColorIOWidget(QWidget):
 
         # if envar exists
         else:
-            directories = os.environ[self.configsEnvar()].split(";")
+            directories = os.environ[self.configsEnvar()].split(":")
 
         # run through the full directories and:
         #   1.) make the envar map
