@@ -645,6 +645,9 @@ class NodeColorRegistryWidget(QWidget):
     """Main widget for the Node Color Registry.
 
     Attributes:
+        commands_list (list): of string commands that the user can execute.
+            When the user executes one of these commands, the corresponding function will be looked
+            for and ran.
         node_types (list): of strings of all node types in the scene
         node_colors_map (dict): of all the node/color mappings.
             This is dynamically generated on export"""
@@ -655,12 +658,14 @@ class NodeColorRegistryWidget(QWidget):
         # setup default attributes
         self._node_types = []
         self._node_colors_map = {}
+        self._commands_list = []
 
         # create GUI
         self.__setupGUI(envar)
 
         # setup tool tip
-        self.setToolTip("""ALT + S to bring up save/export menu
+        self.setToolTip("""ALT+S to bring up save/export menu
+ALT+A to bring up the commands menu
 MMB to clear an items color""")
 
     def __setupGUI(self, envar):
@@ -696,6 +701,14 @@ MMB to clear an items color""")
         self._node_colors_widget.addDelegate([Qt.Key_S], self._io_widget, modifier=Qt.AltModifier)
         self._io_widget.hide()
         self._node_type_creation_widget.setFixedHeight(getFontSize()*3)
+
+        # setup user commands widget
+        self._user_commands_widget = ListInputWidget(self)
+        self._user_commands_widget.setUserFinishedEditingEvent(self.userInputCommand)
+        self._node_colors_widget.addDelegate(
+            [Qt.Key_A], self._user_commands_widget, modifier=Qt.AltModifier, focus=True)
+        self._user_commands_widget.hide()
+        self._user_commands_widget.setFixedHeight(getFontSize() * 3)
 
         # setup layout
         QVBoxLayout(self)
@@ -749,6 +762,32 @@ MMB to clear an items color""")
                         if "COLORCONFIG" in data.keys():
                             return True
         return False
+
+    """ User Input Commands """
+    def userInputCommand(self, widget, command_Name):
+        if widget.text() == "": return
+
+        if command_Name in self.commandsList():
+            command = getattr(self, command_Name)
+            command()
+            widget.setText("")
+
+    def commandsList(self):
+        return self._commands_list
+
+    def addCommand(self, command_name, command):
+        """ Adds a command to the command list
+
+        Args:
+            command_name (str): name of command
+            command (func): command to be executed"""
+        self.commandsList().append(command_name)
+        setattr(self, command_name, command)
+        self._user_commands_widget.populate([[command] for command in self.commandsList()])
+
+    def removeCommand(self, command):
+        if command in self.commandsList():
+            self.commandsList().remove(command)
 
     """ PROPERTIES """
     def configsEnvar(self):
