@@ -5,6 +5,9 @@ TODO ( cgwidgets )
             color = [int(c) for c in color]
     *   Update color widget (194)
             Show correct color values when delegate is displayed
+    *   Move commands widget to an abstract widget
+            NodeColorRegistryWidget._user_commands_widget
+            User Input Commands
 """
 """
 The NodeColorRegistryWidget Widget allows users to easily set up node/color combinations and save
@@ -763,7 +766,7 @@ MMB to clear an items color""")
                             return True
         return False
 
-    """ User Input Commands """
+    """ USER INPUT COMMANDS """
     def userInputCommand(self, widget, command_Name):
         if widget.text() == "": return
 
