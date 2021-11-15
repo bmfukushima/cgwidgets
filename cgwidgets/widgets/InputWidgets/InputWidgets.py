@@ -13,6 +13,7 @@ from qtpy.QtCore import Qt
 
 from cgwidgets.widgets import (
     AbstractLabelledInputWidget,
+    AbstractCommandsInputWidget,
     AbstractInputGroup,
     AbstractInputGroupFrame,
     AbstractFrameInputWidgetContainer,
@@ -109,6 +110,11 @@ class ListInputWidget(AbstractListInputWidget):
 
         except AttributeError:
             pass
+
+
+class CommandsInputWidget(AbstractCommandsInputWidget):
+    def __init__(self, parent=None):
+        super(CommandsInputWidget, self).__init__(parent)
 
 
 class LabelledInputWidget(AbstractLabelledInputWidget):

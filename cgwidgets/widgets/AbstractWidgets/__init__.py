@@ -16,6 +16,7 @@ from .AbstractBaseInputWidgets import AbstractBooleanInputWidget as AbstractBool
 from .AbstractBaseInputWidgets import AbstractButtonInputWidget
 from .AbstractBaseInputWidgets import AbstractLabelWidget
 from .AbstractListInputWidget import AbstractListInputWidget as AbstractListInputWidget
+from .AbstractCommandsInputWidget import AbstractCommandsInputWidget
 from .AbstractBaseInputWidgets import AbstractInputPlainText as AbstractInputPlainText
 
 from .AbstractSplitterWidget import AbstractSplitterWidget
