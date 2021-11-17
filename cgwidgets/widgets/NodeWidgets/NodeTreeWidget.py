@@ -29,7 +29,7 @@ class NodeTreeEditor(QWidget):
             | --
         """
 
-        self._node_type = "<multi>"
+        self._node_type = ""
         # setup layout
         QVBoxLayout(self)
 

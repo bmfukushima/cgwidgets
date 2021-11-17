@@ -5,8 +5,6 @@
         *   Drag Leave causing segfaults with STANDALONE TASKBAR (538, 11)
         *   Delays when enlarging (584, 11)
         *   AbstractPiPDisplayWidget change is_standalone to is_organizer (1513, 15)
-        *   Setting (Enlarged Offset) does not allow a 0.0 value
-                This is probably a problem on the ladder widget
 """
 import json
 from collections import OrderedDict
@@ -367,7 +365,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         Args:
             widget (QWidget): to install pseudoevent on"""
         def _dragEnterEvent(event):
-            event.accept()
+            #event.accept()
             widget._old_dragEnterEvent(event)
             self.__dragEnterEvent(getWidgetAncestor(widget, AbstractPopupBarItemWidget))
         if not hasattr(widget, "_old_dragEnterEvent"):
@@ -549,7 +547,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
 
         if event.type() == QEvent.DragEnter:
             # print('enter')
-            event.accept()
+            #event.accept()
             self.__dragEnterEvent(obj)
 
         if event.type() == QEvent.DragMove:

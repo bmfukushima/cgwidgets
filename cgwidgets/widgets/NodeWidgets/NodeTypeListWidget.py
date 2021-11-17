@@ -5,6 +5,7 @@ from qtpy.QtWidgets import QWidget
 from cgwidgets.widgets import ListInputWidget
 from cgwidgets.interface import AbstractNodeInterfaceAPI
 
+
 class NodeTypeListWidget(ListInputWidget):
     """
     Drop down menu with autocomplete for the user to select
@@ -12,7 +13,7 @@ class NodeTypeListWidget(ListInputWidget):
     """
     def __init__(self, parent=None):
         super(NodeTypeListWidget, self).__init__(parent)
-        self.previous_text = "<multi>"
+        self.previous_text = ""
 
         self.setUserFinishedEditingEvent(self.indexChanged)
         self.populate(self.__getAllNodes())
@@ -22,7 +23,7 @@ class NodeTypeListWidget(ListInputWidget):
 
     @staticmethod
     def __getAllNodes():
-        node_list = [["<multi>"]] + sorted([[node] for node in AbstractNodeInterfaceAPI.getAllNodeTypes()])
+        node_list = sorted([[node] for node in AbstractNodeInterfaceAPI.getAllNodeTypes()])
         return node_list
 
     def checkUserInput(self):
