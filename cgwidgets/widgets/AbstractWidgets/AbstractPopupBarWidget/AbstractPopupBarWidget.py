@@ -2032,6 +2032,7 @@ class AbstractPiPDisplayWidget(QWidget):
             # update previous widget
             self.setPreviousWidget(self._current_widget)
             self._current_widget.setIsCurrentWidget(False)
+            self._current_widget.removeEventFilter(self)
 
         else:
             """ If no current widget is set, this will install the drag patches for the widget 
@@ -2043,6 +2044,7 @@ class AbstractPiPDisplayWidget(QWidget):
         self._current_widget = widget
         self.mainViewerWidget().setWidget(widget)
         self._current_widget.installEventFilter(self.popupBarWidget())
+        self._current_widget.installEventFilter(self)
         self.popupBarWidget().setCurrentWidget(widget)
 
         # update mini viewer widget
@@ -2114,37 +2116,69 @@ class AbstractPiPDisplayWidget(QWidget):
             # not enough widgets
             pass
 
-    def keyPressEvent(self, event):
-        # swap between this and previous
-        if event.key() == self.swapKey():
-            self.swapEvent()
-            return
+    def eventFilter(self, obj, event):
+        if event.type() == QEvent.KeyPress:
+            # swap between this and previous
+            if event.key() == self.swapKey():
+                self.swapEvent()
+                return True
 
-        # hotkey swapping
-        if event.key() in self.hotkeySwapKeys():
-            self.hotkeySwapEvent(event.key())
-            return
+            # hotkey swapping
+            if event.key() in self.hotkeySwapKeys():
+                self.hotkeySwapEvent(event.key())
+                return True
 
-        # hide PiP
-        if event.key() == Qt.Key_Q:
-            if not self.popupBarWidget().isEnlarged():
-                self.setIsPopupBarShown(not self.isPopupBarShown())
-                return
+            # hide PiP
+            if event.key() == Qt.Key_Q:
+                if not self.popupBarWidget().isEnlarged():
+                    self.setIsPopupBarShown(not self.isPopupBarShown())
+                    return True
 
-        # escape
-        if event.key() == Qt.Key_Escape:
-            # close this mini viewer
-            if self.popupBarWidget().isEnlarged():
-                self.popupBarWidget().closeEnlargedView()
-                return
+            # escape
+            if event.key() == Qt.Key_Escape:
+                # close this mini viewer
+                if self.popupBarWidget().isEnlarged():
+                    self.popupBarWidget().closeEnlargedView()
+                    return True
 
-            # close parent mini viewer (if open recursively)
-            if self.isPopupBarWidget():
-                parent_main_widget = getWidgetAncestor(self.parent(), AbstractPiPDisplayWidget)
-                parent_main_widget.popupBarWidget().closeEnlargedView()
-            return
+                # close parent mini viewer (if open recursively)
+                if self.isPopupBarWidget():
+                    parent_main_widget = getWidgetAncestor(self.parent(), AbstractPiPDisplayWidget)
+                    parent_main_widget.popupBarWidget().closeEnlargedView()
+                return True
+        return False
 
-        return QWidget.keyPressEvent(self, event)
+    # def keyPressEvent(self, event):
+    #     # swap between this and previous
+    #     if event.key() == self.swapKey():
+    #         self.swapEvent()
+    #         return
+    #
+    #     # hotkey swapping
+    #     if event.key() in self.hotkeySwapKeys():
+    #         self.hotkeySwapEvent(event.key())
+    #         return
+    #
+    #     # hide PiP
+    #     if event.key() == Qt.Key_Q:
+    #         if not self.popupBarWidget().isEnlarged():
+    #             self.setIsPopupBarShown(not self.isPopupBarShown())
+    #             return
+    #
+    #     # escape
+    #     if event.key() == Qt.Key_Escape:
+    #         # close this mini viewer
+    #         if self.popupBarWidget().isEnlarged():
+    #             self.popupBarWidget().closeEnlargedView()
+    #             return
+    #
+    #         # close parent mini viewer (if open recursively)
+    #         if self.isPopupBarWidget():
+    #             parent_main_widget = getWidgetAncestor(self.parent(), AbstractPiPDisplayWidget)
+    #             parent_main_widget.popupBarWidget().closeEnlargedView()
+    #         return
+    #
+    #     return QWidget.keyPressEvent(self, event)
 
     def leaveEvent(self, event):
         """ Blocks the error that occurs when switching between different PiPDisplays"""
