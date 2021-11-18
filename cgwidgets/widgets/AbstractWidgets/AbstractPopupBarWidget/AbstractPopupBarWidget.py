@@ -101,6 +101,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         self._display_mode = AbstractPopupBarDisplayWidget.STANDALONETASKBAR
         self._current_widget = None
         self._enlarged_widget = None
+        self._leaving_popup = False
 
         self.__createSpacerWidget()
         if overlay_widget:
@@ -269,6 +270,12 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
     def setIsFrozen(self, frozen):
         self._is_frozen = frozen
 
+    def isPopupEnabled(self):
+        return self.getTopMostPopupBarDisplay(self, self.parent()).isPopupEnabled()
+
+    def setIsPopupEnabled(self, _pip_widget_is_dragging):
+        self.getTopMostPopupBarDisplay(self, self.parent()).setIsPopupEnabled(_pip_widget_is_dragging)
+
     def spacerWidget(self):
         return self._spacer_widget
 
@@ -401,6 +408,9 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
 
         if self.__dragEvent(obj, event): return True
 
+        # todo setup popup event from enter/leave events
+        # if self.__popupEvent(obj, event): return True
+
         if event.type() == QEvent.KeyPress:
             if event.key() == Qt.Key_Escape:
                 self.closeEnlargedView()
@@ -413,6 +423,9 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             self.__last_object_entered = obj
             #
             if self.isEnlarged():
+                if self.isPopupEnabled():
+                    self.setIsPopupEnabled(False)
+                    return True
                 # Block from re-enlarging itself
                 if self.enlargedWidget() == obj:
                     obj.setFocus()
@@ -448,9 +461,12 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             # leaves over mini viewer widget
             """ Check to see if the cursor is over the object, because the drag
             events will trigger a leave event"""
-            widget_under_cursor = getWidgetUnderCursor()
+            if self.isPopupEnabled():
+                return True
+
             if not isCursorOverWidget(obj):
                 if obj != self.currentWidget():
+                    # print("event filter leaving")
                     widget_under_cursor = getWidgetUnderCursor()
                     if widget_under_cursor != self.spacerWidget():
                         # left widget, but cursor is under another widget
@@ -464,19 +480,34 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
                             if obj == self.enlargedWidget():
                                 self.closeEnlargedView()
 
-            # left under the spacer widget (enlarging)
-            if widget_under_cursor == self.spacerWidget():
-                pass
-            # else:
-            #     widget_under_cursor = getWidgetUnderCursor()
-            #     if not isinstance(widget_under_cursor, AbstractPopupBarItemWidget):
-            #         print('pop up entered', widget_under_cursor)
-            #         widget_under_cursor._event_filter = TestPopupFilter(widget_under_cursor)
-            #         widget_under_cursor.installEventFilter(widget_under_cursor._event_filter)
-            #         self._is_popup_enabled = True
+                return True
+
+            # left by entering a popup widget
+            if self.isEnlarged():
+                if isCursorOverWidget(self.enlargedWidget()):
+                    self.setIsPopupEnabled(True)
+
             return True
 
         return False
+
+
+    # def __popupEvent(self, obj, event):
+    #     if event.type() == QEvent.Enter:
+    #         if self.isEnlarged():
+    #             if self.isPopupEnabled():
+    #                 self.setIsPopupEnabled(False)
+    #                 return True
+    #
+    #     if event.type() == QEvent.Leave:
+    #         if self.isPopupEnabled():
+    #             return True
+    #         # left by entering a popup widget
+    #         if self.isEnlarged():
+    #             if isCursorOverWidget(self.enlargedWidget()):
+    #                 self.setIsPopupEnabled(True)
+    #                 return True
+    #     return False
 
     def __eventFilterSpacerWidget(self, obj, event):
         """ Event Filter that is run when entering the spacer widget
@@ -911,14 +942,6 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         return _widgets
 
 
-class TestPopupFilter(QWidget):
-    def eventFilter(self, obj, event):
-        if event.type() == QEvent.Leave:
-            print('popup left')
-            obj.removeEventFilter(self)
-            return True
-        return False
-
 class AbstractPopupBarItemWidget(AbstractOverlayInputWidget):
     """
     One PiP Widget that is displayed in the AbstractPopupBarWidget
@@ -1137,6 +1160,7 @@ class AbstractPopupBarDisplayWidget(QWidget):
             act as containers for easier calling of different modes.
         _is_popup_display (bool): flag to say this is a popup display widget
             This is more useful when subclassing
+        _is_popup_enabled (bool): Determines if the user has opened a popup of an enlarged widget.
     """
     PIP = "PIP"
     PIPTASKBAR = "PIP TASKBAR"
@@ -1152,6 +1176,7 @@ class AbstractPopupBarDisplayWidget(QWidget):
         self._popup_bar_widget = self._display_widget
         self._widgets = []
         self._is_dragging = False
+        self._is_popup_enabled = False
 
         # setup layout
         QVBoxLayout(self)
@@ -1430,6 +1455,12 @@ class AbstractPopupBarDisplayWidget(QWidget):
 
     def setPiPName(self, pip_name):
         self.popupBarWidget().setPiPName(pip_name)
+
+    def isPopupEnabled(self):
+        return self._is_popup_enabled
+
+    def setIsPopupEnabled(self, _is_popup_enabled):
+        self._is_popup_enabled = _is_popup_enabled
 
     def isDragging(self):
         return self._is_dragging
@@ -2205,8 +2236,9 @@ class AbstractPiPDisplayWidget(QWidget):
         """ Blocks the error that occurs when switching between different PiPDisplays"""
         if self.popupBarWidget().isEnlarged():
             if not isCursorOverWidget(self):
-                print("leaving?")
-                self.popupBarWidget().closeEnlargedView()
+                if not self.popupBarWidget().isPopupEnabled():
+                    # print("leave event")
+                    self.popupBarWidget().closeEnlargedView()
         return QWidget.leaveEvent(self, event)
 
     def resizeEvent(self, event):

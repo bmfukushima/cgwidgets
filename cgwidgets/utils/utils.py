@@ -105,13 +105,6 @@ def isCursorOverWidget(widget):
         widget (QWidget): to test position of
 
     Returns (bool)"""
-    # global_event_pos = QCursor.pos()
-    # cursor_xpos = global_event_pos.x()
-    # cursor_ypos = global_event_pos.y()
-    # if widget.parent():
-    #     top_left = widget.parent().mapToGlobal(widget.geometry().topLeft())
-    # else:
-    #     top_left = widget.geometry().topLeft()
     global_event_pos = QCursor.pos()
     if widget.parent():
         """ Need to check if its a tool or not.  If its not a tool, we need to cast
