@@ -105,13 +105,16 @@ def isCursorOverWidget(widget):
         widget (QWidget): to test position of
 
     Returns (bool)"""
-    global_event_pos = QCursor.pos()
-    cursor_xpos = global_event_pos.x()
-    cursor_ypos = global_event_pos.y()
     if widget.parent():
+        global_event_pos = widget.parent().mapToGlobal(QCursor.pos())
         top_left = widget.parent().mapToGlobal(widget.geometry().topLeft())
     else:
+        global_event_pos = QCursor.pos()
         top_left = widget.geometry().topLeft()
+
+    cursor_xpos = global_event_pos.x()
+    cursor_ypos = global_event_pos.y()
+
     x = top_left.x()
     y = top_left.y()
     w = widget.geometry().width()
