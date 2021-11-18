@@ -33,7 +33,7 @@ popup_bar_widget.setPiPScale(0.55)
 #popup_bar_widget.setTaskbarSize(150)
 # popup_bar_widget.setFixedWidth(150)
 # popup_bar_widget.setDirection(attrs.SOUTH)
-popup_bar_widget.setDisplayMode(PopupBarDisplayWidget.STANDALONETASKBAR)
+popup_bar_widget.setDisplayMode(PopupBarDisplayWidget.PIPTASKBAR)
 
 # create main widget
 main_widget = QWidget()

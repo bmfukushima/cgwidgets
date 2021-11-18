@@ -448,19 +448,32 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             # leaves over mini viewer widget
             """ Check to see if the cursor is over the object, because the drag
             events will trigger a leave event"""
+            widget_under_cursor = getWidgetUnderCursor()
             if not isCursorOverWidget(obj):
-                widget_under_cursor = getWidgetUnderCursor()
-                if widget_under_cursor != self.spacerWidget():
-                    # left widget, but cursor is under another widget
-                    if widget_under_cursor:
-                        if not isWidgetDescendantOf(widget_under_cursor, widget_under_cursor.parent(), obj):
+                if obj != self.currentWidget():
+                    widget_under_cursor = getWidgetUnderCursor()
+                    if widget_under_cursor != self.spacerWidget():
+                        # left widget, but cursor is under another widget
+                        if widget_under_cursor:
+                            if not isWidgetDescendantOf(widget_under_cursor, widget_under_cursor.parent(), obj):
+                                if obj == self.enlargedWidget():
+                                    self.closeEnlargedView()
+
+                        # left widget and entire application
+                        else:
                             if obj == self.enlargedWidget():
                                 self.closeEnlargedView()
 
-                    # left widget and entire application
-                    else:
-                        if obj == self.enlargedWidget():
-                            self.closeEnlargedView()
+            # left under the spacer widget (enlarging)
+            if widget_under_cursor == self.spacerWidget():
+                pass
+            # else:
+            #     widget_under_cursor = getWidgetUnderCursor()
+            #     if not isinstance(widget_under_cursor, AbstractPopupBarItemWidget):
+            #         print('pop up entered', widget_under_cursor)
+            #         widget_under_cursor._event_filter = TestPopupFilter(widget_under_cursor)
+            #         widget_under_cursor.installEventFilter(widget_under_cursor._event_filter)
+            #         self._is_popup_enabled = True
             return True
 
         return False
@@ -897,6 +910,14 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
                 _widgets.append(widget)
         return _widgets
 
+
+class TestPopupFilter(QWidget):
+    def eventFilter(self, obj, event):
+        if event.type() == QEvent.Leave:
+            print('popup left')
+            obj.removeEventFilter(self)
+            return True
+        return False
 
 class AbstractPopupBarItemWidget(AbstractOverlayInputWidget):
     """
@@ -2184,6 +2205,7 @@ class AbstractPiPDisplayWidget(QWidget):
         """ Blocks the error that occurs when switching between different PiPDisplays"""
         if self.popupBarWidget().isEnlarged():
             if not isCursorOverWidget(self):
+                print("leaving?")
                 self.popupBarWidget().closeEnlargedView()
         return QWidget.leaveEvent(self, event)
 

@@ -105,11 +105,21 @@ def isCursorOverWidget(widget):
         widget (QWidget): to test position of
 
     Returns (bool)"""
+    # global_event_pos = QCursor.pos()
+    # cursor_xpos = global_event_pos.x()
+    # cursor_ypos = global_event_pos.y()
+    # if widget.parent():
+    #     top_left = widget.parent().mapToGlobal(widget.geometry().topLeft())
+    # else:
+    #     top_left = widget.geometry().topLeft()
+    global_event_pos = QCursor.pos()
     if widget.parent():
-        global_event_pos = widget.parent().mapToGlobal(QCursor.pos())
+        """ Need to check if its a tool or not.  If its not a tool, we need to cast
+        this to the global position.  If it is a tool, for some reason it already works"""
+        if bool(widget.windowFlags() & Qt.Tool):
+            global_event_pos = widget.parent().mapToGlobal(QCursor.pos())
         top_left = widget.parent().mapToGlobal(widget.geometry().topLeft())
     else:
-        global_event_pos = QCursor.pos()
         top_left = widget.geometry().topLeft()
 
     cursor_xpos = global_event_pos.x()
