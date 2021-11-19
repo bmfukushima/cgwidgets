@@ -49,6 +49,16 @@ widget.loadPopupDisplayFromFile(
     "RecursionWidget"
 )
 """,
+    "RecursionStandalone":"""
+from cgwidgets.widgets import PopupBarDisplayWidget
+from cgwidgets.utils import getDefaultSavePath
+
+widget = PopupBarDisplayWidget()
+widget.loadPopupDisplayFromFile(
+    getDefaultSavePath() + '/.PiPWidgets_02.json',
+    "RecursionWidgetStandalone"
+)
+""",
     "Popup":"""
 import string
 from qtpy.QtWidgets import QWidget, QVBoxLayout, QComboBox

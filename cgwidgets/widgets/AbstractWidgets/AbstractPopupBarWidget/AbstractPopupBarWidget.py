@@ -101,7 +101,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         self._display_mode = AbstractPopupBarDisplayWidget.STANDALONETASKBAR
         self._current_widget = None
         self._enlarged_widget = None
-        self._leaving_popup = False
+        # self._is_popup_enabled = False
 
         self.__createSpacerWidget()
         if overlay_widget:
@@ -271,10 +271,12 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         self._is_frozen = frozen
 
     def isPopupEnabled(self):
+        #return self._is_popup_enabled
         return self.getTopMostPopupBarDisplay(self, self.parent()).isPopupEnabled()
 
-    def setIsPopupEnabled(self, _pip_widget_is_dragging):
-        self.getTopMostPopupBarDisplay(self, self.parent()).setIsPopupEnabled(_pip_widget_is_dragging)
+    def setIsPopupEnabled(self, _is_popup_enabled):
+        #self._is_popup_enabled = _is_popup_enabled
+        self.getTopMostPopupBarDisplay(self, self.parent()).setIsPopupEnabled(_is_popup_enabled)
 
     def spacerWidget(self):
         return self._spacer_widget
