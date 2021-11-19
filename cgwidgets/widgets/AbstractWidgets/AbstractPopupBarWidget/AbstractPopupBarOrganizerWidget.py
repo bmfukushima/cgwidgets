@@ -238,18 +238,18 @@ class AbstractPopupBarOrganizerWidget(AbstractShojiModelViewWidget):
         # help widget
         self._help_widget = PiPHelpWidget(self)
 
-        self.insertShojiWidget(0, column_data={'name': 'Help'}, widget=self._help_widget)
-        self.insertShojiWidget(0, column_data={'name': 'Settings'}, widget=self._settings_widget)
-        self.insertShojiWidget(0, column_data={'name': 'Organizer'}, widget=self._global_organizer_widget)
-        self.insertShojiWidget(0, column_data={'name': 'Views'}, widget=self._local_organizer_widget)
-        self.insertShojiWidget(0, column_data={'name': 'Widget'}, widget=self._popup_bar_display_widget)
+        self.insertShojiWidget(0, column_data={"name": "Help"}, widget=self._help_widget)
+        self.insertShojiWidget(0, column_data={"name": "Settings"}, widget=self._settings_widget)
+        self.insertShojiWidget(0, column_data={"name": "Save / Load"}, widget=self._global_organizer_widget)
+        self.insertShojiWidget(0, column_data={"name": "Organizer"}, widget=self._local_organizer_widget)
+        self.insertShojiWidget(0, column_data={"name": "Display"}, widget=self._popup_bar_display_widget)
 
         # create temp widget
         self.createTempWidget()
         self.createTempWidget()
 
     def showEvent(self, event):
-        indexes = self.model().findItems("Widget", Qt.MatchExactly)
+        indexes = self.model().findItems("Display", Qt.MatchExactly)
         for index in indexes:
             self.setIndexSelected(index, True)
         return AbstractShojiModelViewWidget.showEvent(self, event)
@@ -517,7 +517,7 @@ widget.setWordWrap(True)
 
         # toggle visibility
         self._is_local_organizer_visible = not self.isLocalOrganizerVisible()
-        self.toggleItemVisibility("Views", self.isLocalOrganizerVisible())
+        self.toggleItemVisibility("Organizer", self.isLocalOrganizerVisible())
 
     def isGlobalOrganizerVisible(self):
         return self._is_global_organizer_visible
@@ -541,7 +541,7 @@ widget.setWordWrap(True)
 
         # toggle visibility
         self._is_global_organizer_visible = not self.isGlobalOrganizerVisible()
-        self.toggleItemVisibility("Organizer", self.isGlobalOrganizerVisible())
+        self.toggleItemVisibility("Save / Load", self.isGlobalOrganizerVisible())
 
     def isSettingsVisible(self):
         return self._is_settings_visible
