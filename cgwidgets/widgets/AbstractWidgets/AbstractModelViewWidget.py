@@ -298,7 +298,7 @@ class AbstractModelViewWidget(AbstractShojiLayout):
         return self.view().getItemsSelectedDescendants(item, descendants)
 
     def getIndexFromItem(self, item):
-        self.model().getIndexFromItem(item)
+        return self.model().getIndexFromItem(item)
 
     def rootItem(self):
         return self.model().rootItem()

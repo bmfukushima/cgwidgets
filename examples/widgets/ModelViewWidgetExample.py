@@ -1,3 +1,8 @@
+""" TODO:
+        *   Why don't context menu events work
+                - They work in all the other code...
+"""
+
 import sys
 import os
 os.environ['QT_API'] = 'pyside2'
@@ -52,7 +57,7 @@ class ModelViewWidgetSubclass(ModelViewWidget):
         #     for i, char in enumerate('abc'):
         #         self.model().insertNewIndex(i, name=char, parent=index)
 
-main_widget = ModelViewWidgetSubclass()
+# main_widget = ModelViewWidgetSubclass()
 
 
 # create main Model View Widget
@@ -119,10 +124,12 @@ for index in indexes:
 main_widget.setMultiSelect(True)
 
 # add context menu
-def contextMenu(index, selected_indexes):
+def contextMenuEvent(index, selected_indexes):
     print(index, selected_indexes)
 
-main_widget.addContextMenuEvent('test', contextMenu)
+
+main_widget.addContextMenuEvent('test', contextMenuEvent)
+main_widget.addContextMenuEvent('asdffs', contextMenuEvent)
 
 # # add mime data
 from qtpy.QtCore import QByteArray
