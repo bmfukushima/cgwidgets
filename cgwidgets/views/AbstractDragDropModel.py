@@ -94,7 +94,10 @@ class AbstractDragDropModelItem(object):
 
     def row(self):
         if self._parent is not None:
-            return self._parent._children.index(self)
+            if self in self._parent._children:
+                return self._parent._children.index(self)
+            else:
+                return None
 
     def log(self, tabLevel=-1):
         output = ""
