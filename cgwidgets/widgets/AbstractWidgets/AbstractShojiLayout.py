@@ -341,6 +341,7 @@ class AbstractShojiLayout(AbstractSplitterWidget):
         """TODO why was I resizing here..."""
         #pass
         self.updateStyleSheet()
+        return QSplitter.resizeEvent(self, event)
 
     """ WIDGETS """
     def installHoverDisplay(self, widget):

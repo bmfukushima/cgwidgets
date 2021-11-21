@@ -8,7 +8,7 @@ import os
 os.environ['QT_API'] = 'pyside2'
 from qtpy.QtWidgets import QApplication, QLabel
 from qtpy.QtGui import QCursor
-from qtpy.QtCore import Qt
+from qtpy.QtCore import Qt, QByteArray
 
 from cgwidgets.widgets import ModelViewWidget, AbstractLabelWidget
 
@@ -132,7 +132,7 @@ main_widget.addContextMenuEvent('test', contextMenuEvent)
 main_widget.addContextMenuEvent('asdffs', contextMenuEvent)
 
 # # add mime data
-from qtpy.QtCore import QByteArray
+
 def addMimedata(mimedata, items):
     """ Adds the mimedata to the drag event
 
