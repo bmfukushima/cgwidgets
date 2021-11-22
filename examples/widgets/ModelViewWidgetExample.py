@@ -177,6 +177,7 @@ def contextMenuEvent(index, selected_indexes):
     print(index, selected_indexes)
 
 main_widget.addContextMenuEvent('test', contextMenuEvent)
+main_widget.addContextMenuSeparator()
 main_widget.addContextMenuEvent('asdffs', contextMenuEvent)
 
 # show widget

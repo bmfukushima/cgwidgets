@@ -649,6 +649,9 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
 
         return display_widget
 
+    def addContextMenuSeparator(self):
+        self.headerViewWidget().addContextMenuSeparator()
+
     def addContextMenuEvent(self, name, event):
         """
         Adds an entry into the RMB popup menu.

@@ -167,6 +167,9 @@ class AbstractModelViewWidget(AbstractShojiLayout):
 
         return view
 
+    def addContextMenuSeparator(self):
+        self.view().addContextMenuSeparator()
+
     def addContextMenuEvent(self, name, event):
         """
         Adds an entry into the RMB popup menu.

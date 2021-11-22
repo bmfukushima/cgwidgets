@@ -1,8 +1,5 @@
 """ TODO
         *   Context Menu
-                - Move manifest to a list from a dictionary
-                    This needs to be ordered
-                - Add spacers to manifest
                 - ExpandItem (813)
 
 """
@@ -27,13 +24,15 @@ from cgwidgets.views import AbstractDragDropModel
 class AbstractDragDropAbstractView(object):
     """
     Attributes:
-        copied_indexes (list): of QModelIndexes, currenetly in the internal clipboard
+        copied_indexes (list): of QModelIndexes, currently in the internal clipboard
+        context_menu_manifest (list): of AbstractContextMenuItem defining context menu events
+            has the args "name", "event", "item_type"
     """
     def __init__(self):
         # attrs
         self._copied_items = []
         self._copy_data = []
-        self._context_menu_manifest = {}
+        self._context_menu_manifest = []
         self._delete_warning_widget = None
         self.setMouseTracking(True)
         self.__pressed = False
@@ -661,8 +660,12 @@ class AbstractDragDropAbstractView(object):
     def abstractContextMenuEvent(self, event):
         # populate menu entries
         context_menu = AbstractViewContextMenu(self)
-        for entry_name in self.contextMenuManifest():
-            context_menu.addAction(entry_name)
+
+        for context_menu_item in self.contextMenuManifest():
+            if context_menu_item.itemType() == attrs.CONTEXT_EVENT:
+                context_menu.addAction(context_menu_item.name())
+            else:
+                context_menu.addSeparator()
 
         # Show/Execute menu
         pos = event.globalPos()
@@ -675,7 +678,14 @@ class AbstractDragDropAbstractView(object):
 
         # do user defined event
         if action is not None:
-            self.contextMenuManifest()[action.text()](index_clicked, selected_indexes)
+            event = self.findContextMenuEvent(action.text())
+            if event:
+                event(index_clicked, selected_indexes)
+            # self.contextMenuManifest()[action.text()](index_clicked, selected_indexes)
+
+    def addContextMenuSeparator(self):
+        context_data = AbstractContextMenuItem(None, None, attrs.CONTEXT_SEPERATOR)
+        self.contextMenuManifest().append(context_data)
 
     def addContextMenuEvent(self, name, event):
         """
@@ -683,14 +693,49 @@ class AbstractDragDropAbstractView(object):
 
         Args:
             name (str): name of function to be displayed
-            event (function): takes two args:
-                item_under_cursor (item): current item under cursor
-                indexes (list): of currently selected QModelIndexes
+            event (function): event to be run.
+                takes two args:
+                    item_under_cursor (item): current item under cursor
+                    indexes (list): of currently selected QModelIndexes
+            item_type (attrs.CONTEXT_ITEM_TYPE):
         """
-        self.contextMenuManifest()[name] = event
+        context_data = AbstractContextMenuItem(name, event, attrs.CONTEXT_EVENT)
+        self.contextMenuManifest().append(context_data)
+
+    def findContextMenuEvent(self, name):
+        for item in self.contextMenuManifest():
+            if item.name() == name:
+                return item.event()
+        return None
 
     def contextMenuManifest(self):
         return self._context_menu_manifest
+
+
+class AbstractContextMenuItem(object):
+    """ An item that containts the data required to create a context menu event"""
+    def __init__(self, name, event, item_type):
+        self._name = name
+        self._event = event
+        self._item_type = item_type
+
+    def event(self):
+        return self._event
+
+    def setEvent(self, event):
+        self._event = event
+
+    def itemType(self):
+        return self._item_type
+
+    def setItemType(self, item_type):
+        self._item_type = item_type
+
+    def name(self):
+        return self._name
+
+    def setName(self, name):
+        self._name = name
 
 
 class AbstractDragDropListView(QListView, AbstractDragDropAbstractView):

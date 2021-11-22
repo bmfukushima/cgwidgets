@@ -30,3 +30,6 @@ INTEGER = 'integer'
 STRING = 'string'
 LIST = 'list'
 BOOLEAN = 'boolean'
+
+CONTEXT_EVENT = 0
+CONTEXT_SEPERATOR = 1
