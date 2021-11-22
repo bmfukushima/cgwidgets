@@ -442,35 +442,34 @@ class AbstractDragDropAbstractView(object):
                 self.clearItemSelection()
 
             # Delete Item
-            if self.model().isDeletable():
-                if event.key() in [Qt.Key_Delete, Qt.Key_Backspace]:
-                    # delete events
-                    def deleteItems(widget):
-                        deletable_items = self.getAllBaseItems()
-                        for item in deletable_items:
-                            if item.isDeletable() or (item.isDeletable() == None and self.isDeletable()):
-                                self.model().deleteItem(item, event_update=True)
+            #if self.model().isDeletable():
+            if event.key() in [Qt.Key_Delete, Qt.Key_Backspace]:
+                # delete events
+                def deleteItems(widget):
+                    deletable_items = self.getAllBaseItems()
+                    for item in deletable_items:
+                        if (item.isDeletable() == True) or (item.isDeletable() == None and self.isDeletable() == True):
+                            self.model().deleteItem(item, event_update=True)
 
-                    def dontDeleteItem(widget):
-                        return
+                def dontDeleteItem(widget):
+                    return
 
-                    # delete item
-                    if self.deleteWarningWidget():
-                        showWarningDialogue(self, self.deleteWarningWidget(), deleteItems, dontDeleteItem)
-                    else:
-                        deleteItems(None)
+                # delete item
+                if self.deleteWarningWidget():
+                    showWarningDialogue(self, self.deleteWarningWidget(), deleteItems, dontDeleteItem)
+                else:
+                    deleteItems(None)
 
             # Disable Item
-            if self.model().isEnableable():
-                if event.key() == Qt.Key_D:
-                    indexes = self.selectionModel().selectedRows(0)
-                    for index in indexes:
-                        #if index.column() == 0:
-                        item = index.internalPointer()
-                        if item.isEnableable() or (item.isEnableable() == None and self.isEnableable()):
-                            enabled = False if item.isEnabled() else True
-                            self.model().setItemEnabled(item, enabled)
-                    self.model().layoutChanged.emit()
+            #if self.model().isEnableable():
+            if event.key() == Qt.Key_D:
+                indexes = self.selectionModel().selectedRows(0)
+                for index in indexes:
+                    item = index.internalPointer()
+                    if (item.isEnableable() == True) or (item.isEnableable() == None and self.isEnableable() == True):
+                        enabled = False if item.isEnabled() else True
+                        self.model().setItemEnabled(item, enabled)
+                self.model().layoutChanged.emit()
 
             #self.__keyPressEvent(event)
 
