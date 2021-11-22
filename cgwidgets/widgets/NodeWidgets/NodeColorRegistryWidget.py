@@ -747,7 +747,9 @@ MMB to clear an items color""")
         node_colors_widget.clearItemSelection()
 
         for index in indexes:
+            #view_widget.expandRecursively(index)
             view_widget.setIndexSelected(index, True)
+            view_widget.scrollTo(index)
             view_widget.expandToIndex(index)
 
     @staticmethod

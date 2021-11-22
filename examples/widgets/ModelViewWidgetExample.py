@@ -78,14 +78,18 @@ main_widget.addDelegate([Qt.Key_Q], delegate_widget)
 # insert indexes
 for x in range(0, 7):
     index = main_widget.model().insertNewIndex(x, name=str('node%s'%x))
+
     for i, char in enumerate('abc'):
-        main_widget.model().insertNewIndex(i, name=char, parent=index)
+        test_index = main_widget.model().insertNewIndex(i, name=char, parent=index)
+
     if x == 0:
         index.internalPointer().setIsEditable(True)
         index.internalPointer().setIsSelectable(True)
         index.internalPointer().setIsDroppable(False)
         index.internalPointer().setIsDraggable(True)
         index.internalPointer().setIsCopyable(False)
+
+    main_widget.view().setExpanded(test_index, True)
 
 # set delete on drop...
 """ This will make it so that when an item is dropped, it can be duplicated

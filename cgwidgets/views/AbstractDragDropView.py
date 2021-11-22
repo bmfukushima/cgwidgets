@@ -373,7 +373,6 @@ class AbstractDragDropAbstractView(object):
         parent_item = parent_index.internalPointer()
         if parent_item:
             function(self, parent_index, *args, **kwargs)
-            #self.setExpanded(parent_index, expanded)
             return self.recurseFromIndexToRoot(parent_index, function, *args, **kwargs)
         else:
             return
@@ -403,12 +402,13 @@ class AbstractDragDropAbstractView(object):
         self.setFocus()
         return QAbstractItemView.enterEvent(self, event)
 
-    def expandToIndex(self, index):
+    def expandToIndex(self, index, select=True):
         """ Expands to the index provided.  Assuming this is a TreeView"""
         def expandIndex(view, expand_index, expanded=True):
             self.setExpanded(expand_index, expanded)
 
-        self.setIndexSelected(index, True)
+        if select:
+            self.setIndexSelected(index, True)
         self.recurseFromIndexToRoot(index, expandIndex, expanded=True)
 
     """ VIRTUAL """
@@ -495,12 +495,12 @@ class AbstractDragDropAbstractView(object):
     def setKeyPressEvent(self, function):
         self.__keyPressEvent = function
 
-    def setExpanded(self, index, bool):
-        """ override for list views
-
-        I actually have no idea how this works, but somehow,
-        it magically works"""
-        return QAbstractItemView.keyPressEvent(self, index, bool)
+    # def setExpanded(self, index, bool):
+    #     """ override for list views
+    #
+    #     I actually have no idea how this works, but somehow,
+    #     it magically works"""
+    #     return QAbstractItemView.keyPressEvent(self, index, bool)
 
     """ COPY / PASTE """
     def deepCopyItem(self, item, parent_index, row=0):
