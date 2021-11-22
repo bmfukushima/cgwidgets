@@ -658,7 +658,7 @@ class AbstractDragDropAbstractView(object):
         pass
 
     """ CONTEXT MENU """
-    def contextMenuEvent(self, event):
+    def abstractContextMenuEvent(self, event):
         # populate menu entries
         context_menu = AbstractViewContextMenu(self)
         for entry_name in self.contextMenuManifest():
@@ -778,6 +778,11 @@ class AbstractDragDropListView(QListView, AbstractDragDropAbstractView):
         return style_sheet
 
     """ EVENTS """
+
+    def contextMenuEvent(self, event):
+        self.abstractContextMenuEvent(event)
+        return QTreeView.contextMenuEvent(self, event)
+
     def mousePressEvent(self, event):
         self.abstractMousePressEvent(event)
         return QListView.mousePressEvent(self, event)
@@ -869,6 +874,10 @@ class AbstractDragDropTreeView(QTreeView, AbstractDragDropAbstractView):
         pass
 
     """ EVENTS """
+    def contextMenuEvent(self, event):
+        self.abstractContextMenuEvent(event)
+        return QTreeView.contextMenuEvent(self, event)
+
     def mousePressEvent(self, event):
         self.abstractMousePressEvent(event)
         return QTreeView.mousePressEvent(self, event)
