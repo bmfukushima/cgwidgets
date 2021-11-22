@@ -127,14 +127,6 @@ for index in indexes:
 # set selection mode
 main_widget.setMultiSelect(True)
 
-# add context menu
-def contextMenuEvent(index, selected_indexes):
-    print(index, selected_indexes)
-
-
-main_widget.addContextMenuEvent('test', contextMenuEvent)
-main_widget.addContextMenuEvent('asdffs', contextMenuEvent)
-
 # # add mime data
 
 def addMimedata(mimedata, items):
@@ -150,6 +142,7 @@ def addMimedata(mimedata, items):
 
     mimedata.setData("something/something", ba)
     return mimedata
+
 main_widget.setAddMimeDataFunction(addMimedata)
 
 
@@ -178,6 +171,13 @@ def cutEvent(copied_items):
 #main_widget.setPasteEvent(pasteEvent)
 main_widget.setCutEvent(cutEvent)
 main_widget.setDuplicateEvent(duplicateEvent)
+
+# add context menu
+def contextMenuEvent(index, selected_indexes):
+    print(index, selected_indexes)
+
+main_widget.addContextMenuEvent('test', contextMenuEvent)
+main_widget.addContextMenuEvent('asdffs', contextMenuEvent)
 
 # show widget
 main_widget.show()

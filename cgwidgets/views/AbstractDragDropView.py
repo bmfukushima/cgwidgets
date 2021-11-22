@@ -1,3 +1,12 @@
+""" TODO
+        *   Context Menu
+                - Move manifest to a list from a dictionary
+                    This needs to be ordered
+                - Add spacers to manifest
+                - ExpandItem (813)
+
+"""
+
 import copy
 
 from qtpy import API_NAME
@@ -795,6 +804,21 @@ class AbstractDragDropTreeView(QTreeView, AbstractDragDropAbstractView):
         if API_NAME == "PySide2":
             AbstractDragDropAbstractView.__init__(self)
 
+        # context menu
+        self.addContextMenuEvent("Expand Item", self.expandItemEvent)
+        self.addContextMenuEvent("Expand All", self.expandAllEvent)
+        self.addContextMenuEvent("Collapse All", self.collapseAllEvent)
+
+    """ EVENTS (CONTEXT MENU)"""
+    def expandItemEvent(self, item, indexes):
+        # todo (813)
+        self.expandAll()
+
+    def expandAllEvent(self, item, indexes):
+        self.expandAll()
+
+    def collapseAllEvent(self,  item, indexes):
+        self.collapseAll()
     """ """
     def setHeaderData(self, _header_data):
         """
