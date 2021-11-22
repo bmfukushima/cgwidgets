@@ -448,7 +448,8 @@ class AbstractDragDropAbstractView(object):
                     def deleteItems(widget):
                         deletable_items = self.getAllBaseItems()
                         for item in deletable_items:
-                            self.model().deleteItem(item, event_update=True)
+                            if item.isDeletable() or (item.isDeletable() == None and self.isDeletable()):
+                                self.model().deleteItem(item, event_update=True)
 
                     def dontDeleteItem(widget):
                         return
@@ -466,8 +467,9 @@ class AbstractDragDropAbstractView(object):
                     for index in indexes:
                         #if index.column() == 0:
                         item = index.internalPointer()
-                        enabled = False if item.isEnabled() else True
-                        self.model().setItemEnabled(item, enabled)
+                        if item.isEnableable() or (item.isEnableable() == None and self.isEnableable()):
+                            enabled = False if item.isEnabled() else True
+                            self.model().setItemEnabled(item, enabled)
                     self.model().layoutChanged.emit()
 
             #self.__keyPressEvent(event)

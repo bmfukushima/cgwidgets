@@ -88,8 +88,10 @@ for x in range(0, 7):
         index.internalPointer().setIsDroppable(False)
         index.internalPointer().setIsDraggable(True)
         index.internalPointer().setIsCopyable(False)
+        index.internalPointer().setIsDeletable(False)
+        index.internalPointer().setIsEnableable(False)
+        main_widget.view().setExpanded(index, True)
 
-    main_widget.view().setExpanded(test_index, True)
 
 # set delete on drop...
 """ This will make it so that when an item is dropped, it can be duplicated
