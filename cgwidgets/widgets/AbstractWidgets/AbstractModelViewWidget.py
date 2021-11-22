@@ -720,12 +720,14 @@ class ModelViewMatchFlags(AbstractListInputWidget):
         "CONTAINS": Qt.MatchContains,
         "STARTS WITH": Qt.MatchStartsWith
     }
+
     def __init__(self, parent=None):
         super(ModelViewMatchFlags, self).__init__(parent)
         self.setAlignment(Qt.AlignCenter)
         _options = [[option] for option in ModelViewMatchFlags.MATCH.keys()]
         self.populate(_options)
         self.setText("EXACT")
+        self.filter_results = False
 
 
 if __name__ == "__main__":
