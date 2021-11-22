@@ -985,8 +985,13 @@ class AbstractDragDropModel(QAbstractItemModel):
             item_data = []
 
         for child in item.children():
+            # todo add defualt item states... expanded, enabled, etc
+            """ Will probably need to move this to the view"""
             new_data = self.getItemExportData(child)
-            #new_data = {"children": [], "item_type": child.getArg("item_type"), "node": child.getArg("node")}
+
+            # setup default states
+            # new_data["enabled"] = item.isEnabled()
+            # new_data = {"children": [], "item_type": child.getArg("item_type"), "node": child.getArg("node")}
             item_data.append(new_data)
             if 0 < child.childCount():
                 self.exportModelToDict(child, item_data=new_data["children"])
