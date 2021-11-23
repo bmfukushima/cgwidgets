@@ -856,14 +856,16 @@ class AbstractDragDropTreeView(QTreeView, AbstractDragDropAbstractView):
             AbstractDragDropAbstractView.__init__(self)
 
         # context menu
-        self.addContextMenuEvent("Expand Item and All Children", self.expandItemEvent)
+        # self.addContextMenuEvent("Expand Item and All Children", self.expandItemEvent)
         self.addContextMenuEvent("Expand All", self.expandAllEvent)
         self.addContextMenuEvent("Collapse All", self.collapseAllEvent)
 
     """ EVENTS (CONTEXT MENU)"""
     def expandItemEvent(self, item, indexes):
+        # todo expand recursively broken
         for index in indexes:
-            self.expandRecursively(index)
+            if hasattr(self, "expandRecursively"):
+                self.expandRecursively(index)
         # self.expandAll()
 
     def expandAllEvent(self, item, indexes):
