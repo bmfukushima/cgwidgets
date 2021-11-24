@@ -868,7 +868,9 @@ class ScriptTreeWidget(QTreeWidget):
         return settings_data[setting]
 
     def isItemLocked(self, item):
-        return self.getSetting("locked", item)
+        if item:
+            return self.getSetting("locked", item)
+        return None
 
     """ HOTKEYS """
     def addHotkeyToItem(self, item=None, hotkey=None):
