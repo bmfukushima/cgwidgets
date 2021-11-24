@@ -220,6 +220,19 @@ class AbstractLabelledInputWidget(QFrame, iAbstractInputWidget):
         self._view_widget = _view_widget
         self.mainWidget().insertWidget(0, _view_widget)
 
+    def setViewAsReadOnly(self, enabled, mode=AbstractOverlayInputWidget.RELEASE):
+        """ Determines if the View Widget should be read only or not.
+
+        Args:
+            enabled (bool):
+            mode (AbstractOverlayInputWidget.DISPLAYMODE): If enabled is False, this
+                can be set to determine the display mode.  The default mode is
+                    AbstractOverlayInputWidget.RELEASE"""
+        if enabled:
+            self.viewWidget().setDisplayMode(AbstractOverlayInputWidget.DISABLED)
+        else:
+            self.viewWidget().setDisplayMode(mode)
+
     def name(self):
         return self.viewWidget().title()
 
