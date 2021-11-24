@@ -366,6 +366,7 @@ class ScriptTreeWidget(QTreeWidget):
         self.header().setStretchLastSection(False)
         self.header().setSectionResizeMode(1, QHeaderView.ResizeToContents)
         self.header().setSectionResizeMode(2, QHeaderView.ResizeToContents)
+        self.header().resizeSection(0, 300)
 
         # connect signals
         self.itemChanged.connect(self.updateItemName)
