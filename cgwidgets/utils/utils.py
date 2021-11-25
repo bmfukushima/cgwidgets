@@ -47,6 +47,31 @@ def checkIfValueInRange(enabled, value, range_min, range_max):
     return value
 
 
+def getUniqueName(name, children, exists=True):
+        """ Gets a unique name for an item when it is created
+
+        Args:
+            name (str): name to search for
+            children (ModelViewItem): to check children of
+            exists (bool): determines if the item exists prior to searching for the name or not"""
+        name = name
+
+        # remove one instance of name, as it has already been added
+        if exists:
+            if name in children:
+                children.remove(name)
+
+        # get unique name of item
+        if name in children:
+            while name in children:
+                try:
+                    suffix = str(int(name[-1]) + 1)
+                    name = name[:-1] + suffix
+                except ValueError:
+                    name = name + "0"
+
+        return name
+
 def getFontSize(application=None):
     """
     Returns the current systems font size
