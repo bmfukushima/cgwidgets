@@ -122,6 +122,11 @@ class AbstractDragDropModelItem(object):
     def setColumnData(self, _column_data):
         self._column_data = _column_data
 
+    def hasArg(self, arg):
+        if arg in self.columnData().keys():
+            return True
+        return False
+
     def args(self):
         return self.columnData()
 
@@ -972,8 +977,11 @@ class AbstractDragDropModel(QAbstractItemModel):
     def __startDragEvent(self, items, model):
         pass
 
-    def exportModelToDict(self, item, item_data=None):
+    def exportModelToDict(self, item, item_data=None, allow_none_types=False):
         """ Recursive call to generate a dictionary from the entire model.
+
+        # todo does this need the ability to work with none types?
+        by default, None types will not be allowed
 
         Args:
             item (AbstractDragDropModelItem):
@@ -989,10 +997,13 @@ class AbstractDragDropModel(QAbstractItemModel):
             """ Will probably need to move this to the view"""
             new_data = self.getItemExportData(child)
 
-            # setup default states
-            # new_data["enabled"] = item.isEnabled()
-            # new_data = {"children": [], "item_type": child.getArg("item_type"), "node": child.getArg("node")}
-            item_data.append(new_data)
+            # add data if it exists
+            if allow_none_types:
+                item_data.append(new_data)
+            else:
+                if new_data:
+                    item_data.append(new_data)
+
             if 0 < child.childCount():
                 self.exportModelToDict(child, item_data=new_data["children"])
 
