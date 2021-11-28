@@ -1118,6 +1118,10 @@ class AbstractPopupBarItemWidget(AbstractOverlayInputWidget):
                     main_widget = getWidgetAncestor(self, AbstractPiPDisplayWidget)
                     filepath = "/".join(main_widget.filepath().split("/")[:-1])
                 image_path = image_path.replace("../", filepath + "/")
+            if image_path.startswith("$"):
+                envar = image_path[1:image_path.index("/")]
+                if os.path.isdir(os.environ[envar]):
+                    image_path = os.environ[envar] + image_path[image_path.index("/"):]
         self.setImage(image_path)
 
 

@@ -1,4 +1,8 @@
 """
+TODO: Enhancement
+    PopupBarWidget
+        *   Allow embedded layout instead of floating PiP
+        *   Allow environment variables for images with $ENVAR
 TODO:
     BUGS:
         DragDelegate...
