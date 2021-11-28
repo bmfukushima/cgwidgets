@@ -558,6 +558,9 @@ class AbstractLabelWidget(QFrame, iAbstractInputWidget):
 
         return QWidget.resizeEvent(self, event)
 
+    def showEvent(self, event):
+        self.resizeImage()
+        QFrame.showEvent(self, event)
 
 class AbstractBooleanInputWidget(AbstractLabelWidget):
     TYPE = 'bool'
