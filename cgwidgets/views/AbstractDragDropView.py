@@ -827,7 +827,7 @@ class AbstractDragDropListView(QListView, AbstractDragDropAbstractView):
 
     def contextMenuEvent(self, event):
         self.abstractContextMenuEvent(event)
-        return QTreeView.contextMenuEvent(self, event)
+        return QListView.contextMenuEvent(self, event)
 
     def mousePressEvent(self, event):
         self.abstractMousePressEvent(event)

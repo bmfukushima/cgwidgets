@@ -1183,6 +1183,8 @@ class AbstractPopupBarDisplayWidget(QWidget):
         return self._popup_bar_widget
 
     def widgets(self):
+        # todo is this correct?
+        # this does not look correct...
         return self.displayWidget().widgets()
         # return self._widgets
 

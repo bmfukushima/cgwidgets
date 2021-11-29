@@ -730,7 +730,8 @@ if 0 < len(items):
             """,
             "help": """The overlay image while not enlarged.
 This will set the overlay image for the item currently selected in the views tab.
-You can use ../ to access the current directory"""}
+You can use ../ to access the current directory
+You can use $ENVAR/local/dir to access a directory from an environment variable"""}
     }
 
     def __init__(self, parent=None):
