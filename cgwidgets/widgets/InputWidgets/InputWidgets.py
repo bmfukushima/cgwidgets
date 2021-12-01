@@ -147,7 +147,8 @@ class LabelledInputWidget(AbstractLabelledInputWidget):
         direction=Qt.Horizontal,
         default_label_length=50,
         delegate_widget=None,
-        delegate_constructor=None
+        delegate_constructor=None,
+        view_as_read_only=True,
     ):
         super(LabelledInputWidget, self).__init__(
             parent,
@@ -156,7 +157,8 @@ class LabelledInputWidget(AbstractLabelledInputWidget):
             default_label_length=default_label_length,
             direction=direction,
             delegate_widget=delegate_widget,
-            delegate_constructor=delegate_constructor
+            delegate_constructor=delegate_constructor,
+            view_as_read_only=True,
         )
 
 

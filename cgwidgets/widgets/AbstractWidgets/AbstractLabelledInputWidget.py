@@ -35,6 +35,7 @@ class AbstractLabelledInputWidget(QFrame, iAbstractInputWidget):
         delegate_constructor (QWidget): constructor to use as delegate widget.  This will automatically
             be overwritten by the delegate_widget if it is provided.
         widget_type (QWidget): Widget type to be constructed for as the delegate widget
+        view_as_read_only (bool): Determines if the label should be read only or not
 
     Attributes:
         resize_slider_on_widget_resize (bool): determines if widgets labels should be automatically
@@ -63,7 +64,8 @@ class AbstractLabelledInputWidget(QFrame, iAbstractInputWidget):
         direction=Qt.Horizontal,
         default_label_length=50,
         delegate_widget=None,
-        delegate_constructor=None
+        delegate_constructor=None,
+        view_as_read_only=False,
     ):
         super(AbstractLabelledInputWidget, self).__init__(parent)
         if API_NAME == "PySide2":
@@ -115,7 +117,8 @@ class AbstractLabelledInputWidget(QFrame, iAbstractInputWidget):
         self.mainWidget().setStretchFactor(1, 1)
         self.resetSliderPositionToDefault()
         self.layout().setContentsMargins(1, 1, 1, 1)
-
+        if view_as_read_only:
+            self.setViewAsReadOnly(True)
         # connect signals
         # todo move to newer tech
         # self.mainWidget().addDelayedSplitterMovedEvent(self, self.__splitterMoved, 100)
