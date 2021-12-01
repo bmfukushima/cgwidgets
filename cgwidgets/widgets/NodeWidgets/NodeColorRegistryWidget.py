@@ -362,7 +362,7 @@ class NodeColorView(AbstractDragDropTreeView):
 
                 # create new group item
                 new_group_index = self.model().insertNewIndex(row, name="group", column_data=column_data,
-                                                              is_dropable=True, parent=parent)
+                                                              is_droppable=True, parent=parent)
                 new_group_item = new_group_index.internalPointer()
 
                 # reparent selected items under the new group
@@ -378,7 +378,7 @@ class NodeColorView(AbstractDragDropTreeView):
             else:
                 row = self.model().getRootItem().childCount()
                 new_group_index = self.model().insertNewIndex(row, name="group", column_data=column_data,
-                                                              is_dropable=True)
+                                                              is_droppable=True)
                 new_group_item = new_group_index.internalPointer()
 
             # update new group items unique name
@@ -873,11 +873,11 @@ MMB to clear an items color""")
             if child["item_type"] == COLOR:
                 # column_data = child
                 new_index = self.nodeColorsWidget().insertNewIndex(
-                    0, name=child["name"], column_data=child, is_dropable=False, parent=parent)
+                    0, name=child["name"], column_data=child, is_droppable=False, parent=parent)
                 self.appendNodeType(child["name"])
             elif child["item_type"] == GROUP:
                 new_index = self.nodeColorsWidget().insertNewIndex(
-                    0, name="group", column_data=child, is_dropable=True, parent=parent)
+                    0, name="group", column_data=child, is_droppable=True, parent=parent)
                 self.populate(child["children"], parent=new_index)
                 pass
 
@@ -973,7 +973,7 @@ MMB to clear an items color""")
         if node_type in all_nodes:
             column_data = {"name": node_type, "color": "", "item_type": COLOR}
             new_index = self.nodeColorsWidget().insertNewIndex(
-                0, name=node_type, column_data=column_data, is_dropable=False)
+                0, name=node_type, column_data=column_data, is_droppable=False)
             self.appendNodeType(node_type)
 
             NodeColorRegistryWidget.updateSaveIcon(self, is_dirty=True)

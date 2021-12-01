@@ -212,8 +212,8 @@ class AbstractModelViewWidget(AbstractShojiLayout):
         is_selectable=None,
         is_enableable=None,
         is_deletable=None,
-        is_dragable=None,
-        is_dropable=None
+        is_draggable=None,
+        is_droppable=None
     ):
         new_index = self.model().insertNewIndex(
             row,
@@ -224,8 +224,8 @@ class AbstractModelViewWidget(AbstractShojiLayout):
             is_selectable=is_selectable,
             is_enableable=is_enableable,
             is_deletable=is_deletable,
-            is_dragable=is_dragable,
-            is_dropable=is_dropable
+            is_draggable=is_draggable,
+            is_droppable=is_droppable
         )
 
         return new_index

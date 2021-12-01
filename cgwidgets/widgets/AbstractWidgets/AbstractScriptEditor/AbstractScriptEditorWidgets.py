@@ -345,8 +345,8 @@ class AbstractDesignButtonInterface(object):
     def updateButton(self, current_item=None):
         if current_item:
             item_type = current_item.getItemType()
-            dropable_list = ["script", "gesture", "hotkey"]
-            if item_type in dropable_list:
+            droppable_list = ["script", "gesture", "hotkey"]
+            if item_type in droppable_list:
                 if isinstance(self, GestureDesignEditorButton):
                     self.setText("%s" % (current_item.text(0)))
                 elif isinstance(self, GestureDesignPopupButton):
@@ -619,8 +619,8 @@ class HotkeyDesignEditorButton(AbstractHotkeyDesignButtonWidget):
         # update background color
         current_item = self.getCurrentItem()
         item_type = current_item.getItemType()
-        dropable_list = ["script", "hotkey"]
-        if item_type in dropable_list:
+        droppable_list = ["script", "hotkey"]
+        if item_type in droppable_list:
             self.updateButtonColor(hover=True, drag_active=True)
             event.accept()
 
@@ -1179,8 +1179,8 @@ class GestureDesignEditorButton(GestureDesignButtonWidget):
     def dragEnterEvent(self, event, *args, **kwargs):
         current_item = self.getCurrentItem()
         item_type = current_item.getItemType()
-        dropable_list = ["script", "gesture", "hotkey"]
-        if item_type in dropable_list:
+        droppable_list = ["script", "gesture", "hotkey"]
+        if item_type in droppable_list:
             event.accept()
 
         return QGraphicsItemGroup.dragEnterEvent(self, event, *args, **kwargs)

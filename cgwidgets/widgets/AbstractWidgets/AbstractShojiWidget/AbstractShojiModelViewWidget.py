@@ -151,8 +151,8 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         is_selectable=None,
         is_enableable=None,
         is_deletable=None,
-        is_dragable=None,
-        is_dropable=None):
+        is_draggable=None,
+        is_droppable=None):
         """
         Creates a new tab at  the specified index
 
@@ -193,8 +193,8 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         # setup flags
         view_item.setIsEditable(is_editable)
         view_item.setIsSelectable(is_selectable)
-        view_item.setIsDraggable(is_dragable)
-        view_item.setIsDroppable(is_dropable)
+        view_item.setIsDraggable(is_draggable)
+        view_item.setIsDroppable(is_droppable)
         view_item.setIsEnableable(is_enableable)
         view_item.setIsDeletable(is_deletable)
 
