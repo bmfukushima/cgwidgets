@@ -25,7 +25,8 @@ popup_bar_widget.loadPopupDisplayFromFile(
     getDefaultSavePath() + '/.PiPWidgets_02.json',
     "taskbar"
 )
-
+for x in popup_bar_widget.allWidgets():
+    print(x.name())
 
 # set popup bar widget
 popup_bar_widget.setPiPScale(0.55)

@@ -5,6 +5,10 @@
         *   Drag Leave causing segfaults with STANDALONE TASKBAR (538, 11)
         *   Delays when enlarging (584, 11)
         *   AbstractPiPDisplayWidget change is_standalone to is_organizer (1513, 15)
+
+AbstractPopupBarDisplayWidget --> QWidget()
+    display_widget --> AbstractPopupBarWidget
+    popup_bar_widget --> AbstractPopupBarWidget
 """
 import json
 from collections import OrderedDict
@@ -1131,6 +1135,9 @@ class AbstractPopupBarDisplayWidget(QWidget):
         Todo: need to clean up the underlying API for these calls?
 
     Attributes:
+        current_widget (AbstractPopupBarItemWidget): Current widget being displayed full screen in this widget.
+            This is only active if the display mode is set to:
+                PIP | PIPTASKBAR
         display_mode (AbstractPopupBarDisplayWidget.DISPLAYMODE): what mode should
             be displayed
         display_widget (AbstractPopupBarWidget | AbstractPiPDisplayWidget): The current popup widget
@@ -1174,13 +1181,26 @@ class AbstractPopupBarDisplayWidget(QWidget):
         self.setDisplayMode(display_mode)
 
     """ WIDGETS """
+    def currentWidget(self):
+        return self.displayWidget().currentWidget()
+
     def displayWidget(self):
         return self._display_widget
 
     def popupBarWidget(self):
         return self._popup_bar_widget
 
+    def allWidgets(self):
+        """ Returns a list of all of the widgets"""
+        widgets = self.displayWidget().widgets()
+        if self.isEnlarged():
+            widgets.append(self.enlargedWidget())
+
+        return widgets
+
     def widgets(self):
+        """ Returns a list of all of the widgets, except the enlarged widget,
+        if it is enlarged"""
         # todo is this correct?
         # this does not look correct...
         return self.displayWidget().widgets()
@@ -1212,6 +1232,9 @@ class AbstractPopupBarDisplayWidget(QWidget):
 
     def closeEnlargedView(self):
         self.popupBarWidget().closeEnlargedView()
+
+    def enlargedWidget(self):
+        return self.popupBarWidget().enlargedWidget()
 
     def enlargeWidget(self, widget):
         self.popupBarWidget().enlargeWidget(widget)
@@ -2408,25 +2431,25 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     # create popup bar
-    # popup_bar_widget = AbstractPopupBarWidget()
-    # for x in range(3):
-    #     label = QLabel(str(x))
-    #     popup_bar_widget.createNewWidget(label, name=str(x))
-    #
-    # # create main widget
-    # main_widget = QWidget()
-    # main_layout = QVBoxLayout(main_widget)
-    # other_widget = QLabel("Something Else")
-    # main_layout.addWidget(popup_bar_widget)
-    # main_layout.addWidget(other_widget)
-    #
-    # # set popup bar widget
-    # popup_bar_widget.setFixedWidth(50)
-    # popup_bar_widget.setDisplayMode(AbstractPopupBarDisplayWidget.PIP)
-    # popup_bar_widget.setDirection(attrs.SOUTH)
+    popup_bar_widget = AbstractPopupBarWidget()
+    for x in range(3):
+        label = QLabel(str(x))
+        popup_bar_widget.createNewWidget(label, name=str(x))
 
-    main_widget = AbstractOverlayInputWidget()
-    main_widget.setOverlayImage("/media/ssd01/dev/katana/KatanaWidgets/Icons/iconGSV.png")
+    # create main widget
+    main_widget = QWidget()
+    main_layout = QVBoxLayout(main_widget)
+    other_widget = QLabel("Something Else")
+    main_layout.addWidget(popup_bar_widget)
+    main_layout.addWidget(other_widget)
+
+    # set popup bar widget
+    popup_bar_widget.setFixedWidth(50)
+    popup_bar_widget.setDisplayMode(AbstractPopupBarDisplayWidget.PIP)
+    popup_bar_widget.setDirection(attrs.SOUTH)
+
+    # main_widget = AbstractOverlayInputWidget()
+    # main_widget.setOverlayImage("/media/ssd01/dev/katana/KatanaWidgets/Icons/iconGSV.png")
 
     # show widget
     setAsAlwaysOnTop(main_widget)
