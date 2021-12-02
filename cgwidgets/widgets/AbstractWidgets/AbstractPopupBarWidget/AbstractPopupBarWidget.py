@@ -30,9 +30,7 @@ from cgwidgets.widgets.AbstractWidgets.AbstractLabelledInputWidget import Abstra
 from cgwidgets.widgets.AbstractWidgets.AbstractOverlayInputWidget import AbstractOverlayInputWidget
 
 
-from cgwidgets.widgets import (AbstractSplitterWidget)
-
-import time
+from cgwidgets.widgets import AbstractSplitterWidget
 
 
 class AbstractPopupBarWidget(AbstractSplitterWidget):
@@ -2187,38 +2185,6 @@ class AbstractPiPDisplayWidget(QWidget):
                 return True
         return False
 
-    # def keyPressEvent(self, event):
-    #     # swap between this and previous
-    #     if event.key() == self.swapKey():
-    #         self.swapEvent()
-    #         return
-    #
-    #     # hotkey swapping
-    #     if event.key() in self.hotkeySwapKeys():
-    #         self.hotkeySwapEvent(event.key())
-    #         return
-    #
-    #     # hide PiP
-    #     if event.key() == Qt.Key_Q:
-    #         if not self.popupBarWidget().isEnlarged():
-    #             self.setIsPopupBarShown(not self.isPopupBarShown())
-    #             return
-    #
-    #     # escape
-    #     if event.key() == Qt.Key_Escape:
-    #         # close this mini viewer
-    #         if self.popupBarWidget().isEnlarged():
-    #             self.popupBarWidget().closeEnlargedView()
-    #             return
-    #
-    #         # close parent mini viewer (if open recursively)
-    #         if self.isPopupBarWidget():
-    #             parent_main_widget = getWidgetAncestor(self.parent(), AbstractPiPDisplayWidget)
-    #             parent_main_widget.popupBarWidget().closeEnlargedView()
-    #         return
-    #
-    #     return QWidget.keyPressEvent(self, event)
-
     def leaveEvent(self, event):
         """ Blocks the error that occurs when switching between different PiPDisplays"""
         if self.popupBarWidget().isEnlarged():
@@ -2437,32 +2403,36 @@ class PiPMainViewer(QWidget):
 
 if __name__ == "__main__":
     import sys
-    from qtpy.QtWidgets import QApplication, QLabel, QHBoxLayout
-    from cgwidgets.utils import centerWidgetOnCursor, setAsAlwaysOnTop, centerWidgetOnScreen
+    from cgwidgets.utils import setAsAlwaysOnTop, centerWidgetOnScreen
 
     app = QApplication(sys.argv)
 
     # create popup bar
-    popup_bar_widget = AbstractPopupBarWidget()
-    for x in range(3):
-        label = QLabel(str(x))
-        popup_bar_widget.createNewWidget(label, name=str(x))
-
-    # create main widget
-    main_widget = QWidget()
-    main_layout = QVBoxLayout(main_widget)
-    other_widget = QLabel("Something Else")
-    main_layout.addWidget(popup_bar_widget)
-    main_layout.addWidget(other_widget)
-
-    # set popup bar widget
-    popup_bar_widget.setFixedWidth(50)
-    popup_bar_widget.setDisplayMode(AbstractPopupBarDisplayWidget.PIP)
+    # popup_bar_widget = AbstractPopupBarWidget()
+    # for x in range(3):
+    #     label = QLabel(str(x))
+    #     popup_bar_widget.createNewWidget(label, name=str(x))
+    #
+    # # create main widget
+    # main_widget = QWidget()
+    # main_layout = QVBoxLayout(main_widget)
+    # other_widget = QLabel("Something Else")
+    # main_layout.addWidget(popup_bar_widget)
+    # main_layout.addWidget(other_widget)
+    #
+    # # set popup bar widget
+    # popup_bar_widget.setFixedWidth(50)
+    # popup_bar_widget.setDisplayMode(AbstractPopupBarDisplayWidget.PIP)
     # popup_bar_widget.setDirection(attrs.SOUTH)
+
+    main_widget = AbstractOverlayInputWidget()
+    main_widget.setOverlayImage("/media/ssd01/dev/katana/KatanaWidgets/Icons/iconGSV.png")
 
     # show widget
     setAsAlwaysOnTop(main_widget)
+    main_widget.resize(256, 256)
     main_widget.show()
+
     centerWidgetOnScreen(main_widget)
 
 

@@ -348,6 +348,10 @@ class AbstractLabelWidget(QFrame, iAbstractInputWidget):
         text (str): text to be displayed as the title
         image (str): path on disk to image
 
+    Attributes:
+        widget_resize_mode (Qt.AspectRatioMode): How the image should be resized
+
+
     Hierarchy:
         |-- QStackedLayout (StackAll)
             |- imageWidget --> QLabel
@@ -524,12 +528,12 @@ class AbstractLabelWidget(QFrame, iAbstractInputWidget):
         offset = 4
         width = self.width() - offset
         height = self.height() - offset
-
         # set sized
         self.imageWidget().setFixedSize(width, height)
 
         # resize pixmap
         if not self.pixmap.isNull():
+
             self.pixmap = self.pixmap.scaled(width, height, self.imageResizeMode())
             self.imageWidget().setPixmap(self.pixmap)
 
@@ -559,8 +563,12 @@ class AbstractLabelWidget(QFrame, iAbstractInputWidget):
         return QWidget.resizeEvent(self, event)
 
     def showEvent(self, event):
+        # return_val =
+        self.setImage(self.imagePath())
         self.resizeImage()
-        QFrame.showEvent(self, event)
+
+        return QFrame.showEvent(self, event)
+
 
 class AbstractBooleanInputWidget(AbstractLabelWidget):
     TYPE = 'bool'
@@ -711,7 +719,7 @@ if __name__ == "__main__":
     boolean_test = AbstractBooleanInputWidget(text="boolean", image=None, is_selected=False)
     boolean_test.setImage(icons["example_image_01"])
     label_test = AbstractLabelWidget(text="label")
-    label_test.setImage(icons["example_image_02"])
+    label_test.setImage("/media/ssd01/dev/katana/KatanaWidgets/Icons/iconGSV.png")
     # button_test = AbstractButtonInputWidget(title="yolo", is_toggleable=True)
     # label_test = AbstractLabelWidget(text="test")
     #
@@ -719,13 +727,13 @@ if __name__ == "__main__":
 
     main_widget = QWidget()
     main_layout = QVBoxLayout(main_widget)
-    main_layout.addWidget(boolean_test)
+    #main_layout.addWidget(boolean_test)
     main_layout.addWidget(label_test)
-    main_layout.addWidget(string_test)
+    #main_layout.addWidget(string_test)
 
     main_widget.move(QCursor.pos())
     main_widget.show()
-    main_widget.resize(500, 500)
+    main_widget.resize(256, 256)
     main_widget.show()
     #print ('\n\n========================\n\n')
     #print(main_widget.styleSheet())

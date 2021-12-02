@@ -55,8 +55,10 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
         display_mode=4
     ):
         super(AbstractOverlayInputWidget, self).__init__(parent)
+        # pyside2 forces us to do this import
         if API_NAME == "PySide2":
-            iAbstractInputWidget.__init__(self) #pyside2 forces us to do this import
+            iAbstractInputWidget.__init__(self)
+
         # create widgets
         class ViewWidget(AbstractLabelWidget):
             def __init__(self, parent=None, title=""):
@@ -75,7 +77,6 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
                 self.setImagePath(image_path)
                 self.pixmap = QPixmap(image_path)
                 self.resizeImage()
-                # self.updateStyleSheet()
 
             """ EVENTS """
             def mouseReleaseEvent(self, event):
@@ -239,8 +240,6 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
         else:
             self.setContentsMargins(2, 2, 2, 2)
 
-        # self.disableHoverDisplay(self.viewWidget())
-
     def setImageResizeMode(self, resize_mode):
         self.viewWidget().setImageResizeMode(resize_mode)
         self.viewWidget().resizeImage()
@@ -301,15 +300,17 @@ if __name__ == "__main__":
 
     overlay_widget.showImage(False)
     #overlay_widget.disableHoverDisplay(overlay_widget.viewWidget().imageWidget())
+    overlay_widget_2 = AbstractOverlayInputWidget()
+    overlay_widget_2.setImage("/media/ssd01/dev/katana/KatanaWidgets/Icons/iconGSV.png")
 
-    test_label = AbstractLabelWidget(text="Label", image=icons["example_image_02"])
+    test_label = AbstractLabelWidget(text="Label", image="/media/ssd01/dev/katana/KatanaWidgets/Icons/iconGSV.png")
 
     main_widget = QWidget()
     main_layout = QVBoxLayout(main_widget)
-    main_layout.addWidget(overlay_widget)
-    main_layout.addWidget(test_label)
+    #main_layout.addWidget(overlay_widget)
+    main_layout.addWidget(overlay_widget_2)
+    #main_layout.addWidget(test_label)
     main_widget.move(QCursor.pos())
-    main_widget.show()
     main_widget.resize(500, 500)
     main_widget.show()
     #print ('\n\n========================\n\n')
