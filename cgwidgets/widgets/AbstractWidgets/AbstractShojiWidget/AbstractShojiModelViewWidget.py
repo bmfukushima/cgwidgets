@@ -120,11 +120,11 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         self.delegateWidget().insertWidget(0, self._temp_proxy_widget)
 
         # setup main layout
-        scroll_area = QScrollArea()
-        scroll_area.setWidget(delegate_widget)
-        scroll_area.setWidgetResizable(True)
-        self.addWidget(scroll_area)
-        scroll_area.setStyleSheet("QScrollArea{border:None}")
+        self._delegate_scroll_area = QScrollArea()
+        self._delegate_scroll_area.setWidget(delegate_widget)
+        self._delegate_scroll_area.setWidgetResizable(True)
+        self.addWidget(self._delegate_scroll_area)
+        self._delegate_scroll_area.setStyleSheet("QScrollArea{border:None}")
 
         self.addWidget(self._header_widget)
 
@@ -668,6 +668,9 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
             print('view does not have function addContextMenuEvent')
 
     """ DELEGATE """
+    def delegateScrollArea(self):
+        return self._delegate_scroll_area
+
     def delegateWidget(self):
         return self._delegate_widget
 

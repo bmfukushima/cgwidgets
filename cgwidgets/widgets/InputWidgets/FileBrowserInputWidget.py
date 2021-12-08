@@ -14,7 +14,8 @@ class FileBrowserInputWidget(AbstractListInputWidget):
 
         # setup model
         self.model = QFileSystemModel()
-        self.model.setRootPath('/home/')
+        import os
+        self.model.setRootPath(os.environ["HOME"])
         filters = self.model.filter()
         self.model.setFilter(filters | QDir.Hidden)
 

@@ -1,10 +1,16 @@
-""" Todo:
-        *   Check multiple recursion...
-                Specifically in STANDALONE TASKBAR
-        *   Enable swapping of STANDALONE TASKBAR when in PiPView (1989, 23)
-        *   Drag Leave causing segfaults with STANDALONE TASKBAR (538, 11)
-        *   Delays when enlarging (584, 11)
-        *   AbstractPiPDisplayWidget change is_standalone to is_organizer (1513, 15)
+"""
+Todo:
+    *   Check multiple recursion...
+            Specifically in STANDALONE TASKBAR
+    *   Enable swapping of STANDALONE TASKBAR when in PiPView (1989, 23)
+    *   Drag Leave causing segfaults with STANDALONE TASKBAR (538, 11)
+    *   Delays when enlarging (584, 11)
+    *   AbstractPiPDisplayWidget change is_standalone to is_organizer (1513, 15)
+Todo (Features):
+    *   To give the illusion of instantaneous loading:
+            When closing, save image of last state.
+            When loading, load that image while showing the widget
+            Swap image for widget.
 
 AbstractPopupBarDisplayWidget --> QWidget()
     display_widget --> AbstractPopupBarWidget

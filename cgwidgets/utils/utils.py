@@ -72,6 +72,7 @@ def getUniqueName(name, children, exists=True):
 
         return name
 
+
 def getFontSize(application=None):
     """
     Returns the current systems font size
@@ -89,7 +90,7 @@ def guessBackgroundColor(style_sheet):
     find_matches = b = re.findall("background-color.*rgba.*\)", style_sheet)
     if len(find_matches) > 0:
         return '(' + b[0].split('(')[1:][0]
-    return repr((64, 64 ,64 ,255))
+    return repr((64, 64, 64, 255))
 
 
 def printStartTest(name):
@@ -153,30 +154,7 @@ def isCursorOverWidget(widget):
     else:
         return False
 
-# remove this for now
-# def getMainWidget(widget, name):
-#     """
-#     searchs widgets parents until it finds one with the name
-#     provided in the variables.
-#
-#     Note:
-#         that name is found with the __name__() dunder
-#
-#     @widget < widget >
-#         widget to start searching parents from
-#     @name < str >
-#         name of widget to find
-#     """
-#     try:
-#         if widget.__name__() == name:
-#             return widget
-#         else:
-#             return getMainWidget(widget.parent(), name)
-#     except AttributeError:
-#         try:
-#             return getMainWidget(widget.parent(), name)
-#         except AttributeError:
-#             print("this is has no parents...")
+
 def runDelayedEvent(widget, event, name="_timer", delay_amount=50):
     """ Runs the event provided after a certain amount of delay (delay_amount)
 
