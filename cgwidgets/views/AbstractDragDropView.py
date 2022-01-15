@@ -860,6 +860,12 @@ class AbstractDragDropTreeView(QTreeView, AbstractDragDropAbstractView):
         self.addContextMenuEvent("Expand All", self.expandAllEvent)
         self.addContextMenuEvent("Collapse All", self.collapseAllEvent)
 
+    """ EVENTS """
+    def expanded(self, index):
+        print("============ EXPANDED ==================")
+        # print("expanded", index.internalPointer().name())
+        return QTreeView.expanded(self, index)
+
     """ EVENTS (CONTEXT MENU)"""
     def expandItemEvent(self, item, indexes):
         # todo expand recursively broken
@@ -933,6 +939,13 @@ class AbstractDragDropTreeView(QTreeView, AbstractDragDropAbstractView):
 
     def mouseReleaseEvent(self, event):
         self.abstractMouseReleaseEvent(event)
+
+        # update items expansion state
+        index = self.indexAt(event.pos())
+        if index.internalPointer():
+            is_expanded = self.isExpanded(index)
+            index.internalPointer().setIsExpanded(is_expanded)
+
         return QTreeView.mouseReleaseEvent(self, event)
 
     def mouseMoveEvent(self, event):

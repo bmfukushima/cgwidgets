@@ -109,7 +109,10 @@ def getJSONData(json_file):
     if json_file:
         with open(json_file, 'r') as f:
             datastore = json.load(f, object_pairs_hook=OrderedDict)
-    return datastore
+    if datastore:
+        return datastore
+    else:
+        return None
 
 
 def getDefaultSavePath():

@@ -48,6 +48,7 @@ class AbstractDragDropModelItem(object):
         self._is_enabled = True
         self._is_enableable = None
         self._is_editable = None
+        self._is_expanded = None
         self._is_selectable = None
 
         # default parent
@@ -207,6 +208,12 @@ class AbstractDragDropModelItem(object):
 
     def setIsEnabled(self, enable):
         self._is_enabled = enable
+
+    def isExpanded(self):
+        return self._is_expanded
+
+    def setIsExpanded(self, is_expanded):
+        self._is_expanded = is_expanded
 
     def isEnableable(self):
         return self._is_enableable
@@ -992,6 +999,7 @@ class AbstractDragDropModel(QAbstractItemModel):
         if item == self.rootItem():
             item_data = []
 
+        # index = self.getIndexFromItem(item)
         for child in item.children():
             # todo add defualt item states... expanded, enabled, etc
             """ Will probably need to move this to the view"""

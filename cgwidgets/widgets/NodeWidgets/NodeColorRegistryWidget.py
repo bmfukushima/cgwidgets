@@ -392,7 +392,7 @@ class NodeColorView(AbstractDragDropTreeView):
 
         if event.key() == Qt.Key_E:
             data_dict = self.exportModelToDict(self.rootItem())
-            print(data_dict)
+            # print(data_dict)
 
         return AbstractDragDropTreeView.keyPressEvent(self, event)
 
