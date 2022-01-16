@@ -102,13 +102,16 @@ def printStartTest(name):
     print('Starting {} unittest...'.format(name))
 
 
-def getJSONData(json_file):
+def getJSONData(json_file, ordered=True):
     """
     returns the actual json dict
     """
     if json_file:
         with open(json_file, 'r') as f:
-            datastore = json.load(f, object_pairs_hook=OrderedDict)
+            if ordered:
+                datastore = json.load(f, object_pairs_hook=OrderedDict)
+            else:
+                datastore = json.load(f)
     if datastore:
         return datastore
     else:

@@ -163,7 +163,7 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
                 correct values for column data.
             name (str): name of widget
             parent (QModelIndex): Parent index to create this new
-                tab under neath
+                tab underneath
             row (int): index to insert widget at
             widget (QWidget): widget to be displayed at that index
 
@@ -310,8 +310,8 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         """
         self.headerWidget().setDragDropMode(drag_drop_mode)
 
-    def setHeaderItemDeleteEvent(self, function):
-        self.headerWidget().setItemDeleteEvent(function)
+    def setHeaderItemDeleteEvent(self, function, update_first=True):
+        self.headerWidget().setItemDeleteEvent(function, update_first=update_first)
 
     def setHeaderItemDragStartEvent(self, function):
         """

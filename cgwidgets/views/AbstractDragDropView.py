@@ -233,6 +233,12 @@ class AbstractDragDropAbstractView(object):
     def rootItem(self):
         return self.model().rootItem()
 
+    def updateFirst(self):
+        return self.model().updateFirst()
+
+    def setUpdateFirst(self, update_first):
+        self.model().setUpdateFirst(update_first)
+
     """ SELECTION """
     def setItemSelected(self, item, selected):
         """ Selects the item provided
@@ -449,7 +455,7 @@ class AbstractDragDropAbstractView(object):
                     deletable_items = self.getAllBaseItems()
                     for item in deletable_items:
                         if (item.isDeletable() == True) or (item.isDeletable() == None and self.isDeletable() == True):
-                            self.model().deleteItem(item, event_update=True)
+                            self.model().deleteItem(item, event_update=True, update_first=self.updateFirst())
 
                 def dontDeleteItem(widget):
                     return

@@ -412,8 +412,8 @@ class AbstractModelViewWidget(AbstractShojiLayout):
 
         """ VIRTUAL FUNCTIONS """
 
-    def setItemDeleteEvent(self, function):
-        self.model().setItemDeleteEvent(function)
+    def setItemDeleteEvent(self, function, update_first=True):
+        self.model().setItemDeleteEvent(function, update_first=update_first)
 
     def setDragStartEvent(self, function):
         self.model().setDragStartEvent(function)

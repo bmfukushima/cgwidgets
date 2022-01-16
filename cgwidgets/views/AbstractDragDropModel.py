@@ -269,6 +269,7 @@ class AbstractDragDropModel(QAbstractItemModel):
         self._item_type = AbstractDragDropModelItem
         self._item_height = AbstractDragDropModel.ITEM_HEIGHT
         self._item_width = AbstractDragDropModel.ITEM_WIDTH
+        self._update_first = True
 
         # set up root item
         if not root_item:
@@ -320,7 +321,7 @@ class AbstractDragDropModel(QAbstractItemModel):
         item.setIsEnabled(enabled)
         self.itemEnabledEvent(item, enabled)
 
-    def deleteItem(self, item, event_update=False):
+    def deleteItem(self, item, event_update=False, update_first=True):
         """
         When an item is deleted this function will be called.
 
@@ -334,13 +335,16 @@ class AbstractDragDropModel(QAbstractItemModel):
                 if the user event returns TRUE then the item will NOT
                 be deleted... kinda counter intuitive, but w/e I don't
                 feel like rewriting everything
+            update_first (bool): determines if the update should be run before
+                or after the delete has happened.
 
         Returns:
 
         """
         # run deletion event
-        if event_update:
-            self.itemDeleteEvent(item)
+        if self.updateFirst():
+            if event_update:
+                self.itemDeleteEvent(item)
 
         # get old parents
         old_parent_item = item.parent()
@@ -350,6 +354,10 @@ class AbstractDragDropModel(QAbstractItemModel):
         self.beginRemoveRows(old_parent_index, item.row(), item.row() + 1)
         old_parent_item.children().remove(item)
         self.endRemoveRows()
+
+        if not self.updateFirst():
+            if event_update:
+                self.itemDeleteEvent(item)
 
     def clearModel(self, event_update=False):
         """
@@ -762,6 +770,12 @@ class AbstractDragDropModel(QAbstractItemModel):
     def item_width(self, _item_width):
         self._item_width = _item_width
 
+    def updateFirst(self):
+        return self._update_first
+
+    def setUpdateFirst(self, update_first):
+        self._update_first = update_first
+
     """ DRAG / DROP PROPERTIES """
     def isSelectable(self):
         return self._is_selectable
@@ -1034,8 +1048,9 @@ class AbstractDragDropModel(QAbstractItemModel):
     def _add_mimedata(self, mimedata, indexes):
         return mimedata
 
-    def setItemDeleteEvent(self, function):
+    def setItemDeleteEvent(self, function, update_first=True):
         self.__itemDeleteEvent = function
+        self.setUpdateFirst(update_first)
 
     def itemDeleteEvent(self, item):
         self.__itemDeleteEvent(item)
