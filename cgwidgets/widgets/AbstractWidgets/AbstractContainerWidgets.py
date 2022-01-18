@@ -174,14 +174,15 @@ class AbstractInputGroupFrame(QFrame):
         return self.headerWidget().viewWidget()
 
     """ VIRTUAL """
-    def __headerTextChanged(self, widget, value):
-        pass
-
-    def headerTextChanged(self, widget, value):
-        self.__headerTextChanged(widget, value)
+    # def __headerTextChanged(self, widget, value):
+    #     pass
+    #
+    # def headerTextChanged(self, widget, value):
+    #     self.__headerTextChanged(widget, value)
 
     def setHeaderTextChangedEvent(self, function):
-        self.__headerTextChanged = function
+        # self.__headerTextChanged = function
+        self.headerWidget().delegateWidget().setUserFinishedEditingEvent(function)
 
     """ STYLE """
     def setToolTip(self, tool_tip):

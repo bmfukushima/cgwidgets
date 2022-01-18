@@ -1027,7 +1027,6 @@ class AbstractDragDropModelDelegate(QStyledItemDelegate):
         # =======================================================================
         # get data
         # =======================================================================
-        "setting model data???"
         new_value = editor.text()
         if new_value == '':
             return
