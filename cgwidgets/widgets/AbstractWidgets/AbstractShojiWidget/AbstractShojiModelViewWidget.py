@@ -666,6 +666,21 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
             print('view does not have function addContextMenuEvent')
 
     """ DELEGATE """
+    def activeDelegateWidgets(self):
+        """ Returns all of the currently visible delegate widgets"""
+        _delegate_widgets = []
+        for x in range(1, self.delegateWidget().count()):
+            _delegate_widgets.append(self.delegateWidget().widget(x).getMainWidget())
+
+        return _delegate_widgets
+
+    def activeModelDelegateWidgets(self):
+        """ Returns a list of all of the currently active delegate widgets parents"""
+        _delegate_widgets = []
+        for x in range(1, self.delegateWidget().count()):
+            _delegate_widgets.append(self.delegateWidget().widget(x))
+
+        return _delegate_widgets
     def delegateScrollArea(self):
         return self._delegate_scroll_area
 
