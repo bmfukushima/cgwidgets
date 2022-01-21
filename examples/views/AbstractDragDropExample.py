@@ -25,8 +25,8 @@ def testDrag(items, model):
 def testDrop(data, indexes, self, row, parent_item):
     print("DROPPING -->", data, indexes, self, row, parent_item)
 
-def testEdit(item, old_value, new_value):
-    print("EDITING -->", item, old_value, new_value)
+def testEdit(item, old_value, new_value, column):
+    print("EDITING -->", item, old_value, new_value, column)
 
 def testEnable(item, enabled):
     print("ENABLING -->", item.columnData()['name'], enabled)

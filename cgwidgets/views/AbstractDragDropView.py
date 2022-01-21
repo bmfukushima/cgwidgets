@@ -1039,7 +1039,7 @@ class AbstractDragDropModelDelegate(QStyledItemDelegate):
         item.columnData()[arg] = new_value
 
         # emit text changed event
-        model.textChangedEvent(item, old_value, new_value)
+        model.textChangedEvent(item, old_value, new_value, column=index.column())
 
         #model.setData(index, QVariant(new_value))
         #model.aov_list[index.row()] = new_value
@@ -1280,7 +1280,7 @@ if __name__ == '__main__':
     def testDrop(indexes, parent):
         print(indexes, parent)
 
-    def testEdit(item, old_value, new_value):
+    def testEdit(item, old_value, new_value, column=0):
         print(item, old_value, new_value)
 
     def testEnable(item, enabled):

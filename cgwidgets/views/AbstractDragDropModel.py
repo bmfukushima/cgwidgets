@@ -1109,7 +1109,7 @@ class AbstractDragDropModel(QAbstractItemModel):
     def setTextChangedEvent(self, function):
         self.__textChangedEvent = function
 
-    def textChangedEvent(self, item, old_value, new_value):
+    def textChangedEvent(self, item, old_value, new_value, column=0):
         """
         Virtual function that is run after the mime data has been dropped.
 
@@ -1118,9 +1118,9 @@ class AbstractDragDropModel(QAbstractItemModel):
             old_value (str):
             new_value (str):
         """
-        self.__textChangedEvent(item, old_value, new_value)
+        self.__textChangedEvent(item, old_value, new_value, column=column)
 
-    def __textChangedEvent(self, item, old_value, new_value):
+    def __textChangedEvent(self, item, old_value, new_value, column=0):
         pass
 
     def setItemSelectedEvent(self, function):

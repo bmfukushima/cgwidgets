@@ -602,9 +602,7 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         self.model().setHeaderData(_header_data)
 
     def setHeaderWidgetToDefaultSize(self):
-        """
-        Moves the main slider to make the tab label bar the default startup size
-        """
+        """Moves the main slider to make the tab label bar the default startup size"""
         if self.headerPosition() == attrs.NORTH:
             self.moveSplitter(self.header_height, 1)
         elif self.headerPosition() == attrs.SOUTH:

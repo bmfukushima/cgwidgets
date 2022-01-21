@@ -34,7 +34,7 @@ DROPPING -->
         """.format(data=data, row=row, model=model, items=items, parent=parent)
           )
 
-def testEdit(item, old_value, new_value):
+def testEdit(item, old_value, new_value, column):
     print("EDITING -->", item, old_value, new_value)
 
 def testEnable(item, enabled):
