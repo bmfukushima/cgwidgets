@@ -434,7 +434,15 @@ class AbstractButtonInputWidgetContainer(AbstractShojiLayout):
                 updateStyleSheet(button)
         self.normalizeWidgetSizes()
 
+    def setButtonSelected(self, button, enabled):
+        self.updateButtonSelection(button, enabled)
+
     def currentButtons(self):
+        """ Returns a list of all of the currently selected buttons"""
+        return self._current_buttons
+
+    def selectedButtons(self):
+        """ Returns a list of all of the currently selected buttons"""
         return self._current_buttons
 
     def setButtonAsCurrent(self, current_button, enabled):
@@ -450,17 +458,19 @@ class AbstractButtonInputWidgetContainer(AbstractShojiLayout):
         if self.isMultiSelect():
             # add to list
             if enabled:
-                self._current_buttons.append(current_button)
+                self.currentButtons().append(current_button)
                 self.insertWidget(len(self.currentButtons()) - 1, current_button)
 
             # remove from list
             else:
-                if current_button in self._current_buttons:
-                    self._current_buttons.remove(current_button)
+                if current_button in self.currentButtons():
+                    self.currentButtons().remove(current_button)
                 self.insertWidget(len(self.currentButtons()), current_button)
 
         # single select
         else:
+            for button in self.currentButtons():
+                button.is_selected = False
             self._current_buttons = [current_button]
             self.insertWidget(0, current_button)
 
