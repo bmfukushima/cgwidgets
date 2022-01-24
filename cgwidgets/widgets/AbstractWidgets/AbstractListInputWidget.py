@@ -94,6 +94,10 @@ class AbstractListInputWidget(AbstractStringInputWidget):
         """
         return self.__getCleanItems()
 
+    def setPopulateFunction(self, function):
+        """ Same as setCleanItemsFunction """
+        self.__getCleanItems = function
+
     def getAllTypes(self):
         return [item[0] for item in self.getCleanItems()]
 
