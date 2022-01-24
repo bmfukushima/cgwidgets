@@ -384,7 +384,6 @@ class AbstractButtonInputWidgetContainer(AbstractShojiLayout):
         self.setIsHandleVisible(False)
 
     """ GET FLAGS """
-
     def flags(self):
         buttons = self.currentButtons()
         return [button.flag() for button in buttons]
@@ -404,6 +403,11 @@ class AbstractButtonInputWidgetContainer(AbstractShojiLayout):
         self._is_toggleable = enabled
 
     """ BUTTONS """
+    def widgets(self):
+        return self._buttons
+
+    def buttons(self):
+        return self._buttons
 
     def updateButtonSelection(self, selected_button, enabled=None):
         """
