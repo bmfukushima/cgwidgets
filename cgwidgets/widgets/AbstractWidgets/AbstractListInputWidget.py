@@ -287,6 +287,12 @@ class AbstractListInputWidget(AbstractStringInputWidget):
     def filter_results(self, filter_results):
         self._filter_results = filter_results
 
+    def filterResults(self):
+        return self._filter_results
+
+    def setFilterResults(self, filter_results):
+        self._filter_results = filter_results
+
     def itemList(self):
         return self._item_list
 

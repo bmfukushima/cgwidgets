@@ -681,6 +681,7 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
             _delegate_widgets.append(self.delegateWidget().widget(x))
 
         return _delegate_widgets
+
     def delegateScrollArea(self):
         return self._delegate_scroll_area
 
