@@ -2,6 +2,8 @@ import math
 import json
 import os
 
+from qtpy import API_NAME
+
 from qtpy.QtWidgets import (
     QVBoxLayout,
     QWidget,
@@ -386,6 +388,8 @@ class AbstractHotkeyDesignWidget(QWidget, AbstractDesignWidget):
         init_pos=None
     ):
         super(AbstractHotkeyDesignWidget, self).__init__(parent)
+        if API_NAME == "PySide2":
+            AbstractDesignWidget.__init__(self)
 
     def __name__(self):
         return "__hotkey_editor_widget__"
@@ -424,6 +428,8 @@ class AbstractHotkeyDesignButtonWidget(QPushButton, AbstractDesignButtonInterfac
 
     def __init__(self, parent=None, text=None, unique_hash=None):
         super(AbstractHotkeyDesignButtonWidget, self).__init__(parent)
+        if API_NAME == "PySide2":
+            AbstractDesignButtonInterface.__init__(self)
         self.setText(text)
         self.setHotkey(text)
         self.setAcceptDrops(True)
@@ -656,6 +662,8 @@ class GestureDesignWidget(QGraphicsView, AbstractDesignWidget):
         size=50
     ):
         super(GestureDesignWidget, self).__init__(parent)
+        if API_NAME == "PySide2":
+            AbstractDesignWidget.__init__(self)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.horizontalScrollBar().setStyleSheet("height:0px")
@@ -925,6 +933,8 @@ class GestureDesignButtonWidget(QGraphicsItemGroup, AbstractDesignButtonInterfac
             num_points=None
         ):
         super(GestureDesignButtonWidget, self).__init__(parent)
+        if API_NAME == "PySide2":
+            AbstractDesignButtonInterface.__init__(self)
 
     def setText(self, text):
         self.text_item.setPlainText(text)
@@ -1031,6 +1041,8 @@ class GestureDesignButtonWidget(QGraphicsItemGroup, AbstractDesignButtonInterfac
 class GestureDesignPolyWidget(QGraphicsPolygonItem, AbstractDesignButtonInterface):
     def __init__(self, parent=None, points_list=None):
         super(GestureDesignPolyWidget, self).__init__(parent)
+        if API_NAME == "PySide2":
+            AbstractDesignButtonInterface.__init__(self)
         self.drawPolygon(points_list)
         """
         # setup color

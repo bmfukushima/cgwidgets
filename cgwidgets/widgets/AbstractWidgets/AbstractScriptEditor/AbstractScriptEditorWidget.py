@@ -497,9 +497,9 @@ class ScriptTreeWidget(QTreeWidget):
                         # set display hotkey
                         hotkey_dict = getJSONData(orig_dir + "/hotkeys.json")
                         is_locked = self.getSetting("locked", item)
-
-                        if file_path in list(hotkey_dict.keys()):
-                            item.setText(2, hotkey_dict[file_path])
+                        if hotkey_dict:
+                            if file_path in list(hotkey_dict.keys()):
+                                item.setText(2, hotkey_dict[file_path])
                         if is_locked:
                             item.setFlags(item.flags() & ~Qt.ItemIsEditable)
 
@@ -777,12 +777,13 @@ class ScriptTreeWidget(QTreeWidget):
         """
 
         hotkey_dict = self.hotkeyDict()
-        for key in list(hotkey_dict.keys()):
-            new_key = key.replace(old_dir, new_dir)
-            hotkey_dict[new_key] = hotkey_dict.pop(key)
+        if hotkey_dict:
+            for key in list(hotkey_dict.keys()):
+                new_key = key.replace(old_dir, new_dir)
+                hotkey_dict[new_key] = hotkey_dict.pop(key)
 
-        with open(self.hotkeyFile(), "w") as current_file:
-            json.dump(hotkey_dict, current_file)
+            with open(self.hotkeyFile(), "w") as current_file:
+                json.dump(hotkey_dict, current_file)
 
     def updateAllDesignPaths(self, old_dir, new_dir):
         """ Updates all of the design files in all of the script directories
@@ -913,9 +914,10 @@ class ScriptTreeWidget(QTreeWidget):
         # delete from global file
         hotkeys_filepath = self.hotkeyFile()
         hotkey_dict = getJSONData(hotkeys_filepath)
-        hotkey_dict.pop(item_path, None)
-        with open(hotkeys_filepath, "w") as f:
-            json.dump(hotkey_dict, f)
+        if hotkey_dict:
+            hotkey_dict.pop(item_path, None)
+            with open(hotkeys_filepath, "w") as f:
+                json.dump(hotkey_dict, f)
 
     def hotkeyFile(self, item=None):
         """ Returns the path on disk to the current items hotkey.json file

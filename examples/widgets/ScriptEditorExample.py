@@ -10,7 +10,7 @@ os.environ["CGWscripts"] = ":".join([
     getDefaultSavePath() + "/.scripts2",
     #"/media/ssd01/dev/katana/KatanaResources_old/ScriptsTest"
 ])
-
+print(os.environ["CGWscripts"])
 main_widget = ScriptEditorWidget()
 setAsAlwaysOnTop(main_widget)
 main_widget.show()
