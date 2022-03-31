@@ -497,9 +497,15 @@ class AbstractButtonInputWidgetContainer(AbstractShojiLayout):
         Todo: setup image
         """
         from cgwidgets.widgets import AbstractButtonInputWidget
-        button = AbstractButtonInputWidget(self, user_clicked_event=user_clicked_event, title=title, flag=flag,
-                                           is_toggleable=self.isToggleable())
-        self.updateButtonSelection(button, enabled)
+        button = AbstractButtonInputWidget(
+            self,
+            user_clicked_event=user_clicked_event,
+            title=title,
+            flag=flag,
+            is_toggleable=self.isToggleable())
+
+        if self.isToggleable():
+            self.updateButtonSelection(button, enabled)
         self._buttons[title] = button
         self.addWidget(button)
         return button
