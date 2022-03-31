@@ -114,7 +114,13 @@ def centerCursorOnWidget(widget):
     QCursor.setPos(QPoint(xpos, ypos))
 
 
-def centerWidgetOnCursor(widget):
+def centerWidgetOnCursor(widget, raise_=False):
+    """ Centers the widget on the cursor
+
+    Args:
+        widget (QWidget):
+        raise_ (bool): determines if the widget should be forced to the top
+        """
     pos = QCursor.pos()
     widget.setGeometry(
         pos.x() - (widget.geometry().width() * 0.5),
@@ -122,6 +128,10 @@ def centerWidgetOnCursor(widget):
         widget.geometry().width(),
         widget.geometry().height()
     )
+
+    if raise_:
+        widget.activateWindow()
+        widget.raise_()
 
 
 def centerWidgetOnScreen(widget, width=None, height=None, resize=False):

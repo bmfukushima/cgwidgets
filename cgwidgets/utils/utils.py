@@ -2,6 +2,7 @@ import json
 import re
 import math
 import os
+import platform
 
 from collections import OrderedDict
 
@@ -274,7 +275,6 @@ def setAsAlwaysOnTop(widget):
 
 
 def setAsTool(widget, enabled=True):
-    import platform
     if enabled:
         if platform.system() == 'Windows':
             widget.setWindowFlags(
@@ -308,7 +308,6 @@ def setAsTool(widget, enabled=True):
 
 
 def setAsPopup(widget, enabled=True):
-    import platform
     if enabled:
         if platform.system() == 'Windows':
             widget.setWindowFlags(
@@ -342,7 +341,6 @@ def setAsPopup(widget, enabled=True):
 
 
 def setAsWindow(widget):
-    import platform
     if platform.system() == 'Windows':
         widget.setWindowFlags(
             widget.windowFlags()
@@ -369,6 +367,34 @@ def setAsTransparent(widget):
     widget.setAttribute(Qt.WA_TranslucentBackground)
     widget.setStyleSheet("background-color: rgba(0,0,0,0)")
 
+
+def setAsBorderless(widget, enabled=True):
+    if enabled:
+        if platform.system() == 'Windows':
+            widget.setWindowFlags(
+                widget.windowFlags()
+                | Qt.NoDropShadowWindowHint
+                | Qt.WindowStaysOnTopHint
+            )
+        elif platform.system() == 'Linux':
+            widget.setWindowFlags(
+                widget.windowFlags()
+                | Qt.NoDropShadowWindowHint
+                | Qt.FramelessWindowHint
+            )
+    else:
+        if platform.system() == 'Windows':
+            widget.setWindowFlags(
+                widget.windowFlags()
+                & ~Qt.NoDropShadowWindowHint
+                & ~Qt.WindowStaysOnTopHint
+            )
+        elif platform.system() == 'Linux':
+            widget.setWindowFlags(
+                widget.windowFlags()
+                & ~Qt.NoDropShadowWindowHint
+                & ~Qt.FramelessWindowHint
+            )
 
 def updateStyleSheet(widget):
     """

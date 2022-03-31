@@ -389,7 +389,6 @@ class AbstractButtonInputWidgetContainer(AbstractShojiLayout):
         return [button.flag() for button in buttons]
 
     """ PROPERTIES """
-
     def isMultiSelect(self):
         return self._is_multi_select
 
