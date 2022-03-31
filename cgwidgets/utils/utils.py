@@ -214,6 +214,19 @@ def clearLayout(layout, start=None, end=None):
             pass
 
 
+def replaceLast(sstring, old_value, new_value, occurrence=1):
+    """ Replaces the last occurrence of a value in a string
+
+    Args:
+        sstring (str): the string to be manipulated
+        old_value (str): the value to be replaced
+        new_value (str): the new value
+        occurrence (int): the number of values to replace starting from the end
+    """
+    split_string = sstring.rsplit(old_value, occurrence)
+    return new_value.join(split_string)
+
+
 def showWarningDialogue(widget, warning_display_widget, accept_event, cancel_event, width=1080, height=512):
     """
     Displays a warning widget to the user at the center of the screen

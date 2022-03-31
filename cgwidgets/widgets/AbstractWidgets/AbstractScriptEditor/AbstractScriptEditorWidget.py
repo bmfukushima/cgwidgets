@@ -116,7 +116,7 @@ except ImportError:
     from qtpy.QtCore import Qt
 from qtpy.QtGui import QCursor, QKeySequence
 
-from cgwidgets.utils import getWidgetAncestor, showWarningDialogue, getJSONData
+from cgwidgets.utils import getWidgetAncestor, showWarningDialogue, getJSONData, replaceLast
 from cgwidgets.widgets.AbstractWidgets.AbstractBaseInputWidgets import AbstractLabelWidget, AbstractButtonInputWidget
 from cgwidgets.settings import iColor, stylesheets
 
@@ -676,10 +676,12 @@ class ScriptTreeWidget(QTreeWidget):
         if not new_file_dir:
             new_file_dir = current_item.parent().getFileDir()
             new_file_name = "{hash}.{name}".format(hash=current_item.getHash(), name=current_item.text(0))
-            new_file_path = old_file_path.replace(old_file_name, new_file_name)
+            #new_file_path = old_file_path.replace(old_file_name, new_file_name)
+            new_file_path = replaceLast(old_file_path, old_file_name, new_file_name)
         else:
             new_file_name = current_item.getFileName()
-            new_file_path = old_file_path.replace(old_file_dir, new_file_dir)
+            #new_file_path = old_file_path.replace(old_file_dir, new_file_dir)
+            new_file_path = replaceLast(old_file_path, old_file_dir, new_file_dir)
 
         # rename file
         if not os.path.exists(new_file_path):
