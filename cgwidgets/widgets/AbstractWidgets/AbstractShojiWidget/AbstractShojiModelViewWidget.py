@@ -647,10 +647,16 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
 
         return display_widget
 
-    def addContextMenuSeparator(self):
-        self.headerViewWidget().addContextMenuSeparator()
+    def addContextMenuSeparator(self, conditions=None):
+        """Adds a separator into the RMB popup menu.
 
-    def addContextMenuEvent(self, name, event):
+        Args:
+            conditions (dict): a mapping of the items args to be used to display the item.
+                If no conditions are found the item will be added to the menu
+        """
+        self.headerViewWidget().addContextMenuSeparator(conditions)
+
+    def addContextMenuEvent(self, name, event, conditions=None):
         """
         Adds an entry into the RMB popup menu.
 
@@ -659,9 +665,11 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
             event (function): takes two args:
                 item_under_cursor (item): current item under cursor
                 indexes (list): of currently selected QModelIndexes
+            conditions (dict): a mapping of the items args to be used to display the item.
+                If no conditions are found the item will be added to the menu
         """
         if hasattr(self.headerViewWidget(), 'addContextMenuEvent'):
-            self.headerViewWidget().addContextMenuEvent(name, event)
+            self.headerViewWidget().addContextMenuEvent(name, event, conditions)
         else:
             print('view does not have function addContextMenuEvent')
 

@@ -665,12 +665,28 @@ class AbstractDragDropAbstractView(object):
 
     """ CONTEXT MENU """
     def abstractContextMenuEvent(self, event):
+        """ Create entries for the context menu."""
         # populate menu entries
         context_menu = AbstractViewContextMenu(self)
+        current_index = self.getIndexUnderCursor()
+        current_item = current_index.internalPointer()
 
         for context_menu_item in self.contextMenuManifest():
             if context_menu_item.itemType() == attrs.CONTEXT_EVENT:
-                context_menu.addAction(context_menu_item.name())
+                """ Create menu entries, if the conditions are provided,
+                and any match, the menu item will be created"""
+                conditions = context_menu_item.conditions()
+                if current_item:
+                    if conditions:
+                        for arg, value in conditions.items():
+                            if current_item.hasArg(arg):
+                                if current_item.getArg(arg) == value:
+                                    context_menu.addAction(context_menu_item.name())
+                                    break
+                    else:
+                        context_menu.addAction(context_menu_item.name())
+                else:
+                    context_menu.addAction(context_menu_item.name())
             else:
                 context_menu.addSeparator()
 
@@ -690,11 +706,18 @@ class AbstractDragDropAbstractView(object):
                 event(index_clicked, selected_indexes)
             # self.contextMenuManifest()[action.text()](index_clicked, selected_indexes)
 
-    def addContextMenuSeparator(self):
-        context_data = AbstractContextMenuItem(None, None, attrs.CONTEXT_SEPERATOR)
+    def addContextMenuSeparator(self, conditions=None):
+        """
+        Adds a separator into the RMB popup menu.
+
+        Args:
+            conditions (dict): a mapping of the items args to be used to display the item.
+                If no conditions are found the item will be added to the menu
+        """
+        context_data = AbstractContextMenuItem(None, None, attrs.CONTEXT_SEPERATOR, conditions)
         self.contextMenuManifest().append(context_data)
 
-    def addContextMenuEvent(self, name, event):
+    def addContextMenuEvent(self, name, event, conditions=None):
         """
         Adds an entry into the RMB popup menu.
 
@@ -705,8 +728,11 @@ class AbstractDragDropAbstractView(object):
                     item_under_cursor (item): current item under cursor
                     indexes (list): of currently selected QModelIndexes
             item_type (attrs.CONTEXT_ITEM_TYPE):
+            conditions (dict): a mapping of the items args to be used to display the item.
+                If no conditions are found the item will be added to the menu
         """
-        context_data = AbstractContextMenuItem(name, event, attrs.CONTEXT_EVENT)
+        context_data = AbstractContextMenuItem(name, event, attrs.CONTEXT_EVENT, conditions)
+
         self.contextMenuManifest().append(context_data)
 
     def findContextMenuEvent(self, name):
@@ -720,11 +746,19 @@ class AbstractDragDropAbstractView(object):
 
 
 class AbstractContextMenuItem(object):
-    """ An item that containts the data required to create a context menu event"""
-    def __init__(self, name, event, item_type):
+    """ An item that containts the data required to create a context menu event
+
+    Attributes:
+        name (str): display name
+        event (func): function to be run when item is executed
+        item_type ()
+        conditions (dict): a mapping of the items args to be used to display the item
+    """
+    def __init__(self, name, event, item_type, conditions):
         self._name = name
         self._event = event
         self._item_type = item_type
+        self._conditions = conditions
 
     def event(self):
         return self._event
@@ -743,6 +777,12 @@ class AbstractContextMenuItem(object):
 
     def setName(self, name):
         self._name = name
+
+    def conditions(self):
+        return self._conditions
+
+    def setConditions(self, conditions):
+        self._conditions = conditions
 
 
 class AbstractDragDropListView(QListView, AbstractDragDropAbstractView):

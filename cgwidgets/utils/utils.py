@@ -134,6 +134,10 @@ def getDefaultSavePath():
 
 def isCursorOverWidget(widget):
     """ Determines if the cursor is over the widget or not
+
+    This is necessary for checking leave events, when the cursor has left the parent widget,
+    but entered one of its child widgets.
+
     Args:
         widget (QWidget): to test position of
 
@@ -395,6 +399,7 @@ def setAsBorderless(widget, enabled=True):
                 & ~Qt.NoDropShadowWindowHint
                 & ~Qt.FramelessWindowHint
             )
+
 
 def updateStyleSheet(widget):
     """
