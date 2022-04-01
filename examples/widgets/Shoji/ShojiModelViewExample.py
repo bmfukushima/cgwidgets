@@ -60,8 +60,8 @@ from cgwidgets.widgets import (
     ModelViewWidget, FloatInputWidget, LabelledInputWidget, StringInputWidget)
 from cgwidgets.views import AbstractDragDropListView, AbstractDragDropTreeView, AbstractDragDropModelDelegate
 from cgwidgets.widgets import ShojiLayout
-from cgwidgets.settings import attrs
-from cgwidgets.settings import icons
+from cgwidgets.settings import attrs, icons
+from cgwidgets.utils import centerWidgetOnCursor
 
 
 app = QApplication(sys.argv)
@@ -421,8 +421,8 @@ def setupAsDoubleDynamic():
     custom_index.internalPointer().setDynamicUpdateFunction(DynamicItemExample.updateGUI)
 
 
-#setupAsStacked()
-setupAsDynamic()
+setupAsStacked()
+#setupAsDynamic()
 #setupAsDoubleDynamic()
 
 # SET FLAGS
@@ -552,8 +552,36 @@ print(shoji_widget.getAllIndexes())
 
 # shoji_widget.setHeaderItemIsCopyable(True)
 # display widget
-shoji_widget.resize(500, 500)
-shoji_widget.show()
-shoji_widget.move(QCursor.pos())
+
+# single
+# shoji_widget.resize(500,500)
+# shoji_widget.show()
+# centerWidgetOnCursor(shoji_widget)
+
+# double
+
+shoji_layout = ShojiLayout()
+shoji_widget3 = ShojiModelViewWidget(direction=attrs.EAST)
+shoji_widget.setMultiSelect(True)
+shoji_widget3.setMultiSelect(True)
+
+# shoji layout
+shoji_layout3 = ShojiLayout()
+for char in 'SINE.':
+    shoji_layout3.addWidget(StringInputWidget(char))
+shoji_widget3.insertShojiWidget(0, column_data={'name': 'Layout'}, widget=shoji_layout3)
+
+# insert child tabs
+# insert child widgets
+for y in range(0, 2):
+    widget = StringInputWidget(str("SINE."))
+    shoji_widget3.insertShojiWidget(y, column_data={'name': str(y), 'one': 'datttaaa'}, widget=widget)
+
+
+shoji_layout.addWidget(shoji_widget)
+shoji_layout.addWidget(shoji_widget3)
+shoji_layout.show()
+
+centerWidgetOnCursor(shoji_layout)
 
 sys.exit(app.exec_())

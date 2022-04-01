@@ -24,7 +24,7 @@ NOTE:
         "Switch windows directly"
 """
 import sys
-from qtpy.QtWidgets import QApplication, QLabel, QWidget, QVBoxLayout
+from qtpy.QtWidgets import QApplication, QLabel, QWidget, QVBoxLayout, QHBoxLayout
 from qtpy.QtGui import QCursor
 from qtpy.QtCore import Qt
 
@@ -36,6 +36,19 @@ class DisplayLabel(StringInputWidget):
     def __init__(self, parent=None):
         super(DisplayLabel, self).__init__(parent)
         self.setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
+
+
+class MultiDepthWidth(QWidget):
+    def __init__(self, parent=None):
+        super(MultiDepthWidth, self).__init__(parent)
+        QVBoxLayout(self)
+        self.label = QLabel("one")
+        self.layout().addWidget(self.label)
+        layout = QHBoxLayout()
+        layout.addWidget(QLabel('two'))
+        layout.addWidget(QLabel('three'))
+        self.layout().addLayout(layout)
+
 
 # class DisplayLabel(LabelWidget):
 #     def __init__(self, parent=None, text=None, image=None):
@@ -93,7 +106,8 @@ for x in range(3):
     embedded_shoji_01.addWidget(l)
 
 embedded_shoji_01.addWidget(embedded_shoji_02)
-
+multi_depth_widget = MultiDepthWidth()
+embedded_shoji_01.addWidget(multi_depth_widget)
 # add shoji to shoji
 main_widget.addWidget(embedded_shoji_01)
 

@@ -532,7 +532,7 @@ class AbstractShojiLayout(AbstractSplitterWidget):
             elif current_shoji.isSoloView() is False:
                 current_index1, current_widget1 = self.getIndexOfWidget(current_shoji)
                 if current_widget1:
-                    parent_shoji = current_widget.parent()
+                    parent_shoji = current_widget1.parent()
                     parent_shoji.toggleIsSoloView(False, current_shoji)
 
                     self.setIsSoloView(parent_shoji, False)
