@@ -672,12 +672,13 @@ class AbstractDragDropAbstractView(object):
         current_item = current_index.internalPointer()
 
         for context_menu_item in self.contextMenuManifest():
+            conditions = context_menu_item.conditions()
+            # add menu entry
             if context_menu_item.itemType() == attrs.CONTEXT_EVENT:
                 """ Create menu entries, if the conditions are provided,
                 and any match, the menu item will be created"""
-                conditions = context_menu_item.conditions()
-                if current_item:
-                    if conditions:
+                if conditions:
+                    if current_item:
                         for arg, value in conditions.items():
                             if current_item.hasArg(arg):
                                 if current_item.getArg(arg) == value:
@@ -687,8 +688,21 @@ class AbstractDragDropAbstractView(object):
                         context_menu.addAction(context_menu_item.name())
                 else:
                     context_menu.addAction(context_menu_item.name())
+
+            # add separator
             else:
-                context_menu.addSeparator()
+                if conditions:
+                    if current_item:
+                        for arg, value in conditions.items():
+                            if current_item.hasArg(arg):
+                                if current_item.getArg(arg) == value:
+                                    context_menu.addSeparator()
+                                    break
+                    else:
+                        context_menu.addSeparator()
+                else:
+                    context_menu.addSeparator()
+
 
         # Show/Execute menu
         pos = event.globalPos()
