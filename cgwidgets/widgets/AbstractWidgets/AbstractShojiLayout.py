@@ -209,13 +209,21 @@ class AbstractShojiLayout(AbstractSplitterWidget):
         Args:
             widget (QWidget): widget to start searching from to be solo'd
         """
-        if widget.property("is_soloable"):
-            return widget
-        else:
-            if widget.parent():
-                return self.getFirstSoloableWidget(widget.parent())
-            else:
-                return None
+        while widget.parent():
+            if widget.property("is_soloable"):
+                return widget
+            widget = widget.parent()
+
+        return None
+
+
+        # if widget.property("is_soloable"):
+        #     return widget
+        # else:
+        #     if widget.parent():
+        #         return self.getFirstSoloableWidget(widget.parent())
+        #     else:
+        #         return None
 
     """ VIRTUAL EVENTS """
     def setToggleSoloViewEvent(self, function):
@@ -282,12 +290,27 @@ class AbstractShojiLayout(AbstractSplitterWidget):
             # toggle solo view (individual widget )
             self.toggleIsSoloView(True, widget=widget_soloable)
 
-    def getLayoutWidget(self, widget):
+    def getChildWidgetFromGrandchild(self, widget):
+        """ Assuming the widget is a grandchild of this widget, this will return the child
+
+        Args:
+            widget (QWidget): to start searching from"""
         if widget.parent() == self:
             return widget
         else:
             if widget.parent():
-                return self.getLayoutWidget(widget.parent())
+                return self.getChildWidgetFromGrandchild(widget.parent())
+
+    def isShojiMVW(self):
+        """ Determines if this is a child of a ShojiModelViewWidget"""
+        from .AbstractShojiWidget import AbstractShojiModelViewWidget
+        widget = getWidgetUnderCursor()
+        while widget.parent():
+            if isinstance(widget.parent(),  AbstractShojiModelViewWidget):
+                return True
+            widget = widget.parent()
+
+        return False
 
     def enterEvent(self, event):
         self.setFocusWidget()
@@ -308,17 +331,26 @@ class AbstractShojiLayout(AbstractSplitterWidget):
         # need to import here to avoid circular import
         from cgwidgets.widgets import AbstractFrameInputWidgetContainer
         from .AbstractShojiWidget import AbstractShojiModelDelegateWidget
-        # this seems to work
-        """ check widget under cursor"""
-        # if hasattr(widget_under_cursor, "_is_base_widget"):
-        #     event.ignore()
-        #     widget_under_cursor.setFocus()
 
         # hack to ensure Katana gets the focus on the right widget...
-        if isinstance(widget_under_cursor, AbstractFrameInputWidgetContainer):
-            layout_widget = self.getLayoutWidget(widget_under_cursor)
+        from cgwidgets.utils import isWidgetDescendantOfInstance
+        if isWidgetDescendantOfInstance(widget_under_cursor, widget_under_cursor.parent(), AbstractShojiModelDelegateWidget):
+            layout_widget = self.getChildWidgetFromGrandchild(widget_under_cursor)
             if isinstance(layout_widget, AbstractShojiModelDelegateWidget):
                 layout_widget.getMainWidget().setFocus()
+        # if isinstance(widget_under_cursor, AbstractFrameInputWidgetContainer):
+        #     layout_widget = self.getChildWidgetFromGrandchild(widget_under_cursor)
+        #     print(layout_widget)
+        #     if isinstance(layout_widget, AbstractShojiModelDelegateWidget):
+        #         layout_widget.getMainWidget().setFocus()
+        # if self.isShojiMVW():
+        #     layout_widget = self.getChildWidgetFromGrandchild(widget_under_cursor)
+        #     if layout_widget:
+        #         if isinstance(layout_widget, AbstractShojiModelDelegateWidget):
+        #             layout_widget.getMainWidget().setFocus()
+        #             return
+        #         else:
+        #             layout_widget.setFocus()
         else:
             self.setFocus()
 
@@ -328,7 +360,11 @@ class AbstractShojiLayout(AbstractSplitterWidget):
         # preflight
         if not self.isSoloViewEnabled():
             return QSplitter.keyPressEvent(self, event)
-            # QSplitter.keyPressEvent(self, event)
+
+        focus_widget = QApplication.focusWidget()
+        # print("layout key press", focus_widget)
+        # if hasattr(focus_widget, "objectName"):
+        #     print("name == ", focus_widget.objectName())
 
         # solo view
         if event.key() == self.soloViewHotkey():
