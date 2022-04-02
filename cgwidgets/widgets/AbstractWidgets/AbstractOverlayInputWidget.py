@@ -115,7 +115,6 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
 
     """ WIDGETS """
     def delegateWidget(self):
-
         return self._delegate_widget
 
     def setDelegateWidget(self, widget, user_finished_editing_event=None):

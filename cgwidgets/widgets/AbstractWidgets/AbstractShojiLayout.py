@@ -124,9 +124,6 @@ class AbstractShojiLayout(AbstractSplitterWidget):
         self.setHandleWidth(AbstractShojiLayout.HANDLE_WIDTH)
         self.setHandleLength(-1)
 
-
-        #self.updateStyleSheet()
-
     """ UTILS """
     def displayAllWidgets(self, value):
         """
@@ -285,7 +282,18 @@ class AbstractShojiLayout(AbstractSplitterWidget):
             # toggle solo view (individual widget )
             self.toggleIsSoloView(True, widget=widget_soloable)
 
+    def getLayoutWidget(self, widget):
+        if widget.parent() == self:
+            return widget
+        else:
+            if widget.parent():
+                return self.getLayoutWidget(widget.parent())
+
     def enterEvent(self, event):
+        self.setFocusWidget()
+        return QSplitter.enterEvent(self, event)
+
+    def setFocusWidget(self):
         """
         Attempting to suppress signals from the base widgets
         so that they don't lose focus while doing random shit
@@ -296,22 +304,23 @@ class AbstractShojiLayout(AbstractSplitterWidget):
         Returns:
 
         """
-        focused_widget = QApplication.focusWidget()
         widget_under_cursor = getWidgetUnderCursor()
-
-        # not sure if this works, but we're leaving it here for good luck
-        if hasattr(focused_widget, "_is_base_widget"):
-            event.ignore()
-
+        # need to import here to avoid circular import
+        from cgwidgets.widgets import AbstractFrameInputWidgetContainer
+        from .AbstractShojiWidget import AbstractShojiModelDelegateWidget
         # this seems to work
         """ check widget under cursor"""
-        if hasattr(widget_under_cursor, "_is_base_widget"):
-            event.ignore()
-            widget_under_cursor.setFocus()
+        # if hasattr(widget_under_cursor, "_is_base_widget"):
+        #     event.ignore()
+        #     widget_under_cursor.setFocus()
+
+        # hack to ensure Katana gets the focus on the right widget...
+        if isinstance(widget_under_cursor, AbstractFrameInputWidgetContainer):
+            layout_widget = self.getLayoutWidget(widget_under_cursor)
+            if isinstance(layout_widget, AbstractShojiModelDelegateWidget):
+                layout_widget.getMainWidget().setFocus()
         else:
             self.setFocus()
-
-        return QSplitter.enterEvent(self, event)
 
     def keyPressEvent(self, event):
         """
@@ -482,7 +491,6 @@ class AbstractShojiLayout(AbstractSplitterWidget):
 
         # pre flight
         if not widget:
-            #widget = qApp.widgetAt(QCursor.pos())
             widget = QApplication.instance().widgetAt(QCursor.pos())
         if not widget:
             return
@@ -511,14 +519,14 @@ class AbstractShojiLayout(AbstractSplitterWidget):
                     parent_shoji.toggleIsSoloView(True, current_shoji)
 
                     self.setIsSoloView(parent_shoji, True)
-                    parent_shoji.setFocus()
+                    self.setFocusWidget()
 
             # adjust current widget
             elif current_shoji.isSoloView() is False:
                 current_shoji.displayAllWidgets(False)
                 current_widget.show()
                 self.setIsSoloView(current_shoji, True)
-                current_widget.setFocus()
+                self.setFocusWidget()
 
         # exit full screen
         else:
@@ -526,7 +534,7 @@ class AbstractShojiLayout(AbstractSplitterWidget):
             if current_shoji.isSoloView() is True:
                 current_shoji.displayAllWidgets(True)
                 self.setIsSoloView(current_shoji, False)
-                current_widget.setFocus()
+                self.setFocusWidget()
 
             # adjust parent widget
             elif current_shoji.isSoloView() is False:
@@ -536,8 +544,8 @@ class AbstractShojiLayout(AbstractSplitterWidget):
                     parent_shoji.toggleIsSoloView(False, current_shoji)
 
                     self.setIsSoloView(parent_shoji, False)
-                    parent_shoji.setFocus()
-                    current_widget1.setFocus()
+                    self.setFocusWidget()
+                    self.setFocusWidget()
 
     def soloViewHotkey(self):
         return self._solo_view_hotkey

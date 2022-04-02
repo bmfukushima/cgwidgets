@@ -1077,6 +1077,7 @@ class AbstractShojiMainDelegateWidget(AbstractShojiLayout):
         # preflight | suppress if over header
         is_child_of_header = AbstractShojiModelViewWidget.isWidgetUnderCursorChildOfHeader()
         tab_shoji_widget = getWidgetAncestor(self, AbstractShojiModelViewWidget)
+
         if is_child_of_header:
             return tab_shoji_widget.headerWidget().keyPressEvent(event)
         else:
