@@ -292,8 +292,13 @@ class AbstractDragDropAbstractView(object):
         return self.model().findItems(value, index=index, role=role, match_type=match_type)
 
     def getAllSelectedIndexes(self):
-        selected_indexes = self.selectionModel().selectedRows(0)
-        return selected_indexes
+        """ Gets all of the currently selected indexes.
+
+        This will return a list of only the indexes in column 0, if it is a tree view."""
+        if isinstance(self, AbstractDragDropListView):
+            return self.selectionModel().selectedIndexes()
+        if isinstance(self, AbstractDragDropListView):
+            return self.selectionModel().selectedRows(0)
 
     def getAllSelectedItems(self):
         item_list = []
@@ -341,7 +346,11 @@ class AbstractDragDropAbstractView(object):
         Returns (list): of AbstractDragDropModelItem
 
         """
+        # Return the current selection for a list view
+        if isinstance(self, AbstractDragDropListView):
+            return self.getAllSelectedItems()
 
+        # Tree View
         # get attrs
         if not items:
             items = self.getAllSelectedItems()

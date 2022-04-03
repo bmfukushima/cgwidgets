@@ -327,17 +327,19 @@ class AbstractShojiLayout(AbstractSplitterWidget):
         Returns:
 
         """
-        widget_under_cursor = getWidgetUnderCursor()
-        # need to import here to avoid circular import
-        from cgwidgets.widgets import AbstractFrameInputWidgetContainer
-        from .AbstractShojiWidget import AbstractShojiModelDelegateWidget
 
         # hack to ensure Katana gets the focus on the right widget...
-        from cgwidgets.utils import isWidgetDescendantOfInstance
-        if isWidgetDescendantOfInstance(widget_under_cursor, widget_under_cursor.parent(), AbstractShojiModelDelegateWidget):
-            layout_widget = self.getChildWidgetFromGrandchild(widget_under_cursor)
-            if isinstance(layout_widget, AbstractShojiModelDelegateWidget):
-                layout_widget.getMainWidget().setFocus()
+        widget_under_cursor = getWidgetUnderCursor()
+        if widget_under_cursor:
+            # need to import here to avoid circular import
+            from cgwidgets.widgets import AbstractFrameInputWidgetContainer
+            from .AbstractShojiWidget import AbstractShojiModelDelegateWidget
+
+            from cgwidgets.utils import isWidgetDescendantOfInstance
+            if isWidgetDescendantOfInstance(widget_under_cursor, widget_under_cursor.parent(), AbstractShojiModelDelegateWidget):
+                layout_widget = self.getChildWidgetFromGrandchild(widget_under_cursor)
+                if isinstance(layout_widget, AbstractShojiModelDelegateWidget):
+                    layout_widget.getMainWidget().setFocus()
         # if isinstance(widget_under_cursor, AbstractFrameInputWidgetContainer):
         #     layout_widget = self.getChildWidgetFromGrandchild(widget_under_cursor)
         #     print(layout_widget)
@@ -361,7 +363,7 @@ class AbstractShojiLayout(AbstractSplitterWidget):
         if not self.isSoloViewEnabled():
             return QSplitter.keyPressEvent(self, event)
 
-        focus_widget = QApplication.focusWidget()
+        # focus_widget = QApplication.focusWidget()
         # print("layout key press", focus_widget)
         # if hasattr(focus_widget, "objectName"):
         #     print("name == ", focus_widget.objectName())

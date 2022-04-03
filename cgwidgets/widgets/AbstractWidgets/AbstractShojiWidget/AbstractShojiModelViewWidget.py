@@ -1082,7 +1082,6 @@ class AbstractShojiMainDelegateWidget(AbstractShojiLayout):
             return tab_shoji_widget.headerWidget().keyPressEvent(event)
         else:
             AbstractShojiLayout.keyPressEvent(self, event)
-            QApplication.processEvents()
             return
 
 
