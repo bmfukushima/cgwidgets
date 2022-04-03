@@ -341,6 +341,10 @@ class AbstractDragDropModel(QAbstractItemModel):
         Returns:
 
         """
+
+        # preflight
+        if not item.row(): return
+
         # run deletion event
         if self.updateFirst():
             if event_update:
