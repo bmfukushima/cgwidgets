@@ -297,7 +297,7 @@ class AbstractDragDropAbstractView(object):
         This will return a list of only the indexes in column 0, if it is a tree view."""
         if isinstance(self, AbstractDragDropListView):
             return self.selectionModel().selectedIndexes()
-        if isinstance(self, AbstractDragDropListView):
+        if isinstance(self, AbstractDragDropTreeView):
             return self.selectionModel().selectedRows(0)
 
     def getAllSelectedItems(self):

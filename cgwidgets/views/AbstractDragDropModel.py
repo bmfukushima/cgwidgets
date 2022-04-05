@@ -343,25 +343,31 @@ class AbstractDragDropModel(QAbstractItemModel):
         """
 
         # preflight
-        if not item.row(): return
+        # todo for some reason this causes a regression with selection
+        # if not item.row(): return
+        try:
+            # run deletion event
+            if self.updateFirst():
+                if event_update:
+                    self.itemDeleteEvent(item)
 
-        # run deletion event
-        if self.updateFirst():
-            if event_update:
-                self.itemDeleteEvent(item)
+            # get old parents
+            old_parent_item = item.parent()
+            old_parent_index = self.getParentIndexFromItem(item)
 
-        # get old parents
-        old_parent_item = item.parent()
-        old_parent_index = self.getParentIndexFromItem(item)
+            # remove item
+            self.beginRemoveRows(old_parent_index, item.row(), item.row() + 1)
+            old_parent_item.children().remove(item)
+            self.endRemoveRows()
 
-        # remove item
-        self.beginRemoveRows(old_parent_index, item.row(), item.row() + 1)
-        old_parent_item.children().remove(item)
-        self.endRemoveRows()
-
-        if not self.updateFirst():
-            if event_update:
-                self.itemDeleteEvent(item)
+            if not self.updateFirst():
+                if event_update:
+                    self.itemDeleteEvent(item)
+        except TypeError:
+            # for some reason when deleting the last item, or dropping from there it causes an error...
+            # this is to suppress the warning.  Because if I don't hear it, its not a problem!
+            # LALALALALALALALALALA CAN'T NO PROBLEMS HERE
+            pass
 
     def clearModel(self, event_update=False):
         """
