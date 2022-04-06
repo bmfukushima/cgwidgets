@@ -46,7 +46,7 @@ from qtpy.QtGui import QCursor
 from cgwidgets.settings import iColor
 from cgwidgets.settings.stylesheets import splitter_handle_ss
 from cgwidgets.settings.hover_display import installHoverDisplaySS
-from cgwidgets.utils import updateStyleSheet, getWidgetUnderCursor
+from cgwidgets.utils import updateStyleSheet, getWidgetUnderCursor, getWidgetsDescendants
 
 from cgwidgets.widgets.AbstractWidgets.AbstractSplitterWidget import AbstractSplitterWidget
 
@@ -340,6 +340,8 @@ class AbstractShojiLayout(AbstractSplitterWidget):
                 layout_widget = self.getChildWidgetFromGrandchild(widget_under_cursor)
                 if isinstance(layout_widget, AbstractShojiModelDelegateWidget):
                     layout_widget.getMainWidget().setFocus()
+                else:
+                    self.setFocus()
         # if isinstance(widget_under_cursor, AbstractFrameInputWidgetContainer):
         #     layout_widget = self.getChildWidgetFromGrandchild(widget_under_cursor)
         #     print(layout_widget)
@@ -359,10 +361,10 @@ class AbstractShojiLayout(AbstractSplitterWidget):
     def keyPressEvent(self, event):
         """
         """
+        # print("key press", self)
         # preflight
         if not self.isSoloViewEnabled():
             return QSplitter.keyPressEvent(self, event)
-
         # focus_widget = QApplication.focusWidget()
         # print("layout key press", focus_widget)
         # if hasattr(focus_widget, "objectName"):
@@ -371,6 +373,7 @@ class AbstractShojiLayout(AbstractSplitterWidget):
         # solo view
         if event.key() == self.soloViewHotkey():
             self.__soloViewHotkeyPressed(event)
+            event.ignore()
             return
 
         # unsolo view
@@ -389,6 +392,23 @@ class AbstractShojiLayout(AbstractSplitterWidget):
         #pass
         self.updateStyleSheet()
         return QSplitter.resizeEvent(self, event)
+
+    def eventFilter(self, obj, event):
+        if event.type() == QEvent.KeyPress:
+            # preflight
+            if event.key() == self.soloViewHotkey():
+                if not self.isSoloViewEnabled():
+                    return True
+                self.__soloViewHotkeyPressed(event)
+                return True
+            if event.key() == Qt.Key_Escape:
+                if event.modifiers() == Qt.AltModifier:
+                    self.unsoloAll(self)
+                else:
+                    self.toggleIsSoloView(False)
+                return True
+
+        return False
 
     """ WIDGETS """
     def installHoverDisplay(self, widget):
@@ -439,6 +459,10 @@ class AbstractShojiLayout(AbstractSplitterWidget):
         else:
             self.setChildSoloable(self.isSoloViewEnabled(), widget)
 
+        descendants = getWidgetsDescendants(widget.layout())
+        descendants.append(widget)
+        for w in descendants:
+            w.installEventFilter(self)
         self.installHoverDisplay(widget)
 
     # good use case for a decorator?
@@ -582,7 +606,6 @@ class AbstractShojiLayout(AbstractSplitterWidget):
                     parent_shoji.toggleIsSoloView(False, current_shoji)
 
                     self.setIsSoloView(parent_shoji, False)
-                    self.setFocusWidget()
                     self.setFocusWidget()
 
     def soloViewHotkey(self):

@@ -63,8 +63,8 @@ from cgwidgets.widgets import ShojiLayout
 from cgwidgets.settings import attrs, icons
 from cgwidgets.utils import centerWidgetOnCursor
 
-
-app = QApplication(sys.argv)
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
 
 
 # CREATE MAIN WIDGET
@@ -583,5 +583,5 @@ shoji_layout.addWidget(shoji_widget3)
 shoji_layout.show()
 
 centerWidgetOnCursor(shoji_layout)
-
-sys.exit(app.exec_())
+if __name__ == "__main__":
+    sys.exit(app.exec_())

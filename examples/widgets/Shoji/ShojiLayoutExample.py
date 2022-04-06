@@ -31,7 +31,8 @@ from qtpy.QtCore import Qt
 from cgwidgets.widgets import ShojiLayout
 from cgwidgets.widgets import StringInputWidget, LabelWidget
 
-app = QApplication(sys.argv)
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
 class DisplayLabel(StringInputWidget):
     def __init__(self, parent=None):
         super(DisplayLabel, self).__init__(parent)
@@ -117,6 +118,6 @@ main_widget.show()
 main_widget.move(QCursor.pos())
 main_widget.resize(512, 512)
 
-
-sys.exit(app.exec_())
+if __name__ == "__main__":
+    sys.exit(app.exec_())
 

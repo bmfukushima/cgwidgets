@@ -43,46 +43,34 @@ def isWidgetDescendantOfInstance(widget, parent, ancestor):
     else:
         return False
 
-# def isWidgetDescendantOf(widget, parent):
-#     """
-#     Determines if a widget is a descendant of another widget
-#     Args:
-#         widget (QWidget): widget to start searching from
-#         parent (QWidget): widget to check if it is an ancestor of
-#
-#     Returns:
-#
-#     """
-#     if widget:
-#         if widget == parent:
-#             return True
-#         else:
-#             if widget.parent():
-#                 return isWidgetDescendantOf(widget.parent(), parent)
-#             else:
-#                 return False
-#     else:
-#         return False
 
-# for some reason... need to do this really stupid for PySide2 cleanup...
-# def getWidgetAncestor(widget, parent, instance_type):
-#     """
-#     Recursively searches up from the current widget
-#     until an widget of the specified instance is found
-#
-#     Args:
-#         widget (QWidget): widget to search from
-#         instance_type (object): Object type to find
-#     """
-#
-#     if isinstance(widget, instance_type):
-#         return widget
-#     else:
-#         #parent = widget.parent()
-#         if parent:
-#             return getWidgetAncestor(widget.parent(), widget.parent().parent(), instance_type)
-#         else:
-#             return None
+def getWidgetsDescendants(layout, descendants=None):
+    """ Gets all of the descendants from the item provided
+
+    Args:
+        layout (QLayout): to start searching from
+
+    Returns (list): of AbstractDragDropModelItem"""
+    if not descendants:
+        descendants = []
+
+    if not layout: return descendants
+    if not hasattr(layout, "count"):
+        layout = layout.layout()
+
+    #self.group_box.layout().itemAt(index).widget()
+    for i in range(layout.count()):
+        item = layout.itemAt(i)
+        # todo check if copyable?
+        if hasattr(item, "count"):
+            if 0 < item.count():
+
+                descendants += getWidgetsDescendants(item)
+        else:
+            if item.widget():
+                descendants.append(item.widget())
+
+    return descendants
 
 
 def getWidgetAncestor(widget, instance_type):
@@ -157,3 +145,26 @@ def getWidgetAncestorByObjectName(widget, widget_name):
             return getWidgetAncestorByObjectName(widget.parent(), widget_name)
         else:
             return None
+
+
+# import sys
+# from qtpy.QtWidgets import QVBoxLayout, QLabel, QWidget, QApplication
+# #from cgwidgets.utils import centerWidgetOnCursor
+# app = QApplication(sys.argv)
+#
+# main = QWidget()
+# QVBoxLayout(main)
+# for x in range(3):
+#     main.layout().addWidget(QLabel(str(x)))
+# layout = QVBoxLayout()
+# main.layout().addLayout(layout)
+# for x in range(2):
+#     layout.addWidget(QLabel(str(x)))
+#
+# main.show()
+# #centerWidgetOnCursor(main)
+# descendants = getWidgetsDescendants(main.layout())
+# print(descendants)
+#
+#
+# sys.exit(app.exec_())
