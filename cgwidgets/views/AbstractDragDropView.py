@@ -163,7 +163,7 @@ class AbstractDragDropAbstractView(object):
 
     def setMultiSelect(self, multi_select):
         if multi_select is True:
-            self.setSelectionMode(QAbstractItemView.MultiSelection)
+            self.setSelectionMode(QAbstractItemView.ExtendedSelection)
         else:
             self.setSelectionMode(QAbstractItemView.SingleSelection)
 
