@@ -1,5 +1,4 @@
 """
-TODO: Add widgets data?
 SHOJI LAYOUT
 
 The Shoji View is essentially a QSplitter that has the option to
@@ -34,8 +33,6 @@ NOTE:
 TODO:
     *   Double press ESC / Tilda
             Full Screen / Collapse All
-
-
 """
 
 from qtpy.QtWidgets import QSplitter, QSplitterHandle, QApplication #, qApp
@@ -316,22 +313,18 @@ class AbstractShojiLayout(AbstractSplitterWidget):
 
         # Press solo view hotkey
         widget_soloable = self.getFirstSoloableWidget(widget_pressed)
-        # return if no soloable widget found
+
+        # preflight
         if not widget_soloable: return
+        # stop from recursing to higher ShojiLayouts
         if isinstance(widget_soloable, AbstractShojiLayout) and not widget_soloable.property("is_soloable"):
             return
 
         # toggle solo view ( shoji view )
         if event.modifiers() == Qt.AltModifier:
-            if widget_soloable.parent():
-                # from cgwidgets.widgets import AbstractModelViewWidget, ModelViewWidget
-                # if isinstance(widget_soloable, AbstractModelViewWidget):
-                #     widget_soloable = widget_soloable.parent()
-                #
-                # widget_soloable = widget_soloable.parent()
-                widget_soloable = self.getFirstSoloableWidget(widget_soloable.parent())
-                if widget_soloable:
-                    self.toggleIsSoloView(True, widget=widget_soloable)
+            shoji_layout = self.getFirstShojiLayoutWidget(widget_pressed)
+            if shoji_layout:
+                self.toggleIsSoloView(True, widget=shoji_layout)
 
         else:
             # toggle solo view (individual widget )
@@ -501,18 +494,37 @@ class AbstractShojiLayout(AbstractSplitterWidget):
         return QSplitter.insertWidget(self, index, widget)
 
     """ SOLO VIEW """
+    def getFirstShojiLayoutWidget(self, widget):
+        """
+        Gets the first soloable shoji layout widget
+
+        Args:
+            widget (QWidget): widget to start searching from to be solo'd
+        """
+        from cgwidgets.widgets import AbstractModelViewWidget
+        while widget.parent():
+            # add special condition to ignore model view widgets
+            if isinstance(widget, AbstractModelViewWidget):
+                widget = widget.parent()
+                continue
+            if isinstance(widget, AbstractShojiLayout) and widget.property("is_soloable"):
+                return widget
+            widget = widget.parent()
+
+        return None
+
     def getFirstSoloableWidget(self, widget):
         """
         Gets the first widget that is capable of being soloable
 
-        Currently this is hard  coded to the "not_soloable" attribute...
+        Currently this is hard  coded to the "is_soloable" Qt property
         Args:
             widget (QWidget): widget to start searching from to be solo'd
         """
         while widget.parent():
             if widget.property("is_soloable"):
                 return widget
-            """ Special condition so that it will only return to the first layout first """
+            # stop from recursing to higher ShojiLayouts
             if isinstance(widget, AbstractShojiLayout):
                 return widget
             widget = widget.parent()

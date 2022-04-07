@@ -29,7 +29,7 @@ from qtpy.QtGui import QCursor
 from qtpy.QtCore import Qt
 
 from cgwidgets.widgets import ShojiLayout
-from cgwidgets.widgets import StringInputWidget, LabelWidget
+from cgwidgets.widgets import StringInputWidget, LabelWidget, ModelViewWidget
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
@@ -63,8 +63,18 @@ embedded_shoji_01 = ShojiLayout(orientation=Qt.Horizontal)
 embedded_shoji_01.setObjectName("embed1")
 embedded_shoji_02 = ShojiLayout(orientation=Qt.Vertical)
 embedded_shoji_02.setIsSoloViewEnabled(False)
+embedded_shoji_02.setIsSoloViewEnabled(True, override_children=False)
 embedded_shoji_02.setObjectName("embed2")
 
+embedded_shoji_03 = ShojiLayout(orientation=Qt.Horizontal)
+
+embedded_shoji_03.setObjectName("embed3")
+for x in range(3):
+    widget = ModelViewWidget()
+    for y in range(3):
+        widget.insertNewIndex(0, name=str(y))
+    # widget = QLabel(str(x))
+    embedded_shoji_03.addWidget(widget)
 # set custom base setyle sheet
 # base_style_sheet = """
 # {type}{{
@@ -103,7 +113,7 @@ for char in "SINE.":
     # embedded_shoji_02
     l = DisplayLabel(str(char) + "D")
 
-    embedded_shoji_02.addWidget(l)
+    embedded_shoji_02.addWidget(l, is_soloable=False)
 
 # add embedded Shoji Views
 for x in range(3):
@@ -116,13 +126,13 @@ multi_depth_widget = MultiDepthWidth()
 embedded_shoji_01.addWidget(multi_depth_widget)
 # add shoji to shoji
 main_widget.addWidget(embedded_shoji_01)
+main_widget.addWidget(embedded_shoji_03)
 
 # show widget
 
 main_widget.show()
 main_widget.move(QCursor.pos())
 main_widget.resize(512, 512)
-embedded_shoji_02.setIsSoloViewEnabled(False)
 
 if __name__ == "__main__":
     sys.exit(app.exec_())
