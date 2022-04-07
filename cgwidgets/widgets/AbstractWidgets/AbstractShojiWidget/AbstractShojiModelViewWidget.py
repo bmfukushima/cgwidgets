@@ -1085,7 +1085,6 @@ class AbstractShojiMainDelegateWidget(AbstractShojiLayout):
             return AbstractShojiLayout.keyPressEvent(self, event)
 
 
-
 class AbstractShojiModelDelegateWidget(AbstractOverlayInputWidget):
     def __init__(self, parent=None, title="Title", image_path=None, display_overlay=False):
         super(AbstractShojiModelDelegateWidget, self).__init__(parent, title=title, image_path=image_path)

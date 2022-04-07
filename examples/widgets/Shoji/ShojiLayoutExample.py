@@ -60,6 +60,7 @@ class MultiDepthWidth(QWidget):
 main_widget = ShojiLayout()
 embedded_shoji_01 = ShojiLayout(orientation=Qt.Horizontal)
 embedded_shoji_02 = ShojiLayout(orientation=Qt.Vertical)
+embedded_shoji_02.setIsSoloViewEnabled(False)
 
 # set custom base setyle sheet
 # base_style_sheet = """

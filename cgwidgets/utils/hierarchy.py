@@ -1,6 +1,5 @@
 def isWidgetDescendantOf(widget, parent, ancestor):
-    """
-    Determines if a widget is a descendant of another widget
+    """Determines if a widget is a descendant of another widget
     Args:
         widget (QWidget): widget to start searching from
         parent (QWidget): parent of the widget... need this to avoid garbage cleanup
@@ -22,8 +21,8 @@ def isWidgetDescendantOf(widget, parent, ancestor):
 
 
 def isWidgetDescendantOfInstance(widget, parent, ancestor):
-    """
-    Determines if a widget is a descendant of another widget
+    """Determines if a widget is a descendant of another widget type
+
     Args:
         widget (QWidget): widget to start searching from
         parent (QWidget): parent of the widget... need this to avoid garbage cleanup
@@ -34,7 +33,7 @@ def isWidgetDescendantOfInstance(widget, parent, ancestor):
     """
     if widget:
         if isinstance(widget, ancestor):
-            return True
+            return widget
         else:
             if parent:
                 return isWidgetDescendantOfInstance(parent, parent.parent(), ancestor)

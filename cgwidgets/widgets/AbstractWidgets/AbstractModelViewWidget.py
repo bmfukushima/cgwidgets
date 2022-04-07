@@ -4,7 +4,6 @@ import os
 from qtpy.QtWidgets import (QSplitterHandle, QApplication, QLabel, QCompleter, QTreeView, QWidget, QVBoxLayout)
 from qtpy.QtCore import Qt, QModelIndex, QItemSelectionModel
 from qtpy.QtGui import QCursor
-
 from cgwidgets.widgets import AbstractStringInputWidget, AbstractListInputWidget
 from cgwidgets.views import (
     AbstractDragDropModel,
@@ -12,7 +11,7 @@ from cgwidgets.views import (
     AbstractDragDropListView,
     AbstractDragDropModelItem
 )
-from cgwidgets.utils import getWidgetAncestor
+from cgwidgets.utils import getWidgetAncestor, isWidgetDescendantOfInstance
 from cgwidgets.settings import iColor, attrs
 from cgwidgets.widgets import AbstractShojiLayout
 
@@ -140,6 +139,7 @@ class AbstractModelViewWidget(AbstractShojiLayout):
         # setup custom key presses
         if hasattr(view, "setKeyPressEvent"):
             view.setKeyPressEvent(self.keyPressEvent)
+            #view.installEventFilter(self)
 
         # setup default drop attrs
         if view_type == AbstractModelViewWidget.TREE_VIEW:
@@ -594,28 +594,12 @@ class AbstractModelViewWidget(AbstractShojiLayout):
                         self.setFocus()
 
         # full screen
-        """copy / paste from AbstractShojiLayout.__soloViewHotkeyPressed
-        this is essentially just overriding to automagically full screen
-        the parent with Alt+~ instead of the base of ~"""
-        if event.key() == AbstractShojiLayout.FULLSCREEN_HOTKEY:
-            # preflight
-            pos = QCursor.pos()
-
-            widget_pressed = QApplication.instance().widgetAt(pos)
-
-            # bypass handles
-            if isinstance(widget_pressed, QSplitterHandle):
-                return
-            # Press solo view hotkey
-            widget_soloable = self.getFirstSoloableWidget(widget_pressed)
-
-            # return if no soloable widget found
-            if not widget_soloable: return
-
-            # toggle solo view ( shoji view )
-            if widget_soloable.parent():
-                widget_soloable = widget_soloable.parent()
-                self.toggleIsSoloView(True, widget=widget_soloable)
+        """ Need to override the ShojiLayout handler here as it goes a bit wonky """
+        from cgwidgets.widgets import AbstractShojiLayout
+        if event.key() in [AbstractShojiLayout.FULLSCREEN_HOTKEY, Qt.Key_Escape]:
+            shoji_layout = isWidgetDescendantOfInstance(self.parent(), self.parent().parent(), AbstractShojiLayout)
+            if shoji_layout:
+                shoji_layout.keyPressEvent(event)
 
 
 class ModelViewSearchWidget(AbstractShojiLayout):

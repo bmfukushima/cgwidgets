@@ -362,7 +362,6 @@ class AbstractShojiLayout(AbstractSplitterWidget):
     def keyPressEvent(self, event):
         """
         """
-        # print("key press", self)
         # preflight
         if not self.isSoloViewEnabled():
             return QSplitter.keyPressEvent(self, event)
@@ -370,9 +369,10 @@ class AbstractShojiLayout(AbstractSplitterWidget):
         # solo view
         if event.key() == self.soloViewHotkey():
             if not AbstractShojiLayout.SOLOEVENTACTIVE:
-                AbstractShojiLayout.toggleSoloViewEventActive(True)
-                self.__soloViewHotkeyPressed(event)
-            return
+                if self.isSoloViewEnabled():
+                    AbstractShojiLayout.toggleSoloViewEventActive(True)
+                    self.__soloViewHotkeyPressed(event)
+                    return
 
         # unsolo view
         elif event.key() == Qt.Key_Escape:
@@ -408,11 +408,10 @@ class AbstractShojiLayout(AbstractSplitterWidget):
             # preflight
             if not AbstractShojiLayout.SOLOEVENTACTIVE:
                 if event.key() == self.soloViewHotkey():
-                    AbstractShojiLayout.toggleSoloViewEventActive(True)
-                    if not self.isSoloViewEnabled():
+                    if self.isSoloViewEnabled():
+                        AbstractShojiLayout.toggleSoloViewEventActive(True)
+                        self.__soloViewHotkeyPressed(event)
                         return True
-                    self.__soloViewHotkeyPressed(event)
-                    return True
                 if event.key() == Qt.Key_Escape:
                     AbstractShojiLayout.toggleSoloViewEventActive(False)
                     if event.modifiers() == Qt.AltModifier:

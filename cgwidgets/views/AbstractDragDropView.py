@@ -486,8 +486,6 @@ class AbstractDragDropAbstractView(object):
                         self.model().setItemEnabled(item, enabled)
                 self.model().layoutChanged.emit()
 
-            #self.__keyPressEvent(event)
-
         if self.isCopyable():
             if event.modifiers() == Qt.ControlModifier:
                 if event.key() == Qt.Key_C:
@@ -498,6 +496,8 @@ class AbstractDragDropAbstractView(object):
                     self.cutEvent()
                 if event.key() == Qt.Key_D:
                     self.duplicateEvent()
+
+        self.__keyPressEvent(event)
 
     def abstractMousePressEvent(self, event):
         self.__pressed = True
@@ -518,6 +518,9 @@ class AbstractDragDropAbstractView(object):
 
     def setKeyPressEvent(self, function):
         self.__keyPressEvent = function
+
+    def __keyPressEvent(self, event):
+        pass
 
     # def setExpanded(self, index, bool):
     #     """ override for list views
