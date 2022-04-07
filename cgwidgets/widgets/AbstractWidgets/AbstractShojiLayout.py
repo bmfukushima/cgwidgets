@@ -78,13 +78,16 @@ class AbstractShojiLayout(AbstractSplitterWidget):
     Class Attributes:
         HANDLE_WIDTH: Default size of the handle
         FULLSCREEN_HOTKEY: Default hotkey for toggling full screen mode
-
+        SOLOEVENTACTIVE (bool): Determines if a solo view event is active
+            This is used to stop ShojiLayouts embedded recursively from calling
+            the events multiple times.
     Note:
         When solo'ing arbitrary widgets.  Setting an attribute called "not_soloable"
         will cause this widget to not be able to be solo'd (hopefully)
     """
     HANDLE_WIDTH = 2
     FULLSCREEN_HOTKEY = 96
+    SOLOEVENTACTIVE = False
 
     def __init__(self, parent=None, orientation=Qt.Vertical):
         super(AbstractShojiLayout, self).__init__(parent)
@@ -330,11 +333,11 @@ class AbstractShojiLayout(AbstractSplitterWidget):
 
         # hack to ensure Katana gets the focus on the right widget...
         widget_under_cursor = getWidgetUnderCursor()
+        self.setFocus()
+        return
         if widget_under_cursor:
             # need to import here to avoid circular import
-            from cgwidgets.widgets import AbstractFrameInputWidgetContainer
             from .AbstractShojiWidget import AbstractShojiModelDelegateWidget
-
             from cgwidgets.utils import isWidgetDescendantOfInstance
             if isWidgetDescendantOfInstance(widget_under_cursor, widget_under_cursor.parent(), AbstractShojiModelDelegateWidget):
                 layout_widget = self.getChildWidgetFromGrandchild(widget_under_cursor)
@@ -342,21 +345,19 @@ class AbstractShojiLayout(AbstractSplitterWidget):
                     layout_widget.getMainWidget().setFocus()
                 else:
                     self.setFocus()
-        # if isinstance(widget_under_cursor, AbstractFrameInputWidgetContainer):
-        #     layout_widget = self.getChildWidgetFromGrandchild(widget_under_cursor)
-        #     print(layout_widget)
-        #     if isinstance(layout_widget, AbstractShojiModelDelegateWidget):
-        #         layout_widget.getMainWidget().setFocus()
-        # if self.isShojiMVW():
-        #     layout_widget = self.getChildWidgetFromGrandchild(widget_under_cursor)
-        #     if layout_widget:
-        #         if isinstance(layout_widget, AbstractShojiModelDelegateWidget):
-        #             layout_widget.getMainWidget().setFocus()
-        #             return
-        #         else:
-        #             layout_widget.setFocus()
         else:
             self.setFocus()
+
+    @staticmethod
+    def toggleSoloViewEventActive(enabled):
+        if enabled:
+            AbstractShojiLayout.SOLOEVENTACTIVE = True
+        if not enabled:
+            AbstractShojiLayout.SOLOEVENTACTIVE = False
+
+    @staticmethod
+    def isSoloViewEventActive():
+        return AbstractShojiLayout.SOLOEVENTACTIVE
 
     def keyPressEvent(self, event):
         """
@@ -365,27 +366,35 @@ class AbstractShojiLayout(AbstractSplitterWidget):
         # preflight
         if not self.isSoloViewEnabled():
             return QSplitter.keyPressEvent(self, event)
-        # focus_widget = QApplication.focusWidget()
-        # print("layout key press", focus_widget)
-        # if hasattr(focus_widget, "objectName"):
-        #     print("name == ", focus_widget.objectName())
 
         # solo view
         if event.key() == self.soloViewHotkey():
-            self.__soloViewHotkeyPressed(event)
-            event.ignore()
+            if not AbstractShojiLayout.SOLOEVENTACTIVE:
+                AbstractShojiLayout.toggleSoloViewEventActive(True)
+                self.__soloViewHotkeyPressed(event)
             return
 
         # unsolo view
         elif event.key() == Qt.Key_Escape:
-            if event.modifiers() == Qt.AltModifier:
-                self.unsoloAll(self)
-            else:
-                self.toggleIsSoloView(False)
-            return
+            if not AbstractShojiLayout.SOLOEVENTACTIVE:
+                AbstractShojiLayout.toggleSoloViewEventActive(True)
+                if event.modifiers() == Qt.AltModifier:
+                    self.unsoloAll(self)
+                else:
+                    self.toggleIsSoloView(False)
+                return
 
         # something else
         return QSplitter.keyPressEvent(self, event)
+
+    def keyReleaseEvent(self, event):
+        """ Disable solo view event flag """
+        if event.key() == self.soloViewHotkey():
+            AbstractShojiLayout.toggleSoloViewEventActive(False)
+        elif event.key() == Qt.Key_Escape:
+            AbstractShojiLayout.toggleSoloViewEventActive(False)
+
+        return QSplitter.keyReleaseEvent(self, event)
 
     def resizeEvent(self, event):
         """TODO why was I resizing here..."""
@@ -394,20 +403,31 @@ class AbstractShojiLayout(AbstractSplitterWidget):
         return QSplitter.resizeEvent(self, event)
 
     def eventFilter(self, obj, event):
+        # enable activity
         if event.type() == QEvent.KeyPress:
             # preflight
-            if event.key() == self.soloViewHotkey():
-                if not self.isSoloViewEnabled():
+            if not AbstractShojiLayout.SOLOEVENTACTIVE:
+                if event.key() == self.soloViewHotkey():
+                    AbstractShojiLayout.toggleSoloViewEventActive(True)
+                    if not self.isSoloViewEnabled():
+                        return True
+                    self.__soloViewHotkeyPressed(event)
                     return True
-                self.__soloViewHotkeyPressed(event)
-                return True
-            if event.key() == Qt.Key_Escape:
-                if event.modifiers() == Qt.AltModifier:
-                    self.unsoloAll(self)
-                else:
-                    self.toggleIsSoloView(False)
-                return True
+                if event.key() == Qt.Key_Escape:
+                    AbstractShojiLayout.toggleSoloViewEventActive(False)
+                    if event.modifiers() == Qt.AltModifier:
+                        self.unsoloAll(self)
+                    else:
+                        self.toggleIsSoloView(False)
+                    return True
 
+        # disable activity on release
+        if event.type() == QEvent.KeyRelease:
+            if AbstractShojiLayout.SOLOEVENTACTIVE:
+                if event.key() in [Qt.Key_Escape, self.soloViewHotkey()]:
+                    AbstractShojiLayout.toggleSoloViewEventActive(False)
+        if event.type() == QEvent.Enter:
+            self.setFocusWidget()
         return False
 
     """ WIDGETS """

@@ -1077,12 +1077,13 @@ class AbstractShojiMainDelegateWidget(AbstractShojiLayout):
         # preflight | suppress if over header
         is_child_of_header = AbstractShojiModelViewWidget.isWidgetUnderCursorChildOfHeader()
         tab_shoji_widget = getWidgetAncestor(self, AbstractShojiModelViewWidget)
+        #print("main press")
 
         if is_child_of_header:
             return tab_shoji_widget.headerWidget().keyPressEvent(event)
         else:
-            AbstractShojiLayout.keyPressEvent(self, event)
-            return
+            return AbstractShojiLayout.keyPressEvent(self, event)
+
 
 
 class AbstractShojiModelDelegateWidget(AbstractOverlayInputWidget):
@@ -1100,6 +1101,10 @@ class AbstractShojiModelDelegateWidget(AbstractOverlayInputWidget):
         if not display_overlay:
             self.setCurrentIndex(1)
             self.setDisplayMode(AbstractOverlayInputWidget.DISABLED)
+
+    # def enterEvent(self, event):
+    #     self.setFocus()
+    #     return AbstractOverlayInputWidget.enterEvent(self, event)
 
     def setMainWidget(self, widget):
         # remove old main widget if it exists
