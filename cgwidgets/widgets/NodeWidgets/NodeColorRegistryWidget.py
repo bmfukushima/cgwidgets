@@ -284,40 +284,42 @@ class NodeColorItemDelegate(AbstractDragDropModelDelegate):
             painter.drawLine(option.rect.topLeft(), option.rect.topRight())
             painter.drawLine(option.rect.topRight(), option.rect.bottomRight())
 
-            # draw text color
-            """ Text color will be drawn dynamically based off of the value
-            of the existing widget."""
-            # BRIGHT YELLOW / GREEN
-            if 192 < bg_color.green() and bg_color.blue() < 128:
-                int_color = int(math.fabs(bg_color.value() - 255))
-                text_color = [
-                    int_color,
-                    int_color,
-                    int_color,
-                    255
-                ]
-                text_color = QColor(*text_color)
+            # # draw text color
+            # """ Text color will be drawn dynamically based off of the value
+            # of the existing widget."""
+            # # BRIGHT YELLOW / GREEN
+            # if 192 < bg_color.green() and bg_color.blue() < 128:
+            #     int_color = int(math.fabs(bg_color.value() - 255))
+            #     text_color = [
+            #         int_color,
+            #         int_color,
+            #         int_color,
+            #         255
+            #     ]
+            #     text_color = QColor(*text_color)
+            #
+            # # LIGHT / DARK COLORS
+            # elif bg_color.value() < 64 or 192 < bg_color.value():
+            #     text_color = [
+            #         int(math.fabs(bg_color.red() - 255)),
+            #         int(math.fabs(bg_color.green() - 255)),
+            #         int(math.fabs(bg_color.blue() - 255)),
+            #         255]
+            #     text_color = QColor(*text_color)
+            #     text_color = QColor(text_color.value(), text_color.value(), text_color.value(), 255)
+            #
+            # # MID COLORS
+            # else:
+            #     int_color = int(math.fabs(bg_color.value() - 128))
+            #     text_color = [
+            #         int_color,
+            #         int_color,
+            #         int_color,
+            #         255
+            #     ]
+            #     text_color = QColor(*text_color)
 
-            # LIGHT / DARK COLORS
-            elif bg_color.value() < 64 or 192 < bg_color.value():
-                text_color = [
-                    int(math.fabs(bg_color.red() - 255)),
-                    int(math.fabs(bg_color.green() - 255)),
-                    int(math.fabs(bg_color.blue() - 255)),
-                    255]
-                text_color = QColor(*text_color)
-                text_color = QColor(text_color.value(), text_color.value(), text_color.value(), 255)
-
-            # MID COLORS
-            else:
-                int_color = int(math.fabs(bg_color.value() - 128))
-                text_color = [
-                    int_color,
-                    int_color,
-                    int_color,
-                    255
-                ]
-                text_color = QColor(*text_color)
+            text_color = QColor(*iColor["rgba_text"])
             painter.setPen(text_color)
             text = index.data(Qt.DisplayRole)
             option.rect.setLeft(option.rect.left() + 5)
@@ -947,7 +949,7 @@ MMB to clear an items color""")
         NodeColorRegistryWidget.updateSaveIcon(self, is_dirty=True)
         self.userDeleteEvent(item)
 
-    def nameChangedEvent(self, item, old_value, new_value):
+    def nameChangedEvent(self, item, old_value, new_value, column=None):
         item_name = AbstractDragDropModel.getUniqueItemName(item)
         if new_value != item_name:
             item.setName(item_name)

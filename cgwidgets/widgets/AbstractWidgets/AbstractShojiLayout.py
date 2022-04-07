@@ -439,22 +439,16 @@ class AbstractShojiLayout(AbstractSplitterWidget):
     def __insertShojiWidget(self, widget, is_soloable=None, override=True):
         """ Add a widget to the GUI
 
+       This utility function is run everytime an addWidget or insertWidget
+       is called.  Its primary responsibility is to setup the hover display,
+       and the ability for a widget to be soloable
+
         Args:
             widget (QWidget): Widget to add to the GUI
             is_soloable (bool): determines if this item is able to be solo'd
             override (bool): determines if the is_soloable property should be overwritten
         """
-        """
-        Runs all the utility functions when a new widget is added.
 
-       This utility function is run everytime an addWidget or insertWidget
-       is called.  Its primary responsibility is to setup the hover display,
-       and the ability for a widget to be soloable
-        Args:
-            widget:
-            is_soloable:
-
-        """
         if is_soloable is None:
             if widget.property("is_soloable") is None:
                 self.setChildSoloable(self.isSoloViewEnabled(), widget)
@@ -530,14 +524,6 @@ class AbstractShojiLayout(AbstractSplitterWidget):
             widget = widget.parent()
 
         return None
-
-        # if widget.property("is_soloable"):
-        #     return widget
-        # else:
-        #     if widget.parent():
-        #         return self.getFirstSoloableWidget(widget.parent())
-        #     else:
-        #         return None
 
     def isSoloView(self):
         return self._is_solo_view
