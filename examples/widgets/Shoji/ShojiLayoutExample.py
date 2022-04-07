@@ -58,9 +58,12 @@ class MultiDepthWidth(QWidget):
 
 # create shoji
 main_widget = ShojiLayout()
+main_widget.setObjectName("main shoji")
 embedded_shoji_01 = ShojiLayout(orientation=Qt.Horizontal)
+embedded_shoji_01.setObjectName("embed1")
 embedded_shoji_02 = ShojiLayout(orientation=Qt.Vertical)
 embedded_shoji_02.setIsSoloViewEnabled(False)
+embedded_shoji_02.setObjectName("embed2")
 
 # set custom base setyle sheet
 # base_style_sheet = """
@@ -83,21 +86,22 @@ main_widget.setIsSoloViewEnabled(True)
 main_widget.setOrientation(Qt.Vertical)
 
 # set up events
-def toggleSoloEvent(enabled, widget):
-    print(enabled, widget)
+# def toggleSoloEvent(enabled, widget):
+#     print(enabled, widget)
 
-main_widget.setToggleSoloViewEvent(toggleSoloEvent)
+# main_widget.setToggleSoloViewEvent(toggleSoloEvent)
 
 # add regular widgets
 for char in "SINE.":
     # main widget
     widget = DisplayLabel(char)
+
     main_widget.addWidget(widget, is_soloable=False)
     #widget.setStyleSheet("background-color: rgba(255,0,0,255)")
-    widget.setContentsMargins(0,0,0,0)
+    widget.setContentsMargins(0, 0, 0, 0)
 
     # embedded_shoji_02
-    l = DisplayLabel(str(char))
+    l = DisplayLabel(str(char) + "D")
 
     embedded_shoji_02.addWidget(l)
 
@@ -118,6 +122,7 @@ main_widget.addWidget(embedded_shoji_01)
 main_widget.show()
 main_widget.move(QCursor.pos())
 main_widget.resize(512, 512)
+embedded_shoji_02.setIsSoloViewEnabled(False)
 
 if __name__ == "__main__":
     sys.exit(app.exec_())

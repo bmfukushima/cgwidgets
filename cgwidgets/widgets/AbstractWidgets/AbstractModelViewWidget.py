@@ -91,8 +91,7 @@ class AbstractModelViewWidget(AbstractShojiLayout):
 
         # setup style
         self.setIsSoloViewEnabled(False)
-        self.not_soloable = True
-        self.setProperty('is_soloable', True)
+        self.setIsSoloViewEnabled(True, override_children=False)
 
         # todo set delegate stretch factor
         # self.setStretchFactor(0, 1)
@@ -131,14 +130,15 @@ class AbstractModelViewWidget(AbstractShojiLayout):
 
         # setup attr
         self._view = view
-        self._view.not_soloable = True
 
         # add view
-        self.insertWidget(0, self._view)
+        self.insertWidget(0, self._view, is_soloable=False)
 
         # setup custom key presses
         if hasattr(view, "setKeyPressEvent"):
             view.setKeyPressEvent(self.keyPressEvent)
+
+        if hasattr(view, "setKeyReleaseEvent"):
             view.setKeyReleaseEvent(self.keyReleaseEvent)
             #view.installEventFilter(self)
 
@@ -564,6 +564,7 @@ class AbstractModelViewWidget(AbstractShojiLayout):
         # TODO TOGGLE DELEGATE KEY
         # this is also maintained under... ShojiMainDelegateWidget
         """
+
 
         # get attrs
         modifiers = QApplication.keyboardModifiers()

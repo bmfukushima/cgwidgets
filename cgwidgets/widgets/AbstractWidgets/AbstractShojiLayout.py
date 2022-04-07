@@ -13,9 +13,8 @@ hovering over.  The user can leave full screen by hitting the "ESC" key.
 
 Widgets can be added/inserted with the kwarg "is_soloable", to stop the
 widget from being able to be solo'd, or force it to be on in some
-scenerios.  This kwarg controls an attribute "not_soloable" on the child widget.
-Where if the attribute exists, the child will not be able to be solo'd, and if the
-attribute does not exist, the child will be soloable.
+scenerios.  This sets a property "is_soloable" on any child widget, and the main
+ShojiLayout to determine if each widget is soloable.
 
 HIERARCHY:
 
@@ -33,9 +32,9 @@ NOTE:
         "Switch windows directly"
 
 TODO:
-    *   Full Screen mode
-    *   Better Displays...
-            Has been added to TabShoji... add to this one?
+    *   Double press ESC / Tilda
+            Full Screen / Collapse All
+
 
 """
 
@@ -112,7 +111,7 @@ class AbstractShojiLayout(AbstractSplitterWidget):
         self._current_index = None
         self._current_widget = None
         self._is_solo_view_enabled = True
-        self.setProperty("is_solo_view_enableable", True)
+        self.setProperty("is_soloable", True)
 
         self._is_solo_view = False
         self._solo_view_hotkey = AbstractShojiLayout.FULLSCREEN_HOTKEY
@@ -128,6 +127,57 @@ class AbstractShojiLayout(AbstractSplitterWidget):
         self.setHandleLength(-1)
 
     """ UTILS """
+    def isShojiMVW(self):
+        """ Determines if this is a child of a ShojiModelViewWidget"""
+        from .AbstractShojiWidget import AbstractShojiModelViewWidget
+        widget = getWidgetUnderCursor()
+        while widget.parent():
+            if isinstance(widget.parent(),  AbstractShojiModelViewWidget):
+                return True
+            widget = widget.parent()
+
+        return False
+
+    def setFocusWidget(self):
+        """
+        Attempting to suppress signals from the base widgets
+        so that they don't lose focus while doing random shit
+
+        Args:
+            event:
+
+        Returns:
+
+        """
+
+        # hack to ensure Katana gets the focus on the right widget...
+        widget_under_cursor = getWidgetUnderCursor()
+        self.setFocus()
+        return
+        if widget_under_cursor:
+            # need to import here to avoid circular import
+            from .AbstractShojiWidget import AbstractShojiModelDelegateWidget
+            from cgwidgets.utils import isWidgetDescendantOfInstance
+            if isWidgetDescendantOfInstance(widget_under_cursor, widget_under_cursor.parent(), AbstractShojiModelDelegateWidget):
+                layout_widget = self.getChildWidgetFromGrandchild(widget_under_cursor)
+                if isinstance(layout_widget, AbstractShojiModelDelegateWidget):
+                    layout_widget.getMainWidget().setFocus()
+                else:
+                    self.setFocus()
+        else:
+            self.setFocus()
+
+    def getChildWidgetFromGrandchild(self, widget):
+        """ Assuming the widget is a grandchild of this widget, this will return the child
+
+        Args:
+            widget (QWidget): to start searching from"""
+        if widget.parent() == self:
+            return widget
+        else:
+            if widget.parent():
+                return self.getChildWidgetFromGrandchild(widget.parent())
+
     def displayAllWidgets(self, value):
         """
         Hides/shows all of the widgets in this splitter.  This is a utility function
@@ -204,30 +254,6 @@ class AbstractShojiLayout(AbstractSplitterWidget):
             else:
                 return None, None
 
-    def getFirstSoloableWidget(self, widget):
-        """
-        Gets the first widget that is capable of being soloable
-
-        Currently this is hard  coded to the "not_soloable" attribute...
-        Args:
-            widget (QWidget): widget to start searching from to be solo'd
-        """
-        while widget.parent():
-            if widget.property("is_soloable"):
-                return widget
-            widget = widget.parent()
-
-        return None
-
-
-        # if widget.property("is_soloable"):
-        #     return widget
-        # else:
-        #     if widget.parent():
-        #         return self.getFirstSoloableWidget(widget.parent())
-        #     else:
-        #         return None
-
     """ VIRTUAL EVENTS """
     def setToggleSoloViewEvent(self, function):
         """
@@ -258,6 +284,17 @@ class AbstractShojiLayout(AbstractSplitterWidget):
         pass
 
     """ EVENTS """
+    @staticmethod
+    def isSoloViewEventActive():
+        return AbstractShojiLayout.SOLOEVENTACTIVE
+
+    @staticmethod
+    def setIsSoloViewEventActive(enabled):
+        if enabled:
+            AbstractShojiLayout.SOLOEVENTACTIVE = True
+        if not enabled:
+            AbstractShojiLayout.SOLOEVENTACTIVE = False
+
     def __soloViewHotkeyPressed(self, event):
         """
         Helper function for when the "soloViewHotkey()" is pressed.
@@ -279,85 +316,30 @@ class AbstractShojiLayout(AbstractSplitterWidget):
 
         # Press solo view hotkey
         widget_soloable = self.getFirstSoloableWidget(widget_pressed)
-
         # return if no soloable widget found
         if not widget_soloable: return
+        if isinstance(widget_soloable, AbstractShojiLayout) and not widget_soloable.property("is_soloable"):
+            return
 
         # toggle solo view ( shoji view )
         if event.modifiers() == Qt.AltModifier:
             if widget_soloable.parent():
-                widget_soloable = widget_soloable.parent()
-                self.toggleIsSoloView(True, widget=widget_soloable)
+                # from cgwidgets.widgets import AbstractModelViewWidget, ModelViewWidget
+                # if isinstance(widget_soloable, AbstractModelViewWidget):
+                #     widget_soloable = widget_soloable.parent()
+                #
+                # widget_soloable = widget_soloable.parent()
+                widget_soloable = self.getFirstSoloableWidget(widget_soloable.parent())
+                if widget_soloable:
+                    self.toggleIsSoloView(True, widget=widget_soloable)
 
         else:
             # toggle solo view (individual widget )
             self.toggleIsSoloView(True, widget=widget_soloable)
 
-    def getChildWidgetFromGrandchild(self, widget):
-        """ Assuming the widget is a grandchild of this widget, this will return the child
-
-        Args:
-            widget (QWidget): to start searching from"""
-        if widget.parent() == self:
-            return widget
-        else:
-            if widget.parent():
-                return self.getChildWidgetFromGrandchild(widget.parent())
-
-    def isShojiMVW(self):
-        """ Determines if this is a child of a ShojiModelViewWidget"""
-        from .AbstractShojiWidget import AbstractShojiModelViewWidget
-        widget = getWidgetUnderCursor()
-        while widget.parent():
-            if isinstance(widget.parent(),  AbstractShojiModelViewWidget):
-                return True
-            widget = widget.parent()
-
-        return False
-
     def enterEvent(self, event):
         self.setFocusWidget()
         return QSplitter.enterEvent(self, event)
-
-    def setFocusWidget(self):
-        """
-        Attempting to suppress signals from the base widgets
-        so that they don't lose focus while doing random shit
-
-        Args:
-            event:
-
-        Returns:
-
-        """
-
-        # hack to ensure Katana gets the focus on the right widget...
-        widget_under_cursor = getWidgetUnderCursor()
-        self.setFocus()
-        return
-        if widget_under_cursor:
-            # need to import here to avoid circular import
-            from .AbstractShojiWidget import AbstractShojiModelDelegateWidget
-            from cgwidgets.utils import isWidgetDescendantOfInstance
-            if isWidgetDescendantOfInstance(widget_under_cursor, widget_under_cursor.parent(), AbstractShojiModelDelegateWidget):
-                layout_widget = self.getChildWidgetFromGrandchild(widget_under_cursor)
-                if isinstance(layout_widget, AbstractShojiModelDelegateWidget):
-                    layout_widget.getMainWidget().setFocus()
-                else:
-                    self.setFocus()
-        else:
-            self.setFocus()
-
-    @staticmethod
-    def setIsSoloViewEventActive(enabled):
-        if enabled:
-            AbstractShojiLayout.SOLOEVENTACTIVE = True
-        if not enabled:
-            AbstractShojiLayout.SOLOEVENTACTIVE = False
-
-    @staticmethod
-    def isSoloViewEventActive():
-        return AbstractShojiLayout.SOLOEVENTACTIVE
 
     def keyPressEvent(self, event):
         """
@@ -461,7 +443,14 @@ class AbstractShojiLayout(AbstractSplitterWidget):
         for widget in widget_list:
             widget.show()
 
-    def __insertShojiWidget(self, widget, is_soloable):
+    def __insertShojiWidget(self, widget, is_soloable=None, override=True):
+        """ Add a widget to the GUI
+
+        Args:
+            widget (QWidget): Widget to add to the GUI
+            is_soloable (bool): determines if this item is able to be solo'd
+            override (bool): determines if the is_soloable property should be overwritten
+        """
         """
         Runs all the utility functions when a new widget is added.
 
@@ -473,10 +462,13 @@ class AbstractShojiLayout(AbstractSplitterWidget):
             is_soloable:
 
         """
-        if is_soloable is not None:
-            self.setChildSoloable(is_soloable, widget)
+        if is_soloable is None:
+            if widget.property("is_soloable") is None:
+                self.setChildSoloable(self.isSoloViewEnabled(), widget)
+            elif override:
+                self.setChildSoloable(self.isSoloViewEnabled(), widget)
         else:
-            self.setChildSoloable(self.isSoloViewEnabled(), widget)
+            self.setChildSoloable(is_soloable, widget)
 
         descendants = getWidgetsDescendants(widget.layout())
         descendants.append(widget)
@@ -485,15 +477,56 @@ class AbstractShojiLayout(AbstractSplitterWidget):
         self.installHoverDisplay(widget)
 
     # good use case for a decorator?
-    def addWidget(self, widget, is_soloable=None):
-        self.__insertShojiWidget(widget, is_soloable)
+    def addWidget(self, widget, is_soloable=None, override=True):
+        """ Add a widget to the GUI
+
+        Args:
+            widget (QWidget): Widget to add to the GUI
+            is_soloable (bool): determines if this item is able to be solo'd
+            override (bool): determines if the is_soloable property should be overwritten
+        """
+        self.__insertShojiWidget(widget, is_soloable=is_soloable, override=override)
         return QSplitter.addWidget(self, widget)
 
-    def insertWidget(self, index, widget, is_soloable=None):
-        self.__insertShojiWidget(widget, is_soloable)
+    def insertWidget(self, index, widget, is_soloable=None, override=True):
+        """ Add a widget to the GUI
+
+        Args:
+            index (int): Index to insert widget at
+            widget (QWidget): Widget to add to the GUI
+            is_soloable (bool): determines if this item is able to be solo'd
+            override (bool): determines if the is_soloable property should be overwritten
+        """
+        self.__insertShojiWidget(widget, is_soloable=is_soloable, override=override)
         return QSplitter.insertWidget(self, index, widget)
 
     """ SOLO VIEW """
+    def getFirstSoloableWidget(self, widget):
+        """
+        Gets the first widget that is capable of being soloable
+
+        Currently this is hard  coded to the "not_soloable" attribute...
+        Args:
+            widget (QWidget): widget to start searching from to be solo'd
+        """
+        while widget.parent():
+            if widget.property("is_soloable"):
+                return widget
+            """ Special condition so that it will only return to the first layout first """
+            if isinstance(widget, AbstractShojiLayout):
+                return widget
+            widget = widget.parent()
+
+        return None
+
+        # if widget.property("is_soloable"):
+        #     return widget
+        # else:
+        #     if widget.parent():
+        #         return self.getFirstSoloableWidget(widget.parent())
+        #     else:
+        #         return None
+
     def isSoloView(self):
         return self._is_solo_view
 
@@ -541,17 +574,20 @@ class AbstractShojiLayout(AbstractSplitterWidget):
     def isSoloViewEnabled(self):
         return self._is_solo_view_enabled
 
-    def setIsSoloViewEnabled(self, enabled):
+    def setIsSoloViewEnabled(self, enabled, override_children=True):
         """
         Determines is this widget can be set to Solo view or not.
 
         Args:
-            enabled:
+            enabled (bool): determines if this layout can be set to a soloview or not
+            override_children (bool): determines if the children should inherit the enabled value provided
         """
         self._is_solo_view_enabled = enabled
-        self.setProperty("is_solo_view_enableable", enabled)
-        for child in self.children():
-            self.setChildSoloable(enabled, child)
+        self.setProperty("is_soloable", enabled)
+
+        if override_children:
+            for child in self.children():
+                self.setChildSoloable(enabled, child)
 
     def toggleIsSoloView(self, is_solo_view, widget=None, current_shoji=None):
         """
