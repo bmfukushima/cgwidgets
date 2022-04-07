@@ -349,7 +349,7 @@ class AbstractShojiLayout(AbstractSplitterWidget):
             self.setFocus()
 
     @staticmethod
-    def toggleSoloViewEventActive(enabled):
+    def setIsSoloViewEventActive(enabled):
         if enabled:
             AbstractShojiLayout.SOLOEVENTACTIVE = True
         if not enabled:
@@ -370,14 +370,14 @@ class AbstractShojiLayout(AbstractSplitterWidget):
         if event.key() == self.soloViewHotkey():
             if not AbstractShojiLayout.SOLOEVENTACTIVE:
                 if self.isSoloViewEnabled():
-                    AbstractShojiLayout.toggleSoloViewEventActive(True)
+                    AbstractShojiLayout.setIsSoloViewEventActive(True)
                     self.__soloViewHotkeyPressed(event)
                     return
 
         # unsolo view
         elif event.key() == Qt.Key_Escape:
             if not AbstractShojiLayout.SOLOEVENTACTIVE:
-                AbstractShojiLayout.toggleSoloViewEventActive(True)
+                AbstractShojiLayout.setIsSoloViewEventActive(True)
                 if event.modifiers() == Qt.AltModifier:
                     self.unsoloAll(self)
                 else:
@@ -390,9 +390,9 @@ class AbstractShojiLayout(AbstractSplitterWidget):
     def keyReleaseEvent(self, event):
         """ Disable solo view event flag """
         if event.key() == self.soloViewHotkey():
-            AbstractShojiLayout.toggleSoloViewEventActive(False)
+            AbstractShojiLayout.setIsSoloViewEventActive(False)
         elif event.key() == Qt.Key_Escape:
-            AbstractShojiLayout.toggleSoloViewEventActive(False)
+            AbstractShojiLayout.setIsSoloViewEventActive(False)
 
         return QSplitter.keyReleaseEvent(self, event)
 
@@ -409,11 +409,11 @@ class AbstractShojiLayout(AbstractSplitterWidget):
             if not AbstractShojiLayout.SOLOEVENTACTIVE:
                 if event.key() == self.soloViewHotkey():
                     if self.isSoloViewEnabled():
-                        AbstractShojiLayout.toggleSoloViewEventActive(True)
+                        AbstractShojiLayout.setIsSoloViewEventActive(True)
                         self.__soloViewHotkeyPressed(event)
                         return True
                 if event.key() == Qt.Key_Escape:
-                    AbstractShojiLayout.toggleSoloViewEventActive(False)
+                    AbstractShojiLayout.setIsSoloViewEventActive(False)
                     if event.modifiers() == Qt.AltModifier:
                         self.unsoloAll(self)
                     else:
@@ -424,7 +424,7 @@ class AbstractShojiLayout(AbstractSplitterWidget):
         if event.type() == QEvent.KeyRelease:
             if AbstractShojiLayout.SOLOEVENTACTIVE:
                 if event.key() in [Qt.Key_Escape, self.soloViewHotkey()]:
-                    AbstractShojiLayout.toggleSoloViewEventActive(False)
+                    AbstractShojiLayout.setIsSoloViewEventActive(False)
         if event.type() == QEvent.Enter:
             self.setFocusWidget()
         return False

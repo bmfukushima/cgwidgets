@@ -139,6 +139,7 @@ class AbstractModelViewWidget(AbstractShojiLayout):
         # setup custom key presses
         if hasattr(view, "setKeyPressEvent"):
             view.setKeyPressEvent(self.keyPressEvent)
+            view.setKeyReleaseEvent(self.keyReleaseEvent)
             #view.installEventFilter(self)
 
         # setup default drop attrs
@@ -600,6 +601,11 @@ class AbstractModelViewWidget(AbstractShojiLayout):
             shoji_layout = isWidgetDescendantOfInstance(self.parent(), self.parent().parent(), AbstractShojiLayout)
             if shoji_layout:
                 shoji_layout.keyPressEvent(event)
+
+    def keyReleaseEvent(self, event):
+        from cgwidgets.widgets import AbstractShojiLayout
+        if event.key() in [AbstractShojiLayout.FULLSCREEN_HOTKEY, Qt.Key_Escape]:
+            AbstractShojiLayout.setIsSoloViewEventActive(False)
 
 
 class ModelViewSearchWidget(AbstractShojiLayout):

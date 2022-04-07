@@ -499,6 +499,9 @@ class AbstractDragDropAbstractView(object):
 
         self.__keyPressEvent(event)
 
+    def abstractKeyReleaseEvent(self, event):
+        self.__keyReleaseEvent(event)
+
     def abstractMousePressEvent(self, event):
         self.__pressed = True
         self.__start_pos = event.pos()
@@ -515,6 +518,12 @@ class AbstractDragDropAbstractView(object):
                     if index_under_cursor == index:
                         self.setIndexSelected(index, True)
             self.__pressed = False
+
+    def setKeyReleaseEvent(self, function):
+        self.__keyReleaseEvent = function
+
+    def __keyReleaseEvent(self, event):
+        pass
 
     def setKeyPressEvent(self, function):
         self.__keyPressEvent = function
@@ -916,6 +925,10 @@ class AbstractDragDropListView(QListView, AbstractDragDropAbstractView):
     def selectionChanged(self, selected, deselected):
         self.abstractSelectionChanged(selected, deselected)
 
+    def keyReleaseEvent(self, event):
+        self.abstractKeyReleaseEvent(event)
+        return QListView.keyReleaseEvent(self, event)
+
     def keyPressEvent(self, event):
         self.abstractKeyPressEvent(event)
         return QListView.keyPressEvent(self, event)
@@ -1030,6 +1043,10 @@ class AbstractDragDropTreeView(QTreeView, AbstractDragDropAbstractView):
     def keyPressEvent(self, event):
         self.abstractKeyPressEvent(event)
         return QTreeView.keyPressEvent(self, event)
+
+    def keyReleaseEvent(self, event):
+        self.abstractKeyReleaseEvent(event)
+        return QTreeView.keyReleaseEvent(self, event)
 
 
 class AbstractViewContextMenu(QMenu):
