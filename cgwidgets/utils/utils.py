@@ -85,12 +85,25 @@ def getFontSize(application=None):
 
 
 def getScreenResolution():
+    """ Gets the resolution of the primary monitor """
     app = QApplication.instance()
     if not app:
         app = QApplication(sys.argv)
     screen = app.primaryScreen()
-    size = (screen.size().width(), screen.size().height())
     # available size= screen.availableGeometry()
+    return screen.size()
+
+
+def scaleResolution(size):
+    """ This will scale from my monitors resolution of 2560x1440 to another 16:9 displays resolution
+
+    Args:
+        size (QSize): size to scale.
+    """
+    resolution = getScreenResolution()
+    mult = resolution.height() / 1440
+    size.setWidth(size.width() * mult)
+    size.setHeight(size.height() * mult)
     return size
 
 

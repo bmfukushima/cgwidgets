@@ -37,7 +37,8 @@ from cgwidgets.utils import (
     getWidgetAncestor,
     setAsTransparent,
     setAsTool,
-    setAsPopup
+    setAsPopup,
+    scaleResolution
 )
 
 from cgwidgets.settings import iColor
@@ -1504,7 +1505,7 @@ class PopupHotkeyMenu(QWidget):
     Attributes:
         popup_stack (list): of strings of the current paths that the user
             has clicked to get to the current menu"""
-    def __init__(self, parent=None, file_path=None, pos=None, size=QSize(1800, 600)):
+    def __init__(self, parent=None, file_path=None, pos=None, size=scaleResolution(QSize(1800, 600))):
         super(PopupHotkeyMenu, self).__init__(parent)
 
         # create attrs
@@ -1537,7 +1538,8 @@ class PopupHotkeyMenu(QWidget):
         painter.setPen(QPen(bg_color))
 
         # ellipse
-        painter.drawEllipse(QPoint(self.width() * 0.5, self.height() * 0.5), 900, 700)
+        ellipse_size = scaleResolution(QSize(900, 700))
+        painter.drawEllipse(QPoint(self.width() * 0.5, self.height() * 0.5), ellipse_size.width(), ellipse_size.height())
 
         # chamfered corners
         # corner_radius = 75
