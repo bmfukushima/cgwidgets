@@ -1,6 +1,6 @@
 import json
 import re
-import math
+import sys
 import os
 import platform
 
@@ -82,6 +82,16 @@ def getFontSize(application=None):
         application = QApplication
     font = application.font()
     return font.pointSize()
+
+
+def getScreenResolution():
+    app = QApplication.instance()
+    if not app:
+        app = QApplication(sys.argv)
+    screen = app.primaryScreen()
+    size = (screen.size().width(), screen.size().height())
+    # available size= screen.availableGeometry()
+    return size
 
 
 def guessBackgroundColor(style_sheet):
