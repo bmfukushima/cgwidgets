@@ -5,7 +5,7 @@
 
 import sys
 import os
-os.environ['QT_API'] = 'pyside2'
+# os.environ['QT_API'] = 'pyside2'
 from qtpy.QtWidgets import QApplication, QLabel
 from qtpy.QtGui import QCursor
 from qtpy.QtCore import Qt, QByteArray
@@ -70,10 +70,11 @@ main_widget.setDeleteWarningWidget(delete_warning_widget)
 
 # create delegates
 delegate_widget = QLabel("F")
+
 main_widget.addDelegate([Qt.Key_F], delegate_widget)
 
 delegate_widget = QLabel("Q")
-main_widget.addDelegate([Qt.Key_Q], delegate_widget)
+main_widget.addDelegate([Qt.Key_W], delegate_widget, modifier=Qt.AltModifier)
 
 # insert indexes
 for x in range(0, 7):

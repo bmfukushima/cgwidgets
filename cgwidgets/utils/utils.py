@@ -98,13 +98,18 @@ def scaleResolution(size):
     """ This will scale from my monitors resolution of 2560x1440 to another 16:9 displays resolution
 
     Args:
-        size (QSize): size to scale.
+        size (QSize || int || float): size to scale.
+
+    Returns (QSize || int || float): same data type that was input
     """
     resolution = getScreenResolution()
     mult = resolution.height() / 1440
-    size.setWidth(size.width() * mult)
-    size.setHeight(size.height() * mult)
-    return size
+    if isinstance(size, QSize):
+        size.setWidth(size.width() * mult)
+        size.setHeight(size.height() * mult)
+        return size
+    else:
+        return size * mult
 
 
 def guessBackgroundColor(style_sheet):

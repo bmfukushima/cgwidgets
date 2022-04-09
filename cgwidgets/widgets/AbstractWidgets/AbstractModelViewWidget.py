@@ -564,7 +564,7 @@ class AbstractModelViewWidget(AbstractShojiLayout):
         # TODO TOGGLE DELEGATE KEY
         # this is also maintained under... ShojiMainDelegateWidget
         """
-
+        from cgwidgets.widgets import AbstractShojiLayout
 
         # get attrs
         modifiers = QApplication.keyboardModifiers()
@@ -580,33 +580,36 @@ class AbstractModelViewWidget(AbstractShojiLayout):
             input_modifier = delegate_manifest["modifier"]
             if modifiers == input_modifier:
                 if event.key() in input_keys:
-                    widget = delegate_manifest["widget"]
-                    self.toggleDelegateWidget(event, widget)
+                    if not AbstractShojiLayout.isSoloViewEventActive():
+                        widget = delegate_manifest["widget"]
+                        self.toggleDelegateWidget(event, widget)
 
-                    # set focus
-                    if delegate_manifest["focus"]:
-                        # focus widget provided
-                        if delegate_manifest["focus_widget"]:
-                            delegate_manifest["focus_widget"].setFocus()
-                        # focus delegate
+                        # set focus
+                        if delegate_manifest["focus"]:
+                            # focus widget provided
+                            if delegate_manifest["focus_widget"]:
+                                delegate_manifest["focus_widget"].setFocus()
+                            # focus delegate
+                            else:
+                                widget.setFocus()
                         else:
-                            widget.setFocus()
-                    else:
-                        # focus model
-                        self.setFocus()
+                            # focus model
+                            self.setFocus()
+
+                        AbstractShojiLayout.setIsSoloViewEventActive(True)
 
         # full screen
         """ Need to override the ShojiLayout handler here as it goes a bit wonky """
-        from cgwidgets.widgets import AbstractShojiLayout
         if event.key() in [AbstractShojiLayout.FULLSCREEN_HOTKEY, Qt.Key_Escape]:
-            shoji_layout = isWidgetDescendantOfInstance(self.parent(), self.parent().parent(), AbstractShojiLayout)
-            if shoji_layout:
-                shoji_layout.keyPressEvent(event)
+            if self.parent():
+                shoji_layout = isWidgetDescendantOfInstance(self.parent(), self.parent().parent(), AbstractShojiLayout)
+                if shoji_layout:
+                    shoji_layout.keyPressEvent(event)
 
     def keyReleaseEvent(self, event):
         from cgwidgets.widgets import AbstractShojiLayout
-        if event.key() in [AbstractShojiLayout.FULLSCREEN_HOTKEY, Qt.Key_Escape]:
-            AbstractShojiLayout.setIsSoloViewEventActive(False)
+        #if event.key() in [AbstractShojiLayout.FULLSCREEN_HOTKEY, Qt.Key_Escape]:
+        AbstractShojiLayout.setIsSoloViewEventActive(False)
 
 
 class ModelViewSearchWidget(AbstractShojiLayout):
