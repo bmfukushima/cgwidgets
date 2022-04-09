@@ -691,9 +691,11 @@ MMB to clear an items color""")
 
         # setup node creation widget
         self._node_type_creation_widget = NodeTypeListWidget(self)
-        self._node_colors_widget.addDelegate([], self._node_type_creation_widget, modifier=Qt.NoModifier, focus=True)
-        self._node_type_creation_widget.show()
-        self._node_type_creation_widget.setFixedHeight(getFontSize()*3)
+        self._node_type_creation_labelled_widget = LabelledInputWidget(name="Node Type", delegate_widget=self._node_type_creation_widget)
+        self._node_type_creation_labelled_widget.setDefaultLabelLength(getFontSize()*8)
+        self._node_colors_widget.addDelegate([], self._node_type_creation_labelled_widget, modifier=Qt.NoModifier, focus=True)
+        self._node_type_creation_labelled_widget.show()
+        self._node_type_creation_labelled_widget.setFixedHeight(getFontSize()*3)
 
         # setup events
         # self._node_colors_widget.setIndexSelectedEvent(self.selectionChanged)
@@ -703,17 +705,18 @@ MMB to clear an items color""")
 
         # setup load / save buttons
         self._io_widget = NodeColorIOWidget(self, envar=envar)
-        self._node_colors_widget.addDelegate([Qt.Key_S], self._io_widget, modifier=Qt.AltModifier)
+        self._node_colors_widget.addDelegate([Qt.Key_S], self._io_widget, modifier=Qt.AltModifier, focus=True)
         self._io_widget.hide()
         self._node_type_creation_widget.setFixedHeight(getFontSize()*3)
 
         # setup user commands widget
         self._user_commands_widget = CommandsInputWidget(self)
-
+        self._user_commands_labelled_widget = LabelledInputWidget(name="Run Command", delegate_widget=self._user_commands_widget)
+        self._user_commands_labelled_widget.setDefaultLabelLength(getFontSize()* 10)
         self._node_colors_widget.addDelegate(
-            [Qt.Key_A], self._user_commands_widget, modifier=Qt.AltModifier, focus=True)
-        self._user_commands_widget.hide()
-        self._user_commands_widget.setFixedHeight(getFontSize() * 3)
+            [Qt.Key_A], self._user_commands_labelled_widget, modifier=Qt.AltModifier, focus=True, focus_widget=self._user_commands_widget)
+        self._user_commands_labelled_widget.hide()
+        self._user_commands_labelled_widget.setFixedHeight(getFontSize() * 3)
 
         # setup layout
         QVBoxLayout(self)

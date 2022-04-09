@@ -2,7 +2,7 @@ import sys
 import os
 
 from qtpy.QtWidgets import (QSplitterHandle, QApplication, QLabel, QCompleter, QTreeView, QWidget, QVBoxLayout)
-from qtpy.QtCore import Qt, QModelIndex, QItemSelectionModel
+from qtpy.QtCore import Qt, QModelIndex, QItemSelectionModel, QEvent
 from qtpy.QtGui import QCursor
 from cgwidgets.widgets import AbstractStringInputWidget, AbstractListInputWidget
 from cgwidgets.views import (
@@ -346,7 +346,7 @@ class AbstractModelViewWidget(AbstractShojiLayout):
     def setDelegateInputManifest(self, manifest={}):
         self._delegate_manifest = manifest
 
-    def addDelegate(self, input, widget, modifier=Qt.NoModifier, focus=False, focus_widget=None):
+    def addDelegate(self, input, widget, modifier=Qt.NoModifier, focus=False, focus_widget=None, always_on=False):
         """
         Adds a new delegate that can be activated with the input/modifer combo provided
 
@@ -355,6 +355,7 @@ class AbstractModelViewWidget(AbstractShojiLayout):
             widget (QWidget):
             modifier (Qt.MODIFIER):
             focus (bool): determines if the widget should be focus when it is shown or not
+            always_on (bool): determines if this widget is always visible or not
 
         Returns:
         """
@@ -365,6 +366,7 @@ class AbstractModelViewWidget(AbstractShojiLayout):
         delegate_manifest["modifier"] = modifier
         delegate_manifest["focus"] = focus
         delegate_manifest["focus_widget"] = focus_widget
+        delegate_manifest["always_on"] = always_on
 
         self._delegate_manifest.append(delegate_manifest)
 
@@ -372,7 +374,16 @@ class AbstractModelViewWidget(AbstractShojiLayout):
         # self.setStretchFactor(len(self._delegate_manifest), 0)
         # add widget
         self.addWidget(widget)
-        widget.hide()
+        if focus_widget:
+            focus_widget.installEventFilter(self)
+        if not always_on:
+            widget.hide()
+
+    def delegateWidgets(self):
+        delegate_widgets = []
+        for item in self.delegateInputManifest():
+            delegate_widgets.append(item["widget"])
+        return delegate_widgets
 
     def toggleDelegateWidget(self, event, widget):
         """
@@ -556,8 +567,47 @@ class AbstractModelViewWidget(AbstractShojiLayout):
         return self.model().exportModelToDict(item, item_data=item_data)
 
     """ EVENTS """
+    def eventFilter(self, obj, event):
+        """ Event filter for handling the hide/show events for the delegate widgets"""
+        if event.type() == QEvent.KeyPress:
+            from cgwidgets.utils import isWidgetDescendantOf, isWidgetDescendantOf2, getWidgetUnderCursor
+            widget_under_cursor = getWidgetUnderCursor()
+
+            if not widget_under_cursor: return
+            if (isWidgetDescendantOf2(widget_under_cursor, widget_under_cursor.parent(), self.delegateWidgets())
+                or isWidgetDescendantOf2(obj, obj.parent(), self.delegateWidgets())
+            ):
+                delegate_data = None
+
+                # get item data
+                for item in self.delegateInputManifest():
+                    if isWidgetDescendantOf(obj, obj.parent(), item["widget"]):
+                        delegate_data = item
+                        break
+
+                # check hotkey press
+                if delegate_data:
+                    if event.modifiers() == delegate_data["modifier"]:
+                        if event.key() in delegate_data["input"]:
+                            if not AbstractShojiLayout.isSoloViewEventActive():
+                                AbstractShojiLayout.setIsSoloViewEventActive(True)
+                                self.toggleDelegateWidget(event, delegate_data["widget"])
+                                return True
+
+                # check escape pressed
+                if event.key() == Qt.Key_Escape:
+                    delegate_data["widget"].hide()
+                    self.delegateToggleEvent(False, event, obj)
+                    # return False
+
+        if event.type() == QEvent.KeyRelease:
+            AbstractShojiLayout.setIsSoloViewEventActive(False)
+
+        return AbstractShojiLayout.eventFilter(self, obj, event)
+
     def enterEvent(self, event):
         self.setFocus()
+        return AbstractShojiLayout.enterEvent(self, event)
 
     def keyPressEvent(self, event):
         """
@@ -569,7 +619,6 @@ class AbstractModelViewWidget(AbstractShojiLayout):
         # get attrs
         modifiers = QApplication.keyboardModifiers()
         input_manifest = self.delegateInputManifest()
-
         # if event.key() in [Qt.Key_D, Qt.Key_Backspace, Qt.Key_Delete]:
         #     return self.view().keyPressEvent(event)
 
@@ -586,12 +635,15 @@ class AbstractModelViewWidget(AbstractShojiLayout):
 
                         # set focus
                         if delegate_manifest["focus"]:
-                            # focus widget provided
-                            if delegate_manifest["focus_widget"]:
-                                delegate_manifest["focus_widget"].setFocus()
-                            # focus delegate
+                            if widget.isVisible():
+                                # focus widget provided
+                                if delegate_manifest["focus_widget"]:
+                                    delegate_manifest["focus_widget"].setFocus()
+                                # focus delegate
+                                else:
+                                    widget.setFocus()
                             else:
-                                widget.setFocus()
+                                self.setFocus()
                         else:
                             # focus model
                             self.setFocus()
