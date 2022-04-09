@@ -528,16 +528,31 @@ class NodeColorIOWidget(QWidget):
                     return
         print("{path} is not a valid color config file".format(path=self.savePath()))
 
+    def __loadEvent(self, filepath):
+        """ Load the color config file
+
+        Args:
+            filepath (str): path on disk to be loaded
+            """
+        self.nodeColorRegistryWidget().loadColorFile(filepath)
+        self.userLoadEvent(filepath)
+        # update save icon
+        NodeColorRegistryWidget.updateSaveIcon(self, is_dirty=False)
+        print("Loading color config:\t{path}".format(path=filepath))
+
     def loadEvent(self, widget):
+        # load from envar dir
         if self.configsDir() and self.fileName():
             if NodeColorRegistryWidget.isColorConfigFile(self.savePath()):
                 if os.path.isfile(self.savePath()):
-                    self.nodeColorRegistryWidget().loadColorFile(self.savePath())
-                    self.userLoadEvent(self.savePath())
-                    # update save icon
-                    NodeColorRegistryWidget.updateSaveIcon(self, is_dirty=False)
-                    print("Loading color config:\t{path}".format(path=self.savePath()))
+                    self.__load(self.savePath())
                     return
+
+        # load absolute path
+        else:
+            if NodeColorRegistryWidget.isColorConfigFile(self.fileName()):
+                self.__load(self.fileName())
+                return
 
         print("{path} is not a valid color config file".format(path=self.savePath()))
 
