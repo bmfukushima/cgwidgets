@@ -5,8 +5,8 @@ from qtpy.QtWidgets import QApplication
 
 from cgwidgets.widgets import NodeColorRegistryWidget
 from cgwidgets.utils import centerWidgetOnScreen, setAsAlwaysOnTop
-
-app = QApplication(sys.argv)
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
 # setup environment configs
 os.environ["CGWNODECOLORCONFIGS"] = "/home/brian/.cgwidgets/colorConfigs_01/:/home/brian/.cgwidgets/colorConfigs_02"
 
@@ -28,4 +28,5 @@ setAsAlwaysOnTop(node_color_registry)
 node_color_registry.show()
 centerWidgetOnScreen(node_color_registry, width=512)
 
-sys.exit(app.exec_())
+if __name__ == "__main__":
+    sys.exit(app.exec_())

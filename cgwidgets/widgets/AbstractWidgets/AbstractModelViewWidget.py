@@ -400,6 +400,7 @@ class AbstractModelViewWidget(AbstractShojiLayout):
         if widget.isVisible():
             enabled = False
             widget.hide()
+            self.setFocus()
         else:
             enabled = True
             widget.show()
@@ -598,6 +599,7 @@ class AbstractModelViewWidget(AbstractShojiLayout):
                 if event.key() == Qt.Key_Escape:
                     delegate_data["widget"].hide()
                     self.delegateToggleEvent(False, event, obj)
+                    self.setFocus()
                     # return False
 
         if event.type() == QEvent.KeyRelease:
