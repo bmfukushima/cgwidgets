@@ -3,6 +3,7 @@ import re
 import sys
 import os
 import platform
+import math
 
 from collections import OrderedDict
 
@@ -160,16 +161,8 @@ def getDefaultSavePath():
     return save_dir
 
 
-def isCursorOverWidget(widget):
-    """ Determines if the cursor is over the widget or not
-
-    This is necessary for checking leave events, when the cursor has left the parent widget,
-    but entered one of its child widgets.
-
-    Args:
-        widget (QWidget): to test position of
-
-    Returns (bool)"""
+def isCursorOverWidget(widget, mask=False, is_ellipse=False):
+    # get cursor pos
     global_event_pos = QCursor.pos()
     if widget.parent():
         """ Need to check if its a tool or not.  If its not a tool, we need to cast
@@ -183,15 +176,38 @@ def isCursorOverWidget(widget):
     cursor_xpos = global_event_pos.x()
     cursor_ypos = global_event_pos.y()
 
+    # get bounding rect
     x = top_left.x()
     y = top_left.y()
+
     w = widget.geometry().width()
     h = widget.geometry().height()
+    if mask:
+        mask_w = widget.mask().boundingRect().width()
+        mask_h = widget.mask().boundingRect().height()
+        if mask_w < w:
+            w = mask_w
+        if mask_h < h:
+            h = mask_h
 
-    if (x < cursor_xpos and cursor_xpos < (x + w)) and (y < cursor_ypos and cursor_ypos < (y + h)):
-        return True
+    # do hit test
+    if is_ellipse:
+        rx = widget.mask().boundingRect().width() * 0.5
+        ry = widget.mask().boundingRect().height() * 0.5
+        cx = x + w * 0.5
+        cy = y + h * 0.5
+        hit_test = math.pow((cursor_xpos - cx), 2) / math.pow(rx, 2) + math.pow((cursor_ypos - cy), 2) / math.pow(ry, 2)
+        if hit_test <= 1.0 and (
+                (x < cursor_xpos and cursor_xpos < (x + w)) and (y < cursor_ypos and cursor_ypos < (y + h))):
+            return True
+        else:
+            return False
+
     else:
-        return False
+        if (x < cursor_xpos and cursor_xpos < (x + w)) and (y < cursor_ypos and cursor_ypos < (y + h)):
+            return True
+        else:
+            return False
 
 
 def runDelayedEvent(widget, event, name="_timer", delay_amount=50):

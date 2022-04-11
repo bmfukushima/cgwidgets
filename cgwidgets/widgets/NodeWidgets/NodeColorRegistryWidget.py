@@ -545,13 +545,13 @@ class NodeColorIOWidget(QWidget):
         if self.configsDir() and self.fileName():
             if NodeColorRegistryWidget.isColorConfigFile(self.savePath()):
                 if os.path.isfile(self.savePath()):
-                    self.__load(self.savePath())
+                    self.__loadEvent(self.savePath())
                     return
 
         # load absolute path
         else:
             if NodeColorRegistryWidget.isColorConfigFile(self.fileName()):
-                self.__load(self.fileName())
+                self.__loadEvent(self.fileName())
                 return
 
         print("{path} is not a valid color config file".format(path=self.savePath()))
