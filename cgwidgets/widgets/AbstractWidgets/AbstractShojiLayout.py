@@ -82,7 +82,8 @@ class AbstractShojiLayout(AbstractSplitterWidget):
         will cause this widget to not be able to be solo'd (hopefully)
     """
     HANDLE_WIDTH = 2
-    FULLSCREEN_HOTKEY = 96
+    #FULLSCREEN_HOTKEY = 96
+    FULLSCREEN_HOTKEY = Qt.Key_Space
     SOLOEVENTACTIVE = False
 
     def __init__(self, parent=None, orientation=Qt.Vertical):

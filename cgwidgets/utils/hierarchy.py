@@ -19,6 +19,7 @@ def isWidgetDescendantOf(widget, parent, ancestor):
     else:
         return False
 
+
 def isWidgetDescendantOf2(widget, parent, ancestors):
     """Determines if a widget is a descendant of another widget, or multiple widgets
 
@@ -41,6 +42,7 @@ def isWidgetDescendantOf2(widget, parent, ancestors):
                 return False
     else:
         return False
+
 
 def isWidgetDescendantOfInstance(widget, parent, ancestor):
     """Determines if a widget is a descendant of another widget type
