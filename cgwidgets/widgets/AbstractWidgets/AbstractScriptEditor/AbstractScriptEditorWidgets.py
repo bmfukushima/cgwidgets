@@ -157,12 +157,20 @@ class AbstractDesignWidget(object):
                         index=item
                     )
                     self.button_dict[item].setHotkey(item)
-                    self.button_dict[item].setFilepath(file_dict[item])
+
+                    # special handling of relative paths
+                    item_filepath = file_dict[item]
+                    if item_filepath.startswith("../"):
+                        item_filepath = item_filepath.replace("..", "/".join(self.filepath().split("/")[:-1]))
+                        # print("changing file path from {old_path} to {new_path}".format(old_path=file_dict[item], new_path=item_filepath))
+
+                    self.button_dict[item].setFilepath(item_filepath)
+                    #self.button_dict[item].setFilepath(file_dict[item])
                     if item_dict:
                         if file_dict[item] in list(item_dict.keys()):
                             self.button_dict[item].setItem(item_dict[file_dict[item]])
                             self.button_dict[item].setHash(unique_hash)
-                    file_type = Locals().checkFileType(file_dict[item])
+                    file_type = Locals().checkFileType(item_filepath)
 
                     self.button_dict[item].setFileType(file_type=file_type)
                     self.button_dict[item].updateButtonColor()
@@ -1480,12 +1488,15 @@ class HotkeyDesignPopupButton(AbstractHotkeyDesignButtonWidget):
 
     def execute(self):
         getWidgetAncestor(self, PopupHotkeyMenu).close()
-
+        print('execute', self.filepath())
         if self.getFileType() == "script":
+            # execute file
+            print('1')
             if os.path.exists(self.filepath()):
                 environment = dict(locals(), **globals())
                 #environment.update(self.importModules())
                 with open(self.filepath()) as script_descriptor:
+                    print('2')
                     exec(script_descriptor.read(), environment, environment)
         elif self.getFileType() == "hotkey":
             self.showHotkeyDesign(self.filepath())
