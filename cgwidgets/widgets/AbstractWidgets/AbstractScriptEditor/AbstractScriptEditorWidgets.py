@@ -1488,15 +1488,11 @@ class HotkeyDesignPopupButton(AbstractHotkeyDesignButtonWidget):
 
     def execute(self):
         getWidgetAncestor(self, PopupHotkeyMenu).close()
-        print('execute', self.filepath())
         if self.getFileType() == "script":
             # execute file
-            print('1')
             if os.path.exists(self.filepath()):
                 environment = dict(locals(), **globals())
-                #environment.update(self.importModules())
                 with open(self.filepath()) as script_descriptor:
-                    print('2')
                     exec(script_descriptor.read(), environment, environment)
         elif self.getFileType() == "hotkey":
             self.showHotkeyDesign(self.filepath())
