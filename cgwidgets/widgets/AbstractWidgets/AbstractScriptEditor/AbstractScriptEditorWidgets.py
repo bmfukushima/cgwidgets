@@ -1438,6 +1438,13 @@ class GestureDesignPopupTextItem(QGraphicsTextItem):
 
 
 """ POPUP MENUS """
+"""
+
+Hierarchy:
+    PopupHotkeyMenu --> (QWidget)
+        |- QVBoxLayout
+            |- """
+
 class HotkeyDesignPopupWidget(AbstractHotkeyDesignWidget):
     def __init__(self, parent=None, item=None, file_path="", init_pos=None):
         super(HotkeyDesignPopupWidget, self).__init__(parent)
