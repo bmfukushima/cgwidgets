@@ -51,7 +51,6 @@ def checkLicenseFile(filepath):
     with open(filepath, "r") as f:
         license_date = f.readlines()[0]
 
-    print(filepath, licenseDate(filepath))
     try:
         str_license_day = license_date[:2*NUM_CIPHER_DIGITS]
         license_day = int(DECRYPTION[str_license_day[0:NUM_CIPHER_DIGITS]] + DECRYPTION[str_license_day[NUM_CIPHER_DIGITS:NUM_CIPHER_DIGITS*2]])
@@ -75,7 +74,6 @@ def checkLicenseFile(filepath):
 
     # cannot find hash
     except KeyError:
-        print("hash fail")
         return False
 
 
