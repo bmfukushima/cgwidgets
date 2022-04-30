@@ -143,7 +143,7 @@ class LabelledInputWidget(AbstractLabelledInputWidget):
         self,
         parent=None,
         name="None",
-        note="None",
+        note=None,
         direction=Qt.Horizontal,
         default_label_length=50,
         delegate_widget=None,
@@ -158,7 +158,7 @@ class LabelledInputWidget(AbstractLabelledInputWidget):
             direction=direction,
             delegate_widget=delegate_widget,
             delegate_constructor=delegate_constructor,
-            view_as_read_only=True,
+            view_as_read_only=view_as_read_only,
         )
 
 
