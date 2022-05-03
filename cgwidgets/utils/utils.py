@@ -142,10 +142,13 @@ def getJSONData(json_file, ordered=True):
                 datastore = json.load(f, object_pairs_hook=OrderedDict)
             else:
                 datastore = json.load(f)
-    if datastore:
-        return datastore
-    else:
-        return None
+
+    # todo for some reason an empty json returns as none
+    return datastore
+    # if datastore:
+    #     return datastore
+    # else:
+    #     return None
 
 
 def getDefaultSavePath():

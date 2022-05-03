@@ -38,7 +38,7 @@ class AbstractScriptEditorPopupEventFilter(QWidget):
         return self._scripts_variable
 
     def scriptsDirectories(self):
-        return os.environ[self.scriptsVariable()].split(":")
+        return os.environ[self.scriptsVariable()].split(";")
 
     def isSettingHotkey(self):
         return self._is_setting_hotkey
@@ -71,28 +71,29 @@ class AbstractScriptEditorPopupEventFilter(QWidget):
                 for directory in self.scriptsDirectories():
                     hotkeys_file_path = "{directory}/hotkeys.json".format(directory=directory)
                     self.hotkey_dict = getJSONData(hotkeys_file_path)
-
-                    # get key input
-                    user_input = QKeySequence(
-                        int(event.modifiers()) + event.key()
-                    ).toString()
-                    for file_path in list(self.hotkey_dict.keys()):
-                        hotkey = self.hotkey_dict[file_path]
-                        if hotkey == user_input:
-                            file_type = Locals().checkFileType(file_path)
-                            if file_type == "hotkey":
-                                main_widget = PopupHotkeyMenu(self.mainWindow(), file_path=file_path)
-                                main_widget.show()
-                            elif file_type == "gesture":
-                                main_widget = PopupGestureMenu(self.mainWindow(), file_path=file_path)
-                                main_widget.show()
-                            elif file_type == "script":
-                                if os.path.exists(file_path):
-                                    environment = dict(locals(), **globals())
-                                    # environment.update(self.importModules())
-                                    with open(file_path) as script_descriptor:
-                                        exec(script_descriptor.read(), environment, environment)
-                            return True
+                    if self.hotkey_dict:
+                        # get key input
+                        user_input = QKeySequence(
+                            int(event.modifiers()) + event.key()
+                        ).toString()
+                        if self.hotkey_dict:
+                            for file_path in list(self.hotkey_dict.keys()):
+                                hotkey = self.hotkey_dict[file_path]
+                                if hotkey == user_input:
+                                    file_type = Locals().checkFileType(file_path)
+                                    if file_type == "hotkey":
+                                        main_widget = PopupHotkeyMenu(self.mainWindow(), file_path=file_path)
+                                        main_widget.show()
+                                    elif file_type == "gesture":
+                                        main_widget = PopupGestureMenu(self.mainWindow(), file_path=file_path)
+                                        main_widget.show()
+                                    elif file_type == "script":
+                                        if os.path.exists(file_path):
+                                            environment = dict(locals(), **globals())
+                                            # environment.update(self.importModules())
+                                            with open(file_path) as script_descriptor:
+                                                exec(script_descriptor.read(), environment, environment)
+                                    return True
 
         return False
 

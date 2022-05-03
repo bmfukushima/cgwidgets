@@ -960,9 +960,10 @@ class ScriptTreeWidget(QTreeWidget):
 
         inverted_hotkey_dict = {}
         hotkey_dict = self.hotkeyDict(item=item)
-        for file_path in list(hotkey_dict.keys()):
-            hotkey = hotkey_dict[file_path]
-            inverted_hotkey_dict[hotkey] = file_path
+        if hotkey_dict:
+            for file_path in list(hotkey_dict.keys()):
+                hotkey = hotkey_dict[file_path]
+                inverted_hotkey_dict[hotkey] = file_path
         return inverted_hotkey_dict
 
     def checkHotkeyExistence(self, hotkey, item=None):
