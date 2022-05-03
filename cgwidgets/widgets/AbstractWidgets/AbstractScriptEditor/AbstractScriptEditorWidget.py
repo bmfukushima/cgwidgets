@@ -505,7 +505,7 @@ class ScriptTreeWidget(QTreeWidget):
                         is_locked = self.getSetting("locked", item)
                         if hotkey_dict:
                             # Check here for relative paths
-                            keys = [file.replace("..", orig_dir) for file in list(hotkey_dict.keys()) if file.startswith("../")]
+                            keys = [file.replace("..", orig_dir) for file in list(hotkey_dict.keys())]
                             if file_path in keys:
                                 try:
                                     item.setText(2, hotkey_dict[file_path])
@@ -929,7 +929,14 @@ class ScriptTreeWidget(QTreeWidget):
         hotkeys_filepath = self.hotkeyFile()
         hotkey_dict = getJSONData(hotkeys_filepath)
         if hotkey_dict:
-            hotkey_dict.pop(item_path, None)
+            try:
+                hotkey_dict.pop(item_path)
+            except KeyError:
+                print(item_path)
+                print(hotkeys_filepath)
+                print(item_path.replace("..", os.path.dirname(hotkeys_filepath)))
+                hotkey_dict.pop(item_path.replace(os.path.dirname(hotkeys_filepath), ".."))
+
             with open(hotkeys_filepath, "w") as f:
                 json.dump(hotkey_dict, f)
 
