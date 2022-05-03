@@ -79,6 +79,9 @@ class AbstractScriptEditorPopupEventFilter(QWidget):
                         if self.hotkey_dict:
                             for file_path in list(self.hotkey_dict.keys()):
                                 hotkey = self.hotkey_dict[file_path]
+                                # check for relative paths
+                                if file_path.startswith(".."):
+                                    file_path = file_path.replace("..", directory)
                                 if hotkey == user_input:
                                     file_type = Locals().checkFileType(file_path)
                                     if file_type == "hotkey":

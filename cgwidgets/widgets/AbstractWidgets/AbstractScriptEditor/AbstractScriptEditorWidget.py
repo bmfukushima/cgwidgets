@@ -293,7 +293,7 @@ class AbstractScriptEditorWidget(QSplitter):
         self._scripts_variable = variable
 
     def scriptsDirectories(self):
-        return os.environ[self.scriptsVariable()].split(":")
+        return os.environ[self.scriptsVariable()].split(";")
 
     """ UTILS """
     @staticmethod
@@ -438,6 +438,12 @@ class ScriptTreeWidget(QTreeWidget):
 
         for file in AbstractScriptEditorWidget.sortedFiles(file_dir):
             file_path = "{filedir}/{file}".format(filedir=file_dir, file=file)
+            # if file_path.startswith("../"):
+            #     print(file_path)
+            #     file_path = file_path.replace("..", file_dir)
+            #     print(file_path)
+            # else:
+            #     file_path = orig_file_path
             if "." in file:
                 if file not in ["hotkeys.json", "settings.json"]:
                     # create directory item
@@ -498,8 +504,14 @@ class ScriptTreeWidget(QTreeWidget):
                         hotkey_dict = getJSONData(orig_dir + "/hotkeys.json")
                         is_locked = self.getSetting("locked", item)
                         if hotkey_dict:
-                            if file_path in list(hotkey_dict.keys()):
-                                item.setText(2, hotkey_dict[file_path])
+                            # Check here for relative paths
+                            keys = [file.replace("..", orig_dir) for file in list(hotkey_dict.keys()) if file.startswith("../")]
+                            if file_path in keys:
+                                try:
+                                    item.setText(2, hotkey_dict[file_path])
+                                except KeyError:
+                                    file_path = file_path.replace(orig_dir, "..")
+                                    item.setText(2, hotkey_dict[file_path])
                         if is_locked:
                             item.setFlags(item.flags() & ~Qt.ItemIsEditable)
 
