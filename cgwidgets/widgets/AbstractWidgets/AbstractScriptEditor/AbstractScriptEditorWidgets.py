@@ -679,8 +679,8 @@ class GestureDesignWidget(QGraphicsView, AbstractDesignWidget):
         self.verticalScrollBar().setStyleSheet("width:0px")
         #self.setStyleSheet("background-color: rgba(0,255,255,255);")
 
-        color = QColor(1,1,1,255)
-        self.setBackgroundBrush(QBrush(color, Qt.SolidPattern))
+        #color = QColor(1,1,1,255)
+        #self.setBackgroundBrush(QBrush(color, Qt.SolidPattern))
 
     def __name__(self):
         return "__gesture_editor_widget__"
@@ -1280,8 +1280,8 @@ class GestureDesignPopupWidget(GestureDesignWidget):
         self,
         parent=None,
         file_path="",
-        init_pos=None,
-        size=None
+        init_pos=QCursor.pos(),
+        size=500
     ):
         super(GestureDesignPopupWidget, self).__init__(parent)
         self.setFilepath(file_path)
@@ -1602,10 +1602,10 @@ class PopupGestureMenu(QWidget):
         )
 
         # create main layout
-        main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(0, 0, 0, 0)
+        QVBoxLayout(self)
+        self.layout().setContentsMargins(0, 0, 0, 0)
         design_widget = GestureDesignPopupWidget(self, file_path=file_path, init_pos=pos, size=size)
-        main_layout.addWidget(design_widget)
+        self.layout().addWidget(design_widget)
 
         # set focus
         design_widget.setFocusPolicy(Qt.StrongFocus)

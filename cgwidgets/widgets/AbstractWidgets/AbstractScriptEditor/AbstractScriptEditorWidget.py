@@ -929,16 +929,15 @@ class ScriptTreeWidget(QTreeWidget):
         hotkeys_filepath = self.hotkeyFile()
         hotkey_dict = getJSONData(hotkeys_filepath)
         if hotkey_dict:
-            try:
-                hotkey_dict.pop(item_path)
-            except KeyError:
-                print(item_path)
-                print(hotkeys_filepath)
-                print(item_path.replace("..", os.path.dirname(hotkeys_filepath)))
-                hotkey_dict.pop(item_path.replace(os.path.dirname(hotkeys_filepath), ".."))
+            relative_path = item_path.replace(os.path.dirname(hotkeys_filepath), "")
+            if relative_path in list(hotkey_dict.keys()):
+                try:
+                    hotkey_dict.pop(item_path)
+                except KeyError:
+                    hotkey_dict.pop(item_path.replace(os.path.dirname(hotkeys_filepath), ".."))
 
-            with open(hotkeys_filepath, "w") as f:
-                json.dump(hotkey_dict, f)
+                with open(hotkeys_filepath, "w") as f:
+                    json.dump(hotkey_dict, f)
 
     def hotkeyFile(self, item=None):
         """ Returns the path on disk to the current items hotkey.json file
