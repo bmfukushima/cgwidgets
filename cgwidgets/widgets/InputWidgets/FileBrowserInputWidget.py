@@ -6,7 +6,7 @@ from qtpy.QtWidgets import (
 from qtpy.QtCore import Qt, QEvent, QDir
 
 from cgwidgets.widgets import AbstractListInputWidget
-from cgwidgets.utils import installCompleterPopup
+from cgwidgets.utils import installCompleterPopup, getDefaultSavePath
 
 class FileBrowserInputWidget(AbstractListInputWidget):
     def __init__(self, parent=None):
@@ -15,7 +15,7 @@ class FileBrowserInputWidget(AbstractListInputWidget):
         # setup model
         self.model = QFileSystemModel()
         import os
-        self.model.setRootPath(os.environ["HOME"])
+        self.model.setRootPath(getDefaultSavePath())
         filters = self.model.filter()
         self.model.setFilter(filters | QDir.Hidden)
 

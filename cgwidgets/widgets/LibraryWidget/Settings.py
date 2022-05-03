@@ -83,7 +83,7 @@ if __name__ == '__main__':
         'DEFAULT_SIZE': 'large',
     }
     
-    settings_dir = os.environ['HOME'] + '/.library'
+    settings_dir = getDefaultSavePath() + '/.library'
     settings_loc = settings_dir + '/settings.json'
     if not os.path.isdir(settings_dir):
         os.mkdir(settings_dir)

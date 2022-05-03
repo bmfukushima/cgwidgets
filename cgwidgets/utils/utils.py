@@ -157,7 +157,11 @@ def getDefaultSavePath():
 
     Returns (str): $HOME/.cgwidgets
     """
-    save_dir = os.environ["HOME"] + '/.cgwidgets'
+    # HOMEPATH
+    if platform.system() == 'Windows':
+        save_dir = os.environ["HOMEPATH"] + '/.cgwidgets'
+    elif platform.system() == 'Linux':
+        save_dir = os.environ["HOME"] + '/.cgwidgets'
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 

@@ -33,7 +33,8 @@ from cgwidgets.widgets import (
 from cgwidgets.widgets import (ShojiModelDelegateWidget)
 from cgwidgets.utils import (
     getWidgetAncestor,
-    installCompleterPopup
+    installCompleterPopup,
+    getDefaultSavePath
 )
 
 
@@ -198,7 +199,7 @@ class FileBrowserInputWidget(AbstractListInputWidget):
 
         # setup model
         self.model = QFileSystemModel()
-        self.model.setRootPath('/home/')
+        self.model.setRootPath(getDefaultSavePath())
         filters = self.model.filter()
         self.model.setFilter(filters | QDir.Hidden)
 
