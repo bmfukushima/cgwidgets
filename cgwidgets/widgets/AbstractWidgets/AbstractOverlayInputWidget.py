@@ -91,9 +91,9 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
             def enterEvent(self, event):
                 # enable editor
                 if self.parent().displayMode() == AbstractOverlayInputWidget.ENTER:
-                    self.parent().showDelegate()
-                    AbstractLabelWidget.enterEvent(self, event)
-                    self.parent().delegateWidget().setFocus()
+                        self.parent().showDelegate()
+                        AbstractLabelWidget.enterEvent(self, event)
+                        self.parent().delegateWidget().setFocus()
                 return AbstractLabelWidget.enterEvent(self, event)
 
         # create view widget

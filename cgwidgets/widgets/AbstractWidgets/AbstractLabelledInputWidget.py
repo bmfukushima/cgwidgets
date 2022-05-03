@@ -87,6 +87,7 @@ class AbstractLabelledInputWidget(QFrame, iAbstractInputWidget):
 
         # create view widget
         self._view_widget = AbstractOverlayInputWidget(title=name)
+
         if note:
             self._view_widget.setToolTip(note)
         if image_path:

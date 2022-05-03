@@ -425,31 +425,17 @@ def setAsTransparent(widget):
 
 def setAsBorderless(widget, enabled=True):
     if enabled:
-        if platform.system() == 'Windows':
-            widget.setWindowFlags(
-                widget.windowFlags()
-                | Qt.NoDropShadowWindowHint
-                | Qt.WindowStaysOnTopHint
-            )
-        elif platform.system() == 'Linux':
-            widget.setWindowFlags(
-                widget.windowFlags()
-                | Qt.NoDropShadowWindowHint
-                | Qt.FramelessWindowHint
-            )
+        widget.setWindowFlags(
+            widget.windowFlags()
+            | Qt.NoDropShadowWindowHint
+            | Qt.FramelessWindowHint
+        )
     else:
-        if platform.system() == 'Windows':
-            widget.setWindowFlags(
-                widget.windowFlags()
-                & ~Qt.NoDropShadowWindowHint
-                & ~Qt.WindowStaysOnTopHint
-            )
-        elif platform.system() == 'Linux':
-            widget.setWindowFlags(
-                widget.windowFlags()
-                & ~Qt.NoDropShadowWindowHint
-                & ~Qt.FramelessWindowHint
-            )
+        widget.setWindowFlags(
+            widget.windowFlags()
+            & ~Qt.NoDropShadowWindowHint
+            & ~Qt.FramelessWindowHint
+        )
 
 
 def updateStyleSheet(widget):
