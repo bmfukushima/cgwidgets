@@ -1121,8 +1121,9 @@ class GestureDesignEditorWidget(GestureDesignWidget):
         )
         # set scene display
         self.setMaximumSize(size, size)
-
-        file_dict = getJSONData(self.filepath())
+        color = QColor(*iColor["rgba_background_01"])
+        self.setBackgroundBrush(QBrush(color, Qt.SolidPattern))
+        self.setStyleSheet("border:None")
 
 
 class GestureDesignEditorButton(GestureDesignButtonWidget):
