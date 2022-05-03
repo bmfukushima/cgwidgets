@@ -1,4 +1,5 @@
-from PIL import Image
+# TODO fix PIL imports
+# from PIL import Image
 
 from qtpy.QtWidgets import (QWidget, QFrame, QSizePolicy, QLabel, QVBoxLayout)
 from qtpy.QtGui import (QMovie)
@@ -39,12 +40,13 @@ class AbstractGIFWidget(QFrame):
         return aspect_ratio
 
     def fileResolution(self):
+        # todo fix PIL imports
         # loading the image
-        img = Image.open(self.gifFile())
-
-        # fetching the dimensions
-        width, height = img.size
-
+        # img = Image.open(self.gifFile())
+        #
+        # # fetching the dimensions
+        # width, height = img.size
+        width, height = 500, 500
         return width, height
 
     def resolution(self):
