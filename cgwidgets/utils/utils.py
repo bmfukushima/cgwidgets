@@ -313,7 +313,7 @@ def showWarningDialogue(widget, warning_display_widget, accept_event, cancel_eve
 
     # show widget._warning_widget
     setAsAlwaysOnTop(widget._warning_widget)
-    setAsBorderless(widget._warning_widget, enabled)
+    setAsBorderless(widget._warning_widget, True)
     widget._warning_widget.show()
     centerCursorOnWidget(widget._warning_widget)
     # widget._warning_widget.setFocus()
