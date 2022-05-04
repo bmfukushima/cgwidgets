@@ -116,7 +116,7 @@ class AbstractDesignWidget(object):
         item_dict=None,
         button_type=None,
         gesture_points_dict=None,
-        r0=None
+        is_visible=True,
     ):
         """ Populates the design editor
 
@@ -124,7 +124,10 @@ class AbstractDesignWidget(object):
 
         Args:
             file_dict (dict): from the filepath.json for a design item
-            item_dict (dict): of {filepath:item} that is stored on the AbstractScriptEditorWidget"""
+            item_dict (dict): of {filepath:item} that is stored on the AbstractScriptEditorWidget
+            is_visible (bool): Determines if this drawing should be visible
+                Invisible drawings are used for hitbox events
+            """
         # create button layout
         if "hotkey" in button_type:
             self.button_list = [
@@ -162,10 +165,8 @@ class AbstractDesignWidget(object):
                     item_filepath = file_dict[item]
                     if item_filepath.startswith("../"):
                         item_filepath = item_filepath.replace("..", "/".join(self.filepath().split("/")[:-1]))
-                        # print("changing file path from {old_path} to {new_path}".format(old_path=file_dict[item], new_path=item_filepath))
 
                     self.button_dict[item].setFilepath(item_filepath)
-                    #self.button_dict[item].setFilepath(file_dict[item])
                     if item_dict:
                         if file_dict[item] in list(item_dict.keys()):
                             self.button_dict[item].setItem(item_dict[file_dict[item]])
@@ -173,7 +174,7 @@ class AbstractDesignWidget(object):
                     file_type = Locals().checkFileType(item_filepath)
 
                     self.button_dict[item].setFileType(file_type=file_type)
-                    self.button_dict[item].updateButtonColor()
+                    self.button_dict[item].updateButtonColor(is_visible=is_visible)
 
                 # Create Empty Buttons
                 # Will bypass for the gesture user display
@@ -192,7 +193,7 @@ class AbstractDesignWidget(object):
                         self.button_dict[item].setHotkey(item)
 
                         self.button_dict[item].setFileType(file_type=file_type)
-                        self.button_dict[item].updateButtonColor()
+                        self.button_dict[item].updateButtonColor(is_visible=is_visible)
 
         self.setButtonSize()
 
@@ -472,7 +473,7 @@ class AbstractHotkeyDesignButtonWidget(QPushButton, AbstractDesignButtonInterfac
 
         self.setBorderColor(border_color)
 
-    def updateButtonColor(self, hover=False, drag_active=False):
+    def updateButtonColor(self, hover=False, drag_active=False, is_visible=True):
         """ Updates the buttons colors.
 
         Args:
@@ -659,7 +660,7 @@ class HotkeyDesignEditorButton(AbstractHotkeyDesignButtonWidget):
 
 
 """ GESTURE """
-class GestureDesignWidget(QGraphicsView, AbstractDesignWidget):
+class AbstractGestureDesignWidget(QGraphicsView, AbstractDesignWidget):
     def __init__(
         self,
         parent=None,
@@ -670,7 +671,7 @@ class GestureDesignWidget(QGraphicsView, AbstractDesignWidget):
         script_list=None,
         size=50
     ):
-        super(GestureDesignWidget, self).__init__(parent)
+        super(AbstractGestureDesignWidget, self).__init__(parent)
         if API_NAME == "PySide2":
             AbstractDesignWidget.__init__(self)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -723,11 +724,14 @@ class GestureDesignWidget(QGraphicsView, AbstractDesignWidget):
         r1=40,
         size=None,
         item_dict=None,
-        file_dict=None
+        file_dict=None,
+        is_visible=True
     ):
         """
         @num_points <int> total number of segments to draw
         @returns <list> of <Polygon>
+        Args:
+            is_visible (bool): determines if the polygons drawn will be visible
         """
         def getPoints(index, num_points, offset, r0, r1):
             """
@@ -881,7 +885,7 @@ class GestureDesignWidget(QGraphicsView, AbstractDesignWidget):
             item_dict=item_dict,
             button_type=display_type,
             gesture_points_dict=polygon_points_dict,
-            r0=r0
+            is_visible=is_visible
         )
 
         # rotate outside labels?
@@ -926,7 +930,7 @@ class GestureDesignWidget(QGraphicsView, AbstractDesignWidget):
         return QGraphicsView.dropEvent(self, event, *args, **kwargs)
 
 
-class GestureDesignButtonWidget(QGraphicsItemGroup, AbstractDesignButtonInterface):
+class AbstractGestureDesignButtonWidget(QGraphicsItemGroup, AbstractDesignButtonInterface):
     """
     @points_list: <list> of <QPointF> for building the polygon
     @text: <str> display text
@@ -941,7 +945,7 @@ class GestureDesignButtonWidget(QGraphicsItemGroup, AbstractDesignButtonInterfac
             center_point=None,
             num_points=None
         ):
-        super(GestureDesignButtonWidget, self).__init__(parent)
+        super(AbstractGestureDesignButtonWidget, self).__init__(parent)
         if API_NAME == "PySide2":
             AbstractDesignButtonInterface.__init__(self)
 
@@ -970,81 +974,91 @@ class GestureDesignButtonWidget(QGraphicsItemGroup, AbstractDesignButtonInterfac
         transform = scalingTransform * rotationTransform * translationTransform;
         item.setTransform(transform)
 
-    def updateButtonColor(self):
-        #self.label_item.setPlainText("None")
+    def updateButtonColor(self, is_visible=True):
+        """ Updates the color of the gesture design button
 
-        pen = self.poly_item.pen()
-        width = 2
-        pen.setWidth(width)
-        pen_style = Qt.CustomDashLine
-        file_type = self.getFileType()
-        # set up morse code dots...
-        if file_type is None:
-            text = "None"
-            color = QColor(*iColor["rgba_text"])
+        Args:
+            is_visible (bool): determines if this button should be visible or not.
+                Invisible buttons are used as hitboxes
+        """
+        if is_visible:
+            pen = self.poly_item.pen()
+            width = 2
+            pen.setWidth(width)
+            pen_style = Qt.CustomDashLine
+            file_type = self.getFileType()
+            # set up morse code dots...
+            if file_type is None:
+                text = "None"
+                color = QColor(*iColor["rgba_text"])
 
-            morse_code = [
-                3, 1, 1, 3,
-                3, 1, 3, 1, 3, 3,
-                3, 1, 1, 3,
-                1, 7
-            ]
-        else:
-            if file_type == "hotkey":
-                text = "hotkey"
-                color = QColor(128, 0, 0)
                 morse_code = [
-                    1, 1, 1, 1, 1, 1, 1, 3,
-                    3, 1, 3, 1, 3, 3,
-                    3, 3,
-                    3, 1, 1, 1, 3, 3,
-                    1, 3,
-                    3, 1, 1, 1, 3, 3, 3, 3
-                ]
-                """
-                notatroll = [
-                    1, 1, 1, 1, 1, 1, 1, 1, 1, 3,
-                    1, 3,
                     3, 1, 1, 3,
-                    1, 1, 1, 3,
-                    1, 1, 1, 1, 1, 7
+                    3, 1, 3, 1, 3, 3,
+                    3, 1, 1, 3,
+                    1, 7
                 ]
-                notatroll = [x * width for x in notatroll]
-                """
-            elif file_type == "gesture":
-                text = "gesture"
-                color = QColor(0, 0, 128)
-                morse_code = [
-                    3, 1, 3, 1, 1, 3,
-                    1, 3,
-                    1, 1, 1, 1, 1, 3,
-                    3, 3,
-                    1, 1, 1, 1, 3, 3,
-                    1, 1, 3, 1, 1, 3,
-                    1, 3,
-                ]
-            elif file_type == "script":
-                text = "script"
-                color = QColor(0, 128, 0)
-                morse_code = [
-                    1, 1, 1, 1, 1, 3,
-                    3, 1, 1, 1, 3, 1, 1, 3,
-                    1, 1, 3, 1, 1, 3,
-                    1, 1, 1, 3,
-                    1, 1, 3, 1, 3, 1, 1, 3,
-                    3, 7
-                ]
+            else:
+                if file_type == "hotkey":
+                    text = "hotkey"
+                    color = QColor(128, 0, 0)
+                    morse_code = [
+                        1, 1, 1, 1, 1, 1, 1, 3,
+                        3, 1, 3, 1, 3, 3,
+                        3, 3,
+                        3, 1, 1, 1, 3, 3,
+                        1, 3,
+                        3, 1, 1, 1, 3, 3, 3, 3
+                    ]
+                    """
+                    notatroll = [
+                        1, 1, 1, 1, 1, 1, 1, 1, 1, 3,
+                        1, 3,
+                        3, 1, 1, 3,
+                        1, 1, 1, 3,
+                        1, 1, 1, 1, 1, 7
+                    ]
+                    notatroll = [x * width for x in notatroll]
+                    """
+                elif file_type == "gesture":
+                    text = "gesture"
+                    color = QColor(0, 0, 128)
+                    morse_code = [
+                        3, 1, 3, 1, 1, 3,
+                        1, 3,
+                        1, 1, 1, 1, 1, 3,
+                        3, 3,
+                        1, 1, 1, 1, 3, 3,
+                        1, 1, 3, 1, 1, 3,
+                        1, 3,
+                    ]
+                elif file_type == "script":
+                    text = "script"
+                    color = QColor(0, 128, 0)
+                    morse_code = [
+                        1, 1, 1, 1, 1, 3,
+                        3, 1, 1, 1, 3, 1, 1, 3,
+                        1, 1, 3, 1, 1, 3,
+                        1, 1, 1, 3,
+                        1, 1, 3, 1, 3, 1, 1, 3,
+                        3, 7
+                    ]
 
-        morse_code = [x * width for x in morse_code]
-        pen.setDashPattern(morse_code)
-        pen.setStyle(pen_style)
+            morse_code = [x * width for x in morse_code]
+            pen.setDashPattern(morse_code)
+            pen.setStyle(pen_style)
 
-        # set text
-        # self.label_item.setPlainText(text)
-        self.text_item.centerText()
-        pen.setColor(color)
-        self.poly_item.setPen(pen)
-        self.text_item.setDefaultTextColor(QColor(*iColor["rgba_text"]))
+            # set text
+            # self.label_item.setPlainText(text)
+            self.text_item.centerText()
+            pen.setColor(color)
+            self.poly_item.setPen(pen)
+            self.text_item.setDefaultTextColor(QColor(*iColor["rgba_text"]))
+        else:
+            pen = self.poly_item.pen()
+            color = QColor(0, 0, 0, 0)
+            pen.setColor(color)
+            self.poly_item.setPen(pen)
 
 
 class GestureDesignPolyWidget(QGraphicsPolygonItem, AbstractDesignButtonInterface):
@@ -1078,7 +1092,7 @@ class GestureDesignPolyWidget(QGraphicsPolygonItem, AbstractDesignButtonInterfac
         self.setPolygon(polygon)
 
 
-class GestureDesignEditorWidget(GestureDesignWidget):
+class GestureDesignEditorWidget(AbstractGestureDesignWidget):
     def __init__(
         self,
         parent=None,
@@ -1126,7 +1140,7 @@ class GestureDesignEditorWidget(GestureDesignWidget):
         self.setStyleSheet("border:None")
 
 
-class GestureDesignEditorButton(GestureDesignButtonWidget):
+class GestureDesignEditorButton(AbstractGestureDesignButtonWidget):
     def __init__(
         self,
         parent=None,
@@ -1276,7 +1290,7 @@ class GestureDesignEditorTextItem(QGraphicsTextItem):
         self.setPos(new_pos)
 
 
-class GestureDesignPopupWidget(GestureDesignWidget):
+class GestureDesignPopupWidget(AbstractGestureDesignWidget):
     def __init__(
         self,
         parent=None,
@@ -1304,6 +1318,16 @@ class GestureDesignPopupWidget(GestureDesignWidget):
         self.drawPolygons(
             num_points=8,
             display_type="gesture gui",
+            r0=2500,
+            r1=inner_radius,
+            size=size,
+            file_dict=file_dict,
+            is_visible=False,
+        )
+
+        self.drawPolygons(
+            num_points=8,
+            display_type="gesture gui",
             r0=outer_radius,
             r1=inner_radius,
             size=size,
@@ -1314,7 +1338,7 @@ class GestureDesignPopupWidget(GestureDesignWidget):
         self.setMaximumSize(size*5, size*5)
 
 
-class GestureDesignPopupButton(GestureDesignButtonWidget):
+class GestureDesignPopupButton(AbstractGestureDesignButtonWidget):
     def __init__(
         self,
         parent=None,
@@ -1349,12 +1373,10 @@ class GestureDesignPopupButton(GestureDesignButtonWidget):
         self.setHash(unique_hash)
 
     def execute(self):
-        self.scene().views()[0].parent().close()
-
+        # self.scene().views()[0].parent().close()
         if self.getFileType() == "script":
             if os.path.exists(self.filepath()):
                 environment = dict(locals(), **globals())
-                #environment.update(self.importModules())
                 with open(self.filepath()) as script_descriptor:
                     exec(script_descriptor.read(), environment, environment)
         elif self.getFileType() == "hotkey":
@@ -1364,13 +1386,15 @@ class GestureDesignPopupButton(GestureDesignButtonWidget):
             popup_menu_widget.show()
         elif self.getFileType() == "gesture":
             # katana_main = UI4.App.MainWindow.GetMainWindow()
-            popup_gesture_widget = PopupGestureMenu(file_path=self.filepath())
+            pos = QCursor.pos()
+            popup_gesture_widget = PopupGestureMenu(file_path=self.filepath(), pos=pos, size=500)
             popup_gesture_widget.show()
+
 
     def hoverEnterEvent(self, *args, **kwargs):
         if hasattr(self, "file_path"):
             self.execute()
-        return GestureDesignButtonWidget.hoverEnterEvent(self, *args, **kwargs)
+        return AbstractGestureDesignButtonWidget.hoverEnterEvent(self, *args, **kwargs)
 
 
 class GestureDesignPopupTextItem(QGraphicsTextItem):
