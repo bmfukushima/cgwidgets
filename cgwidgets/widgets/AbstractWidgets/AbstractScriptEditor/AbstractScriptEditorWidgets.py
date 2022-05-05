@@ -1290,7 +1290,6 @@ class GestureDesignEditorTextItem(QGraphicsTextItem):
         self.setPos(new_pos)
 
 
-
 """ POPUP MENUS """
 """
 
