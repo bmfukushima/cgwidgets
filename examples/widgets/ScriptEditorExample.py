@@ -11,10 +11,10 @@ os.environ["CGWscripts"] = ";".join([
     #"/media/ssd01/dev/katana/KatanaResources_old/ScriptsTest"
 ])
 # print(os.environ["CGWscripts"])
-# main_widget = ScriptEditorWidget()
-# setAsAlwaysOnTop(main_widget)
-# main_widget.show()
-# centerWidgetOnScreen(main_widget)
+main_widget = ScriptEditorWidget()
+setAsAlwaysOnTop(main_widget)
+main_widget.show()
+centerWidgetOnScreen(main_widget)
 
 # # popup hotkey example
 # hotkey_file_path = "/home/brian/.cgwidgets/.scripts/5444650753227707392.hotkeyTest/6518770188625019904.HotkeyDesign.json"
@@ -22,9 +22,9 @@ os.environ["CGWscripts"] = ";".join([
 # popup_widget.show()
 
 # popup gesture example
-gesture_file_path = "/home/brian/.cgwidgets/.scripts/7561119950682766336.gestureTest/2258396054567534080.GestureDesign1.json"
-gesture_widget = PopupGestureMenu(file_path=gesture_file_path, size=500)
-gesture_widget.show()
+# gesture_file_path = "/home/brian/.cgwidgets/.scripts/7561119950682766336.gestureTest/2258396054567534080.GestureDesign1.json"
+# gesture_widget = PopupGestureMenu(file_path=gesture_file_path, size=500)
+# gesture_widget.show()
 
 
 sys.exit(app.exec_())

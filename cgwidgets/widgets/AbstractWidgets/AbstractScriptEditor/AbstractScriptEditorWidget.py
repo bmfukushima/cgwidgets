@@ -919,7 +919,6 @@ class ScriptTreeWidget(QTreeWidget):
             item (AbstractBaseItem): item whose hotkey should be removed
                 DesignItem | ScriptItem
         """
-
         if not item:
             item = self.currentItem()
 
@@ -930,7 +929,7 @@ class ScriptTreeWidget(QTreeWidget):
         hotkey_dict = getJSONData(hotkeys_filepath)
         if hotkey_dict:
             relative_path = item_path.replace(os.path.dirname(hotkeys_filepath), "")
-            if relative_path in list(hotkey_dict.keys()):
+            if relative_path in list(hotkey_dict.keys()) or item_path in list(hotkey_dict.keys()):
                 try:
                     hotkey_dict.pop(item_path)
                 except KeyError:
