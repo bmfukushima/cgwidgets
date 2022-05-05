@@ -152,6 +152,7 @@ from qtpy.QtCore import QEvent, Qt
 
 from cgwidgets.views import AbstractDragDropModelItem
 from cgwidgets.utils import (
+    getFontSize,
     getWidgetUnderCursor,
     isWidgetDescendantOf,
     isCursorOverWidget,
@@ -247,6 +248,8 @@ class AbstractPopupBarOrganizerWidget(AbstractShojiModelViewWidget):
         # create temp widget
         self.createTempWidget()
         self.createTempWidget()
+
+        self.setHeaderDefaultLength(getFontSize() * 4)
 
     def showEvent(self, event):
         indexes = self.model().findItems("Display", Qt.MatchExactly)
@@ -399,19 +402,17 @@ class AbstractPopupBarOrganizerWidget(AbstractShojiModelViewWidget):
         constructor_code = """
 from cgwidgets.widgets import AbstractLabelWidget
 text = \"\"\"
-Views:
-Open PiP Widget Organizer.  This will allow you to create/delete
-widgets for the current view (the one that you're looking at now).
+Display:
+How you can expect your tab to look/operate.
+
+Save / Load:
+Load/Save Popup Bar Widgets.  Also allows you to select your current Popup Bar Widget to work on.
 
 Organizer:
-Global PiPWidget Organizer.  In this tab, you'll be able to save/load
-PiPWidgets for future use.
+Add widgets to your currently active popup bar widget that was selected in the "Save / Load" tab.
 
-Settings:
-Most likely where the settings are
+Any changes made will require you to hit the save/update button at the bottom to store these changes to disk.  By default this button will save/update the selected item.  If a Group is selected, then this will update the entire Group, while if an individual item is selected, it will update that singular entry. 
 
-Help:
-If you can't figure this out, I can't help you.
 \"\"\"
 widget = AbstractLabelWidget(self, text)
 widget.setWordWrap(True)
@@ -961,7 +962,8 @@ class PiPGlobalOrganizerWidget(AbstractModelViewWidget):
 
         # create save widget
         self._save_widget = PiPSaveWidget(self, save_data=save_data)
-        self.addDelegate([], self._save_widget)
+        self.addDelegate([], self._save_widget, always_on=True)
+        self._save_widget.setFixedHeight(getFontSize() * 6)
         self._save_widget.show()
 
         # populate
@@ -1246,7 +1248,8 @@ class PiPSaveWidget(QWidget):
         self._name_list.setUserFinishedEditingEvent(self.updateSaveButtonText)
 
         # create name widget
-        self._name_widget = AbstractLabelledInputWidget(name="Name", delegate_widget=self._name_list)
+        self._name_widget = AbstractLabelledInputWidget(name="Name", delegate_widget=self._name_list, default_label_length=getFontSize()*5)
+
         self._save_button_widget = PiPSaveButtonWidget(self, title="UPDATE")
 
         # setup layout
@@ -1719,7 +1722,8 @@ class PiPPopupBarOrganizerWidget(AbstractModelViewWidget):
             widget_types = {}
 
         self._panel_creator_widget = PiPPopupBarWidgetCreator(self, widget_types=widget_types)
-        self.addDelegate([Qt.Key_C], self._panel_creator_widget, modifier=Qt.AltModifier, focus=True)
+        self.addDelegate([Qt.Key_C], self._panel_creator_widget, modifier=Qt.AltModifier, focus=True, always_on=True)
+        self._panel_creator_widget.setFixedHeight(getFontSize() * 3)
         self._panel_creator_widget.show()
 
     """ UTILS """
@@ -1862,11 +1866,14 @@ class PiPHelpWidget(QScrollArea):
         self.help_widget.textWidget().setIndent(20)
         self.help_widget.textWidget().setAlignment(Qt.AlignLeft)
         self.help_widget.setWordWrap(True)
-        self.help_widget.setText("""Views:
-Widgets that will exist in the PiP View you can create more widgets using the empty field at the bottom of this widget
+        self.help_widget.setText("""Display:
+How you can expect your tab to look/operate.
+
+Save / Load:
+Load/Save Popup Bar Widgets.  Also allows you to select your current Popup Bar Widget to work on.
 
 Organizer:
-PiPWidgets can be saved/loaded through this tab.  This Tab Shows all of the PiPWidgets, selecting an organizer will load that PiPWidget setup.
+Add widgets to your currently active popup bar widget that was selected in the "Save / Load" tab.
 
 Any changes made will require you to hit the save/update button at the bottom to store these changes to disk.  By default this button will save/update the selected item.  If a Group is selected, then this will update the entire Group, while if an individual item is selected, it will update that singular entry. 
 
