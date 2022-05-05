@@ -309,6 +309,10 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         self.widgets().append(widget)
         self.setSizes(self.__temp_sizes)
 
+    def distributeSizesEqually(self):
+        sizes = [1 for widget in self.widgets()]
+        self.setSizes(sizes)
+
     def updateWidgetIndexes(self):
         """ Updates all of the widget indexes to their current position """
         # update indexes

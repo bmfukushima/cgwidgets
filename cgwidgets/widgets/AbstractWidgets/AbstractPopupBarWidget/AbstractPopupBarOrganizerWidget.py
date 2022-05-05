@@ -663,6 +663,9 @@ if value == PopupBarDisplayWidget.PIPTASKBAR:
 if value == PopupBarDisplayWidget.STANDALONETASKBAR:
     for taskbar_widget in standalone_taskbar_widgets:
         taskbar_widget.show()
+    print(organizer_widget.popupBarDisplayWidget().settings())
+    # organizer_widget.popupBarDisplayWidget().popupBarWidget().distributeSizesEqually()
+
 
 # update popup bar size
 
@@ -815,6 +818,10 @@ You can use $ENVAR/local/dir to access a directory from an environment variable"
         labelled_input_widget = getWidgetAncestor(widget, AbstractLabelledInputWidget)
         name = labelled_input_widget.name()
         self.setSetting(name, value)
+
+        if name == "Display Mode" and value == AbstractPopupBarDisplayWidget.STANDALONETASKBAR:
+            organizer_widget = getWidgetAncestor(self, AbstractPopupBarOrganizerWidget)
+            organizer_widget.popupBarDisplayWidget().popupBarWidget().distributeSizesEqually()
 
     def setSetting(self, name, value):
         """
