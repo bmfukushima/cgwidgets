@@ -2,9 +2,9 @@
 import sys, os
 
 
-os.environ['QT_API'] = 'pyside2'
-from qtpy import API_NAME
-print(API_NAME)
+# os.environ['QT_API'] = 'pyside2'
+# from qtpy import API_NAME
+# print(API_NAME)
 #import PySide2
 #print(PySide2.__version__)
 from qtpy.QtWidgets import (QApplication, QWidget, QLabel, QHBoxLayout, QVBoxLayout)
@@ -23,7 +23,7 @@ popup_bar_widget = PopupBarDisplayWidget()
 # load widgets
 popup_bar_widget.loadPopupDisplayFromFile(
     getDefaultSavePath() + '/.PiPWidgets_02.json',
-    "taskbar"
+    "standalone_taskbar"
 )
 for x in popup_bar_widget.allWidgets():
     print(x.name())
@@ -34,7 +34,7 @@ popup_bar_widget.setPiPScale(0.55)
 #popup_bar_widget.setTaskbarSize(150)
 # popup_bar_widget.setFixedWidth(150)
 # popup_bar_widget.setDirection(attrs.SOUTH)
-# popup_bar_widget.setDisplayMode(PopupBarDisplayWidget.STANDALONETASKBAR)
+popup_bar_widget.setDisplayMode(PopupBarDisplayWidget.STANDALONETASKBAR)
 
 # create main widget
 main_widget = QWidget()

@@ -1164,6 +1164,7 @@ class AbstractPopupBarDisplayWidget(QWidget):
     TASKBARS = [PIPTASKBAR, STANDALONETASKBAR]
     PIPDISPLAYS = [PIP, PIPTASKBAR]
     _is_popup_widget = True
+
     def __init__(self, parent=None, display_mode=STANDALONETASKBAR):
         super(AbstractPopupBarDisplayWidget, self).__init__(parent)
 
@@ -1338,10 +1339,12 @@ class AbstractPopupBarDisplayWidget(QWidget):
 
         # load widgets
         reversed_widgets = OrderedDict(reversed(list(data["widgets"].items())))
-        #for widget_name, widget_data in data["widgets"].items():
+
         for widget_name, widget_data in reversed_widgets.items():
             widget = self.createWidgetFromConstructorCode(widget_data["code"])
             widget = self.addWidget(widget, name=widget_name)
+            widget.setTitle(widget_data["Overlay Text"])
+            widget.setOverlayImage(widget_data["Overlay Image"])
 
             # create popup bar items
             if organizer:
@@ -1544,11 +1547,9 @@ class AbstractPopupBarDisplayWidget(QWidget):
 
 
 class AbstractPiPDisplayWidget(QWidget):
-    """The PiPWidget is designed to display multiple widgets simultaneously to the user.
+    """ The main viewer of the AbstactPopupBarDisplayWidget.
 
-    Similar to the function that was provided to TV's in the mid 1970's.  This widget is
-    designed to allow the user to create multiple hot swappable widgets inside of the same
-    widget.
+    This is the full screen widget.
 
     Attributes:
         current_widget (QWidget): the widget that is currently set as the main display
@@ -1997,7 +1998,7 @@ class AbstractPiPDisplayWidget(QWidget):
                     constructor_code, name=widget_name, resize_popup_bar=False)
 
             # update widget overlay text/image if set in Taskbar mode
-            if settings["Display Mode"] == AbstractPopupBarDisplayWidget.PIPTASKBAR:
+            if settings["Display Mode"] in AbstractPopupBarDisplayWidget.TASKBARS:
                 widget.setTitle(widget_data["Overlay Text"])
                 widget.setOverlayImage(widget_data["Overlay Image"])
 
