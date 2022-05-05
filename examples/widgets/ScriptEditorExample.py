@@ -17,7 +17,7 @@ os.environ["CGWscripts"] = ";".join([
 # centerWidgetOnScreen(main_widget)
 
 # # popup hotkey example
-# hotkey_file_path = "/home/brian/.cgwidgets/.scripts/3641172470576247296.a.json"
+# hotkey_file_path = "/home/brian/.cgwidgets/.scripts/5444650753227707392.hotkeyTest/6518770188625019904.HotkeyDesign.json"
 # popup_widget = PopupHotkeyMenu(file_path=hotkey_file_path)
 # popup_widget.show()
 

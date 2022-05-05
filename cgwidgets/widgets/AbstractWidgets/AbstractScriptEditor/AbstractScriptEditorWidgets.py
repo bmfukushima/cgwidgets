@@ -1290,13 +1290,21 @@ class GestureDesignEditorTextItem(QGraphicsTextItem):
         self.setPos(new_pos)
 
 
+
+""" POPUP MENUS """
+"""
+
+Hierarchy:
+    PopupHotkeyMenu --> (QWidget)
+        |- QVBoxLayout
+            |- """
 class GestureDesignPopupWidget(AbstractGestureDesignWidget):
     def __init__(
-        self,
-        parent=None,
-        file_path="",
-        init_pos=QCursor.pos(),
-        size=500
+            self,
+            parent=None,
+            file_path="",
+            init_pos=QCursor.pos(),
+            size=500
     ):
         super(GestureDesignPopupWidget, self).__init__(parent)
         self.setFilepath(file_path)
@@ -1335,21 +1343,21 @@ class GestureDesignPopupWidget(AbstractGestureDesignWidget):
         )
 
         # set scene display
-        self.setMaximumSize(size*5, size*5)
+        self.setMaximumSize(size * 5, size * 5)
 
 
 class GestureDesignPopupButton(AbstractGestureDesignButtonWidget):
     def __init__(
-        self,
-        parent=None,
-        text=None,
-        unique_hash=None,
-        points_list=None,
-        center_point=None,
-        num_points=None,
-        pos=None,
-        hotkey=None,
-        type_point=None
+            self,
+            parent=None,
+            text=None,
+            unique_hash=None,
+            points_list=None,
+            center_point=None,
+            num_points=None,
+            pos=None,
+            hotkey=None,
+            type_point=None
     ):
         super(GestureDesignPopupButton, self).__init__(parent)
         # set up items
@@ -1369,11 +1377,12 @@ class GestureDesignPopupButton(AbstractGestureDesignButtonWidget):
         self.setAcceptHoverEvents(True)
         self.text_item.setAcceptHoverEvents(False)
         self.poly_item.setAcceptHoverEvents(False)
-        #self.label_item.setAcceptHoverEvents(False)
+        # self.label_item.setAcceptHoverEvents(False)
         self.setHash(unique_hash)
 
     def execute(self):
-        # self.scene().views()[0].parent().close()
+        popup_widget = self.scene().views()[0].parent()
+        popup_widget.close()
         if self.getFileType() == "script":
             if os.path.exists(self.filepath()):
                 environment = dict(locals(), **globals())
@@ -1381,15 +1390,14 @@ class GestureDesignPopupButton(AbstractGestureDesignButtonWidget):
                     exec(script_descriptor.read(), environment, environment)
         elif self.getFileType() == "hotkey":
             # katana_main = UI4.App.MainWindow.GetMainWindow()
-            pos = QCursor.pos()
-            popup_menu_widget = PopupHotkeyMenu(file_path=self.filepath(), pos=pos)
+            pos = getCenterOfScreen()
+            popup_menu_widget = PopupHotkeyMenu(popup_widget, file_path=self.filepath(), pos=pos)
             popup_menu_widget.show()
         elif self.getFileType() == "gesture":
             # katana_main = UI4.App.MainWindow.GetMainWindow()
             pos = QCursor.pos()
-            popup_gesture_widget = PopupGestureMenu(file_path=self.filepath(), pos=pos, size=500)
+            popup_gesture_widget = PopupGestureMenu(popup_widget, file_path=self.filepath(), pos=pos, size=500)
             popup_gesture_widget.show()
-
 
     def hoverEnterEvent(self, *args, **kwargs):
         if hasattr(self, "file_path"):
@@ -1399,11 +1407,11 @@ class GestureDesignPopupButton(AbstractGestureDesignButtonWidget):
 
 class GestureDesignPopupTextItem(QGraphicsTextItem):
     def __init__(
-        self,
-        parent=None,
-        text=None,
-        hotkey=None,
-        pos=None
+            self,
+            parent=None,
+            text=None,
+            hotkey=None,
+            pos=None
     ):
 
         super(GestureDesignPopupTextItem, self).__init__(parent)
@@ -1419,7 +1427,7 @@ class GestureDesignPopupTextItem(QGraphicsTextItem):
         @update_pos <bool> determines if the text should have its
         position offset to compensate for centering...
         """
-        
+
         pos = self.orig_point
         width = self.boundingRect().width()
         # center text
@@ -1434,7 +1442,7 @@ class GestureDesignPopupTextItem(QGraphicsTextItem):
         elif self.hotkey in "107":
             xpos = pos.x()
             text_format.setAlignment(Qt.AlignRight)
-            pass #align right
+            pass  # align right
         # left
         elif self.hotkey in "345":
             xpos = pos.x() - (width)
@@ -1461,14 +1469,6 @@ class GestureDesignPopupTextItem(QGraphicsTextItem):
         new_pos = QPointF(xpos, ypos)
         self.setPos(new_pos)
 
-
-""" POPUP MENUS """
-"""
-
-Hierarchy:
-    PopupHotkeyMenu --> (QWidget)
-        |- QVBoxLayout
-            |- """
 
 class HotkeyDesignPopupWidget(AbstractHotkeyDesignWidget):
     def __init__(self, parent=None, item=None, file_path="", init_pos=None):
