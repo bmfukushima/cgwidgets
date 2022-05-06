@@ -11,8 +11,8 @@ Todo (Features):
             When closing, save image of last state.
             When loading, load that image while showing the widget
             Swap image for widget.
-    *   Border colors
-
+    *   Leave event, not over widget, need to accomdate for ellipse...
+        todo update ellipse popup
 AbstractPopupBarDisplayWidget --> QWidget()
     display_widget --> AbstractPopupBarWidget
     popup_bar_widget --> AbstractPopupBarWidget
@@ -445,6 +445,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
                     obj.setFocus()
                     return True
                 elif obj.isCurrentWidget():
+                    self.closeEnlargedView()
                     return True
                 # Has just enlarged the widget, but the cursor never entered it
                 else:
@@ -471,6 +472,9 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             return True
 
         if event.type() == QEvent.Leave:
+            #print('2')
+            #print(obj)
+            # todo update ellipse popup
             if not isCursorOverWidget(obj):
                 if obj != self.currentWidget():
                     widget_under_cursor = getWidgetUnderCursor()
@@ -501,6 +505,8 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
                 return True
             # left by entering a popup widget
             if self.isEnlarged():
+                # print('1')
+                # todo update ellipse popup
                 if isCursorOverWidget(self.enlargedWidget()):
                     self.setIsPopupEnabled(True)
                     return True
@@ -647,30 +653,32 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         self._pin_button.show()
 
         # move button, and create margins
+        # int left, int top, int right, int bottom
+        # todo update ellipse popup
         if self.direction() == attrs.NORTH:
             self._pin_button.move(
                 0.5 * (width - self._pin_button.width()),
                 0.5 * (PIN_OFFSET - self._pin_button.height())
             )
-            popup_widget.delegateWidget().layout().setContentsMargins(PIN_OFFSET, PIN_OFFSET, PIN_OFFSET, 0)
+            popup_widget.delegateWidget().layout().setContentsMargins(PIN_OFFSET * 0.25, PIN_OFFSET, PIN_OFFSET * 0.25, 0)
         if self.direction() == attrs.SOUTH:
             self._pin_button.move(
                 0.5 * (width - self._pin_button.width()),
                 height - (0.5 * (PIN_OFFSET + self._pin_button.height()))
             )
-            popup_widget.delegateWidget().layout().setContentsMargins(PIN_OFFSET, 0, PIN_OFFSET, PIN_OFFSET)
+            popup_widget.delegateWidget().layout().setContentsMargins(PIN_OFFSET * 0.25, 0, PIN_OFFSET * 0.25, PIN_OFFSET)
         if self.direction() == attrs.EAST:
             self._pin_button.move(
                 width - (0.5 * (PIN_OFFSET + self._pin_button.width())),
                 0.5 * (height - self._pin_button.height()),
             )
-            popup_widget.delegateWidget().layout().setContentsMargins(0, PIN_OFFSET, PIN_OFFSET, PIN_OFFSET)
+            popup_widget.delegateWidget().layout().setContentsMargins(0, PIN_OFFSET * 0.25, PIN_OFFSET, PIN_OFFSET * 0.25)
         if self.direction() == attrs.WEST:
             self._pin_button.move(
                 0.5 * (PIN_OFFSET - self._pin_button.width()),
                 0.5 * (height - self._pin_button.height()),
             )
-            popup_widget.delegateWidget().layout().setContentsMargins(PIN_OFFSET, PIN_OFFSET, 0, PIN_OFFSET)
+            popup_widget.delegateWidget().layout().setContentsMargins(PIN_OFFSET, PIN_OFFSET * 0.25, 0, PIN_OFFSET * 0.25)
 
         popup_widget.setMasked()
 
@@ -858,7 +866,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         _enlarged_widget = self.enlargedWidget()
         _enlarged_widget.delegateWidget().setProperty("is_popup_widget", True)
         _enlarged_widget.delegateWidget().layout().setContentsMargins(0, 0, 0, 0)
-        self.removePinningToggleButton()
+
         _enlarged_widget.setIsEnlargedWidget(False)
         _enlarged_widget.setIsPinned(False)
 
@@ -929,6 +937,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         """ Unfreezing as a delayed event to help to avoid the segfaults that occur
         when PyQt tries to do things to fast..."""
         # self.setIsFrozen(False)
+        self.removePinningToggleButton(_enlarged_widget)
         runDelayedEvent(self, self.unfreeze, delay_amount=10)
 
     def unfreeze(self):
@@ -1076,7 +1085,11 @@ class AbstractPopupBarItemWidget(AbstractOverlayInputWidget):
         self.setAcceptDrops(True)
         setAsBorderless(self, True)
         self.delegateWidget().setStyleSheet("""
-            AbstractLabelledInputWidget[is_popup_widget=true]{{border: 1px solid rgba{RGBA_SELECTED}}};""".format(RGBA_SELECTED=iColor["rgba_selected"]))
+        AbstractLabelledInputWidget[is_popup_widget=true]{{
+            border: 1px solid rgba{RGBA_SELECTED};
+            border-radius: 10px
+        }};
+        """.format(RGBA_SELECTED=iColor["rgba_selected"]))
         # self.delegateWidget().paintEvent = self._paintEvent
 
     """ WIDGETS """
@@ -1215,33 +1228,37 @@ class AbstractPopupBarItemWidget(AbstractOverlayInputWidget):
         self.setImage(image_path)
 
     """ UTILS """
-    def paintEvent(self, event=None):
-        """ Todo: Why can't I painted here?"""
-        # if self.isPopupWidget():
-        #     print('drawing')
-        from qtpy.QtGui import QPainter, QColor, QPen, QPolygonF
-        if self.isEnlargedWidget():
-            painter = QPainter(self)
-            # painter.setOpacity(0.75)
-            bg_color = QColor(*iColor["rgba_selected"])
-            painter.setPen(QPen(bg_color))
 
-            # # ellipse
-            if self.direction() == attrs.NORTH:
-                height = self.height() * ENLARGED_WIDGET_MASK_SCALE
-                painter.drawEllipse(2, -height * 0.25, self.width() - 4, height)
-            if self.direction() == attrs.SOUTH:
-                height = self.height() * ENLARGED_WIDGET_MASK_SCALE
-                painter.drawEllipse(2, -height * 0.5, self.width() - 4, height)
-            if self.direction() == attrs.EAST:
-                width = self.width() * ENLARGED_WIDGET_MASK_SCALE
-                painter.drawEllipse(-width * 0.5, 2, width, self.height() - 4)
-            if self.direction() == attrs.WEST:
-                width = self.width() * ENLARGED_WIDGET_MASK_SCALE
-                painter.drawEllipse(-width * 0.25, 2, width, self.height() - 4)
+    # todo update ellipse popup
+    # def paintEvent(self, event=None):
+    #     # if self.isPopupWidget():
+    #     #     print('drawing')
+    #     from qtpy.QtGui import QPainter, QColor, QPen, QPolygonF
+    #     if self.isEnlargedWidget():
+    #         painter = QPainter(self)
+    #         # painter.setOpacity(0.75)
+    #         bg_color = QColor(*iColor["rgba_selected"])
+    #         painter.setPen(QPen(bg_color))
+    #
+    #         # # ellipse
+    #         if self.direction() == attrs.NORTH:
+    #             height = self.height() * ENLARGED_WIDGET_MASK_SCALE
+    #             painter.drawEllipse(2, -height * 0.25, self.width() - 4, height)
+    #         if self.direction() == attrs.SOUTH:
+    #             height = self.height() * ENLARGED_WIDGET_MASK_SCALE
+    #             painter.drawEllipse(2, -height * 0.5, self.width() - 4, height)
+    #         if self.direction() == attrs.EAST:
+    #             width = self.width() * ENLARGED_WIDGET_MASK_SCALE
+    #             painter.drawEllipse(-width * 0.5, 2, width, self.height() - 4)
+    #         if self.direction() == attrs.WEST:
+    #             width = self.width() * ENLARGED_WIDGET_MASK_SCALE
+    #             painter.drawEllipse(-width * 0.25, 2, width, self.height() - 4)
 
     def setMasked(self):
-        """ Sets the mask during popup mode"""
+        """ Sets the mask during popup mode
+        # todo update ellipse popup
+        """
+        return
         if self.direction() == attrs.NORTH:
             height = self.height() * ENLARGED_WIDGET_MASK_SCALE
             region = QRegion(1, -height * 0.25, self.width() - 2, height, QRegion.Ellipse)
@@ -2345,7 +2362,6 @@ class AbstractPiPDisplayWidget(QWidget):
         if self.popupBarWidget().isEnlarged():
             if not isCursorOverWidget(self):
                 if not self.popupBarWidget().isPopupEnabled():
-                    # print("leave event")
                     self.popupBarWidget().closeEnlargedView()
         return QWidget.leaveEvent(self, event)
 
@@ -2354,8 +2370,8 @@ class AbstractPiPDisplayWidget(QWidget):
 
         def updateDisplay():
             self.resizePopupBar()
-            if self.popupBarWidget().enlargedWidget():
-                self.popupBarWidget().enlargedWidget().setIsPinned(False)
+            # if self.popupBarWidget().enlargedWidget():
+            #     self.popupBarWidget().enlargedWidget().setIsPinned(False)
             self.popupBarWidget().closeEnlargedView()
 
         installResizeEventFinishedEvent(self, 100, updateDisplay, '_timer')
