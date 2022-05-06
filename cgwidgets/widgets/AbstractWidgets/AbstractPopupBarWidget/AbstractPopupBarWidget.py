@@ -604,6 +604,10 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         # User finished dragging splitter
         self.__temp_sizes = self.sizes()
 
+    def removePinningToggleButton(self):
+        """ Removes the pin button """
+        self._pin_button.setParent(None)
+
     def __createPinningToggleButton(self, popup_widget, width, height):
         """ Creates the pinned button that is displayed in the popup widgets
 
@@ -628,6 +632,17 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
 
         self._pin_button.show()
         self._pin_button.move(pin_offset, pin_offset)
+        # popup_widget.delegateWidget().setAttribute(Qt.WA_TranslucentBackground)
+        # popup_widget.delegateWidget().setStyleSheet("background-color: rgba(0,0,0,0)")
+        # if self.direction() == attrs.NORTH:
+        #     popup_widget.delegateWidget().layout().setContentsMargins(0, PIN_SIZE, 0, 0)
+        # if self.direction() == attrs.SOUTH:
+        #     popup_widget.delegateWidget().layout().setContentsMargins(0, 0, 0, PIN_SIZE)
+        #
+        # if self.direction() == attrs.EAST:
+        #     popup_widget.delegateWidget().layout().setContentsMargins(PIN_SIZE, 0, 0, 0)
+        # if self.direction() == attrs.WEST:
+        #     popup_widget.delegateWidget().layout().setContentsMargins(0, 0, PIN_SIZE, 0)
 
     def enlargeWidget(self, widget):
         """
@@ -807,7 +822,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         _enlarged_widget = self.enlargedWidget()
         _enlarged_widget.delegateWidget().setProperty("is_popup_widget", True)
         _enlarged_widget.delegateWidget().layout().setContentsMargins(0, 0, 0, 0)
-        self._pin_button.setParent(None)
+        self.removePinningToggleButton()
         _enlarged_widget.setIsPinned(False)
 
         # close children
@@ -2413,6 +2428,8 @@ class AbstractPiPDisplayWidget(QWidget):
         self.popupBarWidget().setIsFrozen(True)
 
         if self.popupBarWidget().isEnlarged():
+            self.popupBarWidget().removePinningToggleButton()
+            self.popupBarWidget().enlargedWidget().setIsPinned(False)
             self.setCurrentWidget(self.popupBarWidget().enlargedWidget())
             self.popupBarWidget().setIsEnlarged(False)
 
