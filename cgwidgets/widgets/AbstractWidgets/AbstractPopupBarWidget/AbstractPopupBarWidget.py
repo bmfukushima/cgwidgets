@@ -11,6 +11,7 @@ Todo (Features):
             When closing, save image of last state.
             When loading, load that image while showing the widget
             Swap image for widget.
+    *   Border colors
 
 AbstractPopupBarDisplayWidget --> QWidget()
     display_widget --> AbstractPopupBarWidget
@@ -23,6 +24,7 @@ import os
 from qtpy.QtWidgets import (
     QWidget, QVBoxLayout, QLabel, QSplitter, QSplitterHandle, QApplication)
 from qtpy.QtCore import QEvent, Qt, QPoint
+from qtpy.QtGui import QRegion
 
 from cgwidgets.utils import (
     isWidgetDescendantOf,
@@ -43,6 +45,8 @@ from cgwidgets.widgets.AbstractWidgets.AbstractOverlayInputWidget import Abstrac
 from cgwidgets.widgets import AbstractSplitterWidget, AbstractBooleanInputWidget
 
 PIN_SIZE = scaleResolution(25)
+PIN_OFFSET = PIN_SIZE * 1.5
+ENLARGED_WIDGET_MASK_SCALE = 4
 
 
 class AbstractPopupBarWidget(AbstractSplitterWidget):
@@ -152,6 +156,12 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             self.setOrientation(Qt.Vertical)
         elif direction in [attrs.NORTH, attrs.SOUTH]:
             self.setOrientation(Qt.Horizontal)
+
+        # update widgets direction attr
+        for widget in self.widgets():
+            widget.setDirection(direction)
+        if self.currentWidget():
+            self.currentWidget().setDirection(direction)
 
     def displayMode(self):
         return self._display_mode
@@ -604,9 +614,14 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         # User finished dragging splitter
         self.__temp_sizes = self.sizes()
 
-    def removePinningToggleButton(self):
+    def removePinningToggleButton(self, enlarged_widget=None):
         """ Removes the pin button """
+        if not enlarged_widget:
+            enlarged_widget = self.enlargedWidget()
         self._pin_button.setParent(None)
+        enlarged_widget.delegateWidget().layout().setContentsMargins(0, 0, 0, 0)
+        enlarged_widget.setIsPinned(False)
+        enlarged_widget.clearMask()
 
     def __createPinningToggleButton(self, popup_widget, width, height):
         """ Creates the pinned button that is displayed in the popup widgets
@@ -628,21 +643,36 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             popup_widget.delegateWidget(), text="", is_selected=False, image=icons["pin_disabled"])
         self._pin_button.setUserFinishedEditingEvent(pinPopupWidget)
         self._pin_button.setFixedSize(PIN_SIZE, PIN_SIZE)
-        pin_offset = 0.5 * (popup_widget.delegateWidget().defaultLabelLength() - PIN_SIZE)
 
         self._pin_button.show()
-        self._pin_button.move(pin_offset, pin_offset)
-        # popup_widget.delegateWidget().setAttribute(Qt.WA_TranslucentBackground)
-        # popup_widget.delegateWidget().setStyleSheet("background-color: rgba(0,0,0,0)")
-        # if self.direction() == attrs.NORTH:
-        #     popup_widget.delegateWidget().layout().setContentsMargins(0, PIN_SIZE, 0, 0)
-        # if self.direction() == attrs.SOUTH:
-        #     popup_widget.delegateWidget().layout().setContentsMargins(0, 0, 0, PIN_SIZE)
-        #
-        # if self.direction() == attrs.EAST:
-        #     popup_widget.delegateWidget().layout().setContentsMargins(PIN_SIZE, 0, 0, 0)
-        # if self.direction() == attrs.WEST:
-        #     popup_widget.delegateWidget().layout().setContentsMargins(0, 0, PIN_SIZE, 0)
+
+        # move button, and create margins
+        if self.direction() == attrs.NORTH:
+            self._pin_button.move(
+                0.5 * (width - self._pin_button.width()),
+                0.5 * (PIN_OFFSET - self._pin_button.height())
+            )
+            popup_widget.delegateWidget().layout().setContentsMargins(PIN_OFFSET, PIN_OFFSET, PIN_OFFSET, 0)
+        if self.direction() == attrs.SOUTH:
+            self._pin_button.move(
+                0.5 * (width - self._pin_button.width()),
+                height - (0.5 * (PIN_OFFSET + self._pin_button.height()))
+            )
+            popup_widget.delegateWidget().layout().setContentsMargins(PIN_OFFSET, 0, PIN_OFFSET, PIN_OFFSET)
+        if self.direction() == attrs.EAST:
+            self._pin_button.move(
+                width - (0.5 * (PIN_OFFSET + self._pin_button.width())),
+                0.5 * (height - self._pin_button.height()),
+            )
+            popup_widget.delegateWidget().layout().setContentsMargins(0, PIN_OFFSET, PIN_OFFSET, PIN_OFFSET)
+        if self.direction() == attrs.WEST:
+            self._pin_button.move(
+                0.5 * (PIN_OFFSET - self._pin_button.width()),
+                0.5 * (height - self._pin_button.height()),
+            )
+            popup_widget.delegateWidget().layout().setContentsMargins(PIN_OFFSET, PIN_OFFSET, 0, PIN_OFFSET)
+
+        popup_widget.setMasked()
 
     def enlargeWidget(self, widget):
         """
@@ -663,6 +693,11 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         if not self.widget(widget.index()): return
         if self.widget(widget.index()) == self.spacerWidget(): return
         if self.widget(widget.index()).parent() == self.spacerWidget().parent(): return
+
+        # make sure meta data has been cleared
+        if self.enlargedWidget():
+            self.enlargedWidget().clearMask()
+            self.enlargedWidget().setIsEnlargedWidget(False)
 
         # widget.setIsOverlayDisplayed(True)
         self.setIsFrozen(True)
@@ -707,6 +742,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         self.setSizes(self.__temp_sizes)
         self.setIsFrozen(False)
         widget.setIsOverlayDisplayed(False)
+        self.enlargedWidget().setIsEnlargedWidget(True)
 
     def __enlargeStandaloneTaskbar(self):
         """ Popups the widget when it is in taskbar mode
@@ -823,6 +859,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         _enlarged_widget.delegateWidget().setProperty("is_popup_widget", True)
         _enlarged_widget.delegateWidget().layout().setContentsMargins(0, 0, 0, 0)
         self.removePinningToggleButton()
+        _enlarged_widget.setIsEnlargedWidget(False)
         _enlarged_widget.setIsPinned(False)
 
         # close children
@@ -988,6 +1025,7 @@ class AbstractPopupBarItemWidget(AbstractOverlayInputWidget):
         is_current_widget (bool): Determines if this widget is currently the widget displayed
             in the main viewer.  Note, this is only valid if the displayMode() is set to
                 PIP | PIPTASKBAR
+        is_enlarged_widget (bool): Determines if this is hte current popup widget
         is_overlay_enabled (bool): determines if the overlay is displayed.  This is used with
             the PopupBar to show text instead of the widget to the user.
         is_overlay_displayed (bool): determines if the overlay is currently displayed.  If set to
@@ -1014,6 +1052,7 @@ class AbstractPopupBarItemWidget(AbstractOverlayInputWidget):
             acronym = name
         super(AbstractPopupBarItemWidget, self).__init__(parent, title=acronym)
 
+        self._is_enlarged_widget = False
         self._is_overlay_enabled = is_overlay_enabled
         self._is_current_widget = False
         self._is_pinned = False
@@ -1022,6 +1061,7 @@ class AbstractPopupBarItemWidget(AbstractOverlayInputWidget):
         self._overlay_image = ""
         self._index = 0
         self._direction = direction
+
         # create delegate widget
         delegate_widget = AbstractLabelledInputWidget(
             self, name=name, direction=Qt.Vertical, delegate_widget=delegate_widget)
@@ -1037,6 +1077,7 @@ class AbstractPopupBarItemWidget(AbstractOverlayInputWidget):
         setAsBorderless(self, True)
         self.delegateWidget().setStyleSheet("""
             AbstractLabelledInputWidget[is_popup_widget=true]{{border: 1px solid rgba{RGBA_SELECTED}}};""".format(RGBA_SELECTED=iColor["rgba_selected"]))
+        # self.delegateWidget().paintEvent = self._paintEvent
 
     """ WIDGETS """
     # def mainWidget(self):
@@ -1052,6 +1093,12 @@ class AbstractPopupBarItemWidget(AbstractOverlayInputWidget):
         return getWidgetAncestor(self, AbstractPopupBarDisplayWidget).popupBarWidget()
 
     """ PROPERTIES """
+    def direction(self):
+        return self._direction
+
+    def setDirection(self, direction):
+        self._direction = direction
+
     def isPinned(self):
         return self._is_pinned
 
@@ -1071,6 +1118,12 @@ class AbstractPopupBarItemWidget(AbstractOverlayInputWidget):
             return True
         else:
             return False
+
+    def isEnlargedWidget(self):
+        return self._is_enlarged_widget
+
+    def setIsEnlargedWidget(self, is_enlarged_widget):
+        self._is_enlarged_widget = is_enlarged_widget
 
     def isDisplayNameShown(self):
         return self._is_display_name_shown
@@ -1160,6 +1213,54 @@ class AbstractPopupBarItemWidget(AbstractOverlayInputWidget):
                 if os.path.isdir(os.environ[envar]):
                     image_path = os.environ[envar] + image_path[image_path.index("/"):]
         self.setImage(image_path)
+
+    """ UTILS """
+    def paintEvent(self, event=None):
+        """ Todo: Why can't I painted here?"""
+        # if self.isPopupWidget():
+        #     print('drawing')
+        from qtpy.QtGui import QPainter, QColor, QPen, QPolygonF
+        if self.isEnlargedWidget():
+            painter = QPainter(self)
+            # painter.setOpacity(0.75)
+            bg_color = QColor(*iColor["rgba_selected"])
+            # painter.setBrush(bg_color)
+            painter.setPen(QPen(bg_color))
+
+            # # ellipse
+            """ Draws an ellipse at the coordinates provided, starting at the upper left corner.
+            This is offsetting the radius of the ellipse so that it wills up the entire window"""
+            painter.drawEllipse(0, 0, 50, 50)
+            if self.direction() == attrs.NORTH:
+                height = self.height() * ENLARGED_WIDGET_MASK_SCALE
+                painter.drawEllipse(0, -height * 0.25, self.width() - 1, height - 1)
+            if self.direction() == attrs.SOUTH:
+                height = self.height() * ENLARGED_WIDGET_MASK_SCALE
+                painter.drawEllipse(0, -height * 0.5, self.width() - 1, height - 1)
+            if self.direction() == attrs.EAST:
+                width = self.width() * ENLARGED_WIDGET_MASK_SCALE
+                painter.drawEllipse(-width * 0.5, 0, width - 1, self.height() - 1)
+            if self.direction() == attrs.WEST:
+                width = self.width() * ENLARGED_WIDGET_MASK_SCALE
+                painter.drawEllipse(-width * 0.25, 0, width - 1, self.height() - 1)
+
+
+    def setMasked(self):
+        """ Sets the mask during popup mode"""
+        if self.direction() == attrs.NORTH:
+            height = self.height() * ENLARGED_WIDGET_MASK_SCALE
+            region = QRegion(0, -height * 0.25, self.width(), height, QRegion.Ellipse)
+        if self.direction() == attrs.SOUTH:
+            height = self.height() * ENLARGED_WIDGET_MASK_SCALE
+            region = QRegion(0, -height * 0.5, self.width(), height, QRegion.Ellipse)
+        if self.direction() == attrs.EAST:
+            width = self.width() * ENLARGED_WIDGET_MASK_SCALE
+            region = QRegion(-width * 0.5, 0, width, self.height(), QRegion.Ellipse)
+        if self.direction() == attrs.WEST:
+            width = self.width() * ENLARGED_WIDGET_MASK_SCALE
+            region = QRegion(-width * 0.25, 0, width, self.height(), QRegion.Ellipse)
+        self.clearMask()
+        self.setMask(region)
 
 
 class AbstractPopupBarDisplayWidget(QWidget):
@@ -2429,7 +2530,6 @@ class AbstractPiPDisplayWidget(QWidget):
 
         if self.popupBarWidget().isEnlarged():
             self.popupBarWidget().removePinningToggleButton()
-            self.popupBarWidget().enlargedWidget().setIsPinned(False)
             self.setCurrentWidget(self.popupBarWidget().enlargedWidget())
             self.popupBarWidget().setIsEnlarged(False)
 

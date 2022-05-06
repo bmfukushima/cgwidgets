@@ -33,7 +33,7 @@ popup_bar_widget.setPiPScale(0.55)
 # popup_bar_widget.setSizes([50, 50])
 #popup_bar_widget.setTaskbarSize(150)
 # popup_bar_widget.setFixedWidth(150)
-popup_bar_widget.setDirection(attrs.SOUTH)
+popup_bar_widget.setDirection(attrs.WEST)
 # popup_bar_widget.setDisplayMode(PopupBarDisplayWidget.STANDALONETASKBAR)
 
 # create main widget
