@@ -1224,41 +1224,36 @@ class AbstractPopupBarItemWidget(AbstractOverlayInputWidget):
             painter = QPainter(self)
             # painter.setOpacity(0.75)
             bg_color = QColor(*iColor["rgba_selected"])
-            # painter.setBrush(bg_color)
             painter.setPen(QPen(bg_color))
 
             # # ellipse
-            """ Draws an ellipse at the coordinates provided, starting at the upper left corner.
-            This is offsetting the radius of the ellipse so that it wills up the entire window"""
-            painter.drawEllipse(0, 0, 50, 50)
             if self.direction() == attrs.NORTH:
                 height = self.height() * ENLARGED_WIDGET_MASK_SCALE
-                painter.drawEllipse(0, -height * 0.25, self.width() - 1, height - 1)
+                painter.drawEllipse(2, -height * 0.25, self.width() - 4, height)
             if self.direction() == attrs.SOUTH:
                 height = self.height() * ENLARGED_WIDGET_MASK_SCALE
-                painter.drawEllipse(0, -height * 0.5, self.width() - 1, height - 1)
+                painter.drawEllipse(2, -height * 0.5, self.width() - 4, height)
             if self.direction() == attrs.EAST:
                 width = self.width() * ENLARGED_WIDGET_MASK_SCALE
-                painter.drawEllipse(-width * 0.5, 0, width - 1, self.height() - 1)
+                painter.drawEllipse(-width * 0.5, 2, width, self.height() - 4)
             if self.direction() == attrs.WEST:
                 width = self.width() * ENLARGED_WIDGET_MASK_SCALE
-                painter.drawEllipse(-width * 0.25, 0, width - 1, self.height() - 1)
-
+                painter.drawEllipse(-width * 0.25, 2, width, self.height() - 4)
 
     def setMasked(self):
         """ Sets the mask during popup mode"""
         if self.direction() == attrs.NORTH:
             height = self.height() * ENLARGED_WIDGET_MASK_SCALE
-            region = QRegion(0, -height * 0.25, self.width(), height, QRegion.Ellipse)
+            region = QRegion(1, -height * 0.25, self.width() - 2, height, QRegion.Ellipse)
         if self.direction() == attrs.SOUTH:
             height = self.height() * ENLARGED_WIDGET_MASK_SCALE
-            region = QRegion(0, -height * 0.5, self.width(), height, QRegion.Ellipse)
+            region = QRegion(1, -height * 0.5, self.width() - 2, height, QRegion.Ellipse)
         if self.direction() == attrs.EAST:
             width = self.width() * ENLARGED_WIDGET_MASK_SCALE
-            region = QRegion(-width * 0.5, 0, width, self.height(), QRegion.Ellipse)
+            region = QRegion(-width * 0.5, 1, width, self.height() - 2, QRegion.Ellipse)
         if self.direction() == attrs.WEST:
             width = self.width() * ENLARGED_WIDGET_MASK_SCALE
-            region = QRegion(-width * 0.25, 0, width, self.height(), QRegion.Ellipse)
+            region = QRegion(-width * 0.25, 1, width, self.height() - 2, QRegion.Ellipse)
         self.clearMask()
         self.setMask(region)
 
@@ -2359,6 +2354,8 @@ class AbstractPiPDisplayWidget(QWidget):
 
         def updateDisplay():
             self.resizePopupBar()
+            if self.popupBarWidget().enlargedWidget():
+                self.popupBarWidget().enlargedWidget().setIsPinned(False)
             self.popupBarWidget().closeEnlargedView()
 
         installResizeEventFinishedEvent(self, 100, updateDisplay, '_timer')
