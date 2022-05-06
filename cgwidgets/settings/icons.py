@@ -13,6 +13,8 @@ class Icons(dict):
         self["ACCEPT_GIF"] = self._icons_dir + '/accept.gif'
         self["CANCEL_GIF"] = self._icons_dir + '/cancel.gif'
         self["update"] = self._icons_dir + "/recycle.png"
+        self["pin_enabled"] = self._icons_dir + "branch_open.png"
+        self["pin_disabled"] = self._icons_dir + "branch_closed.png"
 
 icons = Icons()
 

@@ -485,6 +485,7 @@ class AbstractLabelWidget(QFrame, iAbstractInputWidget):
             return
         self.setImagePath(image_path)
         self.pixmap = QPixmap(image_path)
+        self._image_widget.setPixmap(self.pixmap)
         self.resizeImage()
         self.updateStyleSheet()
         #self.updateTextColor()

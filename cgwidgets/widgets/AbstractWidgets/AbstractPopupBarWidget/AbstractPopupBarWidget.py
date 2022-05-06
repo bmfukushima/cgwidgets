@@ -33,15 +33,16 @@ from cgwidgets.utils import (
     runDelayedEvent,
     setAsTool,
     setAsBorderless,
-    installResizeEventFinishedEvent)
+    installResizeEventFinishedEvent,
+    scaleResolution)
 
-from cgwidgets.settings import attrs
-
+from cgwidgets.settings import attrs, icons
+from cgwidgets.settings.colors import iColor
 from cgwidgets.widgets.AbstractWidgets.AbstractLabelledInputWidget import AbstractLabelledInputWidget
 from cgwidgets.widgets.AbstractWidgets.AbstractOverlayInputWidget import AbstractOverlayInputWidget
+from cgwidgets.widgets import AbstractSplitterWidget, AbstractBooleanInputWidget
 
-
-from cgwidgets.widgets import AbstractSplitterWidget
+PIN_SIZE = scaleResolution(25)
 
 
 class AbstractPopupBarWidget(AbstractSplitterWidget):
@@ -234,14 +235,6 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         #     self.setWidgetOverlayDisplay(False)
         # elif self.displayMode() == AbstractPopupBarDisplayWidget.STANDALONETASKBAR:
         #     self.setWidgetOverlayDisplay(False)
-
-    # def setWidgetOverlayDisplay(self, enabled):
-    #     """ Sets all of the widgets to either show or hide the overlay
-    #
-    #     Args:
-    #         enabled (bool): If True, will show the delegate, if False, will show the overlay"""
-    #     for widget in self.widgets():
-    #         widget.setCurrentIndex(enabled)
 
     def setIsOverlayDisplayed(self, enabled):
         """ Determines if the overlay is displayed for each child widget
@@ -611,6 +604,31 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         # User finished dragging splitter
         self.__temp_sizes = self.sizes()
 
+    def __createPinningToggleButton(self, popup_widget, width, height):
+        """ Creates the pinned button that is displayed in the popup widgets
+
+        Args:
+            popup_widget (AbstractPopupBarItemWidget):
+            width (int): of popup
+            height (int): of popup
+            """
+
+        def pinPopupWidget(widget, enabled):
+            self.enlargedWidget().setIsPinned(enabled)
+            if enabled:
+                widget.setImage(icons["pin_enabled"])
+            else:
+                widget.setImage(icons["pin_disabled"])
+
+        self._pin_button = AbstractBooleanInputWidget(
+            popup_widget.delegateWidget(), text="", is_selected=False, image=icons["pin_disabled"])
+        self._pin_button.setUserFinishedEditingEvent(pinPopupWidget)
+        self._pin_button.setFixedSize(PIN_SIZE, PIN_SIZE)
+        pin_offset = 0.5 * (popup_widget.delegateWidget().defaultLabelLength() - PIN_SIZE)
+
+        self._pin_button.show()
+        self._pin_button.move(pin_offset, pin_offset)
+
     def enlargeWidget(self, widget):
         """
         Enlarges the widget provided to be covering most of the main display area.
@@ -639,7 +657,8 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         # set/get attrs
         self.setIsEnlarged(True)
         self.setEnlargedWidget(widget)
-        self.__temp_sizes = self.sizes()
+        # update widget style
+        widget.delegateWidget().setProperty("is_popup_widget", True)
 
         # Swap spacer widget
         self.replaceWidget(widget.index(), self.spacerWidget())
@@ -663,6 +682,10 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         # move / resize enlarged widget
         widget.resize(int(width), int(height))
         widget.move(pos)
+
+        self.__createPinningToggleButton(widget, width, height)
+
+        self.__temp_sizes = self.sizes()
 
         #
         self.insertWidget(widget.index(), self._spacer_widget)
@@ -775,16 +798,19 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         # preflight
         if not self.isEnlarged(): return
         if self.enlargedWidget().isCurrentWidget(): return
+        if self.enlargedWidget().isPinned():
+            return
 
         # setup attrs
         self.setIsFrozen(True)
         widget_under_cursor = getWidgetUnderCursor()
         _enlarged_widget = self.enlargedWidget()
+        _enlarged_widget.delegateWidget().setProperty("is_popup_widget", True)
+        _enlarged_widget.delegateWidget().layout().setContentsMargins(0, 0, 0, 0)
+        self._pin_button.setParent(None)
+        _enlarged_widget.setIsPinned(False)
+
         # close children
-        """ If this is stuck in recursion, this will close all child views.  Note this is
-        only valid when closing a Standalone Taskbar
-        # todo for some reason this doesn't appear to put the widget back...
-        """
         if _enlarged_widget.isPopupWidget():
             if _enlarged_widget.popupWidget().isEnlarged():
                 if _enlarged_widget.popupWidget().displayMode() == AbstractPopupBarDisplayWidget.STANDALONETASKBAR:
@@ -882,8 +908,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
 
         Returns (AbstractPopupBarItemWidget):
         """
-        mini_widget = AbstractPopupBarItemWidget(self, direction=Qt.Vertical, delegate_widget=widget, name=name)
-
+        mini_widget = AbstractPopupBarItemWidget(self, direction=self.direction(), delegate_widget=widget, name=name)
         mini_widget.setIsOverlayEnabled(self.isOverlayEnabled())
         if self.displayMode() == AbstractPopupBarDisplayWidget.PIP:
             mini_widget.setIsOverlayDisplayed(self.isOverlayEnabled())
@@ -965,7 +990,7 @@ class AbstractPopupBarItemWidget(AbstractOverlayInputWidget):
         self,
         parent=None,
         name="None",
-        direction=Qt.Horizontal,
+        direction=attrs.EAST,
         delegate_widget=None,
         is_overlay_enabled=True,
         acronym=None
@@ -976,14 +1001,15 @@ class AbstractPopupBarItemWidget(AbstractOverlayInputWidget):
 
         self._is_overlay_enabled = is_overlay_enabled
         self._is_current_widget = False
+        self._is_pinned = False
         self._name = name
         self._is_display_name_shown = True
         self._overlay_image = ""
         self._index = 0
-
+        self._direction = direction
         # create delegate widget
         delegate_widget = AbstractLabelledInputWidget(
-            self, name=name, direction=direction, delegate_widget=delegate_widget)
+            self, name=name, direction=Qt.Vertical, delegate_widget=delegate_widget)
 
         self.setDelegateWidget(delegate_widget)
 
@@ -994,6 +1020,8 @@ class AbstractPopupBarItemWidget(AbstractOverlayInputWidget):
         delegate_widget.viewWidget().setDisplayMode(AbstractOverlayInputWidget.DISABLED)
         self.setAcceptDrops(True)
         setAsBorderless(self, True)
+        self.delegateWidget().setStyleSheet("""
+            AbstractLabelledInputWidget[is_popup_widget=true]{{border: 1px solid rgba{RGBA_SELECTED}}};""".format(RGBA_SELECTED=iColor["rgba_selected"]))
 
     """ WIDGETS """
     # def mainWidget(self):
@@ -1009,6 +1037,12 @@ class AbstractPopupBarItemWidget(AbstractOverlayInputWidget):
         return getWidgetAncestor(self, AbstractPopupBarDisplayWidget).popupBarWidget()
 
     """ PROPERTIES """
+    def isPinned(self):
+        return self._is_pinned
+
+    def setIsPinned(self, enabled):
+        self._is_pinned = enabled
+
     def isPopupWidget(self):
         """ Determines if this item is a popup widget.
 
