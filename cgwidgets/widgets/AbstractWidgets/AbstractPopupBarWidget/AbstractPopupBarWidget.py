@@ -32,6 +32,7 @@ from cgwidgets.utils import (
     getWidgetUnderCursor,
     runDelayedEvent,
     setAsTool,
+    setAsBorderless,
     installResizeEventFinishedEvent)
 
 from cgwidgets.settings import attrs
@@ -992,32 +993,7 @@ class AbstractPopupBarItemWidget(AbstractOverlayInputWidget):
         self._is_shown = False
         delegate_widget.viewWidget().setDisplayMode(AbstractOverlayInputWidget.DISABLED)
         self.setAcceptDrops(True)
-    #     self.popupWidget().installEventFilter(self)
-    #
-    # def eventFilter(self, obj, event):
-    #     if event.type() == QEvent.KeyPress:
-    #         print('key press', event.text())
-    #         return True
-    #     if event.type() in [QEvent.Show, QEvent.Resize]:
-    #         #if event.type() == QEvent.Resize:
-    #         if self._is_shown:
-    #             print('returning true', obj)
-    #             return True
-    #         else:
-    #             print('first show')
-    #             self._is_shown = True
-    #     return False
-
-    # def updateItemDisplayName(self, widget, value):
-    #     """
-    #     Updates the display name of this label
-    #     Args:
-    #         widget:
-    #         value:
-    #     """
-    #     self.item().columnData()['name'] = value
-    #     self.headerWidget().viewWidget().hideDelegate()
-    #     self.headerWidget().setName(value)
+        setAsBorderless(self, True)
 
     """ WIDGETS """
     # def mainWidget(self):
