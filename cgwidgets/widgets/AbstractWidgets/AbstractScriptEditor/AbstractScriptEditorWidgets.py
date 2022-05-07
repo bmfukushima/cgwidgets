@@ -705,6 +705,8 @@ class AbstractGestureDesignWidget(QGraphicsView, AbstractDesignWidget):
         size=None
     ):
         script_editor_widget = getWidgetAncestorByName(self, "AbstractScriptEditorWidget")
+        if not size:
+            size = min(self.width(), self.height())
 
         for item in self.scene().items():
             self.scene().removeItem(item)
@@ -1225,6 +1227,9 @@ class GestureDesignEditorButton(AbstractGestureDesignButtonWidget):
         return current_item
 
     """ EVENTS """
+    def updateGeometry(self):
+        self.getView().updatePolygons()
+
     def hoverEnterEvent(self, event):
         self.updateButtonColor(hover=True)
         return QGraphicsItemGroup.hoverEnterEvent(self, event)
@@ -1251,6 +1256,7 @@ class GestureDesignEditorButton(AbstractGestureDesignButtonWidget):
     def dropEvent(self, event, *args, **kwargs):
         self.updateButton(current_item=self.getCurrentItem())
         self.updateButtonColor()
+        self.updateGeometry()
         return QGraphicsItemGroup.dropEvent(self, event)
 
     def mousePressEvent(self, event):
@@ -1258,6 +1264,8 @@ class GestureDesignEditorButton(AbstractGestureDesignButtonWidget):
             if hasattr(self, "file_path"):
                 self.updateFile(delete=True)
                 self.updateButton()
+                self.updateGeometry()
+                return
         elif event.button() == Qt.LeftButton:
             self.execute()
         return QGraphicsItemGroup.mousePressEvent(self, event)

@@ -1354,6 +1354,7 @@ class DesignTab(QTabWidget):
 
         style_sheet = """
         QTabWidget{{
+            border: None;
             color: rgba{RGBA_TEXT};
             background-color: rgba{RGBA_BACKGROUND}
         }}
@@ -1435,17 +1436,9 @@ class DesignTab(QTabWidget):
 
     """ GESTURES """
     def getGestureWidgetSize(self):
-        """Gets the height of the Gesture Widget, with offsetsfrom child widgets"""
-        height = self.height()
-        parent_layout = self.parent().layout()
+        """Gets the height of the Gesture Widget, with offsets from child widgets"""
+        size = min(self.width(), self.height() - self.tabBar().height())
 
-        for index in range(1, parent_layout.count()):
-            child = parent_layout.itemAt(index).widget()
-            height -= child.geometry().height()
-            #height -= parent_layout.spacing()
-        size = min(
-            self.width(), height
-        )
         return size
 
     def updateAllGestureDesignsGeometry(self):
