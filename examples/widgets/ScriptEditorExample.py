@@ -23,7 +23,7 @@ centerWidgetOnScreen(main_widget)
 
 # popup gesture example
 # gesture_file_path = "/home/brian/.cgwidgets/.scripts/7561119950682766336.gestureTest/2258396054567534080.GestureDesign1.json"
-# gesture_widget = PopupGestureMenu(file_path=gesture_file_path, size=500)
+# gesture_widget = PopupGestureMenu(file_path=gesture_file_path, display_size=300)
 # gesture_widget.show()
 
 

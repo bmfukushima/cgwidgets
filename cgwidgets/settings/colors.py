@@ -35,6 +35,9 @@ class Colors(dict):
         createColorRange("rgba_blue", (0, 0, start_color, 255), self, num_colors)
         createColorRange("rgba_green", (0, start_color, 0, 255), self, num_colors)
         createColorRange("rgba_red", (start_color, 0, 0, 255), self, num_colors)
+        # self["rgba_red_desat_6"] = (192, 64, 64, 255)
+        self["rgba_blue_desat_6"] = (92, 92, 192, 255)
+        # color = QColor(92, 92, 192, 255)
 
         # mud blood
         createColorRange("rgba_yellow", (start_color, start_color, start_color*0.5, 255), self, num_colors, desaturate=False)
@@ -264,3 +267,7 @@ def desaturateColor(color, desaturation_amount=0.5):
 
 
 iColor = Colors()
+
+# color = QColor(192, 64, 64, 255)
+# color = QColor(92, 92, 192, 255)
+# color = QColor(92, 160, 92, 255)

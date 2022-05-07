@@ -50,9 +50,11 @@ class AbstractDesignWidget(object):
     Attributes:
         button_dict (dict): of all of the buttons
             {"hotkey": QPushButton, "a", QPushButton}
+        disply_size (int): size to display the gui (if gesture)
         """
-    def __init__(self):
+    def __init__(self, display_size=300):
         self.button_dict = {}
+        self._display_size = display_size
 
     def __name__(self):
         return "__design_widget__"
@@ -65,6 +67,7 @@ class AbstractDesignWidget(object):
         gesture_points_dict=None,
         index=None
     ):
+
         if button_type is None:
             return
 
@@ -101,7 +104,8 @@ class AbstractDesignWidget(object):
                 center_point=gesture_points_dict[str(index)]["pc"],
                 num_points=gesture_points_dict["num_points"],
                 hotkey=index,
-                type_point=gesture_points_dict[str(index)]["pl"]
+                type_point=gesture_points_dict[str(index)]["pl"],
+                display_size=self._display_size
             )
             # no idea why it"s not setting with the pos being sent through...
             # so just using the post hack instead =\
@@ -242,6 +246,12 @@ class AbstractDesignWidget(object):
                     #     button.updateButton(current_item=None)
 
     """ PROPERTIES """
+    def setDisplaySize(self, display_size):
+        self._display_size = display_size
+
+    def filepath(self):
+        return self._display_size
+
     def setFilepath(self, file_path):
         self.file_path = file_path
 
@@ -669,9 +679,9 @@ class AbstractGestureDesignWidget(QGraphicsView, AbstractDesignWidget):
         init_pos=None,
         display_type=None,
         script_list=None,
-        size=50
+        display_size=300
     ):
-        super(AbstractGestureDesignWidget, self).__init__(parent)
+        super(AbstractGestureDesignWidget, self).__init__(parent, display_size=display_size)
         if API_NAME == "PySide2":
             AbstractDesignWidget.__init__(self)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -974,77 +984,79 @@ class AbstractGestureDesignButtonWidget(QGraphicsItemGroup, AbstractDesignButton
         transform = scalingTransform * rotationTransform * translationTransform;
         item.setTransform(transform)
 
-    def updateButtonColor(self, is_visible=True):
+    def updateButtonColor(self, hover=False, drag_active=False, is_visible=True):
         """ Updates the color of the gesture design button
 
         Args:
+            hover (bool): determines if the cursor is currently over this widget
+            drag_active (bool): determines if a widget is currently being dragged into this one
             is_visible (bool): determines if this button should be visible or not.
                 Invisible buttons are used as hitboxes
         """
         if is_visible:
             pen = self.poly_item.pen()
-            width = 2
+            width = 1
             pen.setWidth(width)
             pen_style = Qt.CustomDashLine
             file_type = self.getFileType()
             # set up morse code dots...
+            morse_code = [
+                1, 1, 3, 1, 3, 1, 1, 3,
+                1, 3,
+                3, 1, 1, 3,
+                1, 1, 1, 1, 3,
+                1, 1, 1, 1, 1, 1, 7
+            ]
             if file_type is None:
-                text = "None"
                 color = QColor(*iColor["rgba_text"])
-
-                morse_code = [
-                    3, 1, 1, 3,
-                    3, 1, 3, 1, 3, 3,
-                    3, 1, 1, 3,
-                    1, 7
-                ]
+                # morse_code = [
+                #     3, 1, 1, 3,
+                #     3, 1, 3, 1, 3, 3,
+                #     3, 1, 1, 3,
+                #     1, 7
+                # ]
             else:
                 if file_type == "hotkey":
-                    text = "hotkey"
-                    color = QColor(128, 0, 0)
-                    morse_code = [
-                        1, 1, 1, 1, 1, 1, 1, 3,
-                        3, 1, 3, 1, 3, 3,
-                        3, 3,
-                        3, 1, 1, 1, 3, 3,
-                        1, 3,
-                        3, 1, 1, 1, 3, 3, 3, 3
-                    ]
-                    """
-                    notatroll = [
-                        1, 1, 1, 1, 1, 1, 1, 1, 1, 3,
-                        1, 3,
-                        3, 1, 1, 3,
-                        1, 1, 1, 3,
-                        1, 1, 1, 1, 1, 7
-                    ]
-                    notatroll = [x * width for x in notatroll]
-                    """
-                elif file_type == "gesture":
-                    text = "gesture"
-                    color = QColor(0, 0, 128)
-                    morse_code = [
-                        3, 1, 3, 1, 1, 3,
-                        1, 3,
-                        1, 1, 1, 1, 1, 3,
-                        3, 3,
-                        1, 1, 1, 1, 3, 3,
-                        1, 1, 3, 1, 1, 3,
-                        1, 3,
-                    ]
-                elif file_type == "script":
-                    text = "script"
-                    color = QColor(0, 128, 0)
-                    morse_code = [
-                        1, 1, 1, 1, 1, 3,
-                        3, 1, 1, 1, 3, 1, 1, 3,
-                        1, 1, 3, 1, 1, 3,
-                        1, 1, 1, 3,
-                        1, 1, 3, 1, 3, 1, 1, 3,
-                        3, 7
-                    ]
+                    color = QColor(*iColor["rgba_red_desat_6"])
+                    # morse_code = [
+                    #     1, 1, 1, 1, 1, 1, 1, 3,
+                    #     3, 1, 3, 1, 3, 3,
+                    #     3, 3,
+                    #     3, 1, 1, 1, 3, 3,
+                    #     1, 3,
+                    #     3, 1, 1, 1, 3, 3, 3, 3
+                    # ]
 
-            morse_code = [x * width for x in morse_code]
+                elif file_type == "gesture":
+                    color = QColor(*iColor["rgba_blue_desat_6"])
+                    # morse_code = [
+                    #     3, 1, 3, 1, 1, 3,
+                    #     1, 3,
+                    #     1, 1, 1, 1, 1, 3,
+                    #     3, 3,
+                    #     1, 1, 1, 1, 3, 3,
+                    #     1, 1, 3, 1, 1, 3,
+                    #     1, 3,
+                    # ]
+                elif file_type == "script":
+                    color = QColor(*iColor["rgba_green_desat_6"])
+                    # morse_code = [
+                    #     1, 1, 1, 1, 1, 3,
+                    #     3, 1, 1, 1, 3, 1, 1, 3,
+                    #     1, 1, 3, 1, 1, 3,
+                    #     1, 1, 1, 3,
+                    #     1, 1, 3, 1, 3, 1, 1, 3,
+                    #     3, 7
+                    # ]
+
+            # setup for hover
+            if hover:
+                color = QColor(*iColor["rgba_selected"])
+
+            # get drag color
+            if drag_active:
+                color = QColor(*iColor["rgba_selected"])
+
             pen.setDashPattern(morse_code)
             pen.setStyle(pen_style)
 
@@ -1053,7 +1065,7 @@ class AbstractGestureDesignButtonWidget(QGraphicsItemGroup, AbstractDesignButton
             self.text_item.centerText()
             pen.setColor(color)
             self.poly_item.setPen(pen)
-            self.text_item.setDefaultTextColor(QColor(*iColor["rgba_text"]))
+            self.text_item.setDefaultTextColor(color)
         else:
             pen = self.poly_item.pen()
             color = QColor(0, 0, 0, 0)
@@ -1171,6 +1183,8 @@ class GestureDesignEditorButton(AbstractGestureDesignButtonWidget):
         self.setAcceptDrops(True)
         self.text_item.setAcceptDrops(False)
         self.poly_item.setAcceptDrops(False)
+        self.text_item.setAcceptHoverEvents(True)
+        self.poly_item.setAcceptHoverEvents(True)
         self.setHash(unique_hash)
 
         # setup default style
@@ -1211,28 +1225,42 @@ class GestureDesignEditorButton(AbstractGestureDesignButtonWidget):
         return current_item
 
     """ EVENTS """
+    def hoverEnterEvent(self, event):
+        self.updateButtonColor(hover=True)
+        return QGraphicsItemGroup.hoverEnterEvent(self, event)
 
-    def dragEnterEvent(self, event, *args, **kwargs):
+    def hoverLeaveEvent(self, event):
+        self.updateButtonColor()
+        return QGraphicsItemGroup.hoverLeaveEvent(self, event)
+
+    def dragEnterEvent(self, event):
         current_item = self.getCurrentItem()
         item_type = current_item.getItemType()
         droppable_list = ["script", "gesture", "hotkey"]
         if item_type in droppable_list:
             event.accept()
 
-        return QGraphicsItemGroup.dragEnterEvent(self, event, *args, **kwargs)
+        self.updateButtonColor(drag_active=True)
+
+        return QGraphicsItemGroup.dragEnterEvent(self, event)
+
+    def dragLeaveEvent(self, event):
+        self.updateButtonColor()
+        return QGraphicsItemGroup.dragLeaveEvent(self, event)
 
     def dropEvent(self, event, *args, **kwargs):
         self.updateButton(current_item=self.getCurrentItem())
-        return QGraphicsItemGroup.dropEvent(self, event, *args, **kwargs)
+        self.updateButtonColor()
+        return QGraphicsItemGroup.dropEvent(self, event)
 
-    def mousePressEvent(self, event, *args, **kwargs):
+    def mousePressEvent(self, event):
         if event.button() == Qt.MiddleButton:
             if hasattr(self, "file_path"):
                 self.updateFile(delete=True)
                 self.updateButton()
         elif event.button() == Qt.LeftButton:
             self.execute()
-        return QGraphicsItemGroup.mousePressEvent(self, event, *args, **kwargs)
+        return QGraphicsItemGroup.mousePressEvent(self, event)
 
 
 class GestureDesignEditorTextItem(QGraphicsTextItem):
@@ -1303,14 +1331,14 @@ class GestureDesignPopupWidget(AbstractGestureDesignWidget):
             parent=None,
             file_path="",
             init_pos=QCursor.pos(),
-            size=500
+            display_size=500
     ):
-        super(GestureDesignPopupWidget, self).__init__(parent)
+        super(GestureDesignPopupWidget, self).__init__(parent, display_size=display_size)
         self.setFilepath(file_path)
         self.poly_width = .85
 
         # init settings
-        outer_radius = size * .5
+        outer_radius = display_size * .5
         inner_radius = outer_radius * self.poly_width
 
         # set up graphics scene
@@ -1327,7 +1355,7 @@ class GestureDesignPopupWidget(AbstractGestureDesignWidget):
             display_type="gesture gui",
             r0=2500,
             r1=inner_radius,
-            size=size,
+            size=display_size,
             file_dict=file_dict,
             is_visible=False,
         )
@@ -1337,15 +1365,20 @@ class GestureDesignPopupWidget(AbstractGestureDesignWidget):
             display_type="gesture gui",
             r0=outer_radius,
             r1=inner_radius,
-            size=size,
+            size=display_size,
             file_dict=file_dict
         )
 
         # set scene display
-        self.setMaximumSize(size * 5, size * 5)
+        self.setMaximumSize(display_size * 5, display_size * 5)
 
 
 class GestureDesignPopupButton(AbstractGestureDesignButtonWidget):
+    """ A single button that goes in a gesture widget
+
+    Args:
+        display_size (int): Outer bounds of the widget
+        """
     def __init__(
             self,
             parent=None,
@@ -1356,7 +1389,8 @@ class GestureDesignPopupButton(AbstractGestureDesignButtonWidget):
             num_points=None,
             pos=None,
             hotkey=None,
-            type_point=None
+            type_point=None,
+            display_size=500
     ):
         super(GestureDesignPopupButton, self).__init__(parent)
         # set up items
@@ -1366,6 +1400,8 @@ class GestureDesignPopupButton(AbstractGestureDesignButtonWidget):
             text=text, hotkey=hotkey, pos=type_point
         )
         self.text_item.setPos(type_point)
+
+        self._display_size = display_size
 
         # parent items
         self.addToGroup(self.poly_item)
@@ -1378,6 +1414,9 @@ class GestureDesignPopupButton(AbstractGestureDesignButtonWidget):
         self.poly_item.setAcceptHoverEvents(False)
         # self.label_item.setAcceptHoverEvents(False)
         self.setHash(unique_hash)
+
+    def displaySize(self):
+        return self._display_size
 
     def execute(self):
         popup_widget = self.scene().views()[0].parent()
@@ -1395,7 +1434,7 @@ class GestureDesignPopupButton(AbstractGestureDesignButtonWidget):
         elif self.getFileType() == "gesture":
             # katana_main = UI4.App.MainWindow.GetMainWindow()
             pos = QCursor.pos()
-            popup_gesture_widget = PopupGestureMenu(popup_widget, file_path=self.filepath(), pos=pos, size=500)
+            popup_gesture_widget = PopupGestureMenu(popup_widget, file_path=self.filepath(), pos=pos, display_size=self.displaySize())
             popup_gesture_widget.show()
 
     def hoverEnterEvent(self, *args, **kwargs):
@@ -1607,7 +1646,7 @@ class PopupHotkeyMenu(QWidget):
 
 
 class PopupGestureMenu(QWidget):
-    def __init__(self, parent=None, file_path=None, pos=None, size=300, arbitrary_scaler=5):
+    def __init__(self, parent=None, file_path=None, pos=None, display_size=300, arbitrary_scaler=5):
         super(PopupGestureMenu, self).__init__(parent)
 
         # setup attrs
@@ -1619,16 +1658,16 @@ class PopupGestureMenu(QWidget):
         setAsPopup(self)
 
         self.setGeometry(
-            int(pos.x() - size * arbitrary_scaler * .5),
-            int(pos.y() - size * arbitrary_scaler * .5),
-            int(size * arbitrary_scaler),
-            int(size * arbitrary_scaler)
+            int(pos.x() - display_size * arbitrary_scaler * .5),
+            int(pos.y() - display_size * arbitrary_scaler * .5),
+            int(display_size * arbitrary_scaler),
+            int(display_size * arbitrary_scaler)
         )
 
         # create main layout
         QVBoxLayout(self)
         self.layout().setContentsMargins(0, 0, 0, 0)
-        design_widget = GestureDesignPopupWidget(self, file_path=file_path, init_pos=pos, size=size)
+        design_widget = GestureDesignPopupWidget(self, file_path=file_path, init_pos=pos, display_size=display_size)
         self.layout().addWidget(design_widget)
 
         # set focus
