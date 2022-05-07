@@ -663,7 +663,6 @@ if value == PopupBarDisplayWidget.PIPTASKBAR:
 if value == PopupBarDisplayWidget.STANDALONETASKBAR:
     for taskbar_widget in standalone_taskbar_widgets:
         taskbar_widget.show()
-    print(organizer_widget.popupBarDisplayWidget().settings())
     # organizer_widget.popupBarDisplayWidget().popupBarWidget().distributeSizesEqually()
 
 
