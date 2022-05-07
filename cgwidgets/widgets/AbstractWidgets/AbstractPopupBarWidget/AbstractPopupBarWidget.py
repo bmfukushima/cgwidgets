@@ -627,6 +627,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         self._pin_button.setParent(None)
         enlarged_widget.delegateWidget().layout().setContentsMargins(0, 0, 0, 0)
         enlarged_widget.setIsPinned(False)
+        enlarged_widget.delegateWidget().setProperty("is_enlarged_widget", False)
         enlarged_widget.clearMask()
 
     def __createPinningToggleButton(self, popup_widget, width, height):
@@ -715,8 +716,9 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         # set/get attrs
         self.setIsEnlarged(True)
         self.setEnlargedWidget(widget)
+
         # update widget style
-        widget.delegateWidget().setProperty("is_popup_widget", True)
+        widget.delegateWidget().setProperty("is_enlarged_widget", True)
 
         # Swap spacer widget
         self.replaceWidget(widget.index(), self.spacerWidget())
@@ -864,7 +866,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         self.setIsFrozen(True)
         widget_under_cursor = getWidgetUnderCursor()
         _enlarged_widget = self.enlargedWidget()
-        _enlarged_widget.delegateWidget().setProperty("is_popup_widget", True)
+        _enlarged_widget.delegateWidget().setProperty("is_enlarged_widget", False)
         _enlarged_widget.delegateWidget().layout().setContentsMargins(0, 0, 0, 0)
 
         _enlarged_widget.setIsEnlargedWidget(False)
@@ -1084,8 +1086,9 @@ class AbstractPopupBarItemWidget(AbstractOverlayInputWidget):
         delegate_widget.viewWidget().setDisplayMode(AbstractOverlayInputWidget.DISABLED)
         self.setAcceptDrops(True)
         setAsBorderless(self, True)
+        # self.delegateWidget().setProperty("is_enlarged_widget", True)
         self.delegateWidget().setStyleSheet("""
-        AbstractLabelledInputWidget[is_popup_widget=true]{{
+        AbstractLabelledInputWidget[is_enlarged_widget=true]{{
             border: 1px solid rgba{RGBA_SELECTED};
             border-radius: 10px
         }};
@@ -1137,6 +1140,7 @@ class AbstractPopupBarItemWidget(AbstractOverlayInputWidget):
 
     def setIsEnlargedWidget(self, is_enlarged_widget):
         self._is_enlarged_widget = is_enlarged_widget
+        self.delegateWidget().setProperty("is_enlarged_widget", is_enlarged_widget)
 
     def isDisplayNameShown(self):
         return self._is_display_name_shown
@@ -2543,8 +2547,10 @@ class AbstractPiPDisplayWidget(QWidget):
 
         if self.popupBarWidget().isEnlarged():
             self.popupBarWidget().removePinningToggleButton()
+            self.popupBarWidget().enlargedWidget().delegateWidget().setProperty("is_enlarged_widget", False)
             self.setCurrentWidget(self.popupBarWidget().enlargedWidget())
             self.popupBarWidget().setIsEnlarged(False)
+
 
         # swap previous widget widgets
         else:
