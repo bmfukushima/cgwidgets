@@ -180,7 +180,6 @@ class iAbstractInputWidget(object):
         self._timer.start(time_delay)
 
     """ VIRTUAL EVENTS """
-
     def __user_finished_editing_event(self, *args, **kwargs):
         pass
 
