@@ -526,11 +526,12 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         self.setHeaderViewWidget(header_view)
         self.headerWidget().setModel(self.model())
 
-    def addHeaderDelegateWidget(self, input, widget, modifier=Qt.NoModifier, focus=False):
+    def addHeaderDelegateWidget(self, input, widget, modifier=Qt.NoModifier, focus=False, always_on=False):
         """
         Adds a new delegate that can be activated with the input/modifer combo provided
 
         Args:
+            always_on (bool): determines if this is always displayed or not
             input (list): of Qt.KEY
             widget (QWidget):
             modifier (Qt.MODIFIER):
@@ -538,7 +539,7 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
 
         Returns (None):
         """
-        self.headerWidget().addDelegate(input, widget, modifier=modifier, focus=focus)
+        self.headerWidget().addDelegate(input, widget, modifier=modifier, focus=focus, always_on=always_on)
 
     def delegateInputManifest(self):
         return self.headerWidget().delegateInputManifest()
