@@ -83,7 +83,7 @@ class AbstractShojiLayout(AbstractSplitterWidget):
         will cause this widget to not be able to be solo'd (hopefully)
     """
     HANDLE_WIDTH = 2
-    SOLO_VIEW_HOTKEY = [Qt.Key_Space]
+    SOLO_VIEW_HOTKEY = [Qt.Key_Space, 96]
     UNSOLO_VIEW_HOTKEY = [Qt.Key_Escape]
     MODIFIER = Qt.AltModifier
     SOLOEVENTACTIVE = False
@@ -308,7 +308,6 @@ class AbstractShojiLayout(AbstractSplitterWidget):
         """
         # preflight
         pos = QCursor.pos()
-        #widget_pressed = qApp.widgetAt(pos)
         widget_pressed = QApplication.instance().widgetAt(pos)
 
         # bypass handles
@@ -323,15 +322,16 @@ class AbstractShojiLayout(AbstractSplitterWidget):
         if isinstance(widget_soloable, AbstractShojiLayout) and not widget_soloable.property("is_soloable"): return
 
         # toggle solo view ( shoji view )
-        from .AbstractShojiWidget.AbstractShojiModelViewWidget import AbstractShojiModelViewWidget
-        is_shoji_mvw = isWidgetDescendantOfInstance(self, self.parent(), AbstractShojiModelViewWidget)
+        from .AbstractShojiWidget.AbstractShojiModelViewWidget import AbstractShojiMainDelegateWidget
+        is_shoji_mvw = isinstance(self, AbstractShojiMainDelegateWidget)
+
+        # toggle parent widget
         if event.modifiers() == AbstractShojiLayout.MODIFIER or (is_shoji_mvw and self.count() == 2):
             shoji_layout = self.getFirstShojiLayoutWidget(widget_pressed)
             if shoji_layout:
                 self.toggleIsSoloView(True, widget=shoji_layout)
-
+        # toggle solo view (individual widget )
         else:
-            # toggle solo view (individual widget )
             self.toggleIsSoloView(True, widget=widget_soloable)
 
     def enterEvent(self, event):
