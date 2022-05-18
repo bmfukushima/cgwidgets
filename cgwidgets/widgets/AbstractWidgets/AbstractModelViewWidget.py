@@ -598,7 +598,6 @@ class AbstractModelViewWidget(AbstractShojiLayout):
                 # check escape pressed
                 if event.key() == Qt.Key_Escape:
                     if not delegate_data["always_on"]:
-                        print("hide")
                         delegate_data["widget"].hide()
                         self.delegateToggleEvent(False, event, obj)
                         self.setFocus()
