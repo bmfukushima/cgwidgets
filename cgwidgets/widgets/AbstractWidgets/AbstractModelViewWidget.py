@@ -654,7 +654,7 @@ class AbstractModelViewWidget(AbstractShojiLayout):
 
         # full screen
         """ Need to override the ShojiLayout handler here as it goes a bit wonky """
-        if event.key() in [AbstractShojiLayout.FULLSCREEN_HOTKEY, Qt.Key_Escape]:
+        if event.key() in AbstractShojiLayout.SOLO_VIEW_HOTKEY + AbstractShojiLayout.UNSOLO_VIEW_HOTKEY:
             if self.parent():
                 shoji_layout = isWidgetDescendantOfInstance(self.parent(), self.parent().parent(), AbstractShojiLayout)
                 if shoji_layout:
@@ -662,7 +662,6 @@ class AbstractModelViewWidget(AbstractShojiLayout):
 
     def keyReleaseEvent(self, event):
         from cgwidgets.widgets import AbstractShojiLayout
-        #if event.key() in [AbstractShojiLayout.FULLSCREEN_HOTKEY, Qt.Key_Escape]:
         AbstractShojiLayout.setIsSoloViewEventActive(False)
 
 

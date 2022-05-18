@@ -22,7 +22,7 @@ from qtpy.QtWidgets import (
 from qtpy.QtCore import Qt, QModelIndex, QEvent
 from qtpy.QtGui import QCursor
 
-from cgwidgets.utils import getWidgetAncestor, updateStyleSheet
+from cgwidgets.utils import getWidgetAncestor, updateStyleSheet, getWidgetUnderCursor
 from cgwidgets.settings import iColor, attrs
 from cgwidgets.settings.hover_display import installHoverDisplaySS
 from cgwidgets.widgets import (
@@ -1077,10 +1077,17 @@ class AbstractShojiMainDelegateWidget(AbstractShojiLayout):
         # preflight | suppress if over header
         is_child_of_header = AbstractShojiModelViewWidget.isWidgetUnderCursorChildOfHeader()
         tab_shoji_widget = getWidgetAncestor(self, AbstractShojiModelViewWidget)
-        #print("main press")
 
+        # user has pressed key over the header
         if is_child_of_header:
             return tab_shoji_widget.headerWidget().keyPressEvent(event)
+        # special handler to skip blank space
+        elif getWidgetUnderCursor().parent() == self:
+            if event.key() in self.soloViewHotkeys():
+                self.setIsSoloView(self, True)
+            elif event.key() in self.unsoloViewHotkeys():
+                self.setIsSoloView(self, False)
+            return AbstractShojiLayout.keyPressEvent(self, event)
         else:
             return AbstractShojiLayout.keyPressEvent(self, event)
 
