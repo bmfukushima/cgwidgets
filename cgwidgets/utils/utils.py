@@ -204,7 +204,10 @@ def isCursorOverWidget(widget, mask=False, is_ellipse=False):
 
         cx = x + w * 0.5
         cy = y + h * 0.5
-        hit_test = math.pow((cursor_xpos - cx), 2) / math.pow(rx, 2) + math.pow((cursor_ypos - cy), 2) / math.pow(ry, 2)
+        try:
+            hit_test = math.pow((cursor_xpos - cx), 2) / math.pow(rx, 2) + math.pow((cursor_ypos - cy), 2) / math.pow(ry, 2)
+        except ZeroDivisionError:
+            return True
 
         # should be <= 1, but doing 0.99 to make sure it registers
         if hit_test <= 0.99 and (

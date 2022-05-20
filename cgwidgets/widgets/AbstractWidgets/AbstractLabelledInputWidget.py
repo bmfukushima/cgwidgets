@@ -93,6 +93,7 @@ class AbstractLabelledInputWidget(QFrame, iAbstractInputWidget):
         if image_path:
             self.viewWidget().setImage(image_path)
 
+        # todo, why does a subclassed combo box not register here...
         # setup delegate widget
         if not delegate_widget and not delegate_constructor:
             delegate_widget = AbstractStringInputWidget(self)
