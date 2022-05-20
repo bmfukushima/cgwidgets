@@ -250,6 +250,10 @@ class AbstractLabelledInputWidget(QFrame, iAbstractInputWidget):
     def setImage(self, image_path):
         self.viewWidget().setImage(image_path)
 
+    def setViewWidgetUserFinishedEditingEvent(self, func):
+        """ Sets the user finished editing event """
+        self.viewWidget().delegateWidget().setUserFinishedEditingEvent(func)
+
     """ DELEGATE WIDGET """
     def setDelegateWidget(self, _delegate_widget):
         # remove previous input widget
