@@ -115,8 +115,8 @@ class AbstractInputGroupFrame(QFrame):
         # setup delegate widget w/scroll area
         self._scroll_area = QScrollArea()
         self._scroll_area.setAlignment(Qt.AlignTop)
-        # self._scroll_area.setStyleSheet("background-color: rgba{rgba_background_01}".format(**iColor.style_sheet_args))
-        # self._scroll_area.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+        self._scroll_area.setStyleSheet("QScrollArea{border:None}")
+
         self._scroll_area.setWidget(self._main_delegate_widget)
         self._scroll_area.setWidgetResizable(True)
         self.layout().addWidget(self._scroll_area)
