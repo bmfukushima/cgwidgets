@@ -179,7 +179,6 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
 
     def showDelegate(self):
         self.setCurrentIndex(1)
-        self.delegateWidget().setText(self.viewWidget().text())
         self.releaseMouse()
 
         # run user event

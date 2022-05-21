@@ -80,7 +80,7 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
             |    | -- ViewWidget (ShojiHeaderListView)
             |            ( ShojiHeaderListView | ShojiHeaderTableView | ShojiHeaderTreeView )
             | -- Scroll Area
-                |-- DelegateWidget (AbstractShojiMainDelegateWidget --> AbstractOverlayInputWidget)
+                |-- DelegateWidget (AbstractShojiMainDelegateWidget --> AbstractShojiLayout)
                         | -- _temp_proxy_widget (QWidget)
                         | -* AbstractShojiModelDelegateWidget (AbstractOverlayInputWidget)
                                 | -- AbstractFrameInputWidgetContainer
@@ -116,7 +116,7 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         self.setDelegateWidget(delegate_widget)
         self._temp_proxy_widget = QWidget()
         self._temp_proxy_widget.setObjectName("proxy_widget")
-
+        # self._temp_proxy_widget.setStyleSheet("background-color: rgba{rgba_background_01}".format(rgba_background_01=iColor["rgba_background_01"]))
         self.delegateWidget().insertWidget(0, self._temp_proxy_widget)
 
         # setup main layout
@@ -1102,6 +1102,7 @@ class AbstractShojiModelDelegateWidget(AbstractOverlayInputWidget):
         # setup delegate
         delegate_widget = AbstractFrameInputWidgetContainer(self, title=title)
         delegate_widget.layout().setContentsMargins(0, 0, 0, 0)
+
         delegate_widget.setIsHeaderEditable(False)
         self.setDelegateWidget(delegate_widget)
 
@@ -1109,17 +1110,13 @@ class AbstractShojiModelDelegateWidget(AbstractOverlayInputWidget):
             self.setCurrentIndex(1)
             self.setDisplayMode(AbstractOverlayInputWidget.DISABLED)
 
-    # def enterEvent(self, event):
-    #     self.setFocus()
-    #     return AbstractOverlayInputWidget.enterEvent(self, event)
-
     def setMainWidget(self, widget):
         # remove old main widget if it exists
         if hasattr(self, '_main_widget'):
             self._main_widget.setParent(None)
 
         self._main_widget = widget
-        self.delegateWidget().layout().addWidget(self._main_widget)
+        self.delegateWidget().addInputWidget(self._main_widget)
 
     def getMainWidget(self):
         return self._main_widget

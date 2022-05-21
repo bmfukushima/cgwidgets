@@ -1,7 +1,7 @@
 # https://doc.qt.io/qt-5/qframe.html#Shape-enum
 from qtpy.QtWidgets import (
     QFrame, QGroupBox, QBoxLayout, QVBoxLayout, QSizePolicy, QApplication,
-    QWidget, QSplitter
+    QWidget, QSplitter, QScrollArea
 )
 from qtpy.QtCore import Qt
 
@@ -86,11 +86,15 @@ class AbstractInputGroupFrame(QFrame):
         self,
         parent=None,
         title="Name",
-        note="None",
+        note=None,
         direction=Qt.Horizontal
     ):
         super(AbstractInputGroupFrame, self).__init__(parent)
+        from qtpy.QtWidgets import QLabel
         QBoxLayout(QBoxLayout.LeftToRight, self)
+        self._main_delegate_widget = QWidget()
+        self._main_delegate_layout = QBoxLayout(QBoxLayout.LeftToRight, self._main_delegate_widget)
+        self._main_delegate_layout.setContentsMargins(0, 0, 0, 0)
 
         # default attrs
         self._separator_length = -1
@@ -108,8 +112,18 @@ class AbstractInputGroupFrame(QFrame):
             delegate_widget=delegate_widget)
         self.setHeaderWidget(header_widget)
 
+        # setup delegate widget w/scroll area
+        self._scroll_area = QScrollArea()
+        self._scroll_area.setAlignment(Qt.AlignTop)
+        # self._scroll_area.setStyleSheet("background-color: rgba{rgba_background_01}".format(**iColor.style_sheet_args))
+        # self._scroll_area.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+        self._scroll_area.setWidget(self._main_delegate_widget)
+        self._scroll_area.setWidgetResizable(True)
+        self.layout().addWidget(self._scroll_area)
+
         # set up display
-        self.setToolTip(note)
+        if note:
+            self.setToolTip(note)
         self.setDirection(direction)
 
     """ API """
@@ -227,6 +241,16 @@ class AbstractInputGroupFrame(QFrame):
     def getTitle(self):
         return self.headerWidget().title()
 
+    """ WIDGETS """
+    def mainDelegateLayout(self):
+        return self._main_delegate_layout
+
+    def mainDelegateWidget(self):
+        return self._main_delegate_Widget
+
+    def scrollArea(self):
+        return self._scroll_area
+
 
 class AbstractFrameInputWidgetContainer(AbstractInputGroupFrame):
     """
@@ -237,7 +261,7 @@ class AbstractFrameInputWidgetContainer(AbstractInputGroupFrame):
         self,
         parent=None,
         title="None",
-        note="None",
+        note=None,
         direction=Qt.Horizontal
     ):
         # inherit
@@ -255,14 +279,15 @@ class AbstractFrameInputWidgetContainer(AbstractInputGroupFrame):
     def addInputWidget(self, widget, finished_editing_function=None):
         if finished_editing_function:
             widget.setUserFinishedEditingEvent(finished_editing_function)
-        self.layout().addWidget(widget)
+        self.mainDelegateLayout().addWidget(widget)
 
     def delegateWidgets(self):
         input_widgets = []
         # todo FAIL
         # this might fail due to separator hiding/parenting?
-        for index in range(2, self.layout().count()):
-            widget = self.layout().itemAt(index).widget()
+
+        for index in range(self.mainDelegateLayout().count()):
+            widget = self.mainDelegateLayout().itemAt(index).widget()
             input_widgets.append(widget)
 
         return input_widgets
@@ -298,13 +323,15 @@ class AbstractFrameInputWidgetContainer(AbstractInputGroupFrame):
         if direction == Qt.Vertical:
             # direction
             self.layout().setDirection(QBoxLayout.TopToBottom)
-
+            self.mainDelegateLayout().setDirection(QBoxLayout.TopToBottom)
             # separator
             self.updateSeparator(direction)
 
             # update alignment
             self.layout().setAlignment(Qt.AlignTop)
+            self.mainDelegateLayout().setAlignment(Qt.AlignTop)
             self.layout().setSpacing(5)
+            self.mainDelegateLayout().setSpacing(5)
 
             # update label
             self.label().setSizePolicy(
@@ -314,12 +341,14 @@ class AbstractFrameInputWidgetContainer(AbstractInputGroupFrame):
         elif direction == Qt.Horizontal:
             # set layout direction
             self.layout().setDirection(QBoxLayout.LeftToRight)
+            self.mainDelegateLayout().setDirection(QBoxLayout.LeftToRight)
 
             # update separator
             self.updateSeparator(direction)
 
             # alignment
             self.layout().setAlignment(Qt.AlignLeft)
+            self.mainDelegateLayout().setAlignment(Qt.AlignLeft)
             #self.layout().setSpacing(50)
 
             # update label

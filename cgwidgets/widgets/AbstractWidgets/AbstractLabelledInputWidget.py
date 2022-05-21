@@ -5,7 +5,7 @@ Add API for viewWidget
 
 """
 from qtpy import API_NAME
-from qtpy.QtWidgets import (QSizePolicy)
+from qtpy.QtWidgets import (QSizePolicy, QScrollArea)
 from qtpy.QtCore import (QEvent, QDir, QTimer)
 
 from qtpy.QtWidgets import (QFileSystemModel, QCompleter, QApplication, QFrame, QVBoxLayout)
@@ -17,7 +17,7 @@ from cgwidgets.widgets.AbstractWidgets.AbstractShojiLayout import AbstractShojiL
 from cgwidgets.widgets.AbstractWidgets.AbstractInputInterface import iAbstractInputWidget
 
 
-from cgwidgets.utils import (getFontSize, installResizeEventFinishedEvent)
+from cgwidgets.utils import (getFontSize, installResizeEventFinishedEvent, getWidgetAncestor)
 from cgwidgets.settings import iColor
 
 class AbstractLabelledInputWidget(QFrame, iAbstractInputWidget):
@@ -139,24 +139,28 @@ class AbstractLabelledInputWidget(QFrame, iAbstractInputWidget):
             index (int): index of the splitter handle
             """
         modifiers = QApplication.keyboardModifiers()
-        frame_container = self.parent()
-        if hasattr(frame_container, "_frame_container"):
-            if frame_container.direction() == Qt.Vertical:
-                if modifiers in [Qt.AltModifier]:
-                    return
-                else:
-                    if not self._splitter_event_is_paused:
-                        def pauseSplitter():
-                            self._splitter_event_is_paused = False
 
-                        # start timer
-                        self._test_timer = QTimer()
-                        self._test_timer.start(10)
-                        self._test_timer.timeout.connect(pauseSplitter)
+        # check to see if this is in a frame container
+        from cgwidgets.widgets import AbstractFrameInputWidgetContainer
+        frame_container = getWidgetAncestor(self, AbstractFrameInputWidgetContainer)
+        if frame_container:
+            if hasattr(frame_container, "_frame_container"):
+                if frame_container.direction() == Qt.Vertical:
+                    if modifiers in [Qt.AltModifier]:
+                        return
+                    else:
+                        if not self._splitter_event_is_paused:
+                            def pauseSplitter():
+                                self._splitter_event_is_paused = False
 
-                        # update handle positions
-                        self.setAllHandlesToPos(pos, index)
-                        self._splitter_event_is_paused = True
+                            # start timer
+                            self._test_timer = QTimer()
+                            self._test_timer.start(10)
+                            self._test_timer.timeout.connect(pauseSplitter)
+
+                            # update handle positions
+                            self.setAllHandlesToPos(pos, index)
+                            self._splitter_event_is_paused = True
 
     @staticmethod
     def getAllParrallelWidgets(labelled_input_widget):
@@ -166,10 +170,11 @@ class AbstractLabelledInputWidget(QFrame, iAbstractInputWidget):
         Args:
             labelled_input_widget (AbstractLabelledInputWidgets)
         """
+        from cgwidgets.widgets import AbstractFrameInputWidgetContainer
 
-        parent = labelled_input_widget.parent()
+        frame_container = getWidgetAncestor(labelled_input_widget, AbstractFrameInputWidgetContainer)
         handles_list = []
-        widget_list = parent.delegateWidgets()
+        widget_list = frame_container.delegateWidgets()
         for widget in widget_list:
             if hasattr(widget, "TYPE"):
                 if widget.TYPE == "label_input":
@@ -189,6 +194,7 @@ class AbstractLabelledInputWidget(QFrame, iAbstractInputWidget):
         :param pos:
         :return:
         """
+
         self._splitter_event_is_paused = True
         widgets_list = AbstractLabelledInputWidget.getAllParrallelWidgets(self)
         for widget in widgets_list:
