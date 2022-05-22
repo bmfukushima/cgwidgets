@@ -708,7 +708,7 @@ MMB to clear an items color""")
         self._node_type_creation_widget = NodeTypeListWidget(self)
         self._node_type_creation_labelled_widget = LabelledInputWidget(name="Node Type", delegate_widget=self._node_type_creation_widget)
         self._node_type_creation_labelled_widget.setDefaultLabelLength(getFontSize()*8)
-        self._node_colors_widget.addDelegate([], self._node_type_creation_labelled_widget, modifier=Qt.NoModifier, focus=True)
+        self._node_colors_widget.addDelegate([], self._node_type_creation_labelled_widget, modifier=Qt.NoModifier, focus=True, always_on=True)
         self._node_type_creation_labelled_widget.show()
         self._node_type_creation_labelled_widget.setFixedHeight(getFontSize()*3)
 

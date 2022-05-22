@@ -246,7 +246,7 @@ class AbstractInputGroupFrame(QFrame):
         return self._main_delegate_layout
 
     def mainDelegateWidget(self):
-        return self._main_delegate_Widget
+        return self._main_delegate_widget
 
     def scrollArea(self):
         return self._scroll_area
