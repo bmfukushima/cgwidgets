@@ -65,8 +65,8 @@ class PlainTextInputWidget(AbstractInputPlainText):
 
 
 class BooleanInputWidget(AbstractBooleanInputWidget):
-    def __init__(self, parent=None, text=None, is_selected=False):
-        super(BooleanInputWidget, self).__init__(parent, is_selected=is_selected, text=text)
+    def __init__(self, parent=None, text=None, is_selected=False, image=None):
+        super(BooleanInputWidget, self).__init__(parent, is_selected=is_selected, image=image, text=text)
         self.setUserFinishedEditingEvent(self.updateUserInputItem)
 
     def updateUserInputItem(self, *args):

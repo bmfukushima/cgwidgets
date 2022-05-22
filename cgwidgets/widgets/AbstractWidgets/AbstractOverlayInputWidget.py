@@ -244,7 +244,7 @@ class AbstractOverlayInputWidget(QStackedWidget, iAbstractInputWidget):
         self.viewWidget().resizeImage()
 
     """ VIRTUAL EVENTS """
-    def _show_delegate_event(self, widget, delegate_widget):
+    def _show_delegate_event(self, overlay_widget, delegate_widget):
         pass
 
     def setShowDelegateEvent(self, event):
