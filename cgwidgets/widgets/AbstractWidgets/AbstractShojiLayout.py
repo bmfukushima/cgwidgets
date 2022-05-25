@@ -459,6 +459,7 @@ class AbstractShojiLayout(AbstractSplitterWidget):
             elif override:
                 self.setChildSoloable(self.isSoloViewEnabled(), widget)
         else:
+            #self.setChildSoloable(is_soloable, widget)
             self.setChildSoloable(is_soloable, widget)
 
         descendants = getWidgetsDescendants(widget.layout())
@@ -519,12 +520,16 @@ class AbstractShojiLayout(AbstractSplitterWidget):
         Args:
             widget (QWidget): widget to start searching from to be solo'd
         """
+        if not widget: return None
+
         while widget.parent():
             if widget.property("is_soloable"):
                 return widget
+            # todo not sure if this is necessary
             # stop from recursing to higher ShojiLayouts
-            if isinstance(widget, AbstractShojiLayout):
-                return widget
+            # if isinstance(widget, AbstractShojiLayout):
+            #     if widget.property("is_soloable"):
+            #         return widget
             widget = widget.parent()
 
         return None

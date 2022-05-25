@@ -56,8 +56,19 @@ from qtpy.QtWidgets import QApplication, QLabel, QLineEdit, QWidget, QVBoxLayout
 from qtpy.QtGui import QCursor
 
 from cgwidgets.widgets import (
-    ShojiModelViewWidget, ShojiModelItem, ShojiModel,
-    ModelViewWidget, FloatInputWidget, LabelledInputWidget, StringInputWidget)
+    ShojiModelViewWidget,
+    ShojiModelItem,
+    ShojiModel,
+    ModelViewWidget,
+    FloatInputWidget,
+    LabelledInputWidget,
+    StringInputWidget,
+    IntInputWidget,
+    BooleanInputWidget,
+    ListInputWidget,
+    PlainTextInputWidget,
+    FrameInputWidgetContainer
+)
 from cgwidgets.views import AbstractDragDropListView, AbstractDragDropTreeView, AbstractDragDropModelDelegate
 from cgwidgets.widgets import ShojiLayout
 from cgwidgets.settings import attrs, icons
@@ -205,16 +216,69 @@ def setupAsStacked():
     shoji_widget.setDelegateType(ShojiModelViewWidget.STACKED)
     shoji_widget.insertShojiWidget(0, column_data={'name': 'hello'},
                                    widget=LabelledInputWidget(name='hello', delegate_widget=FloatInputWidget()))
-    image_path = icons["example_image_02"]
+
+    ##############################################
+    # create overlay input widget
+    image_path = icons["path_branch_closed"]
+
+    def frameUserEvent(widget, value):
+        print("user input...", widget, value)
+
+    frame_input_widget_container = FrameInputWidgetContainer(title='Frame Input Widgets', direction=Qt.Vertical)
+
+    # set header editable / Display
+    frame_input_widget_container.setIsHeaderEditable(True)
+    frame_input_widget_container.setIsHeaderShown(True)
+
+    # Add widgets
+    label_widgets = {
+        "float": FloatInputWidget,
+        "int": IntInputWidget,
+        "bool": BooleanInputWidget,
+        "str": StringInputWidget,
+        "list": ListInputWidget,
+        "text": PlainTextInputWidget
+    }
+
+    for arg in label_widgets:
+        # create widget
+        widget_type = label_widgets[arg]
+        input_widget = LabelledInputWidget(name=arg, delegate_constructor=widget_type)
+        input_widget.setDefaultLabelLength(200)
+        # set widget orientation
+        input_widget.setDirection(Qt.Horizontal)
+
+        # add to group layout
+        frame_input_widget_container.addInputWidget(input_widget, finished_editing_function=frameUserEvent)
+
+        # test
+        test = QLabel("-")
+        # test.setFixedWidth(25)
+        # input_widget.mainWidget().setSizes([100,200,25])
+        input_widget.mainWidget().addWidget(test)
+
+        # list override
+        if arg == "list":
+            list_of_crap = [
+                ['a', (0, 0, 0, 255)], ['b', (0, 0, 0, 255)], ['c', (0, 0, 0, 255)], ['d', (0, 0, 0, 255)],
+                ['e', (0, 0, 0, 255)],
+                ['aa', (255, 0, 0, 255)], ['bb', (0, 255, 0, 255)], ['cc', (0, 0, 255, 255)], ['dd'], ['ee'],
+                ['aba'], ['bcb'], ['cdc'], ['ded'], ['efe']
+            ]
+            input_widget.delegateWidget().populate(list_of_crap)
+            input_widget.delegateWidget().display_item_colors = True
+
     shoji_widget.insertShojiWidget(
         0,
         column_data={'name': 'world'},
-        widget=LabelledInputWidget(name='foobar', delegate_widget=FloatInputWidget()),
+        widget=frame_input_widget_container,
         display_overlay=True,
         image_path=image_path,
-        text_color=(255, 255, 0, 255),
+        text_color=(128, 128, 255, 255),
         display_delegate_title=False)
 
+    ##############################################
+    # CREATE SHOJI MVW WIDGET
     # shoji model view widget
     shoji_widget2 = ShojiModelViewWidget()
     shoji_widget2.setMultiSelect(True)
@@ -579,8 +643,9 @@ for y in range(0, 2):
 
 
 shoji_layout.addWidget(shoji_widget)
-shoji_layout.addWidget(shoji_widget3)
+#shoji_layout.addWidget(shoji_widget3)
 shoji_layout.show()
+shoji_layout.resize(480, 960)
 
 centerWidgetOnCursor(shoji_layout)
 if __name__ == "__main__":
