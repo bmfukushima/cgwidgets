@@ -115,7 +115,6 @@ class AbstractInputGroupFrame(QFrame):
         # setup delegate widget w/scroll area
         self._scroll_area = QScrollArea()
         self._scroll_area.setAlignment(Qt.AlignTop)
-        self._scroll_area.setStyleSheet("QScrollArea{border:None}")
 
         self._scroll_area.setWidget(self._main_delegate_widget)
         self._scroll_area.setWidgetResizable(True)
@@ -125,6 +124,10 @@ class AbstractInputGroupFrame(QFrame):
         if note:
             self.setToolTip(note)
         self.setDirection(direction)
+
+        # set style
+        self._scroll_area.setStyleSheet("""QScrollArea{border:None};""")
+        self.setStyleSheet("background-color: rgba{rgba_background_00}".format(**iColor.style_sheet_args))
 
     """ API """
     def isHeaderEditable(self):

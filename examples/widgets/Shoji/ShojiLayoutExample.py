@@ -113,7 +113,8 @@ for char in "SINE.":
     # embedded_shoji_02
     l = DisplayLabel(str(char) + "D")
 
-    embedded_shoji_02.addWidget(l, is_soloable=False)
+    #embedded_shoji_02.addWidget(l, is_soloable=False)
+    embedded_shoji_02.addWidget(l, is_soloable=True)
 
 # add embedded Shoji Views
 for x in range(3):
@@ -132,7 +133,7 @@ main_widget.addWidget(embedded_shoji_03)
 
 main_widget.show()
 main_widget.move(QCursor.pos())
-main_widget.resize(512, 512)
+main_widget.resize(480, 960)
 
 if __name__ == "__main__":
     sys.exit(app.exec_())

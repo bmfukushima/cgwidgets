@@ -469,7 +469,7 @@ DROPPING -->
         """.format(data=data, row=row, model=model, items=items, parent=parent)
           )
 
-def testEdit(item, old_value, new_value):
+def testEdit(item, old_value, new_value, column=None):
     print("---- EDIT EVENT ----")
     print(item, old_value, new_value)
     #updateDelegateDisplay

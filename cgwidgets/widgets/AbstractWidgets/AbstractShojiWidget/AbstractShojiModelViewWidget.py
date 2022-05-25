@@ -1110,6 +1110,9 @@ class AbstractShojiModelDelegateWidget(AbstractOverlayInputWidget):
             self.setCurrentIndex(1)
             self.setDisplayMode(AbstractOverlayInputWidget.DISABLED)
 
+        #self.setStyleSheet("background-color: rgba(255,0,0,255)")
+
+
     def setMainWidget(self, widget):
         # remove old main widget if it exists
         if hasattr(self, '_main_widget'):
