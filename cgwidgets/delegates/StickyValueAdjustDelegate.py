@@ -27,8 +27,9 @@ Hierarchy
 
 
 """
-import math
+import decimal
 import logging
+import math
 
 from qtpy.QtCore import QEvent, Qt, QPoint, QRectF
 from qtpy.QtWidgets import (
@@ -348,7 +349,7 @@ class StickyDragWindowWidget(QWidget, iStickyValueAdjustDelegate):
             except AttributeError:
                 orig_value = self.activeObject().text()
 
-        self._orig_value = float(orig_value)
+        self._orig_value = decimal.Decimal(str(orig_value))
 
     """ UTILS """
     def __deactivateStickyDrag(self):
@@ -450,9 +451,11 @@ class StickyDragWindowWidget(QWidget, iStickyValueAdjustDelegate):
         Sets the current value on the widget/item provided
         to the new value based off of how far the cursor has moved
         """
-        new_value = self._num_ticks * self.valuePerTick()
-        new_value += float(self._orig_value)
-        logging.debug(new_value)
+
+        offset_value = decimal.Decimal(str(self._num_ticks)) * decimal.Decimal(str(self.valuePerTick()))
+        new_value = self._orig_value + offset_value
+
+        logging.debug(str(new_value))
         self.activeObject().setValue(new_value)
 
         # enable range
