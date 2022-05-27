@@ -125,7 +125,9 @@ Notes:
             user_input=QEvent.MouseButtonRelease,
             range_enabled=False,
             range_min=0.0,
-            range_max=1.0
+            range_max=1.0,
+            allow_negative_values=True,
+            allow_zero_value=True,
     ):
         super(LadderDelegate, self).__init__(parent)
         layout = QVBoxLayout()
@@ -170,7 +172,9 @@ Notes:
 
         # post flight attr set
         self.middle_item.setRange(range_enabled, range_min, range_max)
-        self._allow_negative = True
+        # self._allow_negative = True
+        self.setAllowNegative(allow_negative_values)
+        self.setAllowZero(allow_zero_value)
 
     """ API """
     def setValue(self, value):
@@ -183,6 +187,8 @@ Notes:
             # preflight checks on value
             value = checkNegative(self._allow_negative, value)
             value = checkIfValueInRange(self.range_enabled, float(value), float(self.range_min), float(self.range_max))
+            if not self._allow_zero and not value:
+                value = self.middle_item.getOrigValue()
 
             # set value
             self._value = value
@@ -244,9 +250,12 @@ Notes:
                 range_max=self.range_max
             )
 
+    def setAllowZero(self, enabled):
+        self._allow_zero = enabled
+        self.middle_item.setAllowZero(enabled)
+
     def setAllowNegative(self, enabled):
         self._allow_negative = enabled
-
         self.middle_item.setAllowNegative(enabled)
 
     def getPixelsPerTick(self):
@@ -853,9 +862,7 @@ def main():
     w2.setLayout(l2)
     float_input = AbstractFloatInputWidget()
     float_input.setDoMath(True)
-    ladder = installLadderDelegate(
-        float_input
-    )
+    ladder = installLadderDelegate(float_input, allow_zero_value=False, allow_negative_values=False)
 
     float_input.setText('12')
     #ladder.setInvisibleWidget(True)

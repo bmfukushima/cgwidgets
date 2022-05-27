@@ -182,7 +182,9 @@ def installLadderDelegate(
     value_list=None,
     range_enabled=False,
     range_min=0.0,
-    range_max=1.0
+    range_max=1.0,
+    allow_negative_values=True,
+    allow_zero_value=True
 ):
     """
     Args:
@@ -205,13 +207,16 @@ def installLadderDelegate(
     if value_list is None:
         value_list = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
     from cgwidgets.delegates import LadderDelegate
+
     ladder = LadderDelegate(
         parent=widget,
         value_list=value_list,
         user_input=user_input,
         range_enabled=range_enabled,
         range_min=range_min,
-        range_max=range_max
+        range_max=range_max,
+        allow_negative_values=allow_negative_values,
+        allow_zero_value=allow_zero_value,
     )
     widget.installEventFilter(ladder)
     return ladder

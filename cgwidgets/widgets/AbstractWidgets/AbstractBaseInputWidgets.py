@@ -54,6 +54,10 @@ class AbstractInputLineEdit(QLineEdit, iAbstractInputWidget):
         self.editingFinished.connect(self.userFinishedEditing)
         self.textChanged.connect(self.userContinuousEditing)
 
+    def setText(self, text):
+        self.setOrigValue(text)
+        return QLineEdit.setText(self, text)
+
     def keyPressEvent(self, event):
         if event.key() in ACCEPT_KEYS:
             self.userFinishedEditing()
@@ -106,7 +110,7 @@ class AbstractNumberInputWidget(AbstractInputLineEdit):
             mathematical functions.  This is run by a simple eval(user_input).
     """
     def __init__(
-        self, parent=None, allow_negative=True, do_math=True
+        self, parent=None, allow_negative=True, allow_zero=True, do_math=True
     ):
         super(AbstractNumberInputWidget, self).__init__(parent)
         self.setOrigValue("0")
@@ -115,6 +119,7 @@ class AbstractNumberInputWidget(AbstractInputLineEdit):
         self.setDoMath(do_math)
         self.setRange(False)
         self.setAllowNegative(allow_negative)
+        self.setAllowZero(allow_zero)
 
     """ LADDER """
     def setValue(self, value):
@@ -166,6 +171,15 @@ class AbstractNumberInputWidget(AbstractInputLineEdit):
     def getAllowNegative(self):
         return self._allow_negative
 
+    def setAllowZero(self, enabled):
+        self._allow_zero = enabled
+
+        if hasattr(self, 'ladder'):
+            self.ladder.setAllowZero(enabled)
+
+    def getAllowZero(self):
+        return self._allow_zero
+
     def setDoMath(self, _do_math):
         self._do_math = _do_math
 
@@ -216,7 +230,10 @@ class AbstractNumberInputWidget(AbstractInputLineEdit):
         # check for values between 0-1
         try:
             if int(float(text)) == 0:
-                return (str(float(text)))
+                if self.getAllowZero():
+                    return (str(float(text)))
+                else:
+                    return self.getOrigValue()
         except ValueError:
             print("for some reason this is an error...")
             pass
@@ -262,10 +279,10 @@ class AbstractNumberInputWidget(AbstractInputLineEdit):
 class AbstractFloatInputWidget(AbstractNumberInputWidget):
     TYPE = 'float'
     def __init__(
-        self, parent=None, allow_negative=True, do_math=True
+        self, parent=None, allow_negative=True, allow_zero=True, do_math=True
     ):
         super(AbstractFloatInputWidget, self).__init__(
-            parent, allow_negative, do_math
+            parent, allow_negative, allow_zero, do_math
         )
         self.appendKey(Qt.Key_Period)
         self.setValidateInputFunction(self.validateInput)
@@ -298,10 +315,10 @@ class AbstractFloatInputWidget(AbstractNumberInputWidget):
 class AbstractIntInputWidget(AbstractNumberInputWidget):
     TYPE = 'int'
     def __init__(
-        self, parent=None, allow_negative=True, do_math=True
+        self, parent=None, allow_negative=True, allow_zero=True, do_math=True
     ):
         super(AbstractIntInputWidget, self).__init__(
-            parent, allow_negative, do_math
+            parent, allow_negative, allow_zero, do_math
         )
         self.setValidateInputFunction(self.validateInput)
 
