@@ -29,7 +29,7 @@ from qtpy.QtGui import QCursor
 from qtpy.QtCore import Qt
 
 from cgwidgets.widgets import ShojiLayout
-from cgwidgets.widgets import StringInputWidget, LabelWidget, ModelViewWidget
+from cgwidgets.widgets import StringInputWidget, LabelWidget, ModelViewWidget, OverlayInputWidget
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
@@ -69,13 +69,14 @@ embedded_shoji_02.setObjectName("embed2")
 embedded_shoji_03 = ShojiLayout(orientation=Qt.Horizontal)
 
 embedded_shoji_03.setObjectName("embed3")
+
 for x in range(3):
     widget = ModelViewWidget()
     for y in range(3):
         widget.insertNewIndex(0, name=str(y))
     # widget = QLabel(str(x))
     embedded_shoji_03.addWidget(widget)
-# set custom base setyle sheet
+# set custom base style sheet
 # base_style_sheet = """
 # {type}{{
 #     background-color: rgba(0,255,0,255);
@@ -85,7 +86,6 @@ for x in range(3):
 #             type=type(main_widget).__name__,
 #         )
 # main_widget.setBaseStyleSheet(base_style_sheet)
-
 
 
 # OPTIONAL | set handle length (if not set, by default this will be full length)
@@ -102,32 +102,71 @@ main_widget.setOrientation(Qt.Vertical)
 # main_widget.setToggleSoloViewEvent(toggleSoloEvent)
 
 # add regular widgets
-for char in "SINE.":
+for char in "FOOBAR":
     # main widget
     widget = DisplayLabel(char)
 
-    main_widget.addWidget(widget, is_soloable=False)
+    # main_widget.addWidget(widget, is_soloable=False)
     #widget.setStyleSheet("background-color: rgba(255,0,0,255)")
     widget.setContentsMargins(0, 0, 0, 0)
 
     # embedded_shoji_02
-    l = DisplayLabel(str(char) + "D")
+    l = DisplayLabel(str(char))
 
     #embedded_shoji_02.addWidget(l, is_soloable=False)
     embedded_shoji_02.addWidget(l, is_soloable=True)
 
 # add embedded Shoji Views
+
+embedded_shoji_04 = ShojiLayout(orientation=Qt.Horizontal)
 for x in range(3):
     l = DisplayLabel(str(x))
 
-    embedded_shoji_01.addWidget(l)
+    embedded_shoji_04.addWidget(l)
 
-embedded_shoji_01.addWidget(embedded_shoji_02)
 multi_depth_widget = MultiDepthWidth()
-embedded_shoji_01.addWidget(multi_depth_widget)
+
+
+overlay_input_widget_01 = OverlayInputWidget()
+overlay_input_widget_01.setDelegateWidget(embedded_shoji_01)
+overlay_input_widget_01.setImage("/media/ssd02/downloads/triangle.png")
+overlay_input_widget_01.setDisplayMode(OverlayInputWidget.ENTER)
+
+overlay_input_widget_02 = OverlayInputWidget()
+overlay_input_widget_02.setDelegateWidget(embedded_shoji_02)
+overlay_input_widget_02.setImage("/media/ssd02/downloads/star.png")
+overlay_input_widget_02.setDisplayMode(OverlayInputWidget.ENTER)
+
+overlay_input_widget_03 = OverlayInputWidget()
+overlay_input_widget_03.setDelegateWidget(embedded_shoji_03)
+overlay_input_widget_03.setImage("/media/ssd02/downloads/circle.png")
+overlay_input_widget_03.setDisplayMode(OverlayInputWidget.ENTER)
+
+overlay_input_widget_04 = OverlayInputWidget()
+overlay_input_widget_04.setDelegateWidget(embedded_shoji_04)
+overlay_input_widget_04.setImage("/media/ssd02/downloads/diamond.png")
+overlay_input_widget_04.setDisplayMode(OverlayInputWidget.ENTER)
+
+overlay_input_widget_05 = OverlayInputWidget()
+overlay_input_widget_05.setDelegateWidget(multi_depth_widget)
+overlay_input_widget_05.setImage("/media/ssd02/downloads/square.png")
+overlay_input_widget_05.setDisplayMode(OverlayInputWidget.ENTER)
+
+# embedded_shoji_01.addWidget(overlay_input_widget_04)
+# embedded_shoji_01.addWidget(overlay_input_widget_01)
+# # embedded_shoji_01.addWidget(multi_depth_widget)
+# # add shoji to shoji
+# main_widget.addWidget(overlay_input_widget_02)
+# main_widget.addWidget(overlay_input_widget_03)
+
+embedded_shoji_01.addWidget(overlay_input_widget_04)
+embedded_shoji_01.addWidget(overlay_input_widget_02)
+embedded_shoji_01.addWidget(overlay_input_widget_05)
+# embedded_shoji_01.addWidget(multi_depth_widget)
 # add shoji to shoji
-main_widget.addWidget(embedded_shoji_01)
-main_widget.addWidget(embedded_shoji_03)
+main_widget.addWidget(overlay_input_widget_01)
+main_widget.addWidget(overlay_input_widget_03)
+
 
 # show widget
 

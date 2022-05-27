@@ -128,6 +128,11 @@ class AbstractPythonCodeWidget(QPlainTextEdit):
     def __init__(self, parent=None):
         super(AbstractPythonCodeWidget, self).__init__(parent)
 
+        self.setStyleSheet("""
+        background-color: rgba{rgba_background_00};
+        color: rgba{rgba_text};
+        """.format(**iColor.style_sheet_args))
+
     def getScript(self):
         return self.toPlainText()
 
