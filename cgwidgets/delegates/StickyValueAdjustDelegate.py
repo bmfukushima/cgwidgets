@@ -194,6 +194,10 @@ class iStickyValueAdjustDelegate(object):
 
         setAsAlwaysOnTop(drag_widget)
         drag_widget.show()
+        QApplication.processEvents()
+        drag_widget.raise_()
+        drag_widget.activateWindow()
+        drag_widget.setFocus()
 
         # user activation event
         # todo set deactivation function on drag widget
@@ -312,10 +316,7 @@ class StickyDragWindowWidget(QWidget, iStickyValueAdjustDelegate):
         self.hide()
         setAsTool(self)
         setAsTransparent(self)
-        #self.setWindowOpacity(0.5)
-        # drag_widget.activateWindow()
-        # drag_widget.raise_()
-        # drag_widget.setFocus()
+        # self.setWindowOpacity(0.5)
         self.setValueUpdateEvent(self.valueUpdateEvent)
 
     """ PROPERTIES """
@@ -358,13 +359,20 @@ class StickyDragWindowWidget(QWidget, iStickyValueAdjustDelegate):
         # gets overwritten because of the leave event...
         self.__placeCursorAtActiveItem()
 
+        self.releaseMouse()
+
     def __placeCursorAtActiveItem(self):
         """
         Gets the current active items position in world space
         and places the cursor in the center of that.
         """
         try:
-            cursor_display_pos = getGlobalPos(self.activeObject())
+            object_pos = getGlobalPos(self.activeObject())
+            cursor_display_pos = QPoint(
+                object_pos.x() + (self.activeObject().width() * 0.5),
+                object_pos.y() + (self.activeObject().height() * 0.5)
+            )
+
         except AttributeError:
             view = self.activeObject().scene().views()[0]
             view_pos = view.mapFromScene(self.activeObject().scenePos())
@@ -553,19 +561,16 @@ class StickyDragWindowWidget(QWidget, iStickyValueAdjustDelegate):
         return QWidget.mousePressEvent(self, event)
 
     def showEvent(self, event):
-        offset = 100
+        offset = 5
         screen_resolution = QApplication.desktop().screenGeometry()
         width, height = screen_resolution.width() - (offset*2), screen_resolution.height() - (offset*2)
         self.setFixedSize(width, height)
         self.move(offset, offset)
 
         # reset attrs
-        # self._direction = 0
-        # self._num_ticks = 0
-        # self._previous_num_ticks = 0
         self._is_passed_range = False
-        #self.setStyleSheet("background-color: rgba(255,0,0,255)")
 
+        self.grabMouse()
         return QWidget.showEvent(self, event)
 
     def keyPressEvent(self, event):
