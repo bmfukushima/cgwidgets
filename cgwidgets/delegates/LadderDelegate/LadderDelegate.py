@@ -145,6 +145,7 @@ Notes:
         self.range_max = range_max
 
         # setup default colors
+        self._border_width = 3
         self.rgba_selection = iColor["rgba_selected_hover"]
         self.rgba_bg_slide = iColor["rgba_background_00"]
         self.rgba_fg_slide = iColor["rgba_background_01"]
@@ -182,6 +183,7 @@ Notes:
             # preflight checks on value
             value = checkNegative(self._allow_negative, value)
             value = checkIfValueInRange(self.range_enabled, float(value), float(self.range_min), float(self.range_max))
+
             # set value
             self._value = value
 
@@ -348,6 +350,7 @@ Notes:
     def updateStyleSheet(self):
         style_sheet_args = iColor.style_sheet_args
         update_kwargs = {
+            'border_width': self.borderWidth(),
             'selected_color': repr(self.rgba_selection),
             'slider_pos1': self.slider_pos,
             'slider_pos2': self.slider_pos + 0.01,
@@ -361,7 +364,7 @@ Notes:
         style_sheet = """
         LadderDelegate{{
             background-color: rgba{rgba_background_00};
-            border: 1px solid rgba{rgba_outline}
+            border: {border_width}px solid rgba{rgba_selected_hover}
         }}
         LadderItem{{
             color: rgba{rgba_text};
@@ -439,6 +442,12 @@ Notes:
 
     def setMiddleItemBorderWidth(self, border_width):
         self._middle_item_border_width = border_width
+
+    def borderWidth(self):
+        return self._border_width
+
+    def setBorderWidth(self, border_width):
+        self._border_width = border_width
 
     """ SIZE """
     def getItemHeight(self):
@@ -571,7 +580,7 @@ Notes:
         width = self.parent().width()
 
         # update main width
-        self.setFixedWidth(width+2)
+        self.setFixedWidth(width + self.borderWidth() * 2)
 
         for item in self.item_list:
             item.setFixedSize(width, height)
@@ -627,7 +636,6 @@ Notes:
     """ WIDGETS """
     def ladderItems(self):
         return self._ladder_items
-        return
 
     def middleItem(self):
         return self.middle_item
@@ -728,11 +736,6 @@ Attributes:
         self.setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
         self.rgba_background = iColor["rgba_background_01"]
         self.updateStyleSheet()
-        # self.setStyleSheet(
-        #     """
-        #     background-color: rgba{rgba_blue_5};
-        #     color: rgba{rgba_text}
-        #     """.format(**iColor.style_sheet_args))
 
     def mousePressEvent(self, event):
         return AbstractFloatInputWidget.mousePressEvent(self, event)
