@@ -173,8 +173,7 @@ def testWidget():
         activation_event=testActivate,
         deactivation_event=testDeactivate,
         input_buttons=[Qt.LeftButton],
-        value_update_event=testValueUpdate,
-        magnitude_type=None
+        value_update_event=testValueUpdate
     )
 
     return main_widget

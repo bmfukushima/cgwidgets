@@ -31,12 +31,13 @@ Ladder Item has the StickyDrag delegate installed on it
 The values are updated by...
     LadderItem.setValue()
     LadderDelegate.setValue()
-        -> LadderMiddleItem.setValue()
+        -> LadderFloatMiddleItem.setValue()
         -> inputWidget.setText() or inputWidget.setValue()
 """
 import math
 from decimal import Decimal, getcontext
 
+from qtpy import API_NAME
 from qtpy.QtGui import *
 from qtpy.QtWidgets import *
 from qtpy.QtCore import *
@@ -56,8 +57,9 @@ from cgwidgets.utils import (
 from cgwidgets.delegates import SlideDelegate
 
 from cgwidgets.settings.colors import (iColor)
+from cgwidgets.settings import attrs
 
-from cgwidgets.widgets import AbstractFloatInputWidget #AbstractFloatInputWidget
+from cgwidgets.widgets import AbstractFloatInputWidget, AbstractIntInputWidget, IntInputWidget
 
 
 class LadderDelegate(QFrame):
@@ -95,8 +97,10 @@ Attributes:
     item_height (int): The height of each individual adjustable item.
             The middle item will always have the same geometry as the
             parent widget.
-    middle_item (LadderMiddleItem):
+    middle_item (LadderFloatMiddleItem):
     ladder_items (list): of LadderItems
+    ladder_type (attrs.TYPE): determines what type of ladder this is, an int, or float
+        INTEGER | FLOAT
     middle_item_border_color (rgba int 0-255):
         The border color that is displayed to the user on the middle item
             ( value display widget )
@@ -128,6 +132,7 @@ Notes:
             range_max=1.0,
             allow_negative_values=True,
             allow_zero_value=True,
+            ladder_type=attrs.FLOAT,
     ):
         super(LadderDelegate, self).__init__(parent)
         layout = QVBoxLayout()
@@ -145,6 +150,12 @@ Notes:
         self.range_enabled = range_enabled
         self.range_min = range_min
         self.range_max = range_max
+        self._ladder_type = ladder_type
+
+        if isinstance(parent, AbstractFloatInputWidget):
+            self.setLadderType(attrs.FLOAT)
+        if isinstance(parent, (AbstractIntInputWidget, IntInputWidget)):
+            self.setLadderType(attrs.INTEGER)
 
         # setup default colors
         self._border_width = 3
@@ -172,84 +183,10 @@ Notes:
 
         # post flight attr set
         self.middle_item.setRange(range_enabled, range_min, range_max)
-        # self._allow_negative = True
         self.setAllowNegative(allow_negative_values)
         self.setAllowZero(allow_zero_value)
 
     """ API """
-    def setValue(self, value):
-        """
-        value (float): Sets the value on the parent widget.
-            creating a setValue(value) method on the parent
-            widget will run this method last when setting the value
-        """
-        if value is not None:
-            # preflight checks on value
-            value = checkNegative(self._allow_negative, value)
-            value = checkIfValueInRange(self.range_enabled, float(value), float(self.range_min), float(self.range_max))
-            if not self._allow_zero and not value:
-                value = self.middle_item.getOrigValue()
-
-            # set value
-            self._value = value
-
-            parent = self.parent()
-
-            # update other widgets
-            self.middle_item.setValue(str(self._value))
-
-            # self.middle_item.setCursorPosition(0)
-            try:
-                parent.setText(str(self._value))
-            except AttributeError:
-                try:
-                    self.parent().setValue(self._value)
-                except AttributeError:
-                    return None
-
-    def getValue(self):
-        """
-        Returns:
-            current parent widgets value. Will attempt to look for the
-            default text() attr, however if it is not available, will look for
-            the parents getValue() method.
-        """
-        try:
-            self._value = float(self.parent().text())
-            return self._value
-        except AttributeError:
-            try:
-                return self.parent().getValue()
-            except AttributeError:
-                return None
-        except ValueError:
-            return None
-
-    def setRange(self, enabled, range_min=0, range_max=1):
-        """
-        Determines if this widget has a specified range.  Going over this
-        range will clip values into that range
-        """
-        self.range_enabled = enabled
-        self.range_min = range_min
-        self.range_max = range_max
-
-        self.middle_item.setRange(enabled, range_min, range_max)
-        from cgwidgets.utils import removeStickyAdjustDelegate
-        for widget in self.ladderItems():
-            removeStickyAdjustDelegate(widget)
-
-            installStickyAdjustDelegate(
-                widget,
-                pixels_per_tick=self.getPixelsPerTick(),
-                value_per_tick=widget.valueMult(),
-                activation_event=widget.activationEvent,
-                deactivation_event=widget.deactivationEvent,
-                range_enabled=self.range_enabled,
-                range_min=self.range_min,
-                range_max=self.range_max
-            )
-
     def setAllowZero(self, enabled):
         self._allow_zero = enabled
         self.middle_item.setAllowZero(enabled)
@@ -257,22 +194,6 @@ Notes:
     def setAllowNegative(self, enabled):
         self._allow_negative = enabled
         self.middle_item.setAllowNegative(enabled)
-
-    def getPixelsPerTick(self):
-        return self._pixels_per_tick
-
-    def setPixelsPerTick(self, _pixels_per_tick):
-        self._pixels_per_tick = _pixels_per_tick
-
-        for item in self.item_list:
-            if item != self.middle_item:
-                item._filter_STICKY.setPixelsPerTick(_pixels_per_tick)
-
-    def getUserInputTrigger(self):
-        return self._user_input
-
-    def setUserInputTrigger(self, user_input):
-        self._user_input = user_input
 
     def setDiscreteDrag(
         self,
@@ -337,7 +258,7 @@ Notes:
         at the original clicking point.
         """
         for item in self.item_list:
-            if not isinstance(item, LadderMiddleItem):
+            if not isinstance(item, LadderFloatMiddleItem):
                 if boolean is True:
                     installInvisibleCursorEvent(item)
                 elif boolean is False:
@@ -354,6 +275,104 @@ Notes:
             installInvisibleWidgetEvent(self)
         elif boolean is False:
             self.removeEventFilter()
+
+    def setLadderType(self, ladder_type):
+        self._ladder_type = ladder_type
+
+    def getLadderType(self):
+        return self._ladder_type
+
+    def getPixelsPerTick(self):
+        return self._pixels_per_tick
+
+    def setPixelsPerTick(self, _pixels_per_tick):
+        self._pixels_per_tick = _pixels_per_tick
+
+        for item in self.item_list:
+            if item != self.middle_item:
+                item._filter_STICKY.setPixelsPerTick(_pixels_per_tick)
+
+    def setRange(self, enabled, range_min=0, range_max=1):
+        """
+        Determines if this widget has a specified range.  Going over this
+        range will clip values into that range
+        """
+        self.range_enabled = enabled
+        self.range_min = range_min
+        self.range_max = range_max
+
+        self.middle_item.setRange(enabled, range_min, range_max)
+        from cgwidgets.utils import removeStickyAdjustDelegate
+        for widget in self.ladderItems():
+            removeStickyAdjustDelegate(widget)
+
+            installStickyAdjustDelegate(
+                widget,
+                pixels_per_tick=self.getPixelsPerTick(),
+                value_per_tick=widget.valueMult(),
+                activation_event=widget.activationEvent,
+                deactivation_event=widget.deactivationEvent,
+                range_enabled=self.range_enabled,
+                range_min=self.range_min,
+                range_max=self.range_max
+            )
+
+    def getUserInputTrigger(self):
+        return self._user_input
+
+    def setUserInputTrigger(self, user_input):
+        self._user_input = user_input
+
+    def setValue(self, value):
+        """
+        value (float): Sets the value on the parent widget.
+            creating a setValue(value) method on the parent
+            widget will run this method last when setting the value
+        """
+        if value is not None:
+            # preflight checks on value
+            value = checkNegative(self._allow_negative, value)
+            value = checkIfValueInRange(self.range_enabled, float(value), float(self.range_min), float(self.range_max))
+            if not self._allow_zero and not value:
+                value = self.middle_item.getOrigValue()
+
+            # set value
+            self._value = value
+
+            parent = self.parent()
+
+            # update other widgets
+            self.middle_item.setValue(str(self._value))
+
+            # self.middle_item.setCursorPosition(0)
+            try:
+                parent.setText(str(self._value))
+            except AttributeError:
+                try:
+                    self.parent().setValue(self._value)
+                except AttributeError:
+                    return None
+
+    def getValue(self):
+        """
+        Returns:
+            current parent widgets value. Will attempt to look for the
+            default text() attr, however if it is not available, will look for
+            the parents getValue() method.
+        """
+        try:
+            if self.getLadderType() == attrs.FLOAT:
+                self._value = float(self.parent().text())
+            if self.getLadderType() == attrs.INTEGER:
+                self._value = int(self.parent().text())
+            return self._value
+        except AttributeError:
+            try:
+                return self.parent().getValue()
+            except AttributeError:
+                return None
+        except ValueError:
+            return None
 
     """ COLORS """
     def updateStyleSheet(self):
@@ -416,7 +435,7 @@ Notes:
 
         # update slidebar
         for item in self.item_list:
-            if not isinstance(item, LadderMiddleItem):
+            if not isinstance(item, LadderFloatMiddleItem):
                 item.slidebar.rgba_bg_slide = color
 
     @property
@@ -429,7 +448,7 @@ Notes:
 
         # update slidebar
         for item in self.item_list:
-            if not isinstance(item, LadderMiddleItem):
+            if not isinstance(item, LadderFloatMiddleItem):
                     item.slidebar.rgba_fg_slide = rgba_fg_slide
 
     @property
@@ -554,10 +573,16 @@ Notes:
         Creates the middle item which is a AbstractFloatInputWidget for the user.
         """
         # special handler for display widget
-        self.middle_item = LadderMiddleItem(
-            parent=self,
-            value=self.getValue()
-        )
+        if self.getLadderType() == attrs.INTEGER:
+            self.middle_item = LadderIntMiddleItem(
+                parent=self,
+                value=self.getValue()
+            )
+        else:
+            self.middle_item = LadderFloatMiddleItem(
+                parent=self,
+                value=self.getValue()
+            )
         self.layout().insertWidget(self.middle_item_index, self.middle_item)
 
         # populate item list
@@ -621,7 +646,7 @@ Notes:
         how close they are to creating the next tick
         """
         for item in self.item_list:
-            if not isinstance(item, LadderMiddleItem):
+            if not isinstance(item, LadderFloatMiddleItem):
                 if enabled is True:
                     slidebar = installSlideDelegate(
                         item,
@@ -723,7 +748,28 @@ Notes:
         return QFrame.eventFilter(self, obj, event, *args, **kwargs)
 
 
-class LadderMiddleItem(AbstractFloatInputWidget):
+# todo move middle items to abstract class
+class iMiddleItem(object):
+    def mousePressEvent(self, event):
+        return self.__class__.mousePressEvent(self, event)
+
+    def mouseReleaseEvent(self, event):
+        return self.__class__.mouseReleaseEvent(self, event)
+
+    def keyPressEvent(self, event):
+        if event.key() in [Qt.Key_Return, Qt.Key_Enter]:
+            self.parent().hide()
+        return self.__class__.keyPressEvent(self, event)
+
+    def setMiddleValue(self):
+        self.parent().parent().setValue(str(self.text()))
+
+    def setValue(self, value):
+        self.setText(str(value))
+        self._value = value
+
+
+class LadderIntMiddleItem(AbstractIntInputWidget, iMiddleItem):
     """
 This is the display label to overlayover the current widget.
 Due to how awesomely bad transparency is to do in Qt =\
@@ -739,30 +785,40 @@ Attributes:
         that is returned to the parent widget during user manipulation.
     """
     def __init__(self, parent=None, value=None):
-        super(LadderMiddleItem, self).__init__(parent)
+        super(LadderIntMiddleItem, self).__init__(parent)
+        if API_NAME == "PySide2":
+            iMiddleItem.__init__(self, value)
         self.setValue(value)
         self.editingFinished.connect(self.setMiddleValue)
         self.setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
         self.rgba_background = iColor["rgba_background_01"]
         self.updateStyleSheet()
 
-    def mousePressEvent(self, event):
-        return AbstractFloatInputWidget.mousePressEvent(self, event)
+    def getValue(self):
+        return int(self._value)
 
-    def mouseReleaseEvent(self, event):
-        return AbstractFloatInputWidget.mouseReleaseEvent(self, event)
+class LadderFloatMiddleItem(AbstractFloatInputWidget, iMiddleItem):
+    """
+This is the display label to overlayover the current widget.
+Due to how awesomely bad transparency is to do in Qt =\
+I made this a widget instead of transparency... in hindsite...
+I guess I could have done a mask.
 
-    def keyPressEvent(self, event):
-        if event.key() in [Qt.Key_Return, Qt.Key_Enter]:
-            self.parent().hide()
-        return AbstractFloatInputWidget.keyPressEvent(self, event)
+Args:
+    **  parent (LadderDelegate)
+    **  value (float): the default value to display
 
-    def setMiddleValue(self):
-        self.parent().parent().setValue(str(self.text()))
-
-    def setValue(self, value):
-        self.setText(str(value))
-        self._value = value
+Attributes:
+    value (float): display value that should be the value
+        that is returned to the parent widget during user manipulation.
+    """
+    def __init__(self, parent=None, value=None):
+        super(LadderFloatMiddleItem, self).__init__(parent)
+        self.setValue(value)
+        self.editingFinished.connect(self.setMiddleValue)
+        self.setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
+        self.rgba_background = iColor["rgba_background_01"]
+        self.updateStyleSheet()
 
     def getValue(self):
         return float(self._value)

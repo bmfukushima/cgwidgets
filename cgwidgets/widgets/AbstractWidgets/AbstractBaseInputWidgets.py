@@ -132,8 +132,7 @@ class AbstractNumberInputWidget(AbstractInputLineEdit):
             self,
             _use_ladder_delegate,
             user_input=QEvent.MouseButtonRelease,
-            value_list=[0.01, 0.1, 1, 10],
-            alignment=Qt.AlignLeft
+            value_list=[0.01, 0.1, 1, 10]
     ):
         """
 
@@ -241,7 +240,8 @@ class AbstractNumberInputWidget(AbstractInputLineEdit):
                 else:
                     return self.getOrigValue()
         except ValueError:
-            print("for some reason this is an error...")
+            # errors here when evaluating
+            # print("for some reason this is an error...")
             pass
 
         try:
@@ -348,9 +348,14 @@ class AbstractIntInputWidget(AbstractNumberInputWidget):
         Evaluates the users input, this is important
         when using numbers
         """
-        # if value is 0
-        value = self.getInputHelper()
-        return str(int(value))
+        # if value is not 0
+        try:
+            value = self.getInputHelper()
+            return str(int(value))
+
+        # is zero
+        except ValueError:
+            return str("0")
 
 
 class AbstractStringInputWidget(AbstractInputLineEdit):
