@@ -114,7 +114,7 @@ class AbstractNumberInputWidget(AbstractInputLineEdit):
         self.setKeyList(NUMERICAL_INPUT_KEYS)
         self.setDoMath(do_math)
         self.setRange(False)
-        self.setAllowNegative(True)
+        self.setAllowNegative(allow_negative)
 
     """ LADDER """
     def setValue(self, value):

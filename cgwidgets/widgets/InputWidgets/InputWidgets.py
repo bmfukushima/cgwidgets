@@ -44,14 +44,14 @@ class ButtonInputWidget(AbstractButtonInputWidget):
 
 
 class FloatInputWidget(AbstractFloatInputWidget):
-    def __init__(self, parent=None):
-        super(FloatInputWidget, self).__init__(parent)
-        self.setDoMath(True)
+    def __init__(self, parent=None, allow_negative=True, do_math=True):
+        super(FloatInputWidget, self).__init__(parent, allow_negative=allow_negative, do_math=do_math)
+        self.setDoMath(do_math)
 
 
 class IntInputWidget(AbstractIntInputWidget):
-    def __init__(self, parent=None):
-        super(IntInputWidget, self).__init__(parent)
+    def __init__(self, parent=None, allow_negative=True, do_math=True):
+        super(IntInputWidget, self).__init__(parent, allow_negative=allow_negative, do_math=do_math)
 
 
 class StringInputWidget(AbstractStringInputWidget):
