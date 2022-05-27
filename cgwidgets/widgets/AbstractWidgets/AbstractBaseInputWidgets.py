@@ -151,10 +151,16 @@ class AbstractNumberInputWidget(AbstractInputLineEdit):
             self.ladder = installLadderDelegate(
                 self,
                 user_input=user_input,
-                value_list=value_list
+                value_list=value_list,
+                range_enabled=self.range_enabled,
+                range_min=self.range_min,
+                range_max=self.range_max,
+                allow_negative_values=self.getAllowNegative(),
+                allow_zero_value=self.getAllowZero()
             )
-            self.ladder.setRange(self.range_enabled, self.range_min, self.range_max)
-            self.ladder.setAllowNegative(self.getAllowNegative())
+            # self.ladder.setRange(self.range_enabled, self.range_min, self.range_max)
+            # self.ladder.setAllowNegative(self.getAllowNegative())
+            # self.ladder.setAllowZero(self.getAllowZero())
 
         self._use_ladder_delegate = _use_ladder_delegate
 
