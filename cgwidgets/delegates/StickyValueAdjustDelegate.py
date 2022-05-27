@@ -209,9 +209,9 @@ class iStickyValueAdjustDelegate(object):
             obj (QWidget / QItem --> DragWidget): Object to install all of the extra attrs on
         """
         obj._cursor_pos = QCursor.pos()
-        top_left = getTopLeftPos(obj)
-        QCursor.setPos(top_left + QPoint(10, 10))
-        obj.setFocus()
+        # top_left = getTopLeftPos(obj)
+        # QCursor.setPos(top_left + QPoint(10, 10))
+        # obj.setFocus()
 
         # set up drag time attrs
         obj.updateOrigValue()
@@ -312,7 +312,10 @@ class StickyDragWindowWidget(QWidget, iStickyValueAdjustDelegate):
         self.hide()
         setAsTool(self)
         setAsTransparent(self)
-
+        #self.setWindowOpacity(0.5)
+        # drag_widget.activateWindow()
+        # drag_widget.raise_()
+        # drag_widget.setFocus()
         self.setValueUpdateEvent(self.valueUpdateEvent)
 
     """ PROPERTIES """
