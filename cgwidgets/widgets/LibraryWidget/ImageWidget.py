@@ -201,15 +201,18 @@ class ImageWidget(QLabel):
             current_index += 1
         elif direction == 'previous':
             current_index -= 1
-        new_image = image_list[current_index]
-        proxy_image_dir = self.proxyImageDir
-        new_image_path = '/'.join([proxy_image_dir, new_image])
-        self.proxyImageIndex = current_index
+        try:
+            new_image = image_list[current_index]
+            proxy_image_dir = self.proxyImageDir
+            new_image_path = '/'.join([proxy_image_dir, new_image])
+            self.proxyImageIndex = current_index
 
-        self.currentImage = new_image
+            self.currentImage = new_image
 
-        self.currentPixmap = new_image_path
-        self.setFrameWidgetText(new_image)
+            self.currentPixmap = new_image_path
+            self.setFrameWidgetText(new_image)
+        except IndexError:
+            pass
 
     def nextImage(self):
         self.setImage(direction='next')

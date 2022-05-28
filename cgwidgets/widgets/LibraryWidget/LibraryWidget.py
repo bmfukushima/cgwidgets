@@ -173,7 +173,6 @@ from qtpy.QtWidgets import *
 from qtpy.QtGui import *
 from qtpy.QtCore import *
 
-#from cgqtpy.ImageLibrary import ImageWidget
 import sys
 from . import ImageWidget
 from .PublishWidget import PublishWidget

@@ -624,11 +624,12 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         """ Removes the pin button """
         if not enlarged_widget:
             enlarged_widget = self.enlargedWidget()
-        self._pin_button.setParent(None)
-        enlarged_widget.delegateWidget().layout().setContentsMargins(0, 0, 0, 0)
-        enlarged_widget.setIsPinned(False)
-        enlarged_widget.delegateWidget().setProperty("is_enlarged_widget", False)
-        enlarged_widget.clearMask()
+        if hasattr(self, "_pin_button"):
+            self._pin_button.setParent(None)
+            enlarged_widget.delegateWidget().layout().setContentsMargins(0, 0, 0, 0)
+            enlarged_widget.setIsPinned(False)
+            enlarged_widget.delegateWidget().setProperty("is_enlarged_widget", False)
+            enlarged_widget.clearMask()
 
     def __createPinningToggleButton(self, popup_widget, width, height):
         """ Creates the pinned button that is displayed in the popup widgets
@@ -2551,9 +2552,9 @@ class AbstractPiPDisplayWidget(QWidget):
             self.setCurrentWidget(self.popupBarWidget().enlargedWidget())
             self.popupBarWidget().setIsEnlarged(False)
 
-
         # swap previous widget widgets
         else:
+            self.popupBarWidget().removePinningToggleButton()
             self.swapWidgets()
 
         self.popupBarWidget().setIsFrozen(False)
