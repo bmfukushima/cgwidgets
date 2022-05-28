@@ -676,13 +676,16 @@ Notes:
 
     """ EVENTS """
     def leaveEvent(self, event, *args, **kwargs):
-        """
-        When the cursor leaves the widget, this will hide the ladder if the
+        """When the cursor leaves the widget, this will hide the ladder if the
         user is not manipulating the object.
+
+        This will also set the cursor position to the one that is currently selected in the middle item
         """
         if self._updating is True:
             return
+        cursor_position = self.middle_item.cursorPosition()
         self.hide()
+        self.parent().setCursorPosition(cursor_position)
         return QFrame.leaveEvent(self, event, *args, **kwargs)
 
     def hideEvent(self, event, *args, **kwargs):
@@ -690,8 +693,6 @@ Notes:
         Resets the cursor on the input widget to 0, so that
         it won't do the awesome wonky alignment
         """
-        #self.parent()._updating = False
-        self.parent().setCursorPosition(0)
         return QWidget.hideEvent(self, event, *args, **kwargs)
 
     def showEvent(self, *args, **kwargs):
@@ -699,10 +700,13 @@ Notes:
 
         # reset cursor position
         cursor_position = self.parent().cursorPosition()
+        self.__updateDelegateGeometry()
+
+        self.raise_()
+        self.activateWindow()
         self.middle_item.setFocus()
         self.middle_item.setCursorPosition(cursor_position)
 
-        self.__updateDelegateGeometry()
         return QWidget.showEvent(self, *args, **kwargs)
 
     def mouseMoveEvent(self, event):
