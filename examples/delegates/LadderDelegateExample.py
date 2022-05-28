@@ -13,9 +13,9 @@ main_window = QWidget()
 
 # setup style for documenting
 setAsBorderless(main_window)
-main_window.setStyleSheet("""background-color:rgba{rgba_background_00}""".format(**iColor.style_sheet_args))
+main_window.setStyleSheet("""background-color:rgba{rgba_background_01}""".format(**iColor.style_sheet_args))
 main_layout = QVBoxLayout()
-main_layout.setContentsMargins(50, 50, 50, 50)
+main_layout.setContentsMargins(1000, 1000, 1000, 1000)
 
 main_window.setLayout(main_layout)
 

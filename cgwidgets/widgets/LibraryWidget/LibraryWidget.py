@@ -179,7 +179,7 @@ from . import ImageWidget
 from .PublishWidget import PublishWidget
 from .TopBarWidget import TopBarMainWidget
 from .__utils__ import iUtils
-from cgwidgets import utils as gUtils
+from cgwidgets.utils import getWidgetAncestorByName, clearLayout, getJSONData
 from .Views import *
 
 
@@ -432,7 +432,7 @@ class LibraryWidget(QWidget, iUtils):
                 self.drag_image_path
                 self.drag_proxy_image_path
             except AttributeError:
-                json_data = gUtils.getJSONData(widget.json_file)
+                json_data = getJSONData(widget.json_file)
                 if 'default_image' in json_data.keys():
                     current_image = '/'.join([widget.proxyImageDir, json_data['default_image']])
                     if os.path.isfile(current_image) is False:
@@ -572,7 +572,7 @@ class FullScreenImageViewer(ThumbnailViewWidget):
         """
 
         # get attributes
-        n = len(gUtils.getMainWidget(self, 'Library').temp_selection_list)
+        n = len(getWidgetAncestorByName(self, 'Library').temp_selection_list)
         if n == 0:
             """
             small hack, when the widget is initializing it will try to divide by 0
@@ -668,7 +668,7 @@ class FullScreenImageViewer(ThumbnailViewWidget):
             temp_dict[widget.json_file]['currentImage'] = widget.currentImage
             temp_dict[widget.json_file]['proxyImageIndex'] = widget.proxyImageIndex
         # clear layout
-        gUtils.clearLayout(self.main_layout)
+        clearLayout(self.main_layout)
 
         # populate model
         widget_list = []
@@ -740,7 +740,7 @@ class FullScreenImageViewer(ThumbnailViewWidget):
         When this widget is hidden from view, it returns the
         previous selection back to the user
         """
-        main_widget = gUtils.getMainWidget(self, 'Library')
+        main_widget = getWidgetAncestorByName(self, 'Library')
         main_widget.model.metadata['selected'] = main_widget.temp_selection_list
         main_widget.model.updateViews()
         return ThumbnailViewWidget.hideEvent(self, *args, **kwargs)
@@ -750,7 +750,7 @@ class FullScreenImageViewer(ThumbnailViewWidget):
         When this widget is resized, it updates the sizes of the widgets
         to get the most possible space
         """
-        main_widget = gUtils.getMainWidget(self, 'Library')
+        main_widget = getWidgetAncestorByName(self, 'Library')
         self.update(selection_list=main_widget.temp_selection_list)
         #return ThumbnailViewWidget.resizeEvent(self, event, *args, **kwargs)
 
@@ -768,7 +768,7 @@ class FullScreenImageItem(ImageWidget.ImageWidget):
         # set up json data
 
         self.json_file = json_file
-        json_data = gUtils.getJSONData(json_file)
+        json_data = getJSONData(json_file)
 
         self.image_width = image_width
 
@@ -892,7 +892,7 @@ class FullScreenImageItem(ImageWidget.ImageWidget):
                         selected = False
 
                     # update the image
-                    main_widget = gUtils.getMainWidget(self, 'Library')
+                    main_widget = getWidgetAncestorByName(self, 'Library')
                     full_screen_view = main_widget.full_screen_image
                     if mmd > change_distance:
                         full_screen_view.previousImage(selected=selected)
@@ -1036,7 +1036,7 @@ class DirList(QTreeWidget):
         views to display all of the images located in that directory
         and its subdirectories in the view
         """
-        main_widget = gUtils.getMainWidget(self, 'Library')
+        main_widget = getWidgetAncestorByName(self, 'Library')
 
         # get all items
         item = self.currentItem()

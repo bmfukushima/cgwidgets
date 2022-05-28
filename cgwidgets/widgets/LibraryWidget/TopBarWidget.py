@@ -4,7 +4,8 @@ from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 
 from .__utils__ import iUtils
-from cgwidgets import utils as gUtils
+from cgwidgets.utils import getWidgetAncestorByName
+
 
 class TopBarMainWidget(QWidget):
     """
@@ -57,7 +58,7 @@ class ViewModeDropDown(QComboBox):
 
     def indexChanged(self):
         mode = self.currentText()
-        main_widget = gUtils.getMainWidget(self, 'Library')
+        main_widget = getWidgetAncestorByName(self, 'Library')
         model = iUtils.getModel(self)
         if mode == 'Publish':
             self.switchToPublishView(main_widget)
@@ -181,7 +182,7 @@ class ImageSizeButton(QPushButton):
         model = iUtils.getModel(self)
         self.clearUserSelection()
         self.setStyleSheet(iUtils.createThumbnailSS(self.border_width, True))
-        main_widget = gUtils.getMainWidget(self, 'Library')
+        main_widget = getWidgetAncestorByName(self, 'Library')
 
         scroll_bar_width = main_widget.detailed_view.vscrollbar.width()
         splitter_width = main_widget.main_splitter_handle_width

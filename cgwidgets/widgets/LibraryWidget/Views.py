@@ -24,7 +24,7 @@ from qtpy.QtCore import *
 from qtpy.QtGui import *
 
 from .__utils__ import iUtils
-from cgwidgets import utils as gUtils
+from cgwidgets.utils import getWidgetAncestorByName, clearLayout
 
 
 class ImageListModel(QAbstractTableModel):
@@ -208,7 +208,7 @@ class ImageListModel(QAbstractTableModel):
         Updates all of the views, this is not attached to this model
         in any way... so I could probably just send this to a iUtils...
         """
-        main_widget = gUtils.getMainWidget(self._parent_widget, 'Library')
+        main_widget = getWidgetAncestorByName(self._parent_widget, 'Library')
 
         detailed_view = main_widget.detailed_view
         thumbnail_view = main_widget.thumbnail_view
@@ -325,7 +325,7 @@ class ThumbnailViewWidget(QScrollArea):
         self.model = model
         # reset
         # self.resetHeaderWidgetLists()
-        gUtils.clearLayout(self.main_layout)
+        clearLayout(self.main_layout)
 
         # populate model
         widget_list = []
@@ -397,7 +397,7 @@ class ThumbnailViewWidget(QScrollArea):
             self.num_columns = num_columns
 
         # clear layout
-        gUtils.clearLayout(self.main_layout)
+        clearLayout(self.main_layout)
 
         # populate layout
         if hasattr(self, 'widget_list'):
@@ -409,7 +409,7 @@ class ThumbnailViewWidget(QScrollArea):
                 )
 
     def update(self):
-        self.image_size = gUtils.getMainWidget(self, 'Library').image_size
+        self.image_size = getWidgetAncestorByName(self, 'Library').image_size
         # update model
         try:
             self.setModel(self.model)
@@ -535,8 +535,10 @@ class DetailedViewWidget(QWidget):
         self.main_table = DetailedViewTable(self, hscrollbar=self.hscrollbar, vscrollbar=self.vscrollbar)
 
         # set widget sizes
-        main_widget = gUtils.getMainWidget(self, 'Library')
-        self.main_layout.setSpacing(main_widget.main_splitter_handle_width)
+        #main_widget = gUtils.getMainWidget(self, 'Library')
+        #main_widget = getWidget
+        #self.main_layout.setSpacing(main_widget.main_splitter_handle_width)
+        self.main_layout.setSpacing(10)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
 
         # add widgets to layout
@@ -567,7 +569,7 @@ class DetailedViewWidget(QWidget):
 
         # reset
         self.resetHeaderWidgetLists()
-        gUtils.clearLayout(self.main_table.main_layout)
+        clearLayout(self.main_table.main_layout)
 
         # update view
         for row in range(model.rowCount()):
@@ -583,7 +585,7 @@ class DetailedViewWidget(QWidget):
 
     def update(self):
         # self.image_size = gUtils.getMainWidget(self, 'Library').image_size
-        self.row_height = gUtils.getMainWidget(self, 'Library').image_size
+        self.row_height = getWidgetAncestorByName(self, 'Library').image_size
         # update model
         try:
             self.setModel(self.model)
@@ -787,7 +789,7 @@ class DetailedViewVerticalHeader(QWidget):
         """
         updates the row height
         """
-        gUtils.clearLayout(self.main_layout)
+        clearLayout(self.main_layout)
         self.populate()
 
         row_height = self.getRowHeight() + (iUtils.getSetting('IMAGE_SELECTED_BORDER_WIDTH') * 2)

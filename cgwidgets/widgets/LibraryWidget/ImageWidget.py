@@ -15,7 +15,7 @@ from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 
 from .__utils__ import iUtils
-from cgwidgets import utils as gUtils
+from cgwidgets.utils import getWidgetAncestorByName, getJSONData
 
 
 class ImageWidget(QLabel):
@@ -221,7 +221,7 @@ class ImageWidget(QLabel):
 
     def mousePressEvent(self, event, *args, **kwargs):
         self.button = event.button()
-        main_widget = gUtils.getMainWidget(self, 'Library')
+        main_widget = getWidgetAncestorByName(self, 'Library')
 
         # set selection
         #selection_list = self.model.metadata['selected']
@@ -273,7 +273,7 @@ class DefaultImage(ImageWidget):
         self._activated = False
 
         self.json_file = json_file
-        json_data = gUtils.getJSONData(json_file)
+        json_data = getJSONData(json_file)
 
         self.proxyImageDir = json_data['proxy']
         self.proxyImageList = (sorted(os.listdir(json_data['proxy'])))
@@ -325,7 +325,7 @@ class DefaultImage(ImageWidget):
                 self.setSelected()
                 self._activated = True
                 # Activate full screen display
-                main_widget = gUtils.getMainWidget(self, 'Library')
+                main_widget = getWidgetAncestorByName(self, 'Library')
                 main_widget.activateFullScreenDisplay()
 
         def rightMousePress():

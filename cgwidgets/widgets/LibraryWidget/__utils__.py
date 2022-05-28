@@ -6,7 +6,7 @@ from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 from qtpy.QtGui import *
 
-from cgwidgets import utils as gUtils
+from cgwidgets.utils import getJSONData, getWidgetAncestorByName
 
 class iUtils(object):
 
@@ -21,7 +21,7 @@ class iUtils(object):
         try:
             settings_dir = os.environ['HOME'] + '/.library'
             settings_loc = settings_dir + '/settings.json'
-            user_settings = gUtils.getJSONData(settings_loc)
+            user_settings = getJSONData(settings_loc)
             value = user_settings[setting]
         # global settings
         except KeyError:
@@ -40,7 +40,7 @@ class iUtils(object):
     
     @staticmethod
     def getModel(widget):
-        main_widget = gUtils.getMainWidget(widget, 'Library')
+        main_widget = getWidgetAncestorByName(widget, 'Library')
         model = main_widget.model
         return model
 
