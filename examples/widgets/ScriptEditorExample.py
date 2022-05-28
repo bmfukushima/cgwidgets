@@ -15,10 +15,10 @@ os.environ["CGWscripts"] = ";".join([
 # main_widget = ScriptEditorWidget()
 # setAsAlwaysOnTop(main_widget)
 # main_widget.show()
-# main_widget.resize(1024, 512)
+# main_widget.resize(960, 540)
 # centerWidgetOnScreen(main_widget)
 
-# # popup hotkey example
+# # # popup hotkey example
 hotkey_file_path = "/home/brian/.cgwidgets/.scripts/1377191011911108608.HotkeyDesign.json"
 popup_widget = PopupHotkeyMenu(file_path=hotkey_file_path)
 popup_widget.show()

@@ -801,6 +801,7 @@ Attributes:
     def getValue(self):
         return int(self._value)
 
+
 class LadderFloatMiddleItem(AbstractFloatInputWidget, iMiddleItem):
     """
 This is the display label to overlayover the current widget.

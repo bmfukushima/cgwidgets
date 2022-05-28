@@ -645,7 +645,7 @@ for y in range(0, 2):
 shoji_layout.addWidget(shoji_widget)
 #shoji_layout.addWidget(shoji_widget3)
 shoji_layout.show()
-shoji_layout.resize(480, 960)
+shoji_layout.resize(960, 540)
 
 centerWidgetOnCursor(shoji_layout)
 if __name__ == "__main__":

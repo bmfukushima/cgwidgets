@@ -22,12 +22,12 @@ main_window.setLayout(main_layout)
 # install ladder delegate with utils function
 float_input_widget = FloatInputWidget(do_math=True)
 float_input_widget.setDoMath(True)
-ladder = installLadderDelegate(float_input_widget, allow_zero_value=False, allow_negative_values=False)
+ladder = installLadderDelegate(float_input_widget, allow_zero_value=True, allow_negative_values=False)
 float_input_widget.setText('12.3')
 
 # install ladder delegate with widget function
 int_input_widget = IntInputWidget()
-int_input_widget.setUseLadder(True)
+int_input_widget.setUseLadder(True, value_list=[1, 2, 4, 8, 16, 32])
 
 
 main_layout.addWidget(float_input_widget)
