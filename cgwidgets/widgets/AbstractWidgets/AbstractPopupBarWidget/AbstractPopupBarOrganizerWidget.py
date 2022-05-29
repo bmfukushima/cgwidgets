@@ -1802,15 +1802,16 @@ class PiPPopupBarOrganizerWidget(AbstractModelViewWidget):
             # remove previous widget
             organizer_widget.setPreviousWidget(None)
 
-        # create temp widget
-        if organizer_widget.popupBarDisplayWidget().numWidgets() < 2:
-            organizer_widget.createTempWidget()
-
         # delete widget
         item.widget().setParent(None)
         item.widget().deleteLater()
+
         # resize
         organizer_widget.popupBarDisplayWidget().resizePopupBar()
+
+        # create temp widget
+        if self.rootItem().childCount() == 2:
+            organizer_widget.createTempWidget()
 
     """ EVENTS """
     def showEvent(self, event):

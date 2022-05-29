@@ -11,6 +11,8 @@ from qtpy.QtWidgets import (QApplication, QWidget)
 from cgwidgets.widgets import PopupBarOrganizerWidget
 from cgwidgets.utils import centerWidgetOnCursor, setAsAlwaysOnTop, getDefaultSavePath
 from cgwidgets.settings import attrs
+from cgwidgets.settings import iColor
+
 app = QApplication(sys.argv)
 
 # PiP Widget
@@ -29,7 +31,10 @@ from qtpy.QtWidgets import QLabel
 widget = QLabel(\"TEST\") """,
     "QPushButton":"""
 from qtpy.QtWidgets import QPushButton
-widget = QPushButton(\"TESTBUTTON\") """,
+widget = QPushButton(\"TESTBUTTON\")
+widget.setStyleSheet(\"background-color: rgba{rgba_background_00}; color: rgba{rgba_text};\")
+
+""".format(**iColor.style_sheet_args),
     "List":"""
 from qtpy.QtWidgets import QListWidget
 from qtpy.QtWidgets import QAbstractItemView
@@ -37,8 +42,10 @@ widget = QListWidget()
 widget.setDragDropMode(QAbstractItemView.DragDrop)
 widget.setAcceptDrops(True)
 widget.addItems(['a', 'b', 'c', 'd'])
+widget.setStyleSheet(\"background-color: rgba{rgba_background_00}; color: rgba{rgba_text};\")
 # widget.setFixedWidth(100)
-""",
+""".format(**iColor.style_sheet_args),
+
     "Recursion":"""
 from cgwidgets.widgets import PopupBarDisplayWidget
 from cgwidgets.utils import getDefaultSavePath
@@ -47,8 +54,10 @@ widget = PopupBarDisplayWidget()
 widget.loadPopupDisplayFromFile(
     getDefaultSavePath() + '/.PiPWidgets_02.json',
     "RecursionWidget"
+widget.setStyleSheet(\"background-color: rgba{rgba_background_00}; color: rgba{rgba_text};\")
 )
-""",
+""".format(**iColor.style_sheet_args),
+
     "RecursionStandalone":"""
 from cgwidgets.widgets import PopupBarDisplayWidget
 from cgwidgets.utils import getDefaultSavePath
@@ -58,7 +67,9 @@ widget.loadPopupDisplayFromFile(
     getDefaultSavePath() + '/.PiPWidgets_02.json',
     "RecursionWidgetStandalone"
 )
-""",
+widget.setStyleSheet(\"background-color: rgba{rgba_background_00}; color: rgba{rgba_text};\")
+""".format(**iColor.style_sheet_args),
+
     "Popup":"""
 import string
 from qtpy.QtWidgets import QWidget, QVBoxLayout, QComboBox
@@ -70,7 +81,8 @@ l = QVBoxLayout(widget)
 b = QComboBox()
 b.addItems([char for char in string.ascii_letters])
 l.addWidget(b)
-"""
+widget.setStyleSheet(\"background-color: rgba{rgba_background_00}; color: rgba{rgba_text};\")
+""".format(**iColor.style_sheet_args)
 }
 pip_organizer_widget = PopupBarOrganizerWidget(save_data=save_data, widget_types=widget_types)
 

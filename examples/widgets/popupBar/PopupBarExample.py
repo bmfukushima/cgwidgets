@@ -23,7 +23,7 @@ popup_bar_widget = PopupBarDisplayWidget()
 # load widgets
 popup_bar_widget.loadPopupDisplayFromFile(
     getDefaultSavePath() + '/.PiPWidgets_02.json',
-    "taskbar"
+    "Example"
 )
 for x in popup_bar_widget.allWidgets():
     print(x.name())
@@ -34,15 +34,15 @@ popup_bar_widget.setPiPScale(0.55)
 #popup_bar_widget.setTaskbarSize(150)
 # popup_bar_widget.setFixedWidth(150)
 popup_bar_widget.setDirection(attrs.SOUTH)
-# popup_bar_widget.setDisplayMode(PopupBarDisplayWidget.STANDALONETASKBAR)
+popup_bar_widget.setDisplayMode(PopupBarDisplayWidget.PIPTASKBAR)
 
 # create main widget
 main_widget = QWidget()
 main_layout = QHBoxLayout(main_widget)
 main_layout.setContentsMargins(0, 0, 0, 0)
-other_widget = QLabel("Something Else")
+#other_widget = QLabel("Something Else")
 main_layout.addWidget(popup_bar_widget)
-main_layout.addWidget(other_widget)
+# main_layout.addWidget(other_widget)
 
 
 # show widget
