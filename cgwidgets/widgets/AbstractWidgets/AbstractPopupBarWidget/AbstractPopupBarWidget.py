@@ -440,6 +440,8 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             self.__last_object_entered = obj
             #
             if self.isEnlarged():
+                if self.enlargedWidget().isPinned(): return True
+
                 # Block from re-enlarging itself
                 if self.enlargedWidget() == obj:
                     obj.setFocus()
@@ -472,8 +474,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             return True
 
         if event.type() == QEvent.Leave:
-            #print('2')
-            #print(obj)
+
             # todo update ellipse popup
             if not isCursorOverWidget(obj):
                 if obj != self.currentWidget():
@@ -653,6 +654,8 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
                 super(PinWidget, self).__init__(parent, text=text, image=image, is_selected=is_selected)
 
             def hideEvent(self, event):
+                popup_widget = getWidgetAncestor(self, AbstractPopupBarItemWidget)
+                popup_widget.setIsPinned(False)
                 self.setParent(None)
                 AbstractBooleanInputWidget.hideEvent(self, event)
 

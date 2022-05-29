@@ -34,7 +34,7 @@ popup_bar_widget.setPiPScale(0.55)
 #popup_bar_widget.setTaskbarSize(150)
 # popup_bar_widget.setFixedWidth(150)
 popup_bar_widget.setDirection(attrs.SOUTH)
-popup_bar_widget.setDisplayMode(PopupBarDisplayWidget.PIPTASKBAR)
+popup_bar_widget.setDisplayMode(PopupBarDisplayWidget.PIP)
 
 # create main widget
 main_widget = QWidget()
@@ -48,7 +48,7 @@ main_layout.addWidget(popup_bar_widget)
 # show widget
 setAsAlwaysOnTop(main_widget)
 main_widget.show()
-main_widget.resize(512, 512)
+main_widget.resize(960, 540)
 centerWidgetOnScreen(main_widget)
 
 sys.exit(app.exec_())
