@@ -647,7 +647,16 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             else:
                 widget.setImage(icons["pin_disabled"])
 
-        self._pin_button = AbstractBooleanInputWidget(
+        class PinWidget(AbstractBooleanInputWidget):
+            """ Todo: Why does this not always dissappear... major hack here..."""
+            def __init__(self, parent=None, text=None, image=None, is_selected=False):
+                super(PinWidget, self).__init__(parent, text=text, image=image, is_selected=is_selected)
+
+            def hideEvent(self, event):
+                self.setParent(None)
+                AbstractBooleanInputWidget.hideEvent(self, event)
+
+        self._pin_button = PinWidget(
             popup_widget.delegateWidget(), text="", is_selected=False, image=icons["pin_disabled"])
         self._pin_button.setUserFinishedEditingEvent(pinPopupWidget)
         self._pin_button.setFixedSize(PIN_SIZE, PIN_SIZE)
