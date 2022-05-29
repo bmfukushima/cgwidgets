@@ -437,12 +437,6 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             if event.key() == Qt.Key_Escape:
                 self.closeEnlargedView()
 
-            # close popup bar widget on alt press for drag events
-            if event.key() == Qt.Key_Alt:
-                print("alt")
-                if self.isDragging():
-                    obj.pipPopupBarWidget().closeEnlargedView()
-
         if event.type() == QEvent.Enter:
             """
             If the user exits on the first widget, or a widget that will be the enlarged widget,
@@ -780,6 +774,9 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         self.setIsFrozen(False)
         widget.setIsOverlayDisplayed(False)
         self.enlargedWidget().setIsEnlargedWidget(True)
+
+        widget.raise_()
+        widget.activateWindow()
 
     def __enlargeStandaloneTaskbar(self):
         """ Popups the widget when it is in taskbar mode
