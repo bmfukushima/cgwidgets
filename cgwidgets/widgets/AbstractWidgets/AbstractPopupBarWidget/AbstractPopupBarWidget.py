@@ -474,7 +474,6 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             return True
 
         if event.type() == QEvent.Leave:
-
             # todo update ellipse popup
             if not isCursorOverWidget(obj):
                 if obj != self.currentWidget():
@@ -554,6 +553,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
     def __dragEnterEvent(self, obj):
         self.__last_object_entered = obj
         if self.isEnlarged():
+            if self.enlargedWidget().isPinned(): return True
             # Block from re-enlarging itself
             if self.enlargedWidget() == obj:
                 return True
@@ -594,21 +594,20 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         #     pass
 
         if event.type() == QEvent.DragEnter:
-            # print('enter')
-            #event.accept()
             self.__dragEnterEvent(obj)
 
         if event.type() == QEvent.DragMove:
-            # print('move')
             self.__dragMoveEvent(obj)
 
         # on drop, close and reset
         if event.type() == QEvent.Drop:
-            # print('drop')
             self.setIsDragging(False)
-            obj.pipPopupBarWidget().closeEnlargedView()
 
-            # print('drag leave')
+            # close on drop
+            # if obj.pipPopupBarWidget().isEnlarged():
+            #     if obj == obj.pipPopupBarWidget().enlargedWidget():
+            #         if not obj.pipPopupBarWidget().enlargedWidget().isPinned():
+            #             obj.pipPopupBarWidget().closeEnlargedView()
 
     def __splitterMoved(self, *args):
         """ Sets the __temp_sizes list after the splitter has finished moving
@@ -872,18 +871,15 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         # preflight
         if not self.isEnlarged(): return
         if self.enlargedWidget().isCurrentWidget(): return
-        if self.enlargedWidget().isPinned():
-            return
+        if self.enlargedWidget().isPinned(): return
 
         # setup attrs
         self.setIsFrozen(True)
         widget_under_cursor = getWidgetUnderCursor()
         _enlarged_widget = self.enlargedWidget()
         _enlarged_widget.delegateWidget().setProperty("is_enlarged_widget", False)
-        _enlarged_widget.delegateWidget().layout().setContentsMargins(0, 0, 0, 0)
-
+        self.removePinningToggleButton(_enlarged_widget)
         _enlarged_widget.setIsEnlargedWidget(False)
-        _enlarged_widget.setIsPinned(False)
 
         # close children
         if _enlarged_widget.isPopupWidget():
@@ -952,7 +948,7 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
         """ Unfreezing as a delayed event to help to avoid the segfaults that occur
         when PyQt tries to do things to fast..."""
         # self.setIsFrozen(False)
-        self.removePinningToggleButton(_enlarged_widget)
+
         runDelayedEvent(self, self.unfreeze, delay_amount=10)
 
     def unfreeze(self):
