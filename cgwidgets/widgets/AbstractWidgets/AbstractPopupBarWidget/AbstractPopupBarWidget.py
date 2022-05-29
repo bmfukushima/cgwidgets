@@ -6,6 +6,8 @@ Todo:
     *   Drag Leave causing segfaults with STANDALONE TASKBAR (538, 11)
     *   Delays when enlarging (584, 11)
     *   AbstractPiPDisplayWidget change is_standalone to is_organizer (1513, 15)
+Todo ( Cleanup )
+    *   currentWidget does not work...
 Todo (Features):
     *   To give the illusion of instantaneous loading:
             When closing, save image of last state.
@@ -259,7 +261,10 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
                 widget.setIsOverlayDisplayed(enabled)
 
     def isDragging(self):
-        return self.getTopMostPopupBarDisplay(self, self.parent()).isDragging()
+        top_most_popup_bar = self.getTopMostPopupBarDisplay(self, self.parent())
+        if top_most_popup_bar:
+            return top_most_popup_bar.isDragging()
+        return False
 
     def setIsDragging(self, _pip_widget_is_dragging):
         if self.displayMode() == AbstractPopupBarDisplayWidget.PIP:
@@ -432,6 +437,12 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             if event.key() == Qt.Key_Escape:
                 self.closeEnlargedView()
 
+            # close popup bar widget on alt press for drag events
+            if event.key() == Qt.Key_Alt:
+                print("alt")
+                if self.isDragging():
+                    obj.pipPopupBarWidget().closeEnlargedView()
+
         if event.type() == QEvent.Enter:
             """
             If the user exits on the first widget, or a widget that will be the enlarged widget,
@@ -547,19 +558,21 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
 
         if not self.isDragging():
             self.setIsDragging(True)
-            # obj.pipPopupBarWidget().closeEnlargedView()
             return True
 
     def __dragEnterEvent(self, obj):
         self.__last_object_entered = obj
+
         if self.isEnlarged():
             if self.enlargedWidget().isPinned(): return True
             # Block from re-enlarging itself
             if self.enlargedWidget() == obj:
-                return True
+                if isCursorOverWidget(self.enlargedWidget()):
+                    return True
             # Has just enlarged the widget, but the cursor never entered it
             elif obj.isCurrentWidget():
                 self.closeEnlargedView()
+
             else:
                 # reset display label
                 self._resetSpacerWidget()
@@ -570,12 +583,14 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
 
                 # enlarge widget
                 self.enlargeWidget(obj)
-        # Enlarge PopupBarWidget
+
+        # # Enlarge PopupBarWidget
         else:
             # enlarge widget
-            if not obj.isCurrentWidget():
-                obj.pipPopupBarWidget().closeEnlargedView()
+            if isWidgetDescendantOf(obj, obj.parent(), self):
                 self.enlargeWidget(obj)
+
+        return False
 
     def __dragEvent(self, obj, event):
         """ Handles the event filter's Drag Leave Event
