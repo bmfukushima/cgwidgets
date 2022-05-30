@@ -34,21 +34,26 @@ popup_bar_widget.setPiPScale(0.55)
 #popup_bar_widget.setTaskbarSize(150)
 # popup_bar_widget.setFixedWidth(150)
 popup_bar_widget.setDirection(attrs.NORTH)
-popup_bar_widget.setDisplayMode(PopupBarDisplayWidget.PIP)
+popup_bar_widget.setDisplayMode(PopupBarDisplayWidget.PIPTASKBAR)
 
 # create main widget
 main_widget = QWidget()
+
 main_layout = QHBoxLayout(main_widget)
 main_layout.setContentsMargins(0, 0, 0, 0)
-#other_widget = QLabel("Something Else")
-main_layout.addWidget(popup_bar_widget)
-# main_layout.addWidget(other_widget)
+other_widget = QLabel("Something Else")
+
+main_layout.addWidget(other_widget)
 
 
 # show widget
-setAsAlwaysOnTop(main_widget)
-main_widget.show()
-main_widget.resize(960, 540)
-centerWidgetOnScreen(main_widget)
+setAsAlwaysOnTop(popup_bar_widget)
+popup_bar_widget.show()
+popup_bar_widget.resize(960, 540)
+centerWidgetOnScreen(popup_bar_widget)
+#
+# main_widget.show()
+# main_widget.resize(960, 540)
+# centerWidgetOnScreen(main_widget)
 
 sys.exit(app.exec_())

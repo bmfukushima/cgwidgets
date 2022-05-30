@@ -437,6 +437,17 @@ class AbstractPopupBarWidget(AbstractSplitterWidget):
             if event.key() == Qt.Key_Escape:
                 self.closeEnlargedView()
 
+            popup_display_widget = getWidgetAncestor(self, AbstractPiPDisplayWidget)
+            if popup_display_widget:
+                if event.key() == popup_display_widget.swapKey():
+                    popup_display_widget.swapEvent()
+                    return True
+
+                # hotkey swapping
+                if event.key() in popup_display_widget.hotkeySwapKeys():
+                    popup_display_widget.hotkeySwapEvent(event.key())
+                    return True
+
         if event.type() == QEvent.Enter:
             """
             If the user exits on the first widget, or a widget that will be the enlarged widget,
@@ -1353,6 +1364,8 @@ class AbstractPopupBarDisplayWidget(QWidget):
         """ Needs to be set after all of the layout/attrs are created
          as it will need to call these to set the display mode"""
         self.setDisplayMode(display_mode)
+
+        self.setStyleSheet("background-color: rgba{rgba_background_00};".format(**iColor.style_sheet_args))
 
     """ WIDGETS """
     def currentWidget(self):
