@@ -96,7 +96,7 @@ pip_organizer_widget = PopupBarOrganizerWidget(save_data=save_data, widget_types
 setAsAlwaysOnTop(pip_organizer_widget)
 pip_organizer_widget.show()
 centerWidgetOnCursor(pip_organizer_widget)
-pip_organizer_widget.resize(1512, 512)
+pip_organizer_widget.resize(1920, 1080)
 # pip_organizer_widget.setPiPScale(.55)
 # pip_organizer_widget.setEnlargedScale(0.35)
 # pip_organizer_widget.setDirection(attrs.WEST)

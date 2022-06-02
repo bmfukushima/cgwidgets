@@ -6,10 +6,8 @@ TODO
         tf is this doing... supposed to suppress the results.  So that if it's set to false, it will
         always show all of the options... this seems like a stupid idea
 """
-from qtpy.QtWidgets import (
-    QComboBox, QSizePolicy, QLineEdit, QCompleter, QStyledItemDelegate, QApplication)
-from qtpy.QtGui import(
-    QStandardItem, QStandardItemModel, QPixmap, QIcon, QColor)
+from qtpy.QtWidgets import (QLineEdit, QCompleter, QStyledItemDelegate)
+from qtpy.QtGui import(QPixmap, QIcon, QColor)
 from qtpy.QtCore import (QEvent, QAbstractListModel, Qt, QSortFilterProxyModel, QRegExp)
 
 from cgwidgets.widgets.AbstractWidgets import AbstractStringInputWidget
