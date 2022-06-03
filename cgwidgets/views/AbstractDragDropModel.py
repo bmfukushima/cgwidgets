@@ -454,11 +454,10 @@ class AbstractDragDropModel(QAbstractItemModel):
         if role == Qt.FontRole:
             #font = self.font()
             font = QApplication.font()
+
             font.setStrikeOut(not item.isEnabled())
-            # todo DISABLE UPDATES
-            # doesnt register for some reason segfaults?!?!
-            # WRONG INDEX...
-            #self.invalidateFilter()
+            # Todo SortFilterProxyModel | This causes a crash on init for some reason
+            # however, it is required to update the display.
             self.layoutChanged.emit()
 
             return font

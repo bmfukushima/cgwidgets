@@ -7,7 +7,6 @@
 import copy
 
 from qtpy import API_NAME
-
 from qtpy.QtWidgets import (
     QListView, QAbstractItemView, QTreeView, QApplication,
     QProxyStyle, QStyledItemDelegate, QStyleOptionViewItem, QStyle, QMenu
@@ -123,6 +122,7 @@ class AbstractDragDropAbstractView(object):
 
     def setupCustomDelegate(self):
         delegate = AbstractDragDropModelDelegate(self)
+        # delegate = QStyledItemDelegate(self)
         self.setItemDelegate(delegate)
 
     def getIndexUnderCursor(self):
@@ -169,59 +169,59 @@ class AbstractDragDropAbstractView(object):
 
     """ PROPERTIES (FLAGS) """
     def isCopyable(self):
-        return self.model().isCopyable()
+        return self.sourceModel().isCopyable()
 
     def isItemCopyable(self, item):
-        return self.model().isItemCopyable(item)
+        return self.sourceModel().isItemCopyable(item)
 
     def setIsCopyable(self, enabled):
-        self.model().setIsCopyable(enabled)
+        self.sourceModel().setIsCopyable(enabled)
 
     def isDraggable(self):
-        return self.model().isDraggable()
+        return self.sourceModel().isDraggable()
 
     def setIsDraggable(self, enabled):
-        self.model().setIsDraggable(enabled)
+        self.sourceModel().setIsDraggable(enabled)
 
     def isDroppable(self):
-        return self.model().isDroppable()
+        return self.sourceModel().isDroppable()
 
     def isItemDroppable(self, item):
-        return self.model().isItemDroppable(item)
+        return self.sourceModel().isItemDroppable(item)
 
     def setIsDroppable(self, enabled):
-        self.model().setIsDroppable(enabled)
+        self.sourceModel().setIsDroppable(enabled)
 
     def isRootDroppable(self):
-        return self.model().isRootDroppable()
+        return self.sourceModel().isRootDroppable()
 
     def setIsRootDroppable(self, enabled):
         self._isRootDroppable = enabled
-        self.model().setIsRootDroppable(enabled)
+        self.sourceModel().setIsRootDroppable(enabled)
 
     def isEditable(self):
-        return self.model().isEditable()
+        return self.sourceModel().isEditable()
 
     def setIsEditable(self, enabled):
-        self.model().setIsEditable(enabled)
+        self.sourceModel().setIsEditable(enabled)
 
     def isEnableable(self):
-        return self.model().isEnableable()
+        return self.sourceModel().isEnableable()
 
     def setIsEnableable(self, enabled):
-        self.model().setIsEnableable(enabled)
+        self.sourceModel().setIsEnableable(enabled)
 
     def isDeletable(self):
-        return self.model().isDeletable()
+        return self.sourceModel().isDeletable()
 
     def setIsDeletable(self, enabled):
-        self.model().setIsDeletable(enabled)
+        self.sourceModel().setIsDeletable(enabled)
 
     def isSelectable(self):
-        return self.model().isSelectable()
+        return self.sourceModel().isSelectable()
 
     def setIsSelectable(self, enabled):
-        self.model().setIsSelectable(enabled)
+        self.sourceModel().setIsSelectable(enabled)
 
     """ PROPERTIES """
     def copiedItems(self):
@@ -231,13 +231,13 @@ class AbstractDragDropAbstractView(object):
         self._copied_items = copied_items
 
     def rootItem(self):
-        return self.model().rootItem()
+        return self.sourceModel().rootItem()
 
     def updateFirst(self):
-        return self.model().updateFirst()
+        return self.sourceModel().updateFirst()
 
     def setUpdateFirst(self, update_first):
-        self.model().setUpdateFirst(update_first)
+        self.sourceModel().setUpdateFirst(update_first)
 
     """ SELECTION """
     def setItemSelected(self, item, selected):
@@ -247,7 +247,7 @@ class AbstractDragDropAbstractView(object):
             selected (bool):
 
         Returns (True)"""
-        index = self.model().getIndexFromItem(item)
+        index = self.sourceModel().getIndexFromItem(item)
         if selected:
             self.selectionModel().select(index, QItemSelectionModel.Select | QItemSelectionModel.Rows)
         else:
@@ -272,7 +272,7 @@ class AbstractDragDropAbstractView(object):
     def clearItemSelection(self):
         self.selectionModel().clearSelection()
         # for index in self.selectedIndexes():
-        #     self.selectionModel().select(index, QItemSelectionModel.Deselect)
+        #     self.selectionsourceModel().select(index, QItemSelectionModel.Deselect)
 
     def findItems(self, value, index=None, role=Qt.DisplayRole, match_type=Qt.MatchExactly):
         """
@@ -289,16 +289,16 @@ class AbstractDragDropAbstractView(object):
         Returns (list): of QModelIndex
 
         """
-        return self.model().findItems(value, index=index, role=role, match_type=match_type)
+        return self.sourceModel().findItems(value, index=index, role=role, match_type=match_type)
 
     def getAllSelectedIndexes(self):
         """ Gets all of the currently selected indexes.
 
         This will return a list of only the indexes in column 0, if it is a tree view."""
         if isinstance(self, AbstractDragDropListView):
-            return self.selectionModel().selectedIndexes()
+            return self.selectionsourceModel().selectedIndexes()
         if isinstance(self, AbstractDragDropTreeView):
-            return self.selectionModel().selectedRows(0)
+            return self.selectionsourceModel().selectedRows(0)
 
     def getAllSelectedItems(self):
         item_list = []
@@ -366,10 +366,10 @@ class AbstractDragDropAbstractView(object):
 
     """ EXPORT DATA """
     def setItemExportDataFunction(self, func):
-        self.model().setItemExportDataFunction(func)
+        self.sourceModel().setItemExportDataFunction(func)
 
     def exportModelToDict(self, item, item_data=None):
-        return self.model().exportModelToDict(item, item_data=item_data)
+        return self.sourceModel().exportModelToDict(item, item_data=item_data)
 
     """ DELETE """
     def deleteWarningWidget(self):
@@ -409,7 +409,7 @@ class AbstractDragDropAbstractView(object):
 
         # check to see if items are copyable
         for item in copyable_items:
-            if not self.model().isItemCopyable(item):
+            if not self.sourceModel().isItemCopyable(item):
                 copyable_items.remove(item)
 
         return copyable_items
@@ -419,6 +419,13 @@ class AbstractDragDropAbstractView(object):
         self.setCopiedItems(copyable_items)
 
         return copyable_items
+
+    @staticmethod
+    def getSourceIndex(index):
+        if isinstance(index.model(), QSortFilterProxyModel):
+            return index.model().mapToSource(index)
+        else:
+            return index
 
     """ EVENTS """
     def enterEvent(self, event):
@@ -438,15 +445,15 @@ class AbstractDragDropAbstractView(object):
     def abstractSelectionChanged(self, selected, deselected):
         for index in selected.indexes():
             if index.column() == 0:
-                item = index.internalPointer()
-                self.model().itemSelectedEvent(item, True)
-                self.model().setLastSelectedItem(item)
+                item = AbstractDragDropAbstractView.getSourceIndex(index).internalPointer()
+                self.sourceModel().itemSelectedEvent(item, True)
+                self.sourceModel().setLastSelectedItem(item)
 
         for index in deselected.indexes():
             if index.column() == 0:
-                item = index.internalPointer()
-                self.model().itemSelectedEvent(item, False)
-                self.model().setLastSelectedItem(item)
+                item = AbstractDragDropAbstractView.getSourceIndex(index).internalPointer()
+                self.sourceModel().itemSelectedEvent(item, False)
+                self.sourceModel().setLastSelectedItem(item)
 
     def abstractKeyPressEvent(self, event):
         if event.modifiers() == Qt.NoModifier:
@@ -457,14 +464,14 @@ class AbstractDragDropAbstractView(object):
                 self.clearItemSelection()
 
             # Delete Item
-            #if self.model().isDeletable():
+            #if self.sourceModel().isDeletable():
             if event.key() in [Qt.Key_Delete, Qt.Key_Backspace]:
                 # delete events
                 def deleteItems(widget):
                     deletable_items = self.getAllBaseItems()
                     for item in deletable_items:
                         if (item.isDeletable() == True) or (item.isDeletable() == None and self.isDeletable() == True):
-                            self.model().deleteItem(item, event_update=True, update_first=self.updateFirst())
+                            self.sourceModel().deleteItem(item, event_update=True, update_first=self.updateFirst())
 
                 def dontDeleteItem(widget):
                     return
@@ -476,15 +483,15 @@ class AbstractDragDropAbstractView(object):
                     deleteItems(None)
 
             # Disable Item
-            #if self.model().isEnableable():
+            #if self.sourceModel().isEnableable():
             if event.key() == Qt.Key_D:
-                indexes = self.selectionModel().selectedRows(0)
+                indexes = self.selectionsourceModel().selectedRows(0)
                 for index in indexes:
                     item = index.internalPointer()
                     if (item.isEnableable() == True) or (item.isEnableable() == None and self.isEnableable() == True):
                         enabled = False if item.isEnabled() else True
-                        self.model().setItemEnabled(item, enabled)
-                self.model().layoutChanged.emit()
+                        self.sourceModel().setItemEnabled(item, enabled)
+                self.sourceModel().layoutChanged.emit()
 
         if self.isCopyable():
             if event.modifiers() == Qt.ControlModifier:
@@ -511,10 +518,10 @@ class AbstractDragDropAbstractView(object):
 
     def abstractMouseMoveEvent(self, event):
         if self.__pressed:
-            index_under_cursor = self.indexAt(event.pos())
+            index_under_cursor = AbstractDragDropAbstractView.getSourceIndex(self.indexAt(event.pos()))
             if index_under_cursor.internalPointer():
-                if self.model().lastSelectedItem():
-                    index = self.model().getIndexFromItem(self.model().lastSelectedItem())
+                if self.sourceModel().lastSelectedItem():
+                    index = self.sourceModel().getIndexFromItem(self.sourceModel().lastSelectedItem())
                     if index_under_cursor == index:
                         self.setIndexSelected(index, True)
             self.__pressed = False
@@ -553,7 +560,7 @@ class AbstractDragDropAbstractView(object):
         column_data = copy.deepcopy(item.columnData())
 
         # create new index
-        new_index = self.model().insertNewIndex(row, name=name, column_data=column_data, parent=parent_index)
+        new_index = self.sourceModel().insertNewIndex(row, name=name, column_data=column_data, parent=parent_index)
         return new_index
 
     def setCopyEvent(self, function):
@@ -584,7 +591,7 @@ class AbstractDragDropAbstractView(object):
                 parent_item = current_item.parent()
         # no objects selected
         else:
-            parent_item = self.model().rootItem()
+            parent_item = self.sourceModel().rootItem()
 
         # check is not pasting under current selection
         for item in self.copiedItems():
@@ -593,7 +600,7 @@ class AbstractDragDropAbstractView(object):
         return parent_item
 
     def isItemDescendantOf(self, item, ancestor):
-        return self.model().isItemDescendantOf(item, ancestor)
+        return self.sourceModel().isItemDescendantOf(item, ancestor)
 
     def pasteEvent(self):
         """
@@ -604,7 +611,7 @@ class AbstractDragDropAbstractView(object):
         # Get parent node/item
         parent_item = self.getPasteLocation()
 
-        parent_index = self.model().getIndexFromItem(parent_item)
+        parent_index = self.sourceModel().getIndexFromItem(parent_item)
 
         # paste items
         pasted_items = []
@@ -612,7 +619,7 @@ class AbstractDragDropAbstractView(object):
             # get attrs
             if item == parent_item:
                 parent_item = item.parent()
-                parent_index = self.model().getIndexFromItem(parent_item)
+                parent_index = self.sourceModel().getIndexFromItem(parent_item)
             row = copy.deepcopy(parent_item.childCount())
             new_index = self.deepCopyItem(item, parent_index, row)
             new_item = new_index.internalPointer()
@@ -636,7 +643,7 @@ class AbstractDragDropAbstractView(object):
                 new_index = self.deepCopyItem(child, parent_index, row)
                 # name = copy.deepcopy(item.name())
                 # column_data = copy.deepcopy(item.columnData())
-                # new_index = self.model().insertNewIndex(
+                # new_index = self.sourceModel().insertNewIndex(
                 #     row, name=name, column_data=column_data, parent=parent_index)
                 if 0 < child.childCount():
                     self.__pasteGroupItem(child, new_index)
@@ -654,7 +661,7 @@ class AbstractDragDropAbstractView(object):
 
         # delete indexes
         for item in self.copiedItems():
-            self.model().deleteItem(item, event_update=True)
+            self.sourceModel().deleteItem(item, event_update=True)
 
     def __cutEvent(self, copied_items):
         pass
@@ -669,14 +676,14 @@ class AbstractDragDropAbstractView(object):
         for item in self.copiedItems():
 
             row = copy.deepcopy(item.row())
-            parent = self.model().getIndexFromItem(item.parent())
+            parent = self.sourceModel().getIndexFromItem(item.parent())
             new_index = self.deepCopyItem(item, parent, row)
             new_items.append(new_index.internalPointer())
             # name = copy.deepcopy(item.name())
             # column_data = copy.deepcopy(item.columnData())
             #
 
-            # new_index = self.model().insertNewIndex(row+1, name=name, column_data=column_data, parent=parent)
+            # new_index = self.sourceModel().insertNewIndex(row+1, name=name, column_data=column_data, parent=parent)
             self.__pasteGroupItem(item, new_index)
 
         self.__duplicateEvent(copyable_items, new_items)
@@ -732,7 +739,7 @@ class AbstractDragDropAbstractView(object):
 
         # get selected items / items under cursor
         index_clicked = context_menu.item
-        selected_indexes = self.selectionModel().selectedRows(0)
+        selected_indexes = self.selectionsourceModel().selectedRows(0)
 
         # do user defined event
         if action is not None:
@@ -904,8 +911,18 @@ class AbstractDragDropListView(QListView, AbstractDragDropAbstractView):
         #
         return style_sheet
 
-    """ EVENTS """
+    def sourceModel(self):
+        return self._source_model
 
+    def setModel(self, model):
+        from qtpy.QtCore import QSortFilterProxyModel
+        if isinstance(model, QSortFilterProxyModel):
+            self._source_model = model.sourceModel()
+        else:
+            self._source_model = model
+        return QListView.setModel(self, model)
+
+    """ EVENTS """
     def contextMenuEvent(self, event):
         self.abstractContextMenuEvent(event)
         return QListView.contextMenuEvent(self, event)
@@ -942,8 +959,8 @@ class AbstractDragDropTreeView(QTreeView, AbstractDragDropAbstractView):
 
         # context menu
         # self.addContextMenuEvent("Expand Item and All Children", self.expandItemEvent)
-        self.addContextMenuEvent("Expand All", self.expandAllEvent)
-        self.addContextMenuEvent("Collapse All", self.collapseAllEvent)
+        # self.addContextMenuEvent("Expand All", self.expandAllEvent)
+        # self.addContextMenuEvent("Collapse All", self.collapseAllEvent)
 
     """ EVENTS """
     def expanded(self, index):
@@ -973,7 +990,7 @@ class AbstractDragDropTreeView(QTreeView, AbstractDragDropAbstractView):
             header_data (list): of strings that will be displayed as the header
                 data.  This will also set the number of columns in the view aswell.
         """
-        self.model().setHeaderData(_header_data)
+        self.sourceModel().setHeaderData(_header_data)
 
     """ Overload """
     def createStyleSheet(self, header_position, style_sheet_args):
@@ -1013,6 +1030,16 @@ class AbstractDragDropTreeView(QTreeView, AbstractDragDropAbstractView):
     def setFlow(self, _):
         pass
 
+    def sourceModel(self):
+        return self._source_model
+
+    def setModel(self, model):
+        if isinstance(model, QSortFilterProxyModel):
+            self._source_model = model.sourceModel()
+        else:
+            self._source_model = model
+        return QTreeView.setModel(self, model)
+
     """ EVENTS """
     def contextMenuEvent(self, event):
         self.abstractContextMenuEvent(event)
@@ -1026,7 +1053,8 @@ class AbstractDragDropTreeView(QTreeView, AbstractDragDropAbstractView):
         self.abstractMouseReleaseEvent(event)
 
         # update items expansion state
-        index = self.indexAt(event.pos())
+        index = AbstractDragDropAbstractView.getSourceIndex(self.indexAt(event.pos()))
+
         if index.internalPointer():
             is_expanded = self.isExpanded(index)
             index.internalPointer().setIsExpanded(is_expanded)
@@ -1101,7 +1129,7 @@ class AbstractDragDropModelDelegate(QStyledItemDelegate):
         return delegate_widget
 
     def setEditorData(self, editor, index):
-        # text = index.model().data(index, Qt.DisplayRole)
+        # text = index.sourceModel().data(index, Qt.DisplayRole)
         # editor.setText(text)
         return QStyledItemDelegate.setEditorData(self, editor, index)
 
@@ -1142,6 +1170,7 @@ class AbstractDragDropModelDelegate(QStyledItemDelegate):
         widget = constructor(parent)
         return widget
 
+    # todo update for proxymodels
     def paint(self, painter, option, index):
         """
         Overrides the selection highlight color.
@@ -1152,26 +1181,20 @@ class AbstractDragDropModelDelegate(QStyledItemDelegate):
 
         """
         from qtpy.QtGui import QPalette
-        item = index.internalPointer()
+        # item = index.internalPointer()
         new_option = QStyleOptionViewItem(option)
         brush = QBrush()
-        if item.isEnabled():
-            color = QColor(*iColor["rgba_text"])
-        else:
-            color = QColor(*iColor["rgba_text_disabled"])
-        # TODO highlight selection color???
-        # why did I move this here?
-        brush.setColor(color)
+        index = AbstractDragDropAbstractView.getSourceIndex(index)
+        if index.internalPointer():
+            if index.internalPointer().isEnabled():
+                color = QColor(*iColor["rgba_text"])
+            else:
+                color = QColor(*iColor["rgba_text_disabled"])
 
-        # brush2 = QBrush(QColor(0, 255, 0, 128))
-        new_option.palette.setBrush(QPalette.Normal, QPalette.HighlightedText, brush)
-        # new_option.palette.setBrush(QPalette.Normal, QPalette.Highlight, brush2)
+            brush.setColor(color)
+            new_option.palette.setBrush(QPalette.Normal, QPalette.HighlightedText, brush)
 
-        QStyledItemDelegate.paint(self, painter, new_option, index)
-
-        # if option.state == QStyle.State_Selected:
-        #     brush2 = QBrush(QColor(0, 255, 255, 128))
-        return
+        return QStyledItemDelegate.paint(self, painter, new_option, index)
 
 
 # example drop indicator

@@ -158,15 +158,19 @@ class AbstractModelViewWidget(AbstractShojiLayout):
 
         Returns (QWidget): view
         """
-        if view_type == AbstractModelViewWidget.TREE_VIEW:
-            view = AbstractDragDropTreeView()
+        if view_type in [AbstractModelViewWidget.TREE_VIEW, AbstractModelViewWidget.LIST_VIEW]:
+            if view_type == AbstractModelViewWidget.TREE_VIEW:
+                view = AbstractDragDropTreeView()
 
-        if view_type == AbstractModelViewWidget.LIST_VIEW:
-            view = AbstractDragDropListView()
+            if view_type == AbstractModelViewWidget.LIST_VIEW:
+                view = AbstractDragDropListView()
 
-        self.setView(view, view_type=view_type)
+            self.setView(view, view_type=view_type)
 
-        return view
+            return view
+
+        print("Illegal view type found use: AbstractModelViewWidget.TREE_VIEW, AbstractModelViewWidget.LIST_VIEW")
+        return None
 
     def addContextMenuSeparator(self, conditions=None):
         """
