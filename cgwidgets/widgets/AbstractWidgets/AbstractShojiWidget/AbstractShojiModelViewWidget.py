@@ -104,6 +104,7 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         self._header_width = 100
         self._delegate_title_shown = False
         self._delegate_header_direction = Qt.Vertical
+        self._initializing = True
 
         # setup model / view
         self._header_widget = AbstractShojiHeader(self)
@@ -834,7 +835,9 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
     """ EVENTS """
     def showEvent(self, event):
         return_val = QSplitter.showEvent(self, event)
-        self.setHeaderWidgetToDefaultSize()
+        if self._initializing:
+            self.setHeaderWidgetToDefaultSize()
+            self._initializing = False
         self.updateStyleSheet()
         return return_val
 

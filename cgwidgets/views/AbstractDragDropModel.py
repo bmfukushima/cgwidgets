@@ -436,6 +436,7 @@ class AbstractDragDropModel(QAbstractItemModel):
         INPUTS: QModelIndex, int
         OUTPUT: QVariant, strings are cast to QString which is a QVariant
         """
+
         if not index.isValid():
             return None
 
@@ -718,6 +719,7 @@ class AbstractDragDropModel(QAbstractItemModel):
         INPUTS: int, int, QModelIndex
         """
         parent_item = self.getItem(parent)
+        self.beginResetModel()
         self.beginInsertRows(parent, position, position + num_rows - 1)
 
         for row in range(num_rows):
@@ -726,6 +728,7 @@ class AbstractDragDropModel(QAbstractItemModel):
             success = parent_item.insertChild(position, childNode)
 
         self.endInsertRows()
+        self.endResetModel()
 
         return success
 
@@ -749,12 +752,14 @@ class AbstractDragDropModel(QAbstractItemModel):
 
     def setItemParent(self, row, item, parent_index):
         """ Sets the items parent to a new parent"""
+        self.beginResetModel()
         new_item = item
         self.deleteItem(item, event_update=False)
 
         self.beginInsertRows(parent_index, row, row + 1)
         parent_index.internalPointer().insertChild(row, new_item)
         self.endInsertRows()
+        self.endResetModel()
 
     """ PROPERTIES """
     def lastSelectedItem(self):
@@ -913,6 +918,7 @@ class AbstractDragDropModel(QAbstractItemModel):
 
         """
         # get indexes
+
         self.indexes = [index.internalPointer() for index in indexes if index.column() == 0]
 
         mimedata = QMimeData()
@@ -928,6 +934,7 @@ class AbstractDragDropModel(QAbstractItemModel):
 
     def dropMimeData(self, data, action, row, column, parent):
         # bypass remove rows
+        self.beginResetModel()
         self._dropping = True
 
         # get parent item
@@ -938,6 +945,7 @@ class AbstractDragDropModel(QAbstractItemModel):
         # iterate through index list
         indexes = self.indexes
         new_items = []
+
         for item in indexes:
             # get row
             """ drop on item"""
@@ -977,13 +985,15 @@ class AbstractDragDropModel(QAbstractItemModel):
             new_items.append(new_item)
 
             # insert item
+
             self.beginInsertRows(parent, row, row + 1)
             parent_item.insertChild(row, new_item)
             self.endInsertRows()
 
+
         # run virtual function
         self.dropEvent(data, new_items, self, row, parent_item)
-
+        self.endResetModel()
         # select new indexes?
         #self.layoutChanged.emit()
         return False
@@ -997,15 +1007,6 @@ class AbstractDragDropModel(QAbstractItemModel):
 
     def __getItemExportData(self, item):
         return {"children": [], "name": item.name()}
-
-    def setDragStartEvent(self, function):
-        self.__startDragEvent = function
-
-    def dragStartEvent(self, items, model):
-        self.__startDragEvent(items, model)
-
-    def __startDragEvent(self, items, model):
-        pass
 
     def exportModelToDict(self, item, item_data=None, allow_none_types=False):
         """ Recursive call to generate a dictionary from the entire model.

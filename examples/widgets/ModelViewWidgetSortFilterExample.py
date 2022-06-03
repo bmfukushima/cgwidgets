@@ -38,7 +38,9 @@ class ModelViewWidgetSubclass(ModelViewWidget):
         self._source_model = self.model()
         self._proxy_model = QSortFilterProxyModel(self)
         self._proxy_model.setSourceModel(self._source_model)
-        self.setModel(self._proxy_model)
+        self._proxy_model.setRecursiveFilteringEnabled(True)
+        # self.setModel(self._proxy_model)
+        self.setModel(self._source_model)
         #view.show()
         # view.setModel(self._proxy_model)
         # self.setModel(self._proxy_model)
@@ -48,12 +50,19 @@ class ModelViewWidgetSubclass(ModelViewWidget):
             for i, char in enumerate('abc'):
                 self._source_model.insertNewIndex(i, name=char, parent=index)
 
-        #
-        #
-        regex = QRegExp("a")
-        regex.setCaseSensitivity(Qt.CaseInsensitive)
-        self._proxy_model.setFilterRegExp(regex)
+        # regex = QRegExp("a")
+        # regex.setCaseSensitivity(Qt.CaseInsensitive)
+        # self._proxy_model.setFilterRegExp(regex)
 
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_F5:
+            print('key press')
+            self._proxy_model = QSortFilterProxyModel(self)
+            self._proxy_model.setSourceModel(self._source_model)
+            self._proxy_model.setRecursiveFilteringEnabled(True)
+            self.setModel(self._proxy_model)
+            #self.setModel(self._source_model)
+        return ModelViewWidget.keyPressEvent(self, event)
 
 main_widget = ModelViewWidgetSubclass()
 
