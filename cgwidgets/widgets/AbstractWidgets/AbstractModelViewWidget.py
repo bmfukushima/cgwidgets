@@ -270,14 +270,14 @@ class AbstractModelViewWidget(AbstractShojiLayout):
     def makeModelFilterable(self):
         self.view().makeModelFilterable()
 
-    def addFilter(self, regex_filter, arg="name"):
-        self.view().addFilter(regex_filter=regex_filter, arg=arg)
+    def addFilter(self, regex_filter, arg="name", name=None):
+        self.view().addFilter(regex_filter=regex_filter, arg=arg, name=name)
 
     def clearFilters(self):
         self.view().clearFilters()
 
     def filters(self):
-        self.view().filters()
+        return self.view().filters()
 
     def removeFilter(self, regex_filter, arg="name"):
         self.view().removeFilter({"filter": regex_filter, "arg": arg})

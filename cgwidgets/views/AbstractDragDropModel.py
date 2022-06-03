@@ -130,7 +130,10 @@ class AbstractDragDropModelItem(object):
         self.columnData()[arg] = value
 
     def getArg(self, arg):
-        return self.columnData()[arg]
+        try:
+            return self.columnData()[arg]
+        except KeyError:
+            return None
 
     def getArgsList(self):
         return list(self.columnData().keys())
@@ -291,6 +294,7 @@ class AbstractDragDropFilterProxyModel(QSortFilterProxyModel):
         for _filter in self._filters:
             if _filter["name"] == name:
                 _filter["filter"].setPattern(pattern)
+                self.invalidateFilter()
 
     def filterAcceptsRow(self, source_row, source_parent):
         source_index = self.sourceModel().index(source_row, 0, source_parent)

@@ -494,14 +494,14 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         self.headerWidget().makeModelFilterable()
 
     """ MODEL FILTERS """
-    def addFilter(self, regex_filter, arg="name"):
-        self.headerWidget().addFilter(regex_filter=regex_filter, arg=arg)
+    def addFilter(self, regex_filter, arg="name", name=None):
+        self.headerWidget().addFilter(regex_filter=regex_filter, arg=arg, name=name)
 
     def clearFilters(self):
         self.headerWidget().clearFilters()
 
     def filters(self):
-        self.headerWidget().filters()
+        return self.headerWidget().filters()
 
     def removeFilter(self, regex_filter, arg="name"):
         self.headerWidget().removeFilter({"filter": regex_filter, "arg": arg})

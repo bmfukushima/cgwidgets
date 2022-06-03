@@ -9,7 +9,7 @@ import copy
 from qtpy import API_NAME
 from qtpy.QtWidgets import (QListView, QTreeView, QProxyStyle, QStyledItemDelegate, QStyleOptionViewItem, QMenu, QAbstractItemView)
 from qtpy.QtCore import Qt, QPoint, QPointF, QRect, QItemSelectionModel, QSortFilterProxyModel, QModelIndex, QAbstractItemModel
-from qtpy.QtGui import QColor, QPen, QBrush, QPolygonF, QPainterPath
+from qtpy.QtGui import QColor, QPen, QBrush, QPolygonF, QPainterPath, QCursor
 
 from cgwidgets.utils import showWarningDialogue
 from cgwidgets.settings import iColor, attrs, icons
@@ -439,9 +439,9 @@ class AbstractDragDropAbstractView(object):
             self.setModel(self._proxy_model)
 
     """ VIRTUAL FILTER FUNCTIONS """
-    def addFilter(self, regex_filter, arg="name"):
+    def addFilter(self, regex_filter, arg="name", name=None):
         if self.isModelCustomFilterable():
-            self.model().addFilter(regex_filter=regex_filter, arg=arg)
+            self.model().addFilter(regex_filter=regex_filter, arg=arg, name=name)
         else:
             print("Invalid model, please use AbstractDragDropFilterProxyModel")
 
@@ -451,7 +451,7 @@ class AbstractDragDropAbstractView(object):
 
     def filters(self):
         if self.isModelCustomFilterable():
-            self.model().filters()
+            return self.model().filters()
 
     def removeFilter(self, regex_filter, arg="name"):
         if self.isModelCustomFilterable():
@@ -1442,7 +1442,6 @@ if __name__ == '__main__':
     import sys
     from qtpy.QtWidgets import (
         QApplication, QTreeView, QListView)
-    from qtpy.QtGui import QCursor
 
 
     app = QApplication(sys.argv)
