@@ -7,16 +7,13 @@
 import copy
 
 from qtpy import API_NAME
-from qtpy.QtWidgets import (
-    QListView, QAbstractItemView, QTreeView, QApplication,
-    QProxyStyle, QStyledItemDelegate, QStyleOptionViewItem, QStyle, QMenu
-)
-from qtpy.QtCore import Qt, QPoint, QPointF, QRect, QItemSelectionModel, QSortFilterProxyModel, QModelIndex
-from qtpy.QtGui import QColor, QPen, QBrush, QCursor, QPolygonF, QPainterPath
+from qtpy.QtWidgets import (QListView, QTreeView, QProxyStyle, QStyledItemDelegate, QStyleOptionViewItem, QMenu, QAbstractItemView)
+from qtpy.QtCore import Qt, QPoint, QPointF, QRect, QItemSelectionModel, QSortFilterProxyModel, QModelIndex, QAbstractItemModel
+from qtpy.QtGui import QColor, QPen, QBrush, QPolygonF, QPainterPath
 
 from cgwidgets.utils import showWarningDialogue
 from cgwidgets.settings import iColor, attrs, icons
-from cgwidgets.views import AbstractDragDropModel
+from cgwidgets.views import AbstractDragDropModel, AbstractDragDropFilterProxyModel
 
 
 """ VIEWS """
@@ -35,6 +32,7 @@ class AbstractDragDropAbstractView(object):
         self._delete_warning_widget = None
         self.setMouseTracking(True)
         self.__pressed = False
+        self._proxy_model = None
 
         # setup style
         self.style = AbstractDragDropIndicator()
@@ -420,6 +418,49 @@ class AbstractDragDropAbstractView(object):
 
         return copyable_items
 
+    """ MODEL """
+    def isModelFilterable(self):
+        if isinstance(self.model(), QAbstractItemModel):
+            return False
+        elif isinstance(self.model(), QSortFilterProxyModel):
+            return True
+        else:
+            return False
+
+    def isModelCustomFilterable(self):
+        if isinstance(self.model(), AbstractDragDropFilterProxyModel):
+            return True
+        return False
+
+    def makeModelFilterable(self):
+        if isinstance(self.model(), QAbstractItemModel):
+            self._proxy_model = AbstractDragDropFilterProxyModel(self)
+            self._proxy_model.setSourceModel(self.model())
+            self.setModel(self._proxy_model)
+
+    """ VIRTUAL FILTER FUNCTIONS """
+    def removeFilter(self, regex_filter, arg="name"):
+        if self.isModelCustomFilterable():
+            self.model().removeFilter({"filter": regex_filter, "arg": arg})
+
+    def removeFilterByIndex(self, index):
+        if self.isModelCustomFilterable():
+            self.model().removeFilterByIndex(index)
+
+    def clearFilters(self):
+        if self.isModelCustomFilterable():
+            self.model().clearFilters()
+
+    def filters(self):
+        if self.isModelCustomFilterable():
+            self.model().filters()
+
+    def addFilter(self, regex_filter, arg="name"):
+        if self.isModelCustomFilterable():
+            self.model().addFilter(regex_filter=regex_filter, arg=arg)
+        else:
+            print("Invalid model, please use AbstractDragDropFilterProxyModel")
+
     @staticmethod
     def getSourceIndex(index):
         if isinstance(index.model(), QSortFilterProxyModel):
@@ -461,18 +502,15 @@ class AbstractDragDropAbstractView(object):
         if event.modifiers() == Qt.NoModifier:
             # Clear Selection
             if event.key() == Qt.Key_Escape:
-                # from qtpy.QtWidgets import qApp
-                # if qApp.widgetAt(QCursor.pos()) == self:
                 self.clearItemSelection()
 
             # Delete Item
-            #if self.sourceModel().isDeletable():
             if event.key() in [Qt.Key_Delete, Qt.Key_Backspace]:
                 # delete events
                 def deleteItems(widget):
                     deletable_items = self.getAllBaseItems()
                     for item in deletable_items:
-                        if (item.isDeletable() == True) or (item.isDeletable() == None and self.isDeletable() == True):
+                        if (item.isDeletable() is True) or (item.isDeletable() is None and self.isDeletable() is True):
                             self.sourceModel().deleteItem(item, event_update=True, update_first=self.updateFirst())
 
                 def dontDeleteItem(widget):
@@ -485,7 +523,6 @@ class AbstractDragDropAbstractView(object):
                     deleteItems(None)
 
             # Disable Item
-            #if self.sourceModel().isEnableable():
             if event.key() == Qt.Key_D:
                 indexes = self.selectionsourceModel().selectedRows(0)
                 for index in indexes:
@@ -913,13 +950,19 @@ class AbstractDragDropListView(QListView, AbstractDragDropAbstractView):
         #
         return style_sheet
 
+    # TODO: Move this to AbstractDragDropAbstractView
     def sourceModel(self):
         return self._source_model
 
+    # TODO: Move this to AbstractDragDropAbstractView
+    def proxyModel(self):
+        return self._proxy_model
+
+    # TODO: Move this to AbstractDragDropAbstractView
     def setModel(self, model):
-        from qtpy.QtCore import QSortFilterProxyModel
         if isinstance(model, QSortFilterProxyModel):
             self._source_model = model.sourceModel()
+            self._proxy_model = model
         else:
             self._source_model = model
         return QListView.setModel(self, model)
@@ -1032,12 +1075,19 @@ class AbstractDragDropTreeView(QTreeView, AbstractDragDropAbstractView):
     def setFlow(self, _):
         pass
 
+    # TODO: Move this to AbstractDragDropAbstractView
+    def proxyModel(self):
+        return self._proxy_model
+
+    # TODO: Move this to AbstractDragDropAbstractView
     def sourceModel(self):
         return self._source_model
 
+    # TODO: Move this to AbstractDragDropAbstractView
     def setModel(self, model):
         if isinstance(model, QSortFilterProxyModel):
             self._source_model = model.sourceModel()
+            self._proxy_model = model
         else:
             self._source_model = model
         return QTreeView.setModel(self, model)
@@ -1377,7 +1427,7 @@ class AbstractDragDropIndicator(QProxyStyle):
 if __name__ == '__main__':
     import sys
     from qtpy.QtWidgets import (
-        QApplication, QTreeView, QListView, QAbstractItemView)
+        QApplication, QTreeView, QListView)
     from qtpy.QtGui import QCursor
 
 

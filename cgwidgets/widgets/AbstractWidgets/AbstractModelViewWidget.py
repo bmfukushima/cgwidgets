@@ -116,14 +116,12 @@ class AbstractModelViewWidget(AbstractShojiLayout):
         Returns:
 
         """
-        if hasattr (self, "_view"):
+        if hasattr(self, "_view"):
             self._view.setParent(None)
 
         # setup model
         if self.model():
             view.setModel(self.model())
-            # if isinstance(view, AbstractDragDropListView):
-            #     self.setIsDroppable(False)
         else:
             model = AbstractDragDropModel()
             view.setModel(model)
@@ -264,6 +262,22 @@ class AbstractModelViewWidget(AbstractShojiLayout):
 
     def selectionModel(self):
         return self.view().selectionModel()
+
+    """ MODEL FILTERS"""
+    def removeFilter(self, regex_filter, arg="name"):
+        self.view().removeFilter({"filter": regex_filter, "arg": arg})
+
+    def removeFilterByIndex(self, index):
+        self.view().removeFilterByIndex(index)
+
+    def clearFilters(self):
+        self.view().clearFilters()
+
+    def filters(self):
+        self.view().filters()
+
+    def addFilter(self, regex_filter, arg="name"):
+        self.view().addFilter(regex_filter=regex_filter, arg=arg)
 
     """ SELECTION """
     def clearItemSelection(self):

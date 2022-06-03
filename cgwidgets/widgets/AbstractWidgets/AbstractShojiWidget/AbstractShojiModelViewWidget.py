@@ -466,7 +466,6 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
             return model
 
     def setModel(self, model):
-        #self._model = model
         if isinstance(model, QSortFilterProxyModel):
             model.sourceModel().setItemType(AbstractShojiModelItem)
         else:
@@ -487,6 +486,22 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
 
     def deleteItem(self, item, event_update=False):
         self.model().deleteItem(item, event_update=event_update)
+
+    """ MODEL FILTERS """
+    def removeFilter(self, regex_filter, arg="name"):
+        self.headerWidget().removeFilter({"filter": regex_filter, "arg": arg})
+
+    def removeFilterByIndex(self, index):
+        self.headerWidget().removeFilterByIndex(index)
+
+    def clearFilters(self):
+        self.headerWidget().clearFilters()
+
+    def filters(self):
+        self.headerWidget().filters()
+
+    def addFilter(self, regex_filter, arg="name"):
+        self.headerWidget().addFilter(regex_filter=regex_filter, arg=arg)
 
     """ EXPORT DATA """
     def setItemExportDataFunction(self, func):

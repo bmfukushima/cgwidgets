@@ -1,30 +1,16 @@
 import sys
 import os
 # os.environ['QT_API'] = 'pyside2'
-from qtpy.QtWidgets import QApplication, QLabel, QTreeView
+from qtpy.QtWidgets import QApplication
 from qtpy.QtGui import QCursor
-from qtpy.QtCore import Qt, QByteArray, QSortFilterProxyModel, QRegExp, QAbstractItemModel, QModelIndex
+from qtpy.QtCore import Qt, QRegExp
 
-from cgwidgets.widgets import ModelViewWidget, AbstractLabelWidget
-from cgwidgets.views import AbstractDragDropModel
-from cgwidgets.settings import iColor
-from cgwidgets.utils import centerWidgetOnCursor, setAsAlwaysOnTop
-
-from PyQt5.QtCore import (QDate, QDateTime, QRegExp, QSortFilterProxyModel, Qt,
-        QTime)
-from PyQt5.QtGui import QStandardItemModel
-from PyQt5.QtWidgets import (QApplication, QCheckBox, QComboBox, QDateEdit,
-        QGridLayout, QGroupBox, QHBoxLayout, QLabel, QLineEdit, QTreeView,  QListView,
-        QVBoxLayout, QWidget)
+from cgwidgets.widgets import ModelViewWidget
+from cgwidgets.views import AbstractDragDropFilterProxyModel
+from cgwidgets.utils import centerWidgetOnCursor
 
 import sys
 # https://doc.qt.io/qt-5/model-view-programming.html#model-view-classes
-from qtpy.QtWidgets import (
-    QStyledItemDelegate, QApplication, QWidget, QStyle, QStyleOptionViewItem)
-from qtpy.QtCore import (
-    Qt, QModelIndex, QAbstractItemModel, QItemSelectionModel,
-    QSize, QMimeData, QByteArray, QPoint, QRect)
-from qtpy.QtGui import QPainter, QColor, QPen, QBrush, QCursor, QPolygonF, QPainterPath
 
 
 app = QApplication(sys.argv)
@@ -34,36 +20,28 @@ class ModelViewWidgetSubclass(ModelViewWidget):
     def __init__(self, parent=None):
         super(ModelViewWidgetSubclass, self).__init__(parent)
         self.setPresetViewType(ModelViewWidget.TREE_VIEW)
-
-        self._source_model = self.model()
-        self._proxy_model = QSortFilterProxyModel(self)
-        self._proxy_model.setSourceModel(self._source_model)
-        self.setHeaderData(["name", "test"])
-        self.setModel(self._proxy_model)
+        self.view().makeModelFilterable()
 
         for x in range(0, 4):
-            index = self._source_model.insertNewIndex(x, name=str('anode%s' % x))
-            for i, char in enumerate('abc'):
-                self._source_model.insertNewIndex(i, name=char, parent=index)
+            index = self.model().insertNewIndex(x, name=str('anode%s' % x))
 
-        regex = QRegExp("a")
-        regex.setCaseSensitivity(Qt.CaseInsensitive)
-        self._proxy_model.setRecursiveFilteringEnabled(True)
-        self._proxy_model.setFilterRegExp(regex)
+            self.model().insertNewIndex(0, parent=index, column_data={"name":"a", "test":"f"})
+            self.model().insertNewIndex(0, parent=index, column_data={"name":"b", "test":"a"})
+            self.model().insertNewIndex(0, parent=index, column_data={"name":"c", "test":"f"})
 
-    def keyPressEvent(self, event):
-        if event.key() == Qt.Key_F5:
-            pass
-            # self._proxy_model.layoutChanged.emit()
-            #self.setModel(self._source_model)
-        return ModelViewWidget.keyPressEvent(self, event)
+        regex1 = QRegExp("c")
+        regex1.setCaseSensitivity(Qt.CaseInsensitive)
+        regex2 = QRegExp("f")
+        regex2.setCaseSensitivity(Qt.CaseInsensitive)
+
+        self.addFilter(regex1)
+        self.addFilter(regex2, "test")
+
 
 main_widget = ModelViewWidgetSubclass()
 
 # show widget
 main_widget.show()
 centerWidgetOnCursor(main_widget)
-
-# self.model().setItemEnabled(item, enabled)
 
 sys.exit(app.exec_())

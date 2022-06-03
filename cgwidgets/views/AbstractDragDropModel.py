@@ -1,17 +1,12 @@
 # https://doc.qt.io/qt-5/model-view-programming.html#model-view-classes
-"""
-Todo:
-    *   Unique item names for each child?
-"""
-from collections import OrderedDict
-import copy
 
-from qtpy.QtWidgets import (
-    QStyledItemDelegate, QApplication, QWidget, QStyle, QStyleOptionViewItem)
+from collections import OrderedDict
+
+from qtpy.QtWidgets import (QApplication, QWidget)
 from qtpy.QtCore import (
-    Qt, QModelIndex, QAbstractItemModel, QItemSelectionModel, QSortFilterProxyModel,
-    QSize, QMimeData, QByteArray, QPoint, QRect)
-from qtpy.QtGui import QPainter, QColor, QPen, QBrush, QCursor, QPolygonF, QPainterPath
+    Qt, QModelIndex, QAbstractItemModel, QSortFilterProxyModel,
+    QSize, QMimeData, QByteArray)
+from qtpy.QtGui import QColor
 
 from cgwidgets.settings import iColor
 
@@ -152,7 +147,10 @@ class AbstractDragDropModelItem(object):
         try:
             return self.columnData()["name"]
         except KeyError:
-            return self.columnData()[list(self.columnData().keys())[0]]
+            try:
+                return self.columnData()[list(self.columnData().keys())[0]]
+            except IndexError:
+                return None
 
     def setName(self, name):
         self.columnData()[list(self.columnData().keys())[0]] = name
@@ -229,6 +227,53 @@ class AbstractDragDropModelItem(object):
         elif _is_selectable: self._is_selectable = Qt.ItemIsSelectable
         elif not _is_selectable: self._is_selectable = 0
         else: self._is_selectable = False
+
+
+class AbstractDragDropFilterProxyModel(QSortFilterProxyModel):
+    """ Proxy model designed for use with the abstract drag/drop system
+
+    Attributes:
+        filters (list): of dict's containing regex filters to be used when on this model
+            {"filter": QRegExp, "arg": str(arg)}
+            arg is arg in the items data to check, please note that this needs to be a string value
+    """
+    def __init__(self, parent=None):
+        super(AbstractDragDropFilterProxyModel, self).__init__(parent)
+        self._filters = []
+        self.setRecursiveFilteringEnabled(True)
+
+    def removeFilter(self, regex_filter, arg="name"):
+        try:
+            self._filters.remove({"filter": regex_filter, "arg": arg})
+        except ValueError:
+            # Invalid filter
+            pass
+
+    def removeFilterByIndex(self, index):
+        del self._filters[index]
+
+    def clearFilters(self):
+        self._filters = []
+
+    def addFilter(self, regex_filter, arg="name"):
+        """ Add's a new proxy filter """
+        new_filter = {"filter": regex_filter, "arg": arg}
+        self._filters.append(new_filter)
+
+    def filters(self):
+        return self._filters
+
+    def filterAcceptsRow(self, source_row, source_parent):
+        source_index = self.sourceModel().index(source_row, 0, source_parent)
+        item = source_index.internalPointer()
+        if item:
+            for filter in self.filters():
+                item_data = item.getArg(filter["arg"])
+                match = filter["filter"].indexIn(item_data, 0)
+                if match == -1:
+                    return False
+
+        return QSortFilterProxyModel.filterAcceptsRow(self, source_row, source_parent)
 
 
 class AbstractDragDropModel(QAbstractItemModel):
