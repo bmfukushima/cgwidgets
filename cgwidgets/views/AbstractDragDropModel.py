@@ -459,7 +459,7 @@ class AbstractDragDropModel(QAbstractItemModel):
             font.setStrikeOut(not item.isEnabled())
             # Todo SortFilterProxyModel | This causes a crash on init for some reason
             # however, it is required to update the display.
-            self.layoutChanged.emit()
+            # self.layoutChanged.emit()
 
             return font
             #self.setFont(0, font)
