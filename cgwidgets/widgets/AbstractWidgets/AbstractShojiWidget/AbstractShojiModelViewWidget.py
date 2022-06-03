@@ -488,11 +488,8 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
         self.model().deleteItem(item, event_update=event_update)
 
     """ MODEL FILTERS """
-    def removeFilter(self, regex_filter, arg="name"):
-        self.headerWidget().removeFilter({"filter": regex_filter, "arg": arg})
-
-    def removeFilterByIndex(self, index):
-        self.headerWidget().removeFilterByIndex(index)
+    def addFilter(self, regex_filter, arg="name"):
+        self.headerWidget().addFilter(regex_filter=regex_filter, arg=arg)
 
     def clearFilters(self):
         self.headerWidget().clearFilters()
@@ -500,8 +497,23 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
     def filters(self):
         self.headerWidget().filters()
 
-    def addFilter(self, regex_filter, arg="name"):
-        self.headerWidget().addFilter(regex_filter=regex_filter, arg=arg)
+    def removeFilter(self, regex_filter, arg="name"):
+        self.headerWidget().removeFilter({"filter": regex_filter, "arg": arg})
+
+    def removeFilterByIndex(self, index):
+        self.headerWidget().removeFilterByIndex(index)
+
+    def removeFilterByName(self, name):
+        self.headerWidget().removeFilterByName(name)
+
+    def updateFilterByName(self, pattern, name):
+        """ Updates the given filter with the regex provided
+
+        Args:
+            pattern (str): regex pattern to be updated
+            name (str): name of filter to update
+        """
+        self.headerWidget().updateFilterByName(pattern, name)
 
     """ EXPORT DATA """
     def setItemExportDataFunction(self, func):

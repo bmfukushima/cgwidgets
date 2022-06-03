@@ -439,13 +439,11 @@ class AbstractDragDropAbstractView(object):
             self.setModel(self._proxy_model)
 
     """ VIRTUAL FILTER FUNCTIONS """
-    def removeFilter(self, regex_filter, arg="name"):
+    def addFilter(self, regex_filter, arg="name"):
         if self.isModelCustomFilterable():
-            self.model().removeFilter({"filter": regex_filter, "arg": arg})
-
-    def removeFilterByIndex(self, index):
-        if self.isModelCustomFilterable():
-            self.model().removeFilterByIndex(index)
+            self.model().addFilter(regex_filter=regex_filter, arg=arg)
+        else:
+            print("Invalid model, please use AbstractDragDropFilterProxyModel")
 
     def clearFilters(self):
         if self.isModelCustomFilterable():
@@ -455,11 +453,27 @@ class AbstractDragDropAbstractView(object):
         if self.isModelCustomFilterable():
             self.model().filters()
 
-    def addFilter(self, regex_filter, arg="name"):
+    def removeFilter(self, regex_filter, arg="name"):
         if self.isModelCustomFilterable():
-            self.model().addFilter(regex_filter=regex_filter, arg=arg)
-        else:
-            print("Invalid model, please use AbstractDragDropFilterProxyModel")
+            self.model().removeFilter({"filter": regex_filter, "arg": arg})
+
+    def removeFilterByIndex(self, index):
+        if self.isModelCustomFilterable():
+            self.model().removeFilterByIndex(index)
+
+    def removeFilterByName(self, name):
+        if self.isModelCustomFilterable():
+            self.model().removeFilterByName(name)
+
+    def updateFilterByName(self, pattern, name):
+        """ Updates the given filter with the regex provided
+
+        Args:
+            pattern (str): regex pattern to be updated
+            name (str): name of filter to update
+        """
+        if self.isModelCustomFilterable():
+            self.model().updateFilterByName(pattern, name)
 
     @staticmethod
     def getSourceIndex(index):

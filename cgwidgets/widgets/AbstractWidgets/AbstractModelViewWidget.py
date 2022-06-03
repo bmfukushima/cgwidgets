@@ -264,11 +264,8 @@ class AbstractModelViewWidget(AbstractShojiLayout):
         return self.view().selectionModel()
 
     """ MODEL FILTERS"""
-    def removeFilter(self, regex_filter, arg="name"):
-        self.view().removeFilter({"filter": regex_filter, "arg": arg})
-
-    def removeFilterByIndex(self, index):
-        self.view().removeFilterByIndex(index)
+    def addFilter(self, regex_filter, arg="name"):
+        self.view().addFilter(regex_filter=regex_filter, arg=arg)
 
     def clearFilters(self):
         self.view().clearFilters()
@@ -276,8 +273,23 @@ class AbstractModelViewWidget(AbstractShojiLayout):
     def filters(self):
         self.view().filters()
 
-    def addFilter(self, regex_filter, arg="name"):
-        self.view().addFilter(regex_filter=regex_filter, arg=arg)
+    def removeFilter(self, regex_filter, arg="name"):
+        self.view().removeFilter({"filter": regex_filter, "arg": arg})
+
+    def removeFilterByIndex(self, index):
+        self.view().removeFilterByIndex(index)
+
+    def removeFilterByName(self, name):
+        self.view().removeFilterByName(name)
+
+    def updateFilterByName(self, pattern, name):
+        """ Updates the given filter with the regex provided
+
+        Args:
+            pattern (str): regex pattern to be updated
+            name (str): name of filter to update
+        """
+        self.view().updateFilterByName(pattern, name)
 
     """ SELECTION """
     def clearItemSelection(self):

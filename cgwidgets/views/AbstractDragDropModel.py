@@ -232,6 +232,12 @@ class AbstractDragDropModelItem(object):
 class AbstractDragDropFilterProxyModel(QSortFilterProxyModel):
     """ Proxy model designed for use with the abstract drag/drop system
 
+    Note:
+        Anything added here needs to have the virtual classes updated...
+            AbstractDrag/DropView
+            AbstractModelViewWidget
+            AbstractShojiModelViewWidget
+
     Attributes:
         filters (list): of dict's containing regex filters to be used when on this model
             {"filter": QRegExp, "arg": str(arg)}
@@ -241,6 +247,24 @@ class AbstractDragDropFilterProxyModel(QSortFilterProxyModel):
         super(AbstractDragDropFilterProxyModel, self).__init__(parent)
         self._filters = []
         self.setRecursiveFilteringEnabled(True)
+
+    def addFilter(self, regex_filter, arg="name", name=None):
+        """ Add's a new proxy filter
+
+        Args:
+            regex_filter (QRegExp):
+            arg (str): column data arg to query
+            name (str): internal name of this filter
+        """
+        name = name or regex_filter.pattern() + arg
+        new_filter = {"filter": regex_filter, "arg": arg, "name":name}
+        self._filters.append(new_filter)
+
+    def clearFilters(self):
+        self._filters = []
+
+    def filters(self):
+        return self._filters
 
     def removeFilter(self, regex_filter, arg="name"):
         try:
@@ -252,16 +276,21 @@ class AbstractDragDropFilterProxyModel(QSortFilterProxyModel):
     def removeFilterByIndex(self, index):
         del self._filters[index]
 
-    def clearFilters(self):
-        self._filters = []
+    def removeFilterByName(self, name):
+        for _filter in self._filters:
+            if _filter["name"] == name:
+                del self._filters[_filter]
 
-    def addFilter(self, regex_filter, arg="name"):
-        """ Add's a new proxy filter """
-        new_filter = {"filter": regex_filter, "arg": arg}
-        self._filters.append(new_filter)
+    def updateFilterByName(self, pattern, name):
+        """ Updates the given filter with the regex provided
 
-    def filters(self):
-        return self._filters
+        Args:
+            pattern (str): regex pattern to be updated
+            name (str): name of filter to update
+        """
+        for _filter in self._filters:
+            if _filter["name"] == name:
+                _filter["filter"].setPattern(pattern)
 
     def filterAcceptsRow(self, source_row, source_parent):
         source_index = self.sourceModel().index(source_row, 0, source_parent)
