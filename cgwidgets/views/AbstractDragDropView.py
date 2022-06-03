@@ -538,7 +538,7 @@ class AbstractDragDropAbstractView(object):
 
             # Disable Item
             if event.key() == Qt.Key_D:
-                indexes = self.selectionsourceModel().selectedRows(0)
+                indexes = self.selectionModel().selectedRows(0)
                 for index in indexes:
                     item = index.internalPointer()
                     if (item.isEnableable() == True) or (item.isEnableable() == None and self.isEnableable() == True):
@@ -784,7 +784,6 @@ class AbstractDragDropAbstractView(object):
                 else:
                     context_menu.addSeparator()
 
-
         # Show/Execute menu
         pos = event.globalPos()
         context_menu.popup(pos)
@@ -792,7 +791,7 @@ class AbstractDragDropAbstractView(object):
 
         # get selected items / items under cursor
         index_clicked = context_menu.item
-        selected_indexes = self.selectionsourceModel().selectedRows(0)
+        selected_indexes = self.selectionModel().selectedRows(0)
 
         # do user defined event
         if action is not None:
