@@ -32,6 +32,8 @@ class AbstractListInputWidget(AbstractStringInputWidget):
         display_item_colors (bool): Determines if the item colors should be displayed
             or not.  By default this is set to off.  Item colors will need to be put as the
             second index for each item in the model provided to the list.
+            Expected as
+                [["Name", (R,G,B,A), ["Name", (R,G,B,A)]
         item_list (list): string list of all of the items in the list.  Updating this
             will auto update the default settings for blank setups
         previous_text (str): the previous items text.  This is stored for cancel events
