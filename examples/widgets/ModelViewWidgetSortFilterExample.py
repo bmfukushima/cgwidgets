@@ -38,7 +38,7 @@ class ModelViewWidgetSubclass(ModelViewWidget):
         self._source_model = self.model()
         self._proxy_model = QSortFilterProxyModel(self)
         self._proxy_model.setSourceModel(self._source_model)
-
+        self.setHeaderData(["name", "test"])
         self.setModel(self._proxy_model)
 
         for x in range(0, 4):
@@ -53,11 +53,7 @@ class ModelViewWidgetSubclass(ModelViewWidget):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_F5:
-            print('key press')
-            self._proxy_model = QSortFilterProxyModel(self)
-            self._proxy_model.setSourceModel(self._source_model)
-            self._proxy_model.setRecursiveFilteringEnabled(True)
-            self.setModel(self._proxy_model)
+            self._proxy_model.layoutChanged.emit()
             #self.setModel(self._source_model)
         return ModelViewWidget.keyPressEvent(self, event)
 

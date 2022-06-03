@@ -453,12 +453,12 @@ class AbstractDragDropModel(QAbstractItemModel):
 
         # change style for disabled items
         if role == Qt.FontRole:
-            #font = self.font()
             font = QApplication.font()
 
             font.setStrikeOut(not item.isEnabled())
             # Todo SortFilterProxyModel | This causes a crash on init for some reason
             # however, it is required to update the display.
+            # self.layoutAboutToBeChanged.emit()
             # self.layoutChanged.emit()
 
             return font
@@ -933,6 +933,10 @@ class AbstractDragDropModel(QAbstractItemModel):
         return mimedata
 
     def dropMimeData(self, data, action, row, column, parent):
+        # todo move this to beginMoveRows?
+        # (QModelIndex, int sourceFirst, int sourceLast, QModelIndex, int destinationChild)
+        # beginMoveRows(sourceParent, 2, 4, destinationParent, 2);
+
         # bypass remove rows
         self.beginResetModel()
         self._dropping = True
@@ -958,7 +962,7 @@ class AbstractDragDropModel(QAbstractItemModel):
                 if row > item.row():
                     if self.deleteItemOnDrop() or item.deleteOnDrop():
                         row -= 1
-
+            # move this to beginMoveRows??
             # remove item
             if item.deleteOnDrop():
                 self.deleteItem(item, event_update=False)
@@ -968,34 +972,17 @@ class AbstractDragDropModel(QAbstractItemModel):
                 row += 1
 
             # duplicate item
-            """
-            Cannot pickle QWidgets...
-            Need to make some sort of weak ref pickling thingymabobber"""
-            # todo KATANA UPDATE NEEDED
-            """
-            Making this work like this because Katana needs to update its shit
-            and this causes a crash...
-            """
-            # try:
-            #     new_item = copy.deepcopy(item)
-            # except TypeError:
-            #     # cannot pickle something
-            #     new_item = item
             new_item = item
             new_items.append(new_item)
 
             # insert item
-
             self.beginInsertRows(parent, row, row + 1)
             parent_item.insertChild(row, new_item)
             self.endInsertRows()
 
-
         # run virtual function
         self.dropEvent(data, new_items, self, row, parent_item)
         self.endResetModel()
-        # select new indexes?
-        #self.layoutChanged.emit()
         return False
 
     """ EXPORT DATA """
@@ -1148,6 +1135,7 @@ class AbstractDragDropModel(QAbstractItemModel):
             This will run through a for each loop and run for every single item in
             the current selection
         """
+
         self.__itemSelectedEvent(item, enabled)
 
     def __itemSelectedEvent(self, item, enabled):

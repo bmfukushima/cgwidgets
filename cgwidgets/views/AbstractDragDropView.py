@@ -455,6 +455,8 @@ class AbstractDragDropAbstractView(object):
                 self.sourceModel().itemSelectedEvent(item, False)
                 self.sourceModel().setLastSelectedItem(item)
 
+        self.model().layoutChanged.emit()
+
     def abstractKeyPressEvent(self, event):
         if event.modifiers() == Qt.NoModifier:
             # Clear Selection
@@ -1141,8 +1143,10 @@ class AbstractDragDropModelDelegate(QStyledItemDelegate):
         new_value = editor.text()
         if new_value == '':
             return
-        item = index.internalPointer()
-        arg = model._header_data[index.column()]
+        source_index = AbstractDragDropAbstractView.getSourceIndex(index)
+        model = source_index.model()
+        item = source_index.internalPointer()
+        arg = model._header_data[source_index.column()]
         old_value = item.columnData()[arg]
         new_value = editor.text()
 
@@ -1150,7 +1154,7 @@ class AbstractDragDropModelDelegate(QStyledItemDelegate):
         item.columnData()[arg] = new_value
 
         # emit text changed event
-        model.textChangedEvent(item, old_value, new_value, column=index.column())
+        model.textChangedEvent(item, old_value, new_value, column=source_index.column())
 
         #model.setData(index, QVariant(new_value))
         #model.aov_list[index.row()] = new_value
