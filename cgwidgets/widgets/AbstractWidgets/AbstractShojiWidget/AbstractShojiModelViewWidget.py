@@ -19,7 +19,7 @@ from qtpy import API_NAME
 
 from qtpy.QtWidgets import (
     QWidget, QAbstractItemView, QScrollArea, QSplitter, QApplication)#, qApp)
-from qtpy.QtCore import Qt, QModelIndex, QEvent
+from qtpy.QtCore import Qt, QModelIndex, QEvent, QSortFilterProxyModel
 from qtpy.QtGui import QCursor
 
 from cgwidgets.utils import getWidgetAncestor, updateStyleSheet, getWidgetUnderCursor
@@ -459,11 +459,18 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
 
     """ MODEL """
     def model(self):
-        return self.headerWidget().model()
+        model = self.headerWidget().model()
+        if isinstance(model, QSortFilterProxyModel):
+            return model.sourceModel()
+        else:
+            return model
 
     def setModel(self, model):
         #self._model = model
-        model.setItemType(AbstractShojiModelItem)
+        if isinstance(model, QSortFilterProxyModel):
+            model.sourceModel().setItemType(AbstractShojiModelItem)
+        else:
+            model.setItemType(AbstractShojiModelItem)
         self._header_widget.setModel(model)
         self._header_widget.setIndexSelectedEvent(self._header_widget.selectionChanged)
 

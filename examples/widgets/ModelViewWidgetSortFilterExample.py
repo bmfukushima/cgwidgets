@@ -53,7 +53,8 @@ class ModelViewWidgetSubclass(ModelViewWidget):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_F5:
-            self._proxy_model.layoutChanged.emit()
+            pass
+            # self._proxy_model.layoutChanged.emit()
             #self.setModel(self._source_model)
         return ModelViewWidget.keyPressEvent(self, event)
 

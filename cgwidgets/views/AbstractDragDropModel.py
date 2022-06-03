@@ -456,23 +456,15 @@ class AbstractDragDropModel(QAbstractItemModel):
             font = QApplication.font()
 
             font.setStrikeOut(not item.isEnabled())
-            # Todo SortFilterProxyModel | This causes a crash on init for some reason
-            # however, it is required to update the display.
-            # self.layoutAboutToBeChanged.emit()
-            # self.layoutChanged.emit()
 
             return font
-            #self.setFont(0, font)
-        # todo disabled item color
+
         if role == Qt.ForegroundRole:
             if item.isEnabled():
                 color = QColor(*iColor["rgba_text"])
             else:
                 color = QColor(*iColor["rgba_text_disabled"])
             return color
-
-        # elif role == Qt.BackgroundRole:
-        #     return QColor(255, 0, 0, 255)
 
         if role == Qt.SizeHintRole:
             return QSize(self.item_width, self.item_height)

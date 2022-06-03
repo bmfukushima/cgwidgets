@@ -2,7 +2,7 @@ import sys
 import os
 
 from qtpy.QtWidgets import (QSplitterHandle, QApplication, QLabel, QCompleter, QTreeView, QWidget, QVBoxLayout)
-from qtpy.QtCore import Qt, QModelIndex, QItemSelectionModel, QEvent
+from qtpy.QtCore import Qt, QModelIndex, QItemSelectionModel, QEvent, QSortFilterProxyModel
 from qtpy.QtGui import QCursor
 from cgwidgets.widgets import AbstractStringInputWidget, AbstractListInputWidget
 from cgwidgets.views import (
@@ -209,7 +209,11 @@ class AbstractModelViewWidget(AbstractShojiLayout):
     """ MODEL """
     def model(self):
         if hasattr(self, "_view"):
-            return self.view().model()
+            model = self.view().model()
+            if isinstance(model, QSortFilterProxyModel):
+                return model.sourceModel()
+            else:
+                return model
         else:
             return None
 
