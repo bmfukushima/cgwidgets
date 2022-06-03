@@ -264,6 +264,12 @@ class AbstractModelViewWidget(AbstractShojiLayout):
         return self.view().selectionModel()
 
     """ MODEL FILTERS"""
+    def isModelCustomFilterable(self):
+        self.view().isModelCustomFilterable()
+
+    def makeModelFilterable(self):
+        self.view().makeModelFilterable()
+
     def addFilter(self, regex_filter, arg="name"):
         self.view().addFilter(regex_filter=regex_filter, arg=arg)
 

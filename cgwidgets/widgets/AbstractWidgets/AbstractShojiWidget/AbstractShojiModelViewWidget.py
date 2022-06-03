@@ -487,6 +487,12 @@ class AbstractShojiModelViewWidget(QSplitter, iShojiDynamicWidget):
     def deleteItem(self, item, event_update=False):
         self.model().deleteItem(item, event_update=event_update)
 
+    def isModelCustomFilterable(self):
+        self.headerWidget().isModelCustomFilterable()
+
+    def makeModelFilterable(self):
+        self.headerWidget().makeModelFilterable()
+
     """ MODEL FILTERS """
     def addFilter(self, regex_filter, arg="name"):
         self.headerWidget().addFilter(regex_filter=regex_filter, arg=arg)
