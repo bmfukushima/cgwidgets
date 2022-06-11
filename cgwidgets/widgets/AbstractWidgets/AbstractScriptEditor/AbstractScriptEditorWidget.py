@@ -253,16 +253,13 @@ class AbstractScriptEditorWidget(QSplitter):
 
         # CREATE WIDGETS
         self._script_widget = ScriptTreeWidget(parent=self)
-
         self._design_tab_widget = DesignTab(parent=self, python_editor=python_editor)
-        #save_button = SaveButton(parent=self)
 
         self._design_main_widget = QWidget()
         design_vbox = QVBoxLayout()
         design_vbox.setContentsMargins(0, 0, 0, 0)
         self._design_main_widget.setLayout(design_vbox)
         design_vbox.addWidget(self._design_tab_widget)
-        #design_vbox.addWidget(save_button)
 
         # ADD WIDGETS TO SPLITTER
         self.addWidget(self._script_widget)
@@ -1394,6 +1391,8 @@ class DesignTab(QTabWidget):
             RGBA_BACKGROUND=iColor["rgba_background_00"]
         )
         self.setStyleSheet(style_sheet)
+
+        self.setMinimumWidth(1)
 
     def __name__(self):
         return "__main_tab__"

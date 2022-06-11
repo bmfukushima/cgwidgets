@@ -554,7 +554,7 @@ class AbstractLabelWidget(QFrame, iAbstractInputWidget):
     def resizeImage(self):
         """ Main function for resizin the image."""
         # get height/width
-        offset = 4
+        offset = 10
         width = self.width() - offset
         height = self.height() - offset
         # set sized
@@ -562,7 +562,6 @@ class AbstractLabelWidget(QFrame, iAbstractInputWidget):
 
         # resize pixmap
         if not self.pixmap.isNull():
-
             self.pixmap = self.pixmap.scaled(width, height, self.imageResizeMode())
             self.imageWidget().setPixmap(self.pixmap)
 
@@ -574,6 +573,8 @@ class AbstractLabelWidget(QFrame, iAbstractInputWidget):
         """
         self.setImage(self.imagePath())
         delattr(self, "_timer")
+        self.resizeImage()
+        print('resize')
 
     def resizeEvent(self, event):
         """
@@ -581,21 +582,20 @@ class AbstractLabelWidget(QFrame, iAbstractInputWidget):
         signal to have the display fully updated.
         """
         # preflight
-        if not hasattr(self, "_image_path"): return QWidget.resizeEvent(self, event)
-        if not self.isImageVisible(): return QWidget.resizeEvent(self, event)
 
+        if not self._image_path: return QFrame.resizeEvent(self, event)
+        if not self.isImageVisible(): return QFrame.resizeEvent(self, event)
+
+        # Todo for some reason this causes a slow down when resizing in PySide2
+        # only happens in Nuke/Houdini and not in the example
         self.resizeTimerEvent(100, self.time)
 
-        # resize image
-        self.resizeImage()
-
-        return QWidget.resizeEvent(self, event)
+        return QFrame.resizeEvent(self, event)
 
     def showEvent(self, event):
         # return_val =
         self.setImage(self.imagePath())
         self.resizeImage()
-
         return QFrame.showEvent(self, event)
 
 
