@@ -117,7 +117,9 @@ class AbstractNumberInputWidget(AbstractInputLineEdit):
         self.setText("0")
         self.setKeyList(NUMERICAL_INPUT_KEYS)
         self.setDoMath(do_math)
-        self.setRange(False)
+        self.range_enabled = None
+        self.range_min = None
+        self.range_max = None
         self.setAllowNegative(allow_negative)
         self.setAllowZero(allow_zero)
 
@@ -132,7 +134,10 @@ class AbstractNumberInputWidget(AbstractInputLineEdit):
             self,
             _use_ladder_delegate,
             user_input=QEvent.MouseButtonRelease,
-            value_list=[0.01, 0.1, 1, 10]
+            value_list=[0.01, 0.1, 1, 10],
+            range_min=0,
+            range_max=1,
+            range_enabled=False
     ):
         """
 
@@ -140,20 +145,25 @@ class AbstractNumberInputWidget(AbstractInputLineEdit):
             _use_ladder_delegate (bool): enables/disables ladder
             user_input (QEvent.MouseButton): input event to display the ladder
             value_list (list): of values to adjust with
-            alignment:
+            range_min (float):
+            range_max (float):
+            range_enabled (bool):
 
         Returns:
 
         """
         # create ladder
         if _use_ladder_delegate is True:
+            range_enabled = self.range_enabled or range_enabled
+            range_min = self.range_min or range_min
+            range_max = self.range_max or range_max
             self.ladder = installLadderDelegate(
                 self,
                 user_input=user_input,
                 value_list=value_list,
-                range_enabled=self.range_enabled,
-                range_min=self.range_min,
-                range_max=self.range_max,
+                range_enabled=range_enabled,
+                range_min=range_min,
+                range_max=range_max,
                 allow_negative_values=self.getAllowNegative(),
                 allow_zero_value=self.getAllowZero()
             )
@@ -574,7 +584,6 @@ class AbstractLabelWidget(QFrame, iAbstractInputWidget):
         self.setImage(self.imagePath())
         delattr(self, "_timer")
         self.resizeImage()
-        print('resize')
 
     def resizeEvent(self, event):
         """
