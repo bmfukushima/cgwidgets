@@ -558,10 +558,12 @@ class StickyDragWindowWidget(QWidget, iStickyValueAdjustDelegate):
         self.__setValue()
         QWidget.mouseMoveEvent(self, event, *args, **kwargs)
 
-    def mousePressEvent(self, event):
-        self.__deactivateStickyDrag()
-        self.deactivationEvent(self.activeObject(), self.activationObject(), event)
-        return QWidget.mousePressEvent(self, event)
+    def mouseReleaseEvent(self, event):
+        if self._is_initializing:
+            self._is_initializing = False
+        else:
+            self.__deactivateStickyDrag()
+            self.deactivationEvent(self.activeObject(), self.activationObject(), event)
 
     def showEvent(self, event):
         offset = 5
@@ -574,10 +576,12 @@ class StickyDragWindowWidget(QWidget, iStickyValueAdjustDelegate):
         self._is_passed_range = False
 
         self.grabMouse()
+        self._is_initializing = True
         return QWidget.showEvent(self, event)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape:
             self.__deactivateStickyDrag()
+            self.deactivationEvent(self.activeObject(), self.activationObject(), event)
 
 

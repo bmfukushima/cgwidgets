@@ -439,7 +439,7 @@ class AbstractLabelWidget(QFrame, iAbstractInputWidget):
         # set text alignment
         self.setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
         # self.textWidget().setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
-        # self.imageWidget().setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
+        self.imageWidget().setAlignment(Qt.AlignCenter)
 
         self.layout().addWidget(self.textWidget())
         self.layout().addWidget(self.imageWidget())
@@ -526,6 +526,7 @@ class AbstractLabelWidget(QFrame, iAbstractInputWidget):
         self._image_widget.setPixmap(self.pixmap)
         self.resizeImage()
         self.updateStyleSheet()
+        self._image_widget.setAlignment(Qt.AlignCenter)
         #self.updateTextColor()
         # self.removeImage()
 
@@ -562,11 +563,13 @@ class AbstractLabelWidget(QFrame, iAbstractInputWidget):
         self._image_resize_mode = resize_mode
 
     def resizeImage(self):
-        """ Main function for resizin the image."""
+        """ Main function for resizing the image."""
         # get height/width
-        offset = 10
-        width = self.width() - offset
-        height = self.height() - offset
+        # todo figure out correct offset
+        """ Currently using an arbitrary offset to accommodate border width for all DCC's """
+        offset = 4
+        width = self.frameGeometry().width() - offset
+        height = self.frameGeometry().height() - offset
         # set sized
         self.imageWidget().setFixedSize(width, height)
 
@@ -574,6 +577,7 @@ class AbstractLabelWidget(QFrame, iAbstractInputWidget):
         if not self.pixmap.isNull():
             self.pixmap = self.pixmap.scaled(width, height, self.imageResizeMode())
             self.imageWidget().setPixmap(self.pixmap)
+            self.imageWidget().setAlignment(Qt.AlignCenter)
 
     """ EVENTS """
     def time(self):
@@ -602,10 +606,10 @@ class AbstractLabelWidget(QFrame, iAbstractInputWidget):
         return QFrame.resizeEvent(self, event)
 
     def showEvent(self, event):
-        # return_val =
+        return_val = QFrame.showEvent(self, event)
         self.setImage(self.imagePath())
         self.resizeImage()
-        return QFrame.showEvent(self, event)
+        return return_val
 
 
 class AbstractBooleanInputWidget(AbstractLabelWidget):
