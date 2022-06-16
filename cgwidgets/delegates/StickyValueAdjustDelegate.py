@@ -1,23 +1,4 @@
 """
-TODO:
-    *   Issues with snapping values.
-            - Seems to occur when the original value is at the beginning/end of the defined range.
-            - Potentially something to do with leave events going vertically?
-    PER TICK UPDATE (default is batch update)
-        def getInput(self):
-            self._temp = 0.0
-            return 0.0
-        def setValue(self, value):
-            if value != self._temp:
-                delta_value = value - self._temp
-                self._temp = value
-                self.camera.translate(0, 0, delta_value, local_coord=self.local_coord)
-    setValue:
-        move to function to provide a dict of
-            {user_input: setValueFunction}
-"""
-
-"""
 Hierarchy
     iStickyValueAdjustDelegate, iStickyActivationDelegate
         |- StickyValueAdjustWidgetDelegate --> QWidget
@@ -32,15 +13,10 @@ import logging
 import math
 
 from qtpy.QtCore import QEvent, Qt, QPoint, QRectF
-from qtpy.QtWidgets import (
-    QWidget, QApplication, QGraphicsItem, QWidget
-)
+from qtpy.QtWidgets import (QApplication, QGraphicsItem, QWidget)
 from qtpy.QtGui import QCursor
 
-from cgwidgets.utils import (
-    getMagnitude, Magnitude, getTopLeftPos,
-    setAsTransparent, setAsTool, getGlobalPos, setAsAlwaysOnTop
-)
+from cgwidgets.utils import (getMagnitude, Magnitude, setAsTransparent, setAsTool, getGlobalPos, setAsAlwaysOnTop)
 
 class iStickyValueAdjustDelegate(object):
     """
@@ -214,9 +190,6 @@ class iStickyValueAdjustDelegate(object):
             obj (QWidget / QItem --> DragWidget): Object to install all of the extra attrs on
         """
         obj._cursor_pos = QCursor.pos()
-        # top_left = getTopLeftPos(obj)
-        # QCursor.setPos(top_left + QPoint(10, 10))
-        # obj.setFocus()
 
         # set up drag time attrs
         obj.updateOrigValue()
