@@ -26,7 +26,7 @@ def checkNegative(enabled, value):
     return value
 
 
-def checkIfValueInRange(enabled, value, range_min, range_max):
+def checkIfValueInRange(value, range_min, range_max):
     """
     if set range is enabled, this will force user inputs into the specified range
 
@@ -38,12 +38,12 @@ def checkIfValueInRange(enabled, value, range_min, range_max):
         range_min (float):
         range_max (float):
     """
-    if enabled is True:
-        # print(type(value), value, type(range_min), range_min, type(range_max), range_max)
-        if value < range_min:
 
+    if range_min:
+        if value < range_min:
             value = range_min
-        elif range_max < value:
+    if range_max:
+        if range_max < value:
             value = range_max
 
     return value

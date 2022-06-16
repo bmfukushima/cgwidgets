@@ -128,8 +128,8 @@ Notes:
             value_list=[0.001, 0.01, 0.1, 1, 10, 100, 1000],
             user_input=QEvent.MouseButtonRelease,
             range_enabled=False,
-            range_min=0.0,
-            range_max=1.0,
+            range_min=None,
+            range_max=None,
             allow_negative_values=True,
             allow_zero_value=True,
             ladder_type=attrs.FLOAT,
@@ -292,7 +292,7 @@ Notes:
             if item != self.middle_item:
                 item._filter_STICKY.setPixelsPerTick(_pixels_per_tick)
 
-    def setRange(self, enabled, range_min=0, range_max=1):
+    def setRange(self, enabled, range_min=None, range_max=None):
         """
         Determines if this widget has a specified range.  Going over this
         range will clip values into that range
@@ -332,10 +332,9 @@ Notes:
         if value is not None:
             # preflight checks on value
             value = checkNegative(self._allow_negative, value)
-            value = checkIfValueInRange(self.range_enabled, float(value), float(self.range_min), float(self.range_max))
+            value = checkIfValueInRange(float(value), self.range_min, self.range_max)
             if not self._allow_zero and not value:
                 value = self.middle_item.getOrigValue()
-
             # set value
             self._value = value
 

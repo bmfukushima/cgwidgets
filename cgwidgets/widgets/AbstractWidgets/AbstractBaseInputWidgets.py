@@ -135,8 +135,8 @@ class AbstractNumberInputWidget(AbstractInputLineEdit):
             _use_ladder_delegate,
             user_input=QEvent.MouseButtonRelease,
             value_list=[0.01, 0.1, 1, 10],
-            range_min=0,
-            range_max=1,
+            range_min=None,
+            range_max=None,
             range_enabled=False
     ):
         """
@@ -175,6 +175,30 @@ class AbstractNumberInputWidget(AbstractInputLineEdit):
 
     def getUseLadder(self):
         return self._use_ladder_delegate
+
+    """ UTILS """
+    def getRangeMin(self):
+        """ Gets the lower bound of any number input based off of the
+        range_min, getAllowNegative, getAllowZero handlers"""
+        range_min = self.range_min
+        if range_min:
+            if not self.getAllowNegative() and range_min < 0:
+                range_min = 0
+            if not self.getAllowZero() and range_min == 0:
+                if self.TYPE == "int":
+                    range_min = 1
+                if self.TYPE == "float":
+                    range_min = 0.001
+        else:
+            if not self.getAllowNegative():
+                range_min = 0
+            if not self.getAllowZero():
+                if self.TYPE == "int":
+                    range_min = 1
+                if self.TYPE == "float":
+                    range_min = 0.001
+
+        return range_min
 
     """ PROPERTIES """
     def setAllowNegative(self, enabled):
@@ -236,28 +260,19 @@ class AbstractNumberInputWidget(AbstractInputLineEdit):
     def getInputHelper(self):
         """
         Helper function for the FLOAT/INT widgets to call to check
-        the user input to ensure that it will resolve with an eval call
+        to ensure the value entered is valid.  This will resolve for
+        getAllowZero, getAllowNegative, getDoMath
 
         Returns (str):
         """
         text = self.text()
 
-        # check for values between 0-1
-        try:
-            if int(float(text)) == 0:
-                if self.getAllowZero():
-                    return (str(float(text)))
-                else:
-                    return self.getOrigValue()
-        except ValueError:
-            # errors here when evaluating
-            # print("for some reason this is an error...")
-            pass
-
         try:
             value = eval(text)
             value = checkNegative(self.getAllowNegative(), value)
-            value = checkIfValueInRange(self.range_enabled, value, self.range_min, self.range_max)
+            range_min = self.getRangeMin()
+            print(value, self.range_max)
+            value = checkIfValueInRange(value, range_min, self.range_max)
         except SyntaxError:
             value = self.getOrigValue()
 
@@ -317,15 +332,15 @@ class AbstractFloatInputWidget(AbstractNumberInputWidget):
         Check to see if the users input is valid or not
         """
         return True
-        if not self.validateEvaluation(): return
-
-        # check if float
-        user_input = self.getInput()
-        try:
-            float(user_input)
-            return True
-        except ValueError:
-            return False
+        # if not self.validateEvaluation(): return
+        #
+        # # check if float
+        # user_input = self.getInput()
+        # try:
+        #     float(user_input)
+        #     return True
+        # except ValueError:
+        #     return False
 
 
 class AbstractIntInputWidget(AbstractNumberInputWidget):
