@@ -261,7 +261,6 @@ class AbstractNumberInputWidget(AbstractInputLineEdit):
             value = eval(text)
             value = checkNegative(self.getAllowNegative(), value)
             range_min = self.getRangeMin()
-            print(value, self.range_max)
             value = checkIfValueInRange(value, range_min, self.range_max)
         except SyntaxError:
             value = self.getOrigValue()
