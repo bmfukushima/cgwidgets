@@ -577,6 +577,8 @@ Notes:
                 parent=self,
                 value=self.getValue()
             )
+        if hasattr(self.parent(), "userFinishedEditingEvent"):
+            self.middle_item.setUserFinishedEditingEvent(self.parent().userFinishedEditingEvent)
         self.layout().insertWidget(self.middle_item_index, self.middle_item)
 
         # populate item list
@@ -901,8 +903,6 @@ def main():
                 user_input=QEvent.MouseButtonRelease,
                 value_list=value_list
             )
-            #ladder.setDiscreteDrag(True, alignment=Qt.AlignLeft, depth=10)
-
 
         def setValue(self, value):
             self.setText(str(value))
@@ -918,7 +918,9 @@ def main():
     float_input = AbstractFloatInputWidget()
     float_input.setDoMath(True)
     ladder = installLadderDelegate(float_input, allow_zero_value=False, allow_negative_values=False)
-
+    def editingComplete(widget, value):
+        print(widget, value)
+    float_input.setUserFinishedEditingEvent(editingComplete)
     float_input.setText('12')
     #ladder.setInvisibleWidget(True)
 
