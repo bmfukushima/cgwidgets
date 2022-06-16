@@ -198,7 +198,7 @@ class ColorHeaderWidgetItem(AbstractInputGroup):
 
         # setup ladder
         self.value_widget.setUseLadder(True, value_list=[0.0001, 0.001, 0.01, 0.1])
-        self.setRange(True, 0.0, 1.0)
+        self.setRange(0.0, 1.0)
         self.value_widget.setAlignment(Qt.AlignLeft)
         self.insertWidget(1, self.value_widget)
 
@@ -211,11 +211,11 @@ class ColorHeaderWidgetItem(AbstractInputGroup):
     def getValue(self):
         return self._value
 
-    def setRange(self, enable, range_min, range_max):
+    def setRange(self, range_min, range_max):
         """
         Sets the range of the user input
         """
-        self.value_widget.setRange(enable, range_min, range_max)
+        self.value_widget.setRange(range_min, range_max)
 
     def setAllowNegative(self, enabled):
         """

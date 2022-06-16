@@ -127,7 +127,6 @@ Notes:
             parent=None,
             value_list=[0.001, 0.01, 0.1, 1, 10, 100, 1000],
             user_input=QEvent.MouseButtonRelease,
-            range_enabled=False,
             range_min=None,
             range_max=None,
             allow_negative_values=True,
@@ -147,7 +146,6 @@ Notes:
         self.setMiddleItemBorderWidth(5)
         self.setPixelsPerTick(100)
         self.setItemHeight(50)
-        self.range_enabled = range_enabled
         self.range_min = range_min
         self.range_max = range_max
         self._ladder_type = ladder_type
@@ -182,7 +180,7 @@ Notes:
         self.updateStyleSheet()
 
         # post flight attr set
-        self.middle_item.setRange(range_enabled, range_min, range_max)
+        self.middle_item.setRange(range_min, range_max)
         self.setAllowNegative(allow_negative_values)
         self.setAllowZero(allow_zero_value)
 
@@ -292,16 +290,15 @@ Notes:
             if item != self.middle_item:
                 item._filter_STICKY.setPixelsPerTick(_pixels_per_tick)
 
-    def setRange(self, enabled, range_min=None, range_max=None):
+    def setRange(self, range_min=None, range_max=None):
         """
         Determines if this widget has a specified range.  Going over this
         range will clip values into that range
         """
-        self.range_enabled = enabled
         self.range_min = range_min
         self.range_max = range_max
 
-        self.middle_item.setRange(enabled, range_min, range_max)
+        self.middle_item.setRange(range_min, range_max)
         from cgwidgets.utils import removeStickyAdjustDelegate
         for widget in self.ladderItems():
             removeStickyAdjustDelegate(widget)
@@ -312,7 +309,6 @@ Notes:
                 value_per_tick=widget.valueMult(),
                 activation_event=widget.activationEvent,
                 deactivation_event=widget.deactivationEvent,
-                range_enabled=self.range_enabled,
                 range_min=self.range_min,
                 range_max=self.range_max
             )
@@ -559,7 +555,6 @@ Notes:
                 value_per_tick=value,
                 activation_event=widget.activationEvent,
                 deactivation_event=widget.deactivationEvent,
-                range_enabled=self.range_enabled,
                 range_min=self.range_min,
                 range_max=self.range_max
             )

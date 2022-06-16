@@ -180,9 +180,8 @@ def installLadderDelegate(
     widget,
     user_input=QEvent.MouseButtonRelease,
     value_list=None,
-    range_enabled=False,
-    range_min=0.0,
-    range_max=1.0,
+    range_min=None,
+    range_max=None,
     allow_negative_values=True,
     allow_zero_value=True
 ):
@@ -212,7 +211,6 @@ def installLadderDelegate(
         parent=widget,
         value_list=value_list,
         user_input=user_input,
-        range_enabled=range_enabled,
         range_min=range_min,
         range_max=range_max,
         allow_negative_values=allow_negative_values,
@@ -241,9 +239,8 @@ def installStickyAdjustDelegate(
         pixels_per_tick=200,
         value_per_tick=0.01,
         value_update_event=None,
-        range_enabled=False,
-        range_min=0.0,
-        range_max=1.0
+        range_min=None,
+        range_max=None
     ):
     """
     Args:
@@ -292,8 +289,8 @@ def installStickyAdjustDelegate(
 
     drag_widget = main_application_widget._sticky_drag_window_widget
     # drag_widget._magnitude_type = magnitude_type
-    if range_enabled:
-        drag_widget.setRange(range_enabled, range_min, range_max)
+
+    drag_widget.setRange(range_min, range_max)
     # check activation widget
     if not activation_object:
         activation_object = active_object

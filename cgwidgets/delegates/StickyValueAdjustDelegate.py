@@ -280,7 +280,6 @@ class StickyDragWindowWidget(QWidget, iStickyValueAdjustDelegate):
         self.setMouseTracking(True)
 
         # range attrs
-        self._range_enabled = False
         self._range_min = 0.0
         self._range_max = 1.0
         self._direction = 0
@@ -355,12 +354,11 @@ class StickyDragWindowWidget(QWidget, iStickyValueAdjustDelegate):
         QCursor.setPos(cursor_display_pos)
 
     """ RANGE """
-    def setRange(self, enabled, range_min=0, range_max=1):
+    def setRange(self, range_min=None, range_max=None):
         """
         Determines if this widget has a specified range.  Going over this
         range will clip values into that range
         """
-        self._range_enabled = enabled
         self._range_min = range_min
         self._range_max = range_max
 
@@ -432,37 +430,44 @@ class StickyDragWindowWidget(QWidget, iStickyValueAdjustDelegate):
         self.activeObject().setValue(new_value)
 
         # enable range
-        """     goes under/over range, set position.
-                When hits a tick in the opposite direction
-                restores that position
-                
-                Issue when starting/stopping on the end of a range
-                Seems that the direction changed or range passed is being set"""
+        """ 
+            goes under/over range, set position.
+            When hits a tick in the opposite direction
+            restores that position
+            
+            Issue when starting/stopping on the end of a range
+            Seems that the direction changed or range passed is being set
+        """
+        if self._is_passed_range:
+            # get the current direction of the cursor
+            if direction_changed:
+                # restore attributes when cursor starts moving the other direction
 
-        if self._range_enabled:
-            if self._is_passed_range:
-                # get the current direction of the cursor
-                if direction_changed:
-                    # restore attributes when cursor starts moving the other direction
+                self._calc_pos = self._passed_range_calc_pos
+                self._previous_num_ticks = self._num_ticks
+                if self.direction() == Magnitude.POSITIVE:
+                    QCursor.setPos(self._passed_range_pos.x() + 10, self._passed_range_pos.y() + 10)
+                if self.direction() == Magnitude.NEGATIVE:
+                    QCursor.setPos(self._passed_range_pos.x() - 10, self._passed_range_pos.y() - 10)
 
-                    self._calc_pos = self._passed_range_calc_pos
-                    self._previous_num_ticks = self._num_ticks
-                    if self.direction() == Magnitude.POSITIVE:
-                        QCursor.setPos(self._passed_range_pos.x() + 10, self._passed_range_pos.y() + 10)
-                    if self.direction() == Magnitude.NEGATIVE:
-                        QCursor.setPos(self._passed_range_pos.x() - 10, self._passed_range_pos.y() - 10)
+                # update num ticks
+                self.updateMousePosAttrs()
+                self._previous_num_ticks = self._num_ticks
+                self._is_passed_range = False
 
-                    # update num ticks
-                    self.updateMousePosAttrs()
-                    self._previous_num_ticks = self._num_ticks
-                    self._is_passed_range = False
-
-            elif not self._is_passed_range:
-                # value passes range
-                if new_value < self._range_min or self._range_max < new_value:
-                    self._is_passed_range = True
-                    self._passed_range_pos = QCursor.pos()
-                    self._passed_range_calc_pos = self._calc_pos
+        elif not self._is_passed_range:
+            # value passes range
+            if self._range_min or self._range_max:
+                if self._range_min:
+                    if new_value < self._range_min:
+                        self._is_passed_range = True
+                        self._passed_range_pos = QCursor.pos()
+                        self._passed_range_calc_pos = self._calc_pos
+                if self._range_max:
+                    if self._range_max < new_value:
+                        self._is_passed_range = True
+                        self._passed_range_pos = QCursor.pos()
+                        self._passed_range_calc_pos = self._calc_pos
 
     """ VIRTUAL FUNCTIONS"""
     def __valueUpdateEvent(self, obj, original_value, slider_pos, num_ticks, magnitude):

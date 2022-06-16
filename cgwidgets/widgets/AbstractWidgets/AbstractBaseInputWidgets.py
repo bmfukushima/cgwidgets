@@ -117,7 +117,6 @@ class AbstractNumberInputWidget(AbstractInputLineEdit):
         self.setText("0")
         self.setKeyList(NUMERICAL_INPUT_KEYS)
         self.setDoMath(do_math)
-        self.range_enabled = None
         self.range_min = None
         self.range_max = None
         self.setAllowNegative(allow_negative)
@@ -136,8 +135,7 @@ class AbstractNumberInputWidget(AbstractInputLineEdit):
             user_input=QEvent.MouseButtonRelease,
             value_list=[0.01, 0.1, 1, 10],
             range_min=None,
-            range_max=None,
-            range_enabled=False
+            range_max=None
     ):
         """
 
@@ -147,29 +145,22 @@ class AbstractNumberInputWidget(AbstractInputLineEdit):
             value_list (list): of values to adjust with
             range_min (float):
             range_max (float):
-            range_enabled (bool):
 
         Returns:
-
         """
         # create ladder
         if _use_ladder_delegate is True:
-            range_enabled = self.range_enabled or range_enabled
             range_min = self.range_min or range_min
             range_max = self.range_max or range_max
             self.ladder = installLadderDelegate(
                 self,
                 user_input=user_input,
                 value_list=value_list,
-                range_enabled=range_enabled,
                 range_min=range_min,
                 range_max=range_max,
                 allow_negative_values=self.getAllowNegative(),
                 allow_zero_value=self.getAllowZero()
             )
-            # self.ladder.setRange(self.range_enabled, self.range_min, self.range_max)
-            # self.ladder.setAllowNegative(self.getAllowNegative())
-            # self.ladder.setAllowZero(self.getAllowZero())
 
         self._use_ladder_delegate = _use_ladder_delegate
 
@@ -233,19 +224,18 @@ class AbstractNumberInputWidget(AbstractInputLineEdit):
     def getDoMath(self):
         return self._do_math
 
-    def setRange(self, enabled, range_min=0, range_max=1):
+    def setRange(self, range_min=None, range_max=None):
         """
         Determines if this widget has a specified range.  Going over this
         range will clip values into that range
         """
         # setup default attrs
-        self.range_enabled = enabled
         self.range_min = range_min
         self.range_max = range_max
 
         # set up ladder
         if hasattr(self, 'ladder'):
-            self.ladder.setRange(enabled, range_min, range_max)
+            self.ladder.setRange(range_min, range_max)
 
     def validateEvaluation(self):
         # evaluate if math

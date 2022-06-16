@@ -35,7 +35,7 @@ main_widget.setUserFinishedEditingEvent(finishedEditing)
 # main_widget.setRange(True, 0.0, 1.0)
 # main_widget.setAllowNegative(True)
 # self._colorr_widget = FloatInputWidget(allow_negative=False, allow_zero=False)
-# self._colorr_widget.setUseLadder(True, value_list=[0.001, 0.01, 0.1], range_min=0, range_max=1, range_enabled=True)
+# self._colorr_widget.setUseLadder(True, value_list=[0.001, 0.01, 0.1], range_min=0, range_max=1)
 # show widget
 main_widget.show()
 main_widget.move(QCursor.pos())
