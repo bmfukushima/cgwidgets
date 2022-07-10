@@ -2,17 +2,17 @@
 This is my own personal work (Brian Fukushima), and does not represent that of my employer. 
 All work done in this library represents my own personal designs, code, resources spent, etc.
 Please do not contact my employer with any questions/comments/concerns pertaining to this
-library, but rather please contact me directly if you have any questions/comments/concerns.  
+library, but rather please contact me directly if you have any questions/comments/concerns.
 
 
 The work in this library represents my learning path from scripting towards Software Engineering.
 Due to my inexperience, there will probably be many questionable choices made.  With each questionable
 choice, something has been learned and applied.  Therefor hopefully the newer the code, the nicer it
-will be.  
+will be.
 
 
 This library should be considered to be Open Source and available to use as you see fit, however
-all original copyrights for designs and what not still remain my intellectual property.  
+all original copyrights for designs and what not still remain my intellectual property.
 
 
 # CGWidgets
